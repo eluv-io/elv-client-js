@@ -1,0 +1,12 @@
+!.keep
+
+.idea/
+
+**.DS_STORE
+
+node_modules/
+
+build/contracts/
+
+ElvClient-min-dev.js*
+ElvClient-node-min-dev.js*
