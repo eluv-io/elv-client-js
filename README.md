@@ -97,8 +97,8 @@ let response = await client.ContentLibraries();
 console.log(json);
 
 
-// Result:
-/*
+/* Result:
+
 [ 'ilib181m5UqiibeHCkvydb5zvs',
   'ilib2nhndXbwNsZpSW4vGKZtUL',
   'ilib6M65FWP5VURJAgg5UgH49F',
@@ -186,7 +186,61 @@ client.CreateContentLibrary({
 
 ```
 
-### Other blockchain interaction (including custom contracts)
+### Deploying custom contracts
+
+The ElvClient can be used to deploy custom contracts, provided the ABI and bytecode of the contract.
+
+To deploy a contract, simply pass the ABI, bytecode, any constructor arguments, and the signer.
+
+```javascript
+return await client.DeployContract({
+  abi,
+  bytecode,
+  constructorArgs,
+  signer
+});
+```
+
+Calling a method on a deployed contract is similarly simple:
+
+```javascript
+return await client.CallContractMethod({
+  contractAddress,
+  abi,
+  methodName: "setLibraryHash",
+  methodArgs,
+  signer
+});
+```
+
+The arguments to both the constructor and any methods are provided as an ordered array. Some arguments have special 
+required formats - Bytes32 strings, for example. The FormatContractArguments helper can perform this formatting
+automatically by referencing the ABI.
+
+For example, the ContentLibrary contract constructor requires 3 arguments - a string, a bytes32 string, and an address.
+The FormatContractArguments method will automatically perform the bytes32 string transformation on the second argument. 
+
+```javascript
+const constructorArgs = client.FormatContractArguments({
+  abi,
+  methodName: "constructor",
+  args: [
+    "New Library",
+    "Content Space",
+    "0x0000000000000000000000000000000000000000"
+  ]
+});
+
+/* Result
+
+[ 'New library',
+  '0x436f6e74656e7420537061636500000000000000000000000000000000000000',
+  '0x0000000000000000000000000000000000000000' ]
+ 
+*/
+```
+
+### Other blockchain interaction
 
 The signer object, as described above, is an instance of an [ethers.js](https://github.com/ethers-io/ethers.js/)
 wallet that is connected to the client's specified blockchain (provider). It can be used independently of the ElvClient 
@@ -194,10 +248,10 @@ to do anything outlined in the [documentation](https://docs.ethers.io/ethers.js/
 signing transactions.
 
 This wallet can be used in conjunction with the ethers.js library, or even another ethereum library like web3
-(by extracting the private key), to deploy contracts and sign transactions.
+(by extracting the private key), to deploy contracts, sign transactions and perform other functions not explicitly
+supported in the ElvClient.
 
-To see an example of how this can be done, you can look at how the ```CreateContentLibrary``` method deploys 
-the ContentLibrary contract and calls the SetLibraryHash function on the contract.  
+Refer to src/EthClient.js to see how ElvClient uses ethers.js to interact with the blockchain.
 
 ### Error handling
  
@@ -264,8 +318,7 @@ let result = await client.VerifyContentObject({
 });
 console.log(result);
 
-/*
-Result:
+/* Result:
 
 {
   "hash": "hq__QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb",
