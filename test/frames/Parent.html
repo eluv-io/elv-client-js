@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+</head>
+<body style="height: 100%;">
+<script src="../../ElvClient-min.js"></script>
+<script src="../../ElvFrameClient-min.js"></script>
+<script type="text/javascript">
+  const client = new ElvClient({
+    hostname: "localhost",
+    port: 8008,
+    useHTTPS: false,
+    ethHostname: "localhost",
+    ethPort: 7545,
+    ethUseHTTPS: false
+  });
+
+  let wallet = client.GenerateWallet();
+  let signer = wallet.AddAccount({
+    accountName: "Alice",
+    privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
+  });
+
+  window.addEventListener("message", async function(event) {
+    const responseMessage = await client.CallFromFrameMessage(event.data, signer);
+    if (responseMessage) {
+      document.getElementById("appFrame").contentWindow.postMessage(
+        responseMessage,
+        "*"
+      );
+    }
+  });
+
+
+
+
+
+
+
+
+  // Ensure ElvClient and FrameClient agree on allowed methods
+  const frameClient = new FrameClient({
+    timeout: 20
+  });
+
+  const frameClientMethods = frameClient.AllowedMethods();
+  const elvClientMethods = client.FrameAllowedMethods();
+
+  const differentKeys = frameClientMethods
+    .filter(x => !elvClientMethods.includes(x))
+    .concat(elvClientMethods.filter(x => !frameClientMethods.includes(x)));
+
+  if(differentKeys.length > 0) {
+    console.error("MISMATCHED ALLOWED METHODS BETWEEN ELV CLIENT AND FRAME CLIENT");
+    console.error(differentKeys);
+  }
+</script>
+
+<iframe width="1000px" height="1000px" id="appFrame" src="child.html"></iframe>
+</body>
+</html>

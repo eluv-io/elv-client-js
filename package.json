@@ -1,0 +1,48 @@
+{
+  "name": "elv-client-js",
+  "version": "1.0.0",
+  "description": "Javascript client for Eluvio fabric",
+  "main": "ElvClient-min.js",
+  "author": "Kevin Talmadge",
+  "scripts": {
+    "build": "npm run compile-contracts && npm run build-contract-js && npm run build-web && npm run build-node && npm run build-frame-client",
+    "build-dev": "npm run build-web-dev && npm run build-node-dev && npm run build-frame-client",
+    "build-web": "webpack --progress --mode production --target web --output-filename ElvClient-min.js --devtool none",
+    "build-web-dev": "webpack --progress --target web --output-filename ElvClient-min-dev.js",
+    "build-node": "webpack --progress --mode production --target node --output-filename ElvClient-node-min.js --devtool none",
+    "build-node-dev": "webpack --progress --target node --output-filename ElvClient-node-min-dev.js",
+    "build-frame-client": "webpack -p --progress --entry ./src/FrameClient.js --output-filename ElvFrameClient-min.js --devtool none --optimize-minimize",
+    "compile-contracts": "truffle compile",
+    "build-contract-js": "node build/BuildContracts.js",
+    "lint": "./node_modules/.bin/eslint \"src/**/*.js\" --fix",
+    "truffle_test": "node $NODE_DEBUG_OPTION ./node_modules/.bin/truffle test"
+  },
+  "browser": {
+    "fs": false
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.0.0",
+    "bs58": "^4.0.1",
+    "cbor": "^4.1.1",
+    "deep-equal": "^1.0.1",
+    "ethers": "^4.0.7",
+    "multihashes": "^0.4.14",
+    "node-fetch-polyfill": "^2.0.6",
+    "path": "^0.12.7",
+    "sjcl": "^1.0.7",
+    "urijs": "^1.19.1"
+  },
+  "devDependencies": {
+    "copy-webpack-plugin": "^4.5.2",
+    "eslint": "^5.6.1",
+    "eslint-plugin-react": "^7.11.1",
+    "raw-loader": "^0.5.1",
+    "truffle": "^4.1.14",
+    "truffle-contract": "^3.0.6",
+    "truffle-test-utils": "^0.1.0",
+    "webpack": "^4.20.2",
+    "webpack-bundle-analyzer": "^3.0.3",
+    "webpack-cli": "^3.1.2",
+    "web3": "^1.0.0-beta.36"
+  }
+}

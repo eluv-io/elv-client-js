@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+</head>
+<body style="height: 100%;">
+<script src='../../ElvFrameClient-min.js'></script>
+<script src="../../test/TestMethods.js"></script>
+
+<script>
+  const frameClient = new FrameClient({timeout: 5});
+
+  async function ListLibrariesSequential() {
+    document.getElementById("pre").textContent = "";
+
+    let result = {};
+
+    const contentLibraries = await frameClient.ContentLibraries();
+    for(const libraryId of contentLibraries) {
+      const contentObjects = await frameClient.ContentObjects({libraryId});
+
+      result[libraryId] = contentObjects;
+    }
+
+    document.getElementById("pre").textContent = JSON.stringify(result, null, 2);
+  }
+
+  async function ListLibrariesParallel() {
+    document.getElementById("pre").textContent = "";
+
+    let result = {};
+    try {
+      const contentLibraries = await frameClient.ContentLibraries();
+
+      const promises = contentLibraries.map(libraryId => {
+        return frameClient.ContentObjects({libraryId}).then(contentObjects => result[libraryId] = contentObjects);
+      });
+
+      await Promise.all(promises);
+    } catch(e) {
+      console.log(e);
+    }
+
+    document.getElementById("pre").textContent = JSON.stringify(result, null, 2);
+  }
+
+  async function RunTests() {
+    const result = await TestQueries(frameClient);
+
+    document.getElementById("pre").textContent = result;
+  }
+</script>
+<div>
+  <button onclick="ListLibrariesSequential()">
+    Request Sequential
+  </button>
+
+  <button onclick="ListLibrariesParallel()">
+    Request Parallel
+  </button>
+
+  <button onclick="RunTests()">
+    Run Tests
+  </button>
+
+  <pre id="pre"></pre>
+</div>
+</body>
+</html>
