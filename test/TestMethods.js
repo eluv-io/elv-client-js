@@ -115,6 +115,7 @@ let TestQueries = async (client, signer) => {
 
     output += "MERGED SUBTREE METADATA \n\n";
 
+    /*
     output += "DELETING METADATA...\n\n";
 
     await client.DeleteMetadata({
@@ -130,7 +131,7 @@ let TestQueries = async (client, signer) => {
     });
 
     output += "DELETED METADATA \n\n";
-
+    */
 
     output += "FINALIZING EDIT... \n";
 
@@ -267,6 +268,12 @@ let TestQueries = async (client, signer) => {
     output += "DELETED\n\n";
 
 
+    output += "URLS: \n\n";
+    output += client.FabricUrl({libraryId}) + "\n";
+    output += client.FabricUrl({libraryId, contentHash: objectId}) + "\n";
+    output += client.FabricUrl({libraryId, contentHash: objectId, partHash}) + "\n";
+    output += client.FabricUrl({libraryId, contentHash: objectId, partHash, queryParams: {query: "params", params: "query"}}) + "\n\n";
+
     let contentVerification = await (
       client.VerifyContentObject({libraryId: libraryId, partHash: contentHash})
         .then(response => {
@@ -281,7 +288,6 @@ let TestQueries = async (client, signer) => {
     output += "ERROR: \n";
     output += JSON.stringify(error, null, 2);
   }
-
   return output;
 };
 

@@ -467,12 +467,25 @@ class ElvClient {
     );
   }
 
-  PartUrl({libraryId, contentHash, partHash}) {
-    let path = Path.join("qlibs", libraryId, "q", contentHash, "data", partHash);
+
+  FabricUrl({libraryId, contentHash, partHash, queryParams = {}}) {
+    let path = "";
+
+    if(libraryId) {
+      path = Path.join(path, "qlibs", libraryId);
+
+      if(contentHash) {
+        path = Path.join(path, "q", contentHash);
+
+        if(partHash){
+          path = Path.join(path, "data", partHash);
+        }
+      }
+    }
 
     return this.HttpClient.URL({
-      headers: this.AuthorizationHeader({libraryId}),
-      path: path
+      path: path,
+      queryParams
     });
   }
 
