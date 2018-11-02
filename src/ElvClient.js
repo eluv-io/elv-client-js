@@ -467,7 +467,6 @@ class ElvClient {
     );
   }
 
-
   FabricUrl({libraryId, contentHash, partHash, queryParams = {}}) {
     let path = "";
 
