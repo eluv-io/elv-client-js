@@ -1,5 +1,36 @@
 const Id = require("./Id");
 
+const IsCloneable = (value) => {
+  if(Object(value) !== value) {
+    // Primitive valueue
+    return true;
+  }
+
+  switch({}.toString.call(value).slice(8,-1)) { // Class
+  case "Boolean":
+  case "Number":
+  case "String":
+  case "Date":
+  case "RegExp":
+  case "Blob":
+  case "FileList":
+  case "ImageData":
+  case "ImageBitmap":
+  case "ArrayBuffer":
+    return true;
+  case "Array":
+  case "Object":
+    return Object.keys(value).every(prop => IsCloneable(value[prop]));
+  case "Map":
+    return [...value.keys()].every(IsCloneable)
+      && [...value.values()].every(IsCloneable);
+  case "Set":
+    return [...value.keys()].every(IsCloneable);
+  default:
+    return false;
+  }
+};
+
 class FrameClient {
   constructor({target=parent, timeout=5}) {
     this.timeout = timeout;
@@ -9,7 +40,10 @@ class FrameClient {
       this[methodName] = async (args) => {
         const requestId = Id.next();
 
-        if(args) { args = JSON.parse(JSON.stringify(args)); }
+        // TODO: Instead of serializing the whole thing, only serialize / remove non-clonable
+        if(!IsCloneable(args)) {
+          args = JSON.parse(JSON.stringify(args));
+        }
 
         target.postMessage({
           type: "ElvFrameRequest",
