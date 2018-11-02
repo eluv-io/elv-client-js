@@ -6,11 +6,12 @@ const TestMethods = require("./TestMethods");
 const Test = async () => {
   let Client = new ElvClient({
     //contentSpaceId: "ispc6NxBDhWiRuKyDNMWVmpTuCaQssS2iuDfq8hFkivVoeJw",
-    hostname: "localhost",
-    port: 8008,
+    hostname: "q1.contentfabric.io",
+    port: 80,
     useHTTPS: false,
-    ethHostname: "localhost",
-    ethPort: 7545,
+    ethHostname: "eth1.contentfabric.io",
+    // ethHostname: "127.0.0.1",
+    ethPort: 8545,
     ethUseHTTPS: false
   });
 
