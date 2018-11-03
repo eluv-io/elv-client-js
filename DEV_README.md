@@ -142,6 +142,70 @@ console.log(buffer);
 // Result
 // <Buffer 06 2f 63 62 6f 72 0a a2 67 51 6d 64 48 61 73 68 58 23 02 12 20 7f ee 10 b7 b4 9c 71 38 59 81 83 cc ed 06 d7 09 60 07 a7 0d ed 2d 55 56 0e 9c 7b 79 ca ... >
 ```
+### Create Content Library, Create Object Draft, Upload to Object and Finalize Parts ###
+ output += "CREATING LIBRARY \n";
+
+    let libraryId = await (
+      client.CreateContentLibrary({
+        libraryName: "New library",
+        libraryDescription: "Library Description",
+        signer
+      })
+    );
+
+    output += "LIBRARY CREATED: " + libraryId + "\n\n";
+    let libraryResponse = await(
+      client.ContentLibrary({libraryId})
+    );
+    output += JSON.stringify(libraryResponse, null, 2) + "\n\n";
+
+    output += "CREATING OBJECT... \n";
+
+    let createResponse = await (
+      client.CreateContentObject({
+        libraryId,
+        options: {
+          meta: {
+            "meta": "data",
+            "to_delete": {
+              "value": "value"
+            },
+            "subtree": {
+              "to_delete": "value"
+            }
+          }
+        }
+      })
+    );
+
+    let objectId = createResponse.id;
+
+    output += "CREATED " + objectId + "\n\n";
+
+    output += "CREATING PART...\n";
+
+    let partResponse = await (
+      client.UploadPart({
+        libraryId,
+        writeToken: createResponse.write_token,
+        data: "some form of data"
+      })
+    );
+
+    let partHash = partResponse.part.hash;
+
+    output += "CREATED " + partHash + "\n\n";
+
+    output += "FINALIZING OBJECT... \n";
+
+    await (
+      client.FinalizeContentObject({
+        libraryId,
+        writeToken: createResponse.write_token
+      })
+    );
+
+
 
 ### Blockchain Interaction
 
