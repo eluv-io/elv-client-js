@@ -27,6 +27,15 @@ let Client = new ElvClient({
 });
 ```
 
+**NOTE!** If you are using the `CalVisitor` wifi port 8545 is blocked!
+We have a blockchain test node listening to port 80 at `eth2.contentfabric.io`
+The configuration would then be:
+
+```    
+ethHostname: "eth2.contentfabric.io",
+ethPort: 80
+```
+
 As is, this test will run the `TestQueries` function in `test/TestMethods.js` and execute many of the core API's of the content fabric and blockchain application.  
 
 The current configuration will connect to Eluvio's testnet blockchain and development content fabric.
