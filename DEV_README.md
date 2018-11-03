@@ -142,9 +142,10 @@ console.log(buffer);
 // Result
 // <Buffer 06 2f 63 62 6f 72 0a a2 67 51 6d 64 48 61 73 68 58 23 02 12 20 7f ee 10 b7 b4 9c 71 38 59 81 83 cc ed 06 d7 09 60 07 a7 0d ed 2d 55 56 0e 9c 7b 79 ca ... >
 ```
-### Create Content Library, Create Object Draft, Upload to Object and Finalize Parts ###
- output += "CREATING LIBRARY \n";
+#### Create Content Library, Create Object Draft, Upload to Object and Finalize Parts ####
+ 
 
+    output += "CREATING LIBRARY \n";
     let libraryId = await (
       client.CreateContentLibrary({
         libraryName: "New library",
