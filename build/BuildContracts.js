@@ -4,7 +4,8 @@ const path = require("path");
 // Create minimal JS containing ABI and bytecode from compiled contract
 const BuildContracts = () => {
   const contractsToBuild = [
-    "ContentLibrary"
+    "ContentLibrary",
+    "Content"
   ];
 
   for (const contractFilename of contractsToBuild) {

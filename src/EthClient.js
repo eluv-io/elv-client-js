@@ -5,6 +5,7 @@ const Ethers = require("ethers");
 
 // -- Contract javascript files build using build/BuildContracts.js
 const ContentLibraryContract = require("./contracts/ContentLibrary");
+const ContentContract = require("./contracts/Content");
 
 class EthClient {
   constructor(ethereumURI) {
@@ -119,6 +120,42 @@ class EthClient {
       methodArgs,
       signer});
     return x;
+  }
+
+  async GetContractAddress() {
+
+    var caddr;
+    let provider = new Ethers.providers.JsonRpcProvider(this.ethereumURI);
+    let filter = {
+      fromBlock: "latest",
+      toBlock: "latest",
+    }
+    provider.getLogs(filter).then((result) => {
+	console.log("EVENTS=" +  JSON.stringify(result));
+        let i = new Ethers.utils.Interface(ContentLibraryContract.abi);
+        let evt = i.parseLog(result[2])
+        console.log("Content create log: " + JSON.stringify(evt));
+	let caddr = evt.values["0"];
+	console.log("NEW CONTRACT: ", caddr);
+    })
+    return caddr;
+  }
+
+  async SetCustomContract(contractAddress, customAddress) {
+    const methodArgs = this.FormatContractArguments({
+      abi: ContentContract.abi,
+      methodName: "setCustomContract",
+      args: [
+	  customAddress
+      ]
+    });
+    return await this.CallContractMethod({
+      contractAddress: contractAddress,
+      abi: ContentContract.abi,
+      methodName: "setCustomContract",
+      methodArgs,
+      signer
+    });
   }
 
 }
