@@ -56,7 +56,7 @@ const B64 = (str) => {
 class ElvClient {
   constructor({contentSpaceId, hostname, port, useHTTPS, ethHostname, ethPort, ethUseHTTPS}) {
     this.contentSpaceId = contentSpaceId;
-    
+
     this.fabricURI = new URI()
       .protocol(useHTTPS ? "https" : "http")
       .host(hostname)
@@ -201,7 +201,11 @@ class ElvClient {
       signer
     });
 
-    return libraryId;
+      return {
+	  libraryId: libraryId,
+	  contractAddress: contractInfo.address,
+	  txHash: contractInfo.deployTransaction.hash
+      }
   }
 
   /* Objects */
@@ -467,24 +471,12 @@ class ElvClient {
     );
   }
 
-  FabricUrl({libraryId, contentHash, partHash, queryParams = {}}) {
-    let path = "";
-
-    if(libraryId) {
-      path = Path.join(path, "qlibs", libraryId);
-
-      if(contentHash) {
-        path = Path.join(path, "q", contentHash);
-
-        if(partHash){
-          path = Path.join(path, "data", partHash);
-        }
-      }
-    }
+  PartUrl({libraryId, contentHash, partHash}) {
+    let path = Path.join("qlibs", libraryId, "q", contentHash, "data", partHash);
 
     return this.HttpClient.URL({
-      path: path,
-      queryParams
+      headers: this.AuthorizationHeader({libraryId}),
+      path: path
     });
   }
 

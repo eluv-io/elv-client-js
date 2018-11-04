@@ -15,6 +15,7 @@ class EthClient {
 
   // Apply any necessary formatting to contract arguments based on the ABI spec
   FormatContractArguments({abi, methodName, args}) {
+
     const method = abi.find(func => {
       // Constructor has type=constructor but no name
       return func.name === methodName || func.type === methodName;
@@ -22,7 +23,8 @@ class EthClient {
 
     if(!method) { throw Error("Unknown method: " + methodName); }
 
-    return args.map((arg, i) => {
+      return args.map((arg, i) => {
+	    console.log("ARG: " + JSON.stringify(arg));
       switch(method.inputs[i].type.toLowerCase()) {
       case "bytes32":
         return Ethers.utils.formatBytes32String(arg);
@@ -52,7 +54,11 @@ class EthClient {
       throw Error("Unknown method: " + methodName);
     }
 
-    return await contract.functions[methodName](...methodArgs);
+    let overrides = {
+      gasLimit: 4000000,
+    };
+
+    return await contract.functions[methodName](...methodArgs, overrides);
   }
 
 
@@ -95,6 +101,26 @@ class EthClient {
       signer
     });
   }
+
+  // SS NEW
+  async DeployContentContract({libraryAddress, signer}) {
+    const methodArgs = this.FormatContractArguments({
+      abi: ContentLibraryContract.abi,
+      methodName: "createContent",
+      args: [
+        "aaabbb"
+      ]
+    });
+
+    let x = await this.CallContractMethod({
+      contractAddress: libraryAddress,
+      abi: ContentLibraryContract.abi,
+      methodName: "createContent",
+      methodArgs,
+      signer});
+    return x;
+  }
+
 }
 
 module.exports = EthClient;
