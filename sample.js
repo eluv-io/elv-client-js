@@ -6,8 +6,8 @@ let client = new ElvClient({
     hostname: "q.contentfabric.io",
     port: 80,
     useHTTPS: false,
-    ethHostname: "localhost",
-    ethPort: 7545,
+    ethHostname: "localhost",   // eth.contentfabric.io
+    ethPort: 7545,              // 8545
     ethUseHTTPS: false
 });
 
