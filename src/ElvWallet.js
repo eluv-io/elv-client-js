@@ -7,6 +7,10 @@ class ElvWallet {
   }
 
   async AddAccountFromEncryptedPK({ accountName, encryptedPrivateKey, password }) {
+    if(typeof encryptedPrivateKey === "object") {
+      encryptedPrivateKey = JSON.stringify(encryptedPrivateKey);
+    }
+
     let signer = await Ethers.Wallet.fromEncryptedJson(encryptedPrivateKey, password);
     signer = signer.connect(this.provider);
     this.signers[accountName] = signer;
