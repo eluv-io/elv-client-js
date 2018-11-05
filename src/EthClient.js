@@ -16,7 +16,6 @@ class EthClient {
 
   // Apply any necessary formatting to contract arguments based on the ABI spec
   FormatContractArguments({abi, methodName, args}) {
-
     const method = abi.find(func => {
       // Constructor has type=constructor but no name
       return func.name === methodName || func.type === methodName;
@@ -24,7 +23,7 @@ class EthClient {
 
     if(!method) { throw Error("Unknown method: " + methodName); }
 
-      return args.map((arg, i) => {
+    return args.map((arg, i) => {
       switch(method.inputs[i].type.toLowerCase()) {
       case "bytes32":
         return Ethers.utils.formatBytes32String(arg);
@@ -46,17 +45,20 @@ class EthClient {
     };
   }
 
-  async CallContractMethod({contractAddress, abi, methodName, methodArgs=[], signer}) {
+  async CallContractMethod({
+    contractAddress,
+    abi,
+    methodName,
+    methodArgs=[],
+    overrides={},
+    signer
+  }) {
     let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
     contract = contract.connect(signer);
 
     if(!contract.functions[methodName]) {
       throw Error("Unknown method: " + methodName);
     }
-
-    let overrides = {
-      gasLimit: 4000000,
-    };
 
     return await contract.functions[methodName](...methodArgs, overrides);
   }
@@ -84,7 +86,7 @@ class EthClient {
     });
   }
 
-  async SetLibraryHash({contractAddress, libraryId, signer}) {
+  async SetLibraryHash({contractAddress, libraryId, overrides={}, signer}) {
     const methodArgs = this.FormatContractArguments({
       abi: ContentLibraryContract.abi,
       methodName: "setLibraryHash",
@@ -98,11 +100,11 @@ class EthClient {
       abi: ContentLibraryContract.abi,
       methodName: "setLibraryHash",
       methodArgs,
+      overrides,
       signer
     });
   }
 
-  // SS NEW
   async DeployContentContract({libraryAddress, signer}) {
     const methodArgs = this.FormatContractArguments({
       abi: ContentLibraryContract.abi,
@@ -112,13 +114,13 @@ class EthClient {
       ]
     });
 
-    let x = await this.CallContractMethod({
+    return await this.CallContractMethod({
       contractAddress: libraryAddress,
       abi: ContentLibraryContract.abi,
       methodName: "createContent",
       methodArgs,
-      signer});
-    return x;
+      signer
+    });
   }
 
   async GetContractAddress() {
@@ -128,24 +130,24 @@ class EthClient {
     let filter = {
       fromBlock: "latest",
       toBlock: "latest",
-    }
+    };
     await provider.getLogs(filter).then((result) => {
-	console.log("EVENTS=" +  JSON.stringify(result));
-        let i = new Ethers.utils.Interface(ContentLibraryContract.abi);
-        let evt = i.parseLog(result[2])
-        console.log("Content create log: " + JSON.stringify(evt));
-	caddr = evt.values["0"];
-	console.log("NEW CONTRACT: ", caddr);
-    })
+      console.log("EVENTS=" +  JSON.stringify(result));
+      let i = new Ethers.utils.Interface(ContentLibraryContract.abi);
+      let evt = i.parseLog(result[2]);
+      console.log("Content create log: " + JSON.stringify(evt));
+      caddr = evt.values["0"];
+      console.log("NEW CONTRACT: ", caddr);
+    });
     return caddr;
   }
 
-  async SetCustomContract(contractAddress, customAddress, signer) {
+  async SetCustomContract(contractAddress, customAddress, overrides={}, signer) {
     const methodArgs = this.FormatContractArguments({
       abi: ContentContract.abi,
       methodName: "setCustomContractAddress",
       args: [
-	  customAddress
+        customAddress
       ]
     });
 
@@ -154,11 +156,10 @@ class EthClient {
       abi: ContentContract.abi,
       methodName: "setCustomContractAddress",
       methodArgs,
+      overrides,
       signer
     });
-
   }
-
 }
 
 module.exports = EthClient;
