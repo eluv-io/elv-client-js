@@ -8,7 +8,7 @@ let TestQueries = async (client, signer) => {
 
     output += "CREATING LIBRARY \n";
 
-    let libraryId = await (
+    let libraryInfo = await (
       client.CreateContentLibrary({
         libraryName: "New library",
         libraryDescription: "Library Description",
@@ -16,10 +16,15 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += "LIBRARY CREATED: " + libraryId + "\n\n";
+    const libraryId = libraryInfo.libraryId;
+
+    output += "LIBRARY CREATED: \n";
+    output += JSON.stringify(libraryInfo, null, 2) + "\n\n";
+
     let libraryResponse = await(
       client.ContentLibrary({libraryId})
     );
+    output += "LIBRARY RESPONSE: \n";
     output += JSON.stringify(libraryResponse, null, 2) + "\n\n";
 
     output += "CREATING OBJECT... \n";
