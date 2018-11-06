@@ -45,16 +45,20 @@ class EthClient {
     };
   }
 
+  // Accepts either contract object or contract address
   async CallContractMethod({
+    contract,
     contractAddress,
     abi,
     methodName,
     methodArgs=[],
-    overrides={},
+    overrides={ gasLimit: 4000000 },
     signer
   }) {
-    let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
-    contract = contract.connect(signer);
+    if(!contract) {
+      contract = new Ethers.Contract(contractAddress, abi, signer.provider);
+      contract = contract.connect(signer);
+    }
 
     if(!contract.functions[methodName]) {
       throw Error("Unknown method: " + methodName);
@@ -105,54 +109,60 @@ class EthClient {
     });
   }
 
-  async DeployContentContract({libraryAddress, signer}) {
+  async DeployContentContract({libraryAddress, type, signer}) {
     const methodArgs = this.FormatContractArguments({
       abi: ContentLibraryContract.abi,
       methodName: "createContent",
       args: [
-        "aaabbb"
+        type
       ]
     });
 
-    return await this.CallContractMethod({
-      contractAddress: libraryAddress,
+    let contract = new Ethers.Contract(libraryAddress, ContentLibraryContract.abi, signer.provider);
+    contract = contract.connect(signer);
+
+    // Call create content method on library contract
+    const createMethodCall = await this.CallContractMethod({
+      contract,
       abi: ContentLibraryContract.abi,
       methodName: "createContent",
       methodArgs,
       signer
     });
-  }
 
-  async GetContractAddress() {
+    // Await completion of call and creation of content contract
+    // then extract content contract address from the event log
+    const contentAddress = await new Promise((resolve, reject) => {
+      signer.provider.on(contract.filters.ContentObjectCreated(), async (event) => {
+        try {
+          // Ensure correct transaction is handled
+          if (!event || event.transactionHash !== createMethodCall.hash) { return; }
 
-    var caddr;
-    let provider = new Ethers.providers.JsonRpcProvider(this.ethereumURI);
-    let filter = {
-      fromBlock: "latest",
-      toBlock: "latest",
-    };
-    await provider.getLogs(filter).then((result) => {
-      console.log("EVENTS=" +  JSON.stringify(result));
-      let i = new Ethers.utils.Interface(ContentLibraryContract.abi);
-      let evt = i.parseLog(result[2]);
-      console.log("Content create log: " + JSON.stringify(evt));
-      caddr = evt.values["0"];
-      console.log("NEW CONTRACT: ", caddr);
+          const eventInfo = new Ethers.utils.Interface(ContentLibraryContract.abi).parseLog(event);
+          resolve(eventInfo.values.contentAddress);
+        } catch(error) {
+          reject(error);
+        }
+      });
     });
-    return caddr;
+
+    // Make sure to remove listener when done
+    signer.provider.removeAllListeners(contract.filters.ContentObjectCreated());
+
+    return contentAddress;
   }
 
-  async SetCustomContract(contractAddress, customAddress, overrides={}, signer) {
+  async SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}, signer}) {
     const methodArgs = this.FormatContractArguments({
       abi: ContentContract.abi,
       methodName: "setCustomContractAddress",
       args: [
-        customAddress
+        customContractAddress
       ]
     });
 
     return await this.CallContractMethod({
-      contractAddress: contractAddress,
+      contractAddress: contentContractAddress,
       abi: ContentContract.abi,
       methodName: "setCustomContractAddress",
       methodArgs,

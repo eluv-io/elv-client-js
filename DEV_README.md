@@ -286,6 +286,50 @@ calling encrypt directly may be easier.
 
 ### Deploying custom contracts
 
+#### Compilation and contract code handling
+
+In order to deploy custom contracts, the ABI and bytecode of the compiled contract are required. For
+further contract interaction, such as calling contract methods, only the ABI is necessary.
+
+Contract compilation is outside the scope of this library, but there are many ways to get contracts
+compiled and the ABI and bytecode available to your javascript code. The following advice assumes the 
+contracts are written in Solidity.
+
+##### Compilers: 
+- Using the [Solidity compiler](https://github.com/ethereum/solidity)
+- Using [Truffle](https://github.com/trufflesuite/truffle)
+- Using [solc-js](https://www.npmjs.com/package/solc) (node only)
+- Using [browser-solc](https://github.com/ericxtang/browser-solc) (browser only)
+
+##### Managing compiled contracts
+
+Once your contract has been compiled, there are several ways you can get the ABI and bytecode into
+your javascript environment.
+
+From a usage perspective, the easiest way is to get this data into valid javascript. If you do not
+expect your contract code to change much, you can add the ABI and bytecode strings directly to your
+code.
+
+This library has a build process that does this using the Truffle library (which is used for contract 
+development and testing) for compilation, along with a build script to turn the resultant output 
+(JSON files) into valid, easily importable javascript files. This makes the contract information
+is easy to use, while ensuring that the contracts are up to date and easy to change.
+
+Look at the 'build' script in package.json to see how the build is done. ```./build/BuildContracts.js```
+is the script that generates the javascript files from the truffle JSON, and ```./src/contracts``` is
+where that javascript is output. These scripts are then used in ```./src/EthClient.js```.
+
+Other methods may be more difficult and prone to error due to the difficulty of importing non-javascript
+files into javascript.
+
+- If you are using webpack, you can use the [raw-loader](https://github.com/webpack-contrib/raw-loader)
+to import your compiled contract data.
+- On node.js, you can use fs to read files
+- In a browser, you can do a request to access the file
+
+
+##### Deploying contracts
+
 The ElvClient can be used to deploy custom contracts, provided the ABI and bytecode of the contract.
 
 To deploy a contract, simply pass the ABI, bytecode, any constructor arguments, and the signer.
