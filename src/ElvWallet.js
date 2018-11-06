@@ -6,19 +6,55 @@ class ElvWallet {
     this.signers = {};
   }
 
+  GenerateMnemonic() {
+    return Ethers.utils.HDNode.entropyToMnemonic(Ethers.utils.randomBytes(16));
+  }
+
+  AddAccountFromMnemonic({accountName, mnemonic}) {
+    let signer = Ethers.Wallet.fromMnemonic(mnemonic);
+
+    return this.AddAccount({
+      accountName,
+      privateKey: signer.privateKey
+    });
+  }
+
   async AddAccountFromEncryptedPK({ accountName, encryptedPrivateKey, password }) {
     if(typeof encryptedPrivateKey === "object") {
       encryptedPrivateKey = JSON.stringify(encryptedPrivateKey);
     }
 
     let signer = await Ethers.Wallet.fromEncryptedJson(encryptedPrivateKey, password);
-    signer = signer.connect(this.provider);
-    this.signers[accountName] = signer;
-    return signer;
+
+    return this.AddAccount({
+      accountName,
+      privateKey: signer.privateKey
+    });
+  }
+
+  async GetAccountBalance({ accountName }) {
+    const signer = this.GetAccount({ accountName });
+
+    if(!signer) {
+      throw Error("Unknown account: " + accountName);
+    }
+
+    return Ethers.utils.formatEther(await signer.getBalance());
+  }
+
+  async GetEncryptedPrivateKey({ accountName, password }) {
+    const signer = this.GetAccount({ accountName });
+
+    if(!signer) {
+      throw Error("Unknown account: " + accountName);
+    }
+
+    return await signer.encrypt(password);
   }
 
   AddAccount({ accountName, privateKey }) {
-    let signer = new Ethers.Wallet(privateKey, this.provider);
+    let signer = new Ethers.Wallet(privateKey);
+    signer = signer.connect(this.provider);
     this.signers[accountName] = signer;
     return signer;
   }

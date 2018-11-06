@@ -217,10 +217,14 @@ an [ethers.js](https://github.com/ethers-io/ethers.js/) wallet. ElvClient has a 
 ```ElvWallet``` to make handling this easier.
 
 After creating the ElvClient instance, you can generate an ```ElvWallet``` for the client using
-```client.GenerateWallet()```. This class provides simple methods to store and retrieve signers
-by name.
+```client.GenerateWallet()```. This class provides simple methods to generate signers from various
+information, as well as store and retrieve signers by name. 
 
-##### Generating the wallet and adding accounts:
+Note: you do not need to use the account 
+management functionality of the wallet, you can simply use the wallet to generate signer objects as 
+needed.
+
+#### Generating the wallet and adding accounts:
 
 ```javascript
 let wallet = client.GenerateWallet();
@@ -233,13 +237,22 @@ let signer = wallet.AddAccount({
 
 // With encrypted private key (asynchronous):
 let signer = await wallet.AddAccountFromEncryptedPK({
-  accountName: "Alice",
+  accountName: "Bob",
   encryptedPrivateKey: {"address":"71b011b67dc8f5c323a34cd14b952721d5750c93","crypto":{"cipher":"aes-128-ctr","ciphertext":"768c0b26476793e52c7e292b6b221fa4d7f82a7d20a7ccc042ce43c072f97f38","cipherparams":{"iv":"049e2bed69573f62da6576c21769b520"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"332b0f7730c580aa86b3ec8e79d228e9f76426bb328c468cb57e99e39132c29f"},"mac":"36079b7f32edf1c3d8d1697313f8088c78be07627ffb6421f655409373fded79"},"id":"8181d812-ab5e-4e5b-b023-e9049c2aec48","version":3},
   password: "test"
 });
 
+// Using mnemonics
+let mnemonic = wallet.GenerateMnemonic();
+// -> coin valve van maximum manual glow nurse puppy wish put sound session
+
+let signer = wallet.AddAccountFromMnemonic({
+  accountName: "Carol",
+  mnemonic: mnemonic
+});
 ```
-##### Retrieving and using accounts
+
+#### Retrieving and using accounts
 
 ```javascript
 let signer = wallet.GetAccount({accountName: "Alice"});
@@ -250,6 +263,26 @@ client.CreateContentLibrary({
 })
 
 ```
+
+#### Account utilities
+
+##### Getting account balance
+
+```javascript
+const balance = wallet.GetAccountBalance({accountName: "Alice"});
+
+89.787462796
+```
+
+##### Generating encrypted private key (keystore format)
+```javascript
+const encryptedPrivateKey = wallet.GetEncryptedPrivateKey({accountName: "Alice", password: "test"});
+
+"{\"address\":\"93cc134901c40f6164ab357f4f18bbf4aa058477\",\"id\":\"dc5b06ca-f284-4a47-875a-176d857f6d9d\",\"version\":3,\"Crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"ca349dad2df26ed5786b987fd54e195d\"},\"ciphertext\":\"c4e1d0e1bf21cb8e2c4c732040245ea65f22cd4af0666dc79da1b3fbe23c6a27\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"27695860062f440d91d1863c37349a28518ed98799d0d96b8f9a39c9e23b953a\",\"n\":131072,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"2b0fe21ba893c40ab193694ef2f86c7982138fc17b19148b25f65bfccdbb4fbd\"}}"
+```
+
+Note: This method is equivalent to ```signer.encrypt(password)``` - if you already have the signer object,
+calling encrypt directly may be easier.
 
 ### Deploying custom contracts
 
