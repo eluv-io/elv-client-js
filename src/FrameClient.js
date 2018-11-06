@@ -130,6 +130,7 @@ class FrameClient {
       "QParts",
       "ReplaceMetadata",
       "SetByName",
+      "SetCustomContentContract",
       "SetObjectByName",
       "UploadFileData",
       "UploadJobStatus",
