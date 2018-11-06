@@ -601,12 +601,16 @@ class ElvClient {
     return this.ethClient.FormatContractArguments({abi, methodName, args});
   }
 
-  DeployContract({abi, bytecode, constructorArgs, signer}) {
-    return this.ethClient.DeployContract({abi, bytecode, constructorArgs, signer});
+  DeployContract({abi, bytecode, constructorArgs, overrides={}, signer}) {
+    return this.ethClient.DeployContract({abi, bytecode, constructorArgs, overrides, signer});
   }
 
-  CallContractMethod({contractAddress, abi, methodName, methodArgs, signer}) {
-    return this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, signer});
+  CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides={}, signer}) {
+    return this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides, signer});
+  }
+
+  SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}, signer}) {
+    return this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer});
   }
 }
 
