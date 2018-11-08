@@ -109,7 +109,8 @@ class EthClient {
     });
   }
 
-  async DeployContentContract({libraryAddress, type, signer}) {
+  // Deploy content object contract by calling method on library contract
+  async DeployContentContract({libraryContractAddress, type, signer}) {
     const methodArgs = this.FormatContractArguments({
       abi: ContentLibraryContract.abi,
       methodName: "createContent",
@@ -118,7 +119,7 @@ class EthClient {
       ]
     });
 
-    let contract = new Ethers.Contract(libraryAddress, ContentLibraryContract.abi, signer.provider);
+    let contract = new Ethers.Contract(libraryContractAddress, ContentLibraryContract.abi, signer.provider);
     contract = contract.connect(signer);
 
     // Call create content method on library contract

@@ -196,8 +196,8 @@ class ElvClient {
 
     // Set library hash in contract
     await this.ethClient.SetLibraryHash({
-      contractAddress: contractInfo.address,
       libraryId,
+      contractAddress: contractInfo.address,
       signer
     });
 
@@ -260,10 +260,24 @@ class ElvClient {
 
   /* Content object creation / modification */
 
-  CreateContentObject({libraryId, options={}}) {
+  async CreateContentObject({libraryId, libraryContractAddress, options={}, signer}) {
     let path = Path.join("q");
 
-    return ResponseToJson(
+    // Deploy contract
+    // This calls createContent method of the library contract, which deploys a content contract
+    // The address of that deployed contract is returned
+    let contentContractAddress = await this.ethClient.DeployContentContract({
+      libraryContractAddress,
+      type: "Hello World Object",
+      signer
+    });
+
+    // Inject contract address into metadata
+    const metadata = options.meta || {};
+    metadata.caddr = contentContractAddress;
+    options.meta = metadata;
+
+    const createResponse = await ResponseToJson(
       this.HttpClient.Request({
         headers: this.AuthorizationHeader({libraryId}),
         method: "POST",
@@ -271,6 +285,11 @@ class ElvClient {
         body: options
       })
     );
+
+    // Inject contract address into create response
+    createResponse.contractAddress = contentContractAddress;
+
+    return createResponse;
   }
 
   EditContentObject({libraryId, contentId, options={}}) {
