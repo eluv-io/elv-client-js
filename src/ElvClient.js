@@ -5,6 +5,7 @@ const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
 const HttpClient = require("./HttpClient");
 const ContentObjectVerification = require("./ContentObjectVerification");
+const Utils = require("./Utils");
 
 const HandleErrors = async (response) => {
   response = await response;
@@ -73,6 +74,8 @@ class ElvClient {
       .toString();
 
     this.ethClient = new EthClient(this.ethereumURI);
+
+    this.utils = Utils;
   }
 
   // Authorization: Bearer <token>
