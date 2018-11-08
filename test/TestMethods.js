@@ -17,6 +17,7 @@ let TestQueries = async (client, signer) => {
     );
 
     const libraryId = libraryInfo.libraryId;
+    const libraryContractAddress = libraryInfo.contractAddress;
 
     output += "LIBRARY CREATED: \n";
     output += JSON.stringify(libraryInfo, null, 2) + "\n\n";
@@ -32,6 +33,7 @@ let TestQueries = async (client, signer) => {
     let createResponse = await (
       client.CreateContentObject({
         libraryId,
+        libraryContractAddress,
         options: {
           meta: {
             "meta": "data",
@@ -42,7 +44,8 @@ let TestQueries = async (client, signer) => {
               "to_delete": "value"
             }
           }
-        }
+        },
+        signer
       })
     );
 

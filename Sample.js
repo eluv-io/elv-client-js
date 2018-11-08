@@ -31,7 +31,7 @@ const GetFullContentObject = async ({libraryId, objectId}) => {
 };
 
 const SampleCreateContent = async () => {
-  /* Create library */
+  // Create library with library contract
   const libraryInfo = await client.CreateContentLibrary({
     libraryName: "Hello World Library",
     libraryDescription: "Test library",
@@ -41,32 +41,23 @@ const SampleCreateContent = async () => {
   console.log("Created library: ");
   console.log(libraryInfo);
 
-  /* Create content object */
-
-  // Deploy contract
-  // This calls createContent method of the library contract, which deploys a content contract
-  // The address of that deployed contract is returned
-  let contentContractAddress = await client.ethClient.DeployContentContract({
-    libraryAddress: libraryInfo.contractAddress,
-    type: "Hello World Object",
-    signer
-  });
-
-  // Create content object
+  // Create content object with content object contract
   const createResponse = await client.CreateContentObject({
     libraryId: libraryInfo.libraryId,
+    libraryContractAddress: libraryInfo.contractAddress,
     options: {
       meta: {
         "name": "My new contract",
         "description": "Special contract to handle my special project",
-        "caddr": contentContractAddress
       }
-    }
+    },
+    signer
   });
 
   console.log("\nCreated draft content object: ");
   console.log(createResponse);
 
+  // Finalize object
   const finalizeResponse = await client.FinalizeContentObject({
     libraryId: libraryInfo.libraryId,
     writeToken: createResponse.write_token
@@ -75,6 +66,7 @@ const SampleCreateContent = async () => {
   console.log("\nFinalized content object: ");
   console.log(finalizeResponse);
 
+  // Get object info for display
   const contentObjectInfo = await GetFullContentObject({
     libraryId: libraryInfo.libraryId,
     objectId: finalizeResponse.id
@@ -87,11 +79,13 @@ const SampleCreateContent = async () => {
     libraryId: libraryInfo.libraryId,
     libraryContractAddress: libraryInfo.contractAddress,
     contentObjectId: finalizeResponse.id,
-    contentContractAddress: contentContractAddress
-  };
+    contentContractAddress: createResponse.contractAddress;
+  }
 };
 
 const SampleUpdateContent = async ({libraryId, contentObjectId}) => {
+  // Edit content object metadata
+
   const editResponse = await client.EditContentObject({
     libraryId,
     contentId: contentObjectId
@@ -116,6 +110,7 @@ const SampleUpdateContent = async ({libraryId, contentObjectId}) => {
   console.log("\nFinalized new content object version: ");
   console.log(finalizeResponse);
 
+  // Get object info for display
   const contentObjectInfo = await GetFullContentObject({
     libraryId: libraryId,
     objectId: contentObjectId
