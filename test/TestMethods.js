@@ -275,7 +275,6 @@ let TestQueries = async (client, signer) => {
 
     output += "DELETED\n\n";
 
-
     output += "URLS: \n\n";
     output += client.FabricUrl({libraryId}) + "\n";
     output += client.FabricUrl({libraryId, contentHash: objectId}) + "\n";
@@ -288,6 +287,20 @@ let TestQueries = async (client, signer) => {
           return response;
         })
     );
+
+    const address = libraryInfo.contractAddress;
+    output += "UTILS: \n\n";
+    output += "LIBRARY CONTRACT ADDRESS: " + address + "\n";
+
+    const hash = "ilib" + client.utils.AddressToHash({address});
+    output += "TO HASH: " + hash + "\n";
+
+    const newAddress = client.utils.HashToAddress({hash});
+    output += "TO ADDRESS: " + newAddress + "\n\n";
+
+    if(address.toLowerCase() !== newAddress.toLowerCase()) {
+      throw Error("Address conversion mismatch: " + address + " : " + newAddress);
+    }
 
     output += "CONTENT VERIFICATION: " + contentHash + "\n";
     output += JSON.stringify(contentVerification, null, 2) + "\n";

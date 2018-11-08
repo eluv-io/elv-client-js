@@ -1,4 +1,5 @@
 const Id = require("./Id");
+const Utils = require("./Utils");
 
 const IsCloneable = (value) => {
   if(Object(value) !== value) {
@@ -34,6 +35,8 @@ const IsCloneable = (value) => {
 class FrameClient {
   constructor({target=parent, timeout=5}) {
     this.timeout = timeout;
+
+    this.utils = Utils;
 
     // Dynamically defined methods defined in AllowedMethods
     for(const methodName of this.AllowedMethods()){
