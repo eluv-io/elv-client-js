@@ -172,14 +172,29 @@ class ElvClient {
   // -- Create library in fabric
   // -- Set library hash in contract
   // -- Return library ID
-  async CreateContentLibrary({libraryName, libraryDescription, signer}) {
+  async CreateContentLibrary({
+    name,
+    description,
+    publicMetadata={},
+    privateMetadata={},
+    signer
+  }) {
     let path = Path.join("qlibs");
 
     // Deploy contract
     let contractInfo = await this.ethClient.DeployLibraryContract({
-      libraryName,
+      name,
       signer
     });
+
+    publicMetadata = Object.assign(
+      publicMetadata,
+      {
+        "eluv.name": name,
+        "eluv.description": description,
+        "eluv.contract_address": contractInfo.address
+      }
+    );
 
     // Create library in fabric
     let libraryId = (await ResponseToJson(
@@ -188,11 +203,8 @@ class ElvClient {
         method: "POST",
         path: path,
         body: {
-          meta: {
-            "eluv.name": libraryName,
-            "eluv.description": libraryDescription,
-            "eluv.contract_address": contractInfo.address
-          }
+          meta: publicMetadata,
+          private_meta: privateMetadata
         }
       })
     )).id;

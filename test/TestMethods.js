@@ -10,8 +10,18 @@ let TestQueries = async (client, signer) => {
 
     let libraryInfo = await (
       client.CreateContentLibrary({
-        libraryName: "New library",
-        libraryDescription: "Library Description",
+        name: "New library",
+        description: "Library Description",
+        publicMetadata: {
+          public: {
+            meta: "data"
+          }
+        },
+        privateMetadata: {
+          sshhhh: {
+            its: "a secret"
+          }
+        },
         signer
       })
     );
@@ -28,6 +38,10 @@ let TestQueries = async (client, signer) => {
     output += "LIBRARY RESPONSE: \n";
     output += JSON.stringify(libraryResponse, null, 2) + "\n\n";
 
+    let libraryContentObject = (await client.ContentObjects({libraryId: libraryId})).contents[0];
+    output += "LIBRARY CONTENT OBJECT: \n";
+    output += JSON.stringify(libraryContentObject, null, 2) + "\n\n";
+    
     output += "CREATING OBJECT... \n";
 
     let createResponse = await (
