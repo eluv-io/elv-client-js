@@ -302,6 +302,18 @@ let TestQueries = async (client, signer) => {
       throw Error("Address conversion mismatch: " + address + " : " + newAddress);
     }
 
+    const bytes32Hash = client.utils.HashToBytes32({hash: contentHash});
+    output += "CONTENT HASH TO BYTES32 STRING: \n";
+    output += "HASH: " + contentHash + "\n";
+    output += "BYTES32: " + bytes32Hash + "\n\n";
+
+    // Ensure ToBytes32 is correct
+    const bytes32Test = client.utils.ToBytes32({string: "Hello World!"});
+    const bytes32Expected = "0x48656c6c6f20576f726c64210000000000000000000000000000000000000000";
+    if(bytes32Test !== bytes32Expected) {
+      throw Error("Bytes 32 mismatch: " + bytes32Test + " : " + bytes32Expected);
+    }
+
     output += "CONTENT VERIFICATION: " + contentHash + "\n";
     output += JSON.stringify(contentVerification, null, 2) + "\n";
   } catch(error) {
