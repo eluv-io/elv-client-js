@@ -22,9 +22,7 @@ const Utils = {
   HashToBytes32: ({hash}) => {
     // Parse hash as address and remove 0x and first 4 digits
     let address = Utils.HashToAddress({hash});
-    address = address.replace("0x", "").slice(4);
-
-    return Utils.ToBytes32({string: address});
+    return "0x" + address.replace("0x", "").slice(4);
   }
 };
 
