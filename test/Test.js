@@ -24,7 +24,6 @@ const Test = async () => {
 
   TestMethods.TestQueries(Client, signer).then(result => console.log(result));
 
-
   // Ensure ElvClient and FrameClient agree on allowed methods
   const frameClient = new FrameClient({target: this});
 
