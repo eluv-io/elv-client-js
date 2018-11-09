@@ -15,6 +15,8 @@ let TestQueries = async (client, signer) => {
         publicMetadata: {
           public: {
             meta: "data"
+          }, toReplace: {
+            will: "be replaced"
           }
         },
         privateMetadata: {
@@ -41,7 +43,21 @@ let TestQueries = async (client, signer) => {
     let libraryContentObject = (await client.ContentObjects({libraryId: libraryId})).contents[0];
     output += "LIBRARY CONTENT OBJECT: \n";
     output += JSON.stringify(libraryContentObject, null, 2) + "\n\n";
-    
+
+    output += "UPDATING PUBLIC LIBRARY METADATA...\n";
+    await client.ReplacePublicLibraryMetadata({
+      libraryId,
+      metadataSubtree: "toReplace",
+      metadata: { new: "value"}
+    });
+
+    const libraryMetadata = await client.PublicLibraryMetadata({libraryId});
+
+    output += "NEW PUBLIC LIBRARY METADATA:\n";
+    output += JSON.stringify(libraryMetadata, null, 2) +"\n\n";
+
+
+
     output += "CREATING OBJECT... \n";
 
     let createResponse = await (

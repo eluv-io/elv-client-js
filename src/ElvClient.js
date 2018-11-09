@@ -223,6 +223,31 @@ class ElvClient {
     };
   }
 
+  async PublicLibraryMetadata({libraryId}) {
+    let path = Path.join("qlibs", libraryId, "meta");
+
+    return ResponseToJson(
+      this.HttpClient.Request({
+        headers: this.AuthorizationHeader({libraryId}),
+        method: "GET",
+        path: path
+      })
+    );
+  }
+
+  async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="", metadata={}}) {
+    let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
+
+    await HandleErrors(
+      this.HttpClient.Request({
+        headers: this.AuthorizationHeader({libraryId}),
+        method: "PUT",
+        path: path,
+        body: metadata
+      })
+    );
+  }
+
   /* Objects */
 
   ContentObjects({libraryId}) {
