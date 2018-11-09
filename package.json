@@ -5,8 +5,9 @@
   "main": "ElvClient-min.js",
   "author": "Kevin Talmadge",
   "scripts": {
-    "build": "npm run compile-contracts && npm run build-contract-js && npm run build-web && npm run build-node && npm run build-frame-client",
-    "build-dev": "npm run build-web-dev && npm run build-node-dev && npm run build-frame-client",
+    "build": "npm run compile-contracts && npm run build-contract-js && npm run build-prod && npm run build-frame-client",
+    "build-prod": "npm run build-web && npm run build-node",
+    "build-dev": "npm run build-web-dev && npm run build-node-dev",
     "build-web": "webpack --progress --mode production --target web --output-filename ElvClient-min.js --devtool none",
     "build-web-dev": "webpack --progress --target web --output-filename ElvClient-min-dev.js",
     "build-node": "webpack --progress --mode production --target node --output-filename ElvClient-node-min.js --devtool none",
