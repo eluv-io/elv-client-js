@@ -71,12 +71,12 @@ class EthClient {
   /* Specific contract management */
 
   // Deploy ContentLibrary contract, then set the library hash
-  async DeployLibraryContract({libraryName, signer}) {
+  async DeployLibraryContract({name, signer}) {
     const constructorArgs = this.FormatContractArguments({
       abi: ContentLibraryContract.abi,
       methodName: "constructor",
       args: [
-        libraryName,
+        name,
         "Content Space",
         "0x0000000000000000000000000000000000000000"
       ]
