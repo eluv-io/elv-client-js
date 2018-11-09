@@ -33,8 +33,13 @@ const GetFullContentObject = async ({libraryId, objectId}) => {
 const SampleCreateContent = async () => {
   // Create library with library contract
   const libraryInfo = await client.CreateContentLibrary({
-    libraryName: "Hello World Library",
-    libraryDescription: "Test library",
+    name: "Hello World Library",
+    description: "Test library",
+    publicMetadata: {
+      "public": {
+        meta: "data"
+      }
+    },
     signer
   });
 
@@ -79,7 +84,7 @@ const SampleCreateContent = async () => {
     libraryId: libraryInfo.libraryId,
     libraryContractAddress: libraryInfo.contractAddress,
     contentObjectId: finalizeResponse.id,
-    contentContractAddress: createResponse.contractAddress;
+    contentContractAddress: createResponse.contractAddress
   }
 };
 
@@ -121,7 +126,7 @@ const SampleUpdateContent = async ({libraryId, contentObjectId}) => {
 };
 
 const Sample = async () => {
-  console.log("\nCreating content object...");
+  console.log("\nCreating content library and object...");
   console.log("==========================");
 
   const createResult = await SampleCreateContent();
@@ -154,12 +159,12 @@ const Sample = async () => {
   console.log("\n\nUpdating content object...");
   console.log("==========================");
 
-  SampleUpdateContent({
+  await SampleUpdateContent({
     libraryId: createResult.libraryId,
     contentObjectId: createResult.contentObjectId
   });
 
-  console.log();
+  console.log("\n");
 };
 
 Sample();
