@@ -188,7 +188,7 @@ class ElvClient {
     });
 
     publicMetadata = Object.assign(
-      publicMetadata,
+      publicMetadata || {},
       {
         "eluv.name": name,
         "eluv.description": description,
