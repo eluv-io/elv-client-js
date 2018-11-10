@@ -33,7 +33,12 @@ class EthClient {
     });
   }
 
-  async DeployContract({abi, bytecode, constructorArgs=[], signer}) {
+  async DeployContract({
+    abi,
+    bytecode,
+    constructorArgs=[],
+    signer
+  }) {
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
 
     let contract = await contractFactory.deploy(...constructorArgs);
@@ -52,7 +57,7 @@ class EthClient {
     abi,
     methodName,
     methodArgs=[],
-    overrides={ gasLimit: 4000000 },
+    overrides={ gasLimit: 6000000, gasPrice: 100000 },
     signer
   }) {
     if(!contract) {

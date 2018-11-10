@@ -120,7 +120,7 @@ class ElvClient {
 
       // Inject signer into method arguments
       let args = message.args;
-      if(signer) { args = Object.assign(message.args || {}, {signer}); }
+      if(signer) { args = Object.assign({signer}, message.args || {}); }
 
       let response = await this[method](args);
 
@@ -188,12 +188,12 @@ class ElvClient {
     });
 
     publicMetadata = Object.assign(
-      publicMetadata || {},
       {
         "eluv.name": name,
         "eluv.description": description,
         "eluv.contract_address": contractInfo.address
-      }
+      },
+      publicMetadata || {}
     );
 
     // Create library in fabric
