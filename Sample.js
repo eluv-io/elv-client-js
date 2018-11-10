@@ -1,6 +1,6 @@
 const { ElvClient } = require("./src/ElvClient.js");
 
-let client = new ElvClient({
+let client2 = new ElvClient({
   //contentSpaceId: "ispc6NxBDhWiRuKyDNMWVmpTuCaQssS2iuDfq8hFkivVoeJw",
   hostname: "localhost",
   port: 8008,
@@ -10,9 +10,19 @@ let client = new ElvClient({
   ethUseHTTPS: false
 });
 
+const client = new ElvClient({
+  hostname: "q1.contentfabric.io",
+  port: 80,
+  useHTTPS: false,
+  ethHostname: "eth1.contentfabric.io",
+  ethPort: 8545,
+  ethUseHTTPS: false
+});
+
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
   accountName: "Alice",
+  //privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
   privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
 });
 
@@ -31,60 +41,66 @@ const GetFullContentObject = async ({libraryId, objectId}) => {
 };
 
 const SampleCreateContent = async () => {
-  // Create library with library contract
-  const libraryInfo = await client.CreateContentLibrary({
-    name: "Hello World Library",
-    description: "Test library",
-    publicMetadata: {
-      "public": {
-        meta: "data"
-      }
-    },
-    signer
-  });
+  try {
+    // Create library with library contract
+    const libraryInfo = await client.CreateContentLibrary({
+      name: "Hello World Library",
+      description: "Test library",
+      publicMetadata: {
+        "public": {
+          meta: "data"
+        }
+      },
+      signer
+    });
 
-  console.log("Created library: ");
-  console.log(libraryInfo);
+    console.log("Created library: ");
+    console.log(libraryInfo);
 
-  // Create content object with content object contract
-  const createResponse = await client.CreateContentObject({
-    libraryId: libraryInfo.libraryId,
-    libraryContractAddress: libraryInfo.contractAddress,
-    options: {
-      meta: {
-        "name": "My new contract",
-        "description": "Special contract to handle my special project",
-      }
-    },
-    signer
-  });
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-  console.log("\nCreated draft content object: ");
-  console.log(createResponse);
+    // Create content object with content object contract
+    const createResponse = await client.CreateContentObject({
+      libraryId: libraryInfo.libraryId,
+      libraryContractAddress: libraryInfo.contractAddress,
+      options: {
+        meta: {
+          "name": "My new contract",
+          "description": "Special contract to handle my special project",
+        }
+      },
+      signer
+    });
 
-  // Finalize object
-  const finalizeResponse = await client.FinalizeContentObject({
-    libraryId: libraryInfo.libraryId,
-    writeToken: createResponse.write_token
-  });
+    console.log("\nCreated draft content object: ");
+    console.log(createResponse);
 
-  console.log("\nFinalized content object: ");
-  console.log(finalizeResponse);
+    // Finalize object
+    const finalizeResponse = await client.FinalizeContentObject({
+      libraryId: libraryInfo.libraryId,
+      writeToken: createResponse.write_token
+    });
 
-  // Get object info for display
-  const contentObjectInfo = await GetFullContentObject({
-    libraryId: libraryInfo.libraryId,
-    objectId: finalizeResponse.id
-  });
+    console.log("\nFinalized content object: ");
+    console.log(finalizeResponse);
 
-  console.log("\nContent object:");
-  console.log(contentObjectInfo);
+    // Get object info for display
+    const contentObjectInfo = await GetFullContentObject({
+      libraryId: libraryInfo.libraryId,
+      objectId: finalizeResponse.id
+    });
 
-  return {
-    libraryId: libraryInfo.libraryId,
-    libraryContractAddress: libraryInfo.contractAddress,
-    contentObjectId: finalizeResponse.id,
-    contentContractAddress: createResponse.contractAddress
+    console.log("\nContent object:");
+    console.log(contentObjectInfo);
+
+    return {
+      libraryId: libraryInfo.libraryId,
+      libraryContractAddress: libraryInfo.contractAddress,
+      contentObjectId: finalizeResponse.id,
+      contentContractAddress: createResponse.contractAddress
+    };
+  } catch(error) {
+    console.error(error);
   }
 };
 
