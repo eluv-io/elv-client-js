@@ -12,10 +12,10 @@ let client2 = new ElvClient({
 
 const client = new ElvClient({
   hostname: "q1.contentfabric.io",
-  port: 80,
+  port: 8008,
   useHTTPS: false,
   ethHostname: "eth1.contentfabric.io",
-  ethPort: 8545,
+  ethPort: 80,
   ethUseHTTPS: false
 });
 
