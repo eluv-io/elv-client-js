@@ -2,6 +2,7 @@
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
 
 const Ethers = require("ethers");
+const URI = require("urijs");
 
 // -- Contract javascript files build using build/BuildContracts.js
 const ContentLibraryContract = require("./contracts/ContentLibrary");
@@ -33,12 +34,26 @@ class EthClient {
     });
   }
 
+  // Validate signer is set and provider is correct
+  ValidateSigner(signer) {
+    if(!signer) {
+      throw Error("Signer not set");
+    }
+
+    if(!URI(signer.provider.connection.url).equals(this.ethereumURI)) {
+      throw Error("Signer provider '" + signer.provider.connection.url +
+        "' does not match client provider '" + this.ethereumURI + "'");
+    }
+  }
+
   async DeployContract({
     abi,
     bytecode,
     constructorArgs=[],
     signer
   }) {
+    this.ValidateSigner(signer);
+
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
 
     let contract = await contractFactory.deploy(...constructorArgs);
@@ -60,6 +75,8 @@ class EthClient {
     overrides={ gasLimit: 6000000, gasPrice: 100000 },
     signer
   }) {
+    this.ValidateSigner(signer);
+
     if(!contract) {
       contract = new Ethers.Contract(contractAddress, abi, signer.provider);
       contract = contract.connect(signer);

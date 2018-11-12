@@ -149,8 +149,7 @@ console.log(buffer);
     let libraryId = await (
       client.CreateContentLibrary({
         libraryName: "New library",
-        libraryDescription: "Library Description",
-        signer
+        libraryDescription: "Library Description"
       })
     );
 
@@ -252,16 +251,34 @@ let signer = wallet.AddAccountFromMnemonic({
 });
 ```
 
-#### Retrieving and using accounts
+#### Setting the client's signer
+
+After obtaining the signer through whatever means, you can set the signer for the client.
+
+All blockchain transactions performed by ElvClient will use the signer set by the ```SetSigner``` method.
+An exception will be thrown if the signer is not set, or if the provider of the signer does not match the
+client's provider.
 
 ```javascript
 let signer = wallet.GetAccount({accountName: "Alice"});
 
 client.CreateContentLibrary({
-  libraryName: "New Library",
-  signer
+  libraryName: "New Library"
 })
+```
 
+If the signer is generated from a source other than ElvWallet, you must connect the signer to the client
+provider before use.
+
+```javascript
+let signer = Ethers.Wallet.fromMnemonic(mnemonic);
+
+signer = Client.ConnectSigner({signer});
+client.SetSigner({signer});
+  
+client.CreateContentLibrary({
+  libraryName: "New Library"
+})
 ```
 
 #### Account utilities
@@ -310,14 +327,13 @@ From a usage perspective, the easiest way is to get this data into valid javascr
 expect your contract code to change much, you can add the ABI and bytecode strings directly to your
 code.
 
-This library has a build process that does this using the Truffle library (which is used for contract 
-development and testing) for compilation, along with a build script to turn the resultant output 
-(JSON files) into valid, easily importable javascript files. This makes the contract information
-is easy to use, while ensuring that the contracts are up to date and easy to change.
+This client relies on several of Eluvio's contracts. In order to easily pull these contracts in to 
+the code and, more importantly, to allow us to minify this library into a single file with no dependencies,
+we compile these contracts and format them into easily importable javascript using a build script.
 
 Look at the 'build' script in package.json to see how the build is done. ```./build/BuildContracts.js```
-is the script that generates the javascript files from the truffle JSON, and ```./src/contracts``` is
-where that javascript is output. These scripts are then used in ```./src/EthClient.js```.
+is the script that compiles the contracts and generates the javascript files, and ```./src/contracts``` is
+where those javascript files are written. These scripts are then used in ```./src/EthClient.js```.
 
 Other methods may be more difficult and prone to error due to the difficulty of importing non-javascript
 files into javascript.
@@ -332,14 +348,13 @@ to import your compiled contract data.
 
 The ElvClient can be used to deploy custom contracts, provided the ABI and bytecode of the contract.
 
-To deploy a contract, simply pass the ABI, bytecode, any constructor arguments, and the signer.
+To deploy a contract, simply pass the ABI, bytecode, and any constructor arguments.
 
 ```javascript
 return await client.DeployContract({
   abi,
   bytecode,
-  constructorArgs,
-  signer
+  constructorArgs
 });
 ```
 
@@ -350,8 +365,7 @@ return await client.CallContractMethod({
   contractAddress,
   abi,
   methodName: "setLibraryHash",
-  methodArgs,
-  signer
+  methodArgs
 });
 ```
 
@@ -360,7 +374,7 @@ required formats - Bytes32 strings, for example. The FormatContractArguments hel
 automatically by referencing the ABI.
 
 For example, the ContentLibrary contract constructor requires 3 arguments - a string, a bytes32 string, and an address.
-The FormatContractArguments method will automatically perform the bytes32 string transformation on the second argument. 
+The FormatContractArguments method will automatically perform the bytes32 string transformation on the second argument.
 
 ```javascript
 const constructorArgs = client.FormatContractArguments({
@@ -389,7 +403,7 @@ wallet that is connected to the client's specified blockchain (provider). It can
 to do anything outlined in the [documentation](https://docs.ethers.io/ethers.js/html/api-wallet.html) - namely, 
 signing transactions.
 
-This wallet can be used in conjunction with the ethers.js library, or even another ethereum library like web3
+This signer can be used in conjunction with the ethers.js library, or even another ethereum library like web3
 (by extracting the private key), to deploy contracts, sign transactions and perform other functions not explicitly
 supported in the ElvClient.
 
