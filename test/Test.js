@@ -22,6 +22,9 @@ const Test = async () => {
     privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
   });
 
+  signer = Client.ConnectSigner({signer});
+  Client.SetSigner({signer});
+
   TestMethods.TestQueries(Client, signer).then(result => console.log(result));
 
   // Ensure ElvClient and FrameClient agree on allowed methods

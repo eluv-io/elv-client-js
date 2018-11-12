@@ -1,5 +1,6 @@
 const URI = require("urijs");
 const Path = require("path");
+const Ethers = require("ethers");
 
 const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
@@ -99,9 +100,11 @@ class ElvClient {
     const forbiddenMethods = [
       "constructor",
       "AuthorizationHeader",
-      "FrameAllowedMethods",
       "CallFromFrameMessage",
-      "GenerateWallet"
+      "ConnectSigner",
+      "FrameAllowedMethods",
+      "GenerateWallet",
+      "SetSigner"
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
@@ -109,7 +112,7 @@ class ElvClient {
   }
 
   // Call a method specified in a message from a frame
-  async CallFromFrameMessage(message, signer) {
+  async CallFromFrameMessage(message) {
     if(message.type !== "ElvFrameRequest") { return; }
 
     try {
@@ -118,16 +121,10 @@ class ElvClient {
         throw Error("Invalid method: " + method);
       }
 
-      // Inject signer into method arguments
-      let args = message.args;
-      if(signer) { args = Object.assign({signer}, message.args || {}); }
-
-      let response = await this[method](args);
-
       return {
         type: "ElvFrameResponse",
         requestId: message.requestId,
-        response
+        response: await this[method](message.args)
       };
     } catch(error) {
       return {
@@ -138,8 +135,19 @@ class ElvClient {
     }
   }
 
+  /* Wallet and signers */
+
   GenerateWallet() {
     return new ElvWallet(this.ethereumURI);
+  }
+
+  SetSigner({signer}) {
+    this.signer = signer;
+  }
+
+  ConnectSigner({signer}) {
+    signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
+    return signer;
   }
 
   /* Libraries */
@@ -176,15 +184,14 @@ class ElvClient {
     name,
     description,
     publicMetadata={},
-    privateMetadata={},
-    signer
+    privateMetadata={}
   }) {
     let path = Path.join("qlibs");
 
     // Deploy contract
     let contractInfo = await this.ethClient.DeployLibraryContract({
       name,
-      signer
+      signer: this.signer
     });
 
     publicMetadata = Object.assign(
@@ -213,7 +220,7 @@ class ElvClient {
     await this.ethClient.SetLibraryHash({
       libraryId,
       contractAddress: contractInfo.address,
-      signer
+      signer: this.signer
     });
 
     return {
@@ -300,7 +307,7 @@ class ElvClient {
 
   /* Content object creation / modification */
 
-  async CreateContentObject({libraryId, libraryContractAddress, options={}, signer}) {
+  async CreateContentObject({libraryId, libraryContractAddress, options={}}) {
     let path = Path.join("q");
 
     // Deploy contract
@@ -309,7 +316,7 @@ class ElvClient {
     let contentContractAddress = await this.ethClient.DeployContentContract({
       libraryContractAddress,
       type: "Hello World Object",
-      signer
+      signer: this.signer
     });
 
     // Inject contract address into metadata
@@ -660,16 +667,16 @@ class ElvClient {
     return this.ethClient.FormatContractArguments({abi, methodName, args});
   }
 
-  DeployContract({abi, bytecode, constructorArgs, overrides={}, signer}) {
-    return this.ethClient.DeployContract({abi, bytecode, constructorArgs, overrides, signer});
+  DeployContract({abi, bytecode, constructorArgs, overrides={}}) {
+    return this.ethClient.DeployContract({abi, bytecode, constructorArgs, overrides, signer: this.signer});
   }
 
-  CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides={}, signer}) {
-    return this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides, signer});
+  CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides={}}) {
+    return this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides, signer: this.signer});
   }
 
-  SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}, signer}) {
-    return this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer});
+  SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}}) {
+    return this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
   }
 }
 

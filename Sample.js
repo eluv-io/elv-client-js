@@ -1,6 +1,6 @@
 const { ElvClient } = require("./src/ElvClient.js");
 
-let client2 = new ElvClient({
+let client = new ElvClient({
   //contentSpaceId: "ispc6NxBDhWiRuKyDNMWVmpTuCaQssS2iuDfq8hFkivVoeJw",
   hostname: "localhost",
   port: 8008,
@@ -10,7 +10,7 @@ let client2 = new ElvClient({
   ethUseHTTPS: false
 });
 
-const client = new ElvClient({
+const client2 = new ElvClient({
   hostname: "q1.contentfabric.io",
   port: 8008,
   useHTTPS: false,
@@ -22,9 +22,11 @@ const client = new ElvClient({
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
   accountName: "Alice",
-  //privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
-  privateKey: "1307df44f8f5033ec86434a7965234015da85261df149ed498cb29907df38d72"
+  privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
+  //privateKey: "1307df44f8f5033ec86434a7965234015da85261df149ed498cb29907df38d72"
 });
+
+client.SetSigner({signer});
 
 const GetFullContentObject = async ({libraryId, objectId}) => {
   const objectInfo = await client.ContentObject({
@@ -50,8 +52,7 @@ const SampleCreateContent = async () => {
         "public": {
           meta: "data"
         }
-      },
-      signer
+      }
     });
 
     console.log("Created library: ");
@@ -68,8 +69,7 @@ const SampleCreateContent = async () => {
           "name": "My new contract",
           "description": "Special contract to handle my special project",
         }
-      },
-      signer
+      }
     });
 
     console.log("\nCreated draft content object: ");
@@ -157,8 +157,7 @@ const Sample = async () => {
 
   const deployResult = await client.DeployContract({
     abi: HelloWorldContract.abi,
-    bytecode: HelloWorldContract.bytecode,
-    signer
+    bytecode: HelloWorldContract.bytecode
   });
 
   console.log("\nDeployed custom content contract: ");
@@ -166,8 +165,7 @@ const Sample = async () => {
 
   await client.SetCustomContentContract({
     contentContractAddress: createResult.contentContractAddress,
-    customContractAddress: deployResult.address,
-    signer
+    customContractAddress: deployResult.address
   });
 
   console.log("\nSet custom contract on content object");
