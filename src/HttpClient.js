@@ -63,10 +63,6 @@ class HttpClient {
         .hash("").toString()
     );
   }
-
-  async Buffer(response) {
-    return Buffer.from(await response.arrayBuffer());
-  }
 }
 
 module.exports = HttpClient;

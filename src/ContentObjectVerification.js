@@ -7,14 +7,14 @@ const MultiHash = require("multihashes");
 const DeepEqual = require("deep-equal");
 
 const ContentObjectVerification = {
-  async VerifyContentObject({client, libraryId, partHash}) {
+  async VerifyContentObject({client, libraryId, objectId, partHash}) {
     let response = {
       hash: partHash
     };
 
     partHash = partHash.replace("hq__", "hqp_");
 
-    let qpartsResponse = await client.QParts({partHash: partHash, format: "arrayBuffer"})
+    let qpartsResponse = await client.QParts({objectId, partHash, format: "arrayBuffer"})
       .then(response => Buffer.from(response));
     let partVerification = ContentObjectVerification._VerifyPart({partHash: partHash, qpartsResponse: qpartsResponse});
 
@@ -29,7 +29,7 @@ const ContentObjectVerification = {
     if(response.qref.valid) {
       // Validate Metadata
       let metadataPartHash = "hqp_" + MultiHash.toB58String(Buffer.from(partVerification.cbor.QmdHash.slice(1, partVerification.cbor.QmdHash.length)));
-      let metadataPartResponse = await client.QParts({partHash: metadataPartHash, format: "arrayBuffer"})
+      let metadataPartResponse = await client.QParts({objectId, partHash: metadataPartHash, format: "arrayBuffer"})
         .then(response => Buffer.from(response));
 
       let metadataVerification = ContentObjectVerification._VerifyPart({partHash: metadataPartHash, qpartsResponse: metadataPartResponse});
@@ -47,6 +47,7 @@ const ContentObjectVerification = {
         // to the metadata from the /meta endpoint
         let metadata = await client.ContentObjectMetadata({
           libraryId: libraryId,
+          objectId,
           contentHash: partHash.replace("hqp_", "hq__")
         });
 
@@ -56,7 +57,7 @@ const ContentObjectVerification = {
       // Validate Qstruct
 
       let structPartHash = "hqp_" + MultiHash.toB58String(Buffer.from(partVerification.cbor.QstructHash.slice(1, partVerification.cbor.QstructHash.length)));
-      let structPartResponse = await client.QParts({partHash: structPartHash, format: "arrayBuffer"})
+      let structPartResponse = await client.QParts({objectId, partHash: structPartHash, format: "arrayBuffer"})
         .then(response => Buffer.from(response));
       let structVerification = ContentObjectVerification._VerifyPart({partHash: structPartHash, qpartsResponse: structPartResponse});
 

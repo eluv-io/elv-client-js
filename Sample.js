@@ -103,7 +103,7 @@ const SampleUpdateContent = async ({libraryId, objectId}) => {
 
   const editResponse = await client.EditContentObject({
     libraryId,
-    contentId: objectId
+    objectId
   });
 
   console.log("\nCreated draft content version: ");
