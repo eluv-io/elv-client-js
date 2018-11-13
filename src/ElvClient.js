@@ -279,8 +279,8 @@ class ElvClient {
     );
   }
 
-  async ContentObject({libraryId, objectId, contentHash}) {
-    let path = Path.join("q", contentHash || objectId);
+  async ContentObject({libraryId, objectId, versionHash}) {
+    let path = Path.join("q", versionHash || objectId);
 
     const transactionId = await this.authClient.ContentObjectAccess(
       libraryId,
@@ -296,8 +296,8 @@ class ElvClient {
     );
   }
 
-  ContentObjectMetadata({libraryId, objectId, contentHash}) {
-    let path = Path.join("q", contentHash || objectId, "meta");
+  ContentObjectMetadata({libraryId, objectId, versionHash}) {
+    let path = Path.join("q", versionHash || objectId, "meta");
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -463,8 +463,8 @@ class ElvClient {
     );
   }
 
-  DownloadFile({libraryId, objectId, contentHash, filePath, format="blob"}) {
-    let path = Path.join("q", contentHash || objectId, "files", filePath);
+  DownloadFile({libraryId, objectId, versionHash, filePath, format="blob"}) {
+    let path = Path.join("q", versionHash || objectId, "files", filePath);
 
     return ResponseToFormat(
       format,
@@ -478,8 +478,8 @@ class ElvClient {
 
   /* Parts */
 
-  ContentParts({libraryId, objectId, contentHash}) {
-    let path = Path.join("q", contentHash || objectId, "parts");
+  ContentParts({libraryId, objectId, versionHash}) {
+    let path = Path.join("q", versionHash || objectId, "parts");
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -490,8 +490,8 @@ class ElvClient {
     );
   }
 
-  DownloadAllParts({libraryId, objectId, contentHash, format="blob"}) {
-    let path = Path.join("q", contentHash || objectId, "data");
+  DownloadAllParts({libraryId, objectId, versionHash, format="blob"}) {
+    let path = Path.join("q", versionHash || objectId, "data");
 
     return ResponseToFormat(
       format,
@@ -503,8 +503,8 @@ class ElvClient {
     );
   }
 
-  DownloadPart({libraryId, objectId, contentHash, partHash, format="blob"}) {
-    let path = Path.join("q", contentHash || objectId, "data", partHash);
+  DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
+    let path = Path.join("q", versionHash || objectId, "data", partHash);
 
     return ResponseToFormat(
       format,
@@ -542,14 +542,14 @@ class ElvClient {
     );
   }
 
-  FabricUrl({libraryId, objectId, contentHash, partHash, queryParams = {}}) {
+  FabricUrl({libraryId, objectId, versionHash, partHash, queryParams = {}}) {
     let path = "";
 
     if(libraryId) {
       path = Path.join(path, "qlibs", libraryId);
 
-      if(objectId || contentHash) {
-        path = Path.join(path, "q", contentHash || objectId);
+      if(objectId || versionHash) {
+        path = Path.join(path, "q", versionHash || objectId);
 
         if(partHash){
           path = Path.join(path, "data", partHash);
@@ -644,8 +644,8 @@ class ElvClient {
     });
   }
 
-  Proofs({libraryId, objectId, contentHash, partHash}) {
-    let path = Path.join("q", contentHash || objectId, "data", partHash, "proofs");
+  Proofs({libraryId, objectId, versionHash, partHash}) {
+    let path = Path.join("q", versionHash || objectId, "data", partHash, "proofs");
 
     return ResponseToJson(
       this.HttpClient.Request({

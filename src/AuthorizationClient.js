@@ -58,7 +58,7 @@ class AuthorizationClient {
   }
 
   async ContentObjectContract(libraryId, objectId) {
-    const objectMetadata = await this.elvClient.ContentObjectMetadata({libraryId, contentHash: objectId});
+    const objectMetadata = await this.elvClient.ContentObjectMetadata({libraryId, versionHash: objectId});
     if(objectMetadata && objectMetadata["caddr"]) {
       return objectMetadata["caddr"];
     }
