@@ -10,7 +10,6 @@ const Test = async () => {
     hostname: "localhost",
     port: 8008,
     useHTTPS: false,
-    ethHostname: "eth1.contentfabric.io",
     ethHostname: "127.0.0.1",
     ethPort: 7545,
     ethUseHTTPS: false

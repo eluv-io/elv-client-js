@@ -107,7 +107,7 @@ let TestQueries = async (client, signer) => {
     let metadataResponse = await(
       client.ContentObjectMetadata({
         libraryId,
-        contentHash: objectId
+        objectId
       })
     );
 
@@ -115,8 +115,8 @@ let TestQueries = async (client, signer) => {
 
     output += "EDITING " + objectId + "...\n";
     let editResponse = await client.EditContentObject({
-      libraryId: libraryId,
-      contentId: objectId,
+      libraryId,
+      objectId,
       options: {
         meta: {
           "meta": "changed",
@@ -199,6 +199,7 @@ let TestQueries = async (client, signer) => {
     let contentObjectMetadata = await(
       client.ContentObjectMetadata({
         libraryId,
+        objectId,
         contentHash
       })
     );
@@ -225,6 +226,7 @@ let TestQueries = async (client, signer) => {
 
     let downloadResponse = await client.DownloadPart({
       libraryId,
+      objectId,
       contentHash,
       partHash,
       format: "text"
@@ -265,13 +267,14 @@ let TestQueries = async (client, signer) => {
       }
     }
 
-    let proofs = await client.Proofs({libraryId: libraryId, contentHash, partHash: partHash});
+    let proofs = await client.Proofs({libraryId: libraryId, objectId, contentHash, partHash: partHash});
 
     output += "PROOFS: \n";
     output += JSON.stringify(proofs, null, 2) + "\n\n";
 
     let qparts = await (
       client.QParts({
+        objectId,
         partHash: contentHash.replace("hq__", "hqp_"),
         format: "text"
       })
@@ -283,8 +286,8 @@ let TestQueries = async (client, signer) => {
     output += "DELETING PART... \n";
 
     let partEditResponse = await client.EditContentObject({
-      libraryId: libraryId,
-      contentId: objectId
+      libraryId,
+      objectId
     });
 
     await client.DeletePart({
@@ -302,12 +305,12 @@ let TestQueries = async (client, signer) => {
 
     output += "URLS: \n\n";
     output += client.FabricUrl({libraryId}) + "\n";
-    output += client.FabricUrl({libraryId, contentHash: objectId}) + "\n";
-    output += client.FabricUrl({libraryId, contentHash: objectId, partHash}) + "\n";
-    output += client.FabricUrl({libraryId, contentHash: objectId, partHash, queryParams: {query: "params", params: "query"}}) + "\n\n";
+    output += client.FabricUrl({libraryId, objectId}) + "\n";
+    output += client.FabricUrl({libraryId, objectId, partHash}) + "\n";
+    output += client.FabricUrl({libraryId, objectId, partHash, queryParams: {query: "params", params: "query"}}) + "\n\n";
 
     let contentVerification = await (
-      client.VerifyContentObject({libraryId: libraryId, partHash: contentHash})
+      client.VerifyContentObject({libraryId, objectId, partHash: contentHash})
         .then(response => {
           return response;
         })
