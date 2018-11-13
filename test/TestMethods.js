@@ -8,7 +8,7 @@ let TestQueries = async (client, signer) => {
 
     output += "CREATING LIBRARY \n";
 
-    let libraryInfo = await (
+    const libraryId = await (
       client.CreateContentLibrary({
         name: "New library",
         description: "Library Description",
@@ -28,19 +28,15 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    const libraryId = libraryInfo.libraryId;
-    const libraryContractAddress = libraryInfo.contractAddress;
+    output += "LIBRARY CREATED: " + libraryId + "\n";
 
-    output += "LIBRARY CREATED: \n";
-    output += JSON.stringify(libraryInfo, null, 2) + "\n\n";
-
-    let libraryResponse = await(
+    const libraryResponse = await(
       client.ContentLibrary({libraryId})
     );
     output += "LIBRARY RESPONSE: \n";
     output += JSON.stringify(libraryResponse, null, 2) + "\n\n";
 
-    let libraryContentObject = (await client.ContentObjects({libraryId: libraryId})).contents[0];
+    const libraryContentObject = (await client.ContentObjects({libraryId: libraryId})).contents[0];
     output += "LIBRARY CONTENT OBJECT: \n";
     output += JSON.stringify(libraryContentObject, null, 2) + "\n\n";
 
@@ -63,7 +59,6 @@ let TestQueries = async (client, signer) => {
     let createResponse = await (
       client.CreateContentObject({
         libraryId,
-        libraryContractAddress,
         options: {
           meta: {
             "meta": "data",
@@ -192,7 +187,7 @@ let TestQueries = async (client, signer) => {
     let contentObjectData = await(
       client.ContentObject({
         libraryId,
-        contentHash: objectId
+        objectId
       })
     );
 
@@ -318,18 +313,17 @@ let TestQueries = async (client, signer) => {
         })
     );
 
-    const address = libraryInfo.contractAddress;
     output += "UTILS: \n\n";
-    output += "LIBRARY CONTRACT ADDRESS: " + address + "\n";
+    output += "LIBRARY ID: " + libraryId + "\n";
 
-    const hash = "ilib" + client.utils.AddressToHash({address});
-    output += "TO HASH: " + hash + "\n";
+    const address = client.utils.HashToAddress({hash: libraryId});
+    output += "TO ADDRESS: " + address + "\n";
 
-    const newAddress = client.utils.HashToAddress({hash});
-    output += "TO ADDRESS: " + newAddress + "\n\n";
+    const newLibraryId = client.utils.AddressToLibraryId({address});
+    output += "TO HASH: " + newLibraryId + "\n\n";
 
-    if(address.toLowerCase() !== newAddress.toLowerCase()) {
-      throw Error("Address conversion mismatch: " + address + " : " + newAddress);
+    if(newLibraryId.toLowerCase() !== libraryId.toLowerCase()) {
+      throw Error("Address/hash conversion mismatch: " + libraryId + " : " + newLibraryId);
     }
 
     const bytes32Hash = client.utils.HashToBytes32({hash: contentHash});
@@ -347,9 +341,9 @@ let TestQueries = async (client, signer) => {
     output += "CONTENT VERIFICATION: " + contentHash + "\n";
     output += JSON.stringify(contentVerification, null, 2) + "\n";
   } catch(error) {
-    console.log(error);
-    output += "ERROR: \n";
-    output += JSON.stringify(error, null, 2);
+    console.log(output);
+    console.error(error);
+    return;
   }
   return output;
 };

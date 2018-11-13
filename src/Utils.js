@@ -6,6 +6,18 @@ const Utils = {
     return bs58.encode(Buffer.from(address, "hex"));
   },
 
+  AddressToSpaceId: ({address}) => {
+    return "ispc" + Utils.AddressToHash({address});
+  },
+
+  AddressToLibraryId: ({address}) => {
+    return "ilib" + Utils.AddressToHash({address});
+  },
+
+  AddressToObjectId: ({address}) => {
+    return "iq__" + Utils.AddressToHash({address});
+  },
+
   HashToAddress: ({hash}) => {
     hash = hash.substr(4);
     return "0x" + bs58.decode(hash).toString("hex");

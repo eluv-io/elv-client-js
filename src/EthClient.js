@@ -1,12 +1,12 @@
 // NOTE: Querying Ethereum requires CORS enabled
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
-
 const Ethers = require("ethers");
 const URI = require("urijs");
 
-// -- Contract javascript files build using build/BuildContracts.js
-const ContentLibraryContract = require("./contracts/ContentLibrary");
-const ContentContract = require("./contracts/Content");
+// -- Contract javascript files built using build/BuildContracts.js
+const ContentSpaceContract = require("./contracts/BaseContentSpace");
+const ContentLibraryContract = require("./contracts/BaseLibrary");
+const ContentContract = require("./contracts/BaseContent");
 
 class EthClient {
   constructor(ethereumURI) {
@@ -89,80 +89,45 @@ class EthClient {
     return await contract.functions[methodName](...methodArgs, overrides);
   }
 
+  // Deploy contract by calling method on existing contract
+  async DeployDependentContract({
+    contractAddress,
+    abi,
+    methodName,
+    args=[],
+    eventName,
+    eventValue,
+    signer
+  }) {
+    const methodArgs = this.FormatContractArguments({abi, methodName, args});
 
-  /* Specific contract management */
-
-  // Deploy ContentLibrary contract, then set the library hash
-  async DeployLibraryContract({name, signer}) {
-    const constructorArgs = this.FormatContractArguments({
-      abi: ContentLibraryContract.abi,
-      methodName: "constructor",
-      args: [
-        name,
-        "Content Space",
-        "0x0000000000000000000000000000000000000000"
-      ]
-    });
-
-    return await this.DeployContract({
-      abi: ContentLibraryContract.abi,
-      bytecode: ContentLibraryContract.bytecode,
-      constructorArgs,
-      signer
-    });
-  }
-
-  async SetLibraryHash({contractAddress, libraryId, overrides={}, signer}) {
-    const methodArgs = this.FormatContractArguments({
-      abi: ContentLibraryContract.abi,
-      methodName: "setLibraryHash",
-      args: [
-        libraryId
-      ]
-    });
-
-    return await this.CallContractMethod({
-      contractAddress,
-      abi: ContentLibraryContract.abi,
-      methodName: "setLibraryHash",
-      methodArgs,
-      overrides,
-      signer
-    });
-  }
-
-  // Deploy content object contract by calling method on library contract
-  async DeployContentContract({libraryContractAddress, type, signer}) {
-    const methodArgs = this.FormatContractArguments({
-      abi: ContentLibraryContract.abi,
-      methodName: "createContent",
-      args: [
-        type
-      ]
-    });
-
-    let contract = new Ethers.Contract(libraryContractAddress, ContentLibraryContract.abi, signer.provider);
+    let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
     contract = contract.connect(signer);
 
     // Call create content method on library contract
     const createMethodCall = await this.CallContractMethod({
       contract,
-      abi: ContentLibraryContract.abi,
-      methodName: "createContent",
+      abi,
+      methodName,
       methodArgs,
       signer
     });
 
-    // Await completion of call and creation of content contract
-    // then extract content contract address from the event log
-    const contentAddress = await new Promise((resolve, reject) => {
-      signer.provider.on(contract.filters.ContentObjectCreated(), async (event) => {
+    // Await completion of call and creation of dependent contract
+    // then extract contract address from the event log
+    const dependentContractAddress = await new Promise((resolve, reject) => {
+      signer.provider.on(createMethodCall.hash, async (event) => {
         try {
-          // Ensure correct transaction is handled
-          if (!event || event.transactionHash !== createMethodCall.hash) { return; }
+          // Loop through logs to find the desired event
+          for(const log of event.logs) {
+            const parsedLog = contract.interface.parseLog(log);
 
-          const eventInfo = new Ethers.utils.Interface(ContentLibraryContract.abi).parseLog(event);
-          resolve(eventInfo.values.contentAddress);
+            if(parsedLog && parsedLog.name === eventName) {
+              resolve(parsedLog.values[eventValue]);
+            }
+          }
+
+          reject(eventName + " event not found");
         } catch(error) {
           reject(error);
         }
@@ -170,15 +135,53 @@ class EthClient {
     });
 
     // Make sure to remove listener when done
-    signer.provider.removeAllListeners(contract.filters.ContentObjectCreated());
+    signer.provider.removeAllListeners(createMethodCall.hash);
 
-    return contentAddress;
+    return dependentContractAddress;
+  }
+
+  /* Specific contract management */
+
+
+  async DeployContentSpaceContract({name, signer}) {
+    const response = await this.DeployContract({
+      abi: ContentSpaceContract.abi,
+      bytecode: ContentSpaceContract.bytecode,
+      constructorArgs: [name],
+      signer
+    });
+
+    return response.address;
+  }
+
+  async DeployLibraryContract({contentSpaceAddress, signer}) {
+    return this.DeployDependentContract({
+      contractAddress: contentSpaceAddress,
+      abi: ContentSpaceContract.abi,
+      methodName: "createLibrary",
+      args: ["0x0000000000000000000000000000000000000000"],
+      eventName: "CreateLibrary",
+      eventValue: "libraryAddress",
+      signer
+    });
+  }
+
+  async DeployContentContract({contentLibraryAddress, signer}) {
+    return this.DeployDependentContract({
+      contractAddress: contentLibraryAddress,
+      abi: ContentLibraryContract.abi,
+      methodName: "createContent",
+      args: ["0x0000000000000000000000000000000000000000"],
+      eventName: "ContentObjectCreated",
+      eventValue: "contentAddress",
+      signer
+    });
   }
 
   async SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}, signer}) {
     const methodArgs = this.FormatContractArguments({
       abi: ContentContract.abi,
-      methodName: "setCustomContractAddress",
+      methodName: "setContentContractAddress",
       args: [
         customContractAddress
       ]
@@ -187,7 +190,7 @@ class EthClient {
     return await this.CallContractMethod({
       contractAddress: contentContractAddress,
       abi: ContentContract.abi,
-      methodName: "setCustomContractAddress",
+      methodName: "setContentContractAddress",
       methodArgs,
       overrides,
       signer

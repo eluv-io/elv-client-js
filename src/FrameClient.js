@@ -113,6 +113,7 @@ class FrameClient {
       "ContentParts",
       "CreateContentLibrary",
       "CreateContentObject",
+      "CreateContentSpace",
       "CreateFileUploadJob",
       "DeleteMetadata",
       "DeleteName",
