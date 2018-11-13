@@ -36,7 +36,7 @@ const GetFullContentObject = async ({libraryId, objectId}) => {
 
   objectInfo.meta = await client.ContentObjectMetadata({
     libraryId,
-    contentHash: objectId
+    objectId
   });
 
   return objectInfo;

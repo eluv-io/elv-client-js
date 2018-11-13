@@ -193,14 +193,14 @@ let TestQueries = async (client, signer) => {
 
     output += JSON.stringify(contentObjectData, null, 2) + "\n\n";
 
-    let contentHash = contentObjectData.hash;
+    let versionHash = contentObjectData.hash;
 
     output += "CONTENT OBJECT METADATA: \n";
     let contentObjectMetadata = await(
       client.ContentObjectMetadata({
         libraryId,
         objectId,
-        contentHash
+        versionHash
       })
     );
 
@@ -217,7 +217,7 @@ let TestQueries = async (client, signer) => {
     output += JSON.stringify(contentObjectVersions, null, 2) + "\n\n";
 
 
-    let contentParts = await client.ContentParts({libraryId: libraryId, contentHash});
+    let contentParts = await client.ContentParts({libraryId: libraryId, versionHash});
 
     output += "CONTENT PARTS " + objectId + "\n";
     output += JSON.stringify(contentParts, null, 2) + "\n\n";
@@ -227,7 +227,7 @@ let TestQueries = async (client, signer) => {
     let downloadResponse = await client.DownloadPart({
       libraryId,
       objectId,
-      contentHash,
+      versionHash,
       partHash,
       format: "text"
     });
@@ -267,7 +267,7 @@ let TestQueries = async (client, signer) => {
       }
     }
 
-    let proofs = await client.Proofs({libraryId: libraryId, objectId, contentHash, partHash: partHash});
+    let proofs = await client.Proofs({libraryId: libraryId, objectId, versionHash, partHash: partHash});
 
     output += "PROOFS: \n";
     output += JSON.stringify(proofs, null, 2) + "\n\n";
@@ -275,7 +275,7 @@ let TestQueries = async (client, signer) => {
     let qparts = await (
       client.QParts({
         objectId,
-        partHash: contentHash.replace("hq__", "hqp_"),
+        partHash: versionHash.replace("hq__", "hqp_"),
         format: "text"
       })
     );
@@ -310,7 +310,7 @@ let TestQueries = async (client, signer) => {
     output += client.FabricUrl({libraryId, objectId, partHash, queryParams: {query: "params", params: "query"}}) + "\n\n";
 
     let contentVerification = await (
-      client.VerifyContentObject({libraryId, objectId, partHash: contentHash})
+      client.VerifyContentObject({libraryId, objectId, partHash: versionHash})
         .then(response => {
           return response;
         })
@@ -329,9 +329,9 @@ let TestQueries = async (client, signer) => {
       throw Error("Address/hash conversion mismatch: " + libraryId + " : " + newLibraryId);
     }
 
-    const bytes32Hash = client.utils.HashToBytes32({hash: contentHash});
+    const bytes32Hash = client.utils.HashToBytes32({hash: versionHash});
     output += "CONTENT HASH TO BYTES32 STRING: \n";
-    output += "HASH: " + contentHash + "\n";
+    output += "HASH: " + versionHash + "\n";
     output += "BYTES32: " + bytes32Hash + "\n\n";
 
     // Ensure ToBytes32 is correct
@@ -341,7 +341,7 @@ let TestQueries = async (client, signer) => {
       throw Error("Bytes 32 mismatch: " + bytes32Test + " : " + bytes32Expected);
     }
 
-    output += "CONTENT VERIFICATION: " + contentHash + "\n";
+    output += "CONTENT VERIFICATION: " + versionHash + "\n";
     output += JSON.stringify(contentVerification, null, 2) + "\n";
   } catch(error) {
     console.log(output);

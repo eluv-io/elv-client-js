@@ -47,7 +47,7 @@ contract("HelloWorld", accounts => {
 
     var requestId;
     var requestValid;
-    // event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 contentHash, string pkeRequestor);
+    // event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 versionHash, string pkeRequestor);
     result.logs.forEach(function(logEntry) {
       if (logEntry.event == "AccessRequest") {
         requestId = logEntry.args["request_id"];
@@ -60,7 +60,7 @@ contract("HelloWorld", accounts => {
     // New request, now with a stake holder
     let result2 = await cont.accessRequest(0, "DEADBEEF", "ABABABAB", ["hello again"], [clib.address], {from: requesterAccount, value: 2000000000000000000});
 
-    // event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 contentHash, string pkeRequestor);
+    // event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 versionHash, string pkeRequestor);
     result2.logs.forEach(function(logEntry) {
       if (logEntry.event === "AccessRequest") {
         requestId = logEntry.args["request_id"];

@@ -48,7 +48,7 @@ const ContentObjectVerification = {
         let metadata = await client.ContentObjectMetadata({
           libraryId: libraryId,
           objectId,
-          contentHash: partHash.replace("hqp_", "hq__")
+          versionHash: partHash.replace("hqp_", "hq__")
         });
 
         response.qmd.check = ContentObjectVerification._VerifyMetadata({metadataCbor: metadataVerification.cbor, metadata: metadata});

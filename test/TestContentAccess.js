@@ -26,7 +26,7 @@ contract("Content", accounts => {
     let result = await cont.accessRequest(0, "DEADBEEF", "BABA", [], [], {from: requesterAccount, value: 2000000000000000000});
 
     var requestId;
-    // event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 contentHash, string pkeRequestor);
+    // event AccessRequest(uint request_validity, uint256 request_id, uint8 level, bytes32 versionHash, string pkeRequestor);
     result.logs.forEach(function(logEntry) {
       if (logEntry.event == "AccessRequest")
         requestId = logEntry.args["request_id"];
