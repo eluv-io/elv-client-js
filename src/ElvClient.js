@@ -2,6 +2,7 @@ const URI = require("urijs");
 const Path = require("path");
 const Ethers = require("ethers");
 
+const AuthClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
 const HttpClient = require("./HttpClient");
@@ -77,21 +78,32 @@ class ElvClient {
     this.ethClient = new EthClient(this.ethereumURI);
 
     this.utils = Utils;
+
+    this.authClient = new AuthClient(this, this.ethClient);
   }
 
   // Authorization: Bearer <token>
-  AuthorizationHeader({libraryId, accountAddress, transactionId}) {
+  AuthorizationHeader({libraryId, transactionId}) {
     const token = B64(JSON.stringify({
       qspace_id: this.contentSpaceId,
       qlib_id: libraryId,
-      addr: accountAddress,
-      txid: transactionId
+      addr: "", //this.signer.signingKey.address,
+      txid: "", //transactionId
     }));
+
+    /*
+    console.log({
+      qspace_id: this.contentSpaceId,
+      qlib_id: libraryId,
+      addr: this.signer.signingKey.address,
+      txid: transactionId
+    });
+    */
 
     const signature = B64("SIGNATURE");
 
     return {
-      Authorization: "Bearer " + token //+ "." + signature
+      Authorization: "Bearer " + token + "." + signature
     };
   }
 
@@ -150,6 +162,14 @@ class ElvClient {
     return signer;
   }
 
+  /* Content Spaces */
+
+  async CreateContentSpace({name}) {
+    const contentSpaceAddress = await this.ethClient.DeployContentSpaceContract({name, signer: this.signer});
+
+    return Utils.AddressToSpaceId({address: contentSpaceAddress});
+  }
+
   /* Libraries */
 
   ContentLibraries() {
@@ -186,10 +206,9 @@ class ElvClient {
     publicMetadata={},
     privateMetadata={}
   }) {
-    let path = Path.join("qlibs");
-
     // Deploy contract
-    let contractInfo = await this.ethClient.DeployLibraryContract({
+    let libraryAddress = await this.ethClient.DeployLibraryContract({
+      contentSpaceAddress: Utils.HashToAddress({hash: this.contentSpaceId}),
       name,
       signer: this.signer
     });
@@ -197,37 +216,28 @@ class ElvClient {
     publicMetadata = Object.assign(
       {
         "eluv.name": name,
-        "eluv.description": description,
-        "eluv.contract_address": contractInfo.address
+        "eluv.description": description
       },
       publicMetadata || {}
     );
 
+    const libraryId = this.utils.AddressToLibraryId({address: libraryAddress});
+    const path = Path.join("qlibs", libraryId);
+
     // Create library in fabric
-    let libraryId = (await ResponseToJson(
+    await HandleErrors(
       this.HttpClient.Request({
         headers: this.AuthorizationHeader({}),
-        method: "POST",
+        method: "PUT",
         path: path,
         body: {
           meta: publicMetadata,
           private_meta: privateMetadata
         }
       })
-    )).id;
+    );
 
-    // Set library hash in contract
-    await this.ethClient.SetLibraryHash({
-      libraryId,
-      contractAddress: contractInfo.address,
-      signer: this.signer
-    });
-
-    return {
-      libraryId: libraryId,
-      contractAddress: contractInfo.address,
-      txHash: contractInfo.deployTransaction.hash
-    };
+    return libraryId;
   }
 
   async PublicLibraryMetadata({libraryId}) {
@@ -269,12 +279,17 @@ class ElvClient {
     );
   }
 
-  ContentObject({libraryId, contentHash}) {
-    let path = Path.join("q", contentHash);
+  async ContentObject({libraryId, objectId, contentHash}) {
+    let path = Path.join("q", contentHash || objectId);
+
+    const transactionId = await this.authClient.ContentObjectAccess(
+      libraryId,
+      objectId
+    );
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: this.AuthorizationHeader({libraryId}),
+        headers: this.AuthorizationHeader({libraryId, transactionId}),
         method: "GET",
         path: path
       })
@@ -307,36 +322,26 @@ class ElvClient {
 
   /* Content object creation / modification */
 
-  async CreateContentObject({libraryId, libraryContractAddress, options={}}) {
-    let path = Path.join("q");
-
+  async CreateContentObject({libraryId, options={}}) {
     // Deploy contract
     // This calls createContent method of the library contract, which deploys a content contract
     // The address of that deployed contract is returned
     let contentContractAddress = await this.ethClient.DeployContentContract({
-      libraryContractAddress,
+      contentLibraryAddress: Utils.HashToAddress({hash: libraryId}),
       type: "Hello World Object",
       signer: this.signer
     });
 
-    // Inject contract address into metadata
-    const metadata = options.meta || {};
-    metadata.caddr = contentContractAddress;
-    options.meta = metadata;
+    const path = Path.join("q", this.utils.AddressToObjectId({address: contentContractAddress}));
 
-    const createResponse = await ResponseToJson(
+    return await ResponseToJson(
       this.HttpClient.Request({
         headers: this.AuthorizationHeader({libraryId}),
-        method: "POST",
+        method: "PUT",
         path: path,
         body: options
       })
     );
-
-    // Inject contract address into create response
-    createResponse.contractAddress = contentContractAddress;
-
-    return createResponse;
   }
 
   EditContentObject({libraryId, contentId, options={}}) {
@@ -598,7 +603,7 @@ class ElvClient {
       throw Error("No content object ID");
     }
 
-    let contentObjectData = await this.ContentObject({libraryId: info.libraryId, contentHash: info.objectId});
+    let contentObjectData = await this.ContentObject({libraryId: info.libraryId, objectId: info.objectId});
     contentObjectData.meta = await this.ContentObjectMetadata({libraryId: info.libraryId, contentHash: info.objectId});
 
     return contentObjectData;
@@ -675,7 +680,8 @@ class ElvClient {
     return this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides, signer: this.signer});
   }
 
-  SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}}) {
+  SetCustomContentContract({objectId, customContractAddress, overrides={}}) {
+    const contentContractAddress = Utils.HashToAddress({hash: objectId});
     return this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
   }
 }

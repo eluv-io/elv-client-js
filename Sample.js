@@ -1,7 +1,7 @@
 const { ElvClient } = require("./src/ElvClient.js");
 
 let client = new ElvClient({
-  //contentSpaceId: "ispc6NxBDhWiRuKyDNMWVmpTuCaQssS2iuDfq8hFkivVoeJw",
+  contentSpaceId: "ispc3t3rNEgvFBwLagHKCWK3X1y6w1fS",
   hostname: "localhost",
   port: 8008,
   useHTTPS: false,
@@ -31,7 +31,7 @@ client.SetSigner({signer});
 const GetFullContentObject = async ({libraryId, objectId}) => {
   const objectInfo = await client.ContentObject({
     libraryId,
-    contentHash: objectId
+    objectId
   });
 
   objectInfo.meta = await client.ContentObjectMetadata({
@@ -45,7 +45,7 @@ const GetFullContentObject = async ({libraryId, objectId}) => {
 const SampleCreateContent = async () => {
   try {
     // Create library with library contract
-    const libraryInfo = await client.CreateContentLibrary({
+    const libraryId = await client.CreateContentLibrary({
       name: "Hello World Library",
       description: "Test library",
       publicMetadata: {
@@ -55,15 +55,11 @@ const SampleCreateContent = async () => {
       }
     });
 
-    console.log("Created library: ");
-    console.log(libraryInfo);
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    console.log("Created library: " + libraryId);
 
     // Create content object with content object contract
     const createResponse = await client.CreateContentObject({
-      libraryId: libraryInfo.libraryId,
-      libraryContractAddress: libraryInfo.contractAddress,
+      libraryId,
       options: {
         meta: {
           "name": "My new contract",
@@ -77,7 +73,7 @@ const SampleCreateContent = async () => {
 
     // Finalize object
     const finalizeResponse = await client.FinalizeContentObject({
-      libraryId: libraryInfo.libraryId,
+      libraryId,
       writeToken: createResponse.write_token
     });
 
@@ -86,7 +82,7 @@ const SampleCreateContent = async () => {
 
     // Get object info for display
     const contentObjectInfo = await GetFullContentObject({
-      libraryId: libraryInfo.libraryId,
+      libraryId,
       objectId: finalizeResponse.id
     });
 
@@ -94,22 +90,20 @@ const SampleCreateContent = async () => {
     console.log(contentObjectInfo);
 
     return {
-      libraryId: libraryInfo.libraryId,
-      libraryContractAddress: libraryInfo.contractAddress,
-      contentObjectId: finalizeResponse.id,
-      contentContractAddress: createResponse.contractAddress
+      libraryId,
+      objectId: finalizeResponse.id
     };
   } catch(error) {
     console.error(error);
   }
 };
 
-const SampleUpdateContent = async ({libraryId, contentObjectId}) => {
+const SampleUpdateContent = async ({libraryId, objectId}) => {
   // Edit content object metadata
 
   const editResponse = await client.EditContentObject({
     libraryId,
-    contentId: contentObjectId
+    contentId: objectId
   });
 
   console.log("\nCreated draft content version: ");
@@ -134,7 +128,7 @@ const SampleUpdateContent = async ({libraryId, contentObjectId}) => {
   // Get object info for display
   const contentObjectInfo = await GetFullContentObject({
     libraryId: libraryId,
-    objectId: contentObjectId
+    objectId: objectId
   });
 
   console.log("\nContent object:");
@@ -164,7 +158,7 @@ const Sample = async () => {
   console.log(deployResult.address);
 
   await client.SetCustomContentContract({
-    contentContractAddress: createResult.contentContractAddress,
+    objectId: createResult.objectId,
     customContractAddress: deployResult.address
   });
 
@@ -175,7 +169,7 @@ const Sample = async () => {
 
   await SampleUpdateContent({
     libraryId: createResult.libraryId,
-    contentObjectId: createResult.contentObjectId
+    objectId: createResult.objectId
   });
 
   console.log("\n");

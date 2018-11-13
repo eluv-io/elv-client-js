@@ -6,7 +6,7 @@ const TestMethods = require("./TestMethods");
 
 const Test = async () => {
   let Client = new ElvClient({
-    //contentSpaceId: "ispc6NxBDhWiRuKyDNMWVmpTuCaQssS2iuDfq8hFkivVoeJw",
+    contentSpaceId: "ispc3t3rNEgvFBwLagHKCWK3X1y6w1fS",
     hostname: "localhost",
     port: 8008,
     useHTTPS: false,
@@ -21,8 +21,6 @@ const Test = async () => {
     accountName: "Alice",
     privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
   });
-
-  signer = Client.ConnectSigner({signer});
   Client.SetSigner({signer});
 
   TestMethods.TestQueries(Client, signer).then(result => console.log(result));
