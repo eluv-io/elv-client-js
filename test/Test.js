@@ -4,17 +4,10 @@ const { ElvClient } = require("../src/ElvClient");
 const { FrameClient } = require("../src/FrameClient");
 const TestMethods = require("./TestMethods");
 
+const ClientConfiguration = require("../TestConfiguration.json");
+
 const Test = async () => {
-  let Client = new ElvClient({
-    contentSpaceId: "ispcbw26LEeKAhtHMyJeY69Ha2P8Mfg",
-    hostname: "localhost",
-    port: 8008,
-    useHTTPS: false,
-    //ethHostname: "localhost",
-    ethHostname: "localhost",
-    ethPort: 8545,
-    ethUseHTTPS: false
-  });
+  let Client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
   let wallet = Client.GenerateWallet();
   let signer = wallet.AddAccount({

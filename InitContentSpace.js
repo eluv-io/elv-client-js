@@ -1,14 +1,10 @@
 const { ElvClient } = require("./src/ElvClient");
-const fs = require("fs");
+const ClientConfiguration = require("./TestConfiguration.json");
 
-const client = new ElvClient({
-  hostname: "localhost",
-  port: 8008,
-  useHTTPS: false,
-  ethHostname: "localhost",
-  ethPort: 8545,
-  ethUseHTTPS: false
-});
+const fs = require("fs");
+const readLine = require("readline");
+
+const client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
 let wallet = client.GenerateWallet();
 let signer = wallet.AddAccount({
@@ -25,17 +21,43 @@ if(process.argv.length !== 3) {
 
 const qfabConfigPath = process.argv[2];
 
+const PromptRestart = async () => {
+  console.log("Restart QFab Daemon now\n");
+
+  const rl = readLine.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  let restarted = false;
+
+  while(!restarted) {
+    restarted = await new Promise(
+      resolve => rl.question("QFab daemon restarted? (y/n) ", (answer) => {
+        if(answer === "y") {
+          rl.close();
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      })
+    );
+  }
+};
+
 const Init = async () => {
+  /* Create new content space and update QFab configuration */
+
   let qfabConfig = JSON.parse(fs.readFileSync(qfabConfigPath).toString());
 
-  const contentSpaceAddress = await client.ethClient.DeployContentSpaceContract({
+  const {contractAddress, transactionHash} = await client.ethClient.DeployContentSpaceContract({
     name: "Content Space",
     signer
   });
-  const contentSpaceId = client.utils.AddressToSpaceId({address: contentSpaceAddress});
+  const contentSpaceId = client.utils.AddressToSpaceId({address: contractAddress});
 
   console.log("\nCreated content space:");
-  console.log("\tAddress: " + contentSpaceAddress);
+  console.log("\tAddress: " + contractAddress);
   console.log("\tID: " + contentSpaceId + "\n");
 
   qfabConfig.qspaces = [
@@ -50,6 +72,41 @@ const Init = async () => {
   ];
 
   fs.writeFileSync(qfabConfigPath, JSON.stringify(qfabConfig, null, 2));
+
+  console.log("Updated qfab daemon configuration");
+
+  /* Update local test configuration */
+
+  ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
+  fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
+
+  console.log("Updated elv-client-js test configuration\n");
+
+  client.contentSpaceId = contentSpaceId;
+
+  /* Prompt the user to restart their qfab daemon */
+
+  await PromptRestart();
+
+  /* Create the content types library */
+
+  const libraryId = client.utils.AddressToLibraryId({address: contractAddress});
+  const path = "/qlibs/" + libraryId;
+
+  // Create library in fabric
+  client.HttpClient.Request({
+    headers: await client.AuthorizationHeader({transactionHash}),
+    method: "PUT",
+    path: path,
+    body: {
+      meta: {
+        "eluv.name": "Content Types"
+      }
+    }
+  });
+
+  console.log("\nCreated content types library: ");
+  console.log("\tID: " + libraryId + "\n");
 };
 
 Init();

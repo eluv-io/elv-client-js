@@ -1,24 +1,7 @@
 const { ElvClient } = require("./src/ElvClient.js");
+const ClientConfiguration = require("./TestConfiguration.json");
 
-let client = new ElvClient({
-  contentSpaceId: "ispcctAxva1spCGdy2YMmNfBZDjc4NZ",
-  hostname: "localhost",
-  port: 8008,
-  useHTTPS: false,
-  ethHostname: "localhost",
-  ethPort: 8545,
-  ethUseHTTPS: false
-});
-
-const client2 = new ElvClient({
-  hostname: "q1.contentfabric.io",
-  port: 8008,
-  useHTTPS: false,
-  ethHostname: "eth1.contentfabric.io",
-  ethPort: 80,
-  ethUseHTTPS: false
-});
-
+let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
   accountName: "Alice",
@@ -158,11 +141,12 @@ const Sample = async () => {
   });
 
   console.log("\nDeployed custom content contract: ");
-  console.log(deployResult.address);
+  console.log("Address: " + deployResult.contractAddress);
+  console.log("Transaction hash: " + deployResult.transactionHash);
 
   await client.SetCustomContentContract({
     objectId: createResult.objectId,
-    customContractAddress: deployResult.address
+    customContractAddress: deployResult.contractAddress
   });
 
   console.log("\nSet custom contract on content object");
