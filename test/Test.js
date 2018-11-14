@@ -6,7 +6,7 @@ const TestMethods = require("./TestMethods");
 
 const Test = async () => {
   let Client = new ElvClient({
-    contentSpaceId: "ispc4DTN7UeEHqt7CCo9P4yJNAuAbseT",
+    contentSpaceId: "ispcbw26LEeKAhtHMyJeY69Ha2P8Mfg",
     hostname: "localhost",
     port: 8008,
     useHTTPS: false,
@@ -19,22 +19,12 @@ const Test = async () => {
   let wallet = Client.GenerateWallet();
   let signer = wallet.AddAccount({
     accountName: "Alice",
+    //privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
     privateKey: "1307df44f8f5033ec86434a7965234015da85261df149ed498cb29907df38d72"
   });
   Client.SetSigner({signer});
 
-  /*
-  try {
-    const spaceId = await Client.CreateContentSpace({name: "ContentSpace2"});
-    console.log(spaceId);
-    return;
-  } catch(error) {
-    console.error(error);
-  }
-  */
-
-  TestMethods.TestQueries(Client, signer).then(result => console.log(result));
-
+  TestMethods.TestQueries(Client, signer);
 
   // Ensure ElvClient and FrameClient agree on allowed methods
   const frameClient = new FrameClient({target: this});

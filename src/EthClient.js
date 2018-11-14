@@ -140,7 +140,10 @@ class EthClient {
       const parsedLog = contractInterface.parseLog(log);
 
       if(parsedLog && parsedLog.name === eventName) {
-        return parsedLog.values[eventValue];
+        return {
+          contractAddress: parsedLog.values[eventValue],
+          transactionHash: event.transactionHash
+        };
       }
     }
 

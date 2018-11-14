@@ -219,6 +219,11 @@ contract BaseContent is Editable {
 	{
 		requestID = requestID + 1;
 		//if (statusCode !=0) return false; // only published content should be accessible (debatable)
+		BaseLibrary lib = BaseLibrary(libraryAddress);
+		if (lib.hasAccess(tx.origin) == false) {
+			emit AccessRequest(105, requestID, level, bytes32(""), "", ""); //for non-0 (unsuccessful request) no need to emit the contentHash and pke
+			return false;
+		}
 
 		//Check if request is funded
 		uint256 requiredFund = getAccessCharge(level, custom_values, stakeholders);
