@@ -1,11 +1,11 @@
 pragma solidity ^0.4.21;
 
-import {Ownable} from './ownable.sol';
+import {Accessible} from "./accessible.sol";
 
-contract Editable is Ownable {
+contract Editable is Accessible {
 
-    event Commit(bytes32 object_hash);
-    event UpdateRequest(bytes32 object_hash);
+    event Commit(bytes32 objectHash);
+    event UpdateRequest(bytes32 objectHash);
 
     bytes32 objectHash;
 

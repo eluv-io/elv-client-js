@@ -83,21 +83,22 @@ class ElvClient {
   }
 
   // Authorization: Bearer <token>
-  async AuthorizationHeader({libraryId, objectId}) {
+  async AuthorizationHeader({libraryId, objectId, transactionHash}) {
     // TODO: Authorize different types
-    let transactionId = "";
-    if(objectId) {
-      transactionId = await this.authClient.ContentObjectAccess(
-        libraryId,
-        objectId
-      );
+    if(!transactionHash) {
+      if(objectId) {
+        transactionHash = await this.authClient.ContentObjectAccess(
+          libraryId,
+          objectId
+        );
+      }
     }
 
     const token = B64(JSON.stringify({
       qspace_id: this.contentSpaceId,
       qlib_id: libraryId,
       addr: this.signer.signingKey.address,
-      txid: transactionId
+      txid: transactionHash
     }));
 
     const signature = B64("SIGNATURE");
@@ -207,7 +208,7 @@ class ElvClient {
     privateMetadata={}
   }) {
     // Deploy contract
-    let libraryAddress = await this.ethClient.DeployLibraryContract({
+    let {contractAddress, transactionHash} = await this.ethClient.DeployLibraryContract({
       contentSpaceAddress: Utils.HashToAddress({hash: this.contentSpaceId}),
       name,
       signer: this.signer
@@ -221,13 +222,13 @@ class ElvClient {
       publicMetadata || {}
     );
 
-    const libraryId = this.utils.AddressToLibraryId({address: libraryAddress});
+    const libraryId = this.utils.AddressToLibraryId({address: contractAddress});
     const path = Path.join("qlibs", libraryId);
 
     // Create library in fabric
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({}),
+        headers: await this.AuthorizationHeader({transactionHash}),
         method: "PUT",
         path: path,
         body: {
@@ -323,18 +324,18 @@ class ElvClient {
     // Deploy contract
     // This calls createContent method of the library contract, which deploys a content contract
     // The address of that deployed contract is returned
-    let contentContractAddress = await this.ethClient.DeployContentContract({
+    let {contractAddress, transactionHash} = await this.ethClient.DeployContentContract({
       contentLibraryAddress: Utils.HashToAddress({hash: libraryId}),
       type: "Hello World Object",
       signer: this.signer
     });
 
-    const objectId = this.utils.AddressToObjectId({address: contentContractAddress});
+    const objectId = this.utils.AddressToObjectId({address: contractAddress});
     const path = Path.join("q", objectId);
 
     return await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, transactionHash}),
         method: "PUT",
         path: path,
         body: options

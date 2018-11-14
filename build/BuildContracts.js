@@ -4,20 +4,12 @@ const solc = require("solc").setupMethods(require("./soljson-v0.4.21+commit.dfe3
 
 // Create minimal JS containing ABI and bytecode from compiled contract
 const BuildContracts = () => {
-  const contractSource = [
-    "base_content.sol",
-    "base_content_space.sol",
-    "base_library.sol",
-    "content.sol",
-    "editable.sol",
-    "base_access_control_group.sol",
-    "base_content_type.sol",
-    "ownable.sol"
-  ];
+  const contractFiles = fs.readdirSync(path.join(__dirname, "..", "contracts"))
+    .filter(filename => filename.endsWith(".sol") && filename !== "Migrations.sol");
 
   let sources = {};
-  for (const contractFilename of contractSource) {
-    sources[contractFilename] = fs.readFileSync(path.join(__dirname, "..", "contracts", "base", contractFilename)).toString();
+  for (const contractFilename of contractFiles) {
+    sources[contractFilename] = fs.readFileSync(path.join(__dirname, "..", "contracts", contractFilename)).toString();
   }
 
   const compilationResult = solc.compile({ sources }, 1);

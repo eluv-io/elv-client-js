@@ -1,12 +1,12 @@
 let TestQueries = async (client, signer) => {
-  let output = "";
+  //let output = "";
   try {
     let libraryIds = await client.ContentLibraries();
 
-    output += "LIBRARIES \n";
-    output += JSON.stringify(libraryIds, null, 2) + "\n\n";
+    console.log("LIBRARIES ");
+    console.log(JSON.stringify(libraryIds, null, 2));
 
-    output += "CREATING LIBRARY \n";
+    console.log("CREATING LIBRARY ");
 
     const libraryId = await (
       client.CreateContentLibrary({
@@ -28,19 +28,19 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += "LIBRARY CREATED: " + libraryId + "\n";
+    console.log("LIBRARY CREATED: " + libraryId);
 
     const libraryResponse = await(
       client.ContentLibrary({libraryId})
     );
-    output += "LIBRARY RESPONSE: \n";
-    output += JSON.stringify(libraryResponse, null, 2) + "\n\n";
+    console.log("LIBRARY RESPONSE: ");
+    console.log(JSON.stringify(libraryResponse, null, 2));
 
     const libraryContentObject = (await client.ContentObjects({libraryId: libraryId})).contents[0];
-    output += "LIBRARY CONTENT OBJECT: \n";
-    output += JSON.stringify(libraryContentObject, null, 2) + "\n\n";
+    console.log("LIBRARY CONTENT OBJECT: ");
+    console.log(JSON.stringify(libraryContentObject, null, 2));
 
-    output += "UPDATING PUBLIC LIBRARY METADATA...\n";
+    console.log("UPDATING PUBLIC LIBRARY METADATA...");
     await client.ReplacePublicLibraryMetadata({
       libraryId,
       metadataSubtree: "toReplace",
@@ -49,12 +49,12 @@ let TestQueries = async (client, signer) => {
 
     const libraryMetadata = await client.PublicLibraryMetadata({libraryId});
 
-    output += "NEW PUBLIC LIBRARY METADATA:\n";
-    output += JSON.stringify(libraryMetadata, null, 2) +"\n\n";
+    console.log("NEW PUBLIC LIBRARY METADATA:");
+    console.log(JSON.stringify(libraryMetadata, null, 2) +"");
 
 
 
-    output += "CREATING OBJECT... \n";
+    console.log("CREATING OBJECT... ");
 
     let createResponse = await (
       client.CreateContentObject({
@@ -76,9 +76,9 @@ let TestQueries = async (client, signer) => {
 
     let objectId = createResponse.id;
 
-    output += "CREATED " + objectId + "\n\n";
+    console.log("CREATED " + objectId);
 
-    output += "CREATING PART...\n";
+    console.log("CREATING PART...");
 
     let partResponse = await (
       client.UploadPart({
@@ -91,9 +91,9 @@ let TestQueries = async (client, signer) => {
 
     let partHash = partResponse.part.hash;
 
-    output += "CREATED " + partHash + "\n\n";
+    console.log("CREATED " + partHash);
 
-    output += "FINALIZING OBJECT... \n";
+    console.log("FINALIZING OBJECT... ");
 
     await (
       client.FinalizeContentObject({
@@ -103,9 +103,9 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += "FINALIZED " + objectId + "\n\n";
+    console.log("FINALIZED " + objectId);
 
-    output += "CONTENT OBJECT METADATA: \n";
+    console.log("CONTENT OBJECT METADATA: ");
     let metadataResponse = await(
       client.ContentObjectMetadata({
         libraryId,
@@ -113,9 +113,9 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += JSON.stringify(metadataResponse, null, 2) + "\n\n";
+    console.log(JSON.stringify(metadataResponse, null, 2));
 
-    output += "EDITING " + objectId + "...\n";
+    console.log("EDITING " + objectId + "...");
     let editResponse = await client.EditContentObject({
       libraryId,
       objectId,
@@ -129,9 +129,9 @@ let TestQueries = async (client, signer) => {
       }
     });
 
-    output += JSON.stringify(editResponse, null, 2) + "\n\n";
+    console.log(JSON.stringify(editResponse, null, 2));
 
-    output += "MERGING METADATA...\n\n";
+    console.log("MERGING METADATA...");
 
     await client.MergeMetadata({
       libraryId,
@@ -140,7 +140,7 @@ let TestQueries = async (client, signer) => {
       metadata: { newField: "newValue"}
     });
 
-    output += "MERGED TOP LEVEL METADATA \n";
+    console.log("MERGED TOP LEVEL METADATA ");
 
     await client.MergeMetadata({
       libraryId,
@@ -150,10 +150,10 @@ let TestQueries = async (client, signer) => {
       metadata: { newField: "newValue"}
     });
 
-    output += "MERGED SUBTREE METADATA \n\n";
+    console.log("MERGED SUBTREE METADATA ");
 
     /*
-    output += "DELETING METADATA...\n\n";
+    console.log("DELETING METADATA...");
 
     await client.DeleteMetadata({
       libraryId,
@@ -169,10 +169,10 @@ let TestQueries = async (client, signer) => {
       metadataSubtree: "subtree/to_delete",
     });
 
-    output += "DELETED METADATA \n\n";
+    console.log("DELETED METADATA ");
     */
 
-    output += "FINALIZING EDIT... \n";
+    console.log("FINALIZING EDIT... ");
 
     await (
       client.FinalizeContentObject({
@@ -182,15 +182,15 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += "FINALIZED EDIT " + objectId + "\n\n";
+    console.log("FINALIZED EDIT " + objectId);
 
 
     let contentObjects = await client.ContentObjects({libraryId: libraryId});
 
-    output += "LIBRARY CONTENTS " + libraryId + "\n";
-    output += JSON.stringify(contentObjects, null, 2) + "\n\n";
+    console.log("LIBRARY CONTENTS " + libraryId);
+    console.log(JSON.stringify(contentObjects, null, 2));
 
-    output += "CONTENT OBJECT: \n";
+    console.log("CONTENT OBJECT: ");
     let contentObjectData = await(
       client.ContentObject({
         libraryId,
@@ -198,11 +198,11 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += JSON.stringify(contentObjectData, null, 2) + "\n\n";
+    console.log(JSON.stringify(contentObjectData, null, 2));
 
     let versionHash = contentObjectData.hash;
 
-    output += "CONTENT OBJECT METADATA: \n";
+    console.log("CONTENT OBJECT METADATA: ");
     let contentObjectMetadata = await(
       client.ContentObjectMetadata({
         libraryId,
@@ -211,9 +211,9 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += JSON.stringify(contentObjectMetadata, null, 2) + "\n\n";
+    console.log(JSON.stringify(contentObjectMetadata, null, 2));
 
-    output += "CONTENT OBJECT VERSIONS: \n";
+    console.log("CONTENT OBJECT VERSIONS: ");
     let contentObjectVersions = await(
       client.ContentObjectVersions({
         libraryId,
@@ -221,15 +221,15 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += JSON.stringify(contentObjectVersions, null, 2) + "\n\n";
+    console.log(JSON.stringify(contentObjectVersions, null, 2));
 
 
     let contentParts = await client.ContentParts({libraryId: libraryId, versionHash});
 
-    output += "CONTENT PARTS " + objectId + "\n";
-    output += JSON.stringify(contentParts, null, 2) + "\n\n";
+    console.log("CONTENT PARTS " + objectId);
+    console.log(JSON.stringify(contentParts, null, 2));
 
-    output += "DOWNLOADING PART... \n";
+    console.log("DOWNLOADING PART... ");
 
     let downloadResponse = await client.DownloadPart({
       libraryId,
@@ -239,10 +239,10 @@ let TestQueries = async (client, signer) => {
       format: "text"
     });
 
-    output += "DOWNLOADED: \n";
-    output += downloadResponse + "\n\n";
+    console.log("DOWNLOADED: ");
+    console.log(downloadResponse);
 
-    output += "NAMING... \n";
+    console.log("NAMING... ");
 
     await client.SetObjectByName({
       name: "test",
@@ -250,14 +250,14 @@ let TestQueries = async (client, signer) => {
       objectId
     });
 
-    output += "RETRIEVING OBJECT BY NAME...\n";
+    console.log("RETRIEVING OBJECT BY NAME...");
 
     let nameResponse = await client.GetObjectByName({
       name: "test"
     });
-    output += JSON.stringify(nameResponse, null, 2) + "\n\n";
+    console.log(JSON.stringify(nameResponse, null, 2));
 
-    output += "DELETING NAME...\n";
+    console.log("DELETING NAME...");
     await client.DeleteName({
       name: "test"
     });
@@ -268,7 +268,7 @@ let TestQueries = async (client, signer) => {
       });
     } catch (e) {
       if(e.status === 404) {
-        output += "SUCCESSFULLY DELETED NAME\n\n";
+        console.log("SUCCESSFULLY DELETED NAME");
       } else {
         throw Error("FAILED TO DELETE NAME: " + JSON.stringify(e));
       }
@@ -276,8 +276,8 @@ let TestQueries = async (client, signer) => {
 
     let proofs = await client.Proofs({libraryId: libraryId, objectId, versionHash, partHash: partHash});
 
-    output += "PROOFS: \n";
-    output += JSON.stringify(proofs, null, 2) + "\n\n";
+    console.log("PROOFS: ");
+    console.log(JSON.stringify(proofs, null, 2));
 
     let qparts = await (
       client.QParts({
@@ -287,10 +287,10 @@ let TestQueries = async (client, signer) => {
       })
     );
 
-    output += "QPARTS: \n";
-    output += qparts + "\n\n";
+    console.log("QPARTS: ");
+    console.log(qparts);
 
-    output += "DELETING PART... \n";
+    console.log("DELETING PART... ");
 
     let partEditResponse = await client.EditContentObject({
       libraryId,
@@ -310,13 +310,13 @@ let TestQueries = async (client, signer) => {
       writeToken: partEditResponse.write_token
     });
 
-    output += "DELETED\n\n";
+    console.log("DELETED");
 
-    output += "URLS: \n\n";
-    output += client.FabricUrl({libraryId}) + "\n";
-    output += client.FabricUrl({libraryId, objectId}) + "\n";
-    output += client.FabricUrl({libraryId, objectId, partHash}) + "\n";
-    output += client.FabricUrl({libraryId, objectId, partHash, queryParams: {query: "params", params: "query"}}) + "\n\n";
+    console.log("URLS: ");
+    console.log(client.FabricUrl({libraryId}));
+    console.log(client.FabricUrl({libraryId, objectId}));
+    console.log(client.FabricUrl({libraryId, objectId, partHash}));
+    console.log(client.FabricUrl({libraryId, objectId, partHash, queryParams: {query: "params", params: "query"}}));
 
     let contentVerification = await (
       client.VerifyContentObject({libraryId, objectId, partHash: versionHash})
@@ -325,23 +325,23 @@ let TestQueries = async (client, signer) => {
         })
     );
 
-    output += "UTILS: \n\n";
-    output += "LIBRARY ID: " + libraryId + "\n";
+    console.log("UTILS: ");
+    console.log("LIBRARY ID: " + libraryId);
 
     const address = client.utils.HashToAddress({hash: libraryId});
-    output += "TO ADDRESS: " + address + "\n";
+    console.log("TO ADDRESS: " + address);
 
     const newLibraryId = client.utils.AddressToLibraryId({address});
-    output += "TO HASH: " + newLibraryId + "\n\n";
+    console.log("TO HASH: " + newLibraryId);
 
     if(newLibraryId.toLowerCase() !== libraryId.toLowerCase()) {
       throw Error("Address/hash conversion mismatch: " + libraryId + " : " + newLibraryId);
     }
 
     const bytes32Hash = client.utils.HashToBytes32({hash: versionHash});
-    output += "CONTENT HASH TO BYTES32 STRING: \n";
-    output += "HASH: " + versionHash + "\n";
-    output += "BYTES32: " + bytes32Hash + "\n\n";
+    console.log("CONTENT HASH TO BYTES32 STRING: ");
+    console.log("HASH: " + versionHash);
+    console.log("BYTES32: " + bytes32Hash);
 
     // Ensure ToBytes32 is correct
     const bytes32Test = client.utils.ToBytes32({string: "Hello World!"});
@@ -350,14 +350,11 @@ let TestQueries = async (client, signer) => {
       throw Error("Bytes 32 mismatch: " + bytes32Test + " : " + bytes32Expected);
     }
 
-    output += "CONTENT VERIFICATION: " + versionHash + "\n";
-    output += JSON.stringify(contentVerification, null, 2) + "\n";
+    console.log("CONTENT VERIFICATION: " + versionHash);
+    console.log(JSON.stringify(contentVerification, null, 2));
   } catch(error) {
-    console.log(output);
     console.error(error);
-    return;
   }
-  return output;
 };
 
 

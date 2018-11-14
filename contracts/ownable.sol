@@ -7,53 +7,56 @@ pragma solidity ^0.4.21;
  */
 contract Ownable {
 
-  address public creator;
-  address public owner;
+    address public creator;
+    address public owner;
 
-  /**
-   * @dev The Ownable constructor sets the original `owner` of the contract to the sender
-   * account.
-   */
-  function Ownable() public {
-    creator = tx.origin;
-    owner = tx.origin;
-  }
+    // "Fallback" function - necessary if this contract needs to be paid
+    function () public payable { }
 
-
-  /**
-   * @dev Throws if called by any account other than the owner.
-   */
-  modifier onlyOwner() {
-    require(tx.origin == owner);
-    _;
-  }
-
-  modifier onlyCreator() {
-    require(tx.origin == creator);
-    _;
-  }
-
-
-  /**
-   * @dev Allows the current owner to transfer control of the contract to a newOwner.
-   * @param newOwner The address to transfer ownership to.
-   */
-  function transferOwnership(address newOwner) public onlyOwner {
-    require(newOwner != address(0));
-    owner = newOwner;
-  }
-
-  function transferCreatorship(address newCreator) public onlyCreator {
-    require(newCreator != address(0));
-    if (owner == creator){
-      owner = newCreator;
+    /**
+     * @dev The Ownable constructor sets the original `owner` of the contract to the sender
+     * account.
+     */
+    function Ownable() public {
+        creator = tx.origin;
+        owner = tx.origin;
     }
-    creator = newCreator;
-  }
 
-  function kill() public onlyOwner {
-    selfdestruct(owner);  // kills contract; send remaining funds back to owner
-  }
+
+    /**
+     * @dev Throws if called by any account other than the owner.
+     */
+    modifier onlyOwner() {
+        require(tx.origin == owner);
+        _;
+    }
+
+    modifier onlyCreator() {
+        require(tx.origin == creator);
+        _;
+    }
+
+
+    /**
+     * @dev Allows the current owner to transfer control of the contract to a newOwner.
+     * @param newOwner The address to transfer ownership to.
+     */
+    function transferOwnership(address newOwner) public onlyOwner {
+        require(newOwner != address(0));
+        owner = newOwner;
+    }
+
+    function transferCreatorship(address newCreator) public onlyCreator {
+        require(newCreator != address(0));
+        if (owner == creator){
+            owner = newCreator;
+        }
+        creator = newCreator;
+    }
+
+    function kill() public onlyOwner {
+        selfdestruct(owner);  // kills contract; send remaining funds back to owner
+    }
 
 
 }

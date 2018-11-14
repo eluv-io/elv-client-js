@@ -277,5 +277,15 @@ contract BaseLibrary is Editable {
 
         return contentAddress;
     }
+
+    function accessRequest() public returns (bool){
+        if (hasAccess(tx.origin)) {
+            emit AccessRequest(0);
+            return true;
+        } else {
+            emit AccessRequest(105);
+            return false;
+        }
+    }
 }
 
