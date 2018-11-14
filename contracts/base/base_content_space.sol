@@ -1,6 +1,6 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.21;
 
-import {Ownable} from './ownable.sol';
+import {Ownable} from "./ownable.sol";
 import {BaseAccessControlGroup} from './base_access_control_group.sol';
 import {BaseContentType} from './base_content_type.sol';
 import {BaseLibrary} from './base_library.sol';

@@ -1,11 +1,15 @@
+const Utils = require("./Utils");
+
 // -- Contract javascript files built using build/BuildContracts.js
 const ContentLibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 
 class AuthorizationClient {
-  constructor(elvClient, ethClient) {
+  constructor(elvClient, ethClient, noCache=false) {
     this.elvClient = elvClient;
     this.ethClient = ethClient;
+
+    this.noCache = noCache;
 
     this.accessTransactions = {
       libraries: {},
@@ -13,64 +17,12 @@ class AuthorizationClient {
     };
   }
 
-  async LibraryContract(libraryId) {
-    const libraryMetadata = await this.elvClient.PublicLibraryMetadata({libraryId});
-    if(libraryMetadata && libraryMetadata["eluv.contract_address"]) {
-      return libraryMetadata["eluv.contract_address"];
-    }
-
-    throw Error("Unable to find contract address for library " +libraryId);
-  }
-
-  async LibraryAccess(libraryId) {
-    let transactionHash = this.accessTransactions.libraries[libraryId];
-    if(transactionHash) { return transactionHash; }
-
-    const contractAddress = await this.LibraryContract(libraryId);
-
-    console.log(JSON.stringify(ContentLibraryContract.abi, null, 2));
-
-    const args = [
-      0, // Access level
-      this.elvClient.signer.privateKey, // Private key of requester
-      "", // AFGH string
-      [], // Custom values
-      [] // Stakeholders
-    ];
-
-    const formattedArgs = this.elvClient.FormatContractArguments({
-      abi: ContentLibraryContract.abi,
-      methodName: "accessRequest",
-      args
-    });
-
-    console.log(args);
-    console.log(formattedArgs);
-
-    const response = await this.elvClient.CallContractMethod({
-      contractAddress,
-      abi: ContentLibraryContract.abi,
-      methodName: "accessRequest",
-      methodArgs: formattedArgs
-    });
-
-    console.log(response);
-  }
-
-  async ContentObjectContract(libraryId, objectId) {
-    const objectMetadata = await this.elvClient.ContentObjectMetadata({libraryId, versionHash: objectId});
-    if(objectMetadata && objectMetadata["caddr"]) {
-      return objectMetadata["caddr"];
-    }
-
-    throw Error("Unable to find contract address for library " +libraryId);
-  }
-
   async ContentObjectAccess(libraryId, objectId) {
-    let transactionHash = this.accessTransactions.objects[objectId];
-    if(transactionHash) { return transactionHash; }
-
-    const contractAddress = this.elvClient.utils.HashToAddress({hash: objectId});
+    // See if object has already been accessed and re-use the transaction
+    if(!this.noCache) {
+      let transactionHash = this.accessTransactions.objects[objectId];
+      if(transactionHash) { return transactionHash; }
+    }
 
     const args = [
       0, // Access level
@@ -86,16 +38,29 @@ class AuthorizationClient {
       args
     });
 
-    const response = await this.elvClient.CallContractMethod({
-      contractAddress,
+    const methodEvent = await this.elvClient.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress({hash: objectId}),
       abi: ContentContract.abi,
       methodName: "accessRequest",
       methodArgs: formattedArgs
     });
 
-    this.accessTransactions.objects[objectId] = response.hash;
+    if(!this.noCache) {
+      this.accessTransactions.objects[objectId] = methodEvent.transactionHash;
+    }
 
-    return response.hash;
+    return methodEvent.transactionHash;
+  }
+
+  // Clear cached access transaction IDs for either a specific library/object or all
+  ClearCache({libraryId, objectId}) {
+    if(libraryId) {
+      this.accessTransactions.libraries[libraryId] = undefined;
+    } else if(objectId) {
+      this.accessTransactions.objects[objectId] = undefined;
+    } else {
+      this.accessTransactions = {};
+    }
   }
 }
 

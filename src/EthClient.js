@@ -89,7 +89,38 @@ class EthClient {
     return await contract.functions[methodName](...methodArgs, overrides);
   }
 
-  // Deploy contract by calling method on existing contract
+  async CallContractMethodAndWait({
+    contractAddress,
+    abi,
+    methodName,
+    methodArgs,
+    signer
+  }) {
+    let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
+    contract = contract.connect(signer);
+
+    // Make method call
+    const createMethodCall = await this.CallContractMethod({
+      contract,
+      abi,
+      methodName,
+      methodArgs,
+      signer
+    });
+
+    // Await completion of call and get event
+    const methodEvent = await new Promise((resolve) => {
+      signer.provider.on(createMethodCall.hash, async (event) => {
+        resolve(event);
+      });
+    });
+
+    // Make sure to remove listener when done
+    signer.provider.removeAllListeners(createMethodCall.hash);
+
+    return methodEvent;
+  }
+
   async DeployDependentContract({
     contractAddress,
     abi,
@@ -101,43 +132,19 @@ class EthClient {
   }) {
     const methodArgs = this.FormatContractArguments({abi, methodName, args});
 
-    let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
-    contract = contract.connect(signer);
+    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, signer});
 
-    // Call create content method on library contract
-    const createMethodCall = await this.CallContractMethod({
-      contract,
-      abi,
-      methodName,
-      methodArgs,
-      signer
-    });
+    const contractInterface = new Ethers.utils.Interface(abi);
+    // Loop through logs to find the desired log
+    for(const log of event.logs) {
+      const parsedLog = contractInterface.parseLog(log);
 
-    // Await completion of call and creation of dependent contract
-    // then extract contract address from the event log
-    const dependentContractAddress = await new Promise((resolve, reject) => {
-      signer.provider.on(createMethodCall.hash, async (event) => {
-        try {
-          // Loop through logs to find the desired event
-          for(const log of event.logs) {
-            const parsedLog = contract.interface.parseLog(log);
+      if(parsedLog && parsedLog.name === eventName) {
+        return parsedLog.values[eventValue];
+      }
+    }
 
-            if(parsedLog && parsedLog.name === eventName) {
-              resolve(parsedLog.values[eventValue]);
-            }
-          }
-
-          reject(eventName + " event not found");
-        } catch(error) {
-          reject(error);
-        }
-      });
-    });
-
-    // Make sure to remove listener when done
-    signer.provider.removeAllListeners(createMethodCall.hash);
-
-    return dependentContractAddress;
+    throw Error(eventName + " event not found");
   }
 
   /* Specific contract management */

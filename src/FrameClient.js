@@ -104,6 +104,7 @@ class FrameClient {
   AllowedMethods() {
     return [
       "CallContractMethod",
+      "CallContractMethodAndWait",
       "ContentLibraries",
       "ContentLibrary",
       "ContentObject",

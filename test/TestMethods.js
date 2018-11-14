@@ -83,6 +83,7 @@ let TestQueries = async (client, signer) => {
     let partResponse = await (
       client.UploadPart({
         libraryId,
+        objectId,
         writeToken: createResponse.write_token,
         data: "some form of data"
       })
@@ -97,6 +98,7 @@ let TestQueries = async (client, signer) => {
     await (
       client.FinalizeContentObject({
         libraryId,
+        objectId,
         writeToken: createResponse.write_token
       })
     );
@@ -133,6 +135,7 @@ let TestQueries = async (client, signer) => {
 
     await client.MergeMetadata({
       libraryId,
+      objectId,
       writeToken: editResponse.write_token,
       metadata: { newField: "newValue"}
     });
@@ -141,6 +144,7 @@ let TestQueries = async (client, signer) => {
 
     await client.MergeMetadata({
       libraryId,
+      objectId,
       writeToken: editResponse.write_token,
       metadataSubtree: "sub",
       metadata: { newField: "newValue"}
@@ -153,12 +157,14 @@ let TestQueries = async (client, signer) => {
 
     await client.DeleteMetadata({
       libraryId,
+      objectId,
       writeToken: editResponse.write_token,
       metadataSubtree: "to_delete"
     });
 
     await client.DeleteMetadata({
       libraryId,
+      objectId,
       writeToken: editResponse.write_token,
       metadataSubtree: "subtree/to_delete",
     });
@@ -171,6 +177,7 @@ let TestQueries = async (client, signer) => {
     await (
       client.FinalizeContentObject({
         libraryId,
+        objectId,
         writeToken: editResponse.write_token
       })
     );
@@ -292,12 +299,14 @@ let TestQueries = async (client, signer) => {
 
     await client.DeletePart({
       libraryId,
+      objectId,
       writeToken: partEditResponse.write_token,
       partHash
     });
 
     await client.FinalizeContentObject({
       libraryId,
+      objectId,
       writeToken: partEditResponse.write_token
     });
 
