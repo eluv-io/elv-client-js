@@ -1,0 +1,13 @@
+{
+  "fabric": {
+    "contentSpaceId": "ispc3569mCBVGdYPHar9Bbv4pjbQRuqV",
+    "hostname": "localhost",
+    "port": 8008,
+    "use_https": false
+  },
+  "ethereum": {
+    "hostname": "localhost",
+    "port": 8545,
+    "use_https": false
+  }
+}

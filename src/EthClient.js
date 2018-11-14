@@ -60,8 +60,8 @@ class EthClient {
     await contract.deployed();
 
     return {
-      address: contract.address,
-      deployTransaction: contract.deployTransaction
+      contractAddress: contract.address,
+      transactionHash: contract.deployTransaction.hash
     };
   }
 
@@ -154,14 +154,12 @@ class EthClient {
 
 
   async DeployContentSpaceContract({name, signer}) {
-    const response = await this.DeployContract({
+    return this.DeployContract({
       abi: ContentSpaceContract.abi,
       bytecode: ContentSpaceContract.bytecode,
       constructorArgs: [name],
       signer
     });
-
-    return response.address;
   }
 
   async DeployLibraryContract({contentSpaceAddress, signer}) {

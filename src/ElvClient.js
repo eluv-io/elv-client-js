@@ -82,6 +82,18 @@ class ElvClient {
     this.authClient = new AuthClient(this, this.ethClient, noCache);
   }
 
+  static FromConfiguration({configuration}) {
+    return new ElvClient({
+      contentSpaceId: configuration.fabric.contentSpaceId,
+      hostname: configuration.fabric.hostname,
+      port: configuration.fabric.port,
+      useHTTPS: configuration.fabric.use_https,
+      ethHostname: configuration.ethereum.hostname,
+      ethPort: configuration.ethereum.port,
+      ethUseHTTPS: configuration.ethereum.use_https
+    });
+  }
+
   // Authorization: Bearer <token>
   async AuthorizationHeader({libraryId, objectId, transactionHash}) {
     // TODO: Authorize different types
