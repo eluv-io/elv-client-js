@@ -1,8 +1,8 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.21;
 
-import {Editable} from './editable.sol';
-import {Content} from './content.sol';
-import {BaseLibrary} from './base_library.sol';
+import {Editable} from "./editable.sol";
+import {Content} from "./content.sol";
+import {BaseLibrary} from "./base_library.sol";
 
 
 contract BaseContent is Editable {

@@ -1,12 +1,12 @@
 const { ElvClient } = require("./src/ElvClient.js");
 
 let client = new ElvClient({
-  contentSpaceId: "ispc3t3rNEgvFBwLagHKCWK3X1y6w1fS",
+  contentSpaceId: "ispcctAxva1spCGdy2YMmNfBZDjc4NZ",
   hostname: "localhost",
   port: 8008,
   useHTTPS: false,
   ethHostname: "localhost",
-  ethPort: 7545,
+  ethPort: 8545,
   ethUseHTTPS: false
 });
 
@@ -22,8 +22,8 @@ const client2 = new ElvClient({
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
   accountName: "Alice",
-  privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
   //privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
+  privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
 });
 
 client.SetSigner({signer});
@@ -74,6 +74,7 @@ const SampleCreateContent = async () => {
     // Finalize object
     const finalizeResponse = await client.FinalizeContentObject({
       libraryId,
+      objectId: createResponse.id,
       writeToken: createResponse.write_token
     });
 
@@ -83,7 +84,7 @@ const SampleCreateContent = async () => {
     // Get object info for display
     const contentObjectInfo = await GetFullContentObject({
       libraryId,
-      objectId: finalizeResponse.id
+      objectId: createResponse.id
     });
 
     console.log("\nContent object:");
@@ -91,7 +92,7 @@ const SampleCreateContent = async () => {
 
     return {
       libraryId,
-      objectId: finalizeResponse.id
+      objectId: createResponse.id
     };
   } catch(error) {
     console.error(error);
@@ -111,6 +112,7 @@ const SampleUpdateContent = async ({libraryId, objectId}) => {
 
   await client.MergeMetadata({
     libraryId,
+    objectId,
     writeToken: editResponse.write_token,
     metadata: { "latest_count": 700, "latest_level": 400 }
   });
@@ -119,6 +121,7 @@ const SampleUpdateContent = async ({libraryId, objectId}) => {
 
   const finalizeResponse = await client.FinalizeContentObject({
     libraryId,
+    objectId,
     writeToken: editResponse.write_token
   });
 
