@@ -1,6 +1,7 @@
 const { ElvClient } = require("./src/ElvClient");
 const ClientConfiguration = require("./TestConfiguration.json");
 
+const Path = require("path");
 const fs = require("fs");
 const readLine = require("readline");
 
@@ -14,8 +15,8 @@ let signer = wallet.AddAccount({
 });
 client.SetSigner({signer});
 
-if(process.argv.length !== 3) {
-  console.error("Usage: node InitContentSpace.js <path-to-qfab-config.json>");
+if(process.argv.length !== 4) {
+  console.error("Usage: node InitContentSpace.js <path-to-qfab-config.json> <path-to-content-fabric-dir>");
   process.exit();
 }
 
@@ -107,6 +108,29 @@ const Init = async () => {
 
   console.log("\nCreated content types library: ");
   console.log("\tID: " + libraryId + "\n");
+
+  /* Create content types from bitcode */
+
+  console.log("Creating content types: ");
+
+  const bitcodePath = Path.join(process.argv[3], "bitcode");
+  const bitcodeDirs = fs.readdirSync(bitcodePath)
+    .filter(name => name !== ".gitignore");
+
+  for(const bitcodeDirName of bitcodeDirs) {
+    const bitcodeFiles = fs.readdirSync(Path.join(bitcodePath, bitcodeDirName))
+      .filter(filename => filename.endsWith(".bc"));
+
+    for(const bitcodeFilename of bitcodeFiles) {
+      const name = bitcodeFilename.split(".")[0];
+      const bitcode = fs.readFileSync(Path.join(bitcodePath, bitcodeDirName, bitcodeFilename));
+
+      console.log("\tCreating " + name + "...");
+      await client.CreateContentType({name, bitcode});
+    }
+  }
+
+  console.log();
 };
 
 Init();
