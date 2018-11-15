@@ -167,6 +167,18 @@ class EthClient {
     });
   }
 
+  async DeployTypeContract({contentSpaceAddress, signer}) {
+    return this.DeployDependentContract({
+      contractAddress: contentSpaceAddress,
+      abi: ContentSpaceContract.abi,
+      methodName: "createContentType",
+      args: [],
+      eventName: "CreateContentType",
+      eventValue: "contentTypeAddress",
+      signer
+    });
+  }
+
   async DeployLibraryContract({contentSpaceAddress, signer}) {
     return this.DeployDependentContract({
       contractAddress: contentSpaceAddress,

@@ -281,6 +281,88 @@ class ElvClient {
     );
   }
 
+  /* Content Types */
+
+  async ContentTypes() {
+    const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
+    const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
+
+    let path = Path.join("qlibs", typeLibraryId, "q");
+
+    // Does the same as ContentObjects(), but authorization cannot be performed
+    // against the content type library because it does not have a library contract
+    const response = await ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.AuthorizationHeader({}),
+        method: "GET",
+        path: path
+      })
+    );
+
+    // Return ID, hash and name of each content type
+    // Filter any types without a name (e.g. content library object)
+    return response.contents
+      .map(contentType => {
+        const typeInfo = contentType.versions[0];
+        if(!typeInfo.meta || !typeInfo.meta["eluv.name"]) { return; }
+
+        return {
+          id: typeInfo.id,
+          hash: typeInfo.hash,
+          name: typeInfo.meta["eluv.name"]
+        };
+      })
+      .filter(result => result);
+  }
+
+  async CreateContentType({name, bitcode}) {
+    const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
+    const { contractAddress, transactionHash } = await this.ethClient.DeployTypeContract({
+      contentSpaceAddress,
+      signer: this.signer
+    });
+
+    const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
+
+    const objectId = this.utils.AddressToObjectId({address: contractAddress});
+    const path = Path.join("qlibs", typeLibraryId, "q", objectId);
+
+    // Save transaction hash for authorization on all further requests
+    this.authClient.CacheObjectTransaction({objectId, transactionHash});
+
+    /* Create object, upload bitcode and finalize */
+
+    const createResponse = await ResponseToJson(
+      this.HttpClient.Request({
+        // Note: content type library *does not* have a contract to authorize against
+        headers: await this.AuthorizationHeader({}),
+        method: "PUT",
+        path: path,
+        body: {
+          type: "",
+          meta: {
+            "eluv.name": name
+          }
+        }
+      })
+    );
+
+    await this.UploadPart({
+      libraryId: typeLibraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      data: bitcode
+    });
+
+    await this.FinalizeContentObject({
+      libraryId: typeLibraryId,
+      objectId,
+      writeToken: createResponse.write_token
+    });
+
+    return objectId;
+  }
+
   /* Objects */
 
   async ContentObjects({libraryId}) {
@@ -332,6 +414,8 @@ class ElvClient {
   }
 
   /* Content object creation / modification */
+
+  // TODO: Auto-lookup of content types
 
   async CreateContentObject({libraryId, options={}}) {
     // Deploy contract

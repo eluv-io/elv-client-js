@@ -17,7 +17,14 @@ const Test = async () => {
   });
   client.SetSigner({signer});
 
-  TestMethods.TestQueries(client, signer);
+  //TestMethods.TestQueries(client, signer);
+
+  try {
+    const types = await client.ContentTypes();
+    console.log(JSON.stringify(types, null, 2));
+  } catch(e) {
+    console.log(e);
+  }
 
   // Ensure ElvClient and FrameClient agree on allowed methods
   const frameClient = new FrameClient({target: this});
