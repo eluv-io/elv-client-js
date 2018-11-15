@@ -8,28 +8,23 @@ import {BaseContent} from "./base_content.sol";
 contract BaseLibrary is Editable {
 
 
-    //mapping (address => bool) public managers; //for now let it be restricted to owner
     address public space;
-    //bytes32 public restricted_space;
-    bytes32 public libraryHash;
-    address[] public contributor_groups;
-    address[] public reviewer_groups;
-    address[] public accessor_groups;
-    address[] public content_types;
-    uint256 public contributor_groups_length;
-    uint256 public reviewer_groups_length;
-    uint256 public accessor_groups_length;
-    uint256 public content_types_length;
+    address[] public contributorGroups;
+    address[] public reviewerGroups;
+    address[] public accessorGroups;
+    address[] public contentTypes;
+    uint256 public contributorGroupsLength;
+    uint256 public reviewerGroupsLength;
+    uint256 public accessorGroupsLength;
+    uint256 public contentTypesLength;
 
     mapping ( address => address ) public contentTypeContracts;  // custom contracts map
     mapping ( address => uint256 ) public contentTypeLicensingFees;  // custom contracts map
 
-    //uint256 public maxCredit = 10;
-
-    address[] approvalRequests;
+    address[] public approvalRequests;
     address public addressKMS;
     uint256 public approvalRequestsLength = 0;
-    mapping (address => uint256) private approvalRequestsMap; // the position + 1 in the array, the + 1, is to differentiate index 0 from un-mapped
+    mapping (address => uint256) private approvalRequestsMap; //index offset by 1 to avoid confusing 0 for removed
 
     event ContentObjectCreated(address contentAddress, address content_type);
     event ContributorGroupAdded(address group);
@@ -39,16 +34,13 @@ contract BaseLibrary is Editable {
     event UnauthorizedOperation(uint operationCode, address candidate);
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContentExecuted(address contentAddress, bool approved, string note);
-
     event PayCredit(address payee, uint256 amount);
-
-    //function () public payable { }
 
     function BaseLibrary(address address_KMS) public payable {
         space = msg.sender;
-        contributor_groups_length = 0;
-        reviewer_groups_length = 0;
-        accessor_groups_length = 0;
+        contributorGroupsLength = 0;
+        reviewerGroupsLength = 0;
+        accessorGroupsLength = 0;
         addressKMS = address_KMS;
     }
 
@@ -56,47 +48,42 @@ contract BaseLibrary is Editable {
         addressKMS = address_KMS;
     }
 
-
-
-
-
     function addContributorGroup(address group) public onlyOwner {
-        contributor_groups.push(group);
-        contributor_groups_length = contributor_groups_length + 1;
+        contributorGroups.push(group);
+        contributorGroupsLength = contributorGroupsLength + 1;
         emit ContributorGroupAdded(group);
     }
 
     function addReviewerGroup(address group) public onlyOwner {
-        reviewer_groups.push(group);
-        reviewer_groups_length = contributor_groups_length + 1;
+        reviewerGroups.push(group);
+        reviewerGroupsLength = reviewerGroupsLength + 1;
         emit ReviewerGroupAdded(group);
     }
 
     function addAccessorGroup(address group) public onlyOwner {
-        accessor_groups.push(group);
-        accessor_groups_length = accessor_groups_length + 1;
+        accessorGroups.push(group);
+        accessorGroupsLength = accessorGroupsLength + 1;
         emit AccessorGroupAdded(group);
     }
 
     function addContentType(address content_type, address content_contract, uint256 licensing_fee) public onlyOwner {
-        content_types.push(content_type);
-        content_types_length = content_types_length + 1;
+        contentTypes.push(content_type);
+        contentTypesLength = contentTypesLength + 1;
         contentTypeContracts[content_type] = content_contract;
         contentTypeLicensingFees[content_type] = licensing_fee;
         emit ContentTypeAdded(content_type, content_contract, licensing_fee);
     }
 
-
     function hasAccess(address candidate) public constant returns (bool) {
-        if (accessor_groups.length == 0){
+        if (accessorGroups.length == 0) {
             return true;
         }
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i=0; i <  accessor_groups.length; i++) {
-            group =  accessor_groups[i];
-            if (group != 0x0){
+        for (uint i=0; i < accessorGroups.length; i++) {
+            group = accessorGroups[i];
+            if (group != 0x0) {
                 groupContract = BaseAccessControlGroup(group);
                 groupAccess = groupContract.hasAccess(candidate);
                 if (groupAccess == true) {
@@ -108,16 +95,15 @@ contract BaseLibrary is Editable {
     }
 
     function canContribute(address candidate) public constant returns (bool) {
-
-        if (contributor_groups.length == 0) {
+        if (contributorGroups.length == 0) {
             return true;
         }
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < contributor_groups.length; i++) {
-            group = contributor_groups[i];
-            if (group != 0x0){
+        for (uint i = 0; i < contributorGroups.length; i++) {
+            group = contributorGroups[i];
+            if (group != 0x0) {
                 groupContract = BaseAccessControlGroup(group);
                 groupAccess = groupContract.hasAccess(candidate);
                 if (groupAccess == true) {
@@ -135,9 +121,9 @@ contract BaseLibrary is Editable {
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i=0; i <  reviewer_groups.length; i++) {
-            group =  reviewer_groups[i];
-            if (group != 0x0){
+        for (uint i=0; i < reviewerGroups.length; i++) {
+            group = reviewerGroups[i];
+            if (group != 0x0) {
                 groupContract = BaseAccessControlGroup(group);
                 groupAccess = groupContract.hasAccess(candidate);
                 if (groupAccess == true) {
@@ -149,37 +135,35 @@ contract BaseLibrary is Editable {
     }
 
     function submitApprovalRequest() public returns (bool) {
-        address content_contract = msg.sender;
-        BaseContent c = BaseContent(content_contract);
+        address contentContract = msg.sender;
+        BaseContent c = BaseContent(contentContract);
         if (c.owner() != tx.origin) {
             return false;
         }
-        if (reviewer_groups_length == 0) { //No review required
-            //int current_status = c.statusCode();
-            uint8 percent_complete = c.percentComplete();
-            int new_status_code;
-            new_status_code = 0; // indicates approval, custom contract might overwrite that decision
-            uint256 to_be_paid = c.updateStatus(new_status_code, percent_complete);
-            payCredit(c, to_be_paid);
+        if (reviewerGroupsLength == 0) { //No review required
+            uint8 percentComplete = c.percentComplete();
+            // 0 indicates approval, custom contract might overwrite that decision
+            uint256 toBePaid = c.updateStatus(0, percentComplete);
+            payCredit(c, toBePaid);
 
             // Log event
-            emit ApproveContentExecuted(content_contract, true, "");
+            emit ApproveContentExecuted(contentContract, true, "");
             return true;
         }
-        if (approvalRequestsMap[content_contract] != 0) {
+        if (approvalRequestsMap[contentContract] != 0) {
             return false;
         }
         // Create a new approval request and add to pending list
         if (approvalRequestsLength < approvalRequests.length) {
-            approvalRequests[approvalRequestsLength] = content_contract;
+            approvalRequests[approvalRequestsLength] = contentContract;
         } else {
-            approvalRequests.push(content_contract);
+            approvalRequests.push(contentContract);
         }
-        approvalRequestsMap[content_contract] = approvalRequestsLength + 1;//should be same either way, but in second case the length and number of items match
-        approvalRequestsLength ++;
+        approvalRequestsMap[contentContract] = approvalRequestsLength + 1;
+        approvalRequestsLength++;
 
         // Log event
-        emit ApproveContentRequest(content_contract, tx.origin);
+        emit ApproveContentRequest(contentContract, tx.origin);
         return true;
     }
 
@@ -204,31 +188,23 @@ contract BaseLibrary is Editable {
         approvalRequestsLength--;
         approvalRequestsMap[content_contract] = 0;
         if (approvalRequestsLength > index) {
-            address last_request = approvalRequests[approvalRequestsLength];
-            approvalRequests[index] = last_request;
+            address lastRequest = approvalRequests[approvalRequestsLength];
+            approvalRequests[index] = lastRequest;
             delete approvalRequests[approvalRequestsLength];
-            approvalRequestsMap[last_request] = index + 1;
+            approvalRequestsMap[lastRequest] = index + 1;
         }
 
-        int current_status = c.statusCode();
-        if (current_status > 0) {
-            uint8 percent_complete = c.percentComplete();
-            int new_status_code;
+        int currentStatus = c.statusCode();
+        if (currentStatus > 0) {
+            uint8 percentComplete = c.percentComplete();
+            int newStatusCode;
             if (approved == true) {
-
-                /* remove this logic from here as it is constraining - best to handle it in custom contract
-                if (percent_complete == 100) {
-                  new_status_code = 0; // content approved for viewing
-                } else {
-                  new_status_code = (current_status + 2) * -1; // +2 to keep it odd number. Even number could be used to indicate refusal
-                }
-                */
-                new_status_code = 0; // indicates approval, custom contract might overwrite that decision
+                newStatusCode = 0; // indicates approval, custom contract might overwrite that decision
             } else {
-                new_status_code = (current_status + 1) * -1; // returned to draft
+                newStatusCode = (currentStatus + 1) * -1; // returned to draft
             }
-            uint256 to_be_paid = c.updateStatus(new_status_code, percent_complete);
-            payCredit(c, to_be_paid);
+            uint256 toBePaid = c.updateStatus(newStatusCode, percentComplete);
+            payCredit(c, toBePaid);
 
             // Log event
             emit ApproveContentExecuted(content_contract, approved, note);
@@ -241,18 +217,18 @@ contract BaseLibrary is Editable {
     function payCredit(address content_contract, uint256 amount) public returns (uint256) {
         if (amount > 0) {
             BaseContent c = BaseContent(content_contract);
-            uint256 to_be_paid;
+            uint256 toBePaid;
             uint256 remainder = c.getUnpaidLicensingFee(); //c.licensingFee - c.licensingFeeReceived;
             if (amount > remainder) {
-                to_be_paid = remainder;
+                toBePaid = remainder;
             } else {
-                to_be_paid = amount;
+                toBePaid = amount;
             }
             // credit the transaction caller
-            c.owner().transfer(to_be_paid);
-            c.addLicensingFeeReceived(to_be_paid);
-            emit PayCredit(c.owner(), to_be_paid);
-            return to_be_paid;
+            c.owner().transfer(toBePaid);
+            c.addLicensingFeeReceived(toBePaid);
+            emit PayCredit(c.owner(), toBePaid);
+            return toBePaid;
         } else {
             return 0;
         }
@@ -278,7 +254,7 @@ contract BaseLibrary is Editable {
         return contentAddress;
     }
 
-    function accessRequest() public returns (bool){
+    function accessRequest() public returns (bool) {
         if (hasAccess(tx.origin)) {
             emit AccessRequest(0);
             return true;

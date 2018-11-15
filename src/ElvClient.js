@@ -96,13 +96,13 @@ class ElvClient {
 
   // Authorization: Bearer <token>
   async AuthorizationHeader({libraryId, objectId, transactionHash}) {
-    // TODO: Authorize different types
     if(!transactionHash) {
       if(objectId) {
-        transactionHash = await this.authClient.ContentObjectAccess(
-          libraryId,
-          objectId
-        );
+        transactionHash = await this.authClient.ContentObjectAccess({objectId});
+      } else if(libraryId) {
+        transactionHash = await this.authClient.ContentLibraryAccess({libraryId});
+      } else {
+        transactionHash = await this.authClient.ContentSpaceAccess();
       }
     }
 
@@ -237,6 +237,9 @@ class ElvClient {
     const libraryId = this.utils.AddressToLibraryId({address: contractAddress});
     const path = Path.join("qlibs", libraryId);
 
+    // Save transaction hash for authorization on all further requests
+    this.authClient.CacheLibraryTransaction({libraryId, transactionHash});
+
     // Create library in fabric
     await HandleErrors(
       this.HttpClient.Request({
@@ -330,8 +333,6 @@ class ElvClient {
 
   /* Content object creation / modification */
 
-  // TODO: It would be faster to just use+cache the create transaction hash instead of
-  // calling access request immediately after
   async CreateContentObject({libraryId, options={}}) {
     // Deploy contract
     // This calls createContent method of the library contract, which deploys a content contract
@@ -344,6 +345,9 @@ class ElvClient {
 
     const objectId = this.utils.AddressToObjectId({address: contractAddress});
     const path = Path.join("q", objectId);
+
+    // Save transaction hash for authorization on all further requests
+    this.authClient.CacheObjectTransaction({objectId, transactionHash});
 
     return await ResponseToJson(
       this.HttpClient.Request({
