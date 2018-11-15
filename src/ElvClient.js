@@ -80,6 +80,8 @@ class ElvClient {
     this.utils = Utils;
 
     this.authClient = new AuthClient(this, this.ethClient, noCache);
+
+    this.contentTypes = {};
   }
 
   static FromConfiguration({configuration}) {
@@ -299,20 +301,36 @@ class ElvClient {
       })
     );
 
-    // Return ID, hash and name of each content type
-    // Filter any types without a name (e.g. content library object)
-    return response.contents
-      .map(contentType => {
+    let contentTypes = {};
+    response.contents
+      .forEach(contentType => {
         const typeInfo = contentType.versions[0];
         if(!typeInfo.meta || !typeInfo.meta["eluv.name"]) { return; }
 
-        return {
+        contentTypes[typeInfo.meta["eluv.name"]] = {
           id: typeInfo.id,
-          hash: typeInfo.hash,
-          name: typeInfo.meta["eluv.name"]
+          hash: typeInfo.hash
         };
-      })
-      .filter(result => result);
+      });
+
+    // Cache content types for faster lookup
+    this.contentTypes = Object.assign({}, contentTypes);
+
+    return contentTypes;
+  }
+
+  async ContentType({name}) {
+    if(this.contentTypes[name]) {
+      return this.contentTypes[name];
+    } else {
+      const contentTypes = await this.ContentTypes();
+
+      if(!contentTypes[name]) {
+        throw Error("Unknown content type: " + name);
+      }
+
+      return contentTypes[name];
+    }
   }
 
   async CreateContentType({name, bitcode}) {
@@ -418,12 +436,17 @@ class ElvClient {
   // TODO: Auto-lookup of content types
 
   async CreateContentObject({libraryId, options={}}) {
+    // Look up content type if type is specified
+    if(options.type) {
+      options.type = (await this.ContentType({name: options.type})).hash;
+    }
+
     // Deploy contract
     // This calls createContent method of the library contract, which deploys a content contract
     // The address of that deployed contract is returned
     let {contractAddress, transactionHash} = await this.ethClient.DeployContentContract({
       contentLibraryAddress: Utils.HashToAddress({hash: libraryId}),
-      type: "Hello World Object",
+      type: options.type || "",
       signer: this.signer
     });
 
@@ -444,6 +467,11 @@ class ElvClient {
   }
 
   async EditContentObject({libraryId, objectId, options={}}) {
+    // Look up content type if type is specified
+    if(options.type) {
+      options.type = (await this.ContentType({name: options.type})).hash;
+    }
+
     let path = Path.join("qid", objectId);
 
     return ResponseToJson(

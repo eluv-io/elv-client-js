@@ -112,6 +112,7 @@ class FrameClient {
       "ContentObjectVersions",
       "ContentObjects",
       "ContentParts",
+      "ContentType",
       "ContentTypes",
       "CreateContentLibrary",
       "CreateContentObject",
