@@ -669,7 +669,11 @@ class ElvClient {
     );
   }
 
-  FabricUrl({libraryId, objectId, versionHash, partHash, queryParams = {}}) {
+  async Rep({libraryId, objectId, versionHash, rep}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, rep});
+  }
+
+  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, queryParams = {}}) {
     let path = "";
 
     if(libraryId) {
@@ -680,13 +684,20 @@ class ElvClient {
 
         if(partHash){
           path = Path.join(path, "data", partHash);
+        } else if(rep) {
+          path = Path.join(path, "rep", rep);
         }
       }
     }
 
+    const authorization = (await this.AuthorizationHeader({libraryId, objectId}))
+      .Authorization.replace("Bearer ", "");
+
     return this.HttpClient.URL({
       path: path,
-      queryParams
+      queryParams: Object.assign({
+        authorization,
+      }, queryParams)
     });
   }
 
