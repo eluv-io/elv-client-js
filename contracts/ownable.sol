@@ -1,27 +1,23 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.21;
 
 /**
  * @title Ownable
  * @dev The Ownable contract has an owner address, and provides basic authorization control
  * functions, this simplifies the implementation of "user permissions".
  */
+
 contract Ownable {
 
     address public creator;
     address public owner;
 
-    // "Fallback" function - necessary if this contract needs to be paid
-    function () public payable { }
-
-    /**
-     * @dev The Ownable constructor sets the original `owner` of the contract to the sender
-     * account.
-     */
     function Ownable() public {
         creator = tx.origin;
         owner = tx.origin;
     }
 
+    // "Fallback" function - necessary if this contract needs to be paid
+    function () public payable { }
 
     /**
      * @dev Throws if called by any account other than the owner.
@@ -36,7 +32,6 @@ contract Ownable {
         _;
     }
 
-
     /**
      * @dev Allows the current owner to transfer control of the contract to a newOwner.
      * @param newOwner The address to transfer ownership to.
@@ -48,7 +43,7 @@ contract Ownable {
 
     function transferCreatorship(address newCreator) public onlyCreator {
         require(newCreator != address(0));
-        if (owner == creator){
+        if (owner == creator) {
             owner = newCreator;
         }
         creator = newCreator;

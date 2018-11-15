@@ -1,6 +1,8 @@
 let TestQueries = async (client, signer) => {
   //let output = "";
   try {
+    console.log("AUTHORIZING CONTENT SPACE...\n");
+
     let libraryIds = await client.ContentLibraries();
 
     console.log("LIBRARIES ");
@@ -40,6 +42,12 @@ let TestQueries = async (client, signer) => {
     console.log("LIBRARY CONTENT OBJECT: ");
     console.log(JSON.stringify(libraryContentObject, null, 2));
 
+
+    // Clear auth cache to force an accessRequest to the library on next call
+    console.log("\nFORCING REAUTHORIZATION TO LIBRARY ON NEXT CALL\n");
+    client.authClient.ClearCache({libraryId});
+
+
     console.log("UPDATING PUBLIC LIBRARY METADATA...");
     await client.ReplacePublicLibraryMetadata({
       libraryId,
@@ -51,7 +59,6 @@ let TestQueries = async (client, signer) => {
 
     console.log("NEW PUBLIC LIBRARY METADATA:");
     console.log(JSON.stringify(libraryMetadata, null, 2) +"");
-
 
 
     console.log("CREATING OBJECT... ");
@@ -199,6 +206,10 @@ let TestQueries = async (client, signer) => {
     );
 
     console.log(JSON.stringify(contentObjectData, null, 2));
+
+    // Clear auth cache to force an accessRequest to the object
+    console.log("\nFORCING REAUTHORIZATION TO OBJECT ON NEXT CALL\n");
+    client.authClient.ClearCache({objectId});
 
     let versionHash = contentObjectData.hash;
 

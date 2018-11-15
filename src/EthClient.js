@@ -121,6 +121,20 @@ class EthClient {
     return methodEvent;
   }
 
+  ExtractValueFromEvent({abi, event, eventName, eventValue}) {
+    const contractInterface = new Ethers.utils.Interface(abi);
+    // Loop through logs to find the desired log
+    for(const log of event.logs) {
+      const parsedLog = contractInterface.parseLog(log);
+
+      if(parsedLog && parsedLog.name === eventName) {
+        return parsedLog.values[eventValue];
+      }
+    }
+
+    throw Error(eventName + " event not found");
+  }
+
   async DeployDependentContract({
     contractAddress,
     abi,
@@ -131,23 +145,14 @@ class EthClient {
     signer
   }) {
     const methodArgs = this.FormatContractArguments({abi, methodName, args});
-
     const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, signer});
 
-    const contractInterface = new Ethers.utils.Interface(abi);
-    // Loop through logs to find the desired log
-    for(const log of event.logs) {
-      const parsedLog = contractInterface.parseLog(log);
+    const newContractAddress = this.ExtractValueFromEvent({abi, event, eventName, eventValue});
 
-      if(parsedLog && parsedLog.name === eventName) {
-        return {
-          contractAddress: parsedLog.values[eventValue],
-          transactionHash: event.transactionHash
-        };
-      }
-    }
-
-    throw Error(eventName + " event not found");
+    return {
+      contractAddress: newContractAddress,
+      transactionHash: event.transactionHash
+    };
   }
 
   /* Specific contract management */

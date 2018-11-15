@@ -1,11 +1,15 @@
+pragma solidity 0.4.21;
 
-//NOT USE - a Content Contract is used instead for now, which is debatable
-// Best would be to take out what we need and move to an Accessible class as originally planned
+import {Editable} from "./editable.sol";
 
-pragma solidity ^0.4.21;
-
-import {Editable} from './editable.sol';
 
 contract BaseContentType is Editable {
-    // Nothing different for now
+
+
+    address public contentSpace;
+
+    function BaseContentType() public payable {
+        contentSpace = msg.sender;
+    }
+
 }

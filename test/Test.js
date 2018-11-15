@@ -7,23 +7,23 @@ const TestMethods = require("./TestMethods");
 const ClientConfiguration = require("../TestConfiguration.json");
 
 const Test = async () => {
-  let Client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+  let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
-  let wallet = Client.GenerateWallet();
+  let wallet = client.GenerateWallet();
   let signer = wallet.AddAccount({
     accountName: "Alice",
     //privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
     privateKey: "1307df44f8f5033ec86434a7965234015da85261df149ed498cb29907df38d72"
   });
-  Client.SetSigner({signer});
+  client.SetSigner({signer});
 
-  TestMethods.TestQueries(Client, signer);
+  TestMethods.TestQueries(client, signer);
 
   // Ensure ElvClient and FrameClient agree on allowed methods
   const frameClient = new FrameClient({target: this});
 
   const frameClientMethods = frameClient.AllowedMethods();
-  const elvClientMethods = Client.FrameAllowedMethods();
+  const elvClientMethods = client.FrameAllowedMethods();
 
   const differentKeys = frameClientMethods
     .filter(x => !elvClientMethods.includes(x))
