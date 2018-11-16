@@ -5,6 +5,7 @@ import "./ownable.sol";
 
 contract BaseAccessControlGroup is Ownable {
 
+    address public contentSpace;
 
     mapping (address => bool) public members;
     mapping (address => bool) public managers;
@@ -16,6 +17,7 @@ contract BaseAccessControlGroup is Ownable {
     event UnauthorizedOperation(uint operationCode, address candidate);
 
     function BaseAccessControlGroup() public {
+        contentSpace = msg.sender;
         managers[creator] = true;
         members[creator] = true;
     }
@@ -26,7 +28,7 @@ contract BaseAccessControlGroup is Ownable {
     }
 
     function revokeManagerAccess(address manager) public {
-        if ((msg.sender == creator) || (msg.sender == manager)) {
+        if ((msg.sender == owner) || (msg.sender == manager)) {
             managers[manager] = false;
             emit ManagerAccessRevoked(manager);
         } else {
