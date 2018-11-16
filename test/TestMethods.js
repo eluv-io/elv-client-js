@@ -376,6 +376,15 @@ let TestQueries = async (client) => {
     console.log("CONTENT VERIFICATION: " + versionHash);
     console.log(JSON.stringify(contentVerification, null, 2) + "\n");
 
+    console.log("\nDELETING CONTENT VERSION: ");
+    await client.DeleteContentVersion({
+      libraryId,
+      objectId,
+      versionHash
+    });
+
+    console.log("DELETED");
+
     console.log("\nDELETING CONTENT OBJECT: ");
     await client.DeleteContentObject({
       libraryId,
