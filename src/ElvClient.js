@@ -508,8 +508,20 @@ class ElvClient {
     );
   }
 
-  async DeleteContentObject({libraryId, objectId, versionHash}) {
+  async DeleteContentVersion({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
+
+    return HandleErrors(
+      this.HttpClient.Request({
+        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        method: "DELETE",
+        path: path
+      })
+    );
+  }
+
+  async DeleteContentObject({libraryId, objectId}) {
+    let path = Path.join("qid", objectId);
 
     return HandleErrors(
       this.HttpClient.Request({

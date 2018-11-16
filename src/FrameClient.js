@@ -121,6 +121,7 @@ class FrameClient {
       "CreateFileUploadJob",
       "DeleteContentLibrary",
       "DeleteContentObject",
+      "DeleteContentVersion",
       "DeleteMetadata",
       "DeleteName",
       "DeletePart",
