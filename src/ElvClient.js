@@ -97,12 +97,20 @@ class ElvClient {
   }
 
   // Authorization: Bearer <token>
-  async AuthorizationHeader({libraryId, objectId, transactionHash}) {
+  async AuthorizationHeader({libraryId, objectId, transactionHash, update=false}) {
     if(!transactionHash) {
       if(objectId) {
-        transactionHash = await this.authClient.ContentObjectAccess({objectId});
+        if(update) {
+          transactionHash = await this.authClient.ContentObjectUpdate({objectId});
+        } else {
+          transactionHash = await this.authClient.ContentObjectAccess({objectId});
+        }
       } else if(libraryId) {
-        transactionHash = await this.authClient.ContentLibraryAccess({libraryId});
+        if(update) {
+          transactionHash = await this.authClient.ContentLibraryUpdate({libraryId});
+        } else {
+          transactionHash = await this.authClient.ContentLibraryAccess({libraryId});
+        }
       } else {
         transactionHash = await this.authClient.ContentSpaceAccess();
       }
@@ -219,12 +227,7 @@ class ElvClient {
     publicMetadata={},
     privateMetadata={}
   }) {
-    // Deploy contract
-    let {contractAddress, transactionHash} = await this.ethClient.DeployLibraryContract({
-      contentSpaceAddress: Utils.HashToAddress({hash: this.contentSpaceId}),
-      name,
-      signer: this.signer
-    });
+    const { contractAddress, transactionHash } = await this.authClient.CreateContentLibrary();
 
     publicMetadata = Object.assign(
       {
@@ -237,12 +240,10 @@ class ElvClient {
     const libraryId = this.utils.AddressToLibraryId({address: contractAddress});
     const path = Path.join("qlibs", libraryId);
 
-    // Save transaction hash for authorization on all further requests
-    this.authClient.CacheLibraryTransaction({libraryId, transactionHash});
-
     // Create library in fabric
     await HandleErrors(
       this.HttpClient.Request({
+        // Don't add libraryId to header or it will crash because the library doesn't exist yet
         headers: await this.AuthorizationHeader({transactionHash}),
         method: "PUT",
         path: path,
@@ -261,7 +262,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId}),
+        headers: await this.AuthorizationHeader({libraryId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -287,7 +288,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId}),
+        headers: await this.AuthorizationHeader({libraryId, update: true}),
         method: "PUT",
         path: path,
         body: metadata
@@ -346,26 +347,19 @@ class ElvClient {
   }
 
   async CreateContentType({name, bitcode}) {
-    const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
-    const { contractAddress, transactionHash } = await this.ethClient.DeployTypeContract({
-      contentSpaceAddress,
-      signer: this.signer
-    });
+    const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
 
+    const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
     const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
 
     const objectId = this.utils.AddressToObjectId({address: contractAddress});
     const path = Path.join("qlibs", typeLibraryId, "q", objectId);
 
-    // Save transaction hash for authorization on all further requests
-    this.authClient.CacheObjectTransaction({objectId, transactionHash});
-
     /* Create object, upload bitcode and finalize */
 
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
-        // Note: content type library *does not* have a contract to authorize against
-        headers: await this.AuthorizationHeader({}),
+        headers: await this.AuthorizationHeader({transactionHash}),
         method: "PUT",
         path: path,
         body: {
@@ -445,8 +439,6 @@ class ElvClient {
 
   /* Content object creation, modification, deletion */
 
-  // TODO: Auto-lookup of content types
-
   async CreateContentObject({libraryId, options={}}) {
     // Look up content type if type is specified
     if(options.type) {
@@ -454,19 +446,10 @@ class ElvClient {
     }
 
     // Deploy contract
-    // This calls createContent method of the library contract, which deploys a content contract
-    // The address of that deployed contract is returned
-    let {contractAddress, transactionHash} = await this.ethClient.DeployContentContract({
-      contentLibraryAddress: Utils.HashToAddress({hash: libraryId}),
-      type: options.type || "",
-      signer: this.signer
-    });
+    const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId});
 
     const objectId = this.utils.AddressToObjectId({address: contractAddress});
     const path = Path.join("q", objectId);
-
-    // Save transaction hash for authorization on all further requests
-    this.authClient.CacheObjectTransaction({objectId, transactionHash});
 
     return await ResponseToJson(
       this.HttpClient.Request({
@@ -488,7 +471,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: options
@@ -501,7 +484,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path
       })
@@ -513,7 +496,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -525,7 +508,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -539,7 +522,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: metadata
@@ -552,7 +535,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "PUT",
         path: path,
         body: metadata
@@ -565,7 +548,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -686,7 +669,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: data,
@@ -700,7 +683,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
         path: path
       })
