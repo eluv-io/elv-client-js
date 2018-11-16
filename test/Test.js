@@ -10,7 +10,7 @@ const Test = async () => {
     hostname: "localhost",
     port: 8008,
     useHTTPS: false,
-    ethHostname: "eth1.contentfabric.io",
+    //ethHostname: "eth1.contentfabric.io",
     ethHostname: "127.0.0.1",
     ethPort: 7545,
     ethUseHTTPS: false
@@ -19,7 +19,7 @@ const Test = async () => {
   let wallet = Client.GenerateWallet();
   let signer = wallet.AddAccount({
     accountName: "Alice",
-    privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
+    privateKey: "c4c07927eb6085923d8e15277718d6afcff4b32841efe2e5a1048c79d9e363ff"
   });
 
   signer = Client.ConnectSigner({signer});

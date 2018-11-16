@@ -1,6 +1,11 @@
+const ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;
+const Stream = require("stream")
+
 let TestQueries = async (client, signer) => {
   let output = "";
   try {
+    const elvc = await new ElvCrypto().init();
+
     let libraryIds = await client.ContentLibraries();
 
     output += "LIBRARIES \n";
@@ -34,13 +39,13 @@ let TestQueries = async (client, signer) => {
     output += "LIBRARY CREATED: \n";
     output += JSON.stringify(libraryInfo, null, 2) + "\n\n";
 
-    let libraryResponse = await(
-      client.ContentLibrary({libraryId})
+    let libraryResponse = await (
+      client.ContentLibrary({ libraryId })
     );
     output += "LIBRARY RESPONSE: \n";
     output += JSON.stringify(libraryResponse, null, 2) + "\n\n";
 
-    let libraryContentObject = (await client.ContentObjects({libraryId: libraryId})).contents[0];
+    let libraryContentObject = (await client.ContentObjects({ libraryId: libraryId })).contents[0];
     output += "LIBRARY CONTENT OBJECT: \n";
     output += JSON.stringify(libraryContentObject, null, 2) + "\n\n";
 
@@ -48,13 +53,13 @@ let TestQueries = async (client, signer) => {
     await client.ReplacePublicLibraryMetadata({
       libraryId,
       metadataSubtree: "toReplace",
-      metadata: { new: "value"}
+      metadata: { new: "value" }
     });
 
-    const libraryMetadata = await client.PublicLibraryMetadata({libraryId});
+    const libraryMetadata = await client.PublicLibraryMetadata({ libraryId });
 
     output += "NEW PUBLIC LIBRARY METADATA:\n";
-    output += JSON.stringify(libraryMetadata, null, 2) +"\n\n";
+    output += JSON.stringify(libraryMetadata, null, 2) + "\n\n";
 
 
 
@@ -97,6 +102,27 @@ let TestQueries = async (client, signer) => {
 
     output += "CREATED " + partHash + "\n\n";
 
+    output += "CREATING ENCRYPTED PART...\n";
+    const seedData = new Uint8Array([0xDE, 0xAD, 0xBE, 0xEF]);
+    const testData = new Uint8Array([0xDF, 0xAE, 0xBF, 0xEA]);
+    const primaryKeys = elvc.generatePrimaryKeys(seedData);
+    const symmetricKey = elvc.generateSymmetricKey(seedData);
+    const context = elvc.newPrimaryContext(
+      seedData, primaryKeys.publicKey, primaryKeys.secretKey, symmetricKey.key);
+    const iv = context.generateNextBlockIV();
+    const enc = elvc.encryptPrimary(context, testData, iv);
+    const encStream = new Stream.PassThrough();
+    encStream.end(Buffer.from(enc.data));
+    const encPartResponse = await (
+      client.UploadPart({
+        libraryId,
+        writeToken: createResponse.write_token,
+        data: encStream
+      })
+    );
+    const encPartHash = encPartResponse.part.hash;
+    output += "CREATED " + encPartHash + "\n\n";
+
     output += "FINALIZING OBJECT... \n";
 
     await (
@@ -109,7 +135,7 @@ let TestQueries = async (client, signer) => {
     output += "FINALIZED " + objectId + "\n\n";
 
     output += "CONTENT OBJECT METADATA: \n";
-    let metadataResponse = await(
+    let metadataResponse = await (
       client.ContentObjectMetadata({
         libraryId,
         contentHash: objectId
@@ -139,7 +165,7 @@ let TestQueries = async (client, signer) => {
     await client.MergeMetadata({
       libraryId,
       writeToken: editResponse.write_token,
-      metadata: { newField: "newValue"}
+      metadata: { newField: "newValue" }
     });
 
     output += "MERGED TOP LEVEL METADATA \n";
@@ -148,7 +174,7 @@ let TestQueries = async (client, signer) => {
       libraryId,
       writeToken: editResponse.write_token,
       metadataSubtree: "sub",
-      metadata: { newField: "newValue"}
+      metadata: { newField: "newValue" }
     });
 
     output += "MERGED SUBTREE METADATA \n\n";
@@ -183,13 +209,13 @@ let TestQueries = async (client, signer) => {
     output += "FINALIZED EDIT " + objectId + "\n\n";
 
 
-    let contentObjects = await client.ContentObjects({libraryId: libraryId});
+    let contentObjects = await client.ContentObjects({ libraryId: libraryId });
 
     output += "LIBRARY CONTENTS " + libraryId + "\n";
     output += JSON.stringify(contentObjects, null, 2) + "\n\n";
 
     output += "CONTENT OBJECT: \n";
-    let contentObjectData = await(
+    let contentObjectData = await (
       client.ContentObject({
         libraryId,
         contentHash: objectId
@@ -201,7 +227,7 @@ let TestQueries = async (client, signer) => {
     let contentHash = contentObjectData.hash;
 
     output += "CONTENT OBJECT METADATA: \n";
-    let contentObjectMetadata = await(
+    let contentObjectMetadata = await (
       client.ContentObjectMetadata({
         libraryId,
         contentHash
@@ -211,7 +237,7 @@ let TestQueries = async (client, signer) => {
     output += JSON.stringify(contentObjectMetadata, null, 2) + "\n\n";
 
     output += "CONTENT OBJECT VERSIONS: \n";
-    let contentObjectVersions = await(
+    let contentObjectVersions = await (
       client.ContentObjectVersions({
         libraryId,
         objectId
@@ -221,7 +247,7 @@ let TestQueries = async (client, signer) => {
     output += JSON.stringify(contentObjectVersions, null, 2) + "\n\n";
 
 
-    let contentParts = await client.ContentParts({libraryId: libraryId, contentHash});
+    let contentParts = await client.ContentParts({ libraryId: libraryId, contentHash });
 
     output += "CONTENT PARTS " + objectId + "\n";
     output += JSON.stringify(contentParts, null, 2) + "\n\n";
@@ -237,6 +263,26 @@ let TestQueries = async (client, signer) => {
 
     output += "DOWNLOADED: \n";
     output += downloadResponse + "\n\n";
+
+    output += "DOWNLOADING ENCRYPTED PART... \n";
+    const decPartResponse = await client.DownloadPart({
+      libraryId,
+      contentHash,
+      partHash: encPartHash,
+      format: "arraybuffer"
+    });
+    const decData = elvc.decryptPrimary(
+      context,
+      new Uint8Array(decPartResponse),
+      enc.tag,
+      enc.blockKey,
+      iv,
+      testData.length);
+    context.free();
+    output += "DOWNLOADED: \n";
+    output += decData + "\n";
+    output += "EXPECTED:\n";
+    output += testData + "\n\n";
 
     output += "NAMING... \n";
 
@@ -263,14 +309,14 @@ let TestQueries = async (client, signer) => {
         name: "test"
       });
     } catch (e) {
-      if(e.status === 404) {
+      if (e.status === 404) {
         output += "SUCCESSFULLY DELETED NAME\n\n";
       } else {
         throw Error("FAILED TO DELETE NAME: " + JSON.stringify(e));
       }
     }
 
-    let proofs = await client.Proofs({libraryId: libraryId, contentHash, partHash: partHash});
+    let proofs = await client.Proofs({ libraryId: libraryId, contentHash, partHash: partHash });
 
     output += "PROOFS: \n";
     output += JSON.stringify(proofs, null, 2) + "\n\n";
@@ -306,13 +352,13 @@ let TestQueries = async (client, signer) => {
     output += "DELETED\n\n";
 
     output += "URLS: \n\n";
-    output += client.FabricUrl({libraryId}) + "\n";
-    output += client.FabricUrl({libraryId, contentHash: objectId}) + "\n";
-    output += client.FabricUrl({libraryId, contentHash: objectId, partHash}) + "\n";
-    output += client.FabricUrl({libraryId, contentHash: objectId, partHash, queryParams: {query: "params", params: "query"}}) + "\n\n";
+    output += client.FabricUrl({ libraryId }) + "\n";
+    output += client.FabricUrl({ libraryId, contentHash: objectId }) + "\n";
+    output += client.FabricUrl({ libraryId, contentHash: objectId, partHash }) + "\n";
+    output += client.FabricUrl({ libraryId, contentHash: objectId, partHash, queryParams: { query: "params", params: "query" } }) + "\n\n";
 
     let contentVerification = await (
-      client.VerifyContentObject({libraryId: libraryId, partHash: contentHash})
+      client.VerifyContentObject({ libraryId: libraryId, partHash: contentHash })
         .then(response => {
           return response;
         })
@@ -322,31 +368,31 @@ let TestQueries = async (client, signer) => {
     output += "UTILS: \n\n";
     output += "LIBRARY CONTRACT ADDRESS: " + address + "\n";
 
-    const hash = "ilib" + client.utils.AddressToHash({address});
+    const hash = "ilib" + client.utils.AddressToHash({ address });
     output += "TO HASH: " + hash + "\n";
 
-    const newAddress = client.utils.HashToAddress({hash});
+    const newAddress = client.utils.HashToAddress({ hash });
     output += "TO ADDRESS: " + newAddress + "\n\n";
 
-    if(address.toLowerCase() !== newAddress.toLowerCase()) {
+    if (address.toLowerCase() !== newAddress.toLowerCase()) {
       throw Error("Address conversion mismatch: " + address + " : " + newAddress);
     }
 
-    const bytes32Hash = client.utils.HashToBytes32({hash: contentHash});
+    const bytes32Hash = client.utils.HashToBytes32({ hash: contentHash });
     output += "CONTENT HASH TO BYTES32 STRING: \n";
     output += "HASH: " + contentHash + "\n";
     output += "BYTES32: " + bytes32Hash + "\n\n";
 
     // Ensure ToBytes32 is correct
-    const bytes32Test = client.utils.ToBytes32({string: "Hello World!"});
+    const bytes32Test = client.utils.ToBytes32({ string: "Hello World!" });
     const bytes32Expected = "0x48656c6c6f20576f726c64210000000000000000000000000000000000000000";
-    if(bytes32Test !== bytes32Expected) {
+    if (bytes32Test !== bytes32Expected) {
       throw Error("Bytes 32 mismatch: " + bytes32Test + " : " + bytes32Expected);
     }
 
     output += "CONTENT VERIFICATION: " + contentHash + "\n";
     output += JSON.stringify(contentVerification, null, 2) + "\n";
-  } catch(error) {
+  } catch (error) {
     console.log(error);
     output += "ERROR: \n";
     output += JSON.stringify(error, null, 2);
@@ -355,6 +401,6 @@ let TestQueries = async (client, signer) => {
 };
 
 
-if(typeof window === "undefined") {
+if (typeof window === "undefined") {
   exports.TestQueries = TestQueries;
 }
