@@ -211,10 +211,8 @@ class ElvClient {
     );
   }
 
-  // -- Deploy library contract
-  // -- Create library in fabric
-  // -- Set library hash in contract
-  // -- Return library ID
+  /* Library creation and deletion */
+
   async CreateContentLibrary({
     name,
     description,
@@ -257,6 +255,20 @@ class ElvClient {
 
     return libraryId;
   }
+
+  async DeleteContentLibrary({libraryId}) {
+    let path = Path.join("qlibs", libraryId);
+
+    return HandleErrors(
+      this.HttpClient.Request({
+        headers: await this.AuthorizationHeader({libraryId}),
+        method: "DELETE",
+        path: path
+      })
+    );
+  }
+
+  /* Library metadata */
 
   async PublicLibraryMetadata({libraryId}) {
     let path = Path.join("qlibs", libraryId, "meta");
@@ -431,7 +443,7 @@ class ElvClient {
     );
   }
 
-  /* Content object creation / modification */
+  /* Content object creation, modification, deletion */
 
   // TODO: Auto-lookup of content types
 
@@ -484,6 +496,32 @@ class ElvClient {
     );
   }
 
+  async FinalizeContentObject({libraryId, objectId, writeToken}) {
+    let path = Path.join("q", writeToken);
+
+    return ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        method: "POST",
+        path: path
+      })
+    );
+  }
+
+  async DeleteContentObject({libraryId, objectId, versionHash}) {
+    let path = Path.join("q", versionHash || objectId);
+
+    return HandleErrors(
+      this.HttpClient.Request({
+        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        method: "DELETE",
+        path: path
+      })
+    );
+  }
+
+  /* Content object metadata */
+
   async MergeMetadata({libraryId, objectId, writeToken, metadataSubtree="", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
@@ -517,18 +555,6 @@ class ElvClient {
       this.HttpClient.Request({
         headers: await this.AuthorizationHeader({libraryId, objectId}),
         method: "DELETE",
-        path: path
-      })
-    );
-  }
-
-  async FinalizeContentObject({libraryId, objectId, writeToken}) {
-    let path = Path.join("q", writeToken);
-
-    return ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
-        method: "POST",
         path: path
       })
     );

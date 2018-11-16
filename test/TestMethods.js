@@ -163,8 +163,7 @@ let TestQueries = async (client) => {
 
     console.log("MERGED SUBTREE METADATA ");
 
-    /*
-    console.log("DELETING METADATA...");
+    console.log("\nDELETING METADATA...");
 
     await client.DeleteMetadata({
       libraryId,
@@ -181,9 +180,8 @@ let TestQueries = async (client) => {
     });
 
     console.log("DELETED METADATA ");
-    */
 
-    console.log("FINALIZING EDIT... ");
+    console.log("\nFINALIZING EDIT... ");
 
     await (
       client.FinalizeContentObject({
@@ -327,11 +325,21 @@ let TestQueries = async (client) => {
 
     console.log("DELETED\n");
 
+    const newPartsResponse = await client.ContentParts({
+      libraryId,
+      objectId,
+      versionHash
+    });
+
+    console.log("NEW PARTS: ");
+
+    console.log(JSON.stringify(newPartsResponse, null, 2));
+
     console.log("URLS: ");
-    console.log(client.FabricUrl({libraryId}));
-    console.log(client.FabricUrl({libraryId, objectId}));
-    console.log(client.FabricUrl({libraryId, objectId, partHash}));
-    console.log(client.FabricUrl({libraryId, objectId, partHash, queryParams: {query: "params", params: "query"}}));
+    console.log(await client.FabricUrl({libraryId}));
+    console.log(await client.FabricUrl({libraryId, objectId}));
+    console.log(await client.FabricUrl({libraryId, objectId, partHash}));
+    console.log(await client.FabricUrl({libraryId, objectId, partHash, queryParams: {query: "params", params: "query"}}));
 
     const contentVerification = await (
       client.VerifyContentObject({libraryId, objectId, partHash: versionHash})
@@ -367,6 +375,20 @@ let TestQueries = async (client) => {
 
     console.log("CONTENT VERIFICATION: " + versionHash);
     console.log(JSON.stringify(contentVerification, null, 2) + "\n");
+
+    console.log("\nDELETING CONTENT OBJECT: ");
+    await client.DeleteContentObject({
+      libraryId,
+      objectId
+    });
+
+    console.log("DELETED");
+
+    console.log("\nDELETING CONTENT LIBRARY: ");
+    await client.DeleteContentLibrary({libraryId});
+
+    console.log("DELETED\n");
+
   } catch(error) {
     console.error(error);
   }
