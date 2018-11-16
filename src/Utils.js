@@ -23,6 +23,14 @@ const Utils = {
     return "0x" + bs58.decode(hash).toString("hex");
   },
 
+  EqualHash(firstHash, secondHash) {
+    if((!firstHash || !secondHash) && firstHash !== secondHash) {
+      return false;
+    }
+
+    return (Utils.HashToAddress({hash: firstHash}) === Utils.HashToAddress({hash: secondHash}));
+  },
+
   ToBytes32: ({string}) => {
     const bytes32 = string.split("").map(char => {
       return char.charCodeAt(0).toString(16);

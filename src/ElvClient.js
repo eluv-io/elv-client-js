@@ -99,19 +99,33 @@ class ElvClient {
   // Authorization: Bearer <token>
   async AuthorizationHeader({libraryId, objectId, transactionHash, update=false}) {
     if(!transactionHash) {
-      if(objectId) {
-        if(update) {
-          transactionHash = await this.authClient.ContentObjectUpdate({objectId});
+      // If content library object, authorize against library, not object
+      if(objectId && !Utils.EqualHash(libraryId, objectId)) {
+        if(Utils.EqualHash(this.contentSpaceId, libraryId)) {
+          // Content type
+          if(update) {
+            transactionHash = await this.authClient.ContentTypeUpdate({objectId});
+          } else {
+            transactionHash = await this.authClient.ContentTypeAccess({objectId});
+          }
         } else {
-          transactionHash = await this.authClient.ContentObjectAccess({objectId});
+          // Content object
+          if(update) {
+            transactionHash = await this.authClient.ContentObjectUpdate({objectId});
+          } else {
+            transactionHash = await this.authClient.ContentObjectAccess({objectId});
+          }
         }
-      } else if(libraryId) {
+      // If content space library, authorize against space, not library
+      } else if(libraryId && !Utils.EqualHash(this.contentSpaceId, libraryId)) {
+        // Content Library
         if(update) {
           transactionHash = await this.authClient.ContentLibraryUpdate({libraryId});
         } else {
           transactionHash = await this.authClient.ContentLibraryAccess({libraryId});
         }
       } else {
+        // Content space
         transactionHash = await this.authClient.ContentSpaceAccess();
       }
     }

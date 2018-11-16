@@ -3,6 +3,7 @@ const Utils = require("./Utils");
 // -- Contract javascript files built using build/BuildContracts.js
 const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
+const TypeContract = require("./contracts/BaseContentType");
 const ContentContract = require("./contracts/BaseContent");
 
 class AuthorizationClient {
@@ -95,7 +96,17 @@ class AuthorizationClient {
     });
   }
 
-  async ContentObjectAccess({objectId}) {
+  ContentTypeAccess({objectId}) {
+    return this.AccessRequest({
+      id: objectId,
+      abi: TypeContract.abi,
+      args: [],
+      accessCache: this.accessTransactions.libraries,
+      modifyCache: this.modifyTransactions.libraries
+    });
+  }
+
+  ContentObjectAccess({objectId}) {
     const args = [
       0, // Access level
       this.elvClient.signer.privateKey, // Private key of requester
@@ -122,13 +133,6 @@ class AuthorizationClient {
       signer: this.elvClient.signer
     });
 
-    const libraryId = Utils.AddressToLibraryId({address: contractAddress});
-
-    // Cache creation hash
-    if(!this.noCache) {
-      this.modifyTransactions.libraries[libraryId] = transactionHash;
-    }
-
     return {
       contractAddress,
       transactionHash
@@ -142,13 +146,6 @@ class AuthorizationClient {
       signer: this.elvClient.signer
     });
 
-    const objectId = Utils.AddressToLibraryId({address: contractAddress});
-
-    // Cache creation hash
-    if(!this.noCache) {
-      this.modifyTransactions.objects[objectId] = transactionHash;
-    }
-
     return {
       contractAddress,
       transactionHash
@@ -161,13 +158,6 @@ class AuthorizationClient {
       contentLibraryAddress: Utils.HashToAddress({hash: libraryId}),
       signer: this.elvClient.signer
     });
-
-    const objectId = Utils.AddressToLibraryId({address: contractAddress});
-
-    // Cache creation hash
-    if(!this.noCache) {
-      this.modifyTransactions.objects[objectId] = transactionHash;
-    }
 
     return {
       contractAddress,
@@ -204,6 +194,14 @@ class AuthorizationClient {
       id: libraryId,
       abi: LibraryContract.abi,
       cache: this.modifyTransactions.libraries
+    });
+  }
+
+  async ContentTypeUpdate({objectId}) {
+    return this.UpdateRequest({
+      id: objectId,
+      abi: TypeContract.abi,
+      cache: this.modifyTransactions.objects
     });
   }
 

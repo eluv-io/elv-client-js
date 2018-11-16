@@ -1,14 +1,16 @@
 pragma solidity 0.4.21;
 
+import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
+import "./accessible.sol";
 
 
-contract BaseLibrary is Editable {
+contract BaseLibrary is Accessible, Editable {
 
 
-    address public space;
+    address public contentSpace;
     address[] public contributorGroups;
     address[] public reviewerGroups;
     address[] public accessorGroups;
@@ -37,7 +39,7 @@ contract BaseLibrary is Editable {
     event PayCredit(address payee, uint256 amount);
 
     function BaseLibrary(address address_KMS) public payable {
-        space = msg.sender;
+        contentSpace = msg.sender;
         contributorGroupsLength = 0;
         reviewerGroupsLength = 0;
         accessorGroupsLength = 0;

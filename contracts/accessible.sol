@@ -1,9 +1,7 @@
 pragma solidity 0.4.21;
 
-import {Ownable} from "./ownable.sol";
 
-
-contract Accessible is Ownable {
+contract Accessible  {
 
 
     event AccessRequest(uint requestValidity);
