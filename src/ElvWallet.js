@@ -32,6 +32,17 @@ class ElvWallet {
     });
   }
 
+  AddAccount({ accountName, privateKey }) {
+    let signer = new Ethers.Wallet(privateKey);
+    signer = signer.connect(this.provider);
+
+    if(accountName) {
+      this.signers[accountName] = signer;
+    }
+
+    return signer;
+  }
+
   async GetAccountBalance({ accountName }) {
     const signer = this.GetAccount({ accountName });
 
@@ -50,13 +61,6 @@ class ElvWallet {
     }
 
     return await signer.encrypt(password);
-  }
-
-  AddAccount({ accountName, privateKey }) {
-    let signer = new Ethers.Wallet(privateKey);
-    signer = signer.connect(this.provider);
-    this.signers[accountName] = signer;
-    return signer;
   }
 
   GetAccount({ accountName }) {

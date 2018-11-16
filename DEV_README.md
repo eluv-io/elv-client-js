@@ -49,6 +49,31 @@ let client = new ElvClient({
 });
 ```
 
+From a configuration file:
+
+```json
+// TestConfiguration.json:
+{
+  "fabric": {
+    "contentSpaceId": "ispc33dJvdsPi3Njj6D6VkDJus2HG9JD",
+    "hostname": "localhost",
+    "port": 8008,
+    "use_https": false
+  },
+  "ethereum": {
+    "hostname": "localhost",
+    "port": 8545,
+    "use_https": false
+  }
+}
+```
+
+```javascript
+const ClientConfiguration = require("TestConfiguration.json");
+let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+```
+
+
 All method arguments are **named hashes** for clarity. 
 
 For example:
@@ -62,14 +87,11 @@ client.DownloadPart({
 })
 ```
 
-#### Endpoints without blockchain interaction:
+#### Using the client:
 
 The API client will query the fabric endpoint and return the parsed JSON for JSON based endpoints.
 
-For non-JSON endpoints, such as downloading a file, the format can be specified. By default, it will be parsed as 
-a blob. See ```ElvClient#ResponseToFormat``` for available formats. If the specified format is explicitly undefined
-or otherwise does not match any formats, the raw [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response)
-will be returned.
+For non-JSON endpoints, such as downloading a file, the format can be specified. By default, it will be parsed as a blob. See ```ElvClient#ResponseToFormat``` for available formats. If the specified format is explicitly undefined or otherwise does not match any formats, the raw [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) will be returned.
 
 All query methods are async methods that will return [Promises](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise).
 
@@ -77,16 +99,6 @@ All query methods are async methods that will return [Promises](https://develope
 Examples:
 
 ```javascript
-let client = new ElvClient({
-  contentSpaceId: "ispc6NxBDhWiRuKyDNMWVmpTuCaQssS2iuDfq8hFkivVoeJw",
-  hostname: "localhost",
-  port: 8008,
-  useHTTPS: false,
-  ethHostname: "localhost",
-  port: 8545,
-  useHTTPS: false
-});
-
 // Using .then
 let query = client.ContentLibraries();
 query.then(contentLibraries => console.log(contentLibraries));
@@ -119,8 +131,7 @@ console.log(json);
  */
 ```
 
-Non-JSON data will be returned as a blob by default, but other formats can be specified (as well as returning 
-the raw [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response))
+Non-JSON data like files and parts will be returned as a blob by default, but other formats can be specified (as well as returning the raw [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response))
 ```javascript
 // Using .then
 let query = client.QParts({
@@ -142,140 +153,72 @@ console.log(buffer);
 // Result
 // <Buffer 06 2f 63 62 6f 72 0a a2 67 51 6d 64 48 61 73 68 58 23 02 12 20 7f ee 10 b7 b4 9c 71 38 59 81 83 cc ed 06 d7 09 60 07 a7 0d ed 2d 55 56 0e 9c 7b 79 ca ... >
 ```
-#### Create Content Library, Create Object Draft, Upload to Object and Finalize Parts ####
-   
-    // from eluv-io/test/TestMethods.js
-    output += "CREATING LIBRARY \n";
-    let libraryId = await (
-      client.CreateContentLibrary({
-        libraryName: "New library",
-        libraryDescription: "Library Description"
-      })
-    );
-
-    output += "LIBRARY CREATED: " + libraryId + "\n\n";
-    let libraryResponse = await(
-      client.ContentLibrary({libraryId})
-    );
-    output += JSON.stringify(libraryResponse, null, 2) + "\n\n";
-
-    output += "CREATING OBJECT... \n";
-
-    let createResponse = await (
-      client.CreateContentObject({
-        libraryId,
-        options: {
-          meta: {
-            "meta": "data",
-            "to_delete": {
-              "value": "value"
-            },
-            "subtree": {
-              "to_delete": "value"
-            }
-          }
-        }
-      })
-    );
-
-    let objectId = createResponse.id;
-
-    output += "CREATED " + objectId + "\n\n";
-
-    output += "CREATING PART...\n";
-
-    let partResponse = await (
-      client.UploadPart({
-        libraryId,
-        writeToken: createResponse.write_token,
-        data: "some form of data"
-      })
-    );
-
-    let partHash = partResponse.part.hash;
-
-    output += "CREATED " + partHash + "\n\n";
-
-    output += "FINALIZING OBJECT... \n";
-
-    await (
-      client.FinalizeContentObject({
-        libraryId,
-        writeToken: createResponse.write_token
-      })
-    );
-
-
 
 ### Blockchain Interaction
 
+### Authorization
+
+Being a decentralized, trustless ecosystem, the content fabric relies on smart contracts and blockchain transactions to verify that a user is allowed to perform an action. Each type of content (content spaces, libraries, objects, types) have associated smart contracts deployed to the blockchain that mediate access.
+
+For example, to access a content object, the requestor must call the accessRequest method on that content object's smart contract, then pass the transaction hash in the authorization token when querying the content fabric API. The content fabric will then verify the transaction before performing the requested action. If the transaction is invalid, access will be denied.
+
+The ElvClient handles all of this automatically. When a method is called, it will create the appropriate transaction and send the correct authorization token with the request.
+
+The contract address of content can be determined by its ID, because the IDs of content in the fabric are multiformat hashes. This means that no additional information is needed to locate the appropriate contract when accessing content.
+
+For example, the library with ID ```ilibVdci1v3nUgXdMxMznXny5NfaPRN``` has its contract located at the blockchain address ```0x236ee22acab8810f75b726079a0b3d3afd505645```. 
+
 #### Wallets and signers
 
-Actions involving blockchain transactions will require a *signer*. This is an instance of 
-an [ethers.js](https://github.com/ethers-io/ethers.js/) wallet. ElvClient has a utility class
-```ElvWallet``` to make handling this easier.
+To perform the necessary blockchain interactions, the client requires a *signer*. This is an instance of an [ethers.js](https://github.com/ethers-io/ethers.js/) wallet. ElvClient has a utility class ```ElvWallet``` to make handling this easier.
 
-After creating the ElvClient instance, you can generate an ```ElvWallet``` for the client using
-```client.GenerateWallet()```. This class provides simple methods to generate signers from various
-information, as well as store and retrieve signers by name. 
+After creating the ElvClient instance, you can generate an ```ElvWallet``` for the client using ```client.GenerateWallet()```. This class provides simple methods to generate signers from various information, as well as storing and retrieving signers by name. 
 
-Note: you do not need to use the account 
-management functionality of the wallet, you can simply use the wallet to generate signer objects as 
-needed.
+Note: you do not need to use the account management functionality of the wallet, you can simply use the wallet to generate signer objects as needed. Omitting the name parameter when calling any of the AddAccount is valid - the signer will only be returned and not stored.
 
 #### Generating the wallet and adding accounts:
 
 ```javascript
-let wallet = client.GenerateWallet();
+const wallet = client.GenerateWallet();
 
 // With decrypted private key (synchronous): 
-let signer = wallet.AddAccount({
+const signer = wallet.AddAccount({
   accountName: "Alice",
   privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
 });
 
 // With encrypted private key (asynchronous):
-let signer = await wallet.AddAccountFromEncryptedPK({
+const signer = await wallet.AddAccountFromEncryptedPK({
   accountName: "Bob",
   encryptedPrivateKey: {"address":"71b011b67dc8f5c323a34cd14b952721d5750c93","crypto":{"cipher":"aes-128-ctr","ciphertext":"768c0b26476793e52c7e292b6b221fa4d7f82a7d20a7ccc042ce43c072f97f38","cipherparams":{"iv":"049e2bed69573f62da6576c21769b520"},"kdf":"scrypt","kdfparams":{"dklen":32,"n":262144,"p":1,"r":8,"salt":"332b0f7730c580aa86b3ec8e79d228e9f76426bb328c468cb57e99e39132c29f"},"mac":"36079b7f32edf1c3d8d1697313f8088c78be07627ffb6421f655409373fded79"},"id":"8181d812-ab5e-4e5b-b023-e9049c2aec48","version":3},
   password: "test"
 });
 
-// Using mnemonics
-let mnemonic = wallet.GenerateMnemonic();
+// Using mnemonics (synchronous)
+const mnemonic = wallet.GenerateMnemonic();
 // -> coin valve van maximum manual glow nurse puppy wish put sound session
 
-let signer = wallet.AddAccountFromMnemonic({
+const signer = wallet.AddAccountFromMnemonic({
   accountName: "Carol",
   mnemonic: mnemonic
+});
+
+// It is valid to omit the accountName parameter
+const signer = wallet.AddAccount({
+  privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
 });
 ```
 
 #### Setting the client's signer
 
-After obtaining the signer through whatever means, you can set the signer for the client.
+After obtaining the signer through whatever means, you must set the signer for the client to use.
 
-All blockchain transactions performed by ElvClient will use the signer set by the ```SetSigner``` method.
-An exception will be thrown if the signer is not set, or if the provider of the signer does not match the
-client's provider.
+All blockchain transactions performed by ElvClient will use the signer set by the ```SetSigner``` method. An exception will be thrown if the signer is not set.
 
 ```javascript
-let signer = wallet.GetAccount({accountName: "Alice"});
-
-client.CreateContentLibrary({
-  libraryName: "New Library"
-})
-```
-
-If the signer is generated from a source other than ElvWallet, you must connect the signer to the client
-provider before use.
-
-```javascript
-let signer = Ethers.Wallet.fromMnemonic(mnemonic);
-
-signer = Client.ConnectSigner({signer});
+const signer = wallet.GetAccount({accountName: "Alice"});
 client.SetSigner({signer});
-  
+
 client.CreateContentLibrary({
   libraryName: "New Library"
 })
@@ -291,26 +234,22 @@ const balance = wallet.GetAccountBalance({accountName: "Alice"});
 89.787462796
 ```
 
-##### Generating encrypted private key (keystore format)
+##### Generating signer's encrypted private key (keystore format)
 ```javascript
-const encryptedPrivateKey = wallet.GetEncryptedPrivateKey({accountName: "Alice", password: "test"});
+const encryptedPrivateKey = await wallet.GetEncryptedPrivateKey({accountName: "Alice", password: "test"});
 
 "{\"address\":\"93cc134901c40f6164ab357f4f18bbf4aa058477\",\"id\":\"dc5b06ca-f284-4a47-875a-176d857f6d9d\",\"version\":3,\"Crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"ca349dad2df26ed5786b987fd54e195d\"},\"ciphertext\":\"c4e1d0e1bf21cb8e2c4c732040245ea65f22cd4af0666dc79da1b3fbe23c6a27\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"27695860062f440d91d1863c37349a28518ed98799d0d96b8f9a39c9e23b953a\",\"n\":131072,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"2b0fe21ba893c40ab193694ef2f86c7982138fc17b19148b25f65bfccdbb4fbd\"}}"
 ```
 
-Note: This method is equivalent to ```signer.encrypt(password)``` - if you already have the signer object,
-calling encrypt directly may be easier.
+Note: This method is equivalent to ```signer.encrypt(password)``` - if you already have the signer object, calling encrypt directly may be easier.
 
 ### Deploying custom contracts
 
 #### Compilation and contract code handling
 
-In order to deploy custom contracts, the ABI and bytecode of the compiled contract are required. For
-further contract interaction, such as calling contract methods, only the ABI is necessary.
+In order to deploy custom contracts, the ABI and bytecode of the compiled contract are required. For further contract interaction, such as calling contract methods, only the ABI is necessary.
 
-Contract compilation is outside the scope of this library, but there are many ways to get contracts
-compiled and the ABI and bytecode available to your javascript code. The following advice assumes the 
-contracts are written in Solidity.
+Contract compilation is outside the scope of this library, but there are many ways to get contracts compiled and the ABI and bytecode available to your javascript code. The following advice assumes the contracts are written in Solidity.
 
 ##### Compilers: 
 - Using the [Solidity compiler](https://github.com/ethereum/solidity)
@@ -320,35 +259,72 @@ contracts are written in Solidity.
 
 ##### Managing compiled contracts
 
-Once your contract has been compiled, there are several ways you can get the ABI and bytecode into
-your javascript environment.
+Once your contract has been compiled, there are several ways you can get the ABI and bytecode into your javascript environment.
 
-From a usage perspective, the easiest way is to get this data into valid javascript. If you do not
-expect your contract code to change much, you can add the ABI and bytecode strings directly to your
-code.
+From a usage perspective, the easiest way is to get this data into valid javascript. If you do not expect your contract code to change much, you can add the ABI and bytecode strings directly to your code.
 
-This client relies on several of Eluvio's contracts. In order to easily pull these contracts in to 
-the code and, more importantly, to allow us to minify this library into a single file with no dependencies,
-we compile these contracts and format them into easily importable javascript using a build script.
+This client relies on several of Eluvio's contracts. In order to easily pull these contracts in to the code and to allow us to minify this library into a single file with no dependencies, we compile these contracts and format them into easily importable javascript using a build script.
 
-Look at the 'build' script in package.json to see how the build is done. ```./build/BuildContracts.js```
-is the script that compiles the contracts and generates the javascript files, and ```./src/contracts``` is
-where those javascript files are written. These scripts are then used in ```./src/EthClient.js```.
+ ```./build/BuildContracts.js``` is the script that compiles the contracts and generates the javascript files, and ```./src/contracts``` is where those javascript files are written. These scripts are then used in ```./src/EthClient.js```.
 
-Other methods may be more difficult and prone to error due to the difficulty of importing non-javascript
-files into javascript.
+Compiling to a JSON format would also be easily usable in a javascript environment. For example:
 
-- If you are using webpack, you can use the [raw-loader](https://github.com/webpack-contrib/raw-loader)
-to import your compiled contract data.
+```json
+// Contract.json:
+{
+  "abi": <abi>,
+  "bytecode": <bytecode>
+}
+```
+
+```javascript
+// UseContract.js
+const contractData = require("Contract.json");
+
+client.DeployContract({
+  abi: contractData.abi,
+  bytecode: contractData.bytecode,
+  constructorArgs: []
+})
+```
+
+
+Other methods may be more difficult and prone to error due to the difficulty of importing non-javascript files into javascript.
+
+- If you are using webpack, you can use the [raw-loader](https://github.com/webpack-contrib/raw-loader) to import your compiled contract data.
 - On node.js, you can use fs to read files
-- In a browser, you can do a request to access the file
-
+- In a browser, you can do an XHR or fetch request to access the file
 
 ##### Deploying contracts
 
 The ElvClient can be used to deploy custom contracts, provided the ABI and bytecode of the contract.
 
-To deploy a contract, simply pass the ABI, bytecode, and any constructor arguments.
+The arguments to both the contract constructor and contract methods are provided as an ordered array. Some arguments have special required formats - Bytes32 strings, for example. The FormatContractArguments helper can perform this formatting automatically by referencing the ABI.
+
+For example, the second argument to this contract constructor is a bytes32 string:
+
+```javascript
+const constructorArgs = client.FormatContractArguments({
+  abi,
+  methodName: "constructor",
+  args: [
+    "First Argument",
+    "Content Space",
+    "0x0000000000000000000000000000000000000000"
+  ]
+});
+
+/* Result
+
+[ 'New library',
+  '0x436f6e74656e7420537061636500000000000000000000000000000000000000',
+  '0x0000000000000000000000000000000000000000' ]
+*/
+```
+
+It is recommended to always run your arguments array through the FormatContractArguments method before deploying a contract or calling a contract method unless you explicitly handle argument formatting yourself.
+
+To deploy a contract, simply pass the ABI, bytecode, and formatted constructor arguments.
 
 ```javascript
 return await client.DeployContract({
@@ -364,55 +340,22 @@ Calling a method on a deployed contract is similarly simple:
 return await client.CallContractMethod({
   contractAddress,
   abi,
-  methodName: "setLibraryHash",
+  methodName: "myMethod",
   methodArgs
 });
 ```
 
-The arguments to both the constructor and any methods are provided as an ordered array. Some arguments have special 
-required formats - Bytes32 strings, for example. The FormatContractArguments helper can perform this formatting
-automatically by referencing the ABI.
-
-For example, the ContentLibrary contract constructor requires 3 arguments - a string, a bytes32 string, and an address.
-The FormatContractArguments method will automatically perform the bytes32 string transformation on the second argument.
-
-```javascript
-const constructorArgs = client.FormatContractArguments({
-  abi,
-  methodName: "constructor",
-  args: [
-    "New Library",
-    "Content Space",
-    "0x0000000000000000000000000000000000000000"
-  ]
-});
-
-/* Result
-
-[ 'New library',
-  '0x436f6e74656e7420537061636500000000000000000000000000000000000000',
-  '0x0000000000000000000000000000000000000000' ]
- 
-*/
-```
-
 ### Other blockchain interaction
 
-The signer object, as described above, is an instance of an [ethers.js](https://github.com/ethers-io/ethers.js/)
-wallet that is connected to the client's specified blockchain (provider). It can be used independently of the ElvClient 
-to do anything outlined in the [documentation](https://docs.ethers.io/ethers.js/html/api-wallet.html) - namely, 
-signing transactions.
+The signer object, as described above, is an instance of an [ethers.js](https://github.com/ethers-io/ethers.js/) wallet that is connected to the client's specified blockchain (provider). It can be used independently of the ElvClient to do anything outlined in the [documentation](https://docs.ethers.io/ethers.js/html/api-wallet.html).
 
-This signer can be used in conjunction with the ethers.js library, or even another ethereum library like web3
-(by extracting the private key), to deploy contracts, sign transactions and perform other functions not explicitly
-supported in the ElvClient.
+This signer can be used in conjunction with the ethers.js library, or even another ethereum library like web3 (by extracting the private key), to deploy contracts, sign transactions and perform other functions not explicitly supported in the ElvClient.
 
 Refer to src/EthClient.js to see how ElvClient uses ethers.js to interact with the blockchain.
 
 ### Error handling
  
-Error checking is performed by the client for all queries. If an error occurs or if the response 
-is ```!.ok``` (response code not in 200 range), an error of the following format will be thrown:
+Error checking is performed by the client for all queries. If an error occurs or if the response is ```!.ok``` (response code not in 200 range), an error of the following format will be thrown:
 
 ```json
 { 
@@ -439,27 +382,12 @@ try {
 }
 ```
 
-
-
 See ```./test/TestMethods.js``` for full working examples.
-
-
 
 
 ### Content Object Verification
 
 ```javascript
-let client = new ElvClient({
-  contentSpaceId: "ispc6NxBDhWiRuKyDNMWVmpTuCaQssS2iuDfq8hFkivVoeJw",
-  hostname: "localhost",
-  port: 8008,
-  useHTTPS: false,
-  ethHostname: "localhost",
-  port: 8545,
-  useHTTPS: false
-});
-
-
 // Using promise:
 client.VerifyContentObject({
   partHash: "hq__QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb",
@@ -477,14 +405,14 @@ console.log(result);
 /* Result:
 
 {
-  "hash": "hq__QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb",
+  "hash": "hq__QmchT4PFtSdbLnQjMNeyoMB42jncU6QwiZe4wS1ymvgVK1",
   "qref": {
     "valid": true,
-    "hash": "hqp_QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb"
+    "hash": "hqp_QmchT4PFtSdbLnQjMNeyoMB42jncU6QwiZe4wS1ymvgVK1"
   },
   "qmd": {
     "valid": true,
-    "hash": "hqp_QmdWDY2CaCYXLxz4ZFtiqUBTsp6eBDN7B7UnTCheHYMVpA",
+    "hash": "hqp_QmQ4V6Zi4Z4oGkAiZEYFoYaK5gs55r458dbJXer5hcS4ZB",
     "check": {
       "valid": true,
       "invalidValues": []
@@ -492,17 +420,10 @@ console.log(result);
   },
   "qstruct": {
     "valid": true,
-    "hash": "hqp_QmUiLv4D22kNTMnLcUPRcofv1VmcEHf6wEnwyGVbpMoZzQ",
+    "hash": "hqp_QmNweqiWD85twj1f3HmhmSANoSpdra7cJzraZYetrkxh4c",
     "parts": [
       {
         "hash": "hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB",
-        "proofs": {
-          "rootHash": "ee088e8d93a295066aeb0ef9bc39b126a88a90c553ad3391924d015714ccbaa8",
-          "chunkSize": 49,
-          "chunkNum": 49,
-          "chunkLen": 49,
-          "finalized": 116
-        },
         "size": 17
       }
     ]
@@ -523,28 +444,21 @@ console.log(result);
 Result:
 
 {
-  "hash": "hq__QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb",
+  "hash": "hq__QmchT4PFtSdbLnQjMNeyoMB42jncU6QwiZe4wS1ymvgVK1",
   "qref": {
     "valid": true,
-    "hash": "hqp_QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb"
+    "hash": "hqp_QmchT4PFtSdbLnQjMNeyoMB42jncU6QwiZe4wS1ymvgVK1"
   },
   "qmd": {
     "valid": true,
-    "hash": "hqp_QmdWDY2CaCYXLxz4ZFtiqUBTsp6eBDN7B7UnTCheHYMVpA"
+    "hash": "hqp_QmQ4V6Zi4Z4oGkAiZEYFoYaK5gs55r458dbJXer5hcS4ZB"
   },
   "qstruct": {
     "valid": true,
-    "hash": "hqp_QmUiLv4D22kNTMnLcUPRcofv1VmcEHf6wEnwyGVbpMoZzQ",
+    "hash": "hqp_QmNweqiWD85twj1f3HmhmSANoSpdra7cJzraZYetrkxh4c",
     "parts": [
       {
         "hash": "hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB",
-        "proofs": {
-          "rootHash": "ee088e8d93a295066aeb0ef9bc39b126a88a90c553ad3391924d015714ccbaa8",
-          "chunkSize": 49,
-          "chunkNum": 49,
-          "chunkLen": 49,
-          "finalized": 116
-        },
         "size": 17
       }
     ]
@@ -611,10 +525,8 @@ console.log(result);
 
 ### IFrame Client
 
-The API client can be used transparently by an disprivileged IFrame using the FrameClient (./ElvFrameClient-min.js).
+The API client can be used transparently by an restricted IFrame using the FrameClient (./ElvFrameClient-min.js).
 
 See ./test/frames/Parent.html and ./test/frames/Child.html for example usage
 
-NOTE: Raw response objects cannot be passed in message. When using non-json endpoints (e.g. DownloadPart),
-you must specify a valid type in the format field or accept the default blob format. The available formats 
-correspond to Response methods (.json(), .blob(), .text(), etc.)
+NOTE: Raw response objects cannot be passed in message. When using non-json endpoints (e.g. DownloadPart), you must specify a valid type in the format field or accept the default blob format. The available formats correspond to Response methods (.json(), .blob(), .text(), etc.)

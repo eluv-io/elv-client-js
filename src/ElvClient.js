@@ -136,7 +136,6 @@ class ElvClient {
       "constructor",
       "AuthorizationHeader",
       "CallFromFrameMessage",
-      "ConnectSigner",
       "FrameAllowedMethods",
       "GenerateWallet",
       "SetSigner"
@@ -177,12 +176,8 @@ class ElvClient {
   }
 
   SetSigner({signer}) {
-    this.signer = signer;
-  }
-
-  ConnectSigner({signer}) {
     signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
-    return signer;
+    this.signer = signer;
   }
 
   /* Content Spaces */
