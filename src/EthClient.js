@@ -72,9 +72,14 @@ class EthClient {
     abi,
     methodName,
     methodArgs=[],
-    overrides={ gasLimit: 6000000, gasPrice: 100000 },
+    overrides={},
     signer
   }) {
+    overrides = Object.assign(
+      { gasLimit: 6000000, gasPrice: 100000 },
+      overrides || {}
+    );
+
     this.ValidateSigner(signer);
 
     if(!contract) {
