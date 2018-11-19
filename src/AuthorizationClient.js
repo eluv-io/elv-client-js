@@ -6,10 +6,20 @@ const LibraryContract = require("./contracts/BaseLibrary");
 const TypeContract = require("./contracts/BaseContentType");
 const ContentContract = require("./contracts/BaseContent");
 
+// Node doesn't implement btoa
+const B64 = (str) => {
+  if(typeof btoa !== "undefined") {
+    return btoa(str);
+  }
+
+  return Buffer.from(str).toString("base64");
+};
+
 class AuthorizationClient {
-  constructor(elvClient, ethClient, noCache=false) {
-    this.elvClient = elvClient;
+  constructor({ethClient, contentSpaceId, signer, noCache=false}) {
     this.ethClient = ethClient;
+    this.contentSpaceId = contentSpaceId;
+    this.signer = signer;
 
     this.noCache = noCache;
 
@@ -23,6 +33,54 @@ class AuthorizationClient {
       spaces: {},
       libraries: {},
       objects: {}
+    };
+  }
+
+  // Authorization: Bearer <token>
+  async AuthorizationHeader({libraryId, objectId, transactionHash, update=false}) {
+    if(!transactionHash) {
+      // If content library object, authorize against library, not object
+      if(objectId && !Utils.EqualHash(libraryId, objectId)) {
+        if(Utils.EqualHash(this.contentSpaceId, libraryId)) {
+          // Content type
+          if(update) {
+            transactionHash = await this.ContentTypeUpdate({objectId});
+          } else {
+            transactionHash = await this.ContentTypeAccess({objectId});
+          }
+        } else {
+          // Content object
+          if(update) {
+            transactionHash = await this.ContentObjectUpdate({objectId});
+          } else {
+            transactionHash = await this.ContentObjectAccess({objectId});
+          }
+        }
+        // If content space library, authorize against space, not library
+      } else if(libraryId && !Utils.EqualHash(this.contentSpaceId, libraryId)) {
+        // Content Library
+        if(update) {
+          transactionHash = await this.ContentLibraryUpdate({libraryId});
+        } else {
+          //transactionHash = await this.ContentLibraryAccess({libraryId});
+        }
+      } else {
+        // Content space
+        //transactionHash = await this.ContentSpaceAccess();
+      }
+    }
+
+    const token = B64(JSON.stringify({
+      qspace_id: this.contentSpaceId,
+      qlib_id: libraryId,
+      addr: this.signer.signingKey.address,
+      txid: transactionHash
+    }));
+
+    const signature = B64("SIGNATURE");
+
+    return {
+      Authorization: "Bearer " + token + "." + signature
     };
   }
 
@@ -43,25 +101,28 @@ class AuthorizationClient {
       if(transactionHash) { return transactionHash; }
     }
 
-    const formattedArgs = this.elvClient.FormatContractArguments({
+    const formattedArgs = this.ethClient.FormatContractArguments({
       abi,
       methodName: "accessRequest",
-      args
+      args,
+      signer: this.signer
     });
 
-    const methodEvent = await this.elvClient.CallContractMethodAndWait({
+    const methodEvent = await this.ethClient.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress({hash: id}),
       abi,
       methodName: "accessRequest",
-      methodArgs: formattedArgs
+      methodArgs: formattedArgs,
+      signer: this.signer
     });
 
     // Verify result of access request -- 0 is success
-    const validity = this.elvClient.ethClient.ExtractValueFromEvent({
+    const validity = this.ethClient.ExtractValueFromEvent({
       abi,
       event: methodEvent,
       eventName: "AccessRequest",
-      eventValue: "requestValidity"
+      eventValue: "requestValidity",
+      signer: this.signer
     });
 
     if(validity.toNumber() !== 0) {
@@ -78,7 +139,7 @@ class AuthorizationClient {
 
   ContentSpaceAccess() {
     return this.AccessRequest({
-      id: this.elvClient.contentSpaceId,
+      id: this.contentSpaceId,
       abi: SpaceContract.abi,
       args: [],
       accessCache: this.accessTransactions.spaces,
@@ -109,7 +170,7 @@ class AuthorizationClient {
   ContentObjectAccess({objectId}) {
     const args = [
       0, // Access level
-      this.elvClient.signer.privateKey, // Private key of requester
+      this.signer.privateKey, // Private key of requester
       "", // AFGH string
       [], // Custom values
       [] // Stakeholders
@@ -129,8 +190,8 @@ class AuthorizationClient {
   async CreateContentLibrary() {
     // Deploy contract
     const {contractAddress, transactionHash} = await this.ethClient.DeployLibraryContract({
-      contentSpaceAddress: Utils.HashToAddress({hash: this.elvClient.contentSpaceId}),
-      signer: this.elvClient.signer
+      contentSpaceAddress: Utils.HashToAddress({hash: this.contentSpaceId}),
+      signer: this.signer
     });
 
     return {
@@ -142,8 +203,8 @@ class AuthorizationClient {
   async CreateContentType() {
     // Deploy contract
     const { contractAddress, transactionHash } = await this.ethClient.DeployTypeContract({
-      contentSpaceAddress: Utils.HashToAddress({hash: this.elvClient.contentSpaceId}),
-      signer: this.elvClient.signer
+      contentSpaceAddress: Utils.HashToAddress({hash: this.contentSpaceId}),
+      signer: this.signer
     });
 
     return {
@@ -156,7 +217,7 @@ class AuthorizationClient {
     // Deploy contract
     const { contractAddress, transactionHash } = await this.ethClient.DeployContentContract({
       contentLibraryAddress: Utils.HashToAddress({hash: libraryId}),
-      signer: this.elvClient.signer
+      signer: this.signer
     });
 
     return {
@@ -174,11 +235,12 @@ class AuthorizationClient {
       if(transactionHash) { return transactionHash; }
     }
 
-    const methodEvent = await this.elvClient.CallContractMethodAndWait({
+    const methodEvent = await this.ethClient.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress({hash: id}),
       abi,
       methodName: "updateRequest",
-      methodArgs: []
+      methodArgs: [],
+      signer: this.signer
     });
 
     // Cache the transaction hash
