@@ -2,7 +2,7 @@ const URI = require("urijs");
 const Path = require("path");
 const Ethers = require("ethers");
 
-const AuthClient = require("./AuthorizationClient");
+const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
 const HttpClient = require("./HttpClient");
@@ -47,15 +47,6 @@ const ResponseToFormat = async (format, response) => {
   }
 };
 
-// Node doesn't implement btoa
-const B64 = (str) => {
-  if(typeof btoa !== "undefined") {
-    return btoa(str);
-  }
-
-  return Buffer.from(str).toString("base64");
-};
-
 class ElvClient {
   constructor({contentSpaceId, hostname, port, useHTTPS, ethHostname, ethPort, ethUseHTTPS, noCache=false}) {
     this.contentSpaceId = contentSpaceId;
@@ -76,10 +67,12 @@ class ElvClient {
       .toString();
 
     this.ethClient = new EthClient(this.ethereumURI);
+    // Throw error if authorization is attempted before setting the signer
+    this.authClient = { AuthorizationHeader: () => { throw Error("Signer not set"); }};
+
+    this.noCache = noCache;
 
     this.utils = Utils;
-
-    this.authClient = new AuthClient(this, this.ethClient, noCache);
 
     this.contentTypes = {};
   }
@@ -96,59 +89,10 @@ class ElvClient {
     });
   }
 
-  // Authorization: Bearer <token>
-  async AuthorizationHeader({libraryId, objectId, transactionHash, update=false}) {
-    if(!transactionHash) {
-      // If content library object, authorize against library, not object
-      if(objectId && !Utils.EqualHash(libraryId, objectId)) {
-        if(Utils.EqualHash(this.contentSpaceId, libraryId)) {
-          // Content type
-          if(update) {
-            transactionHash = await this.authClient.ContentTypeUpdate({objectId});
-          } else {
-            transactionHash = await this.authClient.ContentTypeAccess({objectId});
-          }
-        } else {
-          // Content object
-          if(update) {
-            transactionHash = await this.authClient.ContentObjectUpdate({objectId});
-          } else {
-            transactionHash = await this.authClient.ContentObjectAccess({objectId});
-          }
-        }
-      // If content space library, authorize against space, not library
-      } else if(libraryId && !Utils.EqualHash(this.contentSpaceId, libraryId)) {
-        // Content Library
-        if(update) {
-          transactionHash = await this.authClient.ContentLibraryUpdate({libraryId});
-        } else {
-          transactionHash = await this.authClient.ContentLibraryAccess({libraryId});
-        }
-      } else {
-        // Content space
-        transactionHash = await this.authClient.ContentSpaceAccess();
-      }
-    }
-
-    const token = B64(JSON.stringify({
-      qspace_id: this.contentSpaceId,
-      qlib_id: libraryId,
-      addr: this.signer.signingKey.address,
-      txid: transactionHash
-    }));
-
-    const signature = B64("SIGNATURE");
-
-    return {
-      Authorization: "Bearer " + token + "." + signature
-    };
-  }
-
   // Whitelist of methods allowed to be called using the frame API
   FrameAllowedMethods() {
     const forbiddenMethods = [
       "constructor",
-      "AuthorizationHeader",
       "CallFromFrameMessage",
       "FrameAllowedMethods",
       "GenerateWallet",
@@ -192,6 +136,13 @@ class ElvClient {
   SetSigner({signer}) {
     signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
     this.signer = signer;
+
+    this.authClient = new AuthorizationClient({
+      ethClient: this.ethClient,
+      contentSpaceId: this.contentSpaceId,
+      signer: signer,
+      noCache: this.noCache
+    });
   }
 
   /* Content Spaces */
@@ -209,7 +160,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({}),
+        headers: await this.authClient.AuthorizationHeader({}),
         method: "GET",
         path: path
       })
@@ -221,7 +172,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
         path: path
       })
@@ -253,7 +204,7 @@ class ElvClient {
     await HandleErrors(
       this.HttpClient.Request({
         // Don't add libraryId to header or it will crash because the library doesn't exist yet
-        headers: await this.AuthorizationHeader({transactionHash}),
+        headers: await this.authClient.AuthorizationHeader({transactionHash}),
         method: "PUT",
         path: path,
         body: {
@@ -271,7 +222,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -285,7 +236,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
         path: path
       })
@@ -297,7 +248,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
         method: "PUT",
         path: path,
         body: metadata
@@ -317,7 +268,7 @@ class ElvClient {
     // against the content type library because it does not have a library contract
     const response = await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({}),
+        headers: await this.authClient.AuthorizationHeader({}),
         method: "GET",
         path: path
       })
@@ -368,7 +319,7 @@ class ElvClient {
 
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({transactionHash}),
+        headers: await this.authClient.AuthorizationHeader({transactionHash}),
         method: "PUT",
         path: path,
         body: {
@@ -403,7 +354,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
         path: path
       })
@@ -415,7 +366,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -427,7 +378,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -439,7 +390,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -462,7 +413,7 @@ class ElvClient {
 
     return await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, transactionHash}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
         method: "PUT",
         path: path,
         body: options
@@ -480,7 +431,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: options
@@ -493,7 +444,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path
       })
@@ -505,7 +456,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -517,7 +468,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -531,7 +482,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: metadata
@@ -544,7 +495,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "PUT",
         path: path,
         body: metadata
@@ -557,7 +508,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -571,7 +522,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "POST",
         path: path,
         body: fileInfo
@@ -589,7 +540,7 @@ class ElvClient {
         body: fileData,
         bodyType: "BINARY",
         headers: Object.assign(
-          await this.AuthorizationHeader({libraryId, objectId}),
+          await this.authClient.AuthorizationHeader({libraryId, objectId}),
           { "Content-type": "application/octet-stream" }
         )
       })
@@ -601,7 +552,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -613,7 +564,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "POST",
         path: path
       })
@@ -626,7 +577,7 @@ class ElvClient {
     return ResponseToFormat(
       format,
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -640,7 +591,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -653,7 +604,7 @@ class ElvClient {
     return ResponseToFormat(
       format,
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -666,7 +617,7 @@ class ElvClient {
     return ResponseToFormat(
       format,
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -678,7 +629,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: data,
@@ -692,7 +643,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
         path: path
       })
@@ -720,7 +671,7 @@ class ElvClient {
       }
     }
 
-    const authorization = (await this.AuthorizationHeader({libraryId, objectId}))
+    const authorization = (await this.authClient.AuthorizationHeader({libraryId, objectId}))
       .Authorization.replace("Bearer ", "");
 
     return this.HttpClient.URL({
@@ -738,7 +689,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({}),
+        headers: await this.authClient.AuthorizationHeader({}),
         method: "GET",
         path: path
       })
@@ -750,7 +701,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({}),
+        headers: await this.authClient.AuthorizationHeader({}),
         method: "PUT",
         path: path,
         body: {name, target}
@@ -795,7 +746,7 @@ class ElvClient {
 
     await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({}),
+        headers: await this.authClient.AuthorizationHeader({}),
         method: "DELETE",
         path: path
       })
@@ -817,7 +768,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
@@ -830,7 +781,7 @@ class ElvClient {
     return ResponseToFormat(
       format,
       this.HttpClient.Request({
-        headers: await this.AuthorizationHeader({objectId}),
+        headers: await this.authClient.AuthorizationHeader({objectId}),
         method: "GET",
         path: path
       })
