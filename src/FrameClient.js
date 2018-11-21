@@ -1,38 +1,37 @@
 const Id = require("./Id");
 const Utils = require("./Utils");
 
-const IsCloneable = (value) => {
-  if(Object(value) !== value) {
-    // Primitive valueue
-    return true;
-  }
-
-  switch({}.toString.call(value).slice(8,-1)) { // Class
-  case "Boolean":
-  case "Number":
-  case "String":
-  case "Date":
-  case "RegExp":
-  case "Blob":
-  case "FileList":
-  case "ImageData":
-  case "ImageBitmap":
-  case "ArrayBuffer":
-    return true;
-  case "Array":
-  case "Object":
-    return Object.keys(value).every(prop => IsCloneable(value[prop]));
-  case "Map":
-    return [...value.keys()].every(IsCloneable)
-      && [...value.values()].every(IsCloneable);
-  case "Set":
-    return [...value.keys()].every(IsCloneable);
-  default:
-    return false;
-  }
-};
-
 class FrameClient {
+  /**
+   * FrameClient is a client that looks to the user like an ElvClient, but works by passing messages
+   * to another frame with an actual ElvClient instead of making the calls itself.
+   *
+   * The purpose of this is to isolate users' private keys and the usage thereof in one trusted application,
+   * while still allowing other (possibly less trustworthy) applications to communicate with the content fabric
+   * on behalf of the user from a sandboxed IFrame.
+   *
+   * FrameClient has available almost all of the same methods as ElvClient, and should be transparently
+   * interchangable with it from a usage perspective.
+   *
+   * The methods available in FrameClient are generated automatically from ElvClient. These methods will use a
+   * messaging protocol to communicate intent to a specified frame, which can listen for such messages, perform
+   * the actions using the real ElvClient, and return the results via a response message.
+   *
+   * Because the privileged frame is doing the actual work, it may decide to allow or disallow any actions
+   * it sees fit - for example, limiting a dependent app to a few safe calls while preventing it from making any
+   * significant changes.
+   *
+   * The most important aspect of this architecture is to prevent leaking of users' private keys. Be careful when
+   * setting up a project using this architecture - make sure the untrusted app is properly contained in a sandboxed
+   * IFrame and served from a different origin than the privileged app.
+   *
+   * @see test/frames/Parent.html and test/frames/Client.html for an example setup using this scheme
+   *
+   * @namedParams
+   * @param {Object} target - The window or frame that will listen for messages produced by this client
+   * @param {number} timeout - How long to wait for a response after calling a method before giving up
+   * and generating a timeout error
+   */
   constructor({target=parent, timeout=5}) {
     this.timeout = timeout;
 
@@ -43,16 +42,11 @@ class FrameClient {
       this[methodName] = async (args) => {
         const requestId = Id.next();
 
-        // TODO: Instead of serializing the whole thing, only serialize / remove non-clonable
-        if(!IsCloneable(args)) {
-          args = JSON.parse(JSON.stringify(args));
-        }
-
         target.postMessage({
           type: "ElvFrameRequest",
           requestId,
           calledMethod: methodName,
-          args
+          args: this.utils.MakeClonable(args)
         }, "*");
 
         return await this.AwaitMessage(requestId, 5000);
@@ -101,6 +95,9 @@ class FrameClient {
   // List of allowed methods available to frames
   // This should match ElvClient.FrameAvailableMethods()
   // ElvClient will also reject any disallowed methods
+  /**
+   * @returns {Array<string>} - List of ElvClient methods available to a FrameClient
+   */
   AllowedMethods() {
     return [
       "CallContractMethod",
@@ -130,6 +127,7 @@ class FrameClient {
       "DownloadFile",
       "DownloadPart",
       "EditContentObject",
+      "ExtractValueFromEvent",
       "FabricUrl",
       "FinalizeContentObject",
       "FinalizeUploadJobs",

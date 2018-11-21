@@ -50,13 +50,19 @@ class EthClient {
     abi,
     bytecode,
     constructorArgs=[],
+    overrides={},
     signer
   }) {
+    overrides = Object.assign(
+      {},
+      overrides || {}
+    );
+
     this.ValidateSigner(signer);
 
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
 
-    let contract = await contractFactory.deploy(...constructorArgs);
+    let contract = await contractFactory.deploy(...constructorArgs, overrides);
     await contract.deployed();
 
     return {
