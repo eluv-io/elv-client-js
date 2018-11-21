@@ -1,0 +1,28 @@
+{
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc"]
+  },
+  "source": {
+    "include": ["src"],
+    "includePattern": ".js$",
+    "excludePattern": "(node_modules/|docs)"
+  },
+  "plugins": [
+    "plugins/markdown",
+    "./vendor/jsdoc-namedparams.js"
+  ],
+  "templates": {
+    "referenceTitle": "Eluvio Javascript Client",
+    "disableSort": false,
+    "collapse": true
+  },
+  "opts": {
+    "destination": "./docs/",
+    "encoding": "utf8",
+    "pedantic": true,
+    "private": true,
+    "recurse": true,
+    "template": "vendor/jsdoc-template"
+  }
+}

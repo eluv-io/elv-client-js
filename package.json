@@ -5,7 +5,7 @@
   "main": "ElvClient-min.js",
   "author": "Kevin Talmadge",
   "scripts": {
-    "build": "npm run build-contracts && npm run build-prod && npm run build-frame-client",
+    "build": "npm run build-contracts && npm run build-prod && npm run build-frame-client && npm run build-docs",
     "build-prod": "npm run build-web && npm run build-node",
     "build-dev": "npm run build-web-dev && npm run build-node-dev",
     "build-web": "webpack --progress --mode production --target web --output-filename ElvClient-min.js --devtool none",
@@ -14,6 +14,7 @@
     "build-node-dev": "webpack --progress --target node --output-filename ElvClient-node-min-dev.js",
     "build-frame-client": "webpack -p --progress --entry ./src/FrameClient.js --output-filename ElvFrameClient-min.js --devtool none --optimize-minimize",
     "build-contracts": "node build/BuildContracts.js",
+    "build-docs": "jsdoc --configure ./.jsdoc.json",
     "lint": "./node_modules/.bin/eslint \"src/**/*.js\" --fix",
     "truffle_test": "node $NODE_DEBUG_OPTION ./node_modules/.bin/truffle test"
   },
@@ -36,6 +37,8 @@
     "copy-webpack-plugin": "^4.5.2",
     "eslint": "^5.6.1",
     "eslint-plugin-react": "^7.11.1",
+    "jsdoc": "^3.5.5",
+    "minami": "^1.2.3",
     "raw-loader": "^0.5.1",
     "solc": "^0.4.25",
     "truffle": "^4.1.14",

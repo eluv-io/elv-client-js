@@ -1,6 +1,6 @@
 // NOTE: Changes to cbor lib to get webpack to work properly for node and web:
 // - Replace instances of const bignumber = require('bignumber.js') in lib/* with const bignumber = require('bignumber.js').default
-const CBOR = require("../node-cbor/lib/cbor");
+const CBOR = require("../vendor/node-cbor/lib/cbor");
 
 const SJCL = require("sjcl");
 const MultiHash = require("multihashes");

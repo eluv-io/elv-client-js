@@ -49,7 +49,7 @@ let TestQueries = async (client) => {
 
     // Clear auth cache to force an accessRequest to the library on next call
     console.log("\nFORCING REAUTHORIZATION TO LIBRARY ON NEXT CALL\n");
-    client.authClient.ClearCache({libraryId});
+    client.authClient && client.authClient.ClearCache({libraryId});
 
 
     console.log("UPDATING PUBLIC LIBRARY METADATA...");
@@ -211,7 +211,7 @@ let TestQueries = async (client) => {
 
     // Clear auth cache to force an accessRequest to the object
     console.log("\nFORCING REAUTHORIZATION TO OBJECT ON NEXT CALL\n");
-    client.authClient.ClearCache({objectId});
+    client.authClient && client.authClient.ClearCache({objectId});
 
     const versionHash = contentObjectData.hash;
 

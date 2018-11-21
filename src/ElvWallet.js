@@ -1,15 +1,48 @@
 const Ethers = require("ethers");
 
 class ElvWallet {
+  /**
+   * Create a new ElvWallet connected to the given provider
+   *
+   * NOTE: It is recommended to instead initialize wallets from the ElvClient
+   *
+   * @see ElvClient#GenerateWallet()
+   *
+   * @param {string} providerUrl - URL of blockchain provider
+   */
   constructor(providerUrl) {
     this.provider = new Ethers.providers.JsonRpcProvider(providerUrl);
     this.signers = {};
   }
 
+  /**
+   * Generate a mnemonic that can be used to initialize a private key
+   *
+   * @returns {string} - Space-separated list of random words
+   *
+   * @example
+   * wallet.GenerateMnemonic()
+   * => message flat hospital decade burger allow foot sound hunt fiscal script top
+   */
   GenerateMnemonic() {
     return Ethers.utils.HDNode.entropyToMnemonic(Ethers.utils.randomBytes(16));
   }
 
+  /**
+   * Generate a private key from the given mnemonic
+   *
+   * @namedParams
+   * @param {string=} accountName - Name of account to save in wallet
+   * @param {string} mnemonic - Mnemonic from which to generate a private key
+   *
+   * @returns {Signer} - Signer with the generated private key, connected to the provider
+   *
+   * @example
+   * const mnemonic = wallet.GenerateMnemonic()
+   * => message flat hospital decade burger allow foot sound hunt fiscal script top
+   *
+   * const signer = wallet.AddAccountFromMnemonic({mnemonic});
+   */
   AddAccountFromMnemonic({accountName, mnemonic}) {
     let signer = Ethers.Wallet.fromMnemonic(mnemonic);
 
@@ -19,6 +52,16 @@ class ElvWallet {
     });
   }
 
+  /**
+   * Add an account from an encrypted private key (Ethereum keystore format)
+   *
+   * @namedParams
+   * @param {string=} accountName - Name of account to save in wallet
+   * @param {string} encryptedPrivateKey - Encrypted private key to decrypt
+   * @params {string} password - Password with which to decrypt the private key
+   *
+   * @returns {Promise<Signer>} - Signer with the decrypted private key, connected to the provider
+   */
   async AddAccountFromEncryptedPK({ accountName, encryptedPrivateKey, password }) {
     if(typeof encryptedPrivateKey === "object") {
       encryptedPrivateKey = JSON.stringify(encryptedPrivateKey);
@@ -32,6 +75,15 @@ class ElvWallet {
     });
   }
 
+  /**
+   * Add an account from a private key (Ethereum keystore format)
+   *
+   * @namedParams
+   * @param {string=} accountName - Name of account to save in wallet
+   * @param {string} privateKey - Private key to use
+   *
+   * @returns {Signer} - Signer with the private key, connected to the provider
+   */
   AddAccount({ accountName, privateKey }) {
     let signer = new Ethers.Wallet(privateKey);
     signer = signer.connect(this.provider);
@@ -43,30 +95,70 @@ class ElvWallet {
     return signer;
   }
 
-  async GetAccountBalance({ accountName }) {
-    const signer = this.GetAccount({ accountName });
+  /**
+   * Get the balance of the account. The account to query can be specified either by
+   * passing the signer object, or by passing the account name of a saved account
+   *
+   * Note: Either the signer OR the account name should be specified
+   *
+   * @namedParams
+   * @param {string=} accountName - Saved account to query the account balance of
+   * @param {Signer=} signer - Signer to query the account balance of
+   *
+   * @returns {number} - Account balance of the specified account, in ETH
+   */
+  async GetAccountBalance({ accountName, signer }) {
+    const accountSigner = signer || this.GetAccount({ accountName });
 
-    if(!signer) {
+    if(!accountSigner) {
       throw Error("Unknown account: " + accountName);
     }
 
-    return Ethers.utils.formatEther(await signer.getBalance());
+    return Ethers.utils.formatEther(await accountSigner.getBalance());
   }
 
-  async GetEncryptedPrivateKey({ accountName, password }) {
-    const signer = this.GetAccount({ accountName });
+  /**
+   * Generate the encrypted private key (Ethereum keystore format) of the signer's private key
+   * The private key to decrypt can be specified either by passing the signer object, or by passing
+   * the account name of a saved account
+   *
+   * Note: Either the signer OR the account name should be specified
+   *
+   * @namedParams
+   * @param {string=} accountName - Saved account to encrypt the private key of
+   * @param {string=} signer - Signer to encrypt the private key of
+   * @params {string} password - Password to encrypt the private key with
+   *
+   * @returns {Promise<string>} - The encrypted private key (in Ethereum keystore format)
+   */
+  async GetEncryptedPrivateKey({ accountName, signer, password }) {
+    const accountSigner = signer || this.GetAccount({ accountName });
 
-    if(!signer) {
+    if(!accountSigner) {
       throw Error("Unknown account: " + accountName);
     }
 
-    return await signer.encrypt(password);
+    return await accountSigner.encrypt(password);
   }
 
+  /**
+   * Get the signer of a previously saved account by name
+   *
+   * @namedParams
+   * @param {string} accountName - Name of the account
+
+   * @returns {(Signer|undefined)} - Signer of the saved account, if it exists
+   */
   GetAccount({ accountName }) {
     return this.signers[accountName];
   }
 
+  /**
+   * Remove a previously saved account from this wallet
+   *
+   * @namedParams
+   * @param {string} accountName - Name of the account to delete
+   */
   RemoveAccount({ accountName }) {
     delete this.signers[accountName];
   }

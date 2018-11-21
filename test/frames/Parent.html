@@ -8,22 +8,31 @@
 <script src="../../ElvFrameClient-min.js"></script>
 <script type="text/javascript">
   const client = new ElvClient({
+    contentSpaceId: "ispc2U6m3DGNZnpPtowX2t2qpHnQcaGt",
     hostname: "localhost",
     port: 8008,
     useHTTPS: false,
     ethHostname: "localhost",
-    ethPort: 7545,
+    ethPort: 8545,
     ethUseHTTPS: false
   });
 
   let wallet = client.GenerateWallet();
   let signer = wallet.AddAccount({
     accountName: "Alice",
-    privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
+    privateKey: "0xbf092a5c94988e2f7a1d00d0db309fc492fe38ddb57fc6d102d777373389c5e6"
   });
+  client.SetSigner({signer});
+
 
   window.addEventListener("message", async function(event) {
-    const responseMessage = await client.CallFromFrameMessage(event.data, signer);
+    console.log("\nReceived message: ");
+    console.log(event.data);
+
+    const responseMessage = await client.CallFromFrameMessage(event.data);
+    console.log("\nSending response:");
+    console.log(responseMessage);
+
     if (responseMessage) {
       document.getElementById("appFrame").contentWindow.postMessage(
         responseMessage,
@@ -31,30 +40,6 @@
       );
     }
   });
-
-
-
-
-
-
-
-
-  // Ensure ElvClient and FrameClient agree on allowed methods
-  const frameClient = new FrameClient({
-    timeout: 20
-  });
-
-  const frameClientMethods = frameClient.AllowedMethods();
-  const elvClientMethods = client.FrameAllowedMethods();
-
-  const differentKeys = frameClientMethods
-    .filter(x => !elvClientMethods.includes(x))
-    .concat(elvClientMethods.filter(x => !frameClientMethods.includes(x)));
-
-  if(differentKeys.length > 0) {
-    console.error("MISMATCHED ALLOWED METHODS BETWEEN ELV CLIENT AND FRAME CLIENT");
-    console.error(differentKeys);
-  }
 </script>
 
 <iframe width="1000px" height="1000px" id="appFrame" src="child.html"></iframe>

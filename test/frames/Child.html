@@ -45,9 +45,23 @@
   }
 
   async function RunTests() {
-    const result = await TestQueries(frameClient);
+    /* Hijack console.log to turn output into string */
+    let result = "";
+    const oldLog = (function(){
+      var oldLog = console.log;
+      console.log = function (message) {
+        result += "\n" + message;
+      };
+
+      return oldLog;
+    })();
+
+    await TestQueries(frameClient);
 
     document.getElementById("pre").textContent = result;
+
+    // Reset console.log
+    console.log = oldLog;
   }
 </script>
 <div>

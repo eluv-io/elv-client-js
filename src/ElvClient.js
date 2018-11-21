@@ -48,6 +48,23 @@ const ResponseToFormat = async (format, response) => {
 };
 
 class ElvClient {
+  /**
+   * Create a new ElvClient
+   *
+   * @constructor
+   *
+   * @namedParams
+   * @param {string} contentSpaceId - ID of the content space
+   * @param {string} hostname - Hostname of the content fabric API
+   * @param {string} port - Port of the content fabric API
+   * @param {boolean} useHTTPS - Use HTTPS when communicating with the fabric
+   * @param {string} ethHostname - Hostname of the blockchain RPC endpoint
+   * @param {string} ethPort - Port of the blockchain RPC endpoint
+   * @param {boolean} ethUseHTTPS - Use HTTPS when communicating with the blockchain
+   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   *
+   * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
+   */
   constructor({contentSpaceId, hostname, port, useHTTPS, ethHostname, ethPort, ethUseHTTPS, noCache=false}) {
     this.contentSpaceId = contentSpaceId;
 
@@ -77,6 +94,17 @@ class ElvClient {
     this.contentTypes = {};
   }
 
+  /**
+   * Create a new ElvClient from a formatted configuration
+   * @see TestConfiguration.json for format of configuration
+   *
+   * @namedParams
+   * @param {Object} configuration - Configuration containing information on connecting
+   * to the content fabric and blockchain
+   *
+   *
+   * @returns {ElvClient} ElvClient - desc
+   */
   static FromConfiguration({configuration}) {
     return new ElvClient({
       contentSpaceId: configuration.fabric.contentSpaceId,
@@ -89,50 +117,23 @@ class ElvClient {
     });
   }
 
-  // Whitelist of methods allowed to be called using the frame API
-  FrameAllowedMethods() {
-    const forbiddenMethods = [
-      "constructor",
-      "CallFromFrameMessage",
-      "FrameAllowedMethods",
-      "GenerateWallet",
-      "SetSigner"
-    ];
-
-    return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-      .filter(method => !forbiddenMethods.includes(method));
-  }
-
-  // Call a method specified in a message from a frame
-  async CallFromFrameMessage(message) {
-    if(message.type !== "ElvFrameRequest") { return; }
-
-    try {
-      const method = message.calledMethod;
-      if (!this.FrameAllowedMethods().includes(method)) {
-        throw Error("Invalid method: " + method);
-      }
-
-      return {
-        type: "ElvFrameResponse",
-        requestId: message.requestId,
-        response: await this[method](message.args)
-      };
-    } catch(error) {
-      return {
-        type: "ElvFrameResponse",
-        requestId: message.requestId,
-        error
-      };
-    }
-  }
-
   /* Wallet and signers */
 
+  /**
+   * Generate a new ElvWallet that is connected to the client's provider
+   *
+   * @returns {ElvWallet} - ElvWallet instance with this client's provider
+   */
   GenerateWallet() {
     return new ElvWallet(this.ethereumURI);
   }
 
+  /**
+   * Set the signer for this client to use for blockchain transactions
+   *
+   * @namedParams
+   * @param {object} signer - The ethers.js signer object
+   */
   SetSigner({signer}) {
     signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
     this.signer = signer;
@@ -147,6 +148,14 @@ class ElvClient {
 
   /* Content Spaces */
 
+  /**
+   * Deploy a new content space contract
+   *
+   * @namedParams
+   * @param {String} name - Name of the content space
+   *
+   * @returns {Promise<contentSpaceId>} - Content space ID of the created content space
+   */
   async CreateContentSpace({name}) {
     const contentSpaceAddress = await this.ethClient.DeployContentSpaceContract({name, signer: this.signer});
 
@@ -155,6 +164,13 @@ class ElvClient {
 
   /* Libraries */
 
+  /**
+   * List content libraries - returns a list of content library IDs
+   *
+   * @see GET /qlibs
+   *
+   * @returns {Promise<Array<string>>}
+   */
   async ContentLibraries() {
     let path = Path.join("qlibs");
 
@@ -167,6 +183,16 @@ class ElvClient {
     );
   }
 
+  /**
+   * Returns information about the content library
+   *
+   * @see GET /qlibs/:qlibid
+   *
+   * @namedParams
+   * @param {string} libraryId
+   *
+   * @returns {Promise<*>}
+   */
   async ContentLibrary({libraryId}) {
     let path = Path.join("qlibs", libraryId);
 
@@ -181,6 +207,23 @@ class ElvClient {
 
   /* Library creation and deletion */
 
+  /**
+   * Create a new content library.
+   *
+   * A new content library contract is deployed from
+   * the content space, and that contract ID is used to determine the library ID to
+   * create in the fabric.
+   *
+   * @see PUT /qlibs/:qlibid
+   *
+   * @namedParams
+   * @param {string} name - Library name
+   * @param {string} description - Library description
+   * @param {Object} publicMetadata - Public library metadata
+   * @param {Object} privateMetadata - Private library metadata (metadata of library object)
+   *
+   * @returns {Promise<string>} - Library ID of created library
+   */
   async CreateContentLibrary({
     name,
     description,
@@ -217,6 +260,14 @@ class ElvClient {
     return libraryId;
   }
 
+  /**
+   * Delete the specified content library
+   *
+   * @see DELETE /qlibs/:qlibid
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library to delete
+   */
   async DeleteContentLibrary({libraryId}) {
     let path = Path.join("qlibs", libraryId);
 
@@ -231,8 +282,18 @@ class ElvClient {
 
   /* Library metadata */
 
-  async PublicLibraryMetadata({libraryId}) {
-    let path = Path.join("qlibs", libraryId, "meta");
+  /**
+   * Get the public metadata of the specified library
+   *
+   * @see GET /qlibs/:qlibid/meta
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string=} metadataSubtree - Subtree of the library metadata to retrieve
+   * @returns {Promise<Object>} - Public metadata of the library
+   */
+  async PublicLibraryMetadata({libraryId, metadataSubtree=""}) {
+    let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -243,6 +304,16 @@ class ElvClient {
     );
   }
 
+  /**
+   * Replace the specified library's public metadata
+   *
+   * @see PUT /qlibs/:qlibid/meta
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {Object} metadata - New metadata
+   * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
+   */
   async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="", metadata={}}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
@@ -258,6 +329,13 @@ class ElvClient {
 
   /* Content Types */
 
+  /**
+   * List the content types available in this content space
+   *
+   * @see test/ExampleOutput.txt for example response
+   *
+   * @returns {Promise<Object>}
+   */
   async ContentTypes() {
     const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
     const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
@@ -292,6 +370,14 @@ class ElvClient {
     return contentTypes;
   }
 
+  /**
+   * Look up content type record by name
+   *
+   * @namedParams
+   * @param name
+   *
+   * @returns {Promise<Object>}
+   */
   async ContentType({name}) {
     if(this.contentTypes[name]) {
       return this.contentTypes[name];
@@ -306,6 +392,20 @@ class ElvClient {
     }
   }
 
+  /**
+   * Create a new content type.
+   *
+   * A new content type contract is deployed from
+   * the content space, and that contract ID is used to determine the object ID to
+   * create in the fabric. The content type object will be created in the special
+   * content space library (ilib<content-space-hash>)
+   *
+   * @namedParams
+   * @param {string} name - Name of the new content type
+   * @param {(string|blob)} bitcode - Bitcode to be used for the content type
+   *
+   * @returns {Promise<string>} - Object ID of created content type
+   */
   async CreateContentType({name, bitcode}) {
     const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
 
@@ -349,6 +449,16 @@ class ElvClient {
 
   /* Objects */
 
+  /**
+   * List content objects in the specified library
+   *
+   * @see /qlibs/:qlibid/q
+   *
+   * @namedParams
+   * @param libraryId - ID of the library
+   *
+   * @returns {Promise<Array<Object>>} - List of objects in library
+   */
   async ContentObjects({libraryId}) {
     let path = Path.join("qlibs", libraryId, "q");
 
@@ -361,6 +471,18 @@ class ElvClient {
     );
   }
 
+  /**
+   * Get a specific content object in the library
+   *
+   * @see /qlibs/:qlibid/q/:qhit
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Version of the object -- if not specified, latest version is returned
+   *
+   * @returns {Promise<Object>} - Description of created object
+   */
   async ContentObject({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
 
@@ -373,7 +495,20 @@ class ElvClient {
     );
   }
 
-  async ContentObjectMetadata({libraryId, objectId, versionHash}) {
+  /**
+   * Get the metadata of a content object
+   *
+   * @see /qlibs/:qlibid/q/:qhit/meta
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
+   * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+   *
+   * @returns {Promise<Object>} - Metadata of the content object
+   */
+  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree=""}) {
     let path = Path.join("q", versionHash || objectId, "meta");
 
     return ResponseToJson(
@@ -385,6 +520,17 @@ class ElvClient {
     );
   }
 
+  /**
+   * List the versions of a content object
+   *
+   * @see /qlibs/:qlibid/qid/:objectid
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   *
+   * @returns {Promise<Object>} - Response containing versions of the object
+   */
   async ContentObjectVersions({libraryId, objectId}) {
     let path = Path.join("qid", objectId);
 
@@ -399,6 +545,24 @@ class ElvClient {
 
   /* Content object creation, modification, deletion */
 
+  /**
+   * Create a new content object draft.
+   *
+   * A new content object contract is deployed from
+   * the content library, and that contract ID is used to determine the object ID to
+   * create in the fabric.
+   *
+   * @see PUT /qlibs/:qlibid/q/:objectid
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {Object=} options -
+   * type: Name of content type to use for the new object
+   *
+   * meta: Metadata to use for the new object
+   *
+   * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+   */
   async CreateContentObject({libraryId, options={}}) {
     // Look up content type if type is specified
     if(options.type) {
@@ -421,6 +585,20 @@ class ElvClient {
     );
   }
 
+  /**
+   * Create a new content object draft from an existing object.
+   *
+   * @see POST /qlibs/:qlibid/qid/:objectid
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {Object=} options -
+   * type: Name of content type to set the object to - will replace existing type if specified
+   *
+   * meta: New metadata for the object - will replace existing metadata if specified
+   *
+   * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+   */
   async EditContentObject({libraryId, objectId, options={}}) {
     // Look up content type if type is specified
     if(options.type) {
@@ -439,6 +617,16 @@ class ElvClient {
     );
   }
 
+  /**
+   * Finalize content draft
+   *
+   * @see POST /qlibs/:qlibid/q/:write_token
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   */
   async FinalizeContentObject({libraryId, objectId, writeToken}) {
     let path = Path.join("q", writeToken);
 
@@ -451,6 +639,15 @@ class ElvClient {
     );
   }
 
+  /**
+   * Delete specified version of the content object
+   *
+   * @see DELETE /qlibs/:qlibid/q/:qhit
+   *
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
+   */
   async DeleteContentVersion({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
 
@@ -463,6 +660,15 @@ class ElvClient {
     );
   }
 
+  /**
+   * Delete specified content object
+   *
+   * @see DELETE /qlibs/:qlibid/qid/:objectid
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   */
   async DeleteContentObject({libraryId, objectId}) {
     let path = Path.join("qid", objectId);
 
@@ -477,6 +683,18 @@ class ElvClient {
 
   /* Content object metadata */
 
+  /**
+   * Merge specified metadata into existing content object metadata
+   *
+   * @see POST /qlibs/:qlibid/q/:write_token/meta
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Object} metadata - New metadata to merge
+   * @param {string=} metadataSubtree - Subtree of the object metadata to modify
+   */
   async MergeMetadata({libraryId, objectId, writeToken, metadataSubtree="", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
@@ -490,6 +708,18 @@ class ElvClient {
     );
   }
 
+  /**
+   * Replace content object metadata with specified metadata
+   *
+   * @see PUT /qlibs/:qlibid/q/:write_token/meta
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Object} metadata - New metadata to merge
+   * @param {string=} metadataSubtree - Subtree of the object metadata to modify
+   */
   async ReplaceMetadata({libraryId, objectId, writeToken, metadataSubtree="", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
@@ -503,6 +733,18 @@ class ElvClient {
     );
   }
 
+  /**
+   * Delete content object metadata of specified subtree
+   *
+   * @see DELETE /qlibs/:qlibid/q/:write_token/meta
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {string=} metadataSubtree - Subtree of the object metadata to modify
+   * - if not specified, all metadata will be deleted
+   */
   async DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree=""}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
@@ -586,6 +828,18 @@ class ElvClient {
 
   /* Parts */
 
+  /**
+   * List content object parts
+   *
+   * @see GET /qlibs/:qlibid/q/:qhit/parts
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   *
+   * @returns {Promise<Object>} - Response containing list of parts of the object
+   */
   async ContentParts({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId, "parts");
 
@@ -598,6 +852,19 @@ class ElvClient {
     );
   }
 
+  /**
+   * Download all parts of an object
+   *
+   * @see GET /qlibs/:qlibid/q/:qhit/data
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string=} format - Format of the response - default is Blob
+   *
+   * @returns {Promise<Format>} - Part data in the specified format
+   */
   async DownloadAllParts({libraryId, objectId, versionHash, format="blob"}) {
     let path = Path.join("q", versionHash || objectId, "data");
 
@@ -611,6 +878,20 @@ class ElvClient {
     );
   }
 
+  /**
+   * Download specified part
+   *
+   * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string} partHash - Hash of the part to download
+   * @param {string=} format - Format of the response - default is Blob
+   *
+   * @returns {Promise<Format>} - Part data in the specified format
+   */
   async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
     let path = Path.join("q", versionHash || objectId, "data", partHash);
 
@@ -624,6 +905,19 @@ class ElvClient {
     );
   }
 
+  /**
+   * Upload part to an object draft
+   *
+   * @see POST /qlibs/:qlibid/q/:write_token/data
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {(string|blob)} data - Data to upload
+   *
+   * @returns {Promise<Object>} - Response containing information about the uploaded part
+   */
   async UploadPart({libraryId, objectId, writeToken, data}) {
     let path = Path.join("q", writeToken, "data");
 
@@ -638,6 +932,17 @@ class ElvClient {
     );
   }
 
+  /**
+   * Delete the specified part from a content draft
+   *
+   * @see DELETE /qlibs/:qlibid/q/:write_token/parts/:qparthash
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {string} partHash - Hash of the part to delete
+   */
   async DeletePart({libraryId, objectId, writeToken, partHash}) {
     let path = Path.join("q", writeToken, "parts", partHash);
 
@@ -650,11 +955,48 @@ class ElvClient {
     );
   }
 
+  /**
+   * Generate a URL to the specified /rep endpoint of a content object. URL includes authorization token.
+   *
+   * @namedParmas
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string} rep - Representation to use
+   *
+   * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
+   */
   async Rep({libraryId, objectId, versionHash, rep}) {
     return this.FabricUrl({libraryId, objectId, versionHash, rep});
   }
 
-  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, queryParams = {}}) {
+  /**
+   * Generate a URL to the specified item in the content fabric with appropriate authorization token.
+   *
+   * @namedParmas
+   * @param {string=} libraryId - ID of an library
+   * @param {string=} objectId - ID of an object - Required if using versionHash
+   * @param {string=} versionHash - Hash of an object version - If specified, will be used instead of objectID in URL
+   * @param {string=} partHash - Hash of a part - Requires object ID
+   * @param {Object=} queryParams - Query params to add to the URL
+   *
+   * @returns {Promise<string>} - URL to the specified endpoint with authorization token
+   *
+   * @example client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN"});
+=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN?authorization=...
+
+client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN", objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s"});
+=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/iq__4EwJBLZfKpdUSsF4h6pfk777pd5s?authorization=...
+
+client.FabricUrl({
+  libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN",
+  objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s",
+  versionHash: "hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL",
+  partHash: "hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB"
+});
+=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...
+   */
+  async FabricUrl({libraryId, objectId, versionHash, partHash, queryParams = {}}) {
     let path = "";
 
     if(libraryId) {
@@ -665,8 +1007,6 @@ class ElvClient {
 
         if(partHash){
           path = Path.join(path, "data", partHash);
-        } else if(rep) {
-          path = Path.join(path, "rep", rep);
         }
       }
     }
@@ -755,6 +1095,15 @@ class ElvClient {
 
   /* Verification */
 
+  /**
+   * Verify the specified content object
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} partHash - Hash of the content object version
+   *
+   * @returns {Promise<Object>} - Response describing verification results
+   */
   VerifyContentObject({libraryId, partHash}) {
     return ContentObjectVerification.VerifyContentObject({
       client: this,
@@ -763,6 +1112,19 @@ class ElvClient {
     });
   }
 
+  /**
+   * Get the proofs associated with a given part
+   *
+   * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash/proofs
+   *
+   * @namedParmas
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
+   * @param {string} partHash - Hash of the part
+   *
+   * @returns {Promise<Object>} - Response containing proof information
+   */
   async Proofs({libraryId, objectId, versionHash, partHash}) {
     let path = Path.join("q", versionHash || objectId, "data", partHash, "proofs");
 
@@ -775,6 +1137,18 @@ class ElvClient {
     );
   }
 
+  /**
+   * Get part info in CBOR format
+   *
+   * @see GET /qparts/:qparthash
+   *
+   * @namedParmas
+   * @param {string} objectId - ID of the object - required for authentication
+   * @param {string} partHash - Hash of the part
+   * @param {string} format - Format to retrieve the response - defaults to Blob
+   *
+   * @returns {Promise<Format>} - Response containing the CBOR response in the specified format
+   */
   async QParts({objectId, partHash, format="blob"}) {
     let path = Path.join("qparts", partHash);
 
@@ -790,25 +1164,144 @@ class ElvClient {
 
   /* Contracts */
 
+  /**
+   * Format the arguments to be used for the specified method of the contract
+   *
+   * @namedParams
+   * @param {Object} abi - ABI of contract
+   * @param {string} methodName - Name of method for which arguments will be formatted
+   * @param {Array<string>} args - List of arguments
+   *
+   * @returns {Array<string>} - List of formatted arguments
+   */
   FormatContractArguments({abi, methodName, args}) {
     return this.ethClient.FormatContractArguments({abi, methodName, args});
   }
 
-  DeployContract({abi, bytecode, constructorArgs, overrides={}}) {
-    return this.ethClient.DeployContract({abi, bytecode, constructorArgs, overrides, signer: this.signer});
+  /**
+   * Deploy a contract from ABI and bytecode. This client's signer will be the owner of the contract.
+   *
+   * @namedParams
+   * @param {Object} abi - ABI of contract
+   * @param {string} bytecode - Bytecode of the contract
+   * @param {Array<string>} constructorArgs - List of arguments to the contract constructor
+   * - it is recommended to format these arguments using the FormatContractArguments method
+   * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   *
+   * @returns {Promise<Object>} - Response containing the deployed contract address and the transaction hash of the deployment
+   */
+  async DeployContract({abi, bytecode, constructorArgs, overrides={}}) {
+    return await this.ethClient.DeployContract({abi, bytecode, constructorArgs, overrides, signer: this.signer});
   }
 
-  CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides={}}) {
-    return this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides, signer: this.signer});
+  /**
+   * Call the specified method on a deployed contract. This action will be performed by this client's signer.
+   *
+   * NOTE: This method will only wait for the transaction to be created. If you want to wait for the transaction
+   * to be mined, use the CallContractMethodAndWait method.
+   *
+   * @namedParams
+   * @param {string} contractAddress - Address of the contract to call the specified method on
+   * @param {Object} abi - ABI of contract
+   * @param {string} methodName - Method to call on the contract
+   * @param {Array<string>} methodArgs - List of arguments to the contract constructor
+   * - it is recommended to format these arguments using the FormatContractArguments method
+   * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   *
+   * @returns {Promise<Object>} - Response containing information about the transaction
+   */
+  async CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides={}}) {
+    return await this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides, signer: this.signer});
   }
 
-  CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, overrides={}}) {
-    return this.ethClient.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, overrides, signer: this.signer});
+  /**
+   * Call the specified method on a deployed contract and wait for the transaction to be mined.
+   * This action will be performed by this client's signer.
+   *
+   * @namedParams
+   * @param {string} contractAddress - Address of the contract to call the specified method on
+   * @param {Object} abi - ABI of contract
+   * @param {string} methodName - Method to call on the contract
+   * @param {Array<string>} methodArgs - List of arguments to the contract constructor
+   * - it is recommended to format these arguments using the FormatContractArguments method
+   * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   *
+   * @returns {Promise<Object>} - The event object of this transaction
+   */
+  async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, overrides={}}) {
+    return await this.ethClient.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, overrides, signer: this.signer});
   }
 
-  SetCustomContentContract({objectId, customContractAddress, overrides={}}) {
+  /**
+   * Extract the specified value from the given event obtained from the CallContractAndMethodAndWait method
+   *
+   * @see "./src/EthClient#DeployDependentContract" and its callers for example usage
+   *
+   * @namedParams
+   * @param {string} contractAddress - Address of the contract to call the specified method on
+   * @param {Object} abi - ABI of contract
+   * @param {Object} event - Event of the transaction from CallContractMethodAndWait
+   * @param {string} eventName - Name of the event to parse
+   * @param {string} eventValue - Name of the value to extract from the event
+   *
+   * @returns {Promise<*>} - The value extracted from the event
+   */
+  ExtractValueFromEvent({abi, event, eventName, eventValue}) {
+    this.ethClient.ExtractValueFromEvent({abi, event, eventName, eventValue});
+  }
+
+  /**
+   * Set the custom contract of the specified object with the contract at the specified address
+   *
+   * @param {string} objectId - ID of the object
+   * @param {string} customContractAddress - Address of the deployed custom contract
+   * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   *
+   * @returns {Promise<Object>} - Result transaction of calling the setCustomContract method on the content object contract
+   */
+  async SetCustomContentContract({objectId, customContractAddress, overrides={}}) {
     const contentContractAddress = Utils.HashToAddress({hash: objectId});
-    return this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
+    return await this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
+  }
+
+  /* FrameClient related */
+
+  // Whitelist of methods allowed to be called using the frame API
+  FrameAllowedMethods() {
+    const forbiddenMethods = [
+      "constructor",
+      "CallFromFrameMessage",
+      "FrameAllowedMethods",
+      "GenerateWallet",
+      "SetSigner"
+    ];
+
+    return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
+      .filter(method => !forbiddenMethods.includes(method));
+  }
+
+  // Call a method specified in a message from a frame
+  async CallFromFrameMessage(message) {
+    if(message.type !== "ElvFrameRequest") { return; }
+
+    try {
+      const method = message.calledMethod;
+      if (!this.FrameAllowedMethods().includes(method)) {
+        throw Error("Invalid method: " + method);
+      }
+
+      return this.utils.MakeClonable({
+        type: "ElvFrameResponse",
+        requestId: message.requestId,
+        response: await this[method](message.args)
+      });
+    } catch(error) {
+      return this.utils.MakeClonable({
+        type: "ElvFrameResponse",
+        requestId: message.requestId,
+        error
+      });
+    }
   }
 }
 
