@@ -9,14 +9,14 @@
 
 /* string content */
 .str {
-  color: hsl(104, 100%, 24%);
+  color: hsl(104, 100%, 19%);
   font-weight: normal;
   font-style: normal;
 }
 
 /* a keyword */
 .kwd {
-  color: #000000;
+  color: #204c69;
   font-weight: bold;
   font-style: normal;
 }
@@ -29,7 +29,7 @@
 
 /* a type name */
 .typ {
-  color: #000000;
+  color: #7d177b;
   font-weight: normal;
   font-style: normal;
 }
@@ -43,7 +43,7 @@
 
 /* punctuation */
 .pun {
-  color: #000000;
+  color: #333;
   font-weight: bold;
   font-style: normal;
 }

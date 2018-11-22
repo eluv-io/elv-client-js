@@ -2,6 +2,7 @@
 
 /* global document */
 (function () {
+  return;
   var lineId, lines, totalLines, anchorHash;
   var source = document.getElementsByClassName('prettyprint source linenums');
   var i = 0;

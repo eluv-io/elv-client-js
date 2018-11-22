@@ -10,7 +10,7 @@
   },
   "plugins": [
     "plugins/markdown",
-    "./vendor/jsdoc-namedparams.js"
+    "./vendor/elv-jsdoc-template/jsdoc-namedparams-plugin.js"
   ],
   "templates": {
     "referenceTitle": "Eluvio Javascript Client",
@@ -23,6 +23,6 @@
     "pedantic": true,
     "private": true,
     "recurse": true,
-    "template": "vendor/jsdoc-template"
+    "template": "vendor/elv-jsdoc-template"
   }
 }

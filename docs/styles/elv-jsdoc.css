@@ -1,0 +1,448 @@
+/*
+  Google Lato font
+  Source: https://fonts.googleapis.com/css?family=Lato:100,300,400
+*/
+
+/* latin-ext */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 100;
+  src: local("Lato Hairline"), local("Lato-Hairline"), url("https://fonts.gstatic.com/s/lato/v14/S6u8w4BMUTPHh30AUi-qNiXg7eU0.woff2") format("woff2");
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 100;
+  src: local("Lato Hairline"), local("Lato-Hairline"), url("https://fonts.gstatic.com/s/lato/v14/S6u8w4BMUTPHh30AXC-qNiXg7Q.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 300;
+  src: local("Lato Light"), local("Lato-Light"), url("https://fonts.gstatic.com/s/lato/v14/S6u9w4BMUTPHh7USSwaPGQ3q5d0N7w.woff2") format("woff2");
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 300;
+  src: local("Lato Light"), local("Lato-Light"), url("https://fonts.gstatic.com/s/lato/v14/S6u9w4BMUTPHh7USSwiPGQ3q5d0.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 400;
+  src: local("Lato Regular"), local("Lato-Regular"), url("https://fonts.gstatic.com/s/lato/v14/S6uyw4BMUTPHjxAwXiWtFCfQ7A.woff2") format("woff2");
+  unicode-range: U+0100-024F, U+0259, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 400;
+  src: local("Lato Regular"), local("Lato-Regular"), url("https://fonts.gstatic.com/s/lato/v14/S6uyw4BMUTPHjx4wXiWtFCc.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #3e3c42;
+  text-rendering: optimizeLegibility;
+  margin: 0;
+  font-family: Lato, sans-serif;
+}
+
+a {
+  color: #0095dd;
+  text-decoration: none;
+}
+
+ul li {
+  list-style-type: none;
+}
+
+/* Layout */
+
+.nav-container {
+  position: fixed;
+  top: 0;
+  display: block;
+  width: 300px;
+  height: 100%;
+  max-height: 100%;
+  overflow-y: auto;
+  background: #f5f5f5;
+}
+
+.nav-content {
+  padding: 60px 0 20px 20px;
+}
+
+.main {
+  margin-left: 300px;
+  width: calc(100% - 300px);
+}
+
+.main-content {
+  padding: 30px;
+}
+
+.footer {
+  padding: 20px 0;
+  border-top: 1px solid #eee;
+}
+.page-title {
+  margin: 0 0 20px;
+}
+
+/*** Header ***/
+
+.main .header {
+  box-shadow: 2px 2px 2px 0 rgba(161, 161, 161, 0.5);
+}
+
+.nav-container .header {
+  position: fixed;
+  width: 300px;
+}
+
+.header {
+  background: white;
+  position: relative;
+  top: 0;
+  left: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0;
+  box-shadow: 0 2px 2px 0 rgba(161, 161, 161, 0.5);
+  width: 100%;
+  height: 50px;
+  z-index: 1000;
+}
+
+.header .logo {
+  box-sizing: unset;
+  width: 90px;
+  margin-top: 2px;
+}
+
+.header .title {
+  font-size: 14px;
+  font-weight: bold;
+  margin-top: 2px;
+  color: #204c69;
+  font-variant: small-caps;
+}
+
+/*** Nav ***/
+
+.class-link {
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.class-toggle-button {
+  cursor: pointer;
+  display: inline-block;
+  padding: 0 10px;
+}
+
+.class-toggle-button:hover {
+  color: #666;
+}
+
+.visible-class {
+  margin: 0;
+}
+
+nav h3 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-variant: all-small-caps;
+  color: black;
+}
+
+/* Class name */
+nav ul li a {
+  font-size: 18px;
+  font-weight: bold;
+  color: #3e3c42;
+}
+
+nav ul.methods {
+  border-left: 3px solid #0095dd;
+  margin: 10px 0 25px;
+}
+
+/* Method entries */
+nav ul.methods li a {
+  color: #0095dd;
+  font-size: 16px;
+  font-weight: normal;
+  padding-left: 20px;
+  line-height: 1.5;
+}
+
+/*** Main ***/
+
+.container-overview .description {
+  font-size: 18px;
+}
+
+/* Method descriptions */
+
+.methods {
+  display: none;
+}
+
+.main h3 {
+  font-size: 24px;
+  margin: 20px 0 40px;
+}
+
+.type-signature {
+  color: #666;
+}
+
+.description {
+  margin: 10px 0;
+  font-size: 16px;
+}
+
+.description p {
+  margin-bottom: 10px;
+}
+
+.description,
+.return-description-block {
+  margin: 20px 0;
+}
+
+.return-description-block {
+  color: gray;
+  font-size: 14px;
+}
+
+.return-description {
+  color: #3e3c42;
+}
+
+.link-icon {
+  position: absolute;
+  margin-left: -20px;
+  font-weight: bold;
+}
+
+.link-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.name-container {
+  display: block;
+  margin: 20px 0 10px;
+  font-size: 20px;
+  font-weight: 300;
+  font-family: Courier, monospace;
+  line-height: 1;
+}
+
+h4.name {
+  font-weight: bold;
+}
+
+.signature,
+.type-signature {
+  font-weight: lighter;
+}
+
+.signature-attributes {
+  font-size: 60%;
+  color: #5a5;
+  font-style: italic;
+  font-weight: 300;
+  vertical-align: super;
+  margin-left: 5px;
+}
+
+.block-param {
+  padding-left: 30px;
+}
+
+.block-param,
+.inline-param {
+  color: #204c69;
+}
+
+/* Params table */
+
+h5 {
+  margin: 10px 0;
+}
+
+.params, .props {
+  border-spacing: 0;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.params .name, .props .name, .name code {
+  color: #4D4E53;
+  font-family: Courier, monospace;
+  font-size: 100%;
+}
+
+.params td, .params th, .props td, .props th {
+  margin: 0;
+  text-align: left;
+  vertical-align: top;
+  padding: 10px;
+  display: table-cell;
+}
+
+.params td {
+  border-top: 1px solid #eee;
+}
+
+.params thead tr, .props thead tr {
+  background-color: #fff;
+  font-weight: bold;
+}
+
+.params .params thead tr, .props .props thead tr {
+  background-color: #fff;
+  font-weight: bold;
+}
+
+.params td.description>p:first-child, .props td.description>p:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.params td.description>p:last-child, .props td.description>p:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+dl.param-type {
+  margin-top: 5px;
+}
+
+.param-type dt, .param-type dd {
+  display: inline-block
+}
+
+.param-type dd {
+  font-family: Consolas, Monaco, 'Andale Mono', monospace
+}
+
+table {
+  border-collapse: separate;
+  display: block;
+  overflow-x: auto;
+}
+
+table.params {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+}
+
+table tbody td {
+  border-top: 1px solid hsl(207, 10%, 86%);
+  border-right: 1px solid #eee;
+  padding: 5px;
+  /*word-wrap: break-word;*/
+}
+
+table tbody td.last {
+  border-right: none;
+}
+
+td table.params, td table.props {
+  border: 0;
+}
+
+/* Details */
+
+.details {
+  margin: 20px 0 40px;
+  font-size: 14px;
+  text-align: right;
+  background: #ffffff;
+}
+
+.details dt {
+  display: inline-block;
+}
+
+.details dd {
+  display: inline-block;
+  margin: 0;
+}
+
+.details dd a {
+  font-style: italic;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.details ul {
+  margin: 0;
+}
+
+/* See */
+.see-description dt {
+  color: #666;
+}
+
+.see-description dd {
+  margin: 5px 0 0 20px;
+  font-style: italic;
+}
+
+/* Examples */
+
+.example-container {
+  margin: 10px 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Source code */
+
+.source-container {
+  padding: 15px 30px;
+  border: 1px solid #333;
+  overflow-x: auto;
+  font-size: 16px;
+}
+
+section.source-section {
+  margin: 0 20px;
+}
+
+pre.source {
+}

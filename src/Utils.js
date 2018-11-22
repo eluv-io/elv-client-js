@@ -2,7 +2,9 @@ const bs58 = require("bs58");
 
 /**
  * @namespace
- * @description This is a utility class mostly for managing multiformat type conversions
+ * @description This is a utility namespace mostly containing functions for managing
+ * multiformat type conversions
+ *
  *
  * It can be accessed from ElvClient and FrameClient as client.utils
  */

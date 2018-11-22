@@ -1,101 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>
-      ElvClient - Documentation
+    ElvClient - Documentation
   </title>
 
-  <link href="https://www.braintreepayments.com/images/favicon-ccda0b14.png" rel="icon" type="image/png">
+  <script src="scripts/prettify/prettify.js"></script>
+  <script src="scripts/prettify/lang-css.js"></script>
 
-  
-
-    <script src="scripts/prettify/prettify.js"></script>
-    <script src="scripts/prettify/lang-css.js"></script>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-
-  <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
-  <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
-  
-  <link type="text/css" rel="stylesheet" href="styles/collapse.css">
-  
-
-  
-
-  <!-- start Mixpanel -->
-  <script type="text/javascript">(function(e,a){if(!a.__SV){var b=window;try{var c,l,i,j=b.location,g=j.hash;c=function(a,b){return(l=a.match(RegExp(b+"=([^&]*)")))?l[1]:null};g&&c(g,"state")&&(i=JSON.parse(decodeURIComponent(c(g,"state"))),"mpeditor"===i.action&&(b.sessionStorage.setItem("_mpcehash",g),history.replaceState(i.desiredHash||"",e.title,j.pathname+j.search)))}catch(m){}var k,h;window.mixpanel=a;a._i=[];a.init=function(b,c,f){function e(b,a){var c=a.split(".");2==c.length&&(b=b[c[0]],a=c[1]);b[a]=function(){b.push([a].concat(Array.prototype.slice.call(arguments,
-  0)))}}var d=a;"undefined"!==typeof f?d=a[f]=[]:f="mixpanel";d.people=d.people||[];d.toString=function(b){var a="mixpanel";"mixpanel"!==f&&(a+="."+f);b||(a+=" (stub)");return a};d.people.toString=function(){return d.toString(1)+".people (stub)"};k="disable time_event track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config reset people.set people.set_once people.increment people.append people.union people.track_charge people.clear_charges people.delete_user".split(" ");
-  for(h=0;h<k.length;h++)e(d,k[h]);a._i.push([b,c,f])};a.__SV=1.2;b=e.createElement("script");b.type="text/javascript";b.async=!0;b.src="undefined"!==typeof MIXPANEL_CUSTOM_LIB_URL?MIXPANEL_CUSTOM_LIB_URL:"file:"===e.location.protocol&&"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js".match(/^\/\//)?"https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js":"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";c=e.getElementsByTagName("script")[0];c.parentNode.insertBefore(b,c)}})(document,window.mixpanel||[]);
-  mixpanel.init("1919205b2da72e4da3b9b6639b444d59");</script>
-  <!-- end Mixpanel -->
+  <link type="text/css" rel="stylesheet" href="styles/elv-jsdoc.css">
+  <link type="text/css" rel="stylesheet" href="styles/elv-prettify-jsdoc.css">
 </head>
 
 <body>
-  <svg style="display: none;">
-    <defs>
-      <symbol id="linkIcon" fill="#706d77" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 0h24v24H0z" fill="none"/>
-          <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/>
-      </symbol>
-    </defs>
-  </svg>
-
-  <input type="checkbox" id="nav-trigger" class="nav-trigger" />
-  <label for="nav-trigger" class="navicon-button x">
-    <div class="navicon"></div>
-  </label>
-
-  <label for="nav-trigger" class="overlay"></label>
-
-  <div class="top-nav-wrapper">
-    <ul>
-      <li >
+  <div class="layout-container">
+    <nav class="nav-container">
+      <div class="header">
         <a href="index.html">
-          
-            <svg fill="#6D6D6D" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-              <path d="M0 0h24v24H0z" fill="none"/>
-            </svg>
-          
-          
+          <img class="logo" src="images/logo-dark.png" />
         </a>
-      </li>
+        <div class="title">
+          Eluvio Javascript Client
+        </div>
+      </div>
+      <div class="nav-content">
+        <h3>Classes</h3><ul><li id="ElvClient-nav"><a href="ElvClient.html" class="class-link">ElvClient</a><ul class='methods'><li data-type="method" id="ElvClient-FromConfiguration-nav"><a href="ElvClient.html#.FromConfiguration" class="method-link">FromConfiguration</a></li><li data-type="method" id="ElvClient-CallContractMethod-nav"><a href="ElvClient.html#CallContractMethod" class="method-link">CallContractMethod</a></li><li data-type="method" id="ElvClient-CallContractMethodAndWait-nav"><a href="ElvClient.html#CallContractMethodAndWait" class="method-link">CallContractMethodAndWait</a></li><li data-type="method" id="ElvClient-ContentLibraries-nav"><a href="ElvClient.html#ContentLibraries" class="method-link">ContentLibraries</a></li><li data-type="method" id="ElvClient-ContentLibrary-nav"><a href="ElvClient.html#ContentLibrary" class="method-link">ContentLibrary</a></li><li data-type="method" id="ElvClient-ContentObject-nav"><a href="ElvClient.html#ContentObject" class="method-link">ContentObject</a></li><li data-type="method" id="ElvClient-ContentObjectMetadata-nav"><a href="ElvClient.html#ContentObjectMetadata" class="method-link">ContentObjectMetadata</a></li><li data-type="method" id="ElvClient-ContentObjects-nav"><a href="ElvClient.html#ContentObjects" class="method-link">ContentObjects</a></li><li data-type="method" id="ElvClient-ContentObjectVersions-nav"><a href="ElvClient.html#ContentObjectVersions" class="method-link">ContentObjectVersions</a></li><li data-type="method" id="ElvClient-ContentParts-nav"><a href="ElvClient.html#ContentParts" class="method-link">ContentParts</a></li><li data-type="method" id="ElvClient-ContentType-nav"><a href="ElvClient.html#ContentType" class="method-link">ContentType</a></li><li data-type="method" id="ElvClient-ContentTypes-nav"><a href="ElvClient.html#ContentTypes" class="method-link">ContentTypes</a></li><li data-type="method" id="ElvClient-CreateContentLibrary-nav"><a href="ElvClient.html#CreateContentLibrary" class="method-link">CreateContentLibrary</a></li><li data-type="method" id="ElvClient-CreateContentObject-nav"><a href="ElvClient.html#CreateContentObject" class="method-link">CreateContentObject</a></li><li data-type="method" id="ElvClient-CreateContentSpace-nav"><a href="ElvClient.html#CreateContentSpace" class="method-link">CreateContentSpace</a></li><li data-type="method" id="ElvClient-CreateContentType-nav"><a href="ElvClient.html#CreateContentType" class="method-link">CreateContentType</a></li><li data-type="method" id="ElvClient-DeleteContentLibrary-nav"><a href="ElvClient.html#DeleteContentLibrary" class="method-link">DeleteContentLibrary</a></li><li data-type="method" id="ElvClient-DeleteContentObject-nav"><a href="ElvClient.html#DeleteContentObject" class="method-link">DeleteContentObject</a></li><li data-type="method" id="ElvClient-DeleteContentVersion-nav"><a href="ElvClient.html#DeleteContentVersion" class="method-link">DeleteContentVersion</a></li><li data-type="method" id="ElvClient-DeleteMetadata-nav"><a href="ElvClient.html#DeleteMetadata" class="method-link">DeleteMetadata</a></li><li data-type="method" id="ElvClient-DeletePart-nav"><a href="ElvClient.html#DeletePart" class="method-link">DeletePart</a></li><li data-type="method" id="ElvClient-DeployContract-nav"><a href="ElvClient.html#DeployContract" class="method-link">DeployContract</a></li><li data-type="method" id="ElvClient-DownloadAllParts-nav"><a href="ElvClient.html#DownloadAllParts" class="method-link">DownloadAllParts</a></li><li data-type="method" id="ElvClient-DownloadPart-nav"><a href="ElvClient.html#DownloadPart" class="method-link">DownloadPart</a></li><li data-type="method" id="ElvClient-EditContentObject-nav"><a href="ElvClient.html#EditContentObject" class="method-link">EditContentObject</a></li><li data-type="method" id="ElvClient-ExtractValueFromEvent-nav"><a href="ElvClient.html#ExtractValueFromEvent" class="method-link">ExtractValueFromEvent</a></li><li data-type="method" id="ElvClient-FabricUrl-nav"><a href="ElvClient.html#FabricUrl" class="method-link">FabricUrl</a></li><li data-type="method" id="ElvClient-FinalizeContentObject-nav"><a href="ElvClient.html#FinalizeContentObject" class="method-link">FinalizeContentObject</a></li><li data-type="method" id="ElvClient-FormatContractArguments-nav"><a href="ElvClient.html#FormatContractArguments" class="method-link">FormatContractArguments</a></li><li data-type="method" id="ElvClient-GenerateWallet-nav"><a href="ElvClient.html#GenerateWallet" class="method-link">GenerateWallet</a></li><li data-type="method" id="ElvClient-MergeMetadata-nav"><a href="ElvClient.html#MergeMetadata" class="method-link">MergeMetadata</a></li><li data-type="method" id="ElvClient-Proofs-nav"><a href="ElvClient.html#Proofs" class="method-link">Proofs</a></li><li data-type="method" id="ElvClient-PublicLibraryMetadata-nav"><a href="ElvClient.html#PublicLibraryMetadata" class="method-link">PublicLibraryMetadata</a></li><li data-type="method" id="ElvClient-QParts-nav"><a href="ElvClient.html#QParts" class="method-link">QParts</a></li><li data-type="method" id="ElvClient-Rep-nav"><a href="ElvClient.html#Rep" class="method-link">Rep</a></li><li data-type="method" id="ElvClient-ReplaceMetadata-nav"><a href="ElvClient.html#ReplaceMetadata" class="method-link">ReplaceMetadata</a></li><li data-type="method" id="ElvClient-ReplacePublicLibraryMetadata-nav"><a href="ElvClient.html#ReplacePublicLibraryMetadata" class="method-link">ReplacePublicLibraryMetadata</a></li><li data-type="method" id="ElvClient-SetCustomContentContract-nav"><a href="ElvClient.html#SetCustomContentContract" class="method-link">SetCustomContentContract</a></li><li data-type="method" id="ElvClient-SetSigner-nav"><a href="ElvClient.html#SetSigner" class="method-link">SetSigner</a></li><li data-type="method" id="ElvClient-UploadPart-nav"><a href="ElvClient.html#UploadPart" class="method-link">UploadPart</a></li><li data-type="method" id="ElvClient-VerifyContentObject-nav"><a href="ElvClient.html#VerifyContentObject" class="method-link">VerifyContentObject</a></li></ul></li><li id="ElvWallet-nav"><a href="ElvWallet.html" class="class-link">ElvWallet</a><ul class='methods'><li data-type="method" id="ElvWallet-AddAccount-nav"><a href="ElvWallet.html#AddAccount" class="method-link">AddAccount</a></li><li data-type="method" id="ElvWallet-AddAccountFromEncryptedPK-nav"><a href="ElvWallet.html#AddAccountFromEncryptedPK" class="method-link">AddAccountFromEncryptedPK</a></li><li data-type="method" id="ElvWallet-AddAccountFromMnemonic-nav"><a href="ElvWallet.html#AddAccountFromMnemonic" class="method-link">AddAccountFromMnemonic</a></li><li data-type="method" id="ElvWallet-GenerateMnemonic-nav"><a href="ElvWallet.html#GenerateMnemonic" class="method-link">GenerateMnemonic</a></li><li data-type="method" id="ElvWallet-GetAccount-nav"><a href="ElvWallet.html#GetAccount" class="method-link">GetAccount</a></li><li data-type="method" id="ElvWallet-GetAccountBalance-nav"><a href="ElvWallet.html#GetAccountBalance" class="method-link">GetAccountBalance</a></li><li data-type="method" id="ElvWallet-GetEncryptedPrivateKey-nav"><a href="ElvWallet.html#GetEncryptedPrivateKey" class="method-link">GetEncryptedPrivateKey</a></li><li data-type="method" id="ElvWallet-RemoveAccount-nav"><a href="ElvWallet.html#RemoveAccount" class="method-link">RemoveAccount</a></li></ul></li><li id="FrameClient-nav"><a href="FrameClient.html" class="class-link">FrameClient</a><ul class='methods'><li data-type="method" id="FrameClient-AllowedMethods-nav"><a href="FrameClient.html#AllowedMethods" class="method-link">AllowedMethods</a></li></ul></li></ul><h3>Namespaces</h3><ul><li id="Utils-nav"><a href="Utils.html" class="class-link">Utils</a><ul class='methods'><li data-type="method" id="Utils-AddressToHash-nav"><a href="Utils.html#.AddressToHash" class="method-link">AddressToHash</a></li><li data-type="method" id="Utils-AddressToLibraryId-nav"><a href="Utils.html#.AddressToLibraryId" class="method-link">AddressToLibraryId</a></li><li data-type="method" id="Utils-AddressToObjectId-nav"><a href="Utils.html#.AddressToObjectId" class="method-link">AddressToObjectId</a></li><li data-type="method" id="Utils-AddressToSpaceId-nav"><a href="Utils.html#.AddressToSpaceId" class="method-link">AddressToSpaceId</a></li><li data-type="method" id="Utils-EqualHash-nav"><a href="Utils.html#.EqualHash" class="method-link">EqualHash</a></li><li data-type="method" id="Utils-HashToAddress-nav"><a href="Utils.html#.HashToAddress" class="method-link">HashToAddress</a></li><li data-type="method" id="Utils-IsCloneable-nav"><a href="Utils.html#.IsCloneable" class="method-link">IsCloneable</a></li><li data-type="method" id="Utils-MakeClonable-nav"><a href="Utils.html#.MakeClonable" class="method-link">MakeClonable</a></li><li data-type="method" id="Utils-ToBytes32-nav"><a href="Utils.html#.ToBytes32" class="method-link">ToBytes32</a></li></ul></li></ul>
+      </div>
+    </nav>
 
-      
+    <div class="main">
+      <div class="header"></div>
+      <div class="main-content">
+        
+        <h1 class="page-title">
+          ElvClient
+        </h1>
+        
 
-    </ul>
-  </div>
-
-  <nav>
-    <h3 class="reference-title">
-      Eluvio Javascript Client
-    </h3>
-
-    
-
-    <h3>Classes</h3><ul><li id="ElvClient-nav"><a href="ElvClient.html">ElvClient</a><ul class='methods'><li data-type="method" id="ElvClient-FromConfiguration-nav"><a href="ElvClient.html#.FromConfiguration">FromConfiguration</a></li><li data-type="method" id="ElvClient-CallContractMethod-nav"><a href="ElvClient.html#CallContractMethod">CallContractMethod</a></li><li data-type="method" id="ElvClient-CallContractMethodAndWait-nav"><a href="ElvClient.html#CallContractMethodAndWait">CallContractMethodAndWait</a></li><li data-type="method" id="ElvClient-ContentLibraries-nav"><a href="ElvClient.html#ContentLibraries">ContentLibraries</a></li><li data-type="method" id="ElvClient-ContentLibrary-nav"><a href="ElvClient.html#ContentLibrary">ContentLibrary</a></li><li data-type="method" id="ElvClient-ContentObject-nav"><a href="ElvClient.html#ContentObject">ContentObject</a></li><li data-type="method" id="ElvClient-ContentObjectMetadata-nav"><a href="ElvClient.html#ContentObjectMetadata">ContentObjectMetadata</a></li><li data-type="method" id="ElvClient-ContentObjects-nav"><a href="ElvClient.html#ContentObjects">ContentObjects</a></li><li data-type="method" id="ElvClient-ContentObjectVersions-nav"><a href="ElvClient.html#ContentObjectVersions">ContentObjectVersions</a></li><li data-type="method" id="ElvClient-ContentParts-nav"><a href="ElvClient.html#ContentParts">ContentParts</a></li><li data-type="method" id="ElvClient-ContentType-nav"><a href="ElvClient.html#ContentType">ContentType</a></li><li data-type="method" id="ElvClient-ContentTypes-nav"><a href="ElvClient.html#ContentTypes">ContentTypes</a></li><li data-type="method" id="ElvClient-CreateContentLibrary-nav"><a href="ElvClient.html#CreateContentLibrary">CreateContentLibrary</a></li><li data-type="method" id="ElvClient-CreateContentObject-nav"><a href="ElvClient.html#CreateContentObject">CreateContentObject</a></li><li data-type="method" id="ElvClient-CreateContentSpace-nav"><a href="ElvClient.html#CreateContentSpace">CreateContentSpace</a></li><li data-type="method" id="ElvClient-CreateContentType-nav"><a href="ElvClient.html#CreateContentType">CreateContentType</a></li><li data-type="method" id="ElvClient-DeleteContentLibrary-nav"><a href="ElvClient.html#DeleteContentLibrary">DeleteContentLibrary</a></li><li data-type="method" id="ElvClient-DeleteContentObject-nav"><a href="ElvClient.html#DeleteContentObject">DeleteContentObject</a></li><li data-type="method" id="ElvClient-DeleteContentVersion-nav"><a href="ElvClient.html#DeleteContentVersion">DeleteContentVersion</a></li><li data-type="method" id="ElvClient-DeleteMetadata-nav"><a href="ElvClient.html#DeleteMetadata">DeleteMetadata</a></li><li data-type="method" id="ElvClient-DeletePart-nav"><a href="ElvClient.html#DeletePart">DeletePart</a></li><li data-type="method" id="ElvClient-DeployContract-nav"><a href="ElvClient.html#DeployContract">DeployContract</a></li><li data-type="method" id="ElvClient-DownloadAllParts-nav"><a href="ElvClient.html#DownloadAllParts">DownloadAllParts</a></li><li data-type="method" id="ElvClient-DownloadPart-nav"><a href="ElvClient.html#DownloadPart">DownloadPart</a></li><li data-type="method" id="ElvClient-EditContentObject-nav"><a href="ElvClient.html#EditContentObject">EditContentObject</a></li><li data-type="method" id="ElvClient-ExtractValueFromEvent-nav"><a href="ElvClient.html#ExtractValueFromEvent">ExtractValueFromEvent</a></li><li data-type="method" id="ElvClient-FabricUrl-nav"><a href="ElvClient.html#FabricUrl">FabricUrl</a></li><li data-type="method" id="ElvClient-FinalizeContentObject-nav"><a href="ElvClient.html#FinalizeContentObject">FinalizeContentObject</a></li><li data-type="method" id="ElvClient-FormatContractArguments-nav"><a href="ElvClient.html#FormatContractArguments">FormatContractArguments</a></li><li data-type="method" id="ElvClient-GenerateWallet-nav"><a href="ElvClient.html#GenerateWallet">GenerateWallet</a></li><li data-type="method" id="ElvClient-MergeMetadata-nav"><a href="ElvClient.html#MergeMetadata">MergeMetadata</a></li><li data-type="method" id="ElvClient-Proofs-nav"><a href="ElvClient.html#Proofs">Proofs</a></li><li data-type="method" id="ElvClient-PublicLibraryMetadata-nav"><a href="ElvClient.html#PublicLibraryMetadata">PublicLibraryMetadata</a></li><li data-type="method" id="ElvClient-QParts-nav"><a href="ElvClient.html#QParts">QParts</a></li><li data-type="method" id="ElvClient-Rep-nav"><a href="ElvClient.html#Rep">Rep</a></li><li data-type="method" id="ElvClient-ReplaceMetadata-nav"><a href="ElvClient.html#ReplaceMetadata">ReplaceMetadata</a></li><li data-type="method" id="ElvClient-ReplacePublicLibraryMetadata-nav"><a href="ElvClient.html#ReplacePublicLibraryMetadata">ReplacePublicLibraryMetadata</a></li><li data-type="method" id="ElvClient-SetCustomContentContract-nav"><a href="ElvClient.html#SetCustomContentContract">SetCustomContentContract</a></li><li data-type="method" id="ElvClient-SetSigner-nav"><a href="ElvClient.html#SetSigner">SetSigner</a></li><li data-type="method" id="ElvClient-UploadPart-nav"><a href="ElvClient.html#UploadPart">UploadPart</a></li><li data-type="method" id="ElvClient-VerifyContentObject-nav"><a href="ElvClient.html#VerifyContentObject">VerifyContentObject</a></li></ul></li><li id="ElvWallet-nav"><a href="ElvWallet.html">ElvWallet</a><ul class='methods'><li data-type="method" id="ElvWallet-AddAccount-nav"><a href="ElvWallet.html#AddAccount">AddAccount</a></li><li data-type="method" id="ElvWallet-AddAccountFromEncryptedPK-nav"><a href="ElvWallet.html#AddAccountFromEncryptedPK">AddAccountFromEncryptedPK</a></li><li data-type="method" id="ElvWallet-AddAccountFromMnemonic-nav"><a href="ElvWallet.html#AddAccountFromMnemonic">AddAccountFromMnemonic</a></li><li data-type="method" id="ElvWallet-GenerateMnemonic-nav"><a href="ElvWallet.html#GenerateMnemonic">GenerateMnemonic</a></li><li data-type="method" id="ElvWallet-GetAccount-nav"><a href="ElvWallet.html#GetAccount">GetAccount</a></li><li data-type="method" id="ElvWallet-GetAccountBalance-nav"><a href="ElvWallet.html#GetAccountBalance">GetAccountBalance</a></li><li data-type="method" id="ElvWallet-GetEncryptedPrivateKey-nav"><a href="ElvWallet.html#GetEncryptedPrivateKey">GetEncryptedPrivateKey</a></li><li data-type="method" id="ElvWallet-RemoveAccount-nav"><a href="ElvWallet.html#RemoveAccount">RemoveAccount</a></li></ul></li><li id="FrameClient-nav"><a href="FrameClient.html">FrameClient</a><ul class='methods'><li data-type="method" id="FrameClient-AllowedMethods-nav"><a href="FrameClient.html#AllowedMethods">AllowedMethods</a></li></ul></li></ul><h3>Namespaces</h3><ul><li id="Utils-nav"><a href="Utils.html">Utils</a><ul class='methods'><li data-type="method" id="Utils-AddressToHash-nav"><a href="Utils.html#.AddressToHash">AddressToHash</a></li><li data-type="method" id="Utils-AddressToLibraryId-nav"><a href="Utils.html#.AddressToLibraryId">AddressToLibraryId</a></li><li data-type="method" id="Utils-AddressToObjectId-nav"><a href="Utils.html#.AddressToObjectId">AddressToObjectId</a></li><li data-type="method" id="Utils-AddressToSpaceId-nav"><a href="Utils.html#.AddressToSpaceId">AddressToSpaceId</a></li><li data-type="method" id="Utils-EqualHash-nav"><a href="Utils.html#.EqualHash">EqualHash</a></li><li data-type="method" id="Utils-HashToAddress-nav"><a href="Utils.html#.HashToAddress">HashToAddress</a></li><li data-type="method" id="Utils-IsCloneable-nav"><a href="Utils.html#.IsCloneable">IsCloneable</a></li><li data-type="method" id="Utils-MakeClonable-nav"><a href="Utils.html#.MakeClonable">MakeClonable</a></li><li data-type="method" id="Utils-ToBytes32-nav"><a href="Utils.html#.ToBytes32">ToBytes32</a></li></ul></li></ul>
-  </nav>
-
-  <div id="main">
-    
-      <h1 class="page-title">
-        ElvClient
-      </h1>
-    
-
-    
+        
 
 <section>
   <header>
     
-      <h2>
-        
-        ElvClient
-        
-      </h2>
+
 
       
     
@@ -111,9 +61,7 @@
 
   <span class='name-container'>
     <a class="link-icon" href="#ElvClient">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ElvClient">
       <span class="type-signature"></span>new ElvClient<span class="signature">({<div class="block-param">contentSpaceId,</div><div class="block-param">hostname,</div><div class="block-param">port,</div><div class="block-param">useHTTPS,</div><div class="block-param">ethHostname,</div><div class="block-param">ethPort,</div><div class="block-param">ethUseHTTPS,</div><div class="block-param">noCache<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  <a href="ElvClient.html">ElvClient</a></span>
@@ -510,6 +458,18 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -553,18 +513,6 @@
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
     </div>
 
@@ -591,9 +539,7 @@
 
   <span class='name-container'>
     <a class="link-icon" href="#.FromConfiguration">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".FromConfiguration">
       <span class="type-signature">(static) </span>FromConfiguration<span class="signature">({<span class="inline-param">configuration</span>})</span><span class="type-signature"> &rarr;  <a href="ElvClient.html">ElvClient</a></span>
@@ -614,7 +560,7 @@
 
 
   <div class="return-description-block">
-    Returns: <span class="return-description"><p>ElvClient - desc</p></span>
+    Returns: <span class="return-description">New ElvClient connected to the specified content fabric and blockchain</span>
   </div>
 
 
@@ -697,6 +643,18 @@ to the content fabric and blockchain</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -740,18 +698,6 @@ to the content fabric and blockchain</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -760,9 +706,7 @@ to the content fabric and blockchain</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#CallContractMethod">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="CallContractMethod">
       <span class="type-signature">(async) </span>CallContractMethod<span class="signature">({<div class="block-param">contractAddress,</div><div class="block-param">abi,</div><div class="block-param">methodName,</div><div class="block-param">methodArgs,</div><div class="block-param">overrides<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -1017,6 +961,18 @@ to be mined, use the CallContractMethodAndWait method.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -1060,18 +1016,6 @@ to be mined, use the CallContractMethodAndWait method.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -1080,9 +1024,7 @@ to be mined, use the CallContractMethodAndWait method.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#CallContractMethodAndWait">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="CallContractMethodAndWait">
       <span class="type-signature">(async) </span>CallContractMethodAndWait<span class="signature">({<div class="block-param">contractAddress,</div><div class="block-param">abi,</div><div class="block-param">methodName,</div><div class="block-param">methodArgs,</div><div class="block-param">overrides<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -1336,6 +1278,18 @@ This action will be performed by this client's signer.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -1379,18 +1333,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -1399,9 +1341,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentLibraries">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentLibraries">
       <span class="type-signature">(async) </span>ContentLibraries<span class="signature">()</span><span class="type-signature"> &rarr;  Promise.&lt;Array.&lt;string>></span>
@@ -1432,6 +1372,18 @@ This action will be performed by this client's signer.</p>
       </ul>
     </dd>
   </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1485,18 +1437,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -1505,9 +1445,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentLibrary">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentLibrary">
       <span class="type-signature">(async) </span>ContentLibrary<span class="signature">({<span class="inline-param">libraryId</span>})</span><span class="type-signature"> &rarr;  Promise.&lt;*></span>
@@ -1603,6 +1541,18 @@ This action will be performed by this client's signer.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -1646,18 +1596,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -1666,9 +1604,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentObject">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentObject">
       <span class="type-signature">(async) </span>ContentObject<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -1857,6 +1793,18 @@ This action will be performed by this client's signer.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -1900,18 +1848,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -1920,9 +1856,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentObjectMetadata">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentObjectMetadata">
       <span class="type-signature">(async) </span>ContentObjectMetadata<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">metadataSubtree<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -2150,6 +2084,18 @@ This action will be performed by this client's signer.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -2193,18 +2139,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -2213,9 +2147,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentObjects">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentObjects">
       <span class="type-signature">(async) </span>ContentObjects<span class="signature">({<span class="inline-param">libraryId</span>})</span><span class="type-signature"> &rarr;  Promise.&lt;Array.&lt;Object>></span>
@@ -2309,6 +2241,18 @@ This action will be performed by this client's signer.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -2352,18 +2296,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -2372,9 +2304,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentObjectVersions">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentObjectVersions">
       <span class="type-signature">(async) </span>ContentObjectVersions<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -2506,6 +2436,18 @@ This action will be performed by this client's signer.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -2549,18 +2491,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -2569,9 +2499,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentParts">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentParts">
       <span class="type-signature">(async) </span>ContentParts<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -2760,6 +2688,18 @@ This action will be performed by this client's signer.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -2803,18 +2743,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -2823,9 +2751,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentType">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentType">
       <span class="type-signature">(async) </span>ContentType<span class="signature">({<span class="inline-param">name</span>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -2899,6 +2825,18 @@ This action will be performed by this client's signer.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -2942,18 +2880,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -2962,9 +2888,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ContentTypes">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContentTypes">
       <span class="type-signature">(async) </span>ContentTypes<span class="signature">()</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -2995,6 +2919,18 @@ This action will be performed by this client's signer.</p>
       </ul>
     </dd>
   </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -3048,18 +2984,6 @@ This action will be performed by this client's signer.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -3068,9 +2992,7 @@ This action will be performed by this client's signer.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#CreateContentLibrary">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="CreateContentLibrary">
       <span class="type-signature">(async) </span>CreateContentLibrary<span class="signature">({<div class="block-param">name,</div><div class="block-param">description,</div><div class="block-param">publicMetadata,</div><div class="block-param">privateMetadata</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
@@ -3263,6 +3185,18 @@ create in the fabric.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -3306,18 +3240,6 @@ create in the fabric.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -3326,9 +3248,7 @@ create in the fabric.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#CreateContentObject">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="CreateContentObject">
       <span class="type-signature">(async) </span>CreateContentObject<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">options<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -3484,6 +3404,18 @@ create in the fabric.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -3527,18 +3459,6 @@ create in the fabric.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -3547,9 +3467,7 @@ create in the fabric.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#CreateContentSpace">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="CreateContentSpace">
       <span class="type-signature">(async) </span>CreateContentSpace<span class="signature">({<span class="inline-param">name</span>})</span><span class="type-signature"> &rarr;  Promise.&lt;contentSpaceId></span>
@@ -3639,6 +3557,18 @@ create in the fabric.</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -3682,18 +3612,6 @@ create in the fabric.</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -3702,9 +3620,7 @@ create in the fabric.</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#CreateContentType">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="CreateContentType">
       <span class="type-signature">(async) </span>CreateContentType<span class="signature">({<div class="block-param">name,</div><div class="block-param">bitcode</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
@@ -3833,6 +3749,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -3876,18 +3804,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -3896,9 +3812,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#DeleteContentLibrary">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DeleteContentLibrary">
       <span class="type-signature">(async) </span>DeleteContentLibrary<span class="signature">({<span class="inline-param">libraryId</span>})</span><span class="type-signature"></span>
@@ -3994,6 +3908,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -4037,18 +3963,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -4057,9 +3971,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#DeleteContentObject">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DeleteContentObject">
       <span class="type-signature">(async) </span>DeleteContentObject<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId</div>})</span><span class="type-signature"></span>
@@ -4184,6 +4096,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -4227,18 +4151,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -4247,9 +4159,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#DeleteContentVersion">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DeleteContentVersion">
       <span class="type-signature">(async) </span>DeleteContentVersion<span class="signature">(<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"></span>
@@ -4431,6 +4341,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -4474,18 +4396,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -4494,9 +4404,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#DeleteMetadata">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DeleteMetadata">
       <span class="type-signature">(async) </span>DeleteMetadata<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">metadataSubtree<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
@@ -4718,6 +4626,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -4761,18 +4681,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -4781,9 +4689,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#DeletePart">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DeletePart">
       <span class="type-signature">(async) </span>DeletePart<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">partHash</div>})</span><span class="type-signature"></span>
@@ -4966,6 +4872,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -5009,18 +4927,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -5029,9 +4935,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#DeployContract">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DeployContract">
       <span class="type-signature">(async) </span>DeployContract<span class="signature">({<div class="block-param">abi,</div><div class="block-param">bytecode,</div><div class="block-param">constructorArgs,</div><div class="block-param">overrides<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -5247,6 +5151,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -5290,18 +5206,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -5310,9 +5214,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#DownloadAllParts">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DownloadAllParts">
       <span class="type-signature">(async) </span>DownloadAllParts<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">format<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Format></span>
@@ -5540,6 +5442,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -5583,18 +5497,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -5603,9 +5505,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#DownloadPart">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DownloadPart">
       <span class="type-signature">(async) </span>DownloadPart<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">partHash,</div><div class="block-param">format<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Format></span>
@@ -5870,6 +5770,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -5913,18 +5825,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -5933,9 +5833,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#EditContentObject">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="EditContentObject">
       <span class="type-signature">(async) </span>EditContentObject<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">options<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -6088,6 +5986,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -6131,18 +6041,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -6151,9 +6049,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#ExtractValueFromEvent">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ExtractValueFromEvent">
       <span class="type-signature"></span>ExtractValueFromEvent<span class="signature">({<div class="block-param">contractAddress,</div><div class="block-param">abi,</div><div class="block-param">event,</div><div class="block-param">eventName,</div><div class="block-param">eventValue</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;*></span>
@@ -6372,6 +6268,18 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -6415,18 +6323,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -6435,9 +6331,7 @@ content space library (ilib<content-space-hash>)</p>
 
   <span class='name-container'>
     <a class="link-icon" href="#FabricUrl">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="FabricUrl">
       <span class="type-signature">(async) </span>FabricUrl<span class="signature">(<div class="block-param">libraryId<span class="signature-attributes">optional</span>,</div><div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">partHash<span class="signature-attributes">optional</span>,</div><div class="block-param">queryParams<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
@@ -6695,6 +6589,44 @@ content space library (ilib<content-space-hash>)</p>
 
 
 
+
+
+
+
+
+
+
+
+
+  <div class="example-container">
+    <a class="link-icon" href="#FabricUrl-examples">
+      <svg height="20" width="20" style="fill: black;">
+        <use xlink:href="#linkIcon"></use>
+      </svg>
+    </a>
+    <h5 id="FabricUrl-examples">Example</h5>
+    
+
+  <pre class="prettyprint"><code>client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN"});
+=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN?authorization=...
+
+client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN", objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s"});
+=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/iq__4EwJBLZfKpdUSsF4h6pfk777pd5s?authorization=...
+
+client.FabricUrl({
+  libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN",
+  objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s",
+  versionHash: "hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL",
+  partHash: "hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB"
+});
+=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...</code></pre>
+
+
+  </div>
+
+
+
+
 <dl class="details">
 
   
@@ -6738,44 +6670,6 @@ content space library (ilib<content-space-hash>)</p>
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-  <div class="example-container">
-    <a class="link-icon" href="#FabricUrl-examples">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
-    </a>
-    <h5 id="FabricUrl-examples">Example</h5>
-    
-
-  <pre class="prettyprint"><code>client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN"});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN?authorization=...
-
-client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN", objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s"});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/iq__4EwJBLZfKpdUSsF4h6pfk777pd5s?authorization=...
-
-client.FabricUrl({
-  libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN",
-  objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s",
-  versionHash: "hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL",
-  partHash: "hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB"
-});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...</code></pre>
-
-
-  </div>
-
-
       
         
 
@@ -6784,9 +6678,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#FinalizeContentObject">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="FinalizeContentObject">
       <span class="type-signature">(async) </span>FinalizeContentObject<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken</div>})</span><span class="type-signature"></span>
@@ -6940,6 +6832,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -6983,18 +6887,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -7003,9 +6895,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#FormatContractArguments">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="FormatContractArguments">
       <span class="type-signature"></span>FormatContractArguments<span class="signature">({<div class="block-param">abi,</div><div class="block-param">methodName,</div><div class="block-param">args</div>})</span><span class="type-signature"> &rarr;  Array.&lt;string></span>
@@ -7153,6 +7043,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -7196,18 +7098,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -7216,9 +7106,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#GenerateWallet">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="GenerateWallet">
       <span class="type-signature"></span>GenerateWallet<span class="signature">()</span><span class="type-signature"> &rarr;  <a href="ElvWallet.html">ElvWallet</a></span>
@@ -7241,6 +7129,18 @@ client.FabricUrl({
   <div class="return-description-block">
     Returns: <span class="return-description">ElvWallet instance with this client's provider</span>
   </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7296,18 +7196,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -7316,9 +7204,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#MergeMetadata">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="MergeMetadata">
       <span class="type-signature">(async) </span>MergeMetadata<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">metadata,</div><div class="block-param">metadataSubtree<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
@@ -7574,6 +7460,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -7617,18 +7515,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -7637,9 +7523,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#Proofs">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="Proofs">
       <span class="type-signature">(async) </span>Proofs<span class="signature">(<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">partHash</div>)</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -7865,6 +7749,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -7908,18 +7804,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -7928,9 +7812,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#PublicLibraryMetadata">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="PublicLibraryMetadata">
       <span class="type-signature">(async) </span>PublicLibraryMetadata<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">metadataSubtree<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -8082,6 +7964,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -8125,18 +8019,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -8145,9 +8027,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#QParts">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="QParts">
       <span class="type-signature">(async) </span>QParts<span class="signature">(<div class="block-param">objectId,</div><div class="block-param">partHash,</div><div class="block-param">format</div>)</span><span class="type-signature"> &rarr;  Promise.&lt;Format></span>
@@ -8308,6 +8188,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -8351,18 +8243,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -8371,9 +8251,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#Rep">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="Rep">
       <span class="type-signature">(async) </span>Rep<span class="signature">(<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">rep</div>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
@@ -8586,6 +8464,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -8629,18 +8519,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -8649,9 +8527,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#ReplaceMetadata">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ReplaceMetadata">
       <span class="type-signature">(async) </span>ReplaceMetadata<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">metadata,</div><div class="block-param">metadataSubtree<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
@@ -8907,6 +8783,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -8950,18 +8838,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -8970,9 +8846,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#ReplacePublicLibraryMetadata">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ReplacePublicLibraryMetadata">
       <span class="type-signature">(async) </span>ReplacePublicLibraryMetadata<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">metadata,</div><div class="block-param">metadataSubtree<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
@@ -9154,6 +9028,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -9197,18 +9083,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -9217,9 +9091,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#SetCustomContentContract">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="SetCustomContentContract">
       <span class="type-signature">(async) </span>SetCustomContentContract<span class="signature">(<div class="block-param">objectId,</div><div class="block-param">customContractAddress,</div><div class="block-param">overrides<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -9395,6 +9267,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -9438,18 +9322,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -9458,9 +9330,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#SetSigner">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="SetSigner">
       <span class="type-signature"></span>SetSigner<span class="signature">({<span class="inline-param">signer</span>})</span><span class="type-signature"></span>
@@ -9543,6 +9413,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -9586,18 +9468,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -9606,9 +9476,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#UploadPart">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="UploadPart">
       <span class="type-signature">(async) </span>UploadPart<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">data</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -9804,6 +9672,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -9847,18 +9727,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
         
 
@@ -9867,9 +9735,7 @@ client.FabricUrl({
 
   <span class='name-container'>
     <a class="link-icon" href="#VerifyContentObject">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="VerifyContentObject">
       <span class="type-signature"></span>VerifyContentObject<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">partHash</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
@@ -9988,6 +9854,18 @@ client.FabricUrl({
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 <dl class="details">
 
   
@@ -10031,18 +9909,6 @@ client.FabricUrl({
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
       
     
 
@@ -10055,20 +9921,20 @@ client.FabricUrl({
 
 
 
+
+        <footer class="footer">
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
+        </footer>
+      </div>
+    </div>
   </div>
 
-  <br class="clear">
+  <script>
+    // Format and add line numbers to code
+    prettyPrint();
+  </script>
 
-  <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a>
-  </footer>
+  <script type="text/javascript" src="scripts/utils.js"></script>
 
-<script>prettyPrint();</script>
-
-  <script src="scripts/linenumber.js"></script>
-  <script src="scripts/pagelocation.js"></script>
-
-  
-
-</body>
+  </body>
 </html>
