@@ -103,7 +103,7 @@ class ElvClient {
    * to the content fabric and blockchain
    *
    *
-   * @returns {ElvClient} ElvClient - desc
+   * @returns {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
   static FromConfiguration({configuration}) {
     return new ElvClient({

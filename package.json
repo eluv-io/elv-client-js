@@ -14,8 +14,9 @@
     "build-node-dev": "webpack --progress --target node --output-filename ElvClient-node-min-dev.js",
     "build-frame-client": "webpack -p --progress --entry ./src/FrameClient.js --output-filename ElvFrameClient-min.js --devtool none --optimize-minimize",
     "build-contracts": "node build/BuildContracts.js",
-    "build-docs": "jsdoc --configure ./.jsdoc.json",
+    "build-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme DEV_README.md",
     "lint": "./node_modules/.bin/eslint \"src/**/*.js\" --fix",
+    "lint-docs": "./node_modules/.bin/eslint \"vendor/elv-jsdoc-template/tmpl/*.tmpl\" \"vendor/elv-jsdoc-template/**/*.js\" --fix",
     "truffle_test": "node $NODE_DEBUG_OPTION ./node_modules/.bin/truffle test"
   },
   "browser": {
@@ -36,6 +37,7 @@
   "devDependencies": {
     "copy-webpack-plugin": "^4.5.2",
     "eslint": "^5.6.1",
+    "eslint-plugin-html": "^5.0.0",
     "eslint-plugin-react": "^7.11.1",
     "jsdoc": "^3.5.5",
     "minami": "^1.2.3",
