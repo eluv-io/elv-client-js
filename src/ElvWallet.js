@@ -4,7 +4,7 @@ class ElvWallet {
   /**
    * Create a new ElvWallet connected to the given provider
    *
-   * NOTE: It is recommended to instead initialize wallets from the ElvClient
+   * NOTE: It is recommended to initialize wallets from the ElvClient, not using this constructor
    *
    * @see ElvClient#GenerateWallet()
    *
@@ -32,7 +32,7 @@ class ElvWallet {
    * Generate a private key from the given mnemonic
    *
    * @namedParams
-   * @param {string=} accountName - Name of account to save in wallet
+   * @param {string=} accountName - Name of account to save in wallet. Account will be saved in the wallet if provided.
    * @param {string} mnemonic - Mnemonic from which to generate a private key
    *
    * @returns {Signer} - Signer with the generated private key, connected to the provider
@@ -56,7 +56,7 @@ class ElvWallet {
    * Add an account from an encrypted private key (Ethereum keystore format)
    *
    * @namedParams
-   * @param {string=} accountName - Name of account to save in wallet
+   * @param {string=} accountName - Name of account to save in wallet. Account will be saved in the wallet if provided.
    * @param {string} encryptedPrivateKey - Encrypted private key to decrypt
    * @params {string} password - Password with which to decrypt the private key
    *
@@ -79,7 +79,7 @@ class ElvWallet {
    * Add an account from a private key (Ethereum keystore format)
    *
    * @namedParams
-   * @param {string=} accountName - Name of account to save in wallet
+   * @param {string=} accountName - Name of account to save in wallet. Account will be saved in the wallet if provided.
    * @param {string} privateKey - Private key to use
    *
    * @returns {Signer} - Signer with the private key, connected to the provider
@@ -131,7 +131,7 @@ class ElvWallet {
    *
    * @returns {Promise<string>} - The encrypted private key (in Ethereum keystore format)
    */
-  async GetEncryptedPrivateKey({ accountName, signer, password }) {
+  async GenerateEncryptedPrivateKey({ accountName, signer, password }) {
     const accountSigner = signer || this.GetAccount({ accountName });
 
     if(!accountSigner) {

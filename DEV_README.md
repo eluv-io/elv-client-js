@@ -236,7 +236,7 @@ const balance = wallet.GetAccountBalance({accountName: "Alice"});
 
 ##### Generating signer's encrypted private key (keystore format)
 ```javascript
-const encryptedPrivateKey = await wallet.GetEncryptedPrivateKey({accountName: "Alice", password: "test"});
+const encryptedPrivateKey = await wallet.GenerateEncryptedPrivateKey({accountName: "Alice", password: "test"});
 
 "{\"address\":\"93cc134901c40f6164ab357f4f18bbf4aa058477\",\"id\":\"dc5b06ca-f284-4a47-875a-176d857f6d9d\",\"version\":3,\"Crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"ca349dad2df26ed5786b987fd54e195d\"},\"ciphertext\":\"c4e1d0e1bf21cb8e2c4c732040245ea65f22cd4af0666dc79da1b3fbe23c6a27\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"27695860062f440d91d1863c37349a28518ed98799d0d96b8f9a39c9e23b953a\",\"n\":131072,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"2b0fe21ba893c40ab193694ef2f86c7982138fc17b19148b25f65bfccdbb4fbd\"}}"
 ```
