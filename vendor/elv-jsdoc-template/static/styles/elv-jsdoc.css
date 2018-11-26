@@ -434,10 +434,15 @@ td table.params, td table.props {
 /* Source code */
 
 .source-container {
-  padding: 15px 30px;
-  border: 1px solid #333;
+  padding: 15px 30px 15px 45px;
   overflow-x: auto;
   font-size: 16px;
+  background: #eee;
+  border: 1px solid lightgray;
+}
+
+.source-container.example-container {
+  padding: 5px 15px 15px
 }
 
 section.source-section {
