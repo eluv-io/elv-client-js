@@ -1056,13 +1056,15 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noCache - If specified, a new access request will be made for the authorization regardless of
+   * whether such a request exists in the client cache. This request will not be cached.
    *
    * @see FabricUrl for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async CallBitcodeMethod({libraryId, objectId, versionHash, method, queryParams={}}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams});
+  async CallBitcodeMethod({libraryId, objectId, versionHash, method, queryParams={}, noCache=false}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams, noCache});
   }
 
   /**
@@ -1074,13 +1076,15 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noCache - If specified, a new access request will be made for the authorization regardless of
+   * whether such a request exists in the client cache. This request will not be cached.
    *
    * @see FabricUrl for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async Rep({libraryId, objectId, versionHash, rep, queryParams={}}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams});
+  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, noCache=false}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, noCache});
   }
 
   /**
@@ -1094,6 +1098,8 @@ class ElvClient {
    * @param {string=} rep - Rep parameter of the url
    * @param {string=} call - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noCache - If specified, a new access request will be made for the authorization regardless of
+   * whether such a request exists in the client cache. This request will not be cached.
    *
    * @returns {Promise<string>} - URL to the specified endpoint with authorization token
    *
@@ -1111,7 +1117,7 @@ client.FabricUrl({
 });
 => http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...
    */
-  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}}) {
+  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}, noCache=false}) {
     let path = "";
 
     if(libraryId) {
@@ -1130,7 +1136,7 @@ client.FabricUrl({
       }
     }
 
-    const authorization = (await this.authClient.AuthorizationHeader({libraryId, objectId}))
+    const authorization = (await this.authClient.AuthorizationHeader({libraryId, objectId, noCache}))
       .Authorization.replace("Bearer ", "");
 
     return this.HttpClient.URL({
