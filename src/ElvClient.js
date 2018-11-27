@@ -219,6 +219,7 @@ class ElvClient {
    * @namedParams
    * @param {string} name - Library name
    * @param {string} description - Library description
+   * @param {blob=} image - Image associated with the library
    * @param {Object} publicMetadata - Public library metadata
    * @param {Object} privateMetadata - Private library metadata (metadata of library object)
    *
@@ -227,8 +228,9 @@ class ElvClient {
   async CreateContentLibrary({
     name,
     description,
+    image,
     publicMetadata={},
-    privateMetadata={}
+    privateMetadata={},
   }) {
     const { contractAddress, transactionHash } = await this.authClient.CreateContentLibrary();
 
@@ -257,7 +259,75 @@ class ElvClient {
       })
     );
 
+    if(image) {
+      await this.SetContentLibraryImage({
+        libraryId,
+        image
+      });
+    }
+
     return libraryId;
+  }
+
+  /**
+   * Set the image associated with this library
+   *
+   * @param {string} libraryId - ID of the library
+   * @param {blob} image - Image to upload
+   */
+  async SetContentLibraryImage({libraryId, image}) {
+    const objectId = libraryId.replace("ilib", "iq__");
+
+    return this.SetContentObjectImage({
+      libraryId,
+      objectId,
+      image
+    });
+  }
+
+  /**
+   * Set the image associated with this library
+   *
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {blob} image - Image to upload
+   */
+  async SetContentObjectImage({libraryId, objectId, image}) {
+    const editResponse = await this.EditContentObject({
+      libraryId,
+      objectId
+    });
+
+    const uploadResponse = await this.UploadPart({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token,
+      data: image
+    });
+
+    let metadata = await this.ContentObjectMetadata({
+      libraryId,
+      objectId
+    });
+
+    metadata = Object.assign(
+      { "eluv.image": uploadResponse.part.hash },
+      metadata
+    );
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token,
+      metadata
+    });
+
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token
+    });
   }
 
   /**
@@ -978,6 +1048,7 @@ class ElvClient {
    * @param {string=} objectId - ID of an object - Required if using versionHash
    * @param {string=} versionHash - Hash of an object version - If specified, will be used instead of objectID in URL
    * @param {string=} partHash - Hash of a part - Requires object ID
+   * @param {string=} rep - Rep parameter of the url
    * @param {Object=} queryParams - Query params to add to the URL
    *
    * @returns {Promise<string>} - URL to the specified endpoint with authorization token
@@ -996,7 +1067,7 @@ client.FabricUrl({
 });
 => http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...
    */
-  async FabricUrl({libraryId, objectId, versionHash, partHash, queryParams = {}}) {
+  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, queryParams = {}}) {
     let path = "";
 
     if(libraryId) {
@@ -1007,6 +1078,8 @@ client.FabricUrl({
 
         if(partHash){
           path = Path.join(path, "data", partHash);
+        } else if(rep) {
+          path = Path.join(path, "rep", rep);
         }
       }
     }

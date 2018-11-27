@@ -142,6 +142,8 @@ class FrameClient {
       "ReplaceMetadata",
       "ReplacePublicLibraryMetadata",
       "SetByName",
+      "SetContentLibraryImage",
+      "SetContentObjectImage",
       "SetCustomContentContract",
       "SetObjectByName",
       "UploadFileData",

@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 let TestQueries = async (client) => {
   //let output = "";
   try {
@@ -15,10 +18,13 @@ let TestQueries = async (client) => {
 
     console.log("CREATING LIBRARY ");
 
+    const image = fs.readFileSync(path.join(__dirname, "images/logo-dark.png"));
+
     const libraryId = await (
       client.CreateContentLibrary({
         name: "New library",
         description: "Library Description",
+        image,
         publicMetadata: {
           public: {
             meta: "data"
