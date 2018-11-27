@@ -709,7 +709,7 @@ to the content fabric and blockchain</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="CallBitcodeMethod">
-      <span class="type-signature">(async) </span>CallBitcodeMethod<span class="signature">(<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">method,</div><div class="block-param">queryParams<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">(async) </span>CallBitcodeMethod<span class="signature">(<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">method,</div><div class="block-param">queryParams<span class="signature-attributes">optional</span>,</div><div class="block-param">noCache<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -965,6 +965,46 @@ URL includes authorization token.</p>
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>noCache</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>If specified, a new access request will be made for the authorization regardless of
+whether such a request exists in the client cache. This request will not be cached.</p>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -1015,7 +1055,7 @@ URL includes authorization token.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1064">line 1064</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1066">line 1066</a>
         </li>
       </ul>
     </dd>
@@ -1333,7 +1373,7 @@ to be mined, use the CallContractMethodAndWait method.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1332">line 1332</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1338">line 1338</a>
         </li>
       </ul>
     </dd>
@@ -1650,7 +1690,7 @@ This action will be performed by this client's signer.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1350">line 1350</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1356">line 1356</a>
         </li>
       </ul>
     </dd>
@@ -5596,7 +5636,7 @@ content space library (ilib<content-space-hash>)</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1312">line 1312</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1318">line 1318</a>
         </li>
       </ul>
     </dd>
@@ -6713,7 +6753,7 @@ content space library (ilib<content-space-hash>)</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1368">line 1368</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1374">line 1374</a>
         </li>
       </ul>
     </dd>
@@ -6736,7 +6776,7 @@ content space library (ilib<content-space-hash>)</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="FabricUrl">
-      <span class="type-signature">(async) </span>FabricUrl<span class="signature">(<div class="block-param">libraryId<span class="signature-attributes">optional</span>,</div><div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">partHash<span class="signature-attributes">optional</span>,</div><div class="block-param">rep<span class="signature-attributes">optional</span>,</div><div class="block-param">call<span class="signature-attributes">optional</span>,</div><div class="block-param">queryParams<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">(async) </span>FabricUrl<span class="signature">(<div class="block-param">libraryId<span class="signature-attributes">optional</span>,</div><div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">partHash<span class="signature-attributes">optional</span>,</div><div class="block-param">rep<span class="signature-attributes">optional</span>,</div><div class="block-param">call<span class="signature-attributes">optional</span>,</div><div class="block-param">queryParams<span class="signature-attributes">optional</span>,</div><div class="block-param">noCache<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -7062,6 +7102,46 @@ content space library (ilib<content-space-hash>)</p>
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>noCache</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>If specified, a new access request will be made for the authorization regardless of
+whether such a request exists in the client cache. This request will not be cached.</p>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -7138,7 +7218,7 @@ client.FabricUrl({
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1114">line 1114</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1120">line 1120</a>
         </li>
       </ul>
     </dd>
@@ -7566,7 +7646,7 @@ client.FabricUrl({
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1296">line 1296</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1302">line 1302</a>
         </li>
       </ul>
     </dd>
@@ -8272,7 +8352,7 @@ client.FabricUrl({
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1247">line 1247</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1253">line 1253</a>
         </li>
       </ul>
     </dd>
@@ -8711,7 +8791,7 @@ client.FabricUrl({
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1271">line 1271</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1277">line 1277</a>
         </li>
       </ul>
     </dd>
@@ -8734,7 +8814,7 @@ client.FabricUrl({
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="Rep">
-      <span class="type-signature">(async) </span>Rep<span class="signature">(<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">rep,</div><div class="block-param">queryParams<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">(async) </span>Rep<span class="signature">(<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">rep,</div><div class="block-param">queryParams<span class="signature-attributes">optional</span>,</div><div class="block-param">noCache<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -8989,6 +9069,46 @@ client.FabricUrl({
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>noCache</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>If specified, a new access request will be made for the authorization regardless of
+whether such a request exists in the client cache. This request will not be cached.</p>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -9039,7 +9159,7 @@ client.FabricUrl({
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1082">line 1082</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1086">line 1086</a>
         </li>
       </ul>
     </dd>
@@ -10221,7 +10341,7 @@ client.FabricUrl({
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1381">line 1381</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1387">line 1387</a>
         </li>
       </ul>
     </dd>
@@ -10808,7 +10928,7 @@ client.FabricUrl({
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1226">line 1226</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1232">line 1232</a>
         </li>
       </ul>
     </dd>

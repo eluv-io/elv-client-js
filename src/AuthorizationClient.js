@@ -36,8 +36,30 @@ class AuthorizationClient {
     };
   }
 
-  // Authorization: Bearer <token>
-  async AuthorizationHeader({libraryId, objectId, transactionHash, update=false}) {
+  // Wrapper for GenerateAuthorizationHeader to allow for per-call disabling of cache
+  async AuthorizationHeader({libraryId, objectId, transactionHash, update=false, noCache=false}) {
+    const initialNoCache = this.noCache;
+
+    try {
+      // noCache enabled for this call
+      if (noCache && !this.noCache) {
+        this.noCache = true;
+      }
+
+      const authorizationHeader = await this.GenerateAuthorizationHeader({libraryId, objectId, transactionHash, update});
+
+      this.noCache = initialNoCache;
+
+      return authorizationHeader;
+    } catch(error) {
+      // Ensure nocache is properly reset
+      this.noCache = initialNoCache;
+      throw error;
+    }
+  }
+
+  // Generate proper authorization header based on the information provided
+  async GenerateAuthorizationHeader({libraryId, objectId, transactionHash, update=false}) {
     if(!transactionHash) {
       // If content library object, authorize against library, not object
       if(objectId && !Utils.EqualHash(libraryId, objectId)) {

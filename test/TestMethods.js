@@ -346,6 +346,15 @@ let TestQueries = async (client) => {
     console.log(await client.FabricUrl({libraryId, objectId}));
     console.log(await client.FabricUrl({libraryId, objectId, partHash}));
     console.log(await client.FabricUrl({libraryId, objectId, partHash, queryParams: {query: "params", params: "query"}}));
+    console.log("\nNOCACHE URL");
+    console.log(await client.FabricUrl({libraryId, objectId, partHash, noCache: true}));
+
+    console.log("\nREP: ");
+    console.log(await client.Rep({libraryId, objectId, rep: "image"}));
+
+    console.log("\nCALL BITCODE");
+    console.log(await client.CallBitcodeMethod({libraryId, objectId, method: "specialMethod"}));
+
 
     const contentVerification = await (
       client.VerifyContentObject({libraryId, objectId, partHash: versionHash})
