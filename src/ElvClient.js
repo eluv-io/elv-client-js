@@ -259,6 +259,24 @@ class ElvClient {
       })
     );
 
+    // Set library content object type
+    const objectId = libraryId.replace("ilib", "iq__");
+
+    const editResponse = await this.EditContentObject({
+      libraryId,
+      objectId,
+      options: {
+        type: "library"
+      }
+    });
+
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token
+    });
+
+    // Upload image if provided
     if(image) {
       await this.SetContentLibraryImage({
         libraryId,
@@ -311,7 +329,10 @@ class ElvClient {
     });
 
     metadata = Object.assign(
-      { "eluv.image": uploadResponse.part.hash },
+      {
+        "image": uploadResponse.part.hash,
+        "eluv.image": uploadResponse.part.hash
+      },
       metadata
     );
 
@@ -1026,6 +1047,25 @@ class ElvClient {
   }
 
   /**
+   * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
+   * URL includes authorization token.
+   *
+   * @namedParmas
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string} method - Bitcode method to call
+   * @param {Object=} queryParams - Query params to add to the URL
+   *
+   * @see FabricUrl for creating arbitrary fabric URLs
+   *
+   * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
+   */
+  async CallBitcodeMethod({libraryId, objectId, versionHash, method, queryParams={}}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams});
+  }
+
+  /**
    * Generate a URL to the specified /rep endpoint of a content object. URL includes authorization token.
    *
    * @namedParmas
@@ -1033,11 +1073,14 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
+   * @param {Object=} queryParams - Query params to add to the URL
+   *
+   * @see FabricUrl for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async Rep({libraryId, objectId, versionHash, rep}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, rep});
+  async Rep({libraryId, objectId, versionHash, rep, queryParams={}}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams});
   }
 
   /**
@@ -1049,6 +1092,7 @@ class ElvClient {
    * @param {string=} versionHash - Hash of an object version - If specified, will be used instead of objectID in URL
    * @param {string=} partHash - Hash of a part - Requires object ID
    * @param {string=} rep - Rep parameter of the url
+   * @param {string=} call - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
    *
    * @returns {Promise<string>} - URL to the specified endpoint with authorization token
@@ -1067,7 +1111,7 @@ client.FabricUrl({
 });
 => http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...
    */
-  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, queryParams = {}}) {
+  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}}) {
     let path = "";
 
     if(libraryId) {
@@ -1080,6 +1124,8 @@ client.FabricUrl({
           path = Path.join(path, "data", partHash);
         } else if(rep) {
           path = Path.join(path, "rep", rep);
+        } else if(call) {
+          path = Path.join(path, "call", call);
         }
       }
     }
