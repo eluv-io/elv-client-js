@@ -100,6 +100,7 @@ class FrameClient {
    */
   AllowedMethods() {
     return [
+      "CallBitcodeMethod",
       "CallContractMethod",
       "CallContractMethodAndWait",
       "ContentLibraries",
