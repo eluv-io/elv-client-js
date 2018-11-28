@@ -6,6 +6,8 @@ const TestMethods = require("./TestMethods");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
+const ContentContract = require("../src/contracts/BaseContent");
+
 const Test = async () => {
   try {
     let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
@@ -18,7 +20,11 @@ const Test = async () => {
     });
     client.SetSigner({signer});
 
-    await TestMethods.TestQueries(client, signer);
+    //await TestMethods.TestQueries(client, signer);
+
+    const filters = await client.ContentObjectContractEvents({objectId: "iq__39whrV3FHxcWiNQt9qEmsgopdYJj"});
+
+    console.log(filters);
 
     // Ensure ElvClient and FrameClient agree on allowed methods
     const frameClient = new FrameClient({target: this});

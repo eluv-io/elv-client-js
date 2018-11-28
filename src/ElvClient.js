@@ -9,6 +9,8 @@ const HttpClient = require("./HttpClient");
 const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 
+const ContentContract = require("./contracts/BaseContent");
+
 const HandleErrors = async (response) => {
   response = await response;
 
@@ -1387,6 +1389,38 @@ client.FabricUrl({
   async SetCustomContentContract({objectId, customContractAddress, overrides={}}) {
     const contentContractAddress = Utils.HashToAddress({hash: objectId});
     return await this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
+  }
+
+  /**
+   * Get all events on a content object
+   *
+   * @param {string} objectId - The ID of the object
+   *
+   * @see ContractEvents
+   *
+   * @returns {Promise<Array<EventInfo>>}
+   */
+  async ContentObjectContractEvents({objectId}) {
+    return await this.ContractEvents({
+      contractAddress: Utils.HashToAddress({hash: objectId}),
+      abi: ContentContract.abi
+    });
+  }
+
+  /**
+   * Get all events on the specified contract
+   *
+   * @param {string} contractAddress - The address of the contract
+   * @param {object} abi - The ABI of the contract
+   *
+   * @returns {Promise<Array<EventInfo>>}
+   */
+  async ContractEvents({contractAddress, abi}) {
+    return await this.ethClient.ContractEvents({
+      contractAddress,
+      abi,
+      signer: this.authClient.signer
+    });
   }
 
   /* FrameClient related */
