@@ -232,6 +232,20 @@ class EthClient {
       signer
     });
   }
+
+  async ContractEvents({contract, contractAddress, abi, signer}) {
+    if(!contract) {
+      contract = new Ethers.Contract(contractAddress, abi, signer.provider);
+      contract = contract.connect(signer);
+    }
+
+    const contractEvents = await signer.provider.getLogs({
+      address: contract.address,
+      fromBlock: 0
+    });
+
+    return contractEvents.map(event => contract.interface.parseLog(event));
+  }
 }
 
 module.exports = EthClient;
