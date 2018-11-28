@@ -21,7 +21,6 @@ contract BaseLibrary is Accessible, Editable {
     uint256 public contentTypesLength;
 
     mapping ( address => address ) public contentTypeContracts;  // custom contracts map
-    mapping ( address => uint256 ) public contentTypeLicensingFees;  // custom contracts map
 
     address[] public approvalRequests;
     address public addressKMS;
@@ -32,11 +31,10 @@ contract BaseLibrary is Accessible, Editable {
     event ContributorGroupAdded(address group);
     event ReviewerGroupAdded(address group);
     event AccessorGroupAdded(address group);
-    event ContentTypeAdded(address contentType, address contentContract, uint256 licensingFee);
+    event ContentTypeAdded(address contentType, address contentContract);
     event UnauthorizedOperation(uint operationCode, address candidate);
     event ApproveContentRequest(address contentAddress, address submitter);
-    event ApproveContentExecuted(address contentAddress, bool approved, string note);
-    event PayCredit(address payee, uint256 amount);
+    event ApproveContent(address contentAddress, bool approved, string note);
 
     function BaseLibrary(address address_KMS) public payable {
         contentSpace = msg.sender;
@@ -68,12 +66,11 @@ contract BaseLibrary is Accessible, Editable {
         emit AccessorGroupAdded(group);
     }
 
-    function addContentType(address content_type, address content_contract, uint256 licensing_fee) public onlyOwner {
+    function addContentType(address content_type, address content_contract) public onlyOwner {
         contentTypes.push(content_type);
         contentTypesLength = contentTypesLength + 1;
         contentTypeContracts[content_type] = content_contract;
-        contentTypeLicensingFees[content_type] = licensing_fee;
-        emit ContentTypeAdded(content_type, content_contract, licensing_fee);
+        emit ContentTypeAdded(content_type, content_contract);
     }
 
     function hasAccess(address candidate) public constant returns (bool) {
@@ -139,17 +136,14 @@ contract BaseLibrary is Accessible, Editable {
     function submitApprovalRequest() public returns (bool) {
         address contentContract = msg.sender;
         BaseContent c = BaseContent(contentContract);
-        if (c.owner() != tx.origin) {
-            return false;
-        }
+        //require((c.owner() == tx.origin)); the publish already check authorization
+
         if (reviewerGroupsLength == 0) { //No review required
-            uint8 percentComplete = c.percentComplete();
             // 0 indicates approval, custom contract might overwrite that decision
-            uint256 toBePaid = c.updateStatus(0, percentComplete);
-            payCredit(c, toBePaid);
+            c.updateStatus(0);
 
             // Log event
-            emit ApproveContentExecuted(contentContract, true, "");
+            emit ApproveContent(contentContract, true, "");
             return true;
         }
         if (approvalRequestsMap[contentContract] != 0) {
@@ -177,10 +171,8 @@ contract BaseLibrary is Accessible, Editable {
         return approvalRequests[index];
     }
 
-    function approveContentExecuted(address content_contract, bool approved, string note) public returns ( bool ) {
-        if (canReview(tx.origin) == false) {
-            return false;
-        }
+    function approveContent(address content_contract, bool approved, string note) public returns ( bool ) {
+        require(canReview(tx.origin) == true);
         // credit the account based on the percent_complete
         uint256 index = approvalRequestsMap[content_contract] - 1;
         BaseContent c = BaseContent(content_contract);
@@ -198,72 +190,36 @@ contract BaseLibrary is Accessible, Editable {
 
         int currentStatus = c.statusCode();
         if (currentStatus > 0) {
-            uint8 percentComplete = c.percentComplete();
             int newStatusCode;
             if (approved == true) {
                 newStatusCode = 0; // indicates approval, custom contract might overwrite that decision
             } else {
-                newStatusCode = (currentStatus + 1) * -1; // returned to draft
+                newStatusCode = -1; // alternatively we could use more complex logic like (currentStatus + 1) * -1
             }
-            uint256 toBePaid = c.updateStatus(newStatusCode, percentComplete);
-            payCredit(c, toBePaid);
+            c.updateStatus(newStatusCode);
 
             // Log event
-            emit ApproveContentExecuted(content_contract, approved, note);
+            emit ApproveContent(content_contract, approved, note);
             return true;
         } else {
             return false;
         }
     }
 
-    function payCredit(address content_contract, uint256 amount) public returns (uint256) {
-        if (amount > 0) {
-            BaseContent c = BaseContent(content_contract);
-            uint256 toBePaid;
-            uint256 remainder = c.getUnpaidLicensingFee(); //c.licensingFee - c.licensingFeeReceived;
-            if (amount > remainder) {
-                toBePaid = remainder;
-            } else {
-                toBePaid = amount;
-            }
-            // credit the transaction caller
-            c.owner().transfer(toBePaid);
-            c.addLicensingFeeReceived(toBePaid);
-            emit PayCredit(c.owner(), toBePaid);
-            return toBePaid;
-        } else {
-            return 0;
-        }
-    }
-
     function createContent(address content_type) public  returns (address) {
         //check if sender has contributor access
-        if (canContribute(tx.origin) == false) {
-            emit UnauthorizedOperation(101, tx.origin);
-            return 0x0;
-        }
+        require(canContribute(tx.origin));
 
-        //get custom contract address associated with content_type from hash
-        //address custom_contract = contentTypeContracts[content_type]; //Not required anylonger
-        //uint256 licensing_fee = contentTypeLicensingFees[content_type]; //Not required anylonger
-
-        //create content object
-        address contentAddress = new BaseContent();
-        BaseContent c = BaseContent(contentAddress);
-        c.setContentType(content_type);
+        address contentAddress = new BaseContent(content_type);
         emit ContentObjectCreated(contentAddress, content_type);
 
         return contentAddress;
     }
 
     function accessRequest() public returns (bool) {
-        if (hasAccess(tx.origin)) {
-            emit AccessRequest(0);
-            return true;
-        } else {
-            emit AccessRequest(105);
-            return false;
-        }
+        require(hasAccess(tx.origin) || canContribute(tx.origin) || canReview(tx.origin));
+        emit AccessRequest(0);
+        return true;
     }
 }
 

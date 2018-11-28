@@ -17,9 +17,10 @@ contract BaseContent is Editable {
     //bool refundable;
     int public statusCode; // 0: accessible, - in draft, + in review
                            // application have discretion to make up their own status codes to represent their workflow
-    uint8 public percentComplete;
-    uint256 public licensingFee;
-    uint256 public licensingFeeReceived;
+    bytes32 public constant STATUS_PUBLISHED = "Published";
+    bytes32 public constant STATUS_DRAFT = "Draft";
+    bytes32 public constant STATUS_REVIEW = "Draft in review";
+
     uint256 public requestID;
 
     struct RequestData {
@@ -31,7 +32,7 @@ contract BaseContent is Editable {
     mapping(uint256 => RequestData) public requestMap;
 
     event ContentObjectCreate(address containingLibrary);
-    event SetContentType(address contentType, address contentContractAddress, uint256 licensingFee);
+    event SetContentType(address contentType, address contentContractAddress);
 
     event AccessRequest(
         uint requestValidity,
@@ -52,37 +53,67 @@ contract BaseContent is Editable {
     event GetAccessCharge(uint8 level, uint256 accessCharge);
     event InsufficientFunds(uint256 accessCharge, uint256 amountProvided);
     event SetStatusCode(int statusCode);
-    event Publish(uint8 pctComplete, bool requestStatus);
+    event Publish(bool requestStatus, int statusCode, bytes32 objectHash);
 
     // Debug events
     event InvokeCustomPreHook(address custom_contract);
     event ReturnCustomHook(address custom_contract, uint256 result);
     event InvokeCustomPostHook(address custom_contract);
 
-    function BaseContent() public payable {
+    function BaseContent(address content_type) public payable {
         libraryAddress = msg.sender;
         statusCode = -1;
-        licensingFeeReceived = 0;
         requestID = 0;
+        contentType = content_type;
+        //get custom contract address associated with content_type from hash
+        BaseLibrary lib = BaseLibrary(libraryAddress);
+        contentContractAddress = lib.contentTypeContracts(content_type);
+        addressKMS = lib.addressKMS();
+        if (contentContractAddress != 0x0) {
+            Content c = Content(contentContractAddress);
+            require(c.runCreate() == 0);
+        }
         emit ContentObjectCreate(libraryAddress);
     }
 
+    function statusDescription() public constant returns (bytes32) {
+        return statusCodeDescription(statusCode);
+    }
+
+    function statusCodeDescription(int status_code) public constant returns (bytes32) {
+        bytes32 codeDescription = 0x0;
+        if (contentContractAddress != 0x0) {
+            Content c = Content(contentContractAddress);
+            codeDescription = c.runDescribeStatus(status_code);
+        }
+        if (codeDescription != 0x0) {
+            return codeDescription;
+        }
+        if (status_code == 0) {
+            return STATUS_PUBLISHED;
+        }
+        if (status_code < 0) {
+            return  STATUS_DRAFT;
+        }
+        if (status_code > 0) {
+            return STATUS_REVIEW;
+        }
+    }
+
+    /* should be deprecated
     function setContentType(address content_type) public onlyOwner {
         contentType = content_type;
         //get custom contract address associated with content_type from hash
         BaseLibrary lib = BaseLibrary(libraryAddress);
         contentContractAddress = lib.contentTypeContracts(content_type);
-        licensingFee = lib.contentTypeLicensingFees(content_type);
         addressKMS = lib.addressKMS();
-        emit SetContentType(content_type, contentContractAddress, licensingFee);
-    }
+        if (contentContractAddress != 0x0) {
 
-    function setLicensingFee(uint256 licensing_fee) public {
-        if ((tx.origin == owner) && (statusCode < 0)) {
-            licensingFee = licensing_fee;
         }
+        emit SetContentType(content_type, contentContractAddress);
     }
 
+    */
     function setStatusCode(int status_code) public returns (int) {
         if ((tx.origin == owner) && ((status_code < 0) || ((status_code > 0) && (statusCode < 0)))) {
 
@@ -104,19 +135,14 @@ contract BaseContent is Editable {
         addressKMS = address_KMS;
     }
 
-    function getUnpaidLicensingFee() public constant returns (uint256) {
-        return (licensingFee - licensingFeeReceived);
-    }
-
-    function addLicensingFeeReceived(uint256 amount_to_be_paid) public returns (uint256) {
-        if (msg.sender != libraryAddress) {
-            return 0;
-        }
-        licensingFeeReceived = licensingFeeReceived + amount_to_be_paid;
-        return licensingFeeReceived;
-    }
-
+    //to be modified owner should not be able to change this, library owner should if content is in draft
+    // or removed when the debugging is over
     function setContentContractAddress(address addr) public onlyOwner {
+        /*
+        BaseLibrary lib = BaseLibrary(libraryAddress);
+        require(tx.origin == lib.owner()); //only lib owner can modify a content contract and only if in draft
+        require(statusCode < 0);
+        */
         contentContractAddress = addr;
         emit SetContentContract(contentContractAddress);
     }
@@ -140,58 +166,35 @@ contract BaseContent is Editable {
         return accessCharge;
     }
 
-    function publish(uint8 pct_complete, string signed_verification) public payable onlyOwner returns (bool)
-    {
-        // Check that content is verified via the custom data and add to approval list for review if so
-        // Here we check that the signed_verification is valid
-
-        // TODO - CHECK SIGNATURE
-        keccak256(signed_verification);
+    function publish() public payable onlyOwner returns (bool) {
 
         // Update the content contract to reflect the approval process
-        updateStatus(1, pct_complete);
+        updateStatus(1); //update status to in-review
         // mark with statusCode 1, which is the default for in-review - NOTE: could be change to be (currentStatus * -1)
+        bool submitStatus = false;
         if (statusCode > 0) {
             BaseLibrary lib = BaseLibrary(libraryAddress);
-            bool submitStatus = lib.submitApprovalRequest();
-
-            // Log event
-            emit Publish(pct_complete, submitStatus);
-            return submitStatus;
-        } else {
-            return false;
+            submitStatus = lib.submitApprovalRequest();
         }
+        // Log event
+        emit Publish(submitStatus, statusCode, objectHash);
+        return submitStatus;
     }
 
     // returns the amount of licensing fee to be paid for the content,
     //  typically 0 or 100 if content approved to go live, unless a custom contract says otherwise
-    function updateStatus(int status_code, uint8 percent_complete) public returns (uint256) {
-        if ((tx.origin == owner) || (msg.sender == libraryAddress)) {
-            percentComplete = percent_complete;
-            uint256 toBePaid = 0;
-            int newStatusCode;
-            if (contentContractAddress == 0x0) {
-                newStatusCode = status_code;
-                if ((percentComplete == 100) && (status_code == 0)) {
-                    toBePaid = (licensingFee - licensingFeeReceived);
-                }
-            } else {
-                Content c = Content(contentContractAddress);
-                int256 calculatedAmount;
-                (newStatusCode, calculatedAmount) = c.runStatusChange(status_code);
-                if (calculatedAmount < 0) {
-                    if (status_code == 0) {
-                        toBePaid = (licensingFee - licensingFeeReceived);
-                    }
-                } else {
-                    toBePaid = uint256(calculatedAmount);
-                }
-            }
-            setStatusCode(newStatusCode);
-            return toBePaid;
+    function updateStatus(int status_code) public returns (int) {
+        require((tx.origin == owner) || (msg.sender == libraryAddress));
+        int newStatusCode;
+        if (contentContractAddress == 0x0) {
+            newStatusCode = status_code;
         } else {
-            return 0;
+            Content c = Content(contentContractAddress);
+            newStatusCode = c.runStatusChange(status_code);
         }
+        statusCode = newStatusCode;
+        emit SetStatusCode(statusCode);
+        return statusCode;
     }
 
     //  level - the security group for which the access request is for
@@ -220,11 +223,14 @@ contract BaseContent is Editable {
         //Check if request is funded, except if user is owner
         if (tx.origin != owner) {
             uint256 requiredFund = getAccessCharge(level, custom_values, stakeholders);
+            require(msg.value >= uint(requiredFund));
+            /*
             if (msg.value < uint(requiredFund)) {
                 emit AccessRequest(103, requestID, level, bytes32(""), "", "");
                 //for non-0 (unsuccessful request) no need to emit the contentHash and pke
                 return false;
             }
+            */
         }
         RequestData memory r = RequestData(msg.sender, msg.value, 0);
         // status of 0 indicates the payment received is in escrow in the content contract
@@ -266,9 +272,8 @@ contract BaseContent is Editable {
     )
         public returns (bool)
     {
-        if ((msg.sender != owner) && (msg.sender != addressKMS)) {
-            return false;
-        }
+        require((msg.sender == owner) || (msg.sender == addressKMS));
+
         RequestData storage r = requestMap[request_ID];
         if (r.originator == 0x0) {
             return false;
@@ -301,26 +306,31 @@ contract BaseContent is Editable {
     //
     // add a state variable in the contract indicating whether to credit back based on quality score
     function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) public payable returns (bool) {
+        RequestData storage r = requestMap[request_ID];
+        require((r.originator != 0x0) && (msg.sender == r.originator));
         bool result = true;
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            result = c.runFinalize(request_ID);
+            result = (c.runFinalize(request_ID) == 0);
         }
         // Delete request from map after customContract in case it was needed for execution of custom wrap-up
-        RequestData storage r = requestMap[request_ID];
-        if ((r.originator != 0x0) && (msg.sender == r.originator)) {
-            if (r.status == 0) {
-                msg.sender.transfer(r.amountPaid);
-                //if access was not granted, payment is returned to originator
-            }
-            delete requestMap[request_ID];
-        } else {
-            result = false;
+        if (r.status == 0) {
+            //if access was not granted, payment is returned to originator
+            msg.sender.transfer(r.amountPaid);
         }
+        delete requestMap[request_ID];
+
         // record to event
         emit AccessComplete(request_ID, score_pct, ml_out_hash, result);
         return result;
     }
 
+    function kill() public onlyOwner {
+        if (contentContractAddress != 0x0) {
+            Content c = Content(contentContractAddress);
+            require(c.runKill() == 0);
+        }
+        super.kill();
+    }
 
 }
