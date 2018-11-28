@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.21;
 
 contract Utils {
     function getBalance(address addr) public constant returns (uint256) {
@@ -7,11 +7,11 @@ contract Utils {
 }
 
 contract Verifier {
-    function recoverAddr(bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) returns (address) {
+    function recoverAddr(bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) public pure returns (address) {
         return ecrecover(msgHash, v, r, s);
     }
 
-    function isSigned(address _addr, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) returns (bool) {
+    function isSigned(address _addr, bytes32 msgHash, uint8 v, bytes32 r, bytes32 s) public pure returns (bool) {
         return ecrecover(msgHash, v, r, s) == _addr;
     }
 }

@@ -28,12 +28,9 @@ contract BaseAccessControlGroup is Ownable {
     }
 
     function revokeManagerAccess(address manager) public {
-        if ((msg.sender == owner) || (msg.sender == manager)) {
-            managers[manager] = false;
-            emit ManagerAccessRevoked(manager);
-        } else {
-            emit UnauthorizedOperation(11, manager);
-        }
+        require((msg.sender == owner) || (msg.sender == manager));
+        managers[manager] = false;
+        emit ManagerAccessRevoked(manager);
     }
 
     function hasManagerAccess(address candidate) public view returns (bool) {
@@ -41,21 +38,15 @@ contract BaseAccessControlGroup is Ownable {
     }
 
     function grantAccess(address candidate) public {
-        if (managers[msg.sender] == true) {
-            members[candidate] = true;
-            emit MemberAdded(candidate);
-        } else {
-            emit UnauthorizedOperation(20, candidate);
-        }
+        require(managers[msg.sender] == true);
+        members[candidate] = true;
+        emit MemberAdded(candidate);
     }
 
     function revokeAccess(address candidate) public {
-        if ((managers[msg.sender] == true) || (msg.sender == candidate)) {
-            members[candidate] = false;
-            emit MemberRevoked(candidate);
-        } else {
-            emit UnauthorizedOperation(21, candidate);
-        }
+        require((managers[msg.sender] == true) || (msg.sender == candidate));
+        members[candidate] = false;
+        emit MemberRevoked(candidate);
     }
 
     function hasAccess(address candidate) public view returns (bool) {
