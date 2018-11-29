@@ -141,5 +141,20 @@ contract SampleContentLicensing is Content {
         return new_owner;
     }
 
+    /* Ownership of an asset can be reclaimed until the licensing is complete and the contributor has been paid the
+        specified licensing fee. In order to reclaim an asset, the contributor needs to repay what he has received to
+        date for that content asset.
+    */
+    function reclaimContentOwnership(address content_address) public payable returns (address) {
+        require(licensingStatus[content_address].valid);
+        BaseContent contentObj = BaseContent(content_address);
+        require(tx.origin == contentObj.creator());
+        require(msg.value >= licensingStatus[content_address].licensingFeePaid);
+        licensingStatus[content_address].licensingFeePaid = 0;
+        contentObj.updateStatus(-1);
+        contentObj.transferOwnership(tx.origin);
+
+    }
+
 }
 
