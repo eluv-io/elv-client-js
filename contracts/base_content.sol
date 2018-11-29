@@ -181,13 +181,15 @@ contract BaseContent is Editable {
         return submitStatus;
     }
 
-    // returns the amount of licensing fee to be paid for the content,
-    //  typically 0 or 100 if content approved to go live, unless a custom contract says otherwise
     function updateStatus(int status_code) public returns (int) {
-        require((tx.origin == owner) || (msg.sender == libraryAddress));
+        require((tx.origin == owner) || (msg.sender == owner) || (msg.sender == libraryAddress));
         int newStatusCode;
         if (contentContractAddress == 0x0) {
-            newStatusCode = status_code;
+            if (((tx.origin == owner) || (msg.sender == owner)) && ((status_code == -1) || (status_code == 1))) {
+                newStatusCode = status_code; //owner can change status back to draft or to in-review
+            } else if ((msg.sender == libraryAddress) && (statusCode >= 0)) {
+                newStatusCode = status_code; //library can change status of content in review to any status
+            }
         } else {
             Content c = Content(contentContractAddress);
             newStatusCode = c.runStatusChange(status_code);
