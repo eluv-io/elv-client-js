@@ -15,6 +15,27 @@ class EthClient {
 
   /* General contract management */
 
+  FormatContractArgument({type, value}) {
+    // For array types, parse into array if necessary, then format each value.
+    if(type.endsWith("[]")) {
+      if(typeof value === "string") {
+        if(value.trim() === "") { return []; }
+
+        value = value.split(",").map(s => s.trim());
+      }
+
+      const singleType = type.replace("[]", "");
+      return value.map(element => this.FormatContractArgument({type: singleType, value: element}));
+    }
+
+    switch(type.toLowerCase()) {
+    case "bytes32":
+      return Ethers.utils.formatBytes32String(value);
+    default:
+      return value;
+    }
+  }
+
   // Apply any necessary formatting to contract arguments based on the ABI spec
   FormatContractArguments({abi, methodName, args}) {
     const method = abi.find(func => {
@@ -24,14 +45,8 @@ class EthClient {
 
     if(!method) { throw Error("Unknown method: " + methodName); }
 
-    return args.map((arg, i) => {
-      switch(method.inputs[i].type.toLowerCase()) {
-      case "bytes32":
-        return Ethers.utils.formatBytes32String(arg);
-      default:
-        return arg;
-      }
-    });
+    // Format each argument
+    return args.map((arg, i) => this.FormatContractArgument({type: method.inputs[i].type, value: arg}));
   }
 
   // Validate signer is set and provider is correct
@@ -53,11 +68,6 @@ class EthClient {
     overrides={},
     signer
   }) {
-    overrides = Object.assign(
-      {},
-      overrides || {}
-    );
-
     this.ValidateSigner(signer);
 
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
@@ -81,11 +91,6 @@ class EthClient {
     overrides={},
     signer
   }) {
-    overrides = Object.assign(
-      { gasLimit: 6000000, gasPrice: 100000 },
-      overrides || {}
-    );
-
     this.ValidateSigner(signer);
 
     if(!contract) {
@@ -97,7 +102,35 @@ class EthClient {
       throw Error("Unknown method: " + methodName);
     }
 
-    return await contract.functions[methodName](...methodArgs, overrides);
+    let result;
+    try {
+      result = await contract.functions[methodName](...methodArgs, overrides);
+    } catch(error) {
+      // If the default gas limit was not sufficient, bump it up
+      if(error.code === -32000 || error.message.startsWith("replacement fee too low")) {
+        overrides.gasLimit = 8000000;
+        overrides.gasPrice = 8000000;
+        result = await contract.functions[methodName](...methodArgs, overrides);
+      } else {
+        throw error;
+      }
+    }
+
+    if(result && result.gasPrice) {
+      console.log(JSON.stringify({
+        method: methodName,
+        gasPrice: result.gasPrice.toNumber(),
+        gasLimit: result.gasLimit.toNumber(),
+        totalCost: result.gasPrice * result.gasLimit,
+        totalCostEther: Ethers.utils.formatEther(result.gasPrice * result.gasLimit),
+        hash: result.hash,
+        value: result.value.toNumber()
+      }, null, 2));
+    } else {
+      console.log(result);
+    }
+
+    return result;
   }
 
   async CallContractMethodAndWait({
