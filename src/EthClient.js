@@ -116,20 +116,6 @@ class EthClient {
       }
     }
 
-    if(result && result.gasPrice) {
-      console.log(JSON.stringify({
-        method: methodName,
-        gasPrice: result.gasPrice.toNumber(),
-        gasLimit: result.gasLimit.toNumber(),
-        totalCost: result.gasPrice * result.gasLimit,
-        totalCostEther: Ethers.utils.formatEther(result.gasPrice * result.gasLimit),
-        hash: result.hash,
-        value: result.value.toNumber()
-      }, null, 2));
-    } else {
-      console.log(result);
-    }
-
     return result;
   }
 
