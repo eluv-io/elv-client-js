@@ -88,9 +88,12 @@ class EthClient {
     abi,
     methodName,
     methodArgs=[],
+    value,
     overrides={},
     signer
   }) {
+    if(value) { overrides.value = value; }
+
     this.ValidateSigner(signer);
 
     if(!contract) {
@@ -109,13 +112,13 @@ class EthClient {
       // If the default gas limit was not sufficient, bump it up
       if(error.code === -32000 || error.message.startsWith("replacement fee too low")) {
         overrides.gasLimit = 8000000;
-        overrides.gasPrice = 8000000;
+        overrides.gasPrice = 800000000;
         result = await contract.functions[methodName](...methodArgs, overrides);
       } else {
         throw error;
       }
     }
-
+    
     return result;
   }
 
@@ -124,6 +127,7 @@ class EthClient {
     abi,
     methodName,
     methodArgs,
+    value,
     signer
   }) {
     let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
@@ -135,6 +139,7 @@ class EthClient {
       abi,
       methodName,
       methodArgs,
+      value,
       signer
     });
 

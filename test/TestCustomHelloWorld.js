@@ -64,7 +64,7 @@ contract("HelloWorld", accounts => {
     result2.logs.forEach(function(logEntry) {
       if (logEntry.event === "AccessRequest") {
         requestId = logEntry.args["request_id"];
-        requestValid = logEntry.args['request_validity'];
+        requestValid = logEntry.args["request_validity"];
       }
     });
     assert.notStrictEqual(requestId, undefined, "should have found request ID from AccessRequest message");

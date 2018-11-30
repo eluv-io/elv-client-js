@@ -23,6 +23,7 @@
       "error",
       "unix"
     ],
+    "no-undef": "off",
     "quotes": [
       "error",
       "double"
@@ -31,5 +32,11 @@
       "error",
       "always"
     ]
-  }
+  },
+  "overrides": [{
+    "files": [ "test/**/*.js"],
+    "rules": {
+      "no-console": "off"
+    }
+  }]
 }
