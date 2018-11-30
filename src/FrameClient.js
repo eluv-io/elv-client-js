@@ -135,6 +135,7 @@ class FrameClient {
       "FinalizeContentObject",
       "FinalizeUploadJobs",
       "FormatContractArguments",
+      "GetBalance",
       "GetByName",
       "GetObjectByName",
       "MergeMetadata",
@@ -144,6 +145,7 @@ class FrameClient {
       "Rep",
       "ReplaceMetadata",
       "ReplacePublicLibraryMetadata",
+      "SendFunds",
       "SetByName",
       "SetContentLibraryImage",
       "SetContentObjectImage",
@@ -152,7 +154,8 @@ class FrameClient {
       "UploadFileData",
       "UploadJobStatus",
       "UploadPart",
-      "VerifyContentObject"
+      "VerifyContentObject",
+      "WithdrawContractFunds"
     ];
   }
 }

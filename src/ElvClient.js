@@ -1417,8 +1417,49 @@ client.FabricUrl({
     return await this.ethClient.ContractEvents({
       contractAddress,
       abi,
-      signer: this.authClient.signer
+      signer: this.signer
     });
+  }
+
+  // TODO: Not implemented in contracts
+  async WithdrawContractFunds({contractAddress, abi, ether}) {
+    return await this.ethClient.CallContractMethodAndWait({
+      contractAddress,
+      abi,
+      methodName: "transfer",
+      methodArgs: [this.signer.address, Ethers.utils.parseEther(ether.toString())],
+      signer: this.signer
+    })
+  }
+
+  /* Other blockchain operations */
+
+  /**
+   * Get the balance (in ether) of the specified address
+   *
+   * @param {string} address - Address to query
+   *
+   * @returns {Promise<number>} - Balance of the account, in ether
+   */
+  async GetBalance({address}) {
+    return await Ethers.utils.formatEther(await this.signer.provider.getBalance(address));
+  }
+
+  /**
+   * Send ether from this client's current signer to the specified recipient address
+   *
+   * @param {string} recipient - Address of the recipient
+   * @param {number} ether - Amount of ether to send
+   *
+   * @returns {Promise<TransactionReceipt>}
+   */
+  async SendFunds({recipient, ether}) {
+    const transaction = await this.signer.sendTransaction({
+      to: recipient,
+      value: Ethers.utils.parseEther(ether.toString())
+    });
+
+    return await transaction.wait();
   }
 
   /* FrameClient related */
