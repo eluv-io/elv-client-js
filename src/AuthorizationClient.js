@@ -72,6 +72,11 @@ class AuthorizationClient {
   }
 
   async GetAccessCharge({id, abi}) {
+    // Ensure contract has a getAccessCharge method
+    const method = abi.find(element => element.name === "getAccessCharge" && element.type === "function");
+
+    if(!method) { return 0; }
+
     const event = await this.ethClient.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress({hash: id}),
       abi,
