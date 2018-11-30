@@ -15,7 +15,7 @@
     "build-frame-client": "webpack -p --progress --entry ./src/FrameClient.js --output-filename ElvFrameClient-min.js --devtool none --optimize-minimize",
     "build-contracts": "node build/BuildContracts.js",
     "build-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme DEV_README.md",
-    "lint": "./node_modules/.bin/eslint \"src/**/*.js\" --fix",
+    "lint": "./node_modules/.bin/eslint \"src/**/*.js\" \"test/**/*.js\" --fix",
     "lint-docs": "./node_modules/.bin/eslint \"vendor/elv-jsdoc-template/tmpl/*.tmpl\" \"vendor/elv-jsdoc-template/**/*.js\" --fix",
     "truffle_test": "node $NODE_DEBUG_OPTION ./node_modules/.bin/truffle test"
   },

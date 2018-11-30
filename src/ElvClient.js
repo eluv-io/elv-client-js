@@ -330,19 +330,15 @@ class ElvClient {
       objectId
     });
 
-    metadata = Object.assign(
-      {
-        "image": uploadResponse.part.hash,
-        "eluv.image": uploadResponse.part.hash
-      },
-      metadata
-    );
-
     await this.ReplaceMetadata({
       libraryId,
       objectId,
       writeToken: editResponse.write_token,
-      metadata
+      metadata: {
+        ...metadata,
+        "image": uploadResponse.part.hash,
+        "eluv.image": uploadResponse.part.hash
+      }
     });
 
 
@@ -1333,12 +1329,13 @@ client.FabricUrl({
    * @param {string} methodName - Method to call on the contract
    * @param {Array<string>} methodArgs - List of arguments to the contract constructor
    * - it is recommended to format these arguments using the FormatContractArguments method
+   * @param {number} value - Amount of ether to include in the transaction
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - Response containing information about the transaction
    */
-  async CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides={}}) {
-    return await this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, overrides, signer: this.signer});
+  async CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
+    return await this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides, signer: this.signer});
   }
 
   /**
@@ -1351,12 +1348,13 @@ client.FabricUrl({
    * @param {string} methodName - Method to call on the contract
    * @param {Array<string>} methodArgs - List of arguments to the contract constructor
    * - it is recommended to format these arguments using the FormatContractArguments method
+   * @param {number} value - Amount of ether to include in the transaction
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - The event object of this transaction
    */
-  async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, overrides={}}) {
-    return await this.ethClient.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, overrides, signer: this.signer});
+  async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
+    return await this.ethClient.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides, signer: this.signer});
   }
 
   /**

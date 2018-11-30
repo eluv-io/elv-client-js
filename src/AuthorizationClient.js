@@ -1,3 +1,4 @@
+const Ethers = require("ethers");
 const Utils = require("./Utils");
 
 // -- Contract javascript files built using build/BuildContracts.js
@@ -56,6 +57,35 @@ class AuthorizationClient {
       this.noCache = initialNoCache;
       throw error;
     }
+  }
+
+  async IsOwner({id, abi}) {
+    const ownerAddress = await this.ethClient.CallContractMethod({
+      contractAddress: Utils.HashToAddress({hash: id}),
+      abi,
+      methodName: "owner",
+      methodArgs: [],
+      signer: this.signer
+    });
+
+    return ownerAddress.toLowerCase() === this.signer.address.toLowerCase();
+  }
+
+  async GetAccessCharge({id, abi}) {
+    const event = await this.ethClient.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress({hash: id}),
+      abi,
+      methodName: "getAccessCharge",
+      methodArgs: [0, [], []],
+      signer: this.signer
+    });
+
+    return this.ethClient.ExtractValueFromEvent({
+      abi: ContentContract.abi,
+      event,
+      eventName: "GetAccessCharge",
+      eventValue: "accessCharge"
+    });
   }
 
   // Generate proper authorization header based on the information provided
@@ -123,6 +153,15 @@ class AuthorizationClient {
       if(transactionHash) { return transactionHash; }
     }
 
+    const isOwner = await this.IsOwner({id, abi});
+
+    // Send some bux if access charge is required
+    let accessCharge = 0;
+    if(!isOwner) {
+      accessCharge = await this.GetAccessCharge({id, abi});
+      accessCharge = Ethers.utils.parseEther(accessCharge.toString());
+    }
+
     const formattedArgs = this.ethClient.FormatContractArguments({
       abi,
       methodName: "accessRequest",
@@ -135,6 +174,7 @@ class AuthorizationClient {
       abi,
       methodName: "accessRequest",
       methodArgs: formattedArgs,
+      value: accessCharge,
       signer: this.signer
     });
 
@@ -148,7 +188,7 @@ class AuthorizationClient {
     });
 
     if(validity.toNumber() !== 0) {
-      throw Error("Invalid access request: " + validity.toNumber());
+      throw Error("Access request denied: " + validity.toNumber());
     }
 
     // Cache the transaction hash

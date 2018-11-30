@@ -1,7 +1,7 @@
 const { ElvClient } = require("../src/ElvClient");
 const { FrameClient } = require("../src/FrameClient");
-var solc = require('solc');
-const fs = require('fs');
+var solc = require("solc");
+const fs = require("fs");
 
 const TestDeploy = async () => {
   let Client = new ElvClient({
