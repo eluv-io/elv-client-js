@@ -183,17 +183,18 @@ class AuthorizationClient {
       signer: this.signer
     });
 
-    // Verify result of access request -- 0 is success
-    const validity = this.ethClient.ExtractValueFromEvent({
+    // Verify result of access request by trying to extract a value from the event
+    // If access request did not succeed, no event will be emitted
+    const accessLevel = this.ethClient.ExtractValueFromEvent({
       abi,
       event: methodEvent,
       eventName: "AccessRequest",
-      eventValue: "requestValidity",
+      eventValue: "level",
       signer: this.signer
     });
 
-    if(validity.toNumber() !== 0) {
-      throw Error("Access request denied: " + validity.toNumber());
+    if(accessLevel !== 0) {
+      throw Error("Access request denied");
     }
 
     // Cache the transaction hash
@@ -254,9 +255,9 @@ class AuthorizationClient {
 
   /* Create */
 
-  async CreateContentLibrary() {
+  async CreateAccessGroup() {
     // Deploy contract
-    const {contractAddress, transactionHash} = await this.ethClient.DeployLibraryContract({
+    const { contractAddress, transactionHash } = await this.ethClient.DeployAccessGroupContract({
       contentSpaceAddress: Utils.HashToAddress({hash: this.contentSpaceId}),
       signer: this.signer
     });
@@ -270,6 +271,19 @@ class AuthorizationClient {
   async CreateContentType() {
     // Deploy contract
     const { contractAddress, transactionHash } = await this.ethClient.DeployTypeContract({
+      contentSpaceAddress: Utils.HashToAddress({hash: this.contentSpaceId}),
+      signer: this.signer
+    });
+
+    return {
+      contractAddress,
+      transactionHash
+    };
+  }
+
+  async CreateContentLibrary() {
+    // Deploy contract
+    const {contractAddress, transactionHash} = await this.ethClient.DeployLibraryContract({
       contentSpaceAddress: Utils.HashToAddress({hash: this.contentSpaceId}),
       signer: this.signer
     });

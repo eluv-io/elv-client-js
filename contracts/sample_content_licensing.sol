@@ -156,5 +156,22 @@ contract SampleContentLicensing is Content {
 
     }
 
+
+    function runKill() public payable returns (uint) {
+        address contentContract = msg.sender;
+        if (licensingStatus[contentContract].valid == false) {
+            return 0;
+        }
+        BaseContent contentObj = BaseContent(contentContract);
+        //if owner is the custom contract, kill can be called if the licensing fee have been fully paid
+        if (contentObj.owner() == address(this)) {
+            require(licensingStatus[contentContract].licensingFee == licensingStatus[contentContract].licensingFeePaid);
+        } else {
+            require(licensingStatus[contentContract].licensingFeePaid == 0);
+        }
+        delete (licensingStatus[contentContract]);
+        return 0;
+    }
+
 }
 

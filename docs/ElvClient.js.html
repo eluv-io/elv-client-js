@@ -474,6 +474,24 @@ class ElvClient {
     );
   }
 
+  /* Access Groups
+
+  /**
+   * Create a access group
+   *
+   * A new access group contract is deployed from the content space
+   *
+   * @namedParams
+   *
+   * @returns {Promise&lt;string>} - Contract address of created access group
+   */
+  async CreateAccessGroup() {
+    const { contractAddress, transactionHash } = await this.authClient.CreateAccessGroup();
+
+    return contractAddress;
+  }
+
+
   /* Content Types */
 
   /**
@@ -818,6 +836,13 @@ class ElvClient {
    */
   async DeleteContentObject({libraryId, objectId}) {
     let path = Path.join("qid", objectId);
+
+    await this.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress({hash: objectId}),
+      abi: ContentContract.abi,
+      methodName: "kill",
+      methodArgs: []
+    });
 
     return HandleErrors(
       this.HttpClient.Request({

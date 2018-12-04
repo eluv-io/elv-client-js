@@ -80,7 +80,7 @@ contract BaseLibrary is Accessible, Editable {
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i=0; i < accessorGroups.length; i++) {
+        for (uint i = 0; i < accessorGroups.length; i++) {
             group = accessorGroups[i];
             if (group != 0x0) {
                 groupContract = BaseAccessControlGroup(group);
@@ -120,7 +120,7 @@ contract BaseLibrary is Accessible, Editable {
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i=0; i < reviewerGroups.length; i++) {
+        for (uint i = 0; i < reviewerGroups.length; i++) {
             group = reviewerGroups[i];
             if (group != 0x0) {
                 groupContract = BaseAccessControlGroup(group);
@@ -207,12 +207,18 @@ contract BaseLibrary is Accessible, Editable {
     }
 
     function createContent(address content_type) public  returns (address) {
-        //check if sender has contributor access
-        require(canContribute(tx.origin));
-
+        require(canContribute(tx.origin)); //check if sender has contributor access
+        if (contentTypesLength != 0) {
+            bool validType = false;
+            for (uint i = 0; i < contentTypesLength; i++){
+                if (contentTypes[i] == content_type){
+                    validType = true;
+                }
+            }
+            require(validType);
+        }
         address contentAddress = new BaseContent(content_type);
         emit ContentObjectCreated(contentAddress, content_type);
-
         return contentAddress;
     }
 

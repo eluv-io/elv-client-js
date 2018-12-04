@@ -13,6 +13,10 @@ let TestQueries = async (client) => {
 
     const libraryIds = await client.ContentLibraries();
 
+    console.log("CREATING ACCESS GROUP: ");
+    const accessGroupAddress = await client.CreateAccessGroup();
+    console.log(accessGroupAddress + "\n");
+
     console.log("LIBRARIES ");
     console.log(JSON.stringify(libraryIds, null, 2));
 
