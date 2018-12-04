@@ -131,6 +131,14 @@ class ElvClient {
   }
 
   /**
+   * Remove the signer from this client
+   */
+  ClearSigner() {
+    this.authClient = { AuthorizationHeader: () => { throw Error("Signer not set"); }};
+    this.signer = undefined;
+  }
+
+  /**
    * Set the signer for this client to use for blockchain transactions
    *
    * @namedParams
@@ -1442,7 +1450,8 @@ client.FabricUrl({
    * @returns {Promise<number>} - Balance of the account, in ether
    */
   async GetBalance({address}) {
-    return await Ethers.utils.formatEther(await this.signer.provider.getBalance(address));
+    const provider = new Ethers.providers.JsonRpcProvider(this.ethereumURI);
+    return await Ethers.utils.formatEther(await provider.getBalance(address));
   }
 
   /**
@@ -1471,7 +1480,8 @@ client.FabricUrl({
       "CallFromFrameMessage",
       "FrameAllowedMethods",
       "GenerateWallet",
-      "SetSigner"
+      "SetSigner",
+      "ClearSigner"
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
