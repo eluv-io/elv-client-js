@@ -102,6 +102,7 @@ class FrameClient {
     return [
       "CallBitcodeMethod",
       "CallContractMethod",
+      "CallContractMethodAndExtractEventValue",
       "CallContractMethodAndWait",
       "ContentLibraries",
       "ContentLibrary",

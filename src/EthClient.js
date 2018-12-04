@@ -170,6 +170,14 @@ class EthClient {
     throw Error(eventName + " event not found");
   }
 
+  async CallContractMethodAndExtractEventValue({contractAddress, abi, methodName, methodArgs, value, eventName, eventValue, overrides={}, signer}) {
+    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides, signer});
+    return {
+      transactionHash: event.transactionHash,
+      [eventValue]: this.ExtractValueFromEvent({abi, event, eventName, eventValue})
+    };
+  }
+
   async DeployDependentContract({
     contractAddress,
     abi,
