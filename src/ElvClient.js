@@ -10,6 +10,7 @@ const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 
 const ContentContract = require("./contracts/BaseContent");
+const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
 
 const HandleErrors = async (response) => {
   response = await response;
@@ -423,24 +424,6 @@ class ElvClient {
       })
     );
   }
-
-  /* Access Groups */
-
-  /**
-   * Create a access group
-   *
-   * A new access group contract is deployed from the content space
-   *
-   * @namedParams
-   *
-   * @returns {Promise<string>} - Contract address of created access group
-   */
-  async CreateAccessGroup() {
-    const { contractAddress, transactionHash } = await this.authClient.CreateAccessGroup();
-
-    return contractAddress;
-  }
-
 
   /* Content Types */
 
@@ -1178,6 +1161,125 @@ client.FabricUrl({
     });
   }
 
+  /* Access Groups */
+
+  /**
+   * Create a access group
+   *
+   * A new access group contract is deployed from the content space
+   *
+   * @namedParams
+   *
+   * @returns {Promise<string>} - Contract address of created access group
+   */
+  async CreateAccessGroup() {
+    const { contractAddress, transactionHash } = await this.authClient.CreateAccessGroup();
+
+    return contractAddress;
+  }
+
+  async CallAccessGroupMethod({contractAddress, memberAddress, methodName, eventName}) {
+    // Ensure caller is a manager of the group
+    const isManager = await this.CallContractMethod({
+      contractAddress,
+      abi: AccessGroupContract.abi,
+      methodName: "hasManagerAccess",
+      methodArgs: [ this.signer.address.toLowerCase() ]
+    });
+
+    if(!isManager) {
+      throw Error("Manager access required");
+    }
+
+    const { transactionHash, candidate } = await this.CallContractMethodAndExtractEventValue({
+      contractAddress,
+      abi: AccessGroupContract.abi,
+      methodName,
+      methodArgs: [ memberAddress.toLowerCase() ],
+      eventName,
+      eventValue: "candidate",
+    });
+
+    if(candidate.toLowerCase() !== memberAddress.toLowerCase()) {
+      console.error("Mismatch: " + candidate + " :: " + memberAddress);
+      throw Error("Access group method " + methodName + " failed");
+    }
+
+    return transactionHash;
+  }
+
+  /**
+   * Add a member to the access group at the specified contract address. This client's signer must
+   * be a manager of the access group.
+   *
+   * @param {string} contractAddress - Address of the access group contract
+   * @param {string} memberAddress - Address of the member to add
+   *
+   * @returns {Promise<transactionHash>} - The transaction hash of the call to the grantAccess method
+   */
+  async AddAccessGroupMember({contractAddress, memberAddress}) {
+    return await this.CallAccessGroupMethod({
+      contractAddress,
+      memberAddress,
+      methodName: "grantAccess",
+      eventName: "MemberAdded"
+    });
+  }
+
+  /**
+   * Remove a member from the access group at the specified contract address. This client's signer must
+   * be a manager of the access group.
+   *
+   * @param {string} contractAddress - Address of the access group contract
+   * @param {string} memberAddress - Address of the member to remove
+   *
+   * @returns {Promise<transactionHash>} - The transaction hash of the call to the revokeAccess method
+   */
+  async RemoveAccessGroupMember({contractAddress, memberAddress}) {
+    return await this.CallAccessGroupMethod({
+      contractAddress,
+      memberAddress,
+      methodName: "revokeAccess",
+      eventName: "MemberRevoked"
+    });
+  }
+
+  /**
+   * Add a manager to the access group at the specified contract address. This client's signer must
+   * be a manager of the access group.
+   *
+   * @param {string} contractAddress - Address of the access group contract
+   * @param {string} memberAddress - Address of the manager to add
+   *
+   * @returns {Promise<transactionHash>} - The transaction hash of the call to the grantManagerAccess method
+   */
+  async AddAccessGroupManager({contractAddress, memberAddress}) {
+    return await this.CallAccessGroupMethod({
+      contractAddress,
+      memberAddress,
+      methodName: "grantManagerAccess",
+      eventName: "ManagerAccessGranted"
+    });
+  }
+
+  /**
+   * Remove a manager from the access group at the specified contract address. This client's signer must
+   * be a manager of the access group.
+   *
+   * @param {string} contractAddress - Address of the access group contract
+   * @param {string} memberAddress - Address of the manager to remove
+   *
+   * @returns {Promise<transactionHash>} - The transaction hash of the call to the revokeManagerAccess method
+   */
+  async RemoveAccessGroupManager({contractAddress, memberAddress}) {
+    return await this.CallAccessGroupMethod({
+      contractAddress,
+      memberAddress,
+      methodName: "revokeManagerAccess",
+      eventName: "ManagerAccessRevoked"
+    });
+  }
+
   /* Naming */
 
   async GetByName({name}) {
@@ -1543,6 +1645,7 @@ client.FabricUrl({
   FrameAllowedMethods() {
     const forbiddenMethods = [
       "constructor",
+      "CallAccessGroupMethod",
       "CallFromFrameMessage",
       "FrameAllowedMethods",
       "GenerateWallet",

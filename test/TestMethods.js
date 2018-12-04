@@ -13,10 +13,6 @@ let TestQueries = async (client) => {
 
     const libraryIds = await client.ContentLibraries();
 
-    console.log("CREATING ACCESS GROUP: ");
-    const accessGroupAddress = await client.CreateAccessGroup();
-    console.log(accessGroupAddress + "\n");
-
     console.log("LIBRARIES ");
     console.log(JSON.stringify(libraryIds, null, 2));
 
@@ -416,6 +412,36 @@ let TestQueries = async (client) => {
     await client.DeleteContentLibrary({libraryId});
 
     console.log("DELETED\n");
+
+    console.log("CREATING ACCESS GROUP: ");
+    const accessGroupAddress = await client.CreateAccessGroup();
+    console.log(accessGroupAddress + "\n");
+
+    console.log("ADDING MEMBER TO ACCESS GROUP: ");
+    console.log(await client.AddAccessGroupMember({
+      contractAddress: accessGroupAddress,
+      memberAddress: "0x71b011B67dc8f5C323A34Cd14b952721D5750C93"
+    }));
+
+    console.log("REMOVING MEMBER FROM ACCESS GROUP: ");
+    console.log(await client.RemoveAccessGroupMember({
+      contractAddress: accessGroupAddress,
+      memberAddress: "0x71b011B67dc8f5C323A34Cd14b952721D5750C93"
+    }));
+
+    console.log("ADDING MANAGER TO ACCESS GROUP: ");
+    console.log(await client.AddAccessGroupManager({
+      contractAddress: accessGroupAddress,
+      memberAddress: "0x71b011B67dc8f5C323A34Cd14b952721D5750C93"
+    }));
+
+    console.log("REMOVING MANAGER FROM ACCESS GROUP: ");
+    console.log(await client.RemoveAccessGroupManager({
+      contractAddress: accessGroupAddress,
+      memberAddress: "0x71b011B67dc8f5C323A34Cd14b952721D5750C93"
+    }));
+
+
 
   } catch(error) {
     console.error(error);
