@@ -100,6 +100,8 @@ class FrameClient {
    */
   AllowedMethods() {
     return [
+      "AddAccessGroupManager",
+      "AddAccessGroupMember",
       "CallBitcodeMethod",
       "CallContractMethod",
       "CallContractMethodAndExtractEventValue",
@@ -144,6 +146,8 @@ class FrameClient {
       "Proofs",
       "PublicLibraryMetadata",
       "QParts",
+      "RemoveAccessGroupManager",
+      "RemoveAccessGroupMember",
       "Rep",
       "ReplaceMetadata",
       "ReplacePublicLibraryMetadata",

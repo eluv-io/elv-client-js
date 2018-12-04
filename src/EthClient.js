@@ -161,7 +161,6 @@ class EthClient {
     // Loop through logs to find the desired log
     for(const log of event.logs) {
       const parsedLog = contractInterface.parseLog(log);
-
       if(parsedLog && parsedLog.name === eventName) {
         return parsedLog.values[eventValue];
       }
