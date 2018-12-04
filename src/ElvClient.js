@@ -424,7 +424,7 @@ class ElvClient {
     );
   }
 
-  /* Access Groups
+  /* Access Groups */
 
   /**
    * Create a access group
@@ -1387,7 +1387,48 @@ client.FabricUrl({
    * @returns {Promise<Object>} - The event object of this transaction
    */
   async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
-    return await this.ethClient.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides, signer: this.signer});
+    return await this.ethClient.CallContractMethodAndWait({
+      contractAddress,
+      abi,
+      methodName,
+      methodArgs,
+      value,
+      overrides,
+      signer: this.signer
+    });
+  }
+
+  /**
+   * Combines CallContractMethodAndWait and ExtractValueFromEvent to call a contract method, wait for the block
+   * to be mined, and extract a value from the resultant event. This action will be performed by this client's signer.
+   *
+   * @see CallContractMethodAndWait, ExtractValueFromEvent
+   *
+   * @namedParams
+   * @param {string} contractAddress - Address of the contract to call the specified method on
+   * @param {Object} abi - ABI of contract
+   * @param {string} methodName - Method to call on the contract
+   * @param {Array<string>} methodArgs - List of arguments to the contract constructor
+   * - it is recommended to format these arguments using the FormatContractArguments method
+   * @param {number} value - Amount of ether to include in the transaction
+   * @param {string} eventName - Name of the event from which to extract eventValue
+   * @param {string} eventValue - Name of the value to extract from the event
+   * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   *
+   * @returns {Promise<Object>} - An object of the following format: { transactionHash: (txHash), [eventValue]: (extractedValue) }
+   */
+  async CallContractMethodAndExtractEventValue({contractAddress, abi, methodName, methodArgs, value, eventName, eventValue, overrides={}}) {
+    return await this.ethClient.CallContractMethodAndExtractEventValue({
+      contractAddress,
+      abi,
+      methodName,
+      methodArgs,
+      value,
+      eventName,
+      eventValue,
+      overrides,
+      signer: this.signer
+    });
   }
 
   /**

@@ -174,35 +174,29 @@ class AuthorizationClient {
       signer: this.signer
     });
 
-    const methodEvent = await this.ethClient.CallContractMethodAndWait({
+    // Verify result of access request by trying to extract a value from the event
+    // If access request did not succeed, no event will be emitted
+    const { transactionHash, level } = await this.ethClient.CallContractMethodAndExtractEventValue({
       contractAddress: Utils.HashToAddress({hash: id}),
       abi,
       methodName: "accessRequest",
       methodArgs: formattedArgs,
       value: accessCharge,
-      signer: this.signer
-    });
-
-    // Verify result of access request by trying to extract a value from the event
-    // If access request did not succeed, no event will be emitted
-    const accessLevel = this.ethClient.ExtractValueFromEvent({
-      abi,
-      event: methodEvent,
       eventName: "AccessRequest",
       eventValue: "level",
       signer: this.signer
     });
 
-    if(accessLevel !== 0) {
+    if(level !== 0) {
       throw Error("Access request denied");
     }
 
     // Cache the transaction hash
     if(!this.noCache) {
-      accessCache[id] = methodEvent.transactionHash;
+      accessCache[id] = transactionHash;
     }
 
-    return methodEvent.transactionHash;
+    return transactionHash;
   }
 
   ContentSpaceAccess() {
