@@ -35,7 +35,6 @@ contract BaseContent is Editable {
     event SetContentType(address contentType, address contentContractAddress);
 
     event AccessRequest(
-        uint requestValidity,
         uint256 requestID,
         uint8 level,
         bytes32 contentHash,
@@ -135,14 +134,19 @@ contract BaseContent is Editable {
         addressKMS = address_KMS;
     }
 
-    //to be modified owner should not be able to change this, library owner should if content is in draft
-    // or removed when the debugging is over
+    //Owner can change this, unless the contract they are already set it prevent them to do so.
     function setContentContractAddress(address addr) public onlyOwner {
-        /*
-        BaseLibrary lib = BaseLibrary(libraryAddress);
-        require(tx.origin == lib.owner()); //only lib owner can modify a content contract and only if in draft
-        require(statusCode < 0);
-        */
+        Content c;
+        if (contentContractAddress != 0x0) {
+            c = Content(contentContractAddress);
+            uint killStatus = c.runKill();
+            require(killStatus == 0);
+        }
+        if (addr != 0x0) {
+            c = Content(addr);
+            uint createStatus = c.runCreate();
+            require(createStatus == 0);
+        }
         contentContractAddress = addr;
         emit SetContentContract(contentContractAddress);
     }
@@ -216,23 +220,11 @@ contract BaseContent is Editable {
         requestID = requestID + 1;
         //if (statusCode !=0) return false; // only published content should be accessible (debatable)
         BaseLibrary lib = BaseLibrary(libraryAddress);
-        if (lib.hasAccess(tx.origin) == false) {
-            emit AccessRequest(105, requestID, level, bytes32(""), "", "");
-            //for non-0 (unsuccessful request) no need to emit the contentHash and pke
-            return false;
-        }
+        require(lib.hasAccess(tx.origin));
 
-        //Check if request is funded, except if user is owner
-        if (tx.origin != owner) {
+        if (tx.origin != owner) { //Check if request is funded, except if user is owner
             uint256 requiredFund = getAccessCharge(level, custom_values, stakeholders);
             require(msg.value >= uint(requiredFund));
-            /*
-            if (msg.value < uint(requiredFund)) {
-                emit AccessRequest(103, requestID, level, bytes32(""), "", "");
-                //for non-0 (unsuccessful request) no need to emit the contentHash and pke
-                return false;
-            }
-            */
         }
         RequestData memory r = RequestData(msg.sender, msg.value, 0);
         // status of 0 indicates the payment received is in escrow in the content contract
@@ -240,14 +232,10 @@ contract BaseContent is Editable {
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
             uint result = c.runAccess(requestID, level, custom_values, stakeholders);
-            if (result != 0) {
-                emit AccessRequest(result, requestID, level, bytes32(""), "", "");
-                //for non-0 (unsuccessful request) no need to emit the contentHash and pke
-                return false;
-            }
+            require(result == 0);
         }
         // Raise Event
-        emit AccessRequest(0, requestID, level, objectHash, pke_requestor, pke_AFGH);
+        emit AccessRequest(requestID, level, objectHash, pke_requestor, pke_AFGH);
         // Logs custom key/value pairs
         uint256 i;
         for (i = 0; i < custom_values.length; i++) {
@@ -277,9 +265,8 @@ contract BaseContent is Editable {
         require((msg.sender == owner) || (msg.sender == addressKMS));
 
         RequestData storage r = requestMap[request_ID];
-        if (r.originator == 0x0) {
-            return false;
-        }
+        require(r.originator != 0x0);
+
         if (r.status == 0) {
             if (access_granted == false) {
                 //escrowed fund to be refunded to accessor

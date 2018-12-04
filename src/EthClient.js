@@ -202,6 +202,18 @@ class EthClient {
     });
   }
 
+  async DeployAccessGroupContract({contentSpaceAddress, signer}) {
+    return this.DeployDependentContract({
+      contractAddress: contentSpaceAddress,
+      abi: ContentSpaceContract.abi,
+      methodName: "createGroup",
+      args: [],
+      eventName: "CreateGroup",
+      eventValue: "groupAddress",
+      signer
+    });
+  }
+
   async DeployTypeContract({contentSpaceAddress, signer}) {
     return this.DeployDependentContract({
       contractAddress: contentSpaceAddress,
