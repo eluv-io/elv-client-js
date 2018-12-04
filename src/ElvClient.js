@@ -157,6 +157,15 @@ class ElvClient {
     });
   }
 
+  /**
+   * Get the account address of the current signer
+   *
+   * @returns {string} - The address of the current signer
+   */
+  CurrentAccountAddress() {
+    return this.signer ? this.signer.address.toLowerCase() : "";
+  }
+
   /* Content Spaces */
 
   /**
@@ -1179,6 +1188,9 @@ client.FabricUrl({
   }
 
   async CallAccessGroupMethod({contractAddress, memberAddress, methodName, eventName}) {
+    // Ensure address starts with 0x
+    if(!memberAddress.startsWith("0x")) { memberAddress = "0x" + memberAddress; }
+
     // Ensure caller is a manager of the group
     const isManager = await this.CallContractMethod({
       contractAddress,

@@ -4,6 +4,8 @@ const path = require("path");
 let TestQueries = async (client) => {
   //let output = "";
   try {
+    console.log("SIGNER: " + client.CurrentAccountAddress());
+
     console.log("AUTHORIZING CONTENT SPACE...\n");
 
     const contentTypes = await client.ContentTypes();
