@@ -9,6 +9,7 @@ const HttpClient = require("./HttpClient");
 const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 
+const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
 
@@ -359,7 +360,6 @@ class ElvClient {
       }
     });
 
-
     await this.FinalizeContentObject({
       libraryId,
       objectId,
@@ -377,6 +377,13 @@ class ElvClient {
    */
   async DeleteContentLibrary({libraryId}) {
     let path = Path.join("qlibs", libraryId);
+
+    await this.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      abi: LibraryContract.abi,
+      methodName: "kill",
+      methodArgs: []
+    });
 
     return HandleErrors(
       this.HttpClient.Request({
@@ -1220,13 +1227,20 @@ client.FabricUrl({
       throw Error("Manager access required");
     }
 
-    const { transactionHash, candidate } = await this.CallContractMethodAndExtractEventValue({
+    const event = await this.CallContractMethodAndWait({
       contractAddress,
       abi: AccessGroupContract.abi,
       methodName,
       methodArgs: [ memberAddress.toLowerCase() ],
       eventName,
       eventValue: "candidate",
+    });
+
+    const candidate = this.ExtractValueFromEvent({
+      abi: AccessGroupContract.abi,
+      event,
+      eventName,
+      eventValue: "candidate"
     });
 
     if(candidate.toLowerCase() !== memberAddress.toLowerCase()) {
@@ -1530,42 +1544,24 @@ client.FabricUrl({
   }
 
   /**
-   * Combines CallContractMethodAndWait and ExtractValueFromEvent to call a contract method, wait for the block
-   * to be mined, and extract a value from the resultant event. This action will be performed by this client's signer.
-   *
-   * @see CallContractMethodAndWait, ExtractValueFromEvent
+   * Extract the specified event log from the given event obtained from the
+   * CallContractAndMethodAndWait method
    *
    * @namedParams
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
-   * @param {string} methodName - Method to call on the contract
-   * @param {Array<string>} methodArgs - List of arguments to the contract constructor
-   * - it is recommended to format these arguments using the FormatContractArguments method
-   * @param {number} value - Amount of ether to include in the transaction
-   * @param {string} eventName - Name of the event from which to extract eventValue
-   * @param {string} eventValue - Name of the value to extract from the event
-   * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   * @param {Object} event - Event of the transaction from CallContractMethodAndWait
+   * @param {string} eventName - Name of the event to parse
    *
-   * @returns {Promise<Object>} - An object of the following format: { transactionHash: (txHash), [eventValue]: (extractedValue) }
+   * @returns {Promise<*>} - The parsed event log from the event
    */
-  async CallContractMethodAndExtractEventValue({contractAddress, abi, methodName, methodArgs, value, eventName, eventValue, overrides={}}) {
-    return await this.ethClient.CallContractMethodAndExtractEventValue({
-      contractAddress,
-      abi,
-      methodName,
-      methodArgs,
-      value,
-      eventName,
-      eventValue,
-      overrides,
-      signer: this.signer
-    });
+  ExtractEventFromLogs({abi, event, eventName}) {
+    return this.ethClient.ExtractEventFromLogs({abi, event, eventName});
   }
 
   /**
-   * Extract the specified value from the given event obtained from the CallContractAndMethodAndWait method
-   *
-   * @see "./src/EthClient#DeployDependentContract" and its callers for example usage
+   * Extract the specified value from the specified event log from the given event obtained
+   * from the CallContractAndMethodAndWait method
    *
    * @namedParams
    * @param {string} contractAddress - Address of the contract to call the specified method on
@@ -1577,7 +1573,8 @@ client.FabricUrl({
    * @returns {Promise<*>} - The value extracted from the event
    */
   ExtractValueFromEvent({abi, event, eventName, eventValue}) {
-    this.ethClient.ExtractValueFromEvent({abi, event, eventName, eventValue});
+    const eventLog = this.ethClient.ExtractEventFromLogs({abi, event, eventName, eventValue});
+    return eventLog ? eventLog.values[eventValue] : undefined;
   }
 
   /**

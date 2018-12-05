@@ -85,12 +85,13 @@ class AuthorizationClient {
       signer: this.signer
     });
 
-    return this.ethClient.ExtractValueFromEvent({
+    const eventLog = this.ethClient.ExtractEventFromLogs({
       abi: ContentContract.abi,
       event,
-      eventName: "GetAccessCharge",
-      eventValue: "accessCharge"
+      eventName: "GetAccessCharge"
     });
+
+    return eventLog.values.accessCharge;
   }
 
   // Generate proper authorization header based on the information provided
@@ -151,7 +152,7 @@ class AuthorizationClient {
 
   /* Access */
 
-  async AccessRequest({id, abi, args=[], accessCache={}, modifyCache={}}) {
+  async AccessRequest({id, abi, args=[], checkAccessCharge=false, accessCache={}, modifyCache={}}) {
     // See if access or modification request has already been made
     if(!this.noCache) {
       let transactionHash = accessCache[id] || modifyCache[id];
@@ -162,7 +163,7 @@ class AuthorizationClient {
 
     // Send some bux if access charge is required
     let accessCharge = 0;
-    if(!isOwner) {
+    if(!isOwner && checkAccessCharge) {
       accessCharge = await this.GetAccessCharge({id, abi});
       accessCharge = Ethers.utils.parseEther(accessCharge.toString());
     }
@@ -174,29 +175,32 @@ class AuthorizationClient {
       signer: this.signer
     });
 
-    // Verify result of access request by trying to extract a value from the event
     // If access request did not succeed, no event will be emitted
-    const { transactionHash, level } = await this.ethClient.CallContractMethodAndExtractEventValue({
+    const event = await this.ethClient.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress({hash: id}),
       abi,
       methodName: "accessRequest",
       methodArgs: formattedArgs,
       value: accessCharge,
-      eventName: "AccessRequest",
-      eventValue: "level",
       signer: this.signer
     });
 
-    if(level !== 0) {
-      throw Error("Access request denied");
+    const accessRequestEvent = this.ethClient.ExtractEventFromLogs({
+      abi,
+      event,
+      eventName: "AccessRequest"
+    });
+
+    if(event.logs.length === 0 || !accessRequestEvent) {
+      throw Error("Access denied");
     }
 
     // Cache the transaction hash
     if(!this.noCache) {
-      accessCache[id] = transactionHash;
+      accessCache[id] = event.transactionHash;
     }
 
-    return transactionHash;
+    return event.transactionHash;
   }
 
   ContentSpaceAccess() {
@@ -242,6 +246,7 @@ class AuthorizationClient {
       id: objectId,
       abi: ContentContract.abi,
       args,
+      checkAccessCharge: true,
       accessCache: this.accessTransactions.objects,
       modifyCache: this.modifyTransactions.objects
     });

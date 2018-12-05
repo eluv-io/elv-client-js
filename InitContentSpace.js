@@ -7,18 +7,18 @@ const readLine = require("readline");
 
 let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
+if(process.argv.length !== 5) {
+  console.error("Usage: node InitContentSpace.js <path-to-qfab-config.json> <path-to-content-fabric-dir> <private-key>");
+  process.exit();
+}
+
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
   accountName: "Alice",
   //privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
-  privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
+  privateKey: process.argv[4]
 });
 client.SetSigner({signer});
-
-if(process.argv.length !== 4) {
-  console.error("Usage: node InitContentSpace.js <path-to-qfab-config.json> <path-to-content-fabric-dir>");
-  process.exit();
-}
 
 const qfabConfigPath = process.argv[2];
 
