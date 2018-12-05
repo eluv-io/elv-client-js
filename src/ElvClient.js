@@ -1187,6 +1187,23 @@ client.FabricUrl({
     return contractAddress;
   }
 
+  /**
+   * Delete an access group
+   *
+   * Calls the kill method on the specified access group's contract
+   *
+   * @namedParams
+   * @param {string} contractAddress - The address of the access group contract
+   */
+  async DeleteAccessGroup({contractAddress}) {
+    await this.CallContractMethodAndWait({
+      contractAddress,
+      abi: AccessGroupContract.abi,
+      methodName: "kill",
+      methodArgs: []
+    });
+  }
+
   async CallAccessGroupMethod({contractAddress, memberAddress, methodName, eventName}) {
     // Ensure address starts with 0x
     if(!memberAddress.startsWith("0x")) { memberAddress = "0x" + memberAddress; }
