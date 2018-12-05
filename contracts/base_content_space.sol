@@ -17,7 +17,7 @@ contract BaseContentSpace is Accessible, Editable {
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
     event CreateGroup(address groupAddress);
-    event CreateAccountLibrary(address accountAddress);
+    event EngageAccountLibrary(address accountAddress);
 
     function BaseContentSpace(string memory content_space_name) public {
         name = content_space_name;
@@ -45,8 +45,8 @@ contract BaseContentSpace is Accessible, Editable {
         return groupAddress;
     }
 
-    function createAccountLibrary() public returns (address) {
-        emit CreateAccountLibrary(tx.origin);
+    function engageAccountLibrary() public returns (address) {
+        emit EngageAccountLibrary(tx.origin);
     }
 
 

@@ -29,8 +29,11 @@ contract BaseLibrary is Accessible, Editable {
 
     event ContentObjectCreated(address contentAddress, address content_type);
     event ContributorGroupAdded(address group);
+    event ContributorGroupRemoved(address group);
     event ReviewerGroupAdded(address group);
+    event ReviewerGroupRemoved(address group);
     event AccessorGroupAdded(address group);
+    event AccessorGroupRemoved(address group);
     event ContentTypeAdded(address contentType, address contentContract);
     event UnauthorizedOperation(uint operationCode, address candidate);
     event ApproveContentRequest(address contentAddress, address submitter);
@@ -49,21 +52,75 @@ contract BaseLibrary is Accessible, Editable {
     }
 
     function addContributorGroup(address group) public onlyOwner {
-        contributorGroups.push(group);
+        if (contributorGroupsLength < contributorGroups.length) {
+            contributorGroups[contributorGroupsLength] = group;
+        } else {
+            contributorGroups.push(group);
+        }
         contributorGroupsLength = contributorGroupsLength + 1;
         emit ContributorGroupAdded(group);
     }
 
+    function removeContributorGroup(address group) public onlyOwner {
+        for (uint i = 0; i < contributorGroupsLength; i++) {
+            if (contributorGroups[i] == group) {
+                delete contributorGroups[i];
+                if (i != (contributorGroupsLength - 1)){
+                    contributorGroups[i] = contributorGroups[contributorGroupsLength - 1];
+                    delete contributorGroups[contributorGroupsLength - 1];
+                }
+                contributorGroupsLength--;
+                emit ContributorGroupRemoved(group);
+            }
+        }
+    }
+
     function addReviewerGroup(address group) public onlyOwner {
-        reviewerGroups.push(group);
+        if (reviewerGroupsLength < reviewerGroups.length) {
+            reviewerGroups[reviewerGroupsLength] = group;
+        } else {
+            reviewerGroups.push(group);
+        }
         reviewerGroupsLength = reviewerGroupsLength + 1;
         emit ReviewerGroupAdded(group);
     }
 
+    function removeReviewerGroup(address group) public onlyOwner {
+        for (uint i = 0; i < reviewerGroupsLength; i++) {
+            if (reviewerGroups[i] == group) {
+                delete reviewerGroups[i];
+                if (i != (reviewerGroupsLength - 1)){
+                    reviewerGroups[i] = reviewerGroups[reviewerGroupsLength - 1];
+                    delete reviewerGroups[reviewerGroupsLength - 1];
+                }
+                reviewerGroupsLength--;
+                emit ReviewerGroupRemoved(group);
+            }
+        }
+    }
+
     function addAccessorGroup(address group) public onlyOwner {
-        accessorGroups.push(group);
+        if (accessorGroupsLength < accessorGroups.length) {
+            accessorGroups[accessorGroupsLength] = group;
+        } else {
+            accessorGroups.push(group);
+        }
         accessorGroupsLength = accessorGroupsLength + 1;
         emit AccessorGroupAdded(group);
+    }
+
+    function removeAccessorGroup(address group) public onlyOwner {
+        for (uint i = 0; i < accessorGroupsLength; i++) {
+            if (accessorGroups[i] == group) {
+                delete accessorGroups[i];
+                if (i != (accessorGroupsLength - 1)){
+                    accessorGroups[i] = accessorGroups[accessorGroupsLength - 1];
+                    delete accessorGroups[accessorGroupsLength - 1];
+                }
+                accessorGroupsLength--;
+                emit AccessorGroupRemoved(group);
+            }
+        }
     }
 
     function addContentType(address content_type, address content_contract) public onlyOwner {
@@ -74,13 +131,13 @@ contract BaseLibrary is Accessible, Editable {
     }
 
     function hasAccess(address candidate) public constant returns (bool) {
-        if (accessorGroups.length == 0) {
+        if (accessorGroupsLength == 0) {
             return true;
         }
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < accessorGroups.length; i++) {
+        for (uint i = 0; i < accessorGroupsLength; i++) {
             group = accessorGroups[i];
             if (group != 0x0) {
                 groupContract = BaseAccessControlGroup(group);
@@ -94,13 +151,13 @@ contract BaseLibrary is Accessible, Editable {
     }
 
     function canContribute(address candidate) public constant returns (bool) {
-        if (contributorGroups.length == 0) {
+        if (contributorGroupsLength == 0) {
             return true;
         }
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < contributorGroups.length; i++) {
+        for (uint i = 0; i < contributorGroupsLength; i++) {
             group = contributorGroups[i];
             if (group != 0x0) {
                 groupContract = BaseAccessControlGroup(group);
@@ -120,7 +177,7 @@ contract BaseLibrary is Accessible, Editable {
         address group;
         bool groupAccess;
         BaseAccessControlGroup groupContract;
-        for (uint i = 0; i < reviewerGroups.length; i++) {
+        for (uint i = 0; i < reviewerGroupsLength; i++) {
             group = reviewerGroups[i];
             if (group != 0x0) {
                 groupContract = BaseAccessControlGroup(group);

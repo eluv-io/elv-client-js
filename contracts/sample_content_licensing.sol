@@ -60,6 +60,22 @@ contract SampleContentLicensing is Content {
         licensingStatus[msg.sender] = itemStatus;
     }
 
+    function runKill() public payable returns (uint) {
+        address contentContract = msg.sender;
+        if (licensingStatus[contentContract].valid == false) {
+            return 0;
+        }
+        BaseContent contentObj = BaseContent(contentContract);
+        //if owner is the custom contract, kill can be called if the licensing fee have been fully paid
+        if (contentObj.owner() == address(this)) {
+            require(licensingStatus[contentContract].licensingFee == licensingStatus[contentContract].licensingFeePaid);
+        } else {
+            require(licensingStatus[contentContract].licensingFeePaid == 0);
+        }
+        delete (licensingStatus[contentContract]);
+        return 0;
+    }
+
     //on publish-0 payoff remainder, so that licensing is honored regardless of how submission was done
     // deny publishing unless percentComplete is 100
     function runStatusChange(int proposed_status_code) public payable returns (int) {
@@ -156,21 +172,9 @@ contract SampleContentLicensing is Content {
 
     }
 
-
-    function runKill() public payable returns (uint) {
-        address contentContract = msg.sender;
-        if (licensingStatus[contentContract].valid == false) {
-            return 0;
-        }
-        BaseContent contentObj = BaseContent(contentContract);
-        //if owner is the custom contract, kill can be called if the licensing fee have been fully paid
-        if (contentObj.owner() == address(this)) {
-            require(licensingStatus[contentContract].licensingFee == licensingStatus[contentContract].licensingFeePaid);
-        } else {
-            require(licensingStatus[contentContract].licensingFeePaid == 0);
-        }
-        delete (licensingStatus[contentContract]);
-        return 0;
+    function withdraw(uint256 amount) public onlyOwner returns (bool) {
+        owner.transfer(amount);
+        emit PayCredit(owner, 0x0, amount);
     }
 
 }
