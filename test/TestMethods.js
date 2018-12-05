@@ -443,8 +443,8 @@ let TestQueries = async (client) => {
       memberAddress: "0x71b011B67dc8f5C323A34Cd14b952721D5750C93"
     }));
 
-
-
+    console.log("DELETING ACCESS GROUP...");
+    await client.DeleteAccessGroup({contractAddress: accessGroupAddress});
   } catch(error) {
     console.error(error);
   }
