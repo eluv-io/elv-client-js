@@ -11,6 +11,7 @@ const Utils = require("./Utils");
 
 const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
+const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
 
 const HandleErrors = async (response) => {
@@ -224,6 +225,24 @@ class ElvClient {
         path: path
       })
     );
+  }
+
+  /**
+   * Returns the address of the owner of the specified content library
+   *
+   * @namedParams
+   * @param {string} libraryId
+   *
+   * @returns {Promise<string>} - The account address of the owner
+   */
+  async ContentLibraryOwner({libraryId}) {
+    return await this.ethClient.CallContractMethod({
+      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      abi: LibraryContract.abi,
+      methodName: "owner",
+      methodArgs: [],
+      signer: this.signer
+    });
   }
 
   /* Library creation and deletion */
@@ -507,6 +526,26 @@ class ElvClient {
   }
 
   /**
+   * Returns the address of the owner of the specified content type
+   *
+   * @namedParams
+   * @param {string} libraryId
+   *
+   * @returns {Promise<string>} - The account address of the owner
+   */
+  async ContentTypeOwner({name}) {
+    const contentType = await this.ContentType({name});
+
+    return await this.ethClient.CallContractMethod({
+      contractAddress: Utils.HashToAddress({hash: contentType.id}),
+      abi: ContentTypeContract.abi,
+      methodName: "owner",
+      methodArgs: [],
+      signer: this.signer
+    });
+  }
+
+  /**
    * Create a new content type.
    *
    * A new content type contract is deployed from
@@ -607,6 +646,24 @@ class ElvClient {
         path: path
       })
     );
+  }
+
+  /**
+   * Returns the address of the owner of the specified content object
+   *
+   * @namedParams
+   * @param {string} libraryId
+   *
+   * @returns {Promise<string>} - The account address of the owner
+   */
+  async ContentObjectOwner({objectId}) {
+    return await this.ethClient.CallContractMethod({
+      contractAddress: Utils.HashToAddress({hash: objectId}),
+      abi: ContentContract.abi,
+      methodName: "owner",
+      methodArgs: [],
+      signer: this.signer
+    });
   }
 
   /**
@@ -1195,6 +1252,24 @@ client.FabricUrl({
   }
 
   /**
+   * Returns the address of the owner of the specified content object
+   *
+   * @namedParams
+   * @param {string} libraryId
+   *
+   * @returns {Promise<string>} - The account address of the owner
+   */
+  async AccessGroupOwner({contractAddress}) {
+    return await this.ethClient.CallContractMethod({
+      contractAddress,
+      abi: AccessGroupContract.abi,
+      methodName: "owner",
+      methodArgs: [],
+      signer: this.signer
+    });
+  }
+
+  /**
    * Delete an access group
    *
    * Calls the kill method on the specified access group's contract
@@ -1248,7 +1323,7 @@ client.FabricUrl({
       throw Error("Access group method " + methodName + " failed");
     }
 
-    return transactionHash;
+    return event.transactionHash;
   }
 
   /**

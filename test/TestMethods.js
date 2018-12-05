@@ -44,6 +44,9 @@ let TestQueries = async (client) => {
 
     console.log("LIBRARY CREATED: " + libraryId);
 
+    const libraryOwner = await client.ContentLibraryOwner({libraryId});
+    console.log("LIBRARY OWNER: " + libraryOwner);
+
     const libraryResponse = await(
       client.ContentLibrary({libraryId})
     );
@@ -96,6 +99,9 @@ let TestQueries = async (client) => {
     const objectId = createResponse.id;
 
     console.log("CREATED " + objectId);
+
+    const objectOwner = await client.ContentObjectOwner({objectId});
+    console.log("OBJECT OWNER: " + objectOwner);
 
     console.log("CREATING PART...");
 
@@ -419,6 +425,9 @@ let TestQueries = async (client) => {
     const accessGroupAddress = await client.CreateAccessGroup();
     console.log(accessGroupAddress + "\n");
 
+    const accessGroupOwner = await client.AccessGroupOwner({contractAddress: accessGroupAddress});
+    console.log("ACCESS GROUP OWNER: " + accessGroupOwner);
+
     console.log("ADDING MEMBER TO ACCESS GROUP: ");
     console.log(await client.AddAccessGroupMember({
       contractAddress: accessGroupAddress,
@@ -446,6 +455,7 @@ let TestQueries = async (client) => {
     console.log("DELETING ACCESS GROUP...");
     await client.DeleteAccessGroup({contractAddress: accessGroupAddress});
   } catch(error) {
+    console.log(error.stack);
     console.error(error);
   }
 };
