@@ -36,10 +36,10 @@ const Test = async () => {
       console.error(differentKeys);
 
       console.error("EXPECTED");
-      console.log(JSON.stringify(elvClientMethods.sort(), null, 2));
+      console.error(JSON.stringify(elvClientMethods.sort(), null, 2));
     }
   } catch(error) {
-    console.log(error);
+    console.error(error);
   }
 };
 

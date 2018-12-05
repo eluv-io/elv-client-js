@@ -100,6 +100,7 @@ class FrameClient {
    */
   AllowedMethods() {
     return [
+      "AccessGroupOwner",
       "AddAccessGroupManager",
       "AddAccessGroupMember",
       "CallBitcodeMethod",
@@ -107,13 +108,16 @@ class FrameClient {
       "CallContractMethodAndWait",
       "ContentLibraries",
       "ContentLibrary",
+      "ContentLibraryOwner",
       "ContentObject",
       "ContentObjectContractEvents",
       "ContentObjectMetadata",
+      "ContentObjectOwner",
       "ContentObjectVersions",
       "ContentObjects",
       "ContentParts",
       "ContentType",
+      "ContentTypeOwner",
       "ContentTypes",
       "ContractEvents",
       "CreateAccessGroup",
