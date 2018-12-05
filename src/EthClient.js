@@ -156,25 +156,17 @@ class EthClient {
     return methodEvent;
   }
 
-  ExtractValueFromEvent({abi, event, eventName, eventValue}) {
+  ExtractEventFromLogs({abi, event, eventName}) {
     const contractInterface = new Ethers.utils.Interface(abi);
     // Loop through logs to find the desired log
     for(const log of event.logs) {
       const parsedLog = contractInterface.parseLog(log);
       if(parsedLog && parsedLog.name === eventName) {
-        return parsedLog.values[eventValue];
+        return parsedLog;
       }
     }
 
     throw Error(eventName + " event not found");
-  }
-
-  async CallContractMethodAndExtractEventValue({contractAddress, abi, methodName, methodArgs, value, eventName, eventValue, overrides={}, signer}) {
-    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides, signer});
-    return {
-      transactionHash: event.transactionHash,
-      [eventValue]: this.ExtractValueFromEvent({abi, event, eventName, eventValue})
-    };
   }
 
   async DeployDependentContract({
@@ -189,7 +181,8 @@ class EthClient {
     const methodArgs = this.FormatContractArguments({abi, methodName, args});
     const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, signer});
 
-    const newContractAddress = this.ExtractValueFromEvent({abi, event, eventName, eventValue});
+    const eventLog = this.ExtractEventFromLogs({abi, event, eventName, eventValue});
+    const newContractAddress = eventLog.values[eventValue];
 
     return {
       contractAddress: newContractAddress,
