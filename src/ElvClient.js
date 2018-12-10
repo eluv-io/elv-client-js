@@ -95,8 +95,6 @@ class ElvClient {
     this.noCache = noCache;
 
     this.utils = Utils;
-
-    this.contentTypes = {};
   }
 
   /**
@@ -465,11 +463,15 @@ class ElvClient {
   /**
    * List the content types available in this content space
    *
-   * @see test/ExampleOutput.txt for example response
+   * @namedParams
+   * @param {boolean=} latestOnly=true - If specified, only the most recent version of the content type will be included.
    *
-   * @returns {Promise<Object>}
+   * Because content types are specified by their immutable version hash, setting this option to false is useful for
+   * looking up information about existing content object types which may have been updated since the object was created.
+   *
+   * @returns {Promise<Object>} - A mapping of content type version hash to information about that content type version
    */
-  async ContentTypes() {
+  async ContentTypes({latestOnly=true} = {}) {
     const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
     const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
 
@@ -477,52 +479,62 @@ class ElvClient {
 
     // Does the same as ContentObjects(), but authorization cannot be performed
     // against the content type library because it does not have a library contract
-    const response = await ResponseToJson(
+    const typeObjects = (await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({}),
         method: "GET",
         path: path
-      })
-    );
+      }))).contents;
 
     let contentTypes = {};
-    response.contents
-      .forEach(contentType => {
-        const typeInfo = contentType.versions[0];
-        if(!typeInfo.meta || !typeInfo.meta["eluv.name"]) { return; }
+    typeObjects.map(typeObject => {
+      // Skip content library object
+      if(Utils.EqualHash(typeObject.id, typeLibraryId)) { return; }
 
-        contentTypes[typeInfo.meta["eluv.name"]] = {
-          id: typeInfo.id,
-          hash: typeInfo.hash
-        };
-      });
-
-    // Cache content types for faster lookup
-    this.contentTypes = Object.assign({}, contentTypes);
+      // If latestOnly specified, only include most recent versions
+      if(latestOnly) {
+        contentTypes[typeObject.versions[0].hash] = typeObject.versions[0];
+      } else {
+        // Otherwise, include all versions
+        typeObject.versions.map(type => {
+          contentTypes[type.hash] = type;
+        });
+      }
+    });
 
     return contentTypes;
   }
 
   /**
-   * Look up content type record by name
+   * Look up content type record by name or by version hash
    *
    * @namedParams
-   * @param name
+   * @param {string=} name - Name of the content type to find
+   * @param {string=} versionHash - Version hash of the content type to find
+   *
+   * NOTE: If looking up by name, only the latest version of content types will be searched.
+   * If a specific version is required, use the version hash.
    *
    * @returns {Promise<Object>}
    */
-  async ContentType({name}) {
-    if(this.contentTypes[name]) {
-      return this.contentTypes[name];
+  async ContentType({name, versionHash}) {
+    let contentType;
+    if(versionHash) {
+      // Look through all versions of types when searching by version hash
+      const contentTypes = await this.ContentTypes({latestOnly: false});
+      contentType = contentTypes[versionHash];
     } else {
-      const contentTypes = await this.ContentTypes();
-
-      if(!contentTypes[name]) {
-        throw Error("Unknown content type: " + name);
-      }
-
-      return contentTypes[name];
+      // Only look at latest versions of types when searching by name
+      const contentTypes = await this.ContentTypes({latestOnly: true});
+      contentType = Object.values(contentTypes)
+        .find(type => type.meta && (type.meta["eluv.name"] === name));
     }
+
+    if(!contentType) {
+      throw Error("Unknown content type: " + (name || versionHash));
+    }
+
+    return contentType;
   }
 
   /**
@@ -554,12 +566,12 @@ class ElvClient {
    * content space library (ilib<content-space-hash>)
    *
    * @namedParams
-   * @param {string} name - Name of the new content type
+   * @param {object} metadata - Metadata for the new content type
    * @param {(string|blob)} bitcode - Bitcode to be used for the content type
    *
    * @returns {Promise<string>} - Object ID of created content type
    */
-  async CreateContentType({name, bitcode}) {
+  async CreateContentType({metadata={}, bitcode}) {
     const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
 
     const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
@@ -577,9 +589,7 @@ class ElvClient {
         path: path,
         body: {
           type: "",
-          meta: {
-            "eluv.name": name
-          }
+          meta: metadata
         }
       })
     );
@@ -682,13 +692,15 @@ class ElvClient {
   async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree=""}) {
     let path = Path.join("q", versionHash || objectId, "meta");
 
-    return ResponseToJson(
+    const metadata = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
     );
+
+    return metadata || {};
   }
 
   /**
@@ -728,19 +740,18 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {Object=} options -
-   * type: Name of content type to use for the new object
+   * type: Version hash of the content type to associate with the object
    *
    * meta: Metadata to use for the new object
    *
    * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
    */
   async CreateContentObject({libraryId, options={}}) {
-    // Look up content type if type is specified
-    if(options.type) {
-      options.type = (await this.ContentType({name: options.type})).hash;
+    // If type is specified but it is not a version hash, look up type by name
+    if(options.type && !options.type.startsWith("hq__")) {
+      options.type = (await this.ContentType({name: options.type}).hash);
     }
 
-    // Deploy contract
     const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId});
 
     const objectId = this.utils.AddressToObjectId({address: contractAddress});
@@ -764,15 +775,15 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {Object=} options -
-   * type: Name of content type to set the object to - will replace existing type if specified
+   * type: Version hash of the content type to associate with the object - will replace existing type if specified
    *
    * meta: New metadata for the object - will replace existing metadata if specified
    *
    * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
    */
   async EditContentObject({libraryId, objectId, options={}}) {
-    // Look up content type if type is specified
-    if(options.type) {
+    // If type is specified but it is not a version hash, look up type by name
+    if(options.type && !options.type.startsWith("hq__")) {
       options.type = (await this.ContentType({name: options.type})).hash;
     }
 
@@ -1143,7 +1154,7 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
-   * @param {boolean=} noCache - If specified, a new access request will be made for the authorization regardless of
+   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
    * whether such a request exists in the client cache. This request will not be cached.
    *
    * @see FabricUrl for creating arbitrary fabric URLs
@@ -1163,7 +1174,7 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
-   * @param {boolean=} noCache - If specified, a new access request will be made for the authorization regardless of
+   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
    * whether such a request exists in the client cache. This request will not be cached.
    *
    * @see FabricUrl for creating arbitrary fabric URLs
@@ -1185,7 +1196,7 @@ class ElvClient {
    * @param {string=} rep - Rep parameter of the url
    * @param {string=} call - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
-   * @param {boolean=} noCache - If specified, a new access request will be made for the authorization regardless of
+   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
    * whether such a request exists in the client cache. This request will not be cached.
    *
    * @returns {Promise<string>} - URL to the specified endpoint with authorization token

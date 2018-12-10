@@ -128,7 +128,12 @@ const Init = async () => {
         const bitcode = fs.readFileSync(Path.join(bitcodePath, bitcodeDirName, bitcodeFilename));
 
         console.log("\tCreating " + name + "...");
-        await client.CreateContentType({name, bitcode});
+        await client.CreateContentType({
+          metadata: {
+            "eluv.name": name
+          },
+          bitcode
+        });
       }
     }
 
