@@ -7,8 +7,8 @@ const readLine = require("readline");
 
 let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
-if(process.argv.length !== 5) {
-  console.error("Usage: node InitContentSpace.js <path-to-qfab-config.json> <path-to-content-fabric-dir> <private-key>");
+if(process.argv.length !== 5 && process.argv.length !== 6) {
+  console.error("Usage: node InitContentSpace.js <path-to-qfab-config.json> <path-to-content-fabric-dir> <private-key> [existing-content-space-id]");
   process.exit();
 }
 
@@ -21,6 +21,7 @@ const signer = wallet.AddAccount({
 client.SetSigner({signer});
 
 const qfabConfigPath = process.argv[2];
+let contentSpaceId = process.argv[5];
 
 const PromptRestart = async () => {
   console.log("Restart QFab Daemon now\n");
@@ -52,13 +53,27 @@ const Init = async () => {
 
     let qfabConfig = JSON.parse(fs.readFileSync(qfabConfigPath).toString());
 
-    const {contractAddress, transactionHash} = await client.ethClient.DeployContentSpaceContract({
-      name: "Content Space",
-      signer
-    });
-    const contentSpaceId = client.utils.AddressToSpaceId({address: contractAddress});
+    let contractAddress;
+    let transactionHash;
+    if(!contentSpaceId) {
+      // If content space ID is not provided, deploy a new content space contract
+      const deployResult = await client.ethClient.DeployContentSpaceContract({
+        name: "Content Space",
+        signer
+      });
+      contractAddress = deployResult.contractAddress;
+      transactionHash = deployResult.transactionHash;
+      contentSpaceId = client.utils.AddressToSpaceId({address: contractAddress});
+      console.log("\nCreated content space:");
+    } else {
+      // If existing content space ID is provided, authorize against content space library
+      contractAddress = client.utils.HashToAddress({hash: contentSpaceId});
+      transactionHash = await client.authClient.ContentLibraryUpdate({
+        libraryId: client.utils.AddressToLibraryId({address: contractAddress})
+      });
+      console.log("\nUsing content space:");
+    }
 
-    console.log("\nCreated content space:");
     console.log("\tAddress: " + contractAddress);
     console.log("\tID: " + contentSpaceId + "\n");
 
