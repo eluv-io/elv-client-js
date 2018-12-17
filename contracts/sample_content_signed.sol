@@ -14,7 +14,8 @@ contract SampleContentSigned is Content {
 	    return Certifyer.recoverSignerFromMessageHash(message_hash, sig);
     }
 
-    function recoverSignerFromMessage(string message, bytes sig) pure public returns (address) {
+    function recoverSignerFromMessage(bytes message, bytes sig) pure public returns (address) {
+        //bytes memory messageBytes = bytes(message);
 	    return Certifyer.recoverSignerFromMessage(message, sig);
     }
 

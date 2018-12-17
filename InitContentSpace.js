@@ -130,9 +130,10 @@ const Init = async () => {
 
     console.log("Creating content types: ");
 
+    // TODO: use options->withFileTypes to ensure things are directories
     const bitcodePath = Path.join(process.argv[3], "bitcode");
     const bitcodeDirs = fs.readdirSync(bitcodePath)
-      .filter(name => name !== ".gitignore");
+      .filter(name => !name.startsWith("."));
 
     for (const bitcodeDirName of bitcodeDirs) {
       const bitcodeFiles = fs.readdirSync(Path.join(bitcodePath, bitcodeDirName))

@@ -65,6 +65,7 @@ contract BaseContent is Editable {
         requestID = 0;
         contentType = content_type;
         //get custom contract address associated with content_type from hash
+        /*
         BaseLibrary lib = BaseLibrary(libraryAddress);
         contentContractAddress = lib.contentTypeContracts(content_type);
         addressKMS = lib.addressKMS();
@@ -72,6 +73,7 @@ contract BaseContent is Editable {
             Content c = Content(contentContractAddress);
             require(c.runCreate() == 0);
         }
+        */
         emit ContentObjectCreate(libraryAddress);
     }
 
@@ -142,12 +144,12 @@ contract BaseContent is Editable {
             uint killStatus = c.runKill();
             require(killStatus == 0);
         }
+        contentContractAddress = addr;
         if (addr != 0x0) {
             c = Content(addr);
             uint createStatus = c.runCreate();
             require(createStatus == 0);
         }
-        contentContractAddress = addr;
         emit SetContentContract(contentContractAddress);
     }
 

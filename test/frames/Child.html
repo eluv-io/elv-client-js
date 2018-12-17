@@ -8,7 +8,7 @@
 <script src="../../test/TestMethods.js"></script>
 
 <script>
-  const frameClient = new FrameClient({timeout: 5});
+  const frameClient = new FrameClient({timeout: 15});
 
   async function ListLibrariesSequential() {
     document.getElementById("pre").textContent = "";
@@ -45,20 +45,20 @@
   }
 
   async function RunTests() {
+    const resultsElement = document.getElementById("pre");
     /* Hijack console.log to turn output into string */
-    let result = "";
     const oldLog = (function(){
       var oldLog = console.log;
       console.log = function (message) {
-        result += "\n" + message;
+        resultsElement.textContent = resultsElement.textContent + "\n" + message;
+        resultsElement.scrollIntoView(false);
+        oldLog(message);
       };
 
       return oldLog;
     })();
 
     await TestQueries(frameClient);
-
-    document.getElementById("pre").textContent = result;
 
     // Reset console.log
     console.log = oldLog;

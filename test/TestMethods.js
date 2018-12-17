@@ -1,10 +1,15 @@
-const fs = require("fs");
-const path = require("path");
+const runningInBrowser = typeof window !== "undefined";
 
-let TestQueries = async (client) => {
+let fs, path;
+if(!runningInBrowser) {
+  fs = require("fs");
+  path = require("path");
+}
+
+const TestQueries = async (client) => {
   //let output = "";
   try {
-    console.log("SIGNER: " + client.CurrentAccountAddress());
+    console.log("CURRENT ACCOUNT: " + await client.CurrentAccountAddress() + "\n");
 
     console.log("AUTHORIZING CONTENT SPACE...\n");
 
@@ -20,7 +25,10 @@ let TestQueries = async (client) => {
 
     console.log("CREATING LIBRARY ");
 
-    const image = fs.readFileSync(path.join(__dirname, "images/logo-dark.png"));
+    let image;
+    if(!runningInBrowser) {
+      image = fs.readFileSync(path.join(__dirname, "images/logo-dark.png"));
+    }
 
     const libraryId = await (
       client.CreateContentLibrary({
@@ -365,7 +373,7 @@ let TestQueries = async (client) => {
 
 
     const contentVerification = await (
-      client.VerifyContentObject({libraryId, objectId, partHash: versionHash})
+      client.VerifyContentObject({libraryId, objectId, versionHash})
         .then(response => {
           return response;
         })
@@ -454,13 +462,14 @@ let TestQueries = async (client) => {
 
     console.log("DELETING ACCESS GROUP...");
     await client.DeleteAccessGroup({contractAddress: accessGroupAddress});
+
+    console.log("\n\nDONE\n\n");
   } catch(error) {
     console.log(error.stack);
     console.error(error);
   }
 };
 
-
-if(typeof window === "undefined") {
+if(!runningInBrowser) {
   exports.TestQueries = TestQueries;
 }

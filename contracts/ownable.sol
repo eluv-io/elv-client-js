@@ -45,9 +45,6 @@ contract Ownable {
 
     function transferCreatorship(address newCreator) public onlyCreator {
         require(newCreator != address(0));
-        if (owner == creator) {
-            owner = newCreator;
-        }
         creator = newCreator;
     }
 

@@ -33,6 +33,7 @@ class FrameClient {
    * and generating a timeout error
    */
   constructor({target=parent, timeout=5}) {
+    this.target = target;
     this.timeout = timeout;
 
     this.utils = Utils;
@@ -40,18 +41,26 @@ class FrameClient {
     // Dynamically defined methods defined in AllowedMethods
     for(const methodName of this.AllowedMethods()){
       this[methodName] = async (args) => {
-        const requestId = Id.next();
-
-        target.postMessage({
-          type: "ElvFrameRequest",
-          requestId,
-          calledMethod: methodName,
-          args: this.utils.MakeClonable(args)
-        }, "*");
-
-        return await this.AwaitMessage(requestId, 5000);
+        return await this.SendMessage({
+          options: {
+            calledMethod: methodName,
+            args: this.utils.MakeClonable(args)
+          }
+        });
       };
     }
+  }
+
+  async SendMessage({options={}}) {
+    const requestId = Id.next();
+
+    this.target.postMessage({
+      type: "ElvFrameRequest",
+      requestId,
+      ...options
+    }, "*");
+
+    return (await this.AwaitMessage(requestId, 5000));
   }
 
   AwaitMessage(requestId) {
@@ -89,6 +98,23 @@ class FrameClient {
       }
 
       window.addEventListener("message", listener);
+    });
+  }
+
+  async GetFramePath() {
+    return (await this.SendMessage({
+      options: {
+        operation: "GetFramePath"
+      }
+    })).response;
+  }
+
+  async SetFramePath({path}) {
+    await this.SendMessage({
+      options: {
+        operation: "SetFramePath",
+        path
+      }
     });
   }
 
