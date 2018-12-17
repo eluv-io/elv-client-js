@@ -272,13 +272,11 @@ class ElvClient {
   }) {
     const { contractAddress, transactionHash } = await this.authClient.CreateContentLibrary();
 
-    publicMetadata = Object.assign(
-      {
-        "eluv.name": name,
-        "eluv.description": description
-      },
-      publicMetadata || {}
-    );
+    publicMetadata = {
+      ...publicMetadata,
+      "eluv.name": name,
+      "eluv.description": description
+    };
 
     const libraryId = this.utils.AddressToLibraryId({address: contractAddress});
     const path = Path.join("qlibs", libraryId);
@@ -970,10 +968,10 @@ class ElvClient {
         path: path,
         body: fileData,
         bodyType: "BINARY",
-        headers: Object.assign(
-          await this.authClient.AuthorizationHeader({libraryId, objectId}),
-          { "Content-type": "application/octet-stream" }
-        )
+        headers: {
+          "Content-type": "application/octet-stream",
+          ...(await this.authClient.AuthorizationHeader({libraryId, objectId}))
+        }
       })
     );
   }
@@ -1239,9 +1237,10 @@ client.FabricUrl({
 
     return this.HttpClient.URL({
       path: path,
-      queryParams: Object.assign({
-        authorization,
-      }, queryParams)
+      queryParams: {
+        ...queryParams,
+        authorization
+      }
     });
   }
 
@@ -1487,15 +1486,17 @@ client.FabricUrl({
    *
    * @namedParams
    * @param {string} libraryId - ID of the library
-   * @param {string} partHash - Hash of the content object version
+   * @param {string} objectId - ID of the object
+   * @param {string} versionHash - Hash of the content object version
    *
    * @returns {Promise<Object>} - Response describing verification results
    */
-  VerifyContentObject({libraryId, partHash}) {
+  VerifyContentObject({libraryId, objectId, versionHash}) {
     return ContentObjectVerification.VerifyContentObject({
       client: this,
-      libraryId: libraryId,
-      partHash: partHash
+      libraryId,
+      objectId,
+      versionHash
     });
   }
 
@@ -1717,7 +1718,7 @@ client.FabricUrl({
       methodName: "transfer",
       methodArgs: [this.signer.address, Ethers.utils.parseEther(ether.toString())],
       signer: this.signer
-    })
+    });
   }
 
   /* Other blockchain operations */

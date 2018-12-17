@@ -275,13 +275,17 @@ contract BaseLibrary is Accessible, Editable {
             require(validType);
         }
         address contentAddress = new BaseContent(content_type);
+        BaseContent content = BaseContent(contentAddress);
+        content.setAddressKMS(addressKMS);
+        content.setContentContractAddress(contentTypeContracts[content_type]);
+
         emit ContentObjectCreated(contentAddress, content_type);
         return contentAddress;
     }
 
     function accessRequest() public returns (bool) {
         require(hasAccess(tx.origin) || canContribute(tx.origin) || canReview(tx.origin));
-        emit AccessRequest(0);
+        emit AccessRequest();
         return true;
     }
 }

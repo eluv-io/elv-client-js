@@ -7,16 +7,16 @@ const MultiHash = require("multihashes");
 const DeepEqual = require("deep-equal");
 
 const ContentObjectVerification = {
-  async VerifyContentObject({client, libraryId, objectId, partHash}) {
+  async VerifyContentObject({client, libraryId, objectId, versionHash}) {
     let response = {
-      hash: partHash
+      hash: versionHash
     };
 
-    partHash = partHash.replace("hq__", "hqp_");
+    const partHash = versionHash.replace("hq__", "hqp_");
 
-    let qpartsResponse = await client.QParts({objectId, partHash, format: "arrayBuffer"})
+    const qpartsResponse = await client.QParts({objectId, partHash, format: "arrayBuffer"})
       .then(response => Buffer.from(response));
-    let partVerification = ContentObjectVerification._VerifyPart({partHash: partHash, qpartsResponse: qpartsResponse});
+    const partVerification = ContentObjectVerification._VerifyPart({partHash: partHash, qpartsResponse: qpartsResponse});
 
     if(partVerification.valid) {
       response.qref = { valid: true };
@@ -28,11 +28,12 @@ const ContentObjectVerification = {
 
     if(response.qref.valid) {
       // Validate Metadata
-      let metadataPartHash = "hqp_" + MultiHash.toB58String(Buffer.from(partVerification.cbor.QmdHash.slice(1, partVerification.cbor.QmdHash.length)));
-      let metadataPartResponse = await client.QParts({objectId, partHash: metadataPartHash, format: "arrayBuffer"})
+      const qmdHash = partVerification.cbor.QmdHash.value;
+      const metadataPartHash = "hqp_" + MultiHash.toB58String(qmdHash.slice(1, qmdHash.length));
+      const metadataPartResponse = await client.QParts({objectId, partHash: metadataPartHash, format: "arrayBuffer"})
         .then(response => Buffer.from(response));
 
-      let metadataVerification = ContentObjectVerification._VerifyPart({partHash: metadataPartHash, qpartsResponse: metadataPartResponse});
+      const metadataVerification = ContentObjectVerification._VerifyPart({partHash: metadataPartHash, qpartsResponse: metadataPartResponse});
 
       if(metadataVerification.valid) {
         response.qmd = { valid: true };
@@ -45,7 +46,7 @@ const ContentObjectVerification = {
       if(response.qmd.valid && libraryId) {
         // If the library ID is provided, compare some metadata in the CBOR response
         // to the metadata from the /meta endpoint
-        let metadata = await client.ContentObjectMetadata({
+        const metadata = await client.ContentObjectMetadata({
           libraryId: libraryId,
           objectId,
           versionHash: partHash.replace("hqp_", "hq__")
@@ -56,10 +57,11 @@ const ContentObjectVerification = {
 
       // Validate Qstruct
 
-      let structPartHash = "hqp_" + MultiHash.toB58String(Buffer.from(partVerification.cbor.QstructHash.slice(1, partVerification.cbor.QstructHash.length)));
-      let structPartResponse = await client.QParts({objectId, partHash: structPartHash, format: "arrayBuffer"})
+      const qstructHash = partVerification.cbor.QstructHash.value;
+      const structPartHash = "hqp_" + MultiHash.toB58String(qstructHash.slice(1, qstructHash.length));
+      const structPartResponse = await client.QParts({objectId, partHash: structPartHash, format: "arrayBuffer"})
         .then(response => Buffer.from(response));
-      let structVerification = ContentObjectVerification._VerifyPart({partHash: structPartHash, qpartsResponse: structPartResponse});
+      const structVerification = ContentObjectVerification._VerifyPart({partHash: structPartHash, qpartsResponse: structPartResponse});
 
       if(structVerification.valid) {
         response.qstruct = { valid: true };
@@ -90,7 +92,7 @@ const ContentObjectVerification = {
 
     return structParts.map(structPart => {
       return {
-        hash: "hqp_" + MultiHash.toB58String(Buffer.from(structPart.Hash.slice(1, structPart.Hash.length))),
+        hash: "hqp_" + MultiHash.toB58String(structPart.Hash.value.slice(1, structPart.Hash.length)),
         size: structPart.Size
       };
     });

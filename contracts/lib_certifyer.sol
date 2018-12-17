@@ -5,7 +5,7 @@ library Certifyer {
 
     //event Vrs(uint8 v, bytes32 r, bytes32 s);
 
-    function splitSignature(bytes sig) pure  internal returns (uint8, bytes32, bytes32) {
+    function splitSignature(bytes sig) pure public returns (uint8, bytes32, bytes32) {
         require(sig.length == 65);
 
         bytes32 r;
@@ -23,10 +23,10 @@ library Certifyer {
         return (v, r, s);
     }
 
-    function uint2str(uint i) internal pure returns (string){
+    function uint2str(uint i) pure public returns (bytes){
         if (i == 0) return "0";
         uint j = i;
-        uint length;
+        uint length=0;
         while (j != 0){
             length++;
             j /= 10;
@@ -37,9 +37,13 @@ library Certifyer {
             bstr[k--] = byte(48 + i % 10);
             i /= 10;
         }
-        return string(bstr);
+        return bstr;
     }
 
+    function messageHash(bytes message) pure public returns (bytes32) {
+        return keccak256("\x19Ethereum Signed Message:\n",uint2str(message.length), message);
+        //return keccak256("\x19Ethereum Signed Message:\n\x32\x30",  message);
+    }
 
     function recoverSignerFromMessageHash(bytes32 message_hash, bytes sig) pure public returns (address) {
         uint8 v;
@@ -52,15 +56,8 @@ library Certifyer {
         return ecrecover(message_hash, v, r, s);
     }
 
-    function recoverSignerFromMessage(string message, bytes sig) pure public returns (address) {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        bytes32 message_hash = keccak256("\x19Ethereum Signed Message:\n",uint2str(bytes(message).length), message);
-
-        (v, r, s) = splitSignature(sig);
-        //emit Vrs(v,r,s);
-        return ecrecover(message_hash, v, r, s);
+    function recoverSignerFromMessage(bytes message, bytes sig) pure public returns (address) {
+        return recoverSignerFromMessageHash(messageHash(message), sig);
     }
 
 
