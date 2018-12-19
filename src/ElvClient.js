@@ -421,7 +421,7 @@ class ElvClient {
    * @param {string=} metadataSubtree - Subtree of the library metadata to retrieve
    * @returns {Promise<Object>} - Public metadata of the library
    */
-  async PublicLibraryMetadata({libraryId, metadataSubtree=""}) {
+  async PublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
     return ResponseToJson(
@@ -443,7 +443,7 @@ class ElvClient {
    * @param {Object} metadata - New metadata
    * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
    */
-  async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="", metadata={}}) {
+  async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="/", metadata={}}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
     await HandleErrors(
@@ -687,8 +687,8 @@ class ElvClient {
    *
    * @returns {Promise<Object>} - Metadata of the content object
    */
-  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree=""}) {
-    let path = Path.join("q", versionHash || objectId, "meta");
+  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/"}) {
+    let path = Path.join("q", versionHash || objectId, "meta", metadataSubtree);
 
     const metadata = await ResponseToJson(
       this.HttpClient.Request({
@@ -882,7 +882,7 @@ class ElvClient {
    * @param {Object} metadata - New metadata to merge
    * @param {string=} metadataSubtree - Subtree of the object metadata to modify
    */
-  async MergeMetadata({libraryId, objectId, writeToken, metadataSubtree="", metadata={}}) {
+  async MergeMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
     await HandleErrors(
@@ -907,7 +907,7 @@ class ElvClient {
    * @param {Object} metadata - New metadata to merge
    * @param {string=} metadataSubtree - Subtree of the object metadata to modify
    */
-  async ReplaceMetadata({libraryId, objectId, writeToken, metadataSubtree="", metadata={}}) {
+  async ReplaceMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
     await HandleErrors(
@@ -932,7 +932,7 @@ class ElvClient {
    * @param {string=} metadataSubtree - Subtree of the object metadata to modify
    * - if not specified, all metadata will be deleted
    */
-  async DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree=""}) {
+  async DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree="/"}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
     await HandleErrors(
@@ -1531,19 +1531,20 @@ client.FabricUrl({
    * @see GET /qparts/:qparthash
    *
    * @namedParmas
+   * @param {string} libraryId - ID of the library - required for authentication
    * @param {string} objectId - ID of the object - required for authentication
    * @param {string} partHash - Hash of the part
    * @param {string} format - Format to retrieve the response - defaults to Blob
    *
    * @returns {Promise<Format>} - Response containing the CBOR response in the specified format
    */
-  async QParts({objectId, partHash, format="blob"}) {
+  async QParts({libraryId, objectId, partHash, format="blob"}) {
     let path = Path.join("qparts", partHash);
 
     return ResponseToFormat(
       format,
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
