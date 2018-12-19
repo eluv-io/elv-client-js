@@ -102,11 +102,11 @@ class FrameClient {
   }
 
   async GetFramePath() {
-    return (await this.SendMessage({
+    return await this.SendMessage({
       options: {
         operation: "GetFramePath"
       }
-    })).response;
+    });
   }
 
   async SetFramePath({path}) {
