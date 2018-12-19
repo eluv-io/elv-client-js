@@ -14,7 +14,7 @@ const ContentObjectVerification = {
 
     const partHash = versionHash.replace("hq__", "hqp_");
 
-    const qpartsResponse = await client.QParts({objectId, partHash, format: "arrayBuffer"})
+    const qpartsResponse = await client.QParts({libraryId, objectId, partHash, format: "arrayBuffer"})
       .then(response => Buffer.from(response));
     const partVerification = ContentObjectVerification._VerifyPart({partHash: partHash, qpartsResponse: qpartsResponse});
 
@@ -30,7 +30,7 @@ const ContentObjectVerification = {
       // Validate Metadata
       const qmdHash = partVerification.cbor.QmdHash.value;
       const metadataPartHash = "hqp_" + MultiHash.toB58String(qmdHash.slice(1, qmdHash.length));
-      const metadataPartResponse = await client.QParts({objectId, partHash: metadataPartHash, format: "arrayBuffer"})
+      const metadataPartResponse = await client.QParts({libraryId, objectId, partHash: metadataPartHash, format: "arrayBuffer"})
         .then(response => Buffer.from(response));
 
       const metadataVerification = ContentObjectVerification._VerifyPart({partHash: metadataPartHash, qpartsResponse: metadataPartResponse});
@@ -59,7 +59,7 @@ const ContentObjectVerification = {
 
       const qstructHash = partVerification.cbor.QstructHash.value;
       const structPartHash = "hqp_" + MultiHash.toB58String(qstructHash.slice(1, qstructHash.length));
-      const structPartResponse = await client.QParts({objectId, partHash: structPartHash, format: "arrayBuffer"})
+      const structPartResponse = await client.QParts({libraryId, objectId, partHash: structPartHash, format: "arrayBuffer"})
         .then(response => Buffer.from(response));
       const structVerification = ContentObjectVerification._VerifyPart({partHash: structPartHash, qpartsResponse: structPartResponse});
 
