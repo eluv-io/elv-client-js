@@ -24,7 +24,9 @@ const qfabConfigPath = process.argv[2];
 let contentSpaceId = process.argv[5];
 
 const PromptRestart = async () => {
-  console.log("Restart QFab Daemon now\n");
+  console.log("\n\n=======================");
+  console.log("RESTART QFAB DAEMON NOW\n");
+  console.log("=======================\n\n");
 
   const rl = readLine.createInterface({
     input: process.stdin,
