@@ -1680,18 +1680,18 @@ client.FabricUrl({
   }
 
   /**
-   * Get all events on a content object
+   * Get a specific contract event by transaction hash
    *
-   * @param {string} objectId - The ID of the object
+   * @param {object} abi - The ABI of the contract
+   * @param {transactionHash} - The transaction hash of the event to retrieve
    *
-   * @see ContractEvents
-   *
-   * @returns {Promise<Array<EventInfo>>}
+   * @returns {Promise<EventInfo>}
    */
-  async ContentObjectContractEvents({objectId}) {
-    return await this.ContractEvents({
-      contractAddress: Utils.HashToAddress({hash: objectId}),
-      abi: ContentContract.abi
+  async ContractEvent({abi, transactionHash}) {
+    return await this.ethClient.ContractEvent({
+      abi,
+      transactionHash,
+      signer: this.signer
     });
   }
 

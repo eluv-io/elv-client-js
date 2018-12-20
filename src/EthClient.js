@@ -269,6 +269,21 @@ class EthClient {
     });
   }
 
+  FormatEvent(event, contractInterface) {
+    return {
+      ...event,
+      ...(contractInterface.parseLog(event))
+    };
+  }
+
+  async ContractEvent({abi, transactionHash, signer}) {
+    const contractEvents = await signer.provider.getLogs(transactionHash);
+
+    if(contractEvents) {
+      return this.FormatEvent(contractEvents[0], new Ethers.utils.Interface(abi));
+    }
+  }
+
   async ContractEvents({contract, contractAddress, abi, signer}) {
     if(!contract) {
       contract = new Ethers.Contract(contractAddress, abi, signer.provider);
@@ -280,7 +295,7 @@ class EthClient {
       fromBlock: 0
     });
 
-    return contractEvents.map(event => contract.interface.parseLog(event));
+    return contractEvents.map(event => this.FormatEvent(event, contract.interface));
   }
 }
 
