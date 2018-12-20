@@ -1700,13 +1700,17 @@ client.FabricUrl({
    *
    * @param {string} contractAddress - The address of the contract
    * @param {object} abi - The ABI of the contract
+   * @param {integer=} fromBlock - Limit results to events after the specified block (inclusive)
+   * @param {integer=} toBlock - Limit results to events before the specified block (inclusive)
    *
    * @returns {Promise<Array<EventInfo>>}
    */
-  async ContractEvents({contractAddress, abi}) {
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock}) {
     return await this.ethClient.ContractEvents({
       contractAddress,
       abi,
+      fromBlock,
+      toBlock,
       signer: this.signer
     });
   }
