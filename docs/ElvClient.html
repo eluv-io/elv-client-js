@@ -4843,7 +4843,7 @@ looking up information about existing content object types which may have been u
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContractEvents">
-      <span class="type-signature">(async) </span>ContractEvents<span class="signature">(<div class="block-param">contractAddress,</div><div class="block-param">abi</div>)</span><span class="type-signature"> &rarr;  Promise.&lt;Array.&lt;EventInfo>></span>
+      <span class="type-signature">(async) </span>ContractEvents<span class="signature">(<div class="block-param">contractAddress,</div><div class="block-param">abi,</div><div class="block-param">fromBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">toBlock<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;Array.&lt;EventInfo>></span>
     </h4>
   </span>
 
@@ -4878,6 +4878,8 @@ looking up information about existing content object types which may have been u
       <th>Type</th>
 
       
+        <th>Attributes</th>
+      
 
       
 
@@ -4905,6 +4907,14 @@ looking up information about existing content object types which may have been u
           
         </td>
 
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
         
 
         
@@ -4935,11 +4945,97 @@ looking up information about existing content object types which may have been u
         </td>
 
         
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
 
         
 
         <td class="description last">
           <p>The ABI of the contract</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>fromBlock</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      integer
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>Limit results to events after the specified block (inclusive)</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>toBlock</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      integer
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>Limit results to events before the specified block (inclusive)</p>
           
         </td>
       </tr>
@@ -4995,7 +5091,7 @@ looking up information about existing content object types which may have been u
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1706">line 1706</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1708">line 1708</a>
         </li>
       </ul>
     </dd>
@@ -10160,7 +10256,7 @@ client.FabricUrl({
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1734">line 1734</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1738">line 1738</a>
         </li>
       </ul>
     </dd>
@@ -12737,7 +12833,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1747">line 1747</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1751">line 1751</a>
         </li>
       </ul>
     </dd>

@@ -284,7 +284,7 @@ class EthClient {
     }
   }
 
-  async ContractEvents({contract, contractAddress, abi, signer}) {
+  async ContractEvents({contract, contractAddress, abi, fromBlock=0, toBlock, signer}) {
     if(!contract) {
       contract = new Ethers.Contract(contractAddress, abi, signer.provider);
       contract = contract.connect(signer);
@@ -292,7 +292,8 @@ class EthClient {
 
     const contractEvents = await signer.provider.getLogs({
       address: contract.address,
-      fromBlock: 0
+      fromBlock,
+      toBlock
     });
 
     return contractEvents.map(event => this.FormatEvent(event, contract.interface));
