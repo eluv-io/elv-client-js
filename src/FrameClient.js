@@ -160,7 +160,6 @@ class FrameClient {
       "DeleteName",
       "DeletePart",
       "DeployContract",
-      "DownloadAllParts",
       "DownloadFile",
       "DownloadPart",
       "EditContentObject",
