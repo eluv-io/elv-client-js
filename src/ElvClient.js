@@ -8,11 +8,17 @@ const EthClient = require("./EthClient");
 const HttpClient = require("./HttpClient");
 const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
+const Crypto = require("./Crypto");
 
 const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
+
+if(typeof Response === "undefined") {
+  // eslint-disable-next-line no-global-assign
+  Response = require("node-fetch-polyfill/lib/response");
+}
 
 const HandleErrors = async (response) => {
   response = await response;
@@ -356,7 +362,8 @@ class ElvClient {
       libraryId,
       objectId,
       writeToken: editResponse.write_token,
-      data: image
+      data: image,
+      encrypted: false
     });
 
     let metadata = await this.ContentObjectMetadata({
@@ -1040,33 +1047,7 @@ class ElvClient {
   }
 
   /**
-   * Download all parts of an object
-   *
-   * @see GET /qlibs/:qlibid/q/:qhit/data
-   *
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
-   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
-   * @param {string=} format - Format of the response - default is Blob
-   *
-   * @returns {Promise<Format>} - Part data in the specified format
-   */
-  async DownloadAllParts({libraryId, objectId, versionHash, format="blob"}) {
-    let path = Path.join("q", versionHash || objectId, "data");
-
-    return ResponseToFormat(
-      format,
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
-        method: "GET",
-        path: path
-      })
-    );
-  }
-
-  /**
-   * Download specified part
+   * Download a part from a content object
    *
    * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash
    *
@@ -1075,21 +1056,26 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} partHash - Hash of the part to download
-   * @param {string=} format - Format of the response - default is Blob
+   * @param {boolean=} encrypted=true - Whether or not the part is encrypted
+   * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
    *
-   * @returns {Promise<Format>} - Part data in the specified format
+   * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
-  async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
-    let path = Path.join("q", versionHash || objectId, "data", partHash);
+  async DownloadPart({libraryId, objectId, versionHash, partHash, encrypted=true, format="blob"}) {
+    const path = Path.join("q", versionHash || objectId, "data", partHash);
 
-    return ResponseToFormat(
-      format,
+    const response = await HandleErrors(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
     );
+
+    let data = await response.arrayBuffer();
+    if(encrypted) { data = (await Crypto.Decrypt({encryptedData: data})).buffer; }
+
+    return (format && format.toLowerCase() === "blob") ? await new Response(data).blob() : data;
   }
 
   /**
@@ -1101,19 +1087,37 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
-   * @param {(string|blob)} data - Data to upload
+   * @param {(ArrayBuffer | Blob | Buffer)} data - Data to upload
+   * @param {boolean=} encrypted=true - Whether or not to encrypt the part
    *
    * @returns {Promise<Object>} - Response containing information about the uploaded part
    */
-  async UploadPart({libraryId, objectId, writeToken, data}) {
-    let path = Path.join("q", writeToken, "data");
+  async UploadPart({libraryId, objectId, writeToken, data, encrypted=true}) {
+    const path = Path.join("q", writeToken, "data");
+
+    // Convert Blob to ArrayBuffer if necessary
+    let dataBuffer = data;
+    if(!(data instanceof ArrayBuffer) && !(typeof Buffer !== "undefined" && data instanceof Buffer)) {
+      // Blob
+      dataBuffer = await new Response(data).arrayBuffer();
+    }
+
+    if(encrypted) { dataBuffer = await Crypto.Encrypt({data: dataBuffer}); }
+
+    if(dataBuffer instanceof ArrayBuffer) {
+      if(typeof window === "undefined") {
+        dataBuffer = Buffer.from(dataBuffer);
+      } else {
+        await new Response([dataBuffer]).blob();
+      }
+    }
 
     return ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
-        body: data,
+        body: dataBuffer,
         bodyType: "BINARY"
       })
     );
