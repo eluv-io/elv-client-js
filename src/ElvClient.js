@@ -1601,6 +1601,8 @@ client.FabricUrl({
    * @returns {Promise<Object>} - Response containing information about the transaction
    */
   async CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
+    if(value && value > 0) { value = Ethers.utils.parseEther(value.toString()); }
+
     return await this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides, signer: this.signer});
   }
 
@@ -1620,6 +1622,8 @@ client.FabricUrl({
    * @returns {Promise<Object>} - The event object of this transaction
    */
   async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
+    if(value && value > 0) { value = Ethers.utils.parseEther(value.toString()); }
+
     return await this.ethClient.CallContractMethodAndWait({
       contractAddress,
       abi,
@@ -1677,22 +1681,6 @@ client.FabricUrl({
   async SetCustomContentContract({objectId, customContractAddress, overrides={}}) {
     const contentContractAddress = Utils.HashToAddress({hash: objectId});
     return await this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
-  }
-
-  /**
-   * Get a specific contract event by transaction hash
-   *
-   * @param {object} abi - The ABI of the contract
-   * @param {transactionHash} - The transaction hash of the event to retrieve
-   *
-   * @returns {Promise<EventInfo>}
-   */
-  async ContractEvent({abi, transactionHash}) {
-    return await this.ethClient.ContractEvent({
-      abi,
-      transactionHash,
-      signer: this.signer
-    });
   }
 
   /**
