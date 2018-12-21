@@ -144,7 +144,6 @@ class FrameClient {
       "ContentType",
       "ContentTypeOwner",
       "ContentTypes",
-      "ContractEvent",
       "ContractEvents",
       "CreateAccessGroup",
       "CreateContentLibrary",

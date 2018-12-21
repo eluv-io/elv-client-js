@@ -6,6 +6,9 @@ const TestMethods = require("./TestMethods");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
+const ethers = require("ethers");
+const BaseContract = require("../src/contracts/BaseContent");
+
 const Test = async () => {
   try {
     let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
@@ -19,7 +22,27 @@ const Test = async () => {
     });
     client.SetSigner({signer});
 
-    await TestMethods.TestQueries(client, signer);
+    //await TestMethods.TestQueries(client, signer);
+
+
+    let events = await client.ContractEvents({
+      contractAddress: "0x13e83f5d81240f261c4be64d39c0cb988832e321",
+      abi: BaseContract.abi,
+    });
+
+    console.log(events);
+
+
+    events = await client.ContractEvents({
+      abi: BaseContract.abi,
+      transactionHash: ""
+    });
+
+    console.log(events);
+
+
+    //const event = await signer.provider.getLogs("0xeee96b5ecae3f271001e37913885aac16cd37cc28ab702607ad6e39b33521d47");
+    //console.log(event);
 
     // Ensure ElvClient and FrameClient agree on allowed methods
     const frameClient = new FrameClient({target: this});

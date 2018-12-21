@@ -276,27 +276,14 @@ class EthClient {
     };
   }
 
-  async ContractEvent({abi, transactionHash, signer}) {
-    const contractEvents = await signer.provider.getLogs(transactionHash);
-
-    if(contractEvents) {
-      return this.FormatEvent(contractEvents[0], new Ethers.utils.Interface(abi));
-    }
-  }
-
-  async ContractEvents({contract, contractAddress, abi, fromBlock=0, toBlock, signer}) {
-    if(!contract) {
-      contract = new Ethers.Contract(contractAddress, abi, signer.provider);
-      contract = contract.connect(signer);
-    }
-
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, signer}) {
     const contractEvents = await signer.provider.getLogs({
-      address: contract.address,
+      address: contractAddress,
       fromBlock,
       toBlock
     });
 
-    return contractEvents.map(event => this.FormatEvent(event, contract.interface));
+    return contractEvents.map(event => this.FormatEvent(event, new Ethers.utils.Interface(abi)));
   }
 }
 
