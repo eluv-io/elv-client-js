@@ -1,13 +1,17 @@
 const runningInBrowser = typeof window !== "undefined";
 
-let fs, path;
-if(!runningInBrowser) {
+let fs, path, encoder, decoder;
+if(runningInBrowser) {
+  encoder = new TextEncoder();
+  decoder = new TextDecoder("utf-8");
+} else {
   fs = require("fs");
   path = require("path");
+  encoder = new (require("util").TextEncoder)();
+  decoder = new (require("util").TextDecoder)("utf-8");
 }
 
 const TestQueries = async (client) => {
-  //let output = "";
   try {
     console.log("CURRENT ACCOUNT: " + await client.CurrentAccountAddress() + "\n");
 
@@ -118,7 +122,7 @@ const TestQueries = async (client) => {
         libraryId,
         objectId,
         writeToken: createResponse.write_token,
-        data: "some form of data"
+        data: encoder.encode("some form of data").buffer
       })
     );
 
@@ -271,11 +275,13 @@ const TestQueries = async (client) => {
       objectId,
       versionHash,
       partHash,
-      format: "text"
+      format: "arraybuffer"
     });
 
-    console.log("DOWNLOADED: ");
     console.log(downloadResponse);
+
+    console.log("DOWNLOADED: ");
+    console.log(decoder.decode(downloadResponse));
 
     console.log("\nNAMING... ");
 

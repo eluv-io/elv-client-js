@@ -30,6 +30,9 @@ module.exports = {
     filename: "ElvClient-min-dev.js",
     libraryTarget: "umd"
   },
+  node: {
+    fs: "empty"
+  },
   mode: "development",
   devtool: cmdOpts["mode"] === "production" ? "" : "source-map",
   plugins: plugins,
@@ -40,7 +43,7 @@ module.exports = {
     rules: [
       {
         test: /\.(txt|bin|abi)$/i,
-        loader: 'raw-loader'
+        loader: "raw-loader"
       }
     ]
   }
