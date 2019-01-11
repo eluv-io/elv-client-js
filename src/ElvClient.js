@@ -73,10 +73,10 @@ class ElvClient {
    * @param {string} ethPort - Port of the blockchain RPC endpoint
    * @param {boolean} ethUseHTTPS - Use HTTPS when communicating with the blockchain
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
-   *
+   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
-  constructor({contentSpaceId, hostname, port, useHTTPS, ethHostname, ethPort, ethUseHTTPS, noCache=false}) {
+  constructor({contentSpaceId, hostname, port, useHTTPS, ethHostname, ethPort, ethUseHTTPS, noCache=false, noAuth=false}) {
     this.contentSpaceId = contentSpaceId;
 
     this.fabricURI = new URI()
@@ -99,6 +99,7 @@ class ElvClient {
     this.authClient = { AuthorizationHeader: () => { throw Error("Signer not set"); }};
 
     this.noCache = noCache;
+    this.noAuth = noAuth;
 
     this.utils = Utils;
   }
@@ -122,7 +123,9 @@ class ElvClient {
       useHTTPS: configuration.fabric.use_https,
       ethHostname: configuration.ethereum.hostname,
       ethPort: configuration.ethereum.port,
-      ethUseHTTPS: configuration.ethereum.use_https
+      ethUseHTTPS: configuration.ethereum.use_https,
+      noCache: configuration.noCache,
+      noAuth: configuration.noAuth,
     });
   }
 
@@ -159,7 +162,8 @@ class ElvClient {
       ethClient: this.ethClient,
       contentSpaceId: this.contentSpaceId,
       signer: signer,
-      noCache: this.noCache
+      noCache: this.noCache,
+      noAuth: this.noAuth
     });
   }
 
@@ -953,6 +957,115 @@ class ElvClient {
 
   /* Files */
 
+  /**
+   * List the file information about this object
+   *
+   * @see GET /qlibs/:qlibid/q/:qhit/meta/files
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
+   */
+  async ListFiles({libraryId, objectId, versionHash}) {
+    let path = Path.join("q", versionHash || objectId, "meta", "files");
+
+    return ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        method: "GET",
+        path: path,
+      })
+    );
+  }
+
+  /**
+   * Upload files to a content object.
+   * This method encapsulates the complexity of creating upload jobs and uploading data to them.
+   * It is highly recommended to use this method over using CreateFileUploadJob, UploadFileData and FinalizeUploadJobs
+   * individually
+   *
+   * @see GET /qlibs/:qlibid/q/:qhit/meta/files
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Array<object>} fileInfo - List of files to upload, including their size, type, and contents
+   * @example fileInfo
+[
+  {
+    "path": "myDirectory",
+    "type": "directory"
+  },
+  {
+    "path": "myDirectory/Video.mp4",
+    "type": "file",
+    "size": 6045849,
+    "data": <data>
+  },
+  {
+    "path": "myDirectory/MyImage.png",
+    "type": "file",
+    "size": 90509,
+    "data": <data>
+  }
+  {
+    "path": "myDirectory/File.bin",
+    "type": "file",
+    "size": 236990304,
+    "data": <data>
+  },
+  {
+    "path": "myDirectory/subDirectory",
+    "type": "directory"
+  },
+  {
+    "path": "myDirectory/subDirectory/MyVideo.mp4",
+    "type": "file",
+    "size": 6089214,
+    "data": <data>
+  },
+  {
+    "path": "myDirectory/subDirectory/OtherImage.png",
+    "type": "file",
+    "size": 789561,
+    "data": <data>
+  }
+]
+   */
+  async UploadFiles({libraryId, objectId, writeToken, fileInfo}) {
+    // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
+    let fileDataMap = {};
+    fileInfo = fileInfo.map(entry => {
+      fileDataMap[entry.path] = entry.data;
+      delete entry.data;
+
+      return entry;
+    });
+
+    const uploadJobs = (await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo})).upload_jobs;
+
+    await Promise.all(
+      uploadJobs.map(async jobInfo => {
+        await Promise.all(
+          jobInfo.files.map(async fileInfo => {
+            const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+            await this.UploadFileData({
+              libraryId,
+              objectId,
+              writeToken,
+              jobId: jobInfo.id,
+              fileData
+            });
+          })
+        );
+      })
+    );
+
+    await this.FinalizeUploadJobs({libraryId, objectId, writeToken});
+  }
+
   async CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo}) {
     let path = Path.join("q", writeToken, "upload_jobs");
 
@@ -1007,6 +1120,20 @@ class ElvClient {
     );
   }
 
+  /**
+   * Download a file from a content object
+   *
+   * @see GET /qlibs/:qlibid/q/:qhit/files/:filePath
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string} filePath - Path to the file to download
+   * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
+   *
+   * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
+   */
   async DownloadFile({libraryId, objectId, versionHash, filePath, format="blob"}) {
     let path = Path.join("q", versionHash || objectId, "files", filePath);
 

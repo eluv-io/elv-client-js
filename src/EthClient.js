@@ -109,9 +109,10 @@ class EthClient {
     try {
       result = await contract.functions[methodName](...methodArgs, overrides);
     } catch(error) {
-      // If the default gas limit was not sufficient, bump it up
+      // If the default gas limit was not sufficient, bump it up to the gas limit of the latest block
       if(error.code === -32000 || error.message.startsWith("replacement fee too low")) {
-        overrides.gasLimit = 8000000;
+        const latestBlock = await signer.provider.getBlock("latest");
+        overrides.gasLimit = latestBlock.gasLimit;
         overrides.gasPrice = 800000000;
         result = await contract.functions[methodName](...methodArgs, overrides);
       } else {

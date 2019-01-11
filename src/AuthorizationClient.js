@@ -17,12 +17,13 @@ const B64 = (str) => {
 };
 
 class AuthorizationClient {
-  constructor({ethClient, contentSpaceId, signer, noCache=false}) {
+  constructor({ethClient, contentSpaceId, signer, noCache=false, noAuth=false}) {
     this.ethClient = ethClient;
     this.contentSpaceId = contentSpaceId;
     this.signer = signer;
 
     this.noCache = noCache;
+    this.noAuth = noAuth;
 
     this.accessTransactions = {
       spaces: {},
@@ -96,7 +97,7 @@ class AuthorizationClient {
 
   // Generate proper authorization header based on the information provided
   async GenerateAuthorizationHeader({libraryId, objectId, transactionHash, update=false}) {
-    if(!transactionHash) {
+    if(!transactionHash && !this.noAuth) {
       // If content library object, authorize against library, not object
       if(objectId && !Utils.EqualHash(libraryId, objectId)) {
         if(Utils.EqualHash(this.contentSpaceId, libraryId)) {

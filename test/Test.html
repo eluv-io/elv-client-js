@@ -4,7 +4,7 @@
   <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
 </head>
 <body style="height: 100%;">
-  <script src='../ElvClient-min.js'></script>
+  <script src='../ElvClient-min-dev.js'></script>
   <script src='../test/TestMethods.js'></script>
   <script>
     function test() {
@@ -14,16 +14,21 @@
       const output = document.getElementById("output");
 
       const RunTests = async () => {
-        let Client = new ElvClient(
-          {
-            hostname: "localhost",
-            port: 8008,
-            useHTTPS: false,
-            ethHostname: "localhost",
-            ethPort: 7545,
-            ethUseHTTPS: false
+        let client = ElvClient.FromConfiguration({
+          configuration: {
+            "fabric": {
+              "contentSpaceId": "ispc49XhwgW4QiDmj5vgHG5z2BQSKC8q",
+              "hostname": "localhost",
+              "port": 8008,
+              "use_https": false
+            },
+            "ethereum": {
+              "hostname": "localhost",
+              "port": 8545,
+              "use_https": false
+            }
           }
-        );
+        });
 
         output.textContent = "Decrypting private key...";
 
@@ -37,15 +42,16 @@
         });
 
 */
-        let wallet = Client.GenerateWallet();
+        let wallet = client.GenerateWallet();
         let signer = wallet.AddAccount({
           accountName: "Alice",
-          privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
+          privateKey: "0xbf092a5c94988e2f7a1d00d0db309fc492fe38ddb57fc6d102d777373389c5e6"
         });
+        client.SetSigner({signer});
 
         output.textContent = "Running tests...";
 
-        return TestQueries(Client, signer);
+        return TestQueries(client, signer);
       };
 
       RunTests().then(result => output.textContent = result);

@@ -1,15 +1,41 @@
 const runningInBrowser = typeof window !== "undefined";
 
-let fs, path, encoder, decoder;
+let fs, Path, encoder, decoder;
 if(runningInBrowser) {
   encoder = new TextEncoder();
   decoder = new TextDecoder("utf-8");
 } else {
   fs = require("fs");
-  path = require("path");
+  Path = require("path");
   encoder = new (require("util").TextEncoder)();
   decoder = new (require("util").TextDecoder)("utf-8");
 }
+
+// Read the specified directory and format it to be used by UploadFiles
+const ReadDir = (path) => {
+  let fileInfo = [{
+    path,
+    type: "directory"
+  }];
+  const dir = fs.readdirSync(path, {withFileTypes: true});
+
+  dir.forEach(item => {
+    const itemPath = Path.join(path, item.name);
+    if(item.isFile()) {
+      const fileData = fs.readFileSync(itemPath);
+      fileInfo.push({
+        path: itemPath,
+        type: "file",
+        size: fileData.length,
+        data: fileData
+      });
+    } else {
+      fileInfo = fileInfo.concat(ReadDir(itemPath));
+    }
+  });
+
+  return fileInfo;
+};
 
 const TestQueries = async (client) => {
   try {
@@ -31,7 +57,7 @@ const TestQueries = async (client) => {
 
     let image;
     if(!runningInBrowser) {
-      image = fs.readFileSync(path.join(__dirname, "images/logo-dark.png"));
+      image = fs.readFileSync(Path.join(__dirname, "images/logo-dark.png"));
     }
 
     const libraryId = await (
@@ -94,7 +120,7 @@ const TestQueries = async (client) => {
       client.CreateContentObject({
         libraryId,
         options: {
-          type: "avmaster2000",
+          type: "avlive",
           meta: {
             "meta": "data",
             "to_delete": {
@@ -281,7 +307,30 @@ const TestQueries = async (client) => {
     console.log(downloadResponse);
 
     console.log("DOWNLOADED: ");
-    console.log(decoder.decode(downloadResponse));
+    console.log(decoder.decode(downloadResponse).length);
+
+
+    if(!runningInBrowser) {
+      console.log("UPLOADING FILES...");
+
+      const fileInfo = ReadDir("./src");
+
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+      await client.UploadFiles({
+        libraryId,
+        objectId,
+        writeToken,
+        fileInfo
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+
+      console.log("UPLOADED: \n");
+      console.log(JSON.stringify(await client.ListFiles({libraryId, objectId}), null, 2));
+      console.log("\nDOWNLOADING FILE...");
+      const file = await client.DownloadFile({libraryId, objectId, filePath: "src/ElvClient.js"});
+      console.log(file);
+    }
 
     console.log("\nNAMING... ");
 
