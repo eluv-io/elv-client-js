@@ -148,7 +148,7 @@ const Init = async () => {
         console.log("\tCreating " + name + "...");
         await client.CreateContentType({
           metadata: {
-            "eluv.name": name
+            "eluv.name": name,
           },
           bitcode
         });
