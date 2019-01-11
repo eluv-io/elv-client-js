@@ -404,6 +404,8 @@ class ElvClient {
   async DeleteContentLibrary({libraryId}) {
     let path = Path.join("qlibs", libraryId);
 
+    const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
+
     await this.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress({hash: libraryId}),
       abi: LibraryContract.abi,
@@ -413,7 +415,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
+        headers: authorizationHeader,
         method: "DELETE",
         path: path
       })
@@ -863,6 +865,8 @@ class ElvClient {
   async DeleteContentObject({libraryId, objectId}) {
     let path = Path.join("qid", objectId);
 
+    const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
+
     await this.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress({hash: objectId}),
       abi: ContentContract.abi,
@@ -872,7 +876,7 @@ class ElvClient {
 
     return HandleErrors(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: authorizationHeader,
         method: "DELETE",
         path: path
       })
