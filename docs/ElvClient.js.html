@@ -1102,18 +1102,16 @@ class ElvClient {
 
     await Promise.all(
       uploadJobs.map(async jobInfo => {
-        await Promise.all(
-          jobInfo.files.map(async fileInfo => {
-            const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
-            await this.UploadFileData({
-              libraryId,
-              objectId,
-              writeToken,
-              jobId: jobInfo.id,
-              fileData
-            });
-          })
-        );
+        for(const fileInfo of jobInfo.files) {
+          const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+          await this.UploadFileData({
+            libraryId,
+            objectId,
+            writeToken,
+            jobId: jobInfo.id,
+            fileData
+          });
+        }
       })
     );
 
