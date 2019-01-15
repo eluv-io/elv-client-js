@@ -8,7 +8,7 @@ const ClientConfiguration = require("../TestConfiguration.json");
 
 const Test = async () => {
   try {
-    ClientConfiguration.noAuth = true;
+    //ClientConfiguration.noAuth = true;
     let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
     let wallet = client.GenerateWallet();
