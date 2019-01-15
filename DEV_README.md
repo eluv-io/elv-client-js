@@ -530,3 +530,58 @@ The API client can be used transparently by an restricted IFrame using the Frame
 See ./test/frames/Parent.html and ./test/frames/Child.html for example usage
 
 NOTE: Raw response objects cannot be passed in message. When using non-json endpoints (e.g. DownloadPart), you must specify a valid type in the format field or accept the default blob format. The available formats correspond to Response methods (.json(), .blob(), .text(), etc.)
+
+### Content Type Schema
+
+#### Type Schema Grammar:
+
+* **Schema**: [ **Entry** ]
+* **Entry**: { **Key**, **Type**, { **Options** } }
+* **Key**: string
+* **Type**:
+  "label" |
+  "string" |
+  "text" |
+  "integer" |
+  "number" |
+  "json" |
+  "boolean" |
+  "choice" |
+  "list" |
+  "object" |
+  "file" |
+  "attachedFile"
+* **Options** - Each type may have additional options that can modify contents, display properties, or validation of the field
+  - \*
+    - label: string
+      - The label for this field. If not set, the key will be used as the label
+    - required: boolean
+      - Whether or not this field is required. Validation will be performed on the form
+         using the html5 "required" attribute
+  - "label":
+    - text: string
+      - The text to be displayed in the label
+  - "object":
+    - fields: **Schema**
+      - The fields of an object are described as a schema
+    - flattenDisplay: boolean
+      - If true, the fields will not be wrapped in a subsection in the form with the object label -- the fields will appear as if they were not contained in an object.
+  - "choice":
+    - options: [ [label, value], ...]
+      - List of options to choose from. Each entry is a pair consisting of the label of the entry and its value
+  - "file":
+    - multiple: boolean
+      - If specified, will allow uploading of multiple files. Otherwise, only a single file will
+         be allowed
+    - accept: mime-type-string | [ mime-type-string ]
+      - Limits the allowed filetypes to be upload to the specified mime-types
+  - "attachedFile":
+    - hash: string
+      - The hash of the content type part corresponding to the attached file
+
+##### Notes
+*attachedFile* is a special field that corresponds to a file uploaded to the content type. This file will be available in the form via a download link. This type may be useful for terms and conditions, instructions, or other information the contributor may need.
+
+Schema are specified in the "eluv.schema" tag in the content type metadata.
+
+Custom metadata manipulation can be allowed by setting "eluv.allowCustomMetadata" to true in the content type metadata.

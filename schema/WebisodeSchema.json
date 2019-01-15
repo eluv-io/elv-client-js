@@ -1,0 +1,166 @@
+{
+  "eluv.schema": [
+    {
+      "key": "name",
+      "label": "Name",
+      "type": "string"
+    },
+    {
+      "key": "webisode",
+      "type": "object",
+      "flattenDisplay": true,
+      "fields": [
+        {
+          "key": "metadata",
+          "type": "object",
+          "flattenDisplay": true,
+          "fields": [
+            {
+              "key": "title",
+              "label": "Title",
+              "type": "string"
+            },
+            {
+              "key": "synopsis",
+              "label": "Synopsis",
+              "type": "text"
+            },
+            {
+              "key": "cast_and_crew",
+              "label": "Cast and Crew",
+              "type": "string"
+            }
+          ]
+        },
+        {
+          "key": "blog_post",
+          "label": "Blog Post",
+          "type": "text"
+        },
+        {
+          "key": "facebook",
+          "label": "Facebook",
+          "type": "object",
+          "fields": [
+            {
+              "key": "text",
+              "type": "object",
+              "flattenDisplay": true,
+              "fields": [
+                {
+                  "key": "1",
+                  "label": "Text 1",
+                  "type": "string"
+                },
+                {
+                  "key": "2",
+                  "label": "Text 2",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "key": "proxy.1min",
+              "label": "1 Minute Preview",
+              "type": "file",
+              "accept": [
+                "video/*"
+              ]
+            }
+          ]
+        },
+        {
+          "key": "youtube",
+          "label": "YouTube",
+          "type": "object",
+          "fields": [
+            {
+              "key": "text",
+              "type": "object",
+              "flattenDisplay": true,
+              "fields": [
+                {
+                  "key": "1",
+                  "label": "Text 1",
+                  "type": "string"
+                },
+                {
+                  "key": "2",
+                  "label": "Text 2",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "key": "description",
+              "label": "Description",
+              "type": "text"
+            }
+          ]
+        },
+        {
+          "key": "video",
+          "label": "Video",
+          "type": "file",
+          "accept": [
+            "video/*"
+          ]
+        },
+        {
+          "key": "still",
+          "type": "object",
+          "flattenDisplay": true,
+          "fields": [
+            {
+              "key": "highres",
+              "type": "object",
+              "flattenDisplay": true,
+              "fields": [
+                {
+                  "key": "1",
+                  "label": "Hi-res Still 1",
+                  "type": "file",
+                  "accept": [
+                    "image/*"
+                  ]
+                },
+                {
+                  "key": "2",
+                  "label": "Hi-res Still 2",
+                  "type": "file",
+                  "accept": [
+                    "image/*"
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "key": "tags",
+          "label": "Tags",
+          "type": "list"
+        },
+        {
+          "key": "terms_and_conditions_label",
+          "type": "label",
+          "label": "",
+          "text": "Before submitting this content, you must agree to the Terms and Conditions below"
+        },
+        {
+          "hash": "hqp_QmUzs9ticwCsejnjdRrwHsThiNGvNytEFTVY21ZrNKKWAr",
+          "key": "terms_and_conditions",
+          "label": "Terms and Conditions",
+          "type": "attachedFile"
+        },
+        {
+          "key": "agree_to_terms",
+          "label": "I agree",
+          "required": true,
+          "type": "boolean"
+        }
+      ]
+    }
+  ]
+}
+

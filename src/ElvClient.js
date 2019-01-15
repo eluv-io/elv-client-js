@@ -1365,14 +1365,41 @@ client.FabricUrl({
       }
     }
 
-    const authorization = (await this.authClient.AuthorizationHeader({libraryId, objectId, noCache}))
-      .Authorization.replace("Bearer ", "");
+    const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache})
 
     return this.HttpClient.URL({
       path: path,
       queryParams: {
         ...queryParams,
-        authorization
+        authorization: authorizationToken
+      }
+    });
+  }
+
+  /**
+   * Generate a URL to the specified content object file with appropriate authorization token.
+   *
+   * @namedParmas
+   * @param {string} libraryId - ID of an library
+   * @param {string} objectId - ID of an object - Required if using versionHash
+   * @param {string=} versionHash - Hash of an object version - If specified, will be used instead of objectID in URL
+   * @param {string} filePath - Path to the content object file
+   * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+   * whether such a request exists in the client cache. This request will not be cached.
+   *
+   * @returns {Promise<string>} - URL to the specified file with authorization token
+   */
+  async FileUrl({libraryId, objectId, versionHash, filePath, queryParams={}, noCache=false}) {
+    let path = Path.join("qlibs", libraryId, "q", versionHash || objectId, "files", filePath);
+
+    const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+
+    return this.HttpClient.URL({
+      path: path,
+      queryParams: {
+        ...queryParams,
+        authorization: authorizationToken
       }
     });
   }

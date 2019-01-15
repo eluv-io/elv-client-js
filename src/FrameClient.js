@@ -166,6 +166,7 @@ class FrameClient {
       "ExtractEventFromLogs",
       "ExtractValueFromEvent",
       "FabricUrl",
+      "FileUrl",
       "FinalizeContentObject",
       "FinalizeUploadJobs",
       "FormatContractArguments",

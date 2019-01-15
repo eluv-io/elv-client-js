@@ -13,10 +13,7 @@ if(runningInBrowser) {
 
 // Read the specified directory and format it to be used by UploadFiles
 const ReadDir = (path) => {
-  let fileInfo = [{
-    path,
-    type: "directory"
-  }];
+  let fileInfo = [];
   const dir = fs.readdirSync(path, {withFileTypes: true});
 
   dir.forEach(item => {
@@ -57,12 +54,12 @@ const TestQueries = async (client) => {
 
     let image;
     if(!runningInBrowser) {
-      image = fs.readFileSync(Path.join(__dirname, "images/logo-dark.png"));
+      //image = fs.readFileSync(Path.join(__dirname, "images/logo-dark.png"));
     }
 
     const libraryId = await (
       client.CreateContentLibrary({
-        name: "New library",
+        name: "Test library",
         description: "Library Description",
         image,
         publicMetadata: {
@@ -330,7 +327,12 @@ const TestQueries = async (client) => {
       console.log("\nDOWNLOADING FILE...");
       const file = await client.DownloadFile({libraryId, objectId, filePath: "src/ElvClient.js"});
       console.log(file);
+
+      console.log("\nFILE URL:");
+      const fileUrl = await client.FileUrl({libraryId, objectId, filePath: "src/ElvClient.js"});
+      console.log(fileUrl);
     }
+
 
     console.log("\nNAMING... ");
 
