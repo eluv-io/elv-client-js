@@ -578,7 +578,7 @@ class ElvClient {
    *
    * @namedParams
    * @param {object} metadata - Metadata for the new content type
-   * @param {(string|blob)} bitcode - Bitcode to be used for the content type
+   * @param {(string|blob)=} bitcode - Bitcode to be used for the content type
    *
    * @returns {Promise<string>} - Object ID of created content type
    */
@@ -605,12 +605,14 @@ class ElvClient {
       })
     );
 
-    await this.UploadPart({
-      libraryId: typeLibraryId,
-      objectId,
-      writeToken: createResponse.write_token,
-      data: bitcode
-    });
+    if(bitcode) {
+      await this.UploadPart({
+        libraryId: typeLibraryId,
+        objectId,
+        writeToken: createResponse.write_token,
+        data: bitcode
+      });
+    }
 
     await this.FinalizeContentObject({
       libraryId: typeLibraryId,
@@ -1365,7 +1367,7 @@ client.FabricUrl({
       }
     }
 
-    const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache})
+    const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
 
     return this.HttpClient.URL({
       path: path,
