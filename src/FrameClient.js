@@ -51,16 +51,39 @@ class FrameClient {
     }
   }
 
+  /**
+   * Pass an ElvFrameRequest to the target and receive a ElvFrameResponse.
+   * Useful when acting as an intermediate between a contained app and a parent app.
+   *
+   * @namedParams
+   * @param {object} request - An ElvFrameRequest
+   * @returns {object} - The resultant ElvFrameResponse
+   */
+  async PassRequest({request}) {
+    let response;
+    try {
+      response = await this.SendMessage({options: request});
+    } catch(error) {
+      response = JSON.parse(JSON.stringify(error));
+    }
+
+    return {
+      type: "ElvFrameResponse",
+      requestId: request.requestId,
+      response
+    };
+  }
+
   async SendMessage({options={}}) {
     const requestId = Id.next();
 
     this.target.postMessage({
+      ...options,
       type: "ElvFrameRequest",
-      requestId,
-      ...options
+      requestId
     }, "*");
 
-    return (await this.AwaitMessage(requestId, 5000));
+    return (await this.AwaitMessage(requestId));
   }
 
   AwaitMessage(requestId) {
