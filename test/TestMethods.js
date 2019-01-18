@@ -105,8 +105,19 @@ const TestQueries = async (client) => {
     await client.AddLibraryContentType({libraryId, typeId: otherType.id});
 
     console.log("NEW LIBRARY TYPES: ");
+    const updatedLibraryTypes = await client.LibraryContentTypes({libraryId});
+    console.log(updatedLibraryTypes);
+
+    console.log("REMOVING VIDEO TYPE BY NAME...");
+    await client.RemoveLibraryContentType({libraryId, typeName: "video"});
+
+    console.log(`REMOVING ${otherType.meta["eluv.name"]} TYPE BY ID...`);
+    await client.RemoveLibraryContentType({libraryId, typeId: otherType.id});
+
+    console.log("FINAL LIBRARY TYPES: ");
     const finalLibraryTypes = await client.LibraryContentTypes({libraryId});
     console.log(finalLibraryTypes);
+
 
     // Clear auth cache to force an accessRequest to the library on next call
     console.log("\nFORCING REAUTHORIZATION TO LIBRARY ON NEXT CALL\n");

@@ -161,6 +161,7 @@ contract BaseContent is Editable {
             if (calculatedCharge >= 0) {
                 levelAccessCharge = uint256(calculatedCharge);
             }
+            require(levelAccessCharge <= accessCharge);
         }
         emit GetAccessCharge(level, levelAccessCharge);
         return levelAccessCharge;
