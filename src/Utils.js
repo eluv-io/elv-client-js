@@ -9,6 +9,8 @@ const bs58 = require("bs58");
  * It can be accessed from ElvClient and FrameClient as client.utils
  */
 const Utils = {
+  nullAddress: "0x0000000000000000000000000000000000000000",
+
   /**
    * Convert contract address to multiformat hash
    *

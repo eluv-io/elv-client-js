@@ -862,12 +862,23 @@ class ElvClient {
    * @returns {Promise&lt;Object>} - Response containing the object ID and write token of the draft
    */
   async CreateContentObject({libraryId, options={}}) {
-    // If type is specified but it is not a version hash, look up type by name
-    if(options.type &amp;&amp; !options.type.startsWith("hq__")) {
-      options.type = (await this.ContentType({name: options.type}).hash);
+    // Look up content type, if specified
+    let typeId;
+    if(options.type) {
+      let type;
+      if(!options.type.startsWith("hq__")) {
+        // Type name specified
+        type = await this.ContentType({name: options.type});
+      } else {
+        // Type hash specified
+        type = await this.ContentType({versionHash: options.type});
+      }
+
+      typeId = type.id;
+      options.type = type.hash;
     }
 
-    const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId});
+    const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId, typeId});
 
     const objectId = this.utils.AddressToObjectId({address: contractAddress});
     const path = Path.join("q", objectId);
@@ -889,18 +900,15 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} libraryId - ID of the library
-   * @param {Object=} options -
-   * type: Version hash of the content type to associate with the object - will replace existing type if specified
-   *
+   * @param {string} objectId - ID of the object
+   * @param {object=} options -
    * meta: New metadata for the object - will replace existing metadata if specified
    *
-   * @returns {Promise&lt;Object>} - Response containing the object ID and write token of the draft
+   * @returns {Promise&lt;object>} - Response containing the object ID and write token of the draft
    */
   async EditContentObject({libraryId, objectId, options={}}) {
-    // If type is specified but it is not a version hash, look up type by name
-    if(options.type &amp;&amp; !options.type.startsWith("hq__")) {
-      options.type = (await this.ContentType({name: options.type})).hash;
-    }
+    // Don't allow changing of content type in this method
+    delete options.type;
 
     let path = Path.join("qid", objectId);
 
