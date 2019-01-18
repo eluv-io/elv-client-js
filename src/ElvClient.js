@@ -578,7 +578,7 @@ class ElvClient {
    *
    * @namedParams
    * @param {object} metadata - Metadata for the new content type
-   * @param {(string|blob)=} bitcode - Bitcode to be used for the content type
+   * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
    *
    * @returns {Promise<string>} - Object ID of created content type
    */

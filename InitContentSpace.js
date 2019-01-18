@@ -25,7 +25,7 @@ let contentSpaceId = process.argv[5];
 
 const PromptRestart = async () => {
   console.log("\n\n=======================");
-  console.log("RESTART QFAB DAEMON NOW\n");
+  console.log("RESTART QFAB DAEMON NOW");
   console.log("=======================\n\n");
 
   const rl = readLine.createInterface({
@@ -132,18 +132,42 @@ const Init = async () => {
 
     console.log("Creating content types: ");
 
-    // TODO: use options->withFileTypes to ensure things are directories
+    // Read the specified directory and format it to be used by UploadFiles
+    const ReadDir = (path) => {
+      let fileInfo = [];
+      const dir = fs.readdirSync(path, {withFileTypes: true});
+
+      dir.forEach(item => {
+        const itemPath = Path.join(path, item.name);
+        if(item.isFile()) {
+          const fileData = fs.readFileSync(itemPath);
+          fileInfo.push({
+            path: itemPath,
+            type: "file",
+            size: fileData.length,
+            data: fileData
+          });
+        } else {
+          fileInfo = fileInfo.concat(ReadDir(itemPath));
+        }
+      });
+
+      return fileInfo;
+    };
+
+    // List all directories in content-fabric/bitcode
     const bitcodePath = Path.join(process.argv[3], "bitcode");
-    const bitcodeDirs = fs.readdirSync(bitcodePath)
-      .filter(name => !name.startsWith("."));
+    const bitcodeDirs = fs.readdirSync(bitcodePath, {withFileTypes: true})
+      .filter(item => item.isDirectory());
 
-    for (const bitcodeDirName of bitcodeDirs) {
-      const bitcodeFiles = fs.readdirSync(Path.join(bitcodePath, bitcodeDirName))
-        .filter(filename => filename.endsWith(".bc"));
+    // Find the bitcode in each directory and create a content type with it
+    for (const bitcodeDir of bitcodeDirs) {
+      const bitcodeFiles = fs.readdirSync(Path.join(bitcodePath, bitcodeDir.name), {withFileTypes: true})
+        .filter(item => item.isFile() && item.name.endsWith(".bc"));
 
-      for (const bitcodeFilename of bitcodeFiles) {
-        const name = bitcodeFilename.split(".")[0];
-        const bitcode = fs.readFileSync(Path.join(bitcodePath, bitcodeDirName, bitcodeFilename));
+      for (const bitcodeFile of bitcodeFiles) {
+        const name = bitcodeFile.name.split(".")[0];
+        const bitcode = fs.readFileSync(Path.join(bitcodePath, bitcodeDir.name, bitcodeFile.name));
 
         console.log("\tCreating " + name + "...");
         await client.CreateContentType({
