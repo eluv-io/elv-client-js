@@ -93,6 +93,21 @@ const TestQueries = async (client) => {
     console.log(JSON.stringify(libraryContentObject, null, 2));
 
 
+    console.log("LIBRARY TYPES: ");
+    const initialLibraryTypes = await client.LibraryContentTypes({libraryId});
+    console.log(initialLibraryTypes);
+
+    console.log("ADDING VIDEO TYPE BY NAME...");
+    await client.AddLibraryContentType({libraryId, typeName: "video"});
+
+    const otherType = Object.values(contentTypes)[0];
+    console.log(`ADDING ${otherType.meta["eluv.name"]} TYPE BY ID...`);
+    await client.AddLibraryContentType({libraryId, typeId: otherType.id});
+
+    console.log("NEW LIBRARY TYPES: ");
+    const finalLibraryTypes = await client.LibraryContentTypes({libraryId});
+    console.log(finalLibraryTypes);
+
     // Clear auth cache to force an accessRequest to the library on next call
     console.log("\nFORCING REAUTHORIZATION TO LIBRARY ON NEXT CALL\n");
     client.authClient && client.authClient.ClearCache({libraryId});
@@ -117,7 +132,7 @@ const TestQueries = async (client) => {
       client.CreateContentObject({
         libraryId,
         options: {
-          type: "avlive",
+          type: "video",
           meta: {
             "meta": "data",
             "to_delete": {

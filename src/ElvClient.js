@@ -476,6 +476,124 @@ class ElvClient {
     );
   }
 
+  /* Library Content Type Management */
+
+  /**
+   * Add a specified content type to a library
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string=} typeId - ID of the content type (required unless typeName is specified)
+   * @param {string=} typeName - Name of the content type (required unless typeId is specified)
+   * @param {string=} customContractAddress - Address of the custom contract to associate with
+   * this content type for this library
+   *
+   * @returns {string} - Hash of the addContentType transaction
+   */
+  async AddLibraryContentType({libraryId, typeId, typeName, customContractAddress}) {
+    if(!typeId) {
+      // Look up type by name
+      const type = await this.ContentType({name: typeName});
+      typeId = type.id;
+    }
+
+    const typeAddress = this.utils.HashToAddress({hash: typeId});
+    customContractAddress = customContractAddress || this.utils.nullAddress;
+
+    const event = await this.ethClient.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      abi: LibraryContract.abi,
+      methodName: "addContentType",
+      methodArgs: [typeAddress, customContractAddress],
+      signer: this.signer
+    });
+
+    return event.transactionHash;
+  }
+
+  /**
+   * Remove the specified content type from a library
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string=} typeId - ID of the content type (required unless typeName is specified)
+   * @param {string=} typeName - Name of the content type (required unless typeId is specified)
+   *
+   * @returns {string} - Hash of the removeContentType transaction
+   */
+  async RemoveLibraryContentType({libraryId, typeId, typeName}) {
+    if(!typeId) {
+      // Look up type by name
+      const type = await this.ContentType({name: typeName});
+      typeId = type.id;
+    }
+
+    const typeAddress = this.utils.HashToAddress({hash: typeId});
+
+    const event = await this.ethClient.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      abi: LibraryContract.abi,
+      methodName: "removeContentType",
+      methodArgs: [typeAddress],
+      signer: this.signer
+    });
+
+    return event.transactionHash;
+  }
+
+  /**
+   * Retrieve the allowed content types for the specified library. If no content types have been
+   * set on the library, all types are allowed and the result will be equivalent to calling
+   * ContentTypes({latestOnly: true}
+   *
+   * @see <a href="#ContentTypes">ContentTypes</a>
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   *
+   * @returns {Array<object>} - List of accepted content types - return format is equivalent to ContentTypes method
+   */
+  async LibraryContentTypes({libraryId}) {
+    const typesLength = (await this.ethClient.CallContractMethod({
+      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      abi: LibraryContract.abi,
+      methodName: "contentTypesLength",
+      methodArgs: [],
+      signer: this.signer
+    })).toNumber();
+
+    const contentTypes = await this.ContentTypes({});
+
+    // No allowed types set - any type accepted
+    if(typesLength === 0) { return contentTypes; }
+
+    // Get the list of allowed content type addresses
+    const allowedTypeAddresses = await Promise.all(
+      Array.from(new Array(typesLength), async (_, i) => {
+        const typeAddress = await this.ethClient.CallContractMethod({
+          contractAddress: Utils.HashToAddress({hash: libraryId}),
+          abi: LibraryContract.abi,
+          methodName: "contentTypes",
+          methodArgs: [i],
+          signer: this.signer
+        });
+
+        return typeAddress.toString().toLowerCase();
+      })
+    );
+
+    let allowedTypes = {};
+    Object.values(contentTypes).map(type => {
+      const typeAddress = this.utils.HashToAddress({hash: type.id}).toLowerCase();
+      // If type address is allowed, include it
+      if(allowedTypeAddresses.includes(typeAddress)) {
+        allowedTypes[type.hash] = type;
+      }
+    });
+
+    return allowedTypes;
+  }
+
   /* Content Types */
 
   /**
