@@ -298,10 +298,11 @@ class AuthorizationClient {
     };
   }
 
-  async CreateContentObject({libraryId}) {
+  async CreateContentObject({libraryId, typeId}) {
     // Deploy contract
     const { contractAddress, transactionHash } = await this.ethClient.DeployContentContract({
       contentLibraryAddress: Utils.HashToAddress({hash: libraryId}),
+      typeAddress: typeId ? Utils.HashToAddress({hash: typeId}) : Utils.nullAddress,
       signer: this.signer
     });
 

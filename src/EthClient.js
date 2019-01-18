@@ -8,6 +8,8 @@ const ContentSpaceContract = require("./contracts/BaseContentSpace");
 const ContentLibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 
+const Utils = require("./Utils");
+
 class EthClient {
   constructor(ethereumURI) {
     this.ethereumURI = ethereumURI;
@@ -234,19 +236,22 @@ class EthClient {
       contractAddress: contentSpaceAddress,
       abi: ContentSpaceContract.abi,
       methodName: "createLibrary",
-      args: ["0x0000000000000000000000000000000000000000"],
+      args: [Utils.nullAddress],
       eventName: "CreateLibrary",
       eventValue: "libraryAddress",
       signer
     });
   }
 
-  async DeployContentContract({contentLibraryAddress, signer}) {
+  async DeployContentContract({contentLibraryAddress, typeAddress, signer}) {
+    // If type is not specified, use null address
+    typeAddress = typeAddress || Utils.nullAddress;
+
     return this.DeployDependentContract({
       contractAddress: contentLibraryAddress,
       abi: ContentLibraryContract.abi,
       methodName: "createContent",
-      args: ["0x0000000000000000000000000000000000000000"],
+      args: [typeAddress],
       eventName: "ContentObjectCreated",
       eventValue: "contentAddress",
       signer

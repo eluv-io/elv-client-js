@@ -88,7 +88,7 @@ const TestQueries = async (client) => {
     console.log("LIBRARY RESPONSE: ");
     console.log(JSON.stringify(libraryResponse, null, 2));
 
-    const libraryContentObject = (await client.ContentObjects({libraryId: libraryId})).contents[0];
+    const libraryContentObject = (await client.ContentObjects({libraryId: libraryId}))[0];
     console.log("LIBRARY CONTENT OBJECT: ");
     console.log(JSON.stringify(libraryContentObject, null, 2));
 
