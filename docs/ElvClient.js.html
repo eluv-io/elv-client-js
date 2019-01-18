@@ -276,13 +276,18 @@ class ElvClient {
   async ContentLibrary({libraryId}) {
     let path = Path.join("qlibs", libraryId);
 
-    return ResponseToJson(
+    let library = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
         path: path
       })
     );
+
+    return {
+      ...library,
+      meta: library.meta || {}
+    };
   }
 
   /**
@@ -487,13 +492,15 @@ class ElvClient {
   async PublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
-    return ResponseToJson(
+    const metadata = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
         path: path
       })
     );
+
+    return metadata || {};
   }
 
   /**
@@ -554,11 +561,18 @@ class ElvClient {
 
       // If latestOnly specified, only include most recent versions
       if(latestOnly) {
-        contentTypes[typeObject.versions[0].hash] = typeObject.versions[0];
+        let type = typeObject.versions[0];
+        contentTypes[type.hash] = {
+          ...type,
+          meta: type.meta || {}
+        };
       } else {
         // Otherwise, include all versions
         typeObject.versions.map(type => {
-          contentTypes[type.hash] = type;
+          contentTypes[type.hash] = {
+            ...type,
+            meta: type.meta || {}
+          };
         });
       }
     });
@@ -579,17 +593,36 @@ class ElvClient {
    * @returns {Promise&lt;Object>}
    */
   async ContentType({name, versionHash}) {
-    let contentType;
     if(versionHash) {
+      const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
+      const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
+
       // Look through all versions of types when searching by version hash
-      const contentTypes = await this.ContentTypes({latestOnly: false});
-      contentType = contentTypes[versionHash];
-    } else {
-      // Only look at latest versions of types when searching by name
-      const contentTypes = await this.ContentTypes({latestOnly: true});
-      contentType = Object.values(contentTypes)
-        .find(type => type.meta &amp;&amp; (type.meta["eluv.name"] === name));
+      // Does the same as ContentObjects(), but authorization cannot be performed
+      // against the content type library because it does not have a library contract
+      const contentType = await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId}),
+          method: "GET",
+          path: Path.join("q", versionHash)
+        }));
+      const contentTypeMetadata = await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId}),
+          method: "GET",
+          path: Path.join("q", versionHash, "meta")
+        }));
+
+      return {
+        ...contentType,
+        meta: contentTypeMetadata || {}
+      };
     }
+
+    // Only look at latest versions of types when searching by name
+    const contentTypes = await this.ContentTypes({latestOnly: true});
+    const contentType = Object.values(contentTypes)
+      .find(type => type.meta &amp;&amp; (type.meta["eluv.name"] === name));
 
     if(!contentType) {
       throw Error("Unknown content type: " + (name || versionHash));
@@ -688,13 +721,26 @@ class ElvClient {
   async ContentObjects({libraryId}) {
     let path = Path.join("qlibs", libraryId, "q");
 
-    return ResponseToJson(
+    let objects = (await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
         path: path
       })
-    );
+    )).contents;
+
+    // Ensure "meta" is set for all versions
+    return objects.map(object => {
+      return {
+        ...object,
+        versions: object.versions.map(version => {
+          return {
+            ...version,
+            meta: version.meta || {}
+          };
+        })
+      };
+    });
   }
 
   /**
@@ -712,13 +758,19 @@ class ElvClient {
   async ContentObject({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
 
-    return ResponseToJson(
+    let object = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
     );
+
+    // Ensure "meta" is set
+    return {
+      ...object,
+      meta: object.meta || {}
+    };
   }
 
   /**
