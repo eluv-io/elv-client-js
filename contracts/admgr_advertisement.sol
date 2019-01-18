@@ -34,12 +34,12 @@ contract AdmgrAdvertisement is Content {
         address originator; // client address requesting
         address content; // address of sponsored content item
         address advertisement; // address of advertisement being played
-        address campaign;
+        address campaign; //address of the campaign base object
         uint256 amount; // to be paid upon access completion
         int8 status; //0 unpaid, 1 paid off
     }
 
-    mapping(uint256 => RequestData) public requestMap;
+    mapping(bytes32 => RequestData) public requestMap;
 
     uint256 public maxCreditPerAd = 0; //By default no maximum is set
 
@@ -48,27 +48,27 @@ contract AdmgrAdvertisement is Content {
         emit MaxCreditPerAd(maxCreditPerAd);
     }
 
-    function getContent(uint256 request_ID) public view returns (address) {
-        return requestMap[request_ID].content;
+    function getContent(bytes32 request_data_ID) public view returns (address) {
+        return requestMap[request_data_ID].content;
     }
 
-    function getOriginator(uint256 request_ID) public view returns (address) {
-        return requestMap[request_ID].originator;
+    function getOriginator(bytes32 request_data_ID) public view returns (address) {
+        return requestMap[request_data_ID].originator;
     }
 
-    function getAdvertisement(uint256 request_ID) public view returns (address) {
-        address advertisement = requestMap[request_ID].advertisement;
+    function getAdvertisement(bytes32 request_data_ID) public view returns (address) {
+        address advertisement = requestMap[request_data_ID].advertisement;
         require(advertisement != 0x0);
         return advertisement;
     }
 
-    function getAmount(uint256 request_ID) public view returns (uint256) {
-        require((requestMap[request_ID].content != 0x0)  && (requestMap[request_ID].status == 0));
-        return requestMap[request_ID].amount;
+    function getAmount(bytes32 request_data_ID) public view returns (uint256) {
+        require((requestMap[request_data_ID].content != 0x0)  && (requestMap[request_data_ID].status == 0));
+        return requestMap[request_data_ID].amount;
     }
 
-    function getCampaign(uint256 request_ID) public view returns (address) {
-        return requestMap[request_ID].campaign;
+    function getCampaign(bytes32 request_data_ID) public view returns (address) {
+        return requestMap[request_data_ID].campaign;
     }
 
     function setBitcodeAddress(address bitcode) public onlyOwner returns(address) {
@@ -108,7 +108,7 @@ contract AdmgrAdvertisement is Content {
         //emit dbgBytes("message rebuilt", messageStr);
         //emit dbgAddress("signee", signee);
         //emit dbgAddress("bitcodeAddress", bitcodeAddress);
-        require(signee == bitcodeAddress);
+        require(signee == bitcodeAddress); //bitcodeaddress could be stored in AdmgrCampaignManager or AdmgrCampaign
     }
 
     function insertRequest(
@@ -120,14 +120,9 @@ contract AdmgrAdvertisement is Content {
     )
         private
     {
+        bytes32 req_data_id = keccak256(ad_address, request_ID);
         RequestData memory req = RequestData(tx.origin, content_address, ad_address, campaign_address, amount, 0);
-        requestMap[request_ID] = req;
-    }
-
-    function markPaid(uint256 request_ID) public returns(bool) {
-        require(msg.sender == requestMap[request_ID].campaign);
-        requestMap[request_ID].status = 1;
-        return true;
+        requestMap[req_data_id] = req;
     }
 
     function runAccess(
@@ -144,7 +139,9 @@ contract AdmgrAdvertisement is Content {
         uint8 v = uint8(custom_values[1][0]);
         bytes32 r = custom_values[2];
         bytes32 s = custom_values[3];
-        verifyMessage(contentAddress, campaignAddress, amount, v, r, s);
+        if (bitcodeAddress != 0x0){
+            verifyMessage(contentAddress, campaignAddress, amount, v, r, s);
+        }
         require((maxCreditPerAd == 0) || (uint256(amount) <= maxCreditPerAd));
         insertRequest(request_ID, contentAddress, msg.sender, campaignAddress, uint256(amount));
         return 0;
@@ -152,11 +149,13 @@ contract AdmgrAdvertisement is Content {
 
     // Upon completion, the promised amount is divided between the library owner and the viewer and paid off.
     function runFinalize(uint256 request_ID) public payable returns(uint) {
-        RequestData storage req = requestMap[request_ID];
+        bytes32 req_data_id = keccak256(msg.sender, request_ID);
+        RequestData storage req = requestMap[req_data_id];
         require((req.originator == tx.origin) && (req.status == 0));
-        AdmgrCampaign campaign = AdmgrCampaign(requestMap[request_ID].campaign);
-        campaign.payout(request_ID);
-        delete requestMap[request_ID];
+        BaseContent campaignObj = BaseContent(requestMap[req_data_id].campaign);
+        AdmgrCampaign campaign = AdmgrCampaign(campaignObj.contentContractAddress());
+        campaign.payout(req_data_id);
+        delete requestMap[req_data_id];
         emit RunFinalize(request_ID, 0);
         return 0;
     }

@@ -548,6 +548,7 @@ class ElvClient {
     }
 
     const typeAddress = this.utils.HashToAddress({hash: typeId});
+    console.log(typeAddress);
     customContractAddress = customContractAddress || this.utils.nullAddress;
 
     const event = await this.ethClient.CallContractMethodAndWait({
@@ -612,10 +613,8 @@ class ElvClient {
       signer: this.signer
     })).toNumber();
 
-    const contentTypes = await this.ContentTypes({});
-
     // No allowed types set - any type accepted
-    if(typesLength === 0) { return contentTypes; }
+    if(typesLength === 0) { return {}; }
 
     // Get the list of allowed content type addresses
     const allowedTypeAddresses = await Promise.all(
@@ -631,6 +630,8 @@ class ElvClient {
         return typeAddress.toString().toLowerCase();
       })
     );
+
+    const contentTypes = await this.ContentTypes({});
 
     let allowedTypes = {};
     Object.values(contentTypes).map(type => {

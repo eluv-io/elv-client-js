@@ -51,15 +51,15 @@ contract AdmgrCampaign is Content {
         return ((duration == 0) || (startDate + duration >= timeNow));
     }
 
-    function payout(uint256 request_ID) public returns (bool) {
-        require(isActive());
+    function payout(bytes32 requestDataID) public returns (bool) {
+        //require(isActive());
         AdmgrAdvertisement advertisementMgr = AdmgrAdvertisement(msg.sender);
-        address advertisementAddr = advertisementMgr.getAdvertisement(request_ID);
-        uint256 amount = advertisementMgr.getAmount(request_ID);
-        BaseContent advertisement = BaseContent(advertisementAddr);
+        uint256 amount = advertisementMgr.getAmount(requestDataID);
+        address ad = advertisementMgr.getAdvertisement(requestDataID);
+        BaseContent advertisement = BaseContent(ad);
         require(advertisement.contentContractAddress() == msg.sender); //ensure consistency
-        require(advertisementMgr.getOriginator(request_ID) == tx.origin); //ensure caller match request
-        AdData storage adData = adDataMap[advertisementAddr];
+        require(advertisementMgr.getOriginator(requestDataID) == tx.origin); //ensure caller match request
+        AdData storage adData = adDataMap[ad];
         require(adData.status == 1);
         require(adData.budget - adData.paidOut >= amount);
         adDataMap[msg.sender].paidOut = adData.paidOut + amount;
@@ -68,12 +68,11 @@ contract AdmgrCampaign is Content {
         }
         uint256 amount_library = amount / 100 * libraryRetrocession;
         if (amount_library != 0){
-            BaseContent content = BaseContent(advertisementMgr.getContent(request_ID));
+            BaseContent content = BaseContent(advertisementMgr.getContent(requestDataID));
             BaseLibrary lib = BaseLibrary(content.libraryAddress()); //debatable: pay library (add pull function) or owner
             lib.owner().transfer(amount_library);
         }
         tx.origin.transfer(amount - amount_library);
-        advertisementMgr.markPaid(request_ID);
         return true;
     }
 
