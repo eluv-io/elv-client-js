@@ -106,20 +106,22 @@ class EthClient {
     }
 
     let result;
-    try {
-      result = await contract.functions[methodName](...methodArgs, overrides);
-    } catch(error) {
-      // If the default gas limit was not sufficient, bump it up to the gas limit of the latest block
-      if(error.code === -32000 || error.message.startsWith("replacement fee too low")) {
-        const latestBlock = await signer.provider.getBlock("latest");
-        overrides.gasLimit = latestBlock.gasLimit;
-        overrides.gasPrice = 800000000;
+    let success = false;
+    while(!success) {
+      try {
         result = await contract.functions[methodName](...methodArgs, overrides);
-      } else {
-        throw error;
+        success = true;
+      } catch(error) {
+        if(error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
+          const latestBlock = await signer.provider.getBlock("latest");
+          overrides.gasLimit = latestBlock.gasLimit;
+          overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
+        } else {
+          throw error;
+        }
       }
     }
-    
+
     return result;
   }
 

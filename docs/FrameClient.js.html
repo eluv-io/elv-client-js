@@ -82,7 +82,7 @@ class FrameClient {
    * @param {number} timeout - How long to wait for a response after calling a method before giving up
    * and generating a timeout error
    */
-  constructor({target=parent, timeout=5}) {
+  constructor({target=parent, timeout=10}) {
     this.target = target;
     this.timeout = timeout;
 
