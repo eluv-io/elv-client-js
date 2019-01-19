@@ -548,7 +548,6 @@ class ElvClient {
     }
 
     const typeAddress = this.utils.HashToAddress({hash: typeId});
-    console.log(typeAddress);
     customContractAddress = customContractAddress || this.utils.nullAddress;
 
     const event = await this.ethClient.CallContractMethodAndWait({
@@ -593,9 +592,9 @@ class ElvClient {
   }
 
   /**
-   * Retrieve the allowed content types for the specified library. If no content types have been
-   * set on the library, all types are allowed and the result will be equivalent to calling
-   * ContentTypes({latestOnly: true}
+   * Retrieve the allowed content types for the specified library.
+   *
+   * Note: If no content types have been set on the library, all types are allowed, but an empty hash will be returned.
    *
    * @see &lt;a href="#ContentTypes">ContentTypes&lt;/a>
    *

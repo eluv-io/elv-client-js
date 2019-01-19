@@ -62,18 +62,20 @@ contract BaseLibrary is Accessible, Editable {
         emit ContributorGroupAdded(group);
     }
 
-    function removeContributorGroup(address group) public onlyOwner {
+    function removeContributorGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < contributorGroupsLength; i++) {
             if (contributorGroups[i] == group) {
                 delete contributorGroups[i];
-                if (i != (contributorGroupsLength - 1)){
+                if (i != (contributorGroupsLength - 1)) {
                     contributorGroups[i] = contributorGroups[contributorGroupsLength - 1];
                     delete contributorGroups[contributorGroupsLength - 1];
                 }
                 contributorGroupsLength--;
                 emit ContributorGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addReviewerGroup(address group) public onlyOwner {
@@ -86,18 +88,20 @@ contract BaseLibrary is Accessible, Editable {
         emit ReviewerGroupAdded(group);
     }
 
-    function removeReviewerGroup(address group) public onlyOwner {
+    function removeReviewerGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < reviewerGroupsLength; i++) {
             if (reviewerGroups[i] == group) {
                 delete reviewerGroups[i];
-                if (i != (reviewerGroupsLength - 1)){
+                if (i != (reviewerGroupsLength - 1)) {
                     reviewerGroups[i] = reviewerGroups[reviewerGroupsLength - 1];
                     delete reviewerGroups[reviewerGroupsLength - 1];
                 }
                 reviewerGroupsLength--;
                 emit ReviewerGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addAccessorGroup(address group) public onlyOwner {
@@ -110,42 +114,50 @@ contract BaseLibrary is Accessible, Editable {
         emit AccessorGroupAdded(group);
     }
 
-    function removeAccessorGroup(address group) public onlyOwner {
+    function removeAccessorGroup(address group) public onlyOwner returns (bool) {
         for (uint i = 0; i < accessorGroupsLength; i++) {
             if (accessorGroups[i] == group) {
                 delete accessorGroups[i];
-                if (i != (accessorGroupsLength - 1)){
+                if (i != (accessorGroupsLength - 1)) {
                     accessorGroups[i] = accessorGroups[accessorGroupsLength - 1];
                     delete accessorGroups[accessorGroupsLength - 1];
                 }
                 accessorGroupsLength--;
                 emit AccessorGroupRemoved(group);
+                return true;
             }
         }
+        return false;
     }
 
     function addContentType(address content_type, address content_contract) public onlyOwner {
         if ((contentTypeContracts[content_type] == 0x0) && (validType(content_type) == false)) {
-            contentTypes.push(content_type);
+            if (contentTypesLength < contentTypes.length) {
+                contentTypes[contentTypesLength] = content_type;
+            } else {
+                contentTypes.push(content_type);
+            }
             contentTypesLength = contentTypesLength + 1;
         }
         contentTypeContracts[content_type] = content_contract;
         emit ContentTypeAdded(content_type, content_contract);
     }
 
-    function removeContentType(address content_type) public onlyOwner {
-        for (uint i = 0; i < contentTypesLength; i++){
-            if (contentTypes[i] == content_type){
+    function removeContentType(address content_type) public onlyOwner returns (bool) {
+        for (uint i = 0; i < contentTypesLength; i++) {
+            if (contentTypes[i] == content_type) {
                 delete contentTypes[i];
-                if (i != (contentTypesLength - 1)){
+                if (i != (contentTypesLength - 1)) {
                     contentTypes[i] = contentTypes[contentTypesLength - 1];
                     delete contentTypes[contentTypesLength - 1];
                 }
                 contentTypesLength--;
+                delete contentTypeContracts[content_type];
                 emit ContentTypeRemoved(content_type);
+                return true;
             }
         }
-
+        return false;
     }
 
     function hasAccess(address candidate) public constant returns (bool) {
@@ -283,8 +295,8 @@ contract BaseLibrary is Accessible, Editable {
 
     function validType(address content_type) public view returns (bool) {
         bool isValidType = false;
-        for (uint i = 0; i < contentTypesLength; i++){
-            if (contentTypes[i] == content_type){
+        for (uint i = 0; i < contentTypesLength; i++) {
+            if (contentTypes[i] == content_type) {
                 isValidType = true;
             }
         }
