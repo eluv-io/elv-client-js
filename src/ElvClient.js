@@ -168,6 +168,19 @@ class ElvClient {
   }
 
   /**
+   * Set the signer for this client to use for blockchain transactions from an existing web3 provider.
+   * Useful for integrating with MetaMask
+   *
+   * @see https://github.com/ethers-io/ethers.js/issues/59#issuecomment-358224800
+   *
+   * @namedParams
+   * @param {object} provider - The web3 provider object
+   */
+  SetSignerFromWeb3Provider({provider}) {
+    this.SetSigner({signer: new Ethers.providers.Web3Provider(provider).getSigner()});
+  }
+
+  /**
    * Get the account address of the current signer
    *
    * @returns {string} - The address of the current signer
