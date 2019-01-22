@@ -176,6 +176,7 @@ class FrameClient {
       "CreateContentType",
       "CreateFileUploadJob",
       "CurrentAccountAddress",
+      "CustomContractAddress",
       "DeleteAccessGroup",
       "DeleteContentLibrary",
       "DeleteContentObject",

@@ -2037,6 +2037,36 @@ client.FabricUrl({
   }
 
   /**
+   * Get the custom contract of the specified object
+   *
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   *
+   * @returns {Promise<string> | undefined} - If the object has a custom contract, this will return the address of the custom contract
+   */
+  async CustomContractAddress({libraryId, objectId}) {
+    const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
+    const contentSpaceLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
+
+    if(libraryId === contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId)) {
+      // Content type or content library object - no custom contract
+      return;
+    }
+
+    const customContractAddress = await this.ethClient.CallContractMethod({
+      contractAddress: this.utils.HashToAddress({hash: objectId}),
+      abi: ContentContract.abi,
+      methodName: "contentContractAddress",
+      methodArgs: [],
+      signer: this.signer
+    });
+
+    if(customContractAddress === this.utils.nullAddress) { return; }
+
+    return this.utils.FormatAddress({address: customContractAddress});
+  }
+
+  /**
    * Get all events on the specified contract
    *
    * @param {string} contractAddress - The address of the contract
@@ -2109,6 +2139,7 @@ client.FabricUrl({
       "FrameAllowedMethods",
       "GenerateWallet",
       "SetSigner",
+      "SetSignerFromWeb3Provider",
       "ClearSigner"
     ];
 

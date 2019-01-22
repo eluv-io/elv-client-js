@@ -151,7 +151,8 @@
           "hash": "hqp_QmUzs9ticwCsejnjdRrwHsThiNGvNytEFTVY21ZrNKKWAr",
           "key": "terms_and_conditions",
           "label": "Terms and Conditions",
-          "type": "attachedFile"
+          "type": "attachedFile",
+          "filename": "Terms and Conditions.pdf"
         },
         {
           "key": "agree_to_terms",
