@@ -578,6 +578,8 @@ NOTE: Raw response objects cannot be passed in message. When using non-json endp
   - "attachedFile":
     - hash: string
       - The hash of the content type part corresponding to the attached file
+    - filename: string
+      - The filename to use when the file is downloaded. If not provided, the label or the key will be used.
 
 ##### Notes
 *attachedFile* is a special field that corresponds to a file uploaded to the content type. This file will be available in the form via a download link. This type may be useful for terms and conditions, instructions, or other information the contributor may need.

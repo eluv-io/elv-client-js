@@ -12,6 +12,21 @@ const Utils = {
   nullAddress: "0x0000000000000000000000000000000000000000",
 
   /**
+   * Convert address to normalized form - lower case with "0x" prefix
+   *
+   * @namedParams
+   * @param {string} address - Address to format
+   *
+   * @returns {string} - Formatted address
+   */
+  FormatAddress: ({address}) => {
+    if(!address || typeof address !== "string") { return ""; }
+
+    if(!address.startsWith("0x")) { address = "0x" + address; }
+    return address.toLowerCase();
+  },
+
+  /**
    * Convert contract address to multiformat hash
    *
    * @namedParams
