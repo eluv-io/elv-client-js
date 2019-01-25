@@ -4,234 +4,742 @@ AUTHORIZING CONTENT SPACE...
 
 CONTENT TYPES: 
 {
-  "hq__QmS6L8u1Ahh6UeWR7pk6MiirjACThi3zrWRFa1G7TddJDE": {
-    "id": "iq__2AxzHFx2ZSSK6r8Y9G7oD5WUajyq",
-    "hash": "hq__QmS6L8u1Ahh6UeWR7pk6MiirjACThi3zrWRFa1G7TddJDE",
+  "hq__QmZLFRYXoKHPNnXP36aAXwWefs2GUhVwPumoqWKiLZ5YZr": {
+    "id": "iq__2FFieRytt6nj2GPV7dVM8CFM5rPz",
+    "hash": "hq__QmZLFRYXoKHPNnXP36aAXwWefs2GUhVwPumoqWKiLZ5YZr",
     "type": "",
     "meta": {
-      "eluv.name": "adsmanager"
+      "bundle_meta": {
+        "extensions": null,
+        "files_jobs": {},
+        "finalized": true,
+        "pack_policy": "compact",
+        "part_refs": {
+          "hqp_Qma4wfEQFEyoUnek1ixgUpXxFUfrEFjSoKnggjsMTWoF8W": 1
+        },
+        "segments": [
+          {
+            "hash": "hqp_Qma4wfEQFEyoUnek1ixgUpXxFUfrEFjSoKnggjsMTWoF8W",
+            "len": 175828,
+            "off": 0
+          }
+        ],
+        "upload_jobs_count": 0
+      },
+      "eluv.displayApp": "index.html",
+      "eluv.manageApp": "index.html",
+      "eluv.name": "adsmanager",
+      "files": {
+        ".": {
+          "type": "directory"
+        },
+        "index.html": {
+          ".": {
+            "link_to": null,
+            "parts": [
+              0
+            ],
+            "size": 175828
+          }
+        }
+      },
+      "mime-types": {
+        "html": "text/html"
+      }
     }
   },
-  "hq__QmSXdFKRooTyopfWxSvx3vRkyfzyT49wHCGVH9DSmeqTdT": {
-    "id": "iq__2aKTxY6FiDsK11PpX566L1CBjFY1",
-    "hash": "hq__QmSXdFKRooTyopfWxSvx3vRkyfzyT49wHCGVH9DSmeqTdT",
+  "hq__QmV6TKNarmChfyxRafqi6F7xaJg4WEGXUBqjM87NtTnBAc": {
+    "id": "iq__3guxc35s7wazYphcHQfabGM6aGth",
+    "hash": "hq__QmV6TKNarmChfyxRafqi6F7xaJg4WEGXUBqjM87NtTnBAc",
     "type": "",
     "meta": {
-      "eluv.name": "avlive"
+      "customContract": {
+        "abi": [
+          {
+            "constant": true,
+            "inputs": [],
+            "name": "creator",
+            "outputs": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "constant": true,
+            "inputs": [],
+            "name": "licensingFee",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              },
+              {
+                "name": "",
+                "type": "uint8"
+              },
+              {
+                "name": "",
+                "type": "bytes32[]"
+              },
+              {
+                "name": "",
+                "type": "address[]"
+              }
+            ],
+            "name": "runAccess",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+          },
+          {
+            "constant": true,
+            "inputs": [],
+            "name": "percentPartial",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint8"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "amount",
+                "type": "uint256"
+              }
+            ],
+            "name": "withdraw",
+            "outputs": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "proposed_status_code",
+                "type": "int256"
+              }
+            ],
+            "name": "runStatusChange",
+            "outputs": [
+              {
+                "name": "",
+                "type": "int256"
+              }
+            ],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [],
+            "name": "kill",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": true,
+            "inputs": [
+              {
+                "name": "status_code",
+                "type": "int256"
+              }
+            ],
+            "name": "runDescribeStatus",
+            "outputs": [
+              {
+                "name": "",
+                "type": "bytes32"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "pure",
+            "type": "function"
+          },
+          {
+            "constant": true,
+            "inputs": [],
+            "name": "STATUS_FINAL_REVIEW",
+            "outputs": [
+              {
+                "name": "",
+                "type": "bytes32"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "name": "runFinalize",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "newCreator",
+                "type": "address"
+              }
+            ],
+            "name": "transferCreatorship",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [],
+            "name": "runCreate",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+          },
+          {
+            "constant": true,
+            "inputs": [],
+            "name": "owner",
+            "outputs": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "constant": true,
+            "inputs": [],
+            "name": "partialPayment",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint8"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [],
+            "name": "runKill",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "content_address",
+                "type": "address"
+              },
+              {
+                "name": "new_owner",
+                "type": "address"
+              }
+            ],
+            "name": "transferContentOwnership",
+            "outputs": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": true,
+            "inputs": [],
+            "name": "STATUS_DRAFT_APPROVED",
+            "outputs": [
+              {
+                "name": "",
+                "type": "bytes32"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "licensing_fee",
+                "type": "uint256"
+              }
+            ],
+            "name": "setLicensingFee",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint256"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": true,
+            "inputs": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "name": "licensingStatus",
+            "outputs": [
+              {
+                "name": "percentComplete",
+                "type": "uint8"
+              },
+              {
+                "name": "licensingFee",
+                "type": "uint256"
+              },
+              {
+                "name": "licensingFeePaid",
+                "type": "uint256"
+              },
+              {
+                "name": "valid",
+                "type": "bool"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "view",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "partial_payment",
+                "type": "uint8"
+              }
+            ],
+            "name": "setPartialPayment",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint8"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "percent_partial",
+                "type": "uint8"
+              }
+            ],
+            "name": "setPercentPartial",
+            "outputs": [
+              {
+                "name": "",
+                "type": "uint8"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "content_address",
+                "type": "address"
+              }
+            ],
+            "name": "reclaimContentOwnership",
+            "outputs": [
+              {
+                "name": "",
+                "type": "address"
+              }
+            ],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "newOwner",
+                "type": "address"
+              }
+            ],
+            "name": "transferOwnership",
+            "outputs": [],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "",
+                "type": "uint8"
+              },
+              {
+                "name": "",
+                "type": "bytes32[]"
+              },
+              {
+                "name": "",
+                "type": "address[]"
+              }
+            ],
+            "name": "runAccessCharge",
+            "outputs": [
+              {
+                "name": "",
+                "type": "int256"
+              }
+            ],
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "function"
+          },
+          {
+            "constant": false,
+            "inputs": [
+              {
+                "name": "content_contract",
+                "type": "address"
+              },
+              {
+                "name": "approved",
+                "type": "bool"
+              },
+              {
+                "name": "percent_complete",
+                "type": "uint8"
+              },
+              {
+                "name": "note",
+                "type": "string"
+              }
+            ],
+            "name": "reviewContent",
+            "outputs": [
+              {
+                "name": "",
+                "type": "bool"
+              }
+            ],
+            "payable": false,
+            "stateMutability": "nonpayable",
+            "type": "function"
+          },
+          {
+            "payable": true,
+            "stateMutability": "payable",
+            "type": "fallback"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "payee",
+                "type": "address"
+              },
+              {
+                "indexed": false,
+                "name": "content",
+                "type": "address"
+              },
+              {
+                "indexed": false,
+                "name": "amount",
+                "type": "uint256"
+              }
+            ],
+            "name": "PayCredit",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "s",
+                "type": "string"
+              }
+            ],
+            "name": "DbgString",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "a",
+                "type": "address"
+              }
+            ],
+            "name": "DbgAddress",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "u",
+                "type": "uint256"
+              }
+            ],
+            "name": "DbgUint256",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "u",
+                "type": "uint256"
+              }
+            ],
+            "name": "DbgUint",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "result",
+                "type": "uint256"
+              }
+            ],
+            "name": "RunCreate",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "result",
+                "type": "uint256"
+              }
+            ],
+            "name": "RunKill",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "proposedStatusCode",
+                "type": "int256"
+              },
+              {
+                "indexed": false,
+                "name": "returnStatusCode",
+                "type": "int256"
+              }
+            ],
+            "name": "RunStatusChange",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "level",
+                "type": "uint8"
+              },
+              {
+                "indexed": false,
+                "name": "calculateAccessCharge",
+                "type": "int256"
+              }
+            ],
+            "name": "RunAccessCharge",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "requestID",
+                "type": "uint256"
+              },
+              {
+                "indexed": false,
+                "name": "result",
+                "type": "uint256"
+              }
+            ],
+            "name": "RunAccess",
+            "type": "event"
+          },
+          {
+            "anonymous": false,
+            "inputs": [
+              {
+                "indexed": false,
+                "name": "requestID",
+                "type": "uint256"
+              },
+              {
+                "indexed": false,
+                "name": "result",
+                "type": "uint256"
+              }
+            ],
+            "name": "RunFinalize",
+            "type": "event"
+          }
+        ],
+        "address": "0x2FdC0978e66A0A9d9341432E34280d567167BEDF",
+        "description": "",
+        "name": "SampleContentLicensing"
+      },
+      "eluv.displayApp": "index.html",
+      "eluv.manageApp": "index.html",
+      "eluv.name": "submission",
+      "eluv.reviewApp": "index.html"
     }
   },
-  "hq__QmYuKcF9crQzuj8kiJMrLaRQJZ9nAiBAQtukXwJKXMt9Nn": {
-    "id": "iq__2m3NTzJANgGgiW1TLSSzb31Q2xCP",
-    "hash": "hq__QmYuKcF9crQzuj8kiJMrLaRQJZ9nAiBAQtukXwJKXMt9Nn",
+  "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik": {
+    "id": "iq__3niFgkeqw3kWQtiogCQBv7qaE9N6",
+    "hash": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik",
     "type": "",
     "meta": {
       "eluv.name": "video"
     }
   },
-  "hq__QmahRiX5LeT2q9S7cZsXBWQ14gQbCHisX8u6sbECDZyLQr": {
-    "id": "iq__55MbjygBzom6484dmveZ6BfyE4t",
-    "hash": "hq__QmahRiX5LeT2q9S7cZsXBWQ14gQbCHisX8u6sbECDZyLQr",
+  "hq__QmfQ3v4VqqxzW8krbGtxRDMtTKChuULT3qgniLVGy4y7mH": {
+    "id": "iq__3sFmFWpWAaJ6nEyEr3nLhMSUNmck",
+    "hash": "hq__QmfQ3v4VqqxzW8krbGtxRDMtTKChuULT3qgniLVGy4y7mH",
     "type": "",
     "meta": {
-      "eluv.name": "submission",
-      "eluv.schema": [
-        {
-          "key": "name",
-          "label": "Name",
-          "type": "string"
-        },
-        {
-          "fields": [
-            {
-              "fields": [
-                {
-                  "key": "title",
-                  "label": "Title",
-                  "type": "string"
-                },
-                {
-                  "key": "synopsis",
-                  "label": "Synopsis",
-                  "type": "text"
-                },
-                {
-                  "key": "cast_and_crew",
-                  "label": "Cast and Crew",
-                  "type": "string"
-                }
-              ],
-              "flattenDisplay": true,
-              "key": "metadata",
-              "type": "object"
-            },
-            {
-              "key": "blog_post",
-              "label": "Blog Post",
-              "type": "text"
-            },
-            {
-              "fields": [
-                {
-                  "fields": [
-                    {
-                      "key": "1",
-                      "label": "Text 1",
-                      "type": "string"
-                    },
-                    {
-                      "key": "2",
-                      "label": "Text 2",
-                      "type": "string"
-                    }
-                  ],
-                  "flattenDisplay": true,
-                  "key": "text",
-                  "type": "object"
-                },
-                {
-                  "accept": [
-                    "video/*"
-                  ],
-                  "key": "proxy.1min",
-                  "label": "1 Minute Preview",
-                  "type": "file"
-                }
-              ],
-              "key": "facebook",
-              "label": "Facebook",
-              "type": "object"
-            },
-            {
-              "fields": [
-                {
-                  "fields": [
-                    {
-                      "key": "1",
-                      "label": "Text 1",
-                      "type": "string"
-                    },
-                    {
-                      "key": "2",
-                      "label": "Text 2",
-                      "type": "string"
-                    }
-                  ],
-                  "flattenDisplay": true,
-                  "key": "text",
-                  "type": "object"
-                },
-                {
-                  "key": "description",
-                  "label": "Description",
-                  "type": "text"
-                }
-              ],
-              "key": "youtube",
-              "label": "YouTube",
-              "type": "object"
-            },
-            {
-              "accept": [
-                "video/*"
-              ],
-              "key": "video",
-              "label": "Video",
-              "type": "file"
-            },
-            {
-              "fields": [
-                {
-                  "fields": [
-                    {
-                      "accept": [
-                        "image/*"
-                      ],
-                      "key": "1",
-                      "label": "Hi-res Still 1",
-                      "type": "file"
-                    },
-                    {
-                      "accept": [
-                        "image/*"
-                      ],
-                      "key": "2",
-                      "label": "Hi-res Still 2",
-                      "type": "file"
-                    }
-                  ],
-                  "flattenDisplay": true,
-                  "key": "highres",
-                  "type": "object"
-                }
-              ],
-              "flattenDisplay": true,
-              "key": "still",
-              "type": "object"
-            },
-            {
-              "key": "tags",
-              "label": "Tags",
-              "type": "list"
-            },
-            {
-              "key": "terms_and_conditions_label",
-              "label": "",
-              "text": "Before submitting this content, you must agree to the Terms and Conditions below",
-              "type": "label"
-            },
-            {
-              "hash": "hqp_QmUzs9ticwCsejnjdRrwHsThiNGvNytEFTVY21ZrNKKWAr",
-              "key": "terms_and_conditions",
-              "label": "Terms and Conditions",
-              "type": "attachedFile"
-            },
-            {
-              "key": "agree_to_terms",
-              "label": "I agree",
-              "required": true,
-              "type": "boolean"
-            }
-          ],
-          "flattenDisplay": true,
-          "key": "webisode",
-          "type": "object"
-        }
-      ]
+      "eluv.name": "avlive"
     }
   },
-  "hq__QmVKZjLdVB68xMo7zzpVAi72zrQs9df7uAx8aKk2VhUx85": {
-    "id": "iq__nPdJh1yj2XVdhFZrFLBWYXar1gV",
-    "hash": "hq__QmVKZjLdVB68xMo7zzpVAi72zrQs9df7uAx8aKk2VhUx85",
-    "type": "",
-    "meta": {
-      "eluv.name": "library"
-    }
-  },
-  "hq__QmRhWGnDjG46jrYonWSgxpyGdZpPMJS712Lkoyf3BAfnZi": {
-    "id": "iq__vRAttwMksh7He6FqdRLHWvoL2gf",
-    "hash": "hq__QmRhWGnDjG46jrYonWSgxpyGdZpPMJS712Lkoyf3BAfnZi",
+  "hq__QmdtpnBiaW2yoEREhrDg6ALWgo4DUymo8EEdKbK5AH3G8j": {
+    "id": "iq__4QK9i878eyaZoztywxXuib5XCSMb",
+    "hash": "hq__QmdtpnBiaW2yoEREhrDg6ALWgo4DUymo8EEdKbK5AH3G8j",
     "type": "",
     "meta": {
       "eluv.name": "avmaster2000"
+    }
+  },
+  "hq__QmaUkZC1M8J52dpW2QbePsuEdR8K4odf5qMc3aDKX5me93": {
+    "id": "iq__EPkRfC3TwkKegbsZfmwfdqe55nM",
+    "hash": "hq__QmaUkZC1M8J52dpW2QbePsuEdR8K4odf5qMc3aDKX5me93",
+    "type": "",
+    "meta": {
+      "eluv.name": "library"
     }
   }
 }
 
 LIBRARIES 
 [
-  "ilib2KUkKE4e88Rb5G8WA8PJ18sVerU6",
-  "ilib3bF1B1i6kFCiUrENJSpgWK6sRPvc",
-  "ilib3safAE28iBXidwmQNW1M6gLsQhun",
-  "ilib474Gw3F7BcWtkvu7GRXvdcgRZwg2",
-  "ilibKRjHrkVt2uTJBGWu4sWoHtUYhSq"
+  "ilib25NndWZQp4pFpxeJKaWTMsy4Zg45",
+  "ilib2TxBDUvHUf7xFJrTauuwXDDs4Mhi",
+  "ilib3HyZAPS4K7cUoHadZPELBEe8Nzp6",
+  "ilibPxdz7YL68nsgo9Ca74dRwX45Nic",
+  "ilibU7rkKqRwHJRN77oYoA6dUGyY3k6"
 ]
 CREATING LIBRARY 
-LIBRARY CREATED: ilib2FordRTUdHbFxVzuLfEXkZkrF52U
+LIBRARY CREATED: ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ
 LIBRARY OWNER: 0x71b011B67dc8f5C323A34Cd14b952721D5750C93
 LIBRARY RESPONSE: 
 {
-  "id": "ilib2FordRTUdHbFxVzuLfEXkZkrF52U",
-  "qid": "iq__2FordRTUdHbFxVzuLfEXkZkrF52U",
+  "id": "ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ",
+  "qid": "iq__2U3gwLZdyJuofNtbdiue4AAw8UeZ",
   "meta": {
     "eluv.description": "Library Description",
     "eluv.name": "Test library",
@@ -245,12 +753,12 @@ LIBRARY RESPONSE:
 }
 LIBRARY CONTENT OBJECT: 
 {
-  "id": "iq__2FordRTUdHbFxVzuLfEXkZkrF52U",
+  "id": "iq__2U3gwLZdyJuofNtbdiue4AAw8UeZ",
   "versions": [
     {
-      "id": "iq__2FordRTUdHbFxVzuLfEXkZkrF52U",
-      "hash": "hq__QmaNxzPEvbS52j9X3d6vpxgUmpMq1cXjekvywFhGvsPGAU",
-      "type": "hq__QmVKZjLdVB68xMo7zzpVAi72zrQs9df7uAx8aKk2VhUx85",
+      "id": "iq__2U3gwLZdyJuofNtbdiue4AAw8UeZ",
+      "hash": "hq__QmRNge4S4FZRGhwaESNL8fTSNukVenoZpaCiffMG7VZh4y",
+      "type": "",
       "meta": {
         "sshhhh": {
           "its": "a secret"
@@ -258,8 +766,8 @@ LIBRARY CONTENT OBJECT:
       }
     },
     {
-      "id": "iq__2FordRTUdHbFxVzuLfEXkZkrF52U",
-      "hash": "hq__QmXE3cu2eUYMnyq3WNHzLNCrKPs8SxtXsyNWUia9jP19TF",
+      "id": "iq__2U3gwLZdyJuofNtbdiue4AAw8UeZ",
+      "hash": "hq__QmRcbsLYnyxUseskYw4hMHKmwLNByC2goeDLn6EH6e7AFN",
       "type": "",
       "meta": {
         "sshhhh": {
@@ -269,6 +777,31 @@ LIBRARY CONTENT OBJECT:
     }
   ]
 }
+LIBRARY TYPES: 
+{}
+ADDING VIDEO TYPE BY NAME...
+ADDING adsmanager TYPE BY ID...
+NEW LIBRARY TYPES: 
+{ hq__QmZLFRYXoKHPNnXP36aAXwWefs2GUhVwPumoqWKiLZ5YZr:
+   { id: 'iq__2FFieRytt6nj2GPV7dVM8CFM5rPz',
+     hash: 'hq__QmZLFRYXoKHPNnXP36aAXwWefs2GUhVwPumoqWKiLZ5YZr',
+     type: '',
+     meta:
+      { bundle_meta: [Object],
+        'eluv.displayApp': 'index.html',
+        'eluv.manageApp': 'index.html',
+        'eluv.name': 'adsmanager',
+        files: [Object],
+        'mime-types': [Object] } },
+  hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik:
+   { id: 'iq__3niFgkeqw3kWQtiogCQBv7qaE9N6',
+     hash: 'hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik',
+     type: '',
+     meta: { 'eluv.name': 'video' } } }
+REMOVING VIDEO TYPE BY NAME...
+REMOVING adsmanager TYPE BY ID...
+FINAL LIBRARY TYPES: 
+{}
 
 FORCING REAUTHORIZATION TO LIBRARY ON NEXT CALL
 
@@ -285,12 +818,12 @@ NEW PUBLIC LIBRARY METADATA:
   }
 }
 CREATING OBJECT... 
-CREATED iq__row9aNWuqxhHiMj5QoTd3dcDCF5
+CREATED iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F
 OBJECT OWNER: 0x71b011B67dc8f5C323A34Cd14b952721D5750C93
 CREATING PART...
-CREATED hqp_QmWkUhYX4zX7xHK8YzKQqJ6yH4FV4qDf1NXpTNBZz2uRNt
+CREATED hqp_QmcdEzceydTxZdEsvZM7oLjKQqyDmp5A8zrNQbPn7LMDyx
 FINALIZING OBJECT... 
-FINALIZED iq__row9aNWuqxhHiMj5QoTd3dcDCF5
+FINALIZED iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F
 CONTENT OBJECT METADATA: 
 {
   "meta": "data",
@@ -301,11 +834,11 @@ CONTENT OBJECT METADATA:
     "value": "value"
   }
 }
-EDITING iq__row9aNWuqxhHiMj5QoTd3dcDCF5...
+EDITING iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F...
 {
-  "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-  "write_token": "tqw_7ePA118swzxx7QJcH2QBMpyuKrJQPJGd4",
-  "type": ""
+  "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+  "write_token": "tqw_AfL85v7VunsPecekVzXwMMwYPKruRhRg5",
+  "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik"
 }
 MERGING METADATA...
 MERGED TOP LEVEL METADATA 
@@ -315,77 +848,76 @@ DELETING METADATA...
 DELETED METADATA 
 
 FINALIZING EDIT... 
-FINALIZED EDIT iq__row9aNWuqxhHiMj5QoTd3dcDCF5
+FINALIZED EDIT iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F
 
-LIBRARY CONTENTS ilib2FordRTUdHbFxVzuLfEXkZkrF52U
-{
-  "contents": [
-    {
-      "id": "iq__2FordRTUdHbFxVzuLfEXkZkrF52U",
-      "versions": [
-        {
-          "id": "iq__2FordRTUdHbFxVzuLfEXkZkrF52U",
-          "hash": "hq__QmaNxzPEvbS52j9X3d6vpxgUmpMq1cXjekvywFhGvsPGAU",
-          "type": "hq__QmVKZjLdVB68xMo7zzpVAi72zrQs9df7uAx8aKk2VhUx85",
-          "meta": {
-            "sshhhh": {
-              "its": "a secret"
-            }
-          }
-        },
-        {
-          "id": "iq__2FordRTUdHbFxVzuLfEXkZkrF52U",
-          "hash": "hq__QmXE3cu2eUYMnyq3WNHzLNCrKPs8SxtXsyNWUia9jP19TF",
-          "type": "",
-          "meta": {
-            "sshhhh": {
-              "its": "a secret"
-            }
+LIBRARY CONTENTS ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ
+[
+  {
+    "id": "iq__2U3gwLZdyJuofNtbdiue4AAw8UeZ",
+    "versions": [
+      {
+        "id": "iq__2U3gwLZdyJuofNtbdiue4AAw8UeZ",
+        "hash": "hq__QmRNge4S4FZRGhwaESNL8fTSNukVenoZpaCiffMG7VZh4y",
+        "type": "",
+        "meta": {
+          "sshhhh": {
+            "its": "a secret"
           }
         }
-      ]
-    },
-    {
-      "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-      "versions": [
-        {
-          "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-          "hash": "hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT",
-          "type": "",
-          "meta": {
-            "meta": "changed",
+      },
+      {
+        "id": "iq__2U3gwLZdyJuofNtbdiue4AAw8UeZ",
+        "hash": "hq__QmRcbsLYnyxUseskYw4hMHKmwLNByC2goeDLn6EH6e7AFN",
+        "type": "",
+        "meta": {
+          "sshhhh": {
+            "its": "a secret"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+    "versions": [
+      {
+        "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+        "hash": "hq__QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6",
+        "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik",
+        "meta": {
+          "meta": "changed",
+          "newField": "newValue",
+          "sub": {
             "newField": "newValue",
-            "sub": {
-              "newField": "newValue",
-              "tree": "value"
-            },
-            "subtree": {}
-          }
-        },
-        {
-          "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-          "hash": "hq__Qmf71ui59Vq6JCRe2GWihWhWPSRyxuvUeRxG1y9AfTUSE3",
-          "type": "",
-          "meta": {
-            "meta": "data",
-            "subtree": {
-              "to_delete": "value"
-            },
-            "to_delete": {
-              "value": "value"
-            }
+            "tree": "value"
+          },
+          "subtree": {}
+        }
+      },
+      {
+        "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+        "hash": "hq__QmRT56xZuGaHUynPHBjLnCCwz8FRbKRkTths2sxSd5m7fE",
+        "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik",
+        "meta": {
+          "meta": "data",
+          "subtree": {
+            "to_delete": "value"
+          },
+          "to_delete": {
+            "value": "value"
           }
         }
-      ]
-    }
-  ]
-}
+      }
+    ]
+  }
+]
 
 CONTENT OBJECT: 
 {
-  "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-  "hash": "hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT",
-  "type": ""
+  "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+  "hash": "hq__QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6",
+  "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik",
+  "meta": {}
 }
 
 FORCING REAUTHORIZATION TO OBJECT ON NEXT CALL
@@ -404,31 +936,31 @@ CONTENT OBJECT METADATA:
 
 CONTENT OBJECT VERSIONS: 
 {
-  "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
+  "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
   "versions": [
     {
-      "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-      "hash": "hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT",
-      "type": ""
+      "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+      "hash": "hq__QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6",
+      "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik"
     },
     {
-      "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-      "hash": "hq__Qmf71ui59Vq6JCRe2GWihWhWPSRyxuvUeRxG1y9AfTUSE3",
-      "type": ""
+      "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+      "hash": "hq__QmRT56xZuGaHUynPHBjLnCCwz8FRbKRkTths2sxSd5m7fE",
+      "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik"
     }
   ]
 }
 
-CONTENT PARTS iq__row9aNWuqxhHiMj5QoTd3dcDCF5
+CONTENT PARTS iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F
 {
   "content": {
-    "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-    "hash": "hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT",
-    "type": ""
+    "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+    "hash": "hq__QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6",
+    "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik"
   },
   "parts": [
     {
-      "hash": "hqp_QmWkUhYX4zX7xHK8YzKQqJ6yH4FV4qDf1NXpTNBZz2uRNt",
+      "hash": "hqp_QmcdEzceydTxZdEsvZM7oLjKQqyDmp5A8zrNQbPn7LMDyx",
       "size": 705
     }
   ]
@@ -436,7 +968,7 @@ CONTENT PARTS iq__row9aNWuqxhHiMj5QoTd3dcDCF5
 DOWNLOADING PART... 
 ArrayBuffer { byteLength: 8192 }
 DOWNLOADED: 
-8154
+7978
 UPLOADING FILES...
 UPLOADED: 
 
@@ -454,7 +986,7 @@ UPLOADED:
         "parts": [
           0
         ],
-        "size": 10714
+        "size": 11747
       }
     },
     "ContentObjectVerification.js": {
@@ -481,7 +1013,7 @@ UPLOADED:
         "parts": [
           3
         ],
-        "size": 62068
+        "size": 71573
       }
     },
     "ElvWallet.js": {
@@ -499,7 +1031,7 @@ UPLOADED:
         "parts": [
           5
         ],
-        "size": 8164
+        "size": 10501
       }
     },
     "FrameClient.js": {
@@ -508,7 +1040,7 @@ UPLOADED:
         "parts": [
           6
         ],
-        "size": 6103
+        "size": 6887
       }
     },
     "HttpClient.js": {
@@ -535,7 +1067,7 @@ UPLOADED:
         "parts": [
           9
         ],
-        "size": 4223
+        "size": 4689
       }
     },
     "contracts": {
@@ -557,7 +1089,7 @@ UPLOADED:
           "parts": [
             11
           ],
-          "size": 16042
+          "size": 15905
         }
       },
       "AdmgrCampaign.js": {
@@ -566,7 +1098,7 @@ UPLOADED:
           "parts": [
             12
           ],
-          "size": 13420
+          "size": 13185
         }
       },
       "AdmgrCampaignManager.js": {
@@ -575,7 +1107,7 @@ UPLOADED:
           "parts": [
             13
           ],
-          "size": 14859
+          "size": 14621
         }
       },
       "BaseAccessControlGroup.js": {
@@ -593,7 +1125,7 @@ UPLOADED:
           "parts": [
             15
           ],
-          "size": 23585
+          "size": 23615
         }
       },
       "BaseContentSpace.js": {
@@ -602,7 +1134,7 @@ UPLOADED:
           "parts": [
             16
           ],
-          "size": 44354
+          "size": 45844
         }
       },
       "BaseContentType.js": {
@@ -620,7 +1152,7 @@ UPLOADED:
           "parts": [
             18
           ],
-          "size": 37913
+          "size": 39995
         }
       },
       "Certifyer.js": {
@@ -749,22 +1281,36 @@ UPLOADED:
           "size": 1782
         }
       }
+    },
+    "events": {
+      ".": {
+        "type": "directory"
+      },
+      "Topics.js": {
+        ".": {
+          "link_to": null,
+          "parts": [
+            33
+          ],
+          "size": 17003
+        }
+      }
     }
   }
 }
 
 DOWNLOADING FILE...
-<Buffer 63 6f 6e 73 74 20 55 52 49 20 3d 20 72 65 71 75 69 72 65 28 22 75 72 69 6a 73 22 29 3b 0a 63 6f 6e 73 74 20 50 61 74 68 20 3d 20 72 65 71 75 69 72 65 ... 62018 more bytes>
+<Buffer 63 6f 6e 73 74 20 55 52 49 20 3d 20 72 65 71 75 69 72 65 28 22 75 72 69 6a 73 22 29 3b 0a 63 6f 6e 73 74 20 50 61 74 68 20 3d 20 72 65 71 75 69 72 65 ... 71523 more bytes>
 
 FILE URL:
-http://localhost:8008/qlibs/ilib2FordRTUdHbFxVzuLfEXkZkrF52U/q/iq__row9aNWuqxhHiMj5QoTd3dcDCF5/files/src/ElvClient.js?authorization=eyJxc3BhY2VfaWQiOiJpc3BjS1JqSHJrVnQydVRKQkdXdTRzV29IdFVZaFNxIiwicWxpYl9pZCI6ImlsaWIyRm9yZFJUVWRIYkZ4Vnp1TGZFWGtaa3JGNTJVIiwiYWRkciI6IjB4NzFiMDExQjY3ZGM4ZjVDMzIzQTM0Q2QxNGI5NTI3MjFENTc1MEM5MyIsInR4aWQiOiIweDM2MmYyOWRhNGNlMjRhMjkyNGU4MGE0NDk0YTI3NTc2OTJiNzgwN2Y3MWY5YzI1ZWZmYTczNDc0MGRlMjlhZGQifQ%3D%3D.U0lHTkFUVVJF
+http://localhost:8008/qlibs/ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ/q/iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F/files/src/ElvClient.js?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMjVObmRXWlFwNHBGcHhlSkthV1RNc3k0Wmc0NSIsInFsaWJfaWQiOiJpbGliMlUzZ3dMWmR5SnVvZk50YmRpdWU0QUF3OFVlWiIsImFkZHIiOiIweDcxYjAxMUI2N2RjOGY1QzMyM0EzNENkMTRiOTUyNzIxRDU3NTBDOTMiLCJ0eGlkIjoiMHgzMTMxZTAyOGEzMmYxYWNiM2Y0MGUxNzQ0M2MxYTU5YTBjNjFlMGYxZWEyZmVjNDQ4YmU2MWZlOTc3OGJiMmUzIn0%3D.U0lHTkFUVVJF
 
 NAMING... 
 RETRIEVING OBJECT BY NAME...
 {
-  "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-  "hash": "hq__QmRGCsChFrbANrwHd1auyhuLvma18rLDJLtBh1bMs4bX6F",
-  "type": "",
+  "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+  "hash": "hq__QmNj5YynbqcMuzW6ttHZZZwSVrLZitHExTJuU3ZUtFrSo6",
+  "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik",
   "meta": {
     "bundle_meta": {
       "extensions": null,
@@ -772,173 +1318,178 @@ RETRIEVING OBJECT BY NAME...
       "finalized": true,
       "pack_policy": "compact",
       "part_refs": {
-        "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W": 33
+        "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB": 34
       },
       "segments": [
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 10714,
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 11747,
           "off": 0
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 6561,
-          "off": 10714
+          "off": 11747
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 3526,
-          "off": 17275
+          "off": 18308
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 62068,
-          "off": 20801
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 71573,
+          "off": 21834
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 5441,
-          "off": 82869
+          "off": 93407
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 8164,
-          "off": 88310
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 10501,
+          "off": 98848
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 6103,
-          "off": 96474
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 6887,
+          "off": 109349
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 1365,
-          "off": 102577
+          "off": 116236
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 191,
-          "off": 103942
+          "off": 117601
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 4223,
-          "off": 104133
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 4689,
+          "off": 117792
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 745,
-          "off": 108356
+          "off": 122481
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 16042,
-          "off": 109101
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 15905,
+          "off": 123226
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 13420,
-          "off": 125143
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 13185,
+          "off": 139131
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 14859,
-          "off": 138563
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 14621,
+          "off": 152316
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 7003,
-          "off": 153422
+          "off": 166937
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 23585,
-          "off": 160425
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 23615,
+          "off": 173940
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 44354,
-          "off": 184010
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 45844,
+          "off": 197555
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 4392,
-          "off": 228364
+          "off": 243399
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
-          "len": 37913,
-          "off": 232756
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 39995,
+          "off": 247791
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 4261,
-          "off": 270669
+          "off": 287786
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 5936,
-          "off": 274930
+          "off": 292047
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 3611,
-          "off": 280866
+          "off": 297983
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 2324,
-          "off": 284477
+          "off": 301594
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 16423,
-          "off": 286801
+          "off": 303918
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 15501,
-          "off": 303224
+          "off": 320341
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 7418,
-          "off": 318725
+          "off": 335842
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 7852,
-          "off": 326143
+          "off": 343260
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 16428,
-          "off": 333995
+          "off": 351112
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 7875,
-          "off": 350423
+          "off": 367540
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 6551,
-          "off": 358298
+          "off": 375415
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 10081,
-          "off": 364849
+          "off": 381966
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 696,
-          "off": 374930
+          "off": 392047
         },
         {
-          "hash": "hqp_QmUbTq6ApNxtMHnmGyoDPhUoCrDKPM7fe8VZF3NzSvnB2W",
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
           "len": 1782,
-          "off": 375626
+          "off": 392743
+        },
+        {
+          "hash": "hqp_QmScbAzs2GyMBYmmMPtGHFEsaGLeZ955hBKpET1rqPA3mB",
+          "len": 17003,
+          "off": 394525
         }
       ],
       "upload_jobs_count": 0
@@ -957,7 +1508,7 @@ RETRIEVING OBJECT BY NAME...
             "parts": [
               0
             ],
-            "size": 10714
+            "size": 11747
           }
         },
         "ContentObjectVerification.js": {
@@ -984,7 +1535,7 @@ RETRIEVING OBJECT BY NAME...
             "parts": [
               3
             ],
-            "size": 62068
+            "size": 71573
           }
         },
         "ElvWallet.js": {
@@ -1002,7 +1553,7 @@ RETRIEVING OBJECT BY NAME...
             "parts": [
               5
             ],
-            "size": 8164
+            "size": 10501
           }
         },
         "FrameClient.js": {
@@ -1011,7 +1562,7 @@ RETRIEVING OBJECT BY NAME...
             "parts": [
               6
             ],
-            "size": 6103
+            "size": 6887
           }
         },
         "HttpClient.js": {
@@ -1038,7 +1589,7 @@ RETRIEVING OBJECT BY NAME...
             "parts": [
               9
             ],
-            "size": 4223
+            "size": 4689
           }
         },
         "contracts": {
@@ -1060,7 +1611,7 @@ RETRIEVING OBJECT BY NAME...
               "parts": [
                 11
               ],
-              "size": 16042
+              "size": 15905
             }
           },
           "AdmgrCampaign.js": {
@@ -1069,7 +1620,7 @@ RETRIEVING OBJECT BY NAME...
               "parts": [
                 12
               ],
-              "size": 13420
+              "size": 13185
             }
           },
           "AdmgrCampaignManager.js": {
@@ -1078,7 +1629,7 @@ RETRIEVING OBJECT BY NAME...
               "parts": [
                 13
               ],
-              "size": 14859
+              "size": 14621
             }
           },
           "BaseAccessControlGroup.js": {
@@ -1096,7 +1647,7 @@ RETRIEVING OBJECT BY NAME...
               "parts": [
                 15
               ],
-              "size": 23585
+              "size": 23615
             }
           },
           "BaseContentSpace.js": {
@@ -1105,7 +1656,7 @@ RETRIEVING OBJECT BY NAME...
               "parts": [
                 16
               ],
-              "size": 44354
+              "size": 45844
             }
           },
           "BaseContentType.js": {
@@ -1123,7 +1674,7 @@ RETRIEVING OBJECT BY NAME...
               "parts": [
                 18
               ],
-              "size": 37913
+              "size": 39995
             }
           },
           "Certifyer.js": {
@@ -1252,6 +1803,20 @@ RETRIEVING OBJECT BY NAME...
               "size": 1782
             }
           }
+        },
+        "events": {
+          ".": {
+            "type": "directory"
+          },
+          "Topics.js": {
+            ".": {
+              "link_to": null,
+              "parts": [
+                33
+              ],
+              "size": 17003
+            }
+          }
         }
       }
     },
@@ -1272,24 +1837,24 @@ SUCCESSFULLY DELETED NAME
 
 PROOFS: 
 {
-  "root_hash": "65632519d9b801e3fbd1d17b7c10c137af14bf42b0b070b75d6da450056d70bc",
+  "root_hash": "d9734923bd8d0739813bc3590001a5d65173ec0cac6634a7a735e186afd95fc2",
   "proofs": [
     {
       "byte_beg": 0,
       "byte_end": 704,
       "proof": [
-        "65632519d9b801e3fbd1d17b7c10c137af14bf42b0b070b75d6da450056d70bc"
+        "d9734923bd8d0739813bc3590001a5d65173ec0cac6634a7a735e186afd95fc2"
       ]
     }
   ],
   "proof_data": {
-    "65632519d9b801e3fbd1d17b7c10c137af14bf42b0b070b75d6da450056d70bc": "+FyhIHz4Heh6i6IfA+49GbZdu6xxBtLRfZlQ36puqFxajlQluDgAAAAAAAAAAAAAAAAAAAAAwAIAAAAAAAB8+B3oeouiHwPuPRm2XbuscQbS0X2ZUN+qbqhcWo5UJQ=="
+    "d9734923bd8d0739813bc3590001a5d65173ec0cac6634a7a735e186afd95fc2": "+FyhINRDrPkclGmBMwsK57HlPlcKecMs708JpSK5LdqIklPnuDgAAAAAAAAAAAAAAAAAAAAAwAIAAAAAAADUQ6z5HJRpgTMLCuex5T5XCnnDLO9PCaUiuS3aiJJT5w=="
   }
 }
 
 QPARTS: 
 /cbor
-�gQmdHash�)X# ��Z���������~>�	8^ZM{cB*�kQstructHash�)X# *�Au��ҡ�:ܲ�/wk�>�T��*����Y�
+�gQmdHash�)X# ��Z���������~>�	8^ZM{cB*�kQstructHash�)X# �]�;�*���Yd��wj�o��-;YB�wjS���
 
 DELETING PART... 
 DELETED
@@ -1297,46 +1862,46 @@ DELETED
 NEW PARTS: 
 {
   "content": {
-    "id": "iq__row9aNWuqxhHiMj5QoTd3dcDCF5",
-    "hash": "hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT",
-    "type": ""
+    "id": "iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F",
+    "hash": "hq__QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6",
+    "type": "hq__QmVy5z7WwYYDm3U4KEVmzdrgoxqatAHhv1CfZcoaPEL3ik"
   },
   "parts": [
     {
-      "hash": "hqp_QmWkUhYX4zX7xHK8YzKQqJ6yH4FV4qDf1NXpTNBZz2uRNt",
+      "hash": "hqp_QmcdEzceydTxZdEsvZM7oLjKQqyDmp5A8zrNQbPn7LMDyx",
       "size": 705
     }
   ]
 }
 URLS: 
-http://localhost:8008/qlibs/ilib2FordRTUdHbFxVzuLfEXkZkrF52U?authorization=eyJxc3BhY2VfaWQiOiJpc3BjS1JqSHJrVnQydVRKQkdXdTRzV29IdFVZaFNxIiwicWxpYl9pZCI6ImlsaWIyRm9yZFJUVWRIYkZ4Vnp1TGZFWGtaa3JGNTJVIiwiYWRkciI6IjB4NzFiMDExQjY3ZGM4ZjVDMzIzQTM0Q2QxNGI5NTI3MjFENTc1MEM5MyJ9.U0lHTkFUVVJF
-http://localhost:8008/qlibs/ilib2FordRTUdHbFxVzuLfEXkZkrF52U/q/iq__row9aNWuqxhHiMj5QoTd3dcDCF5?authorization=eyJxc3BhY2VfaWQiOiJpc3BjS1JqSHJrVnQydVRKQkdXdTRzV29IdFVZaFNxIiwicWxpYl9pZCI6ImlsaWIyRm9yZFJUVWRIYkZ4Vnp1TGZFWGtaa3JGNTJVIiwiYWRkciI6IjB4NzFiMDExQjY3ZGM4ZjVDMzIzQTM0Q2QxNGI5NTI3MjFENTc1MEM5MyIsInR4aWQiOiIweDM2MmYyOWRhNGNlMjRhMjkyNGU4MGE0NDk0YTI3NTc2OTJiNzgwN2Y3MWY5YzI1ZWZmYTczNDc0MGRlMjlhZGQifQ%3D%3D.U0lHTkFUVVJF
-http://localhost:8008/qlibs/ilib2FordRTUdHbFxVzuLfEXkZkrF52U/q/iq__row9aNWuqxhHiMj5QoTd3dcDCF5/data/hqp_QmWkUhYX4zX7xHK8YzKQqJ6yH4FV4qDf1NXpTNBZz2uRNt?authorization=eyJxc3BhY2VfaWQiOiJpc3BjS1JqSHJrVnQydVRKQkdXdTRzV29IdFVZaFNxIiwicWxpYl9pZCI6ImlsaWIyRm9yZFJUVWRIYkZ4Vnp1TGZFWGtaa3JGNTJVIiwiYWRkciI6IjB4NzFiMDExQjY3ZGM4ZjVDMzIzQTM0Q2QxNGI5NTI3MjFENTc1MEM5MyIsInR4aWQiOiIweDM2MmYyOWRhNGNlMjRhMjkyNGU4MGE0NDk0YTI3NTc2OTJiNzgwN2Y3MWY5YzI1ZWZmYTczNDc0MGRlMjlhZGQifQ%3D%3D.U0lHTkFUVVJF
-http://localhost:8008/qlibs/ilib2FordRTUdHbFxVzuLfEXkZkrF52U/q/iq__row9aNWuqxhHiMj5QoTd3dcDCF5/data/hqp_QmWkUhYX4zX7xHK8YzKQqJ6yH4FV4qDf1NXpTNBZz2uRNt?query=params&params=query&authorization=eyJxc3BhY2VfaWQiOiJpc3BjS1JqSHJrVnQydVRKQkdXdTRzV29IdFVZaFNxIiwicWxpYl9pZCI6ImlsaWIyRm9yZFJUVWRIYkZ4Vnp1TGZFWGtaa3JGNTJVIiwiYWRkciI6IjB4NzFiMDExQjY3ZGM4ZjVDMzIzQTM0Q2QxNGI5NTI3MjFENTc1MEM5MyIsInR4aWQiOiIweDM2MmYyOWRhNGNlMjRhMjkyNGU4MGE0NDk0YTI3NTc2OTJiNzgwN2Y3MWY5YzI1ZWZmYTczNDc0MGRlMjlhZGQifQ%3D%3D.U0lHTkFUVVJF
+http://localhost:8008/qlibs/ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMjVObmRXWlFwNHBGcHhlSkthV1RNc3k0Wmc0NSIsInFsaWJfaWQiOiJpbGliMlUzZ3dMWmR5SnVvZk50YmRpdWU0QUF3OFVlWiIsImFkZHIiOiIweDcxYjAxMUI2N2RjOGY1QzMyM0EzNENkMTRiOTUyNzIxRDU3NTBDOTMifQ%3D%3D.U0lHTkFUVVJF
+http://localhost:8008/qlibs/ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ/q/iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMjVObmRXWlFwNHBGcHhlSkthV1RNc3k0Wmc0NSIsInFsaWJfaWQiOiJpbGliMlUzZ3dMWmR5SnVvZk50YmRpdWU0QUF3OFVlWiIsImFkZHIiOiIweDcxYjAxMUI2N2RjOGY1QzMyM0EzNENkMTRiOTUyNzIxRDU3NTBDOTMiLCJ0eGlkIjoiMHgzMTMxZTAyOGEzMmYxYWNiM2Y0MGUxNzQ0M2MxYTU5YTBjNjFlMGYxZWEyZmVjNDQ4YmU2MWZlOTc3OGJiMmUzIn0%3D.U0lHTkFUVVJF
+http://localhost:8008/qlibs/ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ/q/iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F/data/hqp_QmcdEzceydTxZdEsvZM7oLjKQqyDmp5A8zrNQbPn7LMDyx?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMjVObmRXWlFwNHBGcHhlSkthV1RNc3k0Wmc0NSIsInFsaWJfaWQiOiJpbGliMlUzZ3dMWmR5SnVvZk50YmRpdWU0QUF3OFVlWiIsImFkZHIiOiIweDcxYjAxMUI2N2RjOGY1QzMyM0EzNENkMTRiOTUyNzIxRDU3NTBDOTMiLCJ0eGlkIjoiMHgzMTMxZTAyOGEzMmYxYWNiM2Y0MGUxNzQ0M2MxYTU5YTBjNjFlMGYxZWEyZmVjNDQ4YmU2MWZlOTc3OGJiMmUzIn0%3D.U0lHTkFUVVJF
+http://localhost:8008/qlibs/ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ/q/iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F/data/hqp_QmcdEzceydTxZdEsvZM7oLjKQqyDmp5A8zrNQbPn7LMDyx?query=params&params=query&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMjVObmRXWlFwNHBGcHhlSkthV1RNc3k0Wmc0NSIsInFsaWJfaWQiOiJpbGliMlUzZ3dMWmR5SnVvZk50YmRpdWU0QUF3OFVlWiIsImFkZHIiOiIweDcxYjAxMUI2N2RjOGY1QzMyM0EzNENkMTRiOTUyNzIxRDU3NTBDOTMiLCJ0eGlkIjoiMHgzMTMxZTAyOGEzMmYxYWNiM2Y0MGUxNzQ0M2MxYTU5YTBjNjFlMGYxZWEyZmVjNDQ4YmU2MWZlOTc3OGJiMmUzIn0%3D.U0lHTkFUVVJF
 
 NOCACHE URL
-http://localhost:8008/qlibs/ilib2FordRTUdHbFxVzuLfEXkZkrF52U/q/iq__row9aNWuqxhHiMj5QoTd3dcDCF5/data/hqp_QmWkUhYX4zX7xHK8YzKQqJ6yH4FV4qDf1NXpTNBZz2uRNt?authorization=eyJxc3BhY2VfaWQiOiJpc3BjS1JqSHJrVnQydVRKQkdXdTRzV29IdFVZaFNxIiwicWxpYl9pZCI6ImlsaWIyRm9yZFJUVWRIYkZ4Vnp1TGZFWGtaa3JGNTJVIiwiYWRkciI6IjB4NzFiMDExQjY3ZGM4ZjVDMzIzQTM0Q2QxNGI5NTI3MjFENTc1MEM5MyIsInR4aWQiOiIweGU4MWQ5NGU4NDM4NTM1NTk3MzE0Y2EyMzNkMDhkNjk0MWE5NzM0YTY0M2RlMzlhOWU4NmJhZjViMDBhOTQxMjkifQ%3D%3D.U0lHTkFUVVJF
+http://localhost:8008/qlibs/ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ/q/iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F/data/hqp_QmcdEzceydTxZdEsvZM7oLjKQqyDmp5A8zrNQbPn7LMDyx?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMjVObmRXWlFwNHBGcHhlSkthV1RNc3k0Wmc0NSIsInFsaWJfaWQiOiJpbGliMlUzZ3dMWmR5SnVvZk50YmRpdWU0QUF3OFVlWiIsImFkZHIiOiIweDcxYjAxMUI2N2RjOGY1QzMyM0EzNENkMTRiOTUyNzIxRDU3NTBDOTMiLCJ0eGlkIjoiMHhhZmVmYTM3N2Y3NjQ2M2E4NzJjNDQxOTRlYTRkMDg5NDNmMDYyNWJhYTZlNjE1ZjFhOTEwMzlkMTgyYzIxYzA3In0%3D.U0lHTkFUVVJF
 
 REP: 
-http://localhost:8008/qlibs/ilib2FordRTUdHbFxVzuLfEXkZkrF52U/q/iq__row9aNWuqxhHiMj5QoTd3dcDCF5/rep/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjS1JqSHJrVnQydVRKQkdXdTRzV29IdFVZaFNxIiwicWxpYl9pZCI6ImlsaWIyRm9yZFJUVWRIYkZ4Vnp1TGZFWGtaa3JGNTJVIiwiYWRkciI6IjB4NzFiMDExQjY3ZGM4ZjVDMzIzQTM0Q2QxNGI5NTI3MjFENTc1MEM5MyIsInR4aWQiOiIweDM2MmYyOWRhNGNlMjRhMjkyNGU4MGE0NDk0YTI3NTc2OTJiNzgwN2Y3MWY5YzI1ZWZmYTczNDc0MGRlMjlhZGQifQ%3D%3D.U0lHTkFUVVJF
+http://localhost:8008/qlibs/ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ/q/iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F/rep/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMjVObmRXWlFwNHBGcHhlSkthV1RNc3k0Wmc0NSIsInFsaWJfaWQiOiJpbGliMlUzZ3dMWmR5SnVvZk50YmRpdWU0QUF3OFVlWiIsImFkZHIiOiIweDcxYjAxMUI2N2RjOGY1QzMyM0EzNENkMTRiOTUyNzIxRDU3NTBDOTMiLCJ0eGlkIjoiMHgzMTMxZTAyOGEzMmYxYWNiM2Y0MGUxNzQ0M2MxYTU5YTBjNjFlMGYxZWEyZmVjNDQ4YmU2MWZlOTc3OGJiMmUzIn0%3D.U0lHTkFUVVJF
 
 CALL BITCODE
-http://localhost:8008/qlibs/ilib2FordRTUdHbFxVzuLfEXkZkrF52U/q/iq__row9aNWuqxhHiMj5QoTd3dcDCF5/call/specialMethod?authorization=eyJxc3BhY2VfaWQiOiJpc3BjS1JqSHJrVnQydVRKQkdXdTRzV29IdFVZaFNxIiwicWxpYl9pZCI6ImlsaWIyRm9yZFJUVWRIYkZ4Vnp1TGZFWGtaa3JGNTJVIiwiYWRkciI6IjB4NzFiMDExQjY3ZGM4ZjVDMzIzQTM0Q2QxNGI5NTI3MjFENTc1MEM5MyIsInR4aWQiOiIweDM2MmYyOWRhNGNlMjRhMjkyNGU4MGE0NDk0YTI3NTc2OTJiNzgwN2Y3MWY5YzI1ZWZmYTczNDc0MGRlMjlhZGQifQ%3D%3D.U0lHTkFUVVJF
+http://localhost:8008/qlibs/ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ/q/iq__3TQhNZTGGyFnRFB8fFQRPzpyeX3F/call/specialMethod?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMjVObmRXWlFwNHBGcHhlSkthV1RNc3k0Wmc0NSIsInFsaWJfaWQiOiJpbGliMlUzZ3dMWmR5SnVvZk50YmRpdWU0QUF3OFVlWiIsImFkZHIiOiIweDcxYjAxMUI2N2RjOGY1QzMyM0EzNENkMTRiOTUyNzIxRDU3NTBDOTMiLCJ0eGlkIjoiMHgzMTMxZTAyOGEzMmYxYWNiM2Y0MGUxNzQ0M2MxYTU5YTBjNjFlMGYxZWEyZmVjNDQ4YmU2MWZlOTc3OGJiMmUzIn0%3D.U0lHTkFUVVJF
 
 UTILS: 
-LIBRARY ID: ilib2FordRTUdHbFxVzuLfEXkZkrF52U
-TO ADDRESS: 0x5a1ac3f63ef62f249d3844d3703e1daeb6643085
-TO HASH: ilib2FordRTUdHbFxVzuLfEXkZkrF52U
+LIBRARY ID: ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ
+TO ADDRESS: 0x69402131fc2429e9853ee5a580b9288578f92f26
+TO HASH: ilib2U3gwLZdyJuofNtbdiue4AAw8UeZ
 CONTENT HASH TO BYTES32 STRING: 
-HASH: hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT
-BYTES32: 0xc2453d21cef46fb3489172cd4c0a1a6bd1e171b6be860f8de602c7348186e1f2
+HASH: hq__QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6
+BYTES32: 0x6c3778305ef6498ca58482b7d43855e476e63ffaba5cd39f3f5c34cd298ef997
 
-CONTENT VERIFICATION: hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT
+CONTENT VERIFICATION: hq__QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6
 {
-  "hash": "hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT",
+  "hash": "hq__QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6",
   "qref": {
     "valid": true,
-    "hash": "hqp_QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT"
+    "hash": "hqp_QmVd5oG3c37niC7SNMv8HBwCtGkpaFac8fAFu8oFSczNG6"
   },
   "qmd": {
     "valid": true,
@@ -1348,10 +1913,10 @@ CONTENT VERIFICATION: hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT
   },
   "qstruct": {
     "valid": true,
-    "hash": "hqp_QmRCvVHkqJbmaJitjZLWFcbwfGpDufcqf4bq4AszYrMX4B",
+    "hash": "hqp_QmbYDURKdzoyJu7mKwS4JAJqKJWx72Xp7QiEfp6F8ra1QY",
     "parts": [
       {
-        "hash": "hqp_QmWkUhYX4zX7xHK8YzKQqJ6yH4FV4qDf1NXpTNBZz2uRNt",
+        "hash": "hqp_QmcdEzceydTxZdEsvZM7oLjKQqyDmp5A8zrNQbPn7LMDyx",
         "size": 705
       }
     ]
@@ -1359,6 +1924,9 @@ CONTENT VERIFICATION: hq__QmbR13AF1gtaA2sdgtgxT2j71StDwMCjRo5ADiGYmUfJKT
   "valid": true
 }
 
+
+CALLING ACCESS COMPLETE ON CONTENT OBJECT...
+ACCESS COMPLETE
 
 DELETING CONTENT VERSION: 
 DELETED
@@ -1370,17 +1938,17 @@ DELETING CONTENT LIBRARY:
 DELETED
 
 CREATING ACCESS GROUP: 
-0x4D93c451886333d4b685572BB143f1B27cF0EAAE
+0x1879166f1C373dcBcb84644f09897b527A276Bd3
 
 ACCESS GROUP OWNER: 0x71b011B67dc8f5C323A34Cd14b952721D5750C93
 ADDING MEMBER TO ACCESS GROUP: 
-0x1b3095becb3089c7120da159f63c8c537b9bc202f0ccf33d3c8b882b2787216d
+0x99c6ef6eab29e48a924c4ea7cd71865c4f86e2e393957e641c16650836053e12
 REMOVING MEMBER FROM ACCESS GROUP: 
-0x984e054f51ec131b0c0d93dd2643d88ab7b7a5d21d95e7ac28a37be8b1a4871b
+0x03f30452b8c9d068bef11ede36a1f2a16cc5cbc82cbd6927d75ca1e4b759ff9f
 ADDING MANAGER TO ACCESS GROUP: 
-0x3bf8356001f48ac177789406da29cafd308e09422a657679ac4a69ade7a36a22
+0x6c0b65991ff6a389fc4bf21d6b899374725732ea55c16379230760d54f17fbbf
 REMOVING MANAGER FROM ACCESS GROUP: 
-0xc8e8d476d13a0e2c998773958594020f035c50a8e9fa69d6f89d25088850b535
+0xc57aa9ce58bd888ea7c2c05e43348b127bf87fc2a2296992c2d8f04e44d0f626
 DELETING ACCESS GROUP...
 
 

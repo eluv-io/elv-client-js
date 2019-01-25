@@ -790,6 +790,22 @@ class ElvClient {
   /* Objects */
 
   /**
+   * Call accessComplete on the specified content object contract using a previously cached requestID.
+   * Caching must be enabled and an access request must have been previously made on the specified
+   * object by this client instance.
+   *
+   * @param {string=} objectId - ID of the object
+   * @param {number=} score - Percentage score (0-100)
+   * @returns {Promise<Object>} - Transaction log of the AccessComplete event
+   * @constructor
+   */
+  async ContentObjectAccessComplete({objectId, score=100}) {
+    if(score < 0 || score > 100) { throw Error("Invalid AccessComplete score: " + score); }
+
+    return await this.authClient.AccessComplete({id: objectId, abi: ContentContract.abi, score});
+  }
+
+  /**
    * List content objects in the specified library
    *
    * @see /qlibs/:qlibid/q

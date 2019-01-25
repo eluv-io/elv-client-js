@@ -36,6 +36,8 @@ class AuthorizationClient {
       libraries: {},
       objects: {}
     };
+
+    this.requestIds = {};
   }
 
   async AuthorizationHeader({libraryId, objectId, transactionHash, update=false, noCache=false}) {
@@ -157,6 +159,33 @@ class AuthorizationClient {
 
   /* Access */
 
+  async AccessComplete({id, abi, score}) {
+    const requestId = this.requestIds[id];
+
+    if(!requestId) { throw Error("Unknown request for " + id); }
+
+    const formattedArgs = this.ethClient.FormatContractArguments({
+      abi,
+      methodName: "accessComplete",
+      args: [requestId, score, ""],
+      signer: this.signer
+    });
+
+    // If access request did not succeed, no event will be emitted
+    const event = await this.ethClient.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress({hash: id}),
+      abi,
+      methodName: "accessComplete",
+      methodArgs: formattedArgs,
+      signer: this.signer
+    });
+
+    delete this.requestIds[id];
+    delete this.accessTransactions[id];
+
+    return event;
+  }
+
   async AccessRequest({id, abi, args=[], checkAccessCharge=false, accessCache={}, modifyCache={}}) {
     // See if access or modification request has already been made
     if(!this.noCache) {
@@ -203,6 +232,11 @@ class AuthorizationClient {
     // Cache the transaction hash
     if(!this.noCache) {
       accessCache[id] = event.transactionHash;
+
+      // Save request ID if present
+      if(event.logs.length > 0 && event.logs[0].values) {
+        this.requestIds[id] = event.logs[0].values.requestID;
+      }
     }
 
     return event.transactionHash;
