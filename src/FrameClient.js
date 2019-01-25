@@ -160,6 +160,7 @@ class FrameClient {
       "ContentLibrary",
       "ContentLibraryOwner",
       "ContentObject",
+      "ContentObjectAccessComplete",
       "ContentObjectMetadata",
       "ContentObjectOwner",
       "ContentObjectVersions",

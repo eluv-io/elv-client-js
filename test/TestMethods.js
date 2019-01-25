@@ -490,6 +490,10 @@ const TestQueries = async (client) => {
     console.log("CONTENT VERIFICATION: " + versionHash);
     console.log(JSON.stringify(contentVerification, null, 2) + "\n");
 
+    console.log("\nCALLING ACCESS COMPLETE ON CONTENT OBJECT...");
+    await client.ContentObjectAccessComplete({objectId});
+    console.log("ACCESS COMPLETE");
+
     console.log("\nDELETING CONTENT VERSION: ");
     await client.DeleteContentVersion({
       libraryId,
