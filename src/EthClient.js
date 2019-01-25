@@ -10,6 +10,8 @@ const ContentContract = require("./contracts/BaseContent");
 
 const Utils = require("./Utils");
 
+const Topics = require("./events/topics");
+
 class EthClient {
   constructor(ethereumURI) {
     this.ethereumURI = ethereumURI;
@@ -149,7 +151,7 @@ class EthClient {
     });
 
     // Await completion of call and get event
-    const methodEvent = await new Promise((resolve) => {
+    let methodEvent = await new Promise((resolve) => {
       signer.provider.on(createMethodCall.hash, async (event) => {
         resolve(event);
       });
@@ -157,6 +159,14 @@ class EthClient {
 
     // Make sure to remove listener when done
     signer.provider.removeAllListeners(createMethodCall.hash);
+
+    // Parse logs
+    methodEvent.logs = methodEvent.logs.map(log => {
+      return {
+        ...log,
+        ...(contract.interface.parseLog(log))
+      };
+    });
 
     return methodEvent;
   }
@@ -284,14 +294,77 @@ class EthClient {
     };
   }
 
+  // Get all logs for the specified contract in the specified range
   async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, signer}) {
-    const contractEvents = await signer.provider.getLogs({
+    const contractLogs = await signer.provider.getLogs({
       address: contractAddress,
       fromBlock,
       toBlock
     });
 
-    return contractEvents.map(event => this.FormatEvent(event, new Ethers.utils.Interface(abi)));
+    let blocks = {};
+    contractLogs.forEach(log => {
+      const eventInterface = new Ethers.utils.Interface(abi);
+      const parsedLog = {
+        ...log,
+        ...(eventInterface.parseLog(log))
+      };
+      blocks[log.blockNumber] = [parsedLog].concat((blocks[log.blockNumber] || []));
+    });
+
+    return Object.values(blocks).sort((a, b) => a[0].blockNumber < b[0].blockNumber ? 1 : -1);
+  }
+
+  // Look up the log topic and see if it is known. If so, parse it and inject it into the log
+  ParseUnknownLog({log}) {
+    if(log.topics && log.topics.length > 0) {
+      const topicHash = log.topics[0];
+      const topicInfo = Topics[topicHash];
+      if(topicInfo) {
+        const eventInterface = new Ethers.utils.Interface(topicInfo.abi);
+        if(eventInterface) {
+          log = {
+            ...log,
+            ...(eventInterface.parseLog(log)),
+            contract: topicInfo.contract
+          };
+        }
+      }
+    }
+
+    return log;
+  }
+
+  // Get logs for all blocks in the specified range
+  // Returns a list, sorted in descending block order, with each entry containing all logs or transactions in that block
+  async Events({toBlock, fromBlock, signer}) {
+    const logs = await signer.provider.getLogs({fromBlock, toBlock});
+
+    // Group logs by blocknumber
+    let blocks = {};
+    logs.forEach(log => {
+      blocks[log.blockNumber] = [this.ParseUnknownLog({log})].concat((blocks[log.blockNumber] || []));
+    });
+
+    // Iterate through each block, filling in any missing blocks
+    let output = [];
+    for(let blockNumber = toBlock; blockNumber >= fromBlock; blockNumber--) {
+      if(blocks[blockNumber]) {
+        output.push(blocks[blockNumber]);
+      } else {
+        // Block has no logs -- query transaction hash
+        const blockInfo = await signer.provider.getBlock(blockNumber);
+        if(blockInfo.transactions.length > 0) {
+          output.push(
+            await Promise.all(
+              blockInfo.transactions.map(async transactionHash => await signer.provider.getTransaction(transactionHash))
+            )
+          );
+        }
+      }
+    }
+
+    return output;
   }
 }
 
