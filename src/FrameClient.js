@@ -188,6 +188,7 @@ class FrameClient {
       "DownloadFile",
       "DownloadPart",
       "EditContentObject",
+      "Events",
       "ExtractEventFromLogs",
       "ExtractValueFromEvent",
       "FabricUrl",

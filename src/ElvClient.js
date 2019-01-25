@@ -2071,10 +2071,10 @@ client.FabricUrl({
    *
    * @param {string} contractAddress - The address of the contract
    * @param {object} abi - The ABI of the contract
-   * @param {integer=} fromBlock - Limit results to events after the specified block (inclusive)
-   * @param {integer=} toBlock - Limit results to events before the specified block (inclusive)
+   * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
+   * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
    *
-   * @returns {Promise<Array<EventInfo>>}
+   * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
   async ContractEvents({contractAddress, abi, fromBlock=0, toBlock}) {
     return await this.ethClient.ContractEvents({
@@ -2098,6 +2098,51 @@ client.FabricUrl({
   }
 
   /* Other blockchain operations */
+
+  /**
+   * Get events from the blockchain in reverse chronological order, starting from toBlock. This will also attempt
+   * to identify and parse any known Eluvio contract methods. If successful, the method name, signature, and input
+   * values will be included in the log entry.
+   *
+   * @param {number=} toBlock - Limit results to events before the specified block (inclusive) - If not specified, will start from latest block
+   * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
+   * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are unspecified)
+   *
+   * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+   */
+  async Events({toBlock, fromBlock, count=10}) {
+    const latestBlock = await this.signer.provider.getBlockNumber();
+
+    if(!toBlock) {
+      if(!fromBlock) {
+        toBlock = latestBlock;
+        fromBlock = toBlock - count + 1;
+      } else {
+        toBlock = fromBlock + count - 1;
+      }
+    } else if(!fromBlock) {
+      fromBlock = toBlock - count + 1;
+    }
+
+    // Ensure block numbers are valid
+    if(toBlock > latestBlock) {
+      toBlock = latestBlock;
+    }
+
+    if(fromBlock < 0) {
+      fromBlock = 0;
+    }
+
+    if(fromBlock > toBlock) {
+      return [];
+    }
+
+    return await this.ethClient.Events({
+      toBlock,
+      fromBlock,
+      signer: this.signer
+    });
+  }
 
   /**
    * Get the balance (in ether) of the specified address

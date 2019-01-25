@@ -241,7 +241,7 @@ class AuthorizationClient {
   ContentObjectAccess({objectId}) {
     const args = [
       0, // Access level
-      this.signer.privateKey, // Private key of requester
+      this.signer.signingKey.publicKey, // Public key of requester
       "", // AFGH string
       [], // Custom values
       [] // Stakeholders
