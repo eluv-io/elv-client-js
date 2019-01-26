@@ -465,10 +465,10 @@ const TestQueries = async (client) => {
     console.log("\nUTILS: ");
     console.log("LIBRARY ID: " + libraryId);
 
-    const address = client.utils.HashToAddress({hash: libraryId});
+    const address = client.utils.HashToAddress(libraryId);
     console.log("TO ADDRESS: " + address);
 
-    const newLibraryId = client.utils.AddressToLibraryId({address});
+    const newLibraryId = client.utils.AddressToLibraryId(address);
     console.log("TO HASH: " + newLibraryId);
 
     if(newLibraryId.toLowerCase() !== libraryId.toLowerCase()) {
