@@ -1,4 +1,5 @@
 const bs58 = require("bs58");
+const BigNumber = require("bignumber.js");
 
 /**
  * @namespace
@@ -10,16 +11,43 @@ const bs58 = require("bs58");
  */
 const Utils = {
   nullAddress: "0x0000000000000000000000000000000000000000",
+  weiPerEther: BigNumber("1000000000000000000"),
+
+  /**
+   * Convert wei to ether
+   *
+   * @param {number | string | BigNumber} wei - Wei value to convert to ether
+   *
+   * @see https://github.com/MikeMcl/bignumber.js
+   *
+   * @returns {BigNumber} - Given value in ether
+   */
+  WeiToEther: (wei) => {
+    wei = new BigNumber(wei);
+    return BigNumber(wei).div(Utils.weiPerEther);
+  },
+
+  /**
+   * Convert ether to wei
+   *
+   * @param {number | string | BigNumber} ether - Ether value to convert to wei
+   *
+   * @see https://github.com/MikeMcl/bignumber.js
+   *
+   * @returns {BigNumber} - Given value in wei
+   */
+  EtherToWei: (ether) => {
+    return BigNumber(ether).times(Utils.weiPerEther);
+  },
 
   /**
    * Convert address to normalized form - lower case with "0x" prefix
    *
-   * @namedParams
    * @param {string} address - Address to format
    *
    * @returns {string} - Formatted address
    */
-  FormatAddress: ({address}) => {
+  FormatAddress: (address) => {
     if(!address || typeof address !== "string") { return ""; }
 
     if(!address.startsWith("0x")) { address = "0x" + address; }
@@ -29,12 +57,11 @@ const Utils = {
   /**
    * Convert contract address to multiformat hash
    *
-   * @namedParams
    * @param {string} address - Address of contract
    *
    * @returns {string} - Hash of contract address
    */
-  AddressToHash: ({address}) => {
+  AddressToHash: (address) => {
     address = address.replace("0x", "");
     return bs58.encode(Buffer.from(address, "hex"));
   },
@@ -42,48 +69,44 @@ const Utils = {
   /**
    * Convert contract address to content space ID
    *
-   * @namedParams
    * @param {string} address - Address of contract
    *
    * @returns {string} - Content space ID from contract address
    */
-  AddressToSpaceId: ({address}) => {
-    return "ispc" + Utils.AddressToHash({address});
+  AddressToSpaceId: (address) => {
+    return "ispc" + Utils.AddressToHash(address);
   },
 
   /**
    * Convert contract address to content library ID
    *
-   * @namedParams
    * @param {string} address - Address of contract
    *
    * @returns {string} - Content library ID from contract address
    */
-  AddressToLibraryId: ({address}) => {
-    return "ilib" + Utils.AddressToHash({address});
+  AddressToLibraryId: (address) => {
+    return "ilib" + Utils.AddressToHash(address);
   },
 
   /**
    * Convert contract address to content object ID
    *
-   * @namedParams
    * @param {string} address - Address of contract
    *
    * @returns {string} - Content object ID from contract address
    */
-  AddressToObjectId: ({address}) => {
-    return "iq__" + Utils.AddressToHash({address});
+  AddressToObjectId: (address) => {
+    return "iq__" + Utils.AddressToHash(address);
   },
 
   /**
    * Convert any content fabric ID to the corresponding contract address
    *
-   * @namedParams
    * @param {string} hash - Hash to convert to address
    *
    * @returns {string} - Contract address of item
    */
-  HashToAddress: ({hash}) => {
+  HashToAddress: (hash) => {
     hash = hash.substr(4);
     return "0x" + bs58.decode(hash).toString("hex");
   },
@@ -102,13 +125,12 @@ const Utils = {
       return false;
     }
 
-    return (Utils.HashToAddress({hash: firstHash}) === Utils.HashToAddress({hash: secondHash}));
+    return (Utils.HashToAddress(firstHash) === Utils.HashToAddress(secondHash));
   },
 
   /**
    * Convert the specified string to a bytes32 string
    *
-   * @namedParams
    * @param {string} string - String to format as a bytes32 string
    *
    * @returns {string} - The given string in bytes32 format
@@ -123,7 +145,7 @@ const Utils = {
 
   HashToBytes32: ({hash}) => {
     // Parse hash as address and remove 0x and first 4 digits
-    let address = Utils.HashToAddress({hash});
+    let address = Utils.HashToAddress(hash);
     return "0x" + address.replace("0x", "").slice(4);
   },
 
@@ -166,6 +188,8 @@ const Utils = {
 
   /**
    * Make the given value cloneable if it is not already.
+   *
+   * Note: this will remove any attributes of the object that are not cloneable (e.g. functions)
    *
    * @param {*} value - Value to check
    * @returns {value} - Cloneable value - may be unchanged

@@ -96,7 +96,10 @@ class EthClient {
     overrides={},
     signer
   }) {
-    if(value) { overrides.value = value; }
+    if(value) {
+      // Convert Ether to Wei
+      overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
+    }
 
     this.ValidateSigner(signer);
 

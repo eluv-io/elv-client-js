@@ -202,7 +202,7 @@ class ElvClient {
   async CreateContentSpace({name}) {
     const contentSpaceAddress = await this.ethClient.DeployContentSpaceContract({name, signer: this.signer});
 
-    return Utils.AddressToSpaceId({address: contentSpaceAddress});
+    return Utils.AddressToSpaceId(contentSpaceAddress);
   }
 
   /* Libraries */
@@ -263,7 +263,7 @@ class ElvClient {
    */
   async ContentLibraryOwner({libraryId}) {
     return await this.ethClient.CallContractMethod({
-      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      contractAddress: Utils.HashToAddress(libraryId),
       abi: LibraryContract.abi,
       methodName: "owner",
       methodArgs: [],
@@ -306,7 +306,7 @@ class ElvClient {
       "eluv.description": description
     };
 
-    const libraryId = this.utils.AddressToLibraryId({address: contractAddress});
+    const libraryId = this.utils.AddressToLibraryId(contractAddress);
     const path = Path.join("qlibs", libraryId);
 
     // Create library in fabric
@@ -354,6 +354,7 @@ class ElvClient {
   /**
    * Set the image associated with this library
    *
+   * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {blob} image - Image to upload
    */
@@ -370,6 +371,7 @@ class ElvClient {
   /**
    * Set the image associated with this library
    *
+   * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {blob} image - Image to upload
@@ -425,7 +427,7 @@ class ElvClient {
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
 
     await this.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      contractAddress: Utils.HashToAddress(libraryId),
       abi: LibraryContract.abi,
       methodName: "kill",
       methodArgs: []
@@ -510,11 +512,11 @@ class ElvClient {
       typeId = type.id;
     }
 
-    const typeAddress = this.utils.HashToAddress({hash: typeId});
+    const typeAddress = this.utils.HashToAddress(typeId);
     customContractAddress = customContractAddress || this.utils.nullAddress;
 
     const event = await this.ethClient.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      contractAddress: Utils.HashToAddress(libraryId),
       abi: LibraryContract.abi,
       methodName: "addContentType",
       methodArgs: [typeAddress, customContractAddress],
@@ -541,10 +543,10 @@ class ElvClient {
       typeId = type.id;
     }
 
-    const typeAddress = this.utils.HashToAddress({hash: typeId});
+    const typeAddress = this.utils.HashToAddress(typeId);
 
     const event = await this.ethClient.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      contractAddress: Utils.HashToAddress(libraryId),
       abi: LibraryContract.abi,
       methodName: "removeContentType",
       methodArgs: [typeAddress],
@@ -568,7 +570,7 @@ class ElvClient {
    */
   async LibraryContentTypes({libraryId}) {
     const typesLength = (await this.ethClient.CallContractMethod({
-      contractAddress: Utils.HashToAddress({hash: libraryId}),
+      contractAddress: Utils.HashToAddress(libraryId),
       abi: LibraryContract.abi,
       methodName: "contentTypesLength",
       methodArgs: [],
@@ -582,7 +584,7 @@ class ElvClient {
     const allowedTypeAddresses = await Promise.all(
       Array.from(new Array(typesLength), async (_, i) => {
         const typeAddress = await this.ethClient.CallContractMethod({
-          contractAddress: Utils.HashToAddress({hash: libraryId}),
+          contractAddress: Utils.HashToAddress(libraryId),
           abi: LibraryContract.abi,
           methodName: "contentTypes",
           methodArgs: [i],
@@ -597,7 +599,7 @@ class ElvClient {
 
     let allowedTypes = {};
     Object.values(contentTypes).map(type => {
-      const typeAddress = this.utils.HashToAddress({hash: type.id}).toLowerCase();
+      const typeAddress = this.utils.HashToAddress(type.id).toLowerCase();
       // If type address is allowed, include it
       if(allowedTypeAddresses.includes(typeAddress)) {
         allowedTypes[type.hash] = type;
@@ -621,8 +623,8 @@ class ElvClient {
    * @returns {Promise<Object>} - A mapping of content type version hash to information about that content type version
    */
   async ContentTypes({latestOnly=true} = {}) {
-    const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
-    const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
+    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
+    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
 
     let path = Path.join("qlibs", typeLibraryId, "q");
 
@@ -675,8 +677,8 @@ class ElvClient {
    */
   async ContentType({name, versionHash}) {
     if(versionHash) {
-      const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
-      const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
+      const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
+      const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
 
       // Look through all versions of types when searching by version hash
       // Does the same as ContentObjects(), but authorization cannot be performed
@@ -724,7 +726,7 @@ class ElvClient {
     const contentType = await this.ContentType({name});
 
     return await this.ethClient.CallContractMethod({
-      contractAddress: Utils.HashToAddress({hash: contentType.id}),
+      contractAddress: Utils.HashToAddress(contentType.id),
       abi: ContentTypeContract.abi,
       methodName: "owner",
       methodArgs: [],
@@ -749,17 +751,17 @@ class ElvClient {
   async CreateContentType({metadata={}, bitcode}) {
     const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
 
-    const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
-    const typeLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
+    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
+    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
 
-    const objectId = this.utils.AddressToObjectId({address: contractAddress});
+    const objectId = this.utils.AddressToObjectId(contractAddress);
     const path = Path.join("qlibs", typeLibraryId, "q", objectId);
 
     /* Create object, upload bitcode and finalize */
 
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({transactionHash}),
+        headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId, transactionHash}),
         method: "PUT",
         path: path,
         body: {
@@ -774,7 +776,8 @@ class ElvClient {
         libraryId: typeLibraryId,
         objectId,
         writeToken: createResponse.write_token,
-        data: bitcode
+        data: bitcode,
+        encrypted: false
       });
     }
 
@@ -794,10 +797,11 @@ class ElvClient {
    * Caching must be enabled and an access request must have been previously made on the specified
    * object by this client instance.
    *
+   * @namedParams
    * @param {string=} objectId - ID of the object
    * @param {number=} score - Percentage score (0-100)
+   *
    * @returns {Promise<Object>} - Transaction log of the AccessComplete event
-   * @constructor
    */
   async ContentObjectAccessComplete({objectId, score=100}) {
     if(score < 0 || score > 100) { throw Error("Invalid AccessComplete score: " + score); }
@@ -880,7 +884,7 @@ class ElvClient {
    */
   async ContentObjectOwner({objectId}) {
     return await this.ethClient.CallContractMethod({
-      contractAddress: Utils.HashToAddress({hash: objectId}),
+      contractAddress: Utils.HashToAddress(objectId),
       abi: ContentContract.abi,
       methodName: "owner",
       methodArgs: [],
@@ -977,7 +981,7 @@ class ElvClient {
 
     const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId, typeId});
 
-    const objectId = this.utils.AddressToObjectId({address: contractAddress});
+    const objectId = this.utils.AddressToObjectId(contractAddress);
     const path = Path.join("q", objectId);
 
     return await ResponseToJson(
@@ -1046,6 +1050,7 @@ class ElvClient {
    *
    * @see DELETE /qlibs/:qlibid/q/:qhit
    *
+   * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
@@ -1077,7 +1082,7 @@ class ElvClient {
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
 
     await this.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress({hash: objectId}),
+      contractAddress: Utils.HashToAddress(objectId),
       abi: ContentContract.abi,
       methodName: "kill",
       methodArgs: []
@@ -1488,14 +1493,13 @@ class ElvClient {
    * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
    * URL includes authorization token.
    *
-   * @namedParmas
+   * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
-   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
-   * whether such a request exists in the client cache. This request will not be cached.
+   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of whether such a request exists in the client cache. This request will not be cached.
    *
    * @see FabricUrl for creating arbitrary fabric URLs
    *
@@ -1508,7 +1512,7 @@ class ElvClient {
   /**
    * Generate a URL to the specified /rep endpoint of a content object. URL includes authorization token.
    *
-   * @namedParmas
+   * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
@@ -1528,7 +1532,7 @@ class ElvClient {
   /**
    * Generate a URL to the specified item in the content fabric with appropriate authorization token.
    *
-   * @namedParmas
+   * @namedParams
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object - Required if using versionHash
    * @param {string=} versionHash - Hash of an object version - If specified, will be used instead of objectID in URL
@@ -1588,7 +1592,7 @@ client.FabricUrl({
   /**
    * Generate a URL to the specified content object file with appropriate authorization token.
    *
-   * @namedParmas
+   * @namedParams
    * @param {string} libraryId - ID of an library
    * @param {string} objectId - ID of an object - Required if using versionHash
    * @param {string=} versionHash - Hash of an object version - If specified, will be used instead of objectID in URL
@@ -1619,8 +1623,6 @@ client.FabricUrl({
    * Create a access group
    *
    * A new access group contract is deployed from the content space
-   *
-   * @namedParams
    *
    * @returns {Promise<string>} - Contract address of created access group
    */
@@ -1709,6 +1711,7 @@ client.FabricUrl({
    * Add a member to the access group at the specified contract address. This client's signer must
    * be a manager of the access group.
    *
+   * @namedParams
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the member to add
    *
@@ -1727,6 +1730,7 @@ client.FabricUrl({
    * Remove a member from the access group at the specified contract address. This client's signer must
    * be a manager of the access group.
    *
+   * @namedParams
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the member to remove
    *
@@ -1745,6 +1749,7 @@ client.FabricUrl({
    * Add a manager to the access group at the specified contract address. This client's signer must
    * be a manager of the access group.
    *
+   * @namedParams
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the manager to add
    *
@@ -1763,6 +1768,7 @@ client.FabricUrl({
    * Remove a manager from the access group at the specified contract address. This client's signer must
    * be a manager of the access group.
    *
+   * @namedParams
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the manager to remove
    *
@@ -1874,7 +1880,7 @@ client.FabricUrl({
    *
    * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash/proofs
    *
-   * @namedParmas
+   * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
@@ -1899,7 +1905,7 @@ client.FabricUrl({
    *
    * @see GET /qparts/:qparthash
    *
-   * @namedParmas
+   * @namedParams
    * @param {string} libraryId - ID of the library - required for authentication
    * @param {string} objectId - ID of the object - required for authentication
    * @param {string} partHash - Hash of the part
@@ -1964,14 +1970,12 @@ client.FabricUrl({
    * @param {string} methodName - Method to call on the contract
    * @param {Array<string>} methodArgs - List of arguments to the contract constructor
    * - it is recommended to format these arguments using the FormatContractArguments method
-   * @param {number} value - Amount of ether to include in the transaction
+   * @param {number | BigNumber} value - Amount of ether to include in the transaction
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - Response containing information about the transaction
    */
   async CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
-    if(value && value > 0) { value = Ethers.utils.parseEther(value.toString()); }
-
     return await this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides, signer: this.signer});
   }
 
@@ -1985,14 +1989,14 @@ client.FabricUrl({
    * @param {string} methodName - Method to call on the contract
    * @param {Array<string>} methodArgs - List of arguments to the contract constructor
    * - it is recommended to format these arguments using the FormatContractArguments method
-   * @param {number} value - Amount of ether to include in the transaction
+   * @param {number | BigNumber} value - Amount of ether to include in the transaction
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   *
+   * @see Utils.WeiToEther
    *
    * @returns {Promise<Object>} - The event object of this transaction
    */
   async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
-    if(value && value > 0) { value = Ethers.utils.parseEther(value.toString()); }
-
     return await this.ethClient.CallContractMethodAndWait({
       contractAddress,
       abi,
@@ -2013,6 +2017,8 @@ client.FabricUrl({
    * @param {Object} abi - ABI of contract
    * @param {Object} event - Event of the transaction from CallContractMethodAndWait
    * @param {string} eventName - Name of the event to parse
+   *
+   * @see Utils.WeiToEther
    *
    * @returns {Promise<*>} - The parsed event log from the event
    */
@@ -2041,6 +2047,7 @@ client.FabricUrl({
   /**
    * Set the custom contract of the specified object with the contract at the specified address
    *
+   * @namedParams
    * @param {string} objectId - ID of the object
    * @param {string} customContractAddress - Address of the deployed custom contract
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
@@ -2048,21 +2055,22 @@ client.FabricUrl({
    * @returns {Promise<Object>} - Result transaction of calling the setCustomContract method on the content object contract
    */
   async SetCustomContentContract({objectId, customContractAddress, overrides={}}) {
-    const contentContractAddress = Utils.HashToAddress({hash: objectId});
+    const contentContractAddress = Utils.HashToAddress(objectId);
     return await this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
   }
 
   /**
    * Get the custom contract of the specified object
    *
+   * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    *
    * @returns {Promise<string> | undefined} - If the object has a custom contract, this will return the address of the custom contract
    */
   async CustomContractAddress({libraryId, objectId}) {
-    const contentSpaceAddress = this.utils.HashToAddress({hash: this.contentSpaceId});
-    const contentSpaceLibraryId = this.utils.AddressToLibraryId({address: contentSpaceAddress});
+    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
+    const contentSpaceLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
 
     if(libraryId === contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId)) {
       // Content type or content library object - no custom contract
@@ -2070,7 +2078,7 @@ client.FabricUrl({
     }
 
     const customContractAddress = await this.ethClient.CallContractMethod({
-      contractAddress: this.utils.HashToAddress({hash: objectId}),
+      contractAddress: this.utils.HashToAddress(objectId),
       abi: ContentContract.abi,
       methodName: "contentContractAddress",
       methodArgs: [],
@@ -2079,12 +2087,13 @@ client.FabricUrl({
 
     if(customContractAddress === this.utils.nullAddress) { return; }
 
-    return this.utils.FormatAddress({address: customContractAddress});
+    return this.utils.FormatAddress(customContractAddress);
   }
 
   /**
    * Get all events on the specified contract
    *
+   * @namedParams
    * @param {string} contractAddress - The address of the contract
    * @param {object} abi - The ABI of the contract
    * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
@@ -2120,6 +2129,7 @@ client.FabricUrl({
    * to identify and parse any known Eluvio contract methods. If successful, the method name, signature, and input
    * values will be included in the log entry.
    *
+   * @namedParams
    * @param {number=} toBlock - Limit results to events before the specified block (inclusive) - If not specified, will start from latest block
    * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
    * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are unspecified)
@@ -2163,6 +2173,7 @@ client.FabricUrl({
   /**
    * Get the balance (in ether) of the specified address
    *
+   * @namedParams
    * @param {string} address - Address to query
    *
    * @returns {Promise<number>} - Balance of the account, in ether
@@ -2175,6 +2186,7 @@ client.FabricUrl({
   /**
    * Send ether from this client's current signer to the specified recipient address
    *
+   * @namedParams
    * @param {string} recipient - Address of the recipient
    * @param {number} ether - Amount of ether to send
    *

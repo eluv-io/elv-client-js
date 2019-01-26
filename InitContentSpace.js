@@ -79,27 +79,30 @@ const Init = async () => {
     console.log("\tAddress: " + contractAddress);
     console.log("\tID: " + contentSpaceId + "\n");
 
+    const originalConfig = qfabConfig.qspaces[0] || {};
+    const originalEthConfig = originalConfig.ethereum || {};
+
     qfabConfig.qspaces = [
       {
+        ...originalConfig,
         id: contentSpaceId,
         type: "Ethereum",
         ethereum: {
+          ...originalEthConfig,
           url: client.ethereumURI,
           chain_id: 955301
         }
       }
     ];
 
+    console.log("Updating qfab daemon configuration at " + qfabConfigPath);
     fs.writeFileSync(qfabConfigPath, JSON.stringify(qfabConfig, null, 2));
-
-    console.log("Updated qfab daemon configuration");
 
     /* Update local test configuration and re-initialize client */
 
+    console.log("Updating TestConfiguration.json");
     ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
     fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
-
-    console.log("Updated elv-client-js test configuration\n");
 
     client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
     client.SetSigner({signer});
