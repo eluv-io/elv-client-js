@@ -189,6 +189,41 @@ class ElvClient {
     return this.signer ? this.signer.address.toLowerCase() : "";
   }
 
+  /**
+   * Make an explicit call to accessRequest or updateRequest of the appropriate contract. Unless noCache is specified on
+   * this method or on the client, the resultant transaction hash of this method will be cached for all subsequent
+   * access to this contract.
+   *
+   * Note: Access and update requests are handled automatically by ElvClient. Use this method only if you need to make
+   * an explicit call. For example, if you need to specify custom arguments to access a content object, you can call
+   * this method explicitly with those arguments. Since the result is cached (by default), all subsequent calls to
+   * that content object will be authorized with that AccessRequest transaction.
+   *
+   * Note: If the access request has an associated charge, this charge will be determined and supplied automatically.
+   *
+   * TODO: Content space and library access requests are currently disabled for performance reasons
+   *
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {Array=} args=[] - Custom arguments to the accessRequest or updateRequest methods
+   * @param {boolean=} update=false - If true, will call updateRequest instead of accessRequest
+   * @param {boolean=} noCache=false - If true, the resultant transaction hash will not be cached for future use
+   *
+   * @return {object} - Resultant AccessRequest or UpdateRequest event
+   */
+  AccessRequest({libraryId, objectId, args=[], update=false, noCache=false}) {
+    return this.authClient.MakeAccessRequest({
+      libraryId,
+      objectId,
+      args,
+      update,
+      checkAccessCharge: true,
+      skipCache: true,
+      noCache
+    });
+  }
+
   /* Content Spaces */
 
   /**
