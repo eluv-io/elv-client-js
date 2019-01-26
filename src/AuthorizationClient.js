@@ -1,4 +1,3 @@
-const Ethers = require("ethers");
 const Utils = require("./Utils");
 
 // -- Contract javascript files built using build/BuildContracts.js
@@ -80,41 +79,20 @@ class AuthorizationClient {
     return ownerAddress.toLowerCase() === this.signer.address.toLowerCase();
   }
 
-  // Generate proper authorization header based on the information provided
   async GenerateAuthorizationToken({libraryId, objectId, transactionHash, update=false}) {
-    if(transactionHash && this.noAuth) {
-      // If noAuth, throw out transaction hash
+    if(!transactionHash && !this.noAuth) {
+      const accessTransaction = await this.MakeAccessRequest({
+        libraryId,
+        objectId,
+        transactionHash,
+        update,
+        checkAccessCharge: true,
+        noCache: this.noCache
+      });
+      transactionHash = accessTransaction.transactionHash;
+    } else if(this.noAuth) {
+      // If noAuth is specified, throw out transaction hash
       transactionHash = undefined;
-    } else if(!transactionHash && !this.noAuth) {
-      // If content library object, authorize against library, not object
-      if(objectId && !Utils.EqualHash(libraryId, objectId)) {
-        if(Utils.EqualHash(this.contentSpaceId, libraryId)) {
-          // Content type
-          if(update) {
-            transactionHash = await this.ContentTypeUpdate({objectId});
-          } else {
-            transactionHash = await this.ContentTypeAccess({objectId});
-          }
-        } else {
-          // Content object
-          if(update) {
-            transactionHash = await this.ContentObjectUpdate({objectId});
-          } else {
-            transactionHash = await this.ContentObjectAccess({objectId});
-          }
-        }
-        // If content space library, authorize against space, not library
-      } else if(libraryId && !Utils.EqualHash(this.contentSpaceId, libraryId)) {
-        // Content Library
-        if(update) {
-          transactionHash = await this.ContentLibraryUpdate({libraryId});
-        } else {
-          //transactionHash = await this.ContentLibraryAccess({libraryId});
-        }
-      } else {
-        // Content space
-        //transactionHash = await this.ContentSpaceAccess();
-      }
     }
 
     const token = B64(JSON.stringify({
@@ -127,6 +105,84 @@ class AuthorizationClient {
     const signature = B64("SIGNATURE");
 
     return token + "." + signature;
+  }
+
+  // Generate proper authorization header based on the information provided
+  async MakeAccessRequest({
+    libraryId,
+    objectId,
+    args=[],
+    update=false,
+    checkAccessCharge=true,
+    skipCache=false,
+    noCache=false
+  }) {
+    const isSpaceLibrary = Utils.EqualHash(this.contentSpaceId, libraryId);
+    const isLibraryObject = Utils.EqualHash(libraryId, objectId);
+    const cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
+
+    let id;
+    let abi;
+    let cache;
+    if(!libraryId || (!objectId && isSpaceLibrary) || (isSpaceLibrary && isLibraryObject)) {
+      // Content Space - no library, content space library or content space library object
+      id = this.contentSpaceId;
+      abi = SpaceContract.abi;
+      cache = cacheCollection.spaces;
+      return {transactionHash: ""};
+    } else if(isSpaceLibrary) {
+      // Content type - content space library but not content space library object
+      id = objectId;
+      abi = TypeContract.abi;
+      cache = cacheCollection.objects;
+    } else if(!objectId || isLibraryObject) {
+      // Library - no object specified or library object
+      id = libraryId;
+      abi = LibraryContract.abi;
+      cache = cacheCollection.libraries;
+      return {transactionHash: ""};
+    } else {
+      // Object - any other case
+      id = objectId;
+      abi = ContentContract.abi;
+      cache = cacheCollection.objects;
+
+      if(!args || args.length === 0) {
+        // Set default args
+        args = [
+          0, // Access level
+          this.signer.signingKey.publicKey, // Public key of requester
+          "", // AFGH string
+          [], // Custom values
+          [] // Stakeholders
+        ];
+      }
+    }
+
+    // Check cache for existing transaction
+    if(!noCache && !skipCache) {
+      if(cache[id]) { return { transactionHash: cache[id] }; }
+    }
+
+    // Make the request
+    let accessRequest;
+    if(update) {
+      accessRequest = await this.UpdateRequest({id, abi});
+    } else {
+      accessRequest = await this.AccessRequest({id, abi, args, checkAccessCharge});
+    }
+
+    // Cache the transaction hash
+    if(!noCache) {
+      cache[id] = accessRequest.transactionHash;
+
+      // Save request ID if present
+      if(accessRequest.logs.length > 0 && accessRequest.logs[0].values && accessRequest.logs[0].values.requestID) {
+        this.requestIds[id] = accessRequest.logs[0].values.requestID;
+      }
+    }
+
+    return accessRequest;
   }
 
   CacheLibraryTransaction({libraryId, transactionHash}) {
@@ -189,13 +245,7 @@ class AuthorizationClient {
     return event;
   }
 
-  async AccessRequest({id, abi, args=[], checkAccessCharge=false, accessCache={}, modifyCache={}}) {
-    // See if access or modification request has already been made
-    if(!this.noCache) {
-      let transactionHash = accessCache[id] || modifyCache[id];
-      if(transactionHash) { return transactionHash; }
-    }
-
+  async AccessRequest({id, abi, args=[], checkAccessCharge=false}) {
     const isOwner = await this.IsOwner({id, abi});
 
     // Send some bux if access charge is required
@@ -232,69 +282,20 @@ class AuthorizationClient {
       throw Error("Access denied");
     }
 
-    // Cache the transaction hash
-    if(!this.noCache) {
-      accessCache[id] = event.transactionHash;
-
-      // Save request ID if present
-      if(event.logs.length > 0 && event.logs[0].values) {
-        this.requestIds[id] = event.logs[0].values.requestID;
-      }
-    }
-
-    return event.transactionHash;
+    return event;
   }
 
-  ContentSpaceAccess() {
-    return this.AccessRequest({
-      id: this.contentSpaceId,
-      abi: SpaceContract.abi,
-      args: [],
-      accessCache: this.accessTransactions.spaces,
-      modifyCache: this.modifyTransactions.spaces
+  async UpdateRequest({id, abi}) {
+    return await this.ethClient.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress(id),
+      abi,
+      methodName: "updateRequest",
+      methodArgs: [],
+      signer: this.signer
     });
   }
 
-  ContentLibraryAccess({libraryId}) {
-    return this.AccessRequest({
-      id: libraryId,
-      abi: LibraryContract.abi,
-      args: [],
-      accessCache: this.accessTransactions.libraries,
-      modifyCache: this.modifyTransactions.libraries
-    });
-  }
-
-  ContentTypeAccess({objectId}) {
-    return this.AccessRequest({
-      id: objectId,
-      abi: TypeContract.abi,
-      args: [],
-      accessCache: this.accessTransactions.libraries,
-      modifyCache: this.modifyTransactions.libraries
-    });
-  }
-
-  ContentObjectAccess({objectId}) {
-    const args = [
-      0, // Access level
-      this.signer.signingKey.publicKey, // Public key of requester
-      "", // AFGH string
-      [], // Custom values
-      [] // Stakeholders
-    ];
-
-    return this.AccessRequest({
-      id: objectId,
-      abi: ContentContract.abi,
-      args,
-      checkAccessCharge: true,
-      accessCache: this.accessTransactions.objects,
-      modifyCache: this.modifyTransactions.objects
-    });
-  }
-
-  /* Create */
+  /* Creation methods */
 
   async CreateAccessGroup() {
     // Deploy contract
@@ -347,55 +348,6 @@ class AuthorizationClient {
       contractAddress,
       transactionHash
     };
-  }
-
-  /* Update */
-
-  async UpdateRequest({id, abi, cache={}}) {
-    // See if create or modification request has already been made
-    if(!this.noCache && cache) {
-      let transactionHash = cache[id];
-      if(transactionHash) { return transactionHash; }
-    }
-
-    const methodEvent = await this.ethClient.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress(id),
-      abi,
-      methodName: "updateRequest",
-      methodArgs: [],
-      signer: this.signer
-    });
-
-    // Cache the transaction hash
-    if(!this.noCache && cache) {
-      cache[id] = methodEvent.transactionHash;
-    }
-
-    return methodEvent.transactionHash;
-  }
-
-  async ContentLibraryUpdate({libraryId}) {
-    return this.UpdateRequest({
-      id: libraryId,
-      abi: LibraryContract.abi,
-      cache: this.modifyTransactions.libraries
-    });
-  }
-
-  async ContentTypeUpdate({objectId}) {
-    return this.UpdateRequest({
-      id: objectId,
-      abi: TypeContract.abi,
-      cache: this.modifyTransactions.objects
-    });
-  }
-
-  async ContentObjectUpdate({objectId}) {
-    return this.UpdateRequest({
-      id: objectId,
-      abi: ContentContract.abi,
-      cache: this.modifyTransactions.objects
-    });
   }
 
   // Clear cached access transaction IDs for either a specific library/object or all

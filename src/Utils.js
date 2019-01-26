@@ -121,7 +121,7 @@ const Utils = {
    * @returns {boolean} - Whether or not the hashes of the IDs match
    */
   EqualHash(firstHash, secondHash) {
-    if((!firstHash || !secondHash) && firstHash !== secondHash) {
+    if(!firstHash || !secondHash) {
       return false;
     }
 

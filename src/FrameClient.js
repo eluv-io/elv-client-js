@@ -150,6 +150,7 @@ class FrameClient {
   AllowedMethods() {
     return [
       "AccessGroupOwner",
+      "AccessRequest",
       "AddAccessGroupManager",
       "AddAccessGroupMember",
       "AddLibraryContentType",
