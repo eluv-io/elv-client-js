@@ -65,13 +65,13 @@ const Init = async () => {
       });
       contractAddress = deployResult.contractAddress;
       transactionHash = deployResult.transactionHash;
-      contentSpaceId = client.utils.AddressToSpaceId({address: contractAddress});
+      contentSpaceId = client.utils.AddressToSpaceId(contractAddress);
       console.log("\nCreated content space:");
     } else {
       // If existing content space ID is provided, authorize against content space library
-      contractAddress = client.utils.HashToAddress({hash: contentSpaceId});
+      contractAddress = client.utils.HashToAddress(contentSpaceId);
       transactionHash = await client.authClient.ContentLibraryUpdate({
-        libraryId: client.utils.AddressToLibraryId({address: contractAddress})
+        libraryId: client.utils.AddressToLibraryId(contractAddress)
       });
       console.log("\nUsing content space:");
     }
@@ -111,12 +111,16 @@ const Init = async () => {
 
     await PromptRestart();
 
-    /* Create the content types library */
+    /*
+    * Create the content types library (aka content space library)
+    *
+    * Note: Content space library is a special library backed by the content space contract,
+    *       not a library contract, so we can't use client.CreateContentLibrary
+    */
 
-    const libraryId = client.utils.AddressToLibraryId({address: contractAddress});
+    const libraryId = client.utils.AddressToLibraryId(contractAddress);
     const path = "/qlibs/" + libraryId;
 
-    // Create library in fabric
     client.HttpClient.Request({
       headers: await client.authClient.AuthorizationHeader({transactionHash}),
       method: "PUT",
