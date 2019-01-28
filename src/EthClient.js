@@ -10,7 +10,7 @@ const ContentContract = require("./contracts/BaseContent");
 
 const Utils = require("./Utils");
 
-const Topics = require("./events/topics");
+const Topics = require("./events/Topics");
 
 class EthClient {
   constructor(ethereumURI) {
