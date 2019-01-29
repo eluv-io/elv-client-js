@@ -90,17 +90,7 @@ const Init = async () => {
       console.log("Updating qfab daemon configuration at " + qfabConfigPath);
       fs.writeFileSync(qfabConfigPath, JSON.stringify(qfabConfig, null, 2));
 
-      /* Update local test configuration and re-initialize client */
-
-      console.log("Updating TestConfiguration.json");
-      ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
-      fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
-
-      client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
-      client.SetSigner({signer});
-
       /* Prompt the user to restart their qfab daemon */
-
       await PromptRestart();
     } else {
       // If existing content space ID is provided, authorize against content space library
@@ -109,8 +99,16 @@ const Init = async () => {
         libraryId: client.utils.AddressToLibraryId(contractAddress),
         update: true
       });
-      console.log("\nUsing content space:");
+      console.log("\nUsing content space: " + contentSpaceId);
     }
+
+    /* Update local test configuration and re-initialize client */
+    console.log("Updating TestConfiguration.json");
+    ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
+    fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
+
+    client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+    client.SetSigner({signer});
 
     /*
     * Create the content types library (aka content space library)
