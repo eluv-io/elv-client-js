@@ -436,8 +436,7 @@ class ElvClient {
       writeToken: editResponse.write_token,
       metadata: {
         ...metadata,
-        "image": uploadResponse.part.hash,
-        "eluv.image": uploadResponse.part.hash
+        "image": uploadResponse.part.hash
       }
     });
 
@@ -1043,8 +1042,21 @@ class ElvClient {
    * @returns {Promise<object>} - Response containing the object ID and write token of the draft
    */
   async EditContentObject({libraryId, objectId, options={}}) {
-    // Don't allow changing of content type in this method
-    delete options.type;
+    if(!this.utils.EqualHash(libraryId, objectId)) {
+      // Don't allow changing of content type in this method
+      delete options.type;
+    } else {
+      // Unless modifying the content library object
+      if(options.type) {
+        if(!options.type.startsWith("hq__")) {
+          // Type name specified
+          options.type = (await this.ContentType({name: options.type})).hash;
+        } else {
+          // Type hash specified
+          options.type = (await this.ContentType({versionHash: options.type})).hash;
+        }
+      }
+    }
 
     let path = Path.join("qid", objectId);
 

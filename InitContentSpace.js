@@ -67,49 +67,50 @@ const Init = async () => {
       transactionHash = deployResult.transactionHash;
       contentSpaceId = client.utils.AddressToSpaceId(contractAddress);
       console.log("\nCreated content space:");
+
+      console.log("\tAddress: " + contractAddress);
+      console.log("\tID: " + contentSpaceId + "\n");
+
+      const originalConfig = qfabConfig.qspaces[0] || {};
+      const originalEthConfig = originalConfig.ethereum || {};
+
+      qfabConfig.qspaces = [
+        {
+          ...originalConfig,
+          id: contentSpaceId,
+          type: "Ethereum",
+          ethereum: {
+            ...originalEthConfig,
+            url: client.ethereumURI,
+            chain_id: 955301
+          }
+        }
+      ];
+
+      console.log("Updating qfab daemon configuration at " + qfabConfigPath);
+      fs.writeFileSync(qfabConfigPath, JSON.stringify(qfabConfig, null, 2));
+
+      /* Update local test configuration and re-initialize client */
+
+      console.log("Updating TestConfiguration.json");
+      ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
+      fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
+
+      client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+      client.SetSigner({signer});
+
+      /* Prompt the user to restart their qfab daemon */
+
+      await PromptRestart();
     } else {
       // If existing content space ID is provided, authorize against content space library
       contractAddress = client.utils.HashToAddress(contentSpaceId);
-      transactionHash = await client.authClient.ContentLibraryUpdate({
-        libraryId: client.utils.AddressToLibraryId(contractAddress)
+      transactionHash = await client.authClient.GenerateAuthorizationToken({
+        libraryId: client.utils.AddressToLibraryId(contractAddress),
+        update: true
       });
       console.log("\nUsing content space:");
     }
-
-    console.log("\tAddress: " + contractAddress);
-    console.log("\tID: " + contentSpaceId + "\n");
-
-    const originalConfig = qfabConfig.qspaces[0] || {};
-    const originalEthConfig = originalConfig.ethereum || {};
-
-    qfabConfig.qspaces = [
-      {
-        ...originalConfig,
-        id: contentSpaceId,
-        type: "Ethereum",
-        ethereum: {
-          ...originalEthConfig,
-          url: client.ethereumURI,
-          chain_id: 955301
-        }
-      }
-    ];
-
-    console.log("Updating qfab daemon configuration at " + qfabConfigPath);
-    fs.writeFileSync(qfabConfigPath, JSON.stringify(qfabConfig, null, 2));
-
-    /* Update local test configuration and re-initialize client */
-
-    console.log("Updating TestConfiguration.json");
-    ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
-    fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
-
-    client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
-    client.SetSigner({signer});
-
-    /* Prompt the user to restart their qfab daemon */
-
-    await PromptRestart();
 
     /*
     * Create the content types library (aka content space library)
