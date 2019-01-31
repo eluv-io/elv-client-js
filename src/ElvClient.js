@@ -1573,15 +1573,17 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
+   * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
-   * whether such a request exists in the client cache. This request will not be cached.
+   * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
    *
    * @see FabricUrl for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, noCache=false}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, noCache});
+  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, noAuth=false, noCache=false}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, noAuth, noCache});
   }
 
   /**
@@ -1595,8 +1597,10 @@ class ElvClient {
    * @param {string=} rep - Rep parameter of the url
    * @param {string=} call - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
+   * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
-   * whether such a request exists in the client cache. This request will not be cached.
+   * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
    *
    * @returns {Promise<string>} - URL to the specified endpoint with authorization token
    *
@@ -1614,7 +1618,7 @@ client.FabricUrl({
 });
 => http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...
    */
-  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}, noCache=false}) {
+  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}, noAuth=false, noCache=false}) {
     let path = "";
 
     if(libraryId) {
@@ -1633,14 +1637,13 @@ client.FabricUrl({
       }
     }
 
-    const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+    if(!noAuth) {
+      queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+    }
 
     return this.HttpClient.URL({
       path: path,
-      queryParams: {
-        ...queryParams,
-        authorization: authorizationToken
-      }
+      queryParams
     });
   }
 
