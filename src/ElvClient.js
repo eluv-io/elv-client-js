@@ -806,12 +806,20 @@ class ElvClient {
     );
 
     if(bitcode) {
-      await this.UploadPart({
+      const uploadResponse = await this.UploadPart({
         libraryId: typeLibraryId,
         objectId,
         writeToken: createResponse.write_token,
         data: bitcode,
         encrypted: false
+      });
+
+      await this.ReplaceMetadata({
+        libraryId: typeLibraryId,
+        objectId,
+        writeToken: createResponse.write_token,
+        metadataSubtree: "bitcode",
+        metadata: uploadResponse.part.hash
       });
     }
 
