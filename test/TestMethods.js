@@ -448,8 +448,14 @@ const TestQueries = async (client) => {
     console.log("\nNOCACHE URL");
     console.log(await client.FabricUrl({libraryId, objectId, partHash, noCache: true}));
 
+    console.log("\nNOAUTH URL");
+    console.log(await client.FabricUrl({libraryId, objectId, partHash, noAuth: true}));
+
     console.log("\nREP: ");
     console.log(await client.Rep({libraryId, objectId, rep: "image"}));
+
+    console.log("\nNOAUTH REP: ");
+    console.log(await client.Rep({libraryId, objectId, rep: "image", noAuth: true}));
 
     console.log("\nCALL BITCODE");
     console.log(await client.CallBitcodeMethod({libraryId, objectId, method: "specialMethod"}));
