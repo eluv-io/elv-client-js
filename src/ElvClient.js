@@ -818,7 +818,7 @@ class ElvClient {
         libraryId: typeLibraryId,
         objectId,
         writeToken: createResponse.write_token,
-        metadataSubtree: "bitcode",
+        metadataSubtree: "bitcode_part",
         metadata: uploadResponse.part.hash
       });
     }
