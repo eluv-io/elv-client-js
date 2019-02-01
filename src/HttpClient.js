@@ -11,14 +11,11 @@ class HttpClient {
     this.baseURI = baseURI;
   }
 
-  RequestHeaders(headers={}) {
-    return Object.assign(
-      {
-        "Accept": "application/json",
-        "Content-type": "application/json"
-      },
-      headers
-    );
+  RequestHeaders(bodyType, headers={}) {
+    headers["Accept"] = "application/json";
+    if(bodyType === "JSON") { headers["Content-type"] = "application/json"; }
+
+    return headers;
   }
 
   Request({method, path, queryParams={}, body={}, bodyType="JSON", headers={}}) {
@@ -29,7 +26,7 @@ class HttpClient {
 
     let fetchParameters = {
       method: method,
-      headers: this.RequestHeaders(headers),
+      headers: this.RequestHeaders(bodyType, headers),
     };
 
     if(method === "POST" || method === "PUT") {
