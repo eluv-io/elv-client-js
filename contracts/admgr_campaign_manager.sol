@@ -8,6 +8,8 @@ import {AdmgrAdvertisement} from "./admgr_advertisement.sol";
 
 contract AdmgrCampaign is Content {
 
+    address public campaignManagerAddress;
+
     struct AdData {
         uint256 budget;
         uint256 paidOut;
@@ -41,6 +43,10 @@ contract AdmgrCampaign is Content {
     function setLibraryRetrocession(uint8 percent) public onlyCreator returns(uint8) {
         libraryRetrocession = percent;
         return libraryRetrocession;
+    }
+
+    function setCampaignManagerAddress(address campaign_manager_address) public onlyCreator {
+        campaignManagerAddress = campaign_manager_address;
     }
 
     function isActive() public view returns (bool) {
@@ -78,9 +84,13 @@ contract AdmgrCampaign is Content {
 
     function setupAd(address adAddress, uint256 budget) public onlyOwner returns (bool) {
         AdData memory adData = AdData(budget, 0, 1);
+        AdData storage existingData = adDataMap[adAddress];
+        if (existingData.status == 0) {
+            campaignAds.push(adAddress);
+            campaignAdsLength = campaignAdsLength + 1;
+        }
         adDataMap[adAddress] = adData;
-        campaignAds.push(adAddress);
-        campaignAdsLength = campaignAdsLength + 1;
+
         return true;
     }
 
@@ -91,22 +101,49 @@ contract AdmgrCampaignManager is Content {
 
     uint8 public libraryRetrocession = 0;
 
+    address public campaignLibraryAddress;
+    address public marketPlaceAddress;
+
     function setLibraryRetrocession(uint8 percent) public onlyOwner returns(uint8) {
         libraryRetrocession = percent;
         return libraryRetrocession;
     }
 
-    // Other numbers can be used as error codes and would stop the processing.
+    function setCampaignLibraryAddress(address campaign_library_address) public onlyOwner {
+        campaignLibraryAddress = campaign_library_address;
+    }
+
+    function setMarketPlaceAddress(address market_place_address) public onlyCreator {
+        marketPlaceAddress = market_place_address;
+    }
+
     function runCreate() public payable returns (uint) {
         address campaignAddress = new AdmgrCampaign();
         BaseContent campaignObj = BaseContent(msg.sender);
         campaignObj.setContentContractAddress(campaignAddress);
         AdmgrCampaign campaignContract = AdmgrCampaign(campaignAddress);
         campaignContract.setLibraryRetrocession(libraryRetrocession);
+        campaignContract.setCampaignManagerAddress(address(this));
         campaignContract.transferCreatorship(owner); // Creatorship is kept central
         //campaignContract.transferOwnership(campaignObj.owner()); //Ownership is distributed
         return 0;
     }
 
+
+}
+
+
+contract AdmgrMarketPlace is Content {
+
+    function runCreate() public payable returns (uint) {
+        address campaignMgrAddress = new AdmgrCampaignManager();
+        BaseContent campaignMgrObj = BaseContent(msg.sender);
+        campaignMgrObj.setContentContractAddress(campaignMgrAddress);
+        AdmgrCampaignManager campaignMgrContract = AdmgrCampaignManager(campaignMgrAddress);
+        campaignMgrContract.setMarketPlaceAddress(address(this));
+        campaignMgrContract.transferCreatorship(owner); // Creatorship is kept central
+        campaignMgrContract.transferOwnership(campaignMgrObj.owner()); //Ownership is distributed
+        return 0;
+    }
 
 }
