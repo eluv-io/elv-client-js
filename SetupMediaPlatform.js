@@ -1,5 +1,8 @@
 const { ElvClient } = require("./src/ElvClient.js");
 
+const Path = require("path");
+const fs = require("fs");
+
 const ContentSpaceContract = require("./src/contracts/BaseContentSpace");
 const ContentLibraryContract = require("./src/contracts/BaseLibrary");
 const ContentContract = require("./src/contracts/BaseContent");
@@ -64,6 +67,31 @@ const SetupMediaPlatform = async () => {
     emp.contracts.sponsored_content = {"address" : deployResultSp.contractAddress};
     console.log("Contract - SponsoredContent: " + deployResultSp.contractAddress);
 
+    bitcodePath = "../content-fabric/bitcode" // PENDING(SSS) configure this properly
+
+    // Make content type - SponsoredContent
+    const bitcodeAVMaster = fs.readFileSync(Path.join(bitcodePath, "avmaster", "avmaster2000.imf.bc"));
+    typeSponsoredContent = await client.CreateContentType({
+	metadata: {
+            "eluv.name": "sponsored_content",
+	    "name": "sponsored_content",
+        },
+        bitcode: bitcodeAVMaster
+    });
+    emp.content_types.sponsored_content = typeSponsoredContent;
+    console.log("Content Type - SponsoredContent: " + typeSponsoredContent);
+
+    // Make content type - Advertisement
+    typeAdvertisement = await client.CreateContentType({
+	metadata: {
+            "eluv.name": "advertisement",
+	    "name": "advertisement",
+        },
+        bitcode: bitcodeAVMaster
+    });
+    emp.content_types.advertisement = typeAdvertisement;
+    console.log("Content Type - Advertisement: " + typeAdvertisement);
+
     // Make the main library "Eluvio Media Platform"
     const libraryId = await client.CreateContentLibrary({
 	name: "Eluvio Media Platform",
@@ -73,7 +101,6 @@ const SetupMediaPlatform = async () => {
 	}
     });
     console.log("\nEluvio Media Platform: " + libraryId);
-
 };
 
 SetupMediaPlatform();
