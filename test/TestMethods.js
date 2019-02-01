@@ -54,7 +54,7 @@ const TestQueries = async (client) => {
 
     let image;
     if(!runningInBrowser) {
-      //image = fs.readFileSync(Path.join(__dirname, "images/logo-dark.png"));
+      image = fs.readFileSync(Path.join(__dirname, "images/logo-dark.png"));
     }
 
     const libraryId = await (
@@ -521,6 +521,26 @@ const TestQueries = async (client) => {
     await client.DeleteContentLibrary({libraryId});
 
     console.log("DELETED\n");
+
+    console.log("CREATING USER PROFILE:");
+    await client.userProfile.CreateAccountLibrary();
+
+    console.log("\nUPDATING PUBLIC PROFILE METADATA: ");
+    await client.userProfile.ReplacePublicUserMetadata({metadata: {"public": {"metadata": "value"}}});
+    console.log(JSON.stringify(await client.userProfile.PublicUserMetadata({accountAddress: client.signer.address}), null, 2));
+
+    console.log("\nUPDATING PRIVATE PROFILE METADATA: ");
+    await client.userProfile.ReplacePrivateUserMetadata({metadata: {"private": {"metadata": "value"}}});
+    console.log(JSON.stringify(await client.userProfile.PrivateUserMetadata({}), null, 2));
+
+    if(image) {
+      console.log("\nUPDATING PROFILE IMAGE: ");
+      await client.userProfile.SetUserProfileImage({image});
+      console.log(await client.userProfile.UserProfileImage({accountAddress: client.signer.address}));
+    }
+
+    console.log("\nDELETING ACCOUNT LIBRARY");
+    await client.userProfile.DeleteAccountLibrary();
 
     console.log("CREATING ACCESS GROUP: ");
     const accessGroupAddress = await client.CreateAccessGroup();
