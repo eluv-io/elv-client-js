@@ -210,7 +210,6 @@ class EthClient {
 
   /* Specific contract management */
 
-
   async DeployContentSpaceContract({name, signer}) {
     return this.DeployContract({
       abi: ContentSpaceContract.abi,
@@ -267,6 +266,16 @@ class EthClient {
       args: [typeAddress],
       eventName: "ContentObjectCreated",
       eventValue: "contentAddress",
+      signer
+    });
+  }
+
+  async EngageAccountLibrary({contentSpaceAddress, signer}) {
+    return this.CallContractMethodAndWait({
+      contractAddress: contentSpaceAddress,
+      abi: ContentSpaceContract.abi,
+      methodName: "engageAccountLibrary",
+      args: [],
       signer
     });
   }

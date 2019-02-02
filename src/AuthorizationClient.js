@@ -24,6 +24,8 @@ class AuthorizationClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
 
+    this.userProfileTransaction = "";
+
     this.accessTransactions = {
       spaces: {},
       libraries: {},
@@ -39,14 +41,14 @@ class AuthorizationClient {
     this.requestIds = {};
   }
 
-  async AuthorizationHeader({libraryId, objectId, transactionHash, update=false, noCache=false}) {
-    const authorizationToken = await this.AuthorizationToken({libraryId, objectId, transactionHash, update, noCache});
+  async AuthorizationHeader({libraryId, objectId, transactionHash, update=false, noCache=false, noAuth=false}) {
+    const authorizationToken = await this.AuthorizationToken({libraryId, objectId, transactionHash, update, noCache, noAuth});
 
     return { Authorization: "Bearer " + authorizationToken };
   }
 
   // Wrapper for GenerateAuthorizationHeader to allow for per-call disabling of cache
-  async AuthorizationToken({libraryId, objectId, transactionHash, update=false, noCache=false}) {
+  async AuthorizationToken({libraryId, objectId, transactionHash, update=false, noCache=false, noAuth=false}) {
     const initialNoCache = this.noCache;
 
     try {
@@ -55,7 +57,7 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
-      const authorizationToken = await this.GenerateAuthorizationToken({libraryId, objectId, transactionHash, update});
+      const authorizationToken = await this.GenerateAuthorizationToken({libraryId, objectId, transactionHash, update, noAuth});
 
       this.noCache = initialNoCache;
 
@@ -90,15 +92,16 @@ class AuthorizationClient {
 	return token + "." + signature;
     }
 
-  async GenerateAuthorizationToken({libraryId, objectId, transactionHash, update=false}) {
-    if(!transactionHash && !this.noAuth) {
+  async GenerateAuthorizationToken({libraryId, objectId, transactionHash, update=false, noAuth=false}) {
+    if(!transactionHash && !this.noAuth && !noAuth) {
       const accessTransaction = await this.MakeAccessRequest({
         libraryId,
         objectId,
         transactionHash,
         update,
         checkAccessCharge: true,
-        noCache: this.noCache
+        noCache: this.noCache,
+        noAuth
       });
       transactionHash = accessTransaction.transactionHash;
     } else if(this.noAuth) {
@@ -127,6 +130,7 @@ class AuthorizationClient {
     skipCache=false,
     noCache=false
   }) {
+    const isUserLibrary = libraryId && libraryId === Utils.AddressToLibraryId(this.signer.address);
     const isSpaceLibrary = Utils.EqualHash(this.contentSpaceId, libraryId);
     const isLibraryObject = Utils.EqualHash(libraryId, objectId);
     const cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
@@ -134,7 +138,21 @@ class AuthorizationClient {
     let id;
     let abi;
     let cache;
-    if(!libraryId || (!objectId && isSpaceLibrary) || (isSpaceLibrary && isLibraryObject)) {
+    if (isUserLibrary) {
+      // User profile library - library ID corresponds to signer's address
+      if(!noCache && !skipCache && this.userProfileTransaction) { return this.userProfileTransaction; }
+
+      const userEvent = await this.ethClient.EngageAccountLibrary({
+        contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
+        signer: this.signer
+      });
+
+      if(!noCache) {
+        this.userProfileTransaction = userEvent.transactionHash;
+      }
+
+      return userEvent.transactionHash;
+    } else if(!libraryId || (!objectId && isSpaceLibrary) || (isSpaceLibrary && isLibraryObject)) {
       // Content Space - no library, content space library or content space library object
       id = this.contentSpaceId;
       abi = SpaceContract.abi;

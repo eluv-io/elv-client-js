@@ -6,6 +6,20 @@ const TestMethods = require("./TestMethods");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
+const CompareMethods = (frameClientMethods, elvClientMethods) => {
+  const differentKeys = frameClientMethods
+    .filter(x => !elvClientMethods.includes(x))
+    .concat(elvClientMethods.filter(x => !frameClientMethods.includes(x)));
+
+  if (differentKeys.length > 0) {
+    console.error("MISMATCHED ALLOWED METHODS BETWEEN ELV CLIENT AND FRAME CLIENT");
+    console.error(differentKeys);
+
+    console.error("EXPECTED");
+    console.error(JSON.stringify(elvClientMethods.sort(), null, 2));
+  }
+};
+
 const Test = async () => {
   try {
     //ClientConfiguration.noAuth = true;
@@ -25,20 +39,9 @@ const Test = async () => {
     // Ensure ElvClient and FrameClient agree on allowed methods
     const frameClient = new FrameClient({target: this});
 
-    const frameClientMethods = frameClient.AllowedMethods();
-    const elvClientMethods = client.FrameAllowedMethods();
+    CompareMethods(frameClient.AllowedMethods(), client.FrameAllowedMethods());
+    CompareMethods(frameClient.AllowedUserProfileMethods(), client.userProfile.FrameAllowedMethods());
 
-    const differentKeys = frameClientMethods
-      .filter(x => !elvClientMethods.includes(x))
-      .concat(elvClientMethods.filter(x => !frameClientMethods.includes(x)));
-
-    if (differentKeys.length > 0) {
-      console.error("MISMATCHED ALLOWED METHODS BETWEEN ELV CLIENT AND FRAME CLIENT");
-      console.error(differentKeys);
-
-      console.error("EXPECTED");
-      console.error(JSON.stringify(elvClientMethods.sort(), null, 2));
-    }
   } catch(error) {
     console.error(error);
   }
