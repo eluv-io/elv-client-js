@@ -49,6 +49,21 @@ class FrameClient {
         });
       };
     }
+
+    this.userProfile = {};
+    // Dynamically defined user profile methods defined in AllowedUserProfileMethods
+    for(const methodName of this.AllowedUserProfileMethods()){
+      this.userProfile[methodName] = async (args) => {
+        return await this.SendMessage({
+          options: {
+            module: "userProfile",
+            calledMethod: methodName,
+            args: this.utils.MakeClonable(args)
+          }
+        });
+      };
+    }
+
   }
 
   /**
@@ -225,6 +240,19 @@ class FrameClient {
       "UploadPart",
       "VerifyContentObject",
       "WithdrawContractFunds"
+    ];
+  }
+
+  AllowedUserProfileMethods() {
+    return [ 
+      "CreateAccountLibrary",
+      "UserProfileImage",
+      "SetUserProfileImage",
+      "PublicUserMetadata",
+      "ReplacePublicUserMetadata",
+      "PrivateUserMetadata",
+      "ReplacePrivateUserMetadata",
+      "DeleteAccountLibrary"
     ];
   }
 }

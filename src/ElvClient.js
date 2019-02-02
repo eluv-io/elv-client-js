@@ -5,6 +5,7 @@ const Ethers = require("ethers");
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
+const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
@@ -145,6 +146,7 @@ class ElvClient {
    */
   ClearSigner() {
     this.authClient = { AuthorizationHeader: () => { throw Error("Signer not set"); }};
+    this.userProfile = undefined;
     this.signer = undefined;
   }
 
@@ -165,6 +167,8 @@ class ElvClient {
       noCache: this.noCache,
       noAuth: this.noAuth
     });
+
+    this.userProfile = new UserProfileClient({client: this});
   }
 
   /**
@@ -186,7 +190,7 @@ class ElvClient {
    * @returns {string} - The address of the current signer
    */
   CurrentAccountAddress() {
-    return this.signer ? this.signer.address.toLowerCase() : "";
+    return this.signer ? this.utils.FormatAddress(this.signer.address) : "";
   }
 
   /**
@@ -332,23 +336,30 @@ class ElvClient {
     image,
     publicMetadata={},
     privateMetadata={},
+    isUserLibrary
   }) {
-    const { contractAddress, transactionHash } = await this.authClient.CreateContentLibrary();
+    let libraryId, transactionHash;
+    if(isUserLibrary) {
+      libraryId = this.utils.AddressToLibraryId(this.signer.address);
+    } else {
+      const createRequest = await this.authClient.CreateContentLibrary();
 
-    publicMetadata = {
-      ...publicMetadata,
-      "eluv.name": name,
-      "eluv.description": description
-    };
+      publicMetadata = {
+        ...publicMetadata,
+        "eluv.name": name,
+        "eluv.description": description
+      };
 
-    const libraryId = this.utils.AddressToLibraryId(contractAddress);
+      transactionHash = createRequest.transactionHash;
+      libraryId = this.utils.AddressToLibraryId(createRequest.contractAddress);
+    }
+
     const path = Path.join("qlibs", libraryId);
 
     // Create library in fabric
     await HandleErrors(
       this.HttpClient.Request({
-        // Don't add libraryId to header or it will crash because the library doesn't exist yet
-        headers: await this.authClient.AuthorizationHeader({transactionHash}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
         method: "PUT",
         path: path,
         body: {
@@ -358,7 +369,7 @@ class ElvClient {
       })
     );
 
-    // Set library content object type
+    // Set library content object type on automatically created library object
     const objectId = libraryId.replace("ilib", "iq__");
 
     const editResponse = await this.EditContentObject({
@@ -493,7 +504,7 @@ class ElvClient {
 
     const metadata = await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, noAuth: true}),
         method: "GET",
         path: path
       })
@@ -2284,14 +2295,26 @@ client.FabricUrl({
 
     try {
       const method = message.calledMethod;
-      if (!this.FrameAllowedMethods().includes(method)) {
-        throw Error("Invalid method: " + method);
+
+      let methodResults;
+      if(message.module === "userProfile") {
+        if (!this.userProfile.FrameAllowedMethods().includes(method)) {
+          throw Error("Invalid user profile method: " + method);
+        }
+
+        methodResults = await this.userProfile[method](message.args);
+      } else {
+        if (!this.FrameAllowedMethods().includes(method)) {
+          throw Error("Invalid method: " + method);
+        }
+
+        methodResults = await this[method](message.args);
       }
 
       return this.utils.MakeClonable({
         type: "ElvFrameResponse",
         requestId: message.requestId,
-        response: await this[method](message.args)
+        response: methodResults
       });
     } catch(error) {
       return this.utils.MakeClonable({
