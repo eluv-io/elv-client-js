@@ -843,6 +843,81 @@ class ElvClient {
     return objectId;
   }
 
+  /**
+   * Create a new content type specifying all components.
+   *
+   * A new content type contract is deployed from
+   * the content space, and that contract ID is used to determine the object ID to
+   * create in the fabric. The content type object will be created in the special
+   * content space library (ilib<content-space-hash>)
+   *
+   * @namedParams
+   * @param {object} metadata - Metadata for the new content type
+   * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
+   * @param {} appsFileInfo - apps in the format required by UploadFiles
+   * @param {object} schema - custom schema for the type
+   * @param {<string>} contract - address of the contract associated with this type
+   * @returns {Promise<string>} - Object ID of created content type
+   */
+   async CreateContentTypeFull({metadata={}, bitcode, appsFileInfo, schema, contract}) {
+    const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
+
+    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
+    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
+
+    const objectId = this.utils.AddressToObjectId(contractAddress);
+    const path = Path.join("qlibs", typeLibraryId, "q", objectId);
+
+    metadata.contract = contract;
+    metadata["eluv.schema"] = schema["eluv.schema"];
+
+    /* Create object, upload bitcode and finalize */
+
+    const createResponse = await ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId, transactionHash}),
+        method: "PUT",
+        path: path,
+        body: {
+          type: "",
+          meta: metadata
+        }
+      })
+    );
+
+    await this.UploadFiles({
+      libraryId: typeLibraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      fileInfo: appsFileInfo});
+
+    if(bitcode) {
+      const uploadResponse = await this.UploadPart({
+        libraryId: typeLibraryId,
+        objectId,
+        writeToken: createResponse.write_token,
+        data: bitcode,
+        encrypted: false
+      });
+
+      await this.ReplaceMetadata({
+        libraryId: typeLibraryId,
+        objectId,
+        writeToken: createResponse.write_token,
+        metadataSubtree: "bitcode_part",
+        metadata: uploadResponse.part.hash
+      });
+    }
+
+    await this.FinalizeContentObject({
+      libraryId: typeLibraryId,
+      objectId,
+      writeToken: createResponse.write_token
+    });
+
+    return objectId;
+  }
+
   /* Objects */
 
   /**
