@@ -13,7 +13,11 @@ class HttpClient {
 
   RequestHeaders(bodyType, headers={}) {
     headers["Accept"] = "application/json";
-    if(bodyType === "JSON") { headers["Content-type"] = "application/json"; }
+    if(bodyType === "JSON") {
+      headers["Content-type"] = "application/json";
+    } else {
+      headers["Content-type"] = "application/octet-stream";
+    }
 
     return headers;
   }

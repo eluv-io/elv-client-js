@@ -74,7 +74,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     const libraryId = Utils.AddressToLibraryId(accountAddress);
 
     try {
-      await this.client.ContentLibrary({libraryId});
+      await this.client.PublicLibraryMetadata({libraryId});
 
       return true;
     } catch(error) {
