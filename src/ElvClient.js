@@ -859,7 +859,7 @@ class ElvClient {
    * @param {<string>} contract - address of the contract associated with this type
    * @returns {Promise<string>} - Object ID of created content type
    */
-   async CreateContentTypeFull({metadata={}, bitcode, appsFileInfo, schema, contract}) {
+  async CreateContentTypeFull({metadata={}, bitcode, appsFileInfo, schema, contract}) {
     const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
 
     const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);

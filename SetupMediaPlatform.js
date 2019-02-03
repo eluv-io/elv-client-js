@@ -17,90 +17,164 @@ const ClientConfiguration = require("./TestConfiguration.json");
 let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
-    //accountName: "Alice",
-    //privateKey: "04832aec82a6572d9a5782c4af9d7d88b0eb89116349ee484e96b97daeab5ca6"
-    //  privateKey: "1307df44f8f5033ec86434a7965234015da85261df149ed498cb29907df38d72"
-    accountName: "Owner",
-    privateKey: "bf092a5c94988e2f7a1d00d0db309fc492fe38ddb57fc6d102d777373389c5e6"
+  accountName: "Serbans",
+  privateKey: "efab66c11603800aaaf5ebf135ea1c23393994c4854346949481960a7a3e2573"  // 955301
+  //privateKey: "33235d5d6dbc0b877ce1b505068a7de0e449f77425374d67a4c44f7218c6ddf8" // Ganache
 });
 
 client.SetSigner({signer});
 
+const bitcodePath = "../elv-media-platform/bitcode"; // PENDING(SSS) configure this properly
+const appsPath = "../elv-media-platform/apps";
+const schemaPath = "../elv-media-platform/schemas";
+
+/* Helper - read the specified files and format them to be used by UploadFiles
+ *
+ * @namedParams
+ * @param {} array of {path: "", name: ""} where name is manageApp.html, etc (per content type spec)
+ */
+const PrepareFiles = (files) => {
+  let fileInfo = [];
+
+  files.forEach(item => {
+    const fileData = fs.readFileSync(item.path);
+    fileInfo.push({
+      path: item.name,
+      type: "file",
+      size: fileData.length,
+      data: fileData
+    });
+  });
+  return fileInfo;
+};
+
+const SetupContentTypes = async (client, enp) => {
+
+  ct = {"content_types":{}};
+
+  // Make contract - CampaignManager
+  const md = {name: "campaign_manager", 'eluv.name': "campaign_manager",
+	      class: "content_type",
+	      test: "SS001"};
+  const bitcode = fs.readFileSync(Path.join(bitcodePath, "adsmanager.bc"));
+  const schemaCampaignManager = JSON.parse(fs.readFileSync(Path.join(schemaPath, "campaign_manager.json"), "utf8"));
+  const appPathsCampaignManager = [{path: "../elv-media-platform/apps/elv-ads.html", name: "manageApp.html"},
+				   {path: "../elv-media-platform/apps/elv-campaign-manager.html", name: "displayApp.html"}];
+  const appFilesCampaignManager = PrepareFiles(appPathsCampaignManager);
+
+  console.log("Content Type - CampaignManager start");
+  const typeCampaignManager = await client.CreateContentTypeFull({metadata: md,
+								  bitcode: bitcode,
+								  appsFileInfo: appFilesCampaignManager,
+								  schema: schemaCampaignManager,
+								  contract: emp.contracts.campaign_manager})
+  ct.content_types.campaign_manager = typeCampaignManager;
+  console.log("Content Type - CampaignManager: " + typeCampaignManager);
+
+  // Make content type - SponsoredContent
+  const bitcodeAVMaster = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
+  typeSponsoredContent = await client.CreateContentType({
+    metadata: {
+      "eluv.name": "sponsored_content",
+      "name": "sponsored_content",
+      "manageApp": "elv-campaign-manager.html"
+    },
+    bitcode: bitcodeAVMaster
+  });
+  ct.content_types.sponsored_content = typeSponsoredContent;
+  console.log("Content Type - SponsoredContent: " + typeSponsoredContent);
+
+  // Make content type - Advertisement
+  typeAdvertisement = await client.CreateContentType({
+    metadata: {
+      "eluv.name": "advertisement",
+      "name": "advertisement",
+    },
+    bitcode: bitcodeAVMaster
+  });
+  ct.content_types.advertisement = typeAdvertisement;
+  console.log("Content Type - Advertisement: " + typeAdvertisement);
+
+  return ct;
+};
+
 const SetupMediaPlatform = async () => {
 
-    contentSpaceId = "ispc22PzfU3u1xzJdMpzBfmhoAF1Ucnc";
+  emp = {
+    "contracts":{},
+    "content_types":{}
+  }
 
-    emp = {
-	"contracts":{},
-	"content_types":{}
+  // Make contract AdsMarketplace
+  const deployResultMkt = await client.DeployContract({
+    abi: AdmgrMarketPlace.abi,
+    bytecode: AdmgrMarketPlace.bytecode
+  });
+  emp.contracts.marketplace = {"address": deployResultMkt.contractAddress};
+  console.log("Contract - AdsMarketPlace: " + deployResultMkt.contractAddress);
+
+  // Make contract CampaignManager
+  const deployResultMgr = await client.DeployContract({
+    abi: AdmgrCampaignManager.abi,
+    bytecode: AdmgrCampaignManager.bytecode
+  });
+  emp.contracts.campaign_manager = {"address": deployResultMgr.contractAddress};
+  console.log("Contract - CampaignManager: " + deployResultMgr.contractAddress);
+
+  // Make contract Advertisement
+  const deployResultAd = await client.DeployContract({
+    abi: AdmgrAdvertisement.abi,
+    bytecode: AdmgrAdvertisement.bytecode
+  });
+  emp.contracts.advertisement = {"address": deployResultAd.contractAddress};
+  console.log("Contract - Advertisment: " + deployResultAd.contractAddress);
+
+  // Make contract SponsoredContent
+  const deployResultSp = await client.DeployContract({
+    abi: AdmgrSponsoredContent.abi,
+    bytecode: AdmgrSponsoredContent.bytecode
+  });
+  emp.contracts.sponsored_content = {"address" : deployResultSp.contractAddress};
+  console.log("Contract - SponsoredContent: " + deployResultSp.contractAddress);
+
+  // Make content types
+  const ct = await SetupContentTypes(client, emp);
+  emp.content_types = ct.content_types;
+
+  // Make library - Ads Marketplace
+  const libraryIdAdsMarketplace = await client.CreateContentLibrary({
+    name: "Ads Marketplace",
+    description: "Ads Marketplace",
+    publicMetadata: {
     }
+  });
+  emp.ads_marketplace = libraryIdAdsMarketplace;
 
-    // Make contract AdsMarketplace
-    const deployResultMkt = await client.DeployContract({
-	abi: AdmgrMarketPlace.abi,
-	bytecode: AdmgrMarketPlace.bytecode
-    });
-    emp.contracts.marketplace = {"address": deployResultMkt.contractAddress};
-    console.log("Contract - AdsMarketPlace: " + deployResultMkt.contractAddress);
+  const tx = await client.AddLibraryContentType({
+    libraryId: emp.ads_marketplace,
+    typeId: emp.content_types.campaign_manager,
+    customContractAddress: emp.contracts.campaign_manager.address
+  });
 
-    // Make contract CampaignManager
-    const deployResultMgr = await client.DeployContract({
-	abi: AdmgrCampaignManager.abi,
-	bytecode: AdmgrCampaignManager.bytecode
-    });
-    emp.contracts.campaign_manager = {"address": deployResultMgr.contractAddress};
-    console.log("Contract - CampaignManager: " + deployResultMgr.contractAddress);
+  // Make library - Channels
+  const libraryIdChannels = await client.CreateContentLibrary({
+    name: "Channels",
+    description: "Library for public channels",
+    publicMetadata: {
+    }
+  });
+  emp.channels = libraryIdChannels;
 
-    // Make contract Advertisement
-    const deployResultAd = await client.DeployContract({
-	abi: AdmgrAdvertisement.abi,
-	bytecode: AdmgrAdvertisement.bytecode
-    });
-    emp.contracts.advertisement = {"address": deployResultAd.contractAddress};
-    console.log("Contract - Advertisment: " + deployResultAd.contractAddress);
-
-    // Make contract SponsoredContent
-    const deployResultSp = await client.DeployContract({
-	abi: AdmgrSponsoredContent.abi,
-	bytecode: AdmgrSponsoredContent.bytecode
-    });
-    emp.contracts.sponsored_content = {"address" : deployResultSp.contractAddress};
-    console.log("Contract - SponsoredContent: " + deployResultSp.contractAddress);
-
-    bitcodePath = "../content-fabric/bitcode" // PENDING(SSS) configure this properly
-
-    // Make content type - SponsoredContent
-    const bitcodeAVMaster = fs.readFileSync(Path.join(bitcodePath, "avmaster", "avmaster2000.imf.bc"));
-    typeSponsoredContent = await client.CreateContentType({
-	metadata: {
-            "eluv.name": "sponsored_content",
-	    "name": "sponsored_content",
-        },
-        bitcode: bitcodeAVMaster
-    });
-    emp.content_types.sponsored_content = typeSponsoredContent;
-    console.log("Content Type - SponsoredContent: " + typeSponsoredContent);
-
-    // Make content type - Advertisement
-    typeAdvertisement = await client.CreateContentType({
-	metadata: {
-            "eluv.name": "advertisement",
-	    "name": "advertisement",
-        },
-        bitcode: bitcodeAVMaster
-    });
-    emp.content_types.advertisement = typeAdvertisement;
-    console.log("Content Type - Advertisement: " + typeAdvertisement);
-
-    // Make the main library "Eluvio Media Platform"
-    const libraryId = await client.CreateContentLibrary({
-	name: "Eluvio Media Platform",
-	description: "Eluvio Media Platform",
-	publicMetadata: {
-	    emp
-	}
-    });
-    console.log("\nEluvio Media Platform: " + libraryId);
+  // Make the main library "Eluvio Media Platform"
+  const libraryId = await client.CreateContentLibrary({
+    name: "Eluvio Media Platform",
+    description: "Eluvio Media Platform",
+    publicMetadata: {
+      class: "platform",
+      emp
+    }
+  });
+  console.log("\nEluvio Media Platform: " + libraryId);
 };
 
 SetupMediaPlatform();
