@@ -1,18 +1,18 @@
-const { ElvClient } = require("./src/ElvClient.js");
+const { ElvClient } = require("../src/ElvClient.js");
 
 const Path = require("path");
 const fs = require("fs");
 
-const ContentSpaceContract = require("./src/contracts/BaseContentSpace");
-const ContentLibraryContract = require("./src/contracts/BaseLibrary");
-const ContentContract = require("./src/contracts/BaseContent");
+const ContentSpaceContract = require("../src/contracts/BaseContentSpace");
+const ContentLibraryContract = require("../src/contracts/BaseLibrary");
+const ContentContract = require("../src/contracts/BaseContent");
 
-const AdmgrMarketPlace = require("./src/contracts/AdmgrMarketPlace");
-const AdmgrCampaignManager = require("./src/contracts/AdmgrCampaignManager");
-const AdmgrAdvertisement = require("./src/contracts/AdmgrAdvertisement");
-const AdmgrSponsoredContent = require("./src/contracts/AdmgrSponsoredContent");
+const AdmgrMarketPlace = require("../src/contracts/AdmgrMarketPlace");
+const AdmgrCampaignManager = require("../src/contracts/AdmgrCampaignManager");
+const AdmgrAdvertisement = require("../src/contracts/AdmgrAdvertisement");
+const AdmgrSponsoredContent = require("../src/contracts/AdmgrSponsoredContent");
 
-const ClientConfiguration = require("./TestConfiguration.json");
+const ClientConfiguration = require("../TestConfiguration.json");
 
 let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 const wallet = client.GenerateWallet();
@@ -64,11 +64,11 @@ const TestContentType = async () => {
   const appPathsCampaignManager = [{path: "../elv-media-platform/apps/elv-ads.html", name: "manageApp.html"},
 				   {path: "../elv-media-platform/apps/elv-campaign-manager.html", name: "displayApp.html"}];
   const appFilesCampaignManager = PrepareFiles(appPathsCampaignManager);
-  const o = await client.CreateContentType2({metadata: md,
-					     bitcode: bitcode,
-					     appsFileInfo: appFilesCampaignManager,
-					     schema: schemaCampaignManager,
-					     contract: contract})
+  const o = await client.CreateContentTypeFull({metadata: md,
+						bitcode: bitcode,
+						appsFileInfo: appFilesCampaignManager,
+						schema: schemaCampaignManager,
+						contract: contract})
   console.log("Content Type: " + o);
 };
 

@@ -20,29 +20,35 @@ client.SetSigner({signer});
 
 const SetupSpace = async () => {
 
-    contentSpaceId = "ispc22PzfU3u1xzJdMpzBfmhoAF1Ucnc";
-    libraryId = "ilib22PzfU3u1xzJdMpzBfmhoAF1Ucnc";
+  contentSpaceId = "ispc22PzfU3u1xzJdMpzBfmhoAF1Ucnc";
 
-    contractAddress = client.utils.HashToAddress(contentSpaceId);
+  contractAddress = client.utils.HashToAddress(contentSpaceId);
 
-    const event = await client.ethClient.CallContractMethodAndWait({
-      contractAddress: contractAddress,
-	abi: ContentSpaceContract.abi,
-	methodName: "engageAccountLibrary",
-	value: 0,
-	signer: signer
-    });
+  transactionHash = await client.authClient.GenerateAuthorizationToken({
+    libraryId: client.utils.AddressToLibraryId(contractAddress),
+    update: true
+  });
+  console.log("\nUsing content space: " + contentSpaceId);
 
-    console.log("\nUsing content space: " + contentSpaceId);
-    console.log("\Transaction: " + event.transactionHash);
+  const libraryId = client.utils.AddressToLibraryId(contractAddress);
+  const path = "/qlibs/" + libraryId;
 
-    const token = await client.authClient.FormatAuthToken({
-	libraryId: libraryId,
-	transactionHash: event.transactionHash
-    });
+  client.HttpClient.Request({
+    headers: await client.authClient.AuthorizationHeader({transactionHash}),
+    method: "PUT",
+    path: path,
+    body: {
+      meta: {
+        "eluv.name": "Content Types",
+	"class": "content_space_library"
+      }
+    }
+  });
 
-    console.log("\nAuth token: " + token);
-    console.log("\n");
+  console.log("\nCreated content types library: ");
+  console.log("\tID: " + libraryId + "\n");
+
+  console.log("\n");
 };
 
 SetupSpace();
