@@ -101,7 +101,7 @@ class AuthorizationClient {
     const token = B64(JSON.stringify({
       qspace_id: this.contentSpaceId,
       qlib_id: libraryId,
-      addr: this.signer.signingKey.address,
+      addr: (this.signer && this.signer.signingKey.address) || "",
       txid: transactionHash
     }));
 
@@ -131,6 +131,8 @@ class AuthorizationClient {
     if (isUserLibrary) {
       // User profile library - library ID corresponds to signer's address
       if(!noCache && !skipCache && this.userProfileTransaction) { return this.userProfileTransaction; }
+
+      if(!this.signer) { throw Error("Signer not set"); }
 
       const userEvent = await this.ethClient.EngageAccountLibrary({
         contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
@@ -181,6 +183,8 @@ class AuthorizationClient {
     if(!noCache && !skipCache) {
       if(cache[id]) { return { transactionHash: cache[id] }; }
     }
+
+    if(!this.signer) { throw Error("Signer not set"); }
 
     // Make the request
     let accessRequest;
