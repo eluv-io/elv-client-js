@@ -16,11 +16,9 @@ const B64 = (str) => {
 };
 
 class AuthorizationClient {
-  constructor({ethClient, contentSpaceId, signer, noCache=false, noAuth=false}) {
-    this.ethClient = ethClient;
+  constructor({client, contentSpaceId, noCache=false, noAuth=false}) {
+    this.client = client;
     this.contentSpaceId = contentSpaceId;
-    this.signer = signer;
-
     this.noCache = noCache;
     this.noAuth = noAuth;
 
@@ -70,15 +68,16 @@ class AuthorizationClient {
   }
 
   async IsOwner({id, abi}) {
-    const ownerAddress = await this.ethClient.CallContractMethod({
+    if(!this.client.signer) { return false; }
+
+    const ownerAddress = await this.client.CallContractMethod({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "owner",
-      methodArgs: [],
-      signer: this.signer
+      methodArgs: []
     });
 
-    return ownerAddress.toLowerCase() === this.signer.address.toLowerCase();
+    return ownerAddress.toLowerCase() === this.client.signer.address.toLowerCase();
   }
 
   async GenerateAuthorizationToken({libraryId, objectId, transactionHash, update=false, noAuth=false}) {
@@ -101,7 +100,7 @@ class AuthorizationClient {
     const token = B64(JSON.stringify({
       qspace_id: this.contentSpaceId,
       qlib_id: libraryId,
-      addr: (this.signer && this.signer.signingKey.address) || "",
+      addr: (this.client.signer && this.client.signer.signingKey.address) || "",
       txid: transactionHash
     }));
 
@@ -120,23 +119,22 @@ class AuthorizationClient {
     skipCache=false,
     noCache=false
   }) {
-    const isUserLibrary = libraryId && libraryId === Utils.AddressToLibraryId(this.signer.address);
+    if(!this.client.signer) { throw Error("Signer not set"); }
+
+    const isUserLibrary = libraryId && libraryId === Utils.AddressToLibraryId(this.client.signer.address);
     const isSpaceLibrary = Utils.EqualHash(this.contentSpaceId, libraryId);
     const isLibraryObject = Utils.EqualHash(libraryId, objectId);
     const cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
 
-    let id;
-    let abi;
-    let cache;
+    let id, abi, cache;
+    let isObjectAccess = false;
     if (isUserLibrary) {
       // User profile library - library ID corresponds to signer's address
       if(!noCache && !skipCache && this.userProfileTransaction) { return this.userProfileTransaction; }
 
-      if(!this.signer) { throw Error("Signer not set"); }
-
-      const userEvent = await this.ethClient.EngageAccountLibrary({
+      const userEvent = await this.client.ethClient.EngageAccountLibrary({
         contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-        signer: this.signer
+        signer: this.client.signer
       });
 
       if(!noCache) {
@@ -166,12 +164,13 @@ class AuthorizationClient {
       id = objectId;
       abi = ContentContract.abi;
       cache = cacheCollection.objects;
+      isObjectAccess = true;
 
       if(!args || args.length === 0) {
         // Set default args
         args = [
           0, // Access level
-          this.signer.signingKey.publicKey, // Public key of requester
+          this.client.signer.signingKey.publicKey, // Public key of requester
           "", // AFGH string
           [], // Custom values
           [] // Stakeholders
@@ -183,8 +182,6 @@ class AuthorizationClient {
     if(!noCache && !skipCache) {
       if(cache[id]) { return { transactionHash: cache[id] }; }
     }
-
-    if(!this.signer) { throw Error("Signer not set"); }
 
     // Make the request
     let accessRequest;
@@ -202,6 +199,11 @@ class AuthorizationClient {
       if(accessRequest.logs.length > 0 && accessRequest.logs[0].values && accessRequest.logs[0].values.requestID) {
         this.requestIds[id] = accessRequest.logs[0].values.requestID;
       }
+    }
+
+    // After making an access request, record the tags in the user's profile, if appropriate
+    if(isObjectAccess && !update) {
+      await this.client.userProfile.RecordTags({libraryId, objectId});
     }
 
     return accessRequest;
@@ -223,15 +225,14 @@ class AuthorizationClient {
 
     if(!method) { return 0; }
 
-    const event = await this.ethClient.CallContractMethodAndWait({
+    const event = await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "getAccessCharge",
-      methodArgs: [0, [], []],
-      signer: this.signer
+      methodArgs: [0, [], []]
     });
 
-    const eventLog = this.ethClient.ExtractEventFromLogs({
+    const eventLog = this.client.ExtractEventFromLogs({
       abi: ContentContract.abi,
       event,
       eventName: "GetAccessCharge"
@@ -245,20 +246,18 @@ class AuthorizationClient {
 
     if(!requestId) { throw Error("Unknown request for " + id); }
 
-    const formattedArgs = this.ethClient.FormatContractArguments({
+    const formattedArgs = this.client.FormatContractArguments({
       abi,
       methodName: "accessComplete",
-      args: [requestId, score, ""],
-      signer: this.signer
+      args: [requestId, score, ""]
     });
 
     // If access request did not succeed, no event will be emitted
-    const event = await this.ethClient.CallContractMethodAndWait({
+    const event = await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "accessComplete",
-      methodArgs: formattedArgs,
-      signer: this.signer
+      methodArgs: formattedArgs
     });
 
     delete this.requestIds[id];
@@ -277,24 +276,22 @@ class AuthorizationClient {
       accessCharge = Utils.WeiToEther(await this.GetAccessCharge({id, abi}));
     }
 
-    const formattedArgs = this.ethClient.FormatContractArguments({
+    const formattedArgs = this.client.FormatContractArguments({
       abi,
       methodName: "accessRequest",
-      args,
-      signer: this.signer
+      args
     });
 
     // If access request did not succeed, no event will be emitted
-    const event = await this.ethClient.CallContractMethodAndWait({
+    const event = await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "accessRequest",
       methodArgs: formattedArgs,
       value: accessCharge,
-      signer: this.signer
     });
 
-    const accessRequestEvent = this.ethClient.ExtractEventFromLogs({
+    const accessRequestEvent = this.client.ExtractEventFromLogs({
       abi,
       event,
       eventName: "AccessRequest"
@@ -308,12 +305,11 @@ class AuthorizationClient {
   }
 
   async UpdateRequest({id, abi}) {
-    return await this.ethClient.CallContractMethodAndWait({
+    return await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "updateRequest",
       methodArgs: [],
-      signer: this.signer
     });
   }
 
@@ -321,9 +317,9 @@ class AuthorizationClient {
 
   async CreateAccessGroup() {
     // Deploy contract
-    const { contractAddress, transactionHash } = await this.ethClient.DeployAccessGroupContract({
+    const { contractAddress, transactionHash } = await this.client.ethClient.DeployAccessGroupContract({
       contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-      signer: this.signer
+      signer: this.client.signer
     });
 
     return {
@@ -334,9 +330,9 @@ class AuthorizationClient {
 
   async CreateContentType() {
     // Deploy contract
-    const { contractAddress, transactionHash } = await this.ethClient.DeployTypeContract({
+    const { contractAddress, transactionHash } = await this.client.ethClient.DeployTypeContract({
       contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-      signer: this.signer
+      signer: this.client.signer
     });
 
     return {
@@ -347,9 +343,9 @@ class AuthorizationClient {
 
   async CreateContentLibrary() {
     // Deploy contract
-    const {contractAddress, transactionHash} = await this.ethClient.DeployLibraryContract({
+    const {contractAddress, transactionHash} = await this.client.ethClient.DeployLibraryContract({
       contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-      signer: this.signer
+      signer: this.client.signer
     });
 
     return {
@@ -360,10 +356,10 @@ class AuthorizationClient {
 
   async CreateContentObject({libraryId, typeId}) {
     // Deploy contract
-    const { contractAddress, transactionHash } = await this.ethClient.DeployContentContract({
+    const { contractAddress, transactionHash } = await this.client.ethClient.DeployContentContract({
       contentLibraryAddress: Utils.HashToAddress(libraryId),
       typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
-      signer: this.signer
+      signer: this.client.signer
     });
 
     return {

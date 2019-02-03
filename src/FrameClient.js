@@ -244,11 +244,13 @@ class FrameClient {
   }
 
   AllowedUserProfileMethods() {
-    return [ 
+    return [
+      "CollectedTags",
       "CreateAccountLibrary",
       "UserProfileImage",
       "SetUserProfileImage",
       "PublicUserMetadata",
+      "RecordTags",
       "ReplacePublicUserMetadata",
       "PrivateUserMetadata",
       "ReplacePrivateUserMetadata",

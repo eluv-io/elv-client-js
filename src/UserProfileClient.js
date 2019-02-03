@@ -216,6 +216,121 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     );
   }
 
+  /**
+   * Get the accumulated tags for the current user
+   *
+   * @return {Promise<Object>} - User tags
+   */
+  async CollectedTags() {
+    return await this.PrivateUserMetadata({metadataSubtree: "collected_data"}) || {};
+  }
+
+  async RecordTags({libraryId, objectId}) {
+    await this.__TouchLibrary();
+
+    // If this object has already been seen, don't re-record tags
+    const versionHash = (await this.client.ContentObject({libraryId, objectId})).hash;
+    const seen = await this.PrivateUserMetadata({metadataSubtree: Path.join("accessedContent", versionHash)});
+    if(seen) { return; }
+
+    const userLibraryId = Utils.AddressToLibraryId(this.client.signer.address);
+    const userObjectId = Utils.AddressToObjectId(this.client.signer.address);
+
+    // Mark content as seen
+    const editRequest = await this.client.EditContentObject({libraryId: userLibraryId, objectId: userObjectId});
+    await this.client.ReplaceMetadata({
+      libraryId: userLibraryId,
+      objectId: userObjectId,
+      writeToken: editRequest.write_token,
+      metadataSubtree: Path.join("accessedContent", versionHash),
+      metadata: Date.now()
+    });
+
+    const contentTags = await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree: "video_tags"});
+
+    if(contentTags && contentTags.length > 0) {
+      let userTags = await this.CollectedTags();
+      const formattedTags = this.__FormatVideoTags(contentTags);
+
+      Object.keys(formattedTags).forEach(tag => {
+        if (userTags[tag]) {
+          // User has seen this tag before
+          userTags[tag].occurrences += 1;
+          userTags[tag].aggregate += formattedTags[tag];
+        } else {
+          // New tag
+          userTags[tag] = {
+            occurrences: 1,
+            aggregate: formattedTags[tag]
+          };
+        }
+      });
+
+      // Update user tags
+      await this.client.ReplaceMetadata({
+        libraryId: userLibraryId,
+        objectId: userObjectId,
+        writeToken: editRequest.write_token,
+        metadataSubtree: "collected_data",
+        metadata: userTags
+      });
+    }
+
+    await this.client.FinalizeContentObject({libraryId: userLibraryId, objectId: userObjectId, writeToken: editRequest.write_token});
+  }
+
+  /*
+    Format video tags into an easier format and average scores
+    Example content tags:
+    [
+    {
+      "tags": [
+        {
+          "score": 0.3,
+          "tag": "cherry"
+        },
+        {
+          "score": 0.8,
+          "tag": "chocolate"
+        },
+        {
+          "score": 0.6,
+          "tag": "boat"
+        }
+      ],
+      "time_in": "00:00:00.000",
+      "time_out": "00:03:00.000"
+    },
+    ...
+    ]
+ */
+  __FormatVideoTags(videoTags) {
+    let collectedTags = {};
+
+    videoTags.forEach(videoTag => {
+      const tags = videoTag["tags"];
+
+      tags.forEach(tag => {
+        if(collectedTags[tag.tag]) {
+          collectedTags[tag.tag].occurrences += 1;
+          collectedTags[tag.tag].aggregate += tag.score;
+        } else {
+          collectedTags[tag.tag] = {
+            occurrences: 1,
+            aggregate: tag.score
+          };
+        }
+      });
+    });
+
+    let formattedTags = {};
+    Object.keys(collectedTags).forEach(tag => {
+      formattedTags[tag] = collectedTags[tag].aggregate / collectedTags[tag].occurrences;
+    });
+
+    return formattedTags;
+  }
+
   // Whitelist of methods allowed to be called using the frame API
   FrameAllowedMethods() {
     const forbiddenMethods = [
@@ -223,6 +338,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       "FrameAllowedMethods",
       "__IsLibraryCreated",
       "__TouchLibrary",
+      "__FormatVideoTags"
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))

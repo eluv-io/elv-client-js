@@ -106,15 +106,15 @@ class ElvClient {
   InitializeClients() {
     this.ethClient = new EthClient(this.ethereumURI);
 
+    this.userProfile = new UserProfileClient({client: this});
+
     this.authClient = new AuthorizationClient({
-      ethClient: this.ethClient,
+      client: this,
       contentSpaceId: this.contentSpaceId,
       signer: this.signer,
       noCache: this.noCache,
       noAuth: this.noAuth
     });
-
-    this.userProfile = new UserProfileClient({client: this});
   }
 
   /**
@@ -506,15 +506,21 @@ class ElvClient {
   async PublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
-    const metadata = await ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, noAuth: true}),
-        method: "GET",
-        path: path
-      })
-    );
+    try {
+      const metadata = await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId, noAuth: true}),
+          method: "GET",
+          path: path
+        })
+      );
 
-    return metadata || {};
+      return metadata || {};
+    } catch(error) {
+      if(error.status !== 404) {
+        throw error;
+      }
+    }
   }
 
   /**
@@ -965,15 +971,21 @@ class ElvClient {
   async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/"}) {
     let path = Path.join("q", versionHash || objectId, "meta", metadataSubtree);
 
-    const metadata = await ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
-        method: "GET",
-        path: path
-      })
-    );
+    try {
+      const metadata = await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+          method: "GET",
+          path: path
+        })
+      );
 
-    return metadata || {};
+      return metadata || {};
+    } catch(error) {
+      if(error.status !== 404) {
+        throw error;
+      }
+    }
   }
 
   /**
