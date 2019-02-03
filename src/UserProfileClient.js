@@ -64,8 +64,10 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
   // Create the library if it doesn't yet exist
   async __TouchLibrary() {
-    if(!(await this.__IsLibraryCreated({accountAddress: this.client.signer.address}))) {
-      await this.CreateAccountLibrary();
+    if(this.client.signer) {
+      if (!(await this.__IsLibraryCreated({accountAddress: this.client.signer.address}))) {
+        await this.CreateAccountLibrary();
+      }
     }
   }
 
@@ -87,6 +89,9 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   /**
    * Get the URL of the specified user's profile image
    *
+   * Note: Part hash of profile image will be appended to the URL as a query parameter in order to ensure browsers
+   * won't serve old cached versions when the image is updated
+   *
    * @namedParams
    * @param {string} accountAddress - Address of the user account
    * @return {Promise<string | undefined>} - URL of the user's profile image. Will be undefined if no profile image is set.
@@ -99,10 +104,10 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     if(!(await this.__IsLibraryCreated({accountAddress}))) { return; }
 
     // Ensure image is set
-    const image = await this.PublicUserMetadata({accountAddress, metadataSubtree: "image"});
-    if(!image) { return; }
+    const imageHash = await this.PublicUserMetadata({accountAddress, metadataSubtree: "image"});
+    if(!imageHash) { return; }
 
-    return await this.client.Rep({libraryId, objectId, rep: "image", noAuth: true});
+    return await this.client.Rep({libraryId, objectId, rep: "image", queryParams: {hash: imageHash}, noAuth: true});
   }
 
   /**
@@ -138,7 +143,9 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     try {
       return await this.client.PublicLibraryMetadata({libraryId, metadataSubtree});
     } catch(error) {
-      if(error.status !== 404) {
+      if(error.status === 404) {
+        return {};
+      } else {
         throw error;
       }
     }
@@ -153,6 +160,9 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    */
   async ReplacePublicUserMetadata({metadataSubtree="/", metadata={}}) {
     const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
+
+    await this.__TouchLibrary();
+
     return await this.client.ReplacePublicLibraryMetadata({libraryId, metadataSubtree, metadata});
   }
 
@@ -183,6 +193,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   async ReplacePrivateUserMetadata({metadataSubtree="/", metadata={}}) {
     const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
     const objectId = Utils.AddressToObjectId(this.client.signer.address);
+
+    await this.__TouchLibrary();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 

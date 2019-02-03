@@ -145,14 +145,26 @@ class ElvClient {
       .hash("")
       .toString();
 
-    this.ethClient = new EthClient(this.ethereumURI);
-    // Throw error if authorization is attempted before setting the signer
-    this.authClient = { AuthorizationHeader: () => { throw Error("Signer not set"); }};
-
     this.noCache = noCache;
     this.noAuth = noAuth;
 
     this.utils = Utils;
+
+    this.InitializeClients();
+  }
+
+  InitializeClients() {
+    this.ethClient = new EthClient(this.ethereumURI);
+
+    this.authClient = new AuthorizationClient({
+      ethClient: this.ethClient,
+      contentSpaceId: this.contentSpaceId,
+      signer: this.signer,
+      noCache: this.noCache,
+      noAuth: this.noAuth
+    });
+
+    this.userProfile = new UserProfileClient({client: this});
   }
 
   /**
@@ -195,9 +207,9 @@ class ElvClient {
    * Remove the signer from this client
    */
   ClearSigner() {
-    this.authClient = { AuthorizationHeader: () => { throw Error("Signer not set"); }};
-    this.userProfile = undefined;
     this.signer = undefined;
+
+    this.InitializeClients();
   }
 
   /**
@@ -210,15 +222,7 @@ class ElvClient {
     signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
     this.signer = signer;
 
-    this.authClient = new AuthorizationClient({
-      ethClient: this.ethClient,
-      contentSpaceId: this.contentSpaceId,
-      signer: signer,
-      noCache: this.noCache,
-      noAuth: this.noAuth
-    });
-
-    this.userProfile = new UserProfileClient({client: this});
+    this.InitializeClients();
   }
 
   /**
@@ -2326,6 +2330,7 @@ client.FabricUrl({
   FrameAllowedMethods() {
     const forbiddenMethods = [
       "constructor",
+      "InitializeClients",
       "CallAccessGroupMethod",
       "CallFromFrameMessage",
       "FrameAllowedMethods",
