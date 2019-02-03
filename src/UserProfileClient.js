@@ -143,9 +143,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     try {
       return await this.client.PublicLibraryMetadata({libraryId, metadataSubtree});
     } catch(error) {
-      if(error.status === 404) {
-        return {};
-      } else {
+      if(error.status !== 404) {
         throw error;
       }
     }
