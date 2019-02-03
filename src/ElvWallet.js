@@ -131,14 +131,14 @@ class ElvWallet {
    *
    * @returns {Promise<string>} - The encrypted private key (in Ethereum keystore format)
    */
-  async GenerateEncryptedPrivateKey({ accountName, signer, password }) {
+  async GenerateEncryptedPrivateKey({ accountName, signer, password, options }) {
     const accountSigner = signer || this.GetAccount({ accountName });
 
     if(!accountSigner) {
       throw Error("Unknown account: " + accountName);
     }
 
-    return await accountSigner.encrypt(password);
+    return await accountSigner.encrypt(password, options);
   }
 
   /**
