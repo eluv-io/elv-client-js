@@ -230,7 +230,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
     // If this object has already been seen, don't re-record tags
     const versionHash = (await this.client.ContentObject({libraryId, objectId})).hash;
-    const seen = await this.PrivateUserMetadata({metadataSubtree: Path.join("accessedContent", versionHash)});
+    const seen = await this.PrivateUserMetadata({metadataSubtree: Path.join("accessed_content", versionHash)});
     if(seen) { return; }
 
     const userLibraryId = Utils.AddressToLibraryId(this.client.signer.address);
@@ -242,7 +242,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       libraryId: userLibraryId,
       objectId: userObjectId,
       writeToken: editRequest.write_token,
-      metadataSubtree: Path.join("accessedContent", versionHash),
+      metadataSubtree: Path.join("accessed_content", versionHash),
       metadata: Date.now()
     });
 
