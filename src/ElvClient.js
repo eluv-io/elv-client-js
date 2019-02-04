@@ -95,14 +95,26 @@ class ElvClient {
       .hash("")
       .toString();
 
-    this.ethClient = new EthClient(this.ethereumURI);
-    // Throw error if authorization is attempted before setting the signer
-    this.authClient = { AuthorizationHeader: () => { throw Error("Signer not set"); }};
-
     this.noCache = noCache;
     this.noAuth = noAuth;
 
     this.utils = Utils;
+
+    this.InitializeClients();
+  }
+
+  InitializeClients() {
+    this.ethClient = new EthClient(this.ethereumURI);
+
+    this.userProfile = new UserProfileClient({client: this});
+
+    this.authClient = new AuthorizationClient({
+      client: this,
+      contentSpaceId: this.contentSpaceId,
+      signer: this.signer,
+      noCache: this.noCache,
+      noAuth: this.noAuth
+    });
   }
 
   /**
@@ -145,9 +157,9 @@ class ElvClient {
    * Remove the signer from this client
    */
   ClearSigner() {
-    this.authClient = { AuthorizationHeader: () => { throw Error("Signer not set"); }};
-    this.userProfile = undefined;
     this.signer = undefined;
+
+    this.InitializeClients();
   }
 
   /**
@@ -160,15 +172,7 @@ class ElvClient {
     signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
     this.signer = signer;
 
-    this.authClient = new AuthorizationClient({
-      ethClient: this.ethClient,
-      contentSpaceId: this.contentSpaceId,
-      signer: signer,
-      noCache: this.noCache,
-      noAuth: this.noAuth
-    });
-
-    this.userProfile = new UserProfileClient({client: this});
+    this.InitializeClients();
   }
 
   /**
@@ -502,15 +506,21 @@ class ElvClient {
   async PublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
-    const metadata = await ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, noAuth: true}),
-        method: "GET",
-        path: path
-      })
-    );
+    try {
+      const metadata = await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId, noAuth: true}),
+          method: "GET",
+          path: path
+        })
+      );
 
-    return metadata || {};
+      return metadata || {};
+    } catch(error) {
+      if(error.status !== 404) {
+        throw error;
+      }
+    }
   }
 
   /**
@@ -1039,15 +1049,21 @@ class ElvClient {
   async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/"}) {
     let path = Path.join("q", versionHash || objectId, "meta", metadataSubtree);
 
-    const metadata = await ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
-        method: "GET",
-        path: path
-      })
-    );
+    try {
+      const metadata = await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+          method: "GET",
+          path: path
+        })
+      );
 
-    return metadata || {};
+      return metadata || {};
+    } catch(error) {
+      if(error.status !== 404) {
+        throw error;
+      }
+    }
   }
 
   /**
@@ -1543,12 +1559,11 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} partHash - Hash of the part to download
-   * @param {boolean=} encrypted=true - Whether or not the part is encrypted
    * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
    *
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
-  async DownloadPart({libraryId, objectId, versionHash, partHash, encrypted=true, format="blob"}) {
+  async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
     const path = Path.join("q", versionHash || objectId, "data", partHash);
 
     const response = await HandleErrors(
@@ -1560,7 +1575,6 @@ class ElvClient {
     );
 
     let data = await response.arrayBuffer();
-    if(encrypted) { data = (await Crypto.Decrypt({encryptedData: data})).buffer; }
 
     return (format && format.toLowerCase() === "blob") ? await new Response(data).blob() : data;
   }
@@ -1575,36 +1589,18 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
    * @param {(ArrayBuffer | Blob | Buffer)} data - Data to upload
-   * @param {boolean=} encrypted=true - Whether or not to encrypt the part
    *
    * @returns {Promise<Object>} - Response containing information about the uploaded part
    */
-  async UploadPart({libraryId, objectId, writeToken, data, encrypted=true}) {
+  async UploadPart({libraryId, objectId, writeToken, data}) {
     const path = Path.join("q", writeToken, "data");
-
-    // Convert Blob to ArrayBuffer if necessary
-    let dataBuffer = data;
-    if(!(data instanceof ArrayBuffer) && !(typeof Buffer !== "undefined" && data instanceof Buffer)) {
-      // Blob
-      dataBuffer = await new Response(data).arrayBuffer();
-    }
-
-    if(encrypted) { dataBuffer = await Crypto.Encrypt({data: dataBuffer}); }
-
-    if(dataBuffer instanceof ArrayBuffer) {
-      if(typeof window === "undefined") {
-        dataBuffer = Buffer.from(dataBuffer);
-      } else {
-        await new Response([dataBuffer]).blob();
-      }
-    }
 
     return ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
-        body: dataBuffer,
+        body: data,
         bodyType: "BINARY"
       })
     );
@@ -2354,6 +2350,7 @@ client.FabricUrl({
   FrameAllowedMethods() {
     const forbiddenMethods = [
       "constructor",
+      "InitializeClients",
       "CallAccessGroupMethod",
       "CallFromFrameMessage",
       "FrameAllowedMethods",
