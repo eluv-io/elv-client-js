@@ -68,9 +68,9 @@ contract AdmgrCampaign is Content {
         AdData storage adData = adDataMap[ad];
         require(adData.status == 1);
         require(adData.budget - adData.paidOut >= amount);
-        adDataMap[msg.sender].paidOut = adData.paidOut + amount;
-        if (adDataMap[msg.sender].paidOut == adDataMap[msg.sender].budget) {
-            adDataMap[msg.sender].status = -1;
+        adDataMap[ad].paidOut = adData.paidOut + amount;
+        if (adDataMap[ad].paidOut == adData.budget) {
+            adDataMap[ad].status = -1;
         }
         uint256 amount_library = amount / 100 * libraryRetrocession;
         if (amount_library != 0){
@@ -103,6 +103,7 @@ contract AdmgrCampaignManager is Content {
 
     address public campaignLibraryAddress;
     address public marketPlaceAddress;
+    bool public initializedAsCampaignMgr = false;
 
     function setLibraryRetrocession(uint8 percent) public onlyOwner returns(uint8) {
         libraryRetrocession = percent;
@@ -118,6 +119,10 @@ contract AdmgrCampaignManager is Content {
     }
 
     function runCreate() public payable returns (uint) {
+        if (initializedAsCampaignMgr == false){
+            initializedAsCampaignMgr = true;
+            return 0;
+        }
         address campaignAddress = new AdmgrCampaign();
         BaseContent campaignObj = BaseContent(msg.sender);
         campaignObj.setContentContractAddress(campaignAddress);
@@ -129,6 +134,10 @@ contract AdmgrCampaignManager is Content {
         return 0;
     }
 
+    function markAsCampaignManager() public onlyCreator {
+
+    }
+
 
 }
 
@@ -138,8 +147,8 @@ contract AdmgrMarketPlace is Content {
     function runCreate() public payable returns (uint) {
         address campaignMgrAddress = new AdmgrCampaignManager();
         BaseContent campaignMgrObj = BaseContent(msg.sender);
-        campaignMgrObj.setContentContractAddress(campaignMgrAddress);
         AdmgrCampaignManager campaignMgrContract = AdmgrCampaignManager(campaignMgrAddress);
+        campaignMgrObj.setContentContractAddress(campaignMgrAddress);
         campaignMgrContract.setMarketPlaceAddress(address(this));
         campaignMgrContract.transferCreatorship(owner); // Creatorship is kept central
         campaignMgrContract.transferOwnership(campaignMgrObj.owner()); //Ownership is distributed
