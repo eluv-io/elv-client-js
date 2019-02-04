@@ -125,15 +125,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   async __IsLibraryCreated({accountAddress}) {
     const libraryId = Utils.AddressToLibraryId(accountAddress);
 
-    try {
-      await this.client.PublicLibraryMetadata({libraryId});
-
-      return true;
-    } catch(error) {
-      if(error.status !== 404) {
-        throw error;
-      }
-    }
+    return (!!await this.client.PublicLibraryMetadata({libraryId}));
   }
 
   /**

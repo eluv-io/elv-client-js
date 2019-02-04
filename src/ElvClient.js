@@ -1481,12 +1481,11 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} partHash - Hash of the part to download
-   * @param {boolean=} encrypted=true - Whether or not the part is encrypted
    * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
    *
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
-  async DownloadPart({libraryId, objectId, versionHash, partHash, encrypted=true, format="blob"}) {
+  async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
     const path = Path.join("q", versionHash || objectId, "data", partHash);
 
     const response = await HandleErrors(
@@ -1498,7 +1497,6 @@ class ElvClient {
     );
 
     let data = await response.arrayBuffer();
-    if(encrypted) { data = (await Crypto.Decrypt({encryptedData: data})).buffer; }
 
     return (format && format.toLowerCase() === "blob") ? await new Response(data).blob() : data;
   }
@@ -1513,36 +1511,18 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
    * @param {(ArrayBuffer | Blob | Buffer)} data - Data to upload
-   * @param {boolean=} encrypted=true - Whether or not to encrypt the part
    *
    * @returns {Promise<Object>} - Response containing information about the uploaded part
    */
-  async UploadPart({libraryId, objectId, writeToken, data, encrypted=true}) {
+  async UploadPart({libraryId, objectId, writeToken, data}) {
     const path = Path.join("q", writeToken, "data");
-
-    // Convert Blob to ArrayBuffer if necessary
-    let dataBuffer = data;
-    if(!(data instanceof ArrayBuffer) && !(typeof Buffer !== "undefined" && data instanceof Buffer)) {
-      // Blob
-      dataBuffer = await new Response(data).arrayBuffer();
-    }
-
-    if(encrypted) { dataBuffer = await Crypto.Encrypt({data: dataBuffer}); }
-
-    if(dataBuffer instanceof ArrayBuffer) {
-      if(typeof window === "undefined") {
-        dataBuffer = Buffer.from(dataBuffer);
-      } else {
-        await new Response([dataBuffer]).blob();
-      }
-    }
 
     return ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
-        body: dataBuffer,
+        body: data,
         bodyType: "BINARY"
       })
     );
