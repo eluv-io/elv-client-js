@@ -52,17 +52,33 @@ const SetupContentTypes = async (client, enp) => {
 
   ct = {"content_types":{}};
 
+   // Make content type - Campaign
+  const mdCampaign = {name: "campaign", 'eluv.name': "campaign",
+	      class: "content_type",
+	      test: "SS002"};
+  const appPathsCampaign = [{path: "../elv-media-platform/apps/elv-campaign.html", name: "manageApp.html"},
+				   {path: "../elv-media-platform/apps/elv-campaign.html", name: "displayApp.html"}];
+  const appFilesCampaign = PrepareFiles(appPathsCampaign);
+
+  const typeCampaign = await client.CreateContentTypeFull({metadata: mdCampaign,
+							   bitcode: null,
+							   appsFileInfo: appFilesCampaign,
+							   schema: {},
+							   contract: null})
+  ct.content_types.campaign = typeCampaign;
+  console.log("Content Type - Campaign: " + typeCampaign);
+
   // Make contract - CampaignManager
   const md = {name: "campaign_manager", 'eluv.name': "campaign_manager",
 	      class: "content_type",
+	      campaign_content_type: ct.content_types.campaign,
 	      test: "SS001"};
   const bitcode = fs.readFileSync(Path.join(bitcodePath, "adsmanager.bc"));
   const schemaCampaignManager = JSON.parse(fs.readFileSync(Path.join(schemaPath, "campaign_manager.json"), "utf8"));
-  const appPathsCampaignManager = [{path: "../elv-media-platform/apps/elv-ads.html", name: "manageApp.html"},
+  const appPathsCampaignManager = [{path: "../elv-media-platform/apps/elv-campaign-manager.html", name: "manageApp.html"},
 				   {path: "../elv-media-platform/apps/elv-campaign-manager.html", name: "displayApp.html"}];
   const appFilesCampaignManager = PrepareFiles(appPathsCampaignManager);
 
-  console.log("Content Type - CampaignManager start");
   const typeCampaignManager = await client.CreateContentTypeFull({metadata: md,
 								  bitcode: bitcode,
 								  appsFileInfo: appFilesCampaignManager,
@@ -71,29 +87,55 @@ const SetupContentTypes = async (client, enp) => {
   ct.content_types.campaign_manager = typeCampaignManager;
   console.log("Content Type - CampaignManager: " + typeCampaignManager);
 
-  // Make content type - SponsoredContent
-  const bitcodeAVMaster = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
-  typeSponsoredContent = await client.CreateContentType({
-    metadata: {
-      "eluv.name": "sponsored_content",
-      "name": "sponsored_content",
-      "manageApp": "elv-campaign-manager.html"
-    },
-    bitcode: bitcodeAVMaster
-  });
-  ct.content_types.sponsored_content = typeSponsoredContent;
-  console.log("Content Type - SponsoredContent: " + typeSponsoredContent);
-
   // Make content type - Advertisement
-  typeAdvertisement = await client.CreateContentType({
-    metadata: {
-      "eluv.name": "advertisement",
-      "name": "advertisement",
-    },
-    bitcode: bitcodeAVMaster
-  });
-  ct.content_types.advertisement = typeAdvertisement;
-  console.log("Content Type - Advertisement: " + typeAdvertisement);
+  const mdAd = {name: "advertisement", 'eluv.name': "advertisement",
+	      class: "content_type",
+	      test: "SS001"};
+  const bitcodeAd = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
+  const appPathsAd = [{path: "../elv-media-platform/apps/elv-ads.html", name: "manageApp.html"},
+		      {path: "../elv-media-platform/apps/elv-ads.html", name: "displayApp.html"}];
+  const appFilesAd = PrepareFiles(appPathsAd);
+
+  const typeAd = await client.CreateContentTypeFull({metadata: mdAd,
+						     bitcode: bitcodeAd,
+						     appsFileInfo: appFilesAd,
+						     schema: {},
+						     contract: emp.contracts.advertisement})
+  ct.content_types.advertisement = typeAd;
+  console.log("Content Type - Advertisement: " + typeAd);
+
+  // Make content type - SponsoredContent
+  const mdSponsored = {name: "sponsored_content", 'eluv.name': "sponsored_content",
+	      class: "content_type",
+	      test: "SS001"};
+  const bitcodeSponsored = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
+  const appPathsSponsored = [{path: "../elv-media-platform/apps/elv-sponsored-content.html", name: "manageApp.html"},
+			     {path: "../elv-media-platform/apps/elv-sponsored-content.html", name: "displayApp.html"}];
+  const appFilesSponsored = PrepareFiles(appPathsSponsored);
+
+  const typeSponsored = await client.CreateContentTypeFull({metadata: mdSponsored,
+							    bitcode: bitcodeSponsored,
+							    appsFileInfo: appFilesSponsored,
+							    schema: {},
+							    contract: emp.contracts.sponsored_content})
+  ct.content_types.sponsored_content = typeSponsored;
+  console.log("Content Type - SponsoredContent: " + typeSponsored);
+
+  // Make content type - AVMaster IMF
+  const mdIMF = {name: "avmaster_imf", 'eluv.name': "avmaster_imf",
+		 class: "content_type",
+		 test: "SS001"};
+  const bitcodeIMF = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
+  const appPathsIMF = [{path: "../elv-media-platform/apps/elv-avmaster2000.imf-MP-manage.html", name: "manageApp.html"}];
+  const appFilesIMF = PrepareFiles(appPathsIMF);
+
+  const typeIMF = await client.CreateContentTypeFull({metadata: mdIMF,
+						      bitcode: bitcodeIMF,
+						      appsFileInfo: appFilesIMF,
+						      schema: {},
+						      contract: null})
+  ct.content_types.avmaster_imf = typeIMF;
+  console.log("Content Type - AVMasterIMF: " + typeIMF);
 
   return ct;
 };
