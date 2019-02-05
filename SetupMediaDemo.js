@@ -18,7 +18,7 @@ let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
   accountName: "Serbans",
-  privateKey: "efab66c11603800aaaf5ebf135ea1c23393994c4854346949481960a7a3e2573"  // 955301
+  //privateKey: "efab66c11603800aaaf5ebf135ea1c23393994c4854346949481960a7a3e2573"  // 955301
   //privateKey: "33235d5d6dbc0b877ce1b505068a7de0e449f77425374d67a4c44f7218c6ddf8" // Ganache
 });
 
@@ -40,31 +40,82 @@ const MakeCampaignManager = async (emp, name) => {
     name: "Campaigns Repository - " + name,
     description: "Repository for campaigns associated with " + name,
     publicMetadata: {
+      "campaign_manager_libraryId": emp.ads_marketplace,
+      "campaign_manager_name": name,
+      "campaign_manager_objectId": "unset"
     }
   });
-  await client.AddLibraryContentType({
-    libraryId: libraryCampaigns,
-    typeId: emp.content_types.campaign,
-    customContractAddress: null
-  });
-  console.log("    Campaign Repository Library: " + libraryCampaigns);
 
   const typeObj = await client.ContentObject({
     libraryId: contentSpaceLibraryId,
     objectId: emp.content_types.campaign_manager
   });
 
-  console.log("    dbg: " + typeObj.hash);
-
   // Make the campaign manager object
-  const cmgr = await client.CreateContentObject({
+  const cmgrDraft = await client.CreateContentObject({
     libraryId: emp.ads_marketplace,
     options: {
       "type" : typeObj.hash,
-      "meta" : {"test": "SS001", "campaigns_library": libraryCampaigns}
+      "meta" : {
+	"campaign_content_type_id" : emp.content_types.campaign,
+	"test": "SS001", "campaigns_library": libraryCampaigns,
+	"name": name, "eluv.name": name
+      }
     }
   });
-  console.log("    Campaign Manager: " + cmgr);
+  const cmgr = await client.FinalizeContentObject({
+    libraryId: emp.ads_marketplace,
+    writeToken: cmgrDraft.write_token
+  });
+
+  // Retrieve cusstom contract fom the campaign manager
+  const contractAddress = client.utils.HashToAddress(cmgr.id);
+  const customContractAddress = await client.CallContractMethod({
+    contractAddress: contractAddress,
+    abi: ContentContract.abi,
+    methodName: "contentContractAddress",
+    methodArgs: []
+  });
+
+  // Update library content types list
+  await client.AddLibraryContentType({
+    libraryId: libraryCampaigns,
+    typeId: emp.content_types.campaign,
+    customContractAddress: customContractAddress
+  });
+  console.log("    Campaign Repository Library: " + libraryCampaigns);
+
+  // Update campaigns library metadata
+  await client.ReplacePublicLibraryMetadata({
+    libraryId: libraryCampaigns,
+    metadataSubtree: "campaign_manager_objectId",
+    metadata: cmgr.id
+  });
+  console.log("    Campaign Manager - " + name + ": " + cmgr.id + " hash: " + cmgr.hash);
+};
+
+const MakeChannel = async (emp, name) => {
+
+  const typeObj = await client.ContentObject({
+    libraryId: contentSpaceLibraryId,
+    objectId: emp.content_types.channel
+  });
+
+  // Make the channel object
+  const chanDraft = await client.CreateContentObject({
+    libraryId: emp.channels,
+    options: {
+      "type" : typeObj.hash,
+      "meta" : {
+	"name": name, "eluv.name": name
+      }
+    }
+  });
+  const chan = await client.FinalizeContentObject({
+    libraryId: emp.channels,
+    writeToken: chanDraft.write_token
+  });
+  console.log("    Channel - " + name + ": " + chan.id + " hash: " + chan.hash);
 };
 
 const SetupMediaDemo = async () => {
@@ -93,8 +144,8 @@ const SetupMediaDemo = async () => {
 
   // Make library - Media Archive
   const libraryIdMedia = await client.CreateContentLibrary({
-    name: "Media Archive",
-    description: "Media Archive",
+    name: "Acme Media Archive",
+    description: "Acme Media Archive",
     publicMetadata: {
     }
   });
@@ -107,8 +158,8 @@ const SetupMediaDemo = async () => {
 
   // Make library - Commercial Offering
   const libraryIdCO = await client.CreateContentLibrary({
-    name: "Commercial Offering",
-    description: "Commercial Offering",
+    name: "Acme Commercial Offering",
+    description: "Acme Commercial Offering",
     publicMetadata: {
     }
   });
@@ -119,8 +170,11 @@ const SetupMediaDemo = async () => {
   });
   console.log("    Commercial Offering: " + libraryIdCO);
 
-  MakeCampaignManager(emp, "Open Market Campaign Manager");
-  MakeCampaignManager(emp, "Dedicated Campaign Manager");
+  await MakeCampaignManager(emp, "Open Market Campaign Manager");
+  await MakeCampaignManager(emp, "Dedicated Campaign Manager");
+
+  await MakeChannel(emp, "Acme All Day");
+  await MakeChannel(emp, "Acme Spring Special");
 };
 
 SetupMediaDemo();
