@@ -761,7 +761,7 @@ class ElvClient {
     const contentTypes = await this.ContentTypes({latestOnly: true});
     const contentType = Object.values(contentTypes)
       .find(type => {
-        const typeName = type.meta && (type.meta.name || type.meta["eluv.name"] || type.hash);
+        const typeName = type.meta && (type.meta.name || type.meta["eluv.name"] || type.hash || "");
         return typeName.toLowerCase() === name.toLowerCase();
       });
 
