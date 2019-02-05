@@ -138,7 +138,6 @@ const CreateContentTypes = async () => {
   return {contentTypes, contracts};
 };
 
-
 const InitializeContentSpace = async () => {
   // Ensure the content space library is created
   try {
@@ -178,11 +177,10 @@ const CreateMediaPlatform = async () => {
   console.log("\tAds Marketplace: " + adsMarketplaceID);
 
   // TODO - Make add type automatically pull contract out of type (?)
-  const campaignManagerType = await client.ContentType({name: "Campaign Manager"});
   await client.AddLibraryContentType({
-    libraryId: libraryIds.ads_marketplace,
-    typeName: "Campaign Manager",
-    customContractAddress: campaignManagerType.meta.custom_contract.address
+    libraryId: adsMarketplaceID,
+    typeId: contentTypes.campaign_manager,
+    customContractAddress: contracts.campaign_manager
   });
 
   // Make library - Channels
