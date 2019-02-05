@@ -760,7 +760,10 @@ class ElvClient {
     // Only look at latest versions of types when searching by name
     const contentTypes = await this.ContentTypes({latestOnly: true});
     const contentType = Object.values(contentTypes)
-      .find(type => type.meta && (type.meta["eluv.name"] === name));
+      .find(type => {
+        const typeName = type.meta && (type.meta.name || type.meta["eluv.name"] || type.hash);
+        return typeName.toLowerCase() === name.toLowerCase();
+      });
 
     if(!contentType) {
       throw Error("Unknown content type: " + (name || versionHash));
@@ -825,84 +828,6 @@ class ElvClient {
         }
       })
     );
-
-    if(bitcode) {
-      const uploadResponse = await this.UploadPart({
-        libraryId: typeLibraryId,
-        objectId,
-        writeToken: createResponse.write_token,
-        data: bitcode,
-        encrypted: false
-      });
-
-      await this.ReplaceMetadata({
-        libraryId: typeLibraryId,
-        objectId,
-        writeToken: createResponse.write_token,
-        metadataSubtree: "bitcode_part",
-        metadata: uploadResponse.part.hash
-      });
-    }
-
-    await this.FinalizeContentObject({
-      libraryId: typeLibraryId,
-      objectId,
-      writeToken: createResponse.write_token
-    });
-
-    return objectId;
-  }
-
-  /**
-   * Create a new content type specifying all components.
-   *
-   * A new content type contract is deployed from
-   * the content space, and that contract ID is used to determine the object ID to
-   * create in the fabric. The content type object will be created in the special
-   * content space library (ilib<content-space-hash>)
-   *
-   * @namedParams
-   * @param {object} metadata - Metadata for the new content type
-   * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
-   * @param {} appsFileInfo - apps in the format required by UploadFiles
-   * @param {object} schema - custom schema for the type
-   * @param {<string>} contract - address of the contract associated with this type
-   * @returns {Promise<string>} - Object ID of created content type
-   */
-  async CreateContentTypeFull({metadata={}, bitcode, appsFileInfo, schema, contract}) {
-    const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
-
-    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
-    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
-
-    const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = Path.join("qlibs", typeLibraryId, "q", objectId);
-
-    metadata.customContract = contract;
-    if (schema != null) {
-      metadata["eluv.schema"] = schema["eluv.schema"];
-    }
-    metadata["eluv.manageApp"] = "manageApp.html";
-    metadata["eluv.displayApp"] = "displayApp.html";
-    /* Create object, upload bitcode and finalize */
-
-    const createResponse = await ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId, transactionHash}),
-        method: "PUT",
-        path: path,
-        body: {
-          type: "",
-          meta: metadata
-        }
-      })
-    );
-
-    await this.UploadFiles({
-      libraryId: typeLibraryId,
-      objectId,
-      writeToken: createResponse.write_token,
-      fileInfo: appsFileInfo});
 
     if(bitcode) {
       const uploadResponse = await this.UploadPart({

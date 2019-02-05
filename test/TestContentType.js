@@ -56,7 +56,7 @@ const TestContentType = async () => {
 
   const contract = "0xE4E89323A53f23283197D532c743eecC2DE3C454"; // campaign manager
 
-  const md = {name: "campaign_manager", 'eluv.name': "campaign_manager",
+  const md = {name: "campaign_manager", "eluv.name": "campaign_manager",
 	      class: "content_type",
 	      test: "SS001"};
   const bitcode = fs.readFileSync(Path.join(bitcodePath, "adsmanager.bc"));
@@ -65,10 +65,10 @@ const TestContentType = async () => {
 				   {path: "../elv-media-platform/apps/elv-campaign-manager.html", name: "displayApp.html"}];
   const appFilesCampaignManager = PrepareFiles(appPathsCampaignManager);
   const o = await client.CreateContentTypeFull({metadata: md,
-						bitcode: bitcode,
-						appsFileInfo: appFilesCampaignManager,
-						schema: schemaCampaignManager,
-						contract: contract})
+    bitcode: bitcode,
+    appsFileInfo: appFilesCampaignManager,
+    schema: schemaCampaignManager,
+    contract: contract});
   console.log("Content Type: " + o);
 };
 
