@@ -18,6 +18,30 @@ const HandleErrors = async (response) => {
 
 class UserProfileClient {
   /**
+   * Methods used to access and modify information about the user
+   *
+   * <h4 id="PromptsAndAccessLevels">A note about access level and prompts: </h4>
+   *
+   * Note: This section only applies to applications working within Eluvio Core
+   *
+   * Users can choose whether or not their info is shared to applications. A user
+   * may choose to allow open access to their profile, no access to their profile, or
+   * they may choose to be prompted to give access when an application requests it. The
+   * user's access level can be determined using the <a href="#AccessLevel">AccessLevel</a>
+   * method.
+   *
+   * By default, users will be prompted to give access. For methods that access the user's private information,
+   * Eluvio Core will intercept the request and prompt the user for permission before proceeding. In
+   * these cases, the normal FrameClient timeout period will be ignored, and the response will come
+   * only after the user accepts or rejects the request.
+   *
+   * If the user refuses to give permission, an error will be thrown. Otherwise, the request will proceed
+   * as normal.
+   *
+   * For all prompted methods, an extra argument "requestor" is required.
+   *
+   * <h4>Usage</h4>
+   *
    * Access the UserProfileClient from ElvClient or FrameClient via client.userProfile
    *
    * @example
@@ -34,6 +58,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
 let frameClient = new FrameClient();
 await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
+   *
    */
   constructor({client}) {
     this.client = client;
@@ -76,6 +101,33 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     const libraryId = Utils.AddressToLibraryId(accountAddress);
 
     return (!!await this.client.PublicLibraryMetadata({libraryId}));
+  }
+
+  /**
+   * Return the permissions the current user allows for apps to access their profile.
+   *
+   * "private" - No access allowed
+   * "prompt" - (default) - When access is requested by an app, the user will be prompted to give permission
+   * "public - Public - Any access allowed
+   *
+   * @return {Promise<string>} - Access setting
+   */
+  async AccessLevel() {
+    return (await this.PrivateUserMetadata({metadataSubtree: "access_level"})) || "prompt";
+  }
+
+  /**
+   * Set the current user's access level.
+   *
+   * Note: This method is not accessible to applications. Eluvio core will drop the request.
+   *
+   * @namedParams
+   * @param level
+   */
+  async SetAccessLevel({level}) {
+    if(!["private", "prompt", "public"].includes(level.toLowerCase())) { return; }
+
+    this.ReplacePublicUserMetadata({metadataSubtree: "access_level", metadata: level.toLowerCase()});
   }
 
   /**
@@ -159,6 +211,10 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   /**
    * Access the current user's private metadata
    *
+   * Note: Subject to user's access level
+   *
+   * @see <a href="#PromptsAndAccessLevels">Prompts and access levels</a>
+   *
    * @namedParams
    * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
    *
@@ -193,6 +249,24 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   }
 
   /**
+   * Delete the specified subtree from the users private metadata
+   *
+   * @namedParams
+   * @param {string=} metadataSubtree - Subtree to delete - deletes all metadata if not specified
+   */
+  async DeletePrivateUserMetadata({metadataSubtree="/"}) {
+    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
+    const objectId = Utils.AddressToObjectId(this.client.signer.address);
+
+    await this.__TouchLibrary();
+
+    const editRequest = await this.client.EditContentObject({libraryId, objectId});
+
+    await this.client.DeleteMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+  }
+
+  /**
    * Delete the account library for the current user
    */
   async DeleteAccountLibrary() {
@@ -210,6 +284,10 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
   /**
    * Get the accumulated tags for the current user
+   *
+   * Note: Subject to user's access level
+   *
+   * @see <a href="#PromptsAndAccessLevels">Prompts and access levels</a>
    *
    * @return {Promise<Object>} - User tags
    */
@@ -323,11 +401,21 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     return formattedTags;
   }
 
+  // List of methods that may require a prompt - these should have an unlimited timeout period
+  PromptedMethods() {
+    return [
+      "CollectedTags",
+      "PublicUserMetadata",
+      "PrivateUserMetadata"
+    ];
+  }
+
   // Whitelist of methods allowed to be called using the frame API
   FrameAllowedMethods() {
     const forbiddenMethods = [
       "constructor",
       "FrameAllowedMethods",
+      "PromptedMethods",
       "__IsLibraryCreated",
       "__TouchLibrary",
       "__FormatVideoTags"
