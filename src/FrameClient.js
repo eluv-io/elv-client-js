@@ -52,18 +52,19 @@ class FrameClient {
 
     this.userProfile = {};
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
-    for(const methodName of this.AllowedUserProfileMethods()){
+    for(const methodName of this.AllowedUserProfileMethods()) {
       this.userProfile[methodName] = async (args) => {
         return await this.SendMessage({
           options: {
             module: "userProfile",
             calledMethod: methodName,
-            args: this.utils.MakeClonable(args)
+            args: this.utils.MakeClonable(args),
+            prompted: FrameClient.PromptedMethods().includes(methodName),
+            requestor: args.requestor
           }
         });
       };
     }
-
   }
 
   /**
@@ -98,10 +99,12 @@ class FrameClient {
       requestId
     }, "*");
 
-    return (await this.AwaitMessage(requestId));
+    // No timeout for prompted methods
+    const timeout = options.prompted ? 0 : this.timeout;
+    return (await this.AwaitMessage(requestId, timeout));
   }
 
-  AwaitMessage(requestId) {
+  AwaitMessage(requestId, timeout) {
     return new Promise((resolve, reject) => {
       const listener = async (event) => {
         try {
@@ -125,14 +128,14 @@ class FrameClient {
         }
       };
 
-      if(this.timeout > 0) {
+      if(timeout > 0) {
         // If promise has not been resolved after specified timeout,
         // remove listener and send error response
         setTimeout(() => {
           reject("Request timed out " + requestId);
 
           window.removeEventListener("message", listener);
-        }, this.timeout * 1000);
+        }, timeout * 1000);
       }
 
       window.addEventListener("message", listener);
@@ -154,6 +157,15 @@ class FrameClient {
         path
       }
     });
+  }
+
+  // List of methods that may require a prompt - these should have an unlimited timeout period
+  static PromptedMethods() {
+    return [
+      "CollectedTags",
+      "PublicUserMetadata",
+      "PrivateUserMetadata"
+    ];
   }
 
   // List of allowed methods available to frames
@@ -245,16 +257,19 @@ class FrameClient {
 
   AllowedUserProfileMethods() {
     return [
+      "AccessLevel",
       "CollectedTags",
       "CreateAccountLibrary",
-      "UserProfileImage",
-      "SetUserProfileImage",
+      "DeleteAccountLibrary",
+      "DeletePrivateUserMetadata",
+      "PrivateUserMetadata",
       "PublicUserMetadata",
       "RecordTags",
-      "ReplacePublicUserMetadata",
-      "PrivateUserMetadata",
       "ReplacePrivateUserMetadata",
-      "DeleteAccountLibrary"
+      "ReplacePublicUserMetadata",
+      "SetAccessLevel",
+      "SetUserProfileImage",
+      "UserProfileImage"
     ];
   }
 }
