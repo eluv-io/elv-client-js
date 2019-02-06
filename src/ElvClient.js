@@ -350,7 +350,7 @@ class ElvClient {
 
       publicMetadata = {
         ...publicMetadata,
-        "eluv.name": name,
+        name,
         "eluv.description": description
       };
 
@@ -867,9 +867,9 @@ class ElvClient {
    * @namedParams
    * @param {object} metadata - Metadata for the new content type
    * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
-   * @param {} appsFileInfo - apps in the format required by UploadFiles
+   * @param {object} appsFileInfo - apps in the format required by UploadFiles
    * @param {object} schema - custom schema for the type
-   * @param {<string>} contract - address of the contract associated with this type
+   * @param {string} contract - address of the contract associated with this type
    * @returns {Promise<string>} - Object ID of created content type
    */
   async CreateContentTypeFull({metadata={}, bitcode, appsFileInfo, schema, contract}) {
@@ -1142,6 +1142,29 @@ class ElvClient {
         body: options
       })
     );
+  }
+
+  /**
+   * Create a new content object draft from an existing content object version.
+   *
+   * Note: The type of the new copy can be different from the original object.
+   *
+   * @see <a href="#CreateContentObject">CreateContentObject</a>
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library in which to create the new object
+   * @param originalVersionHash - Version hash of the object to copy
+   * @param {Object=} options -
+   * type: Version hash of the content type to associate with the object - may be different from the original object
+   *
+   * meta: Metadata to use for the new object - This will be merged into the metadata of the original object
+   *
+   * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+   */
+  async CopyContentObject({libraryId, originalVersionHash, options={}}) {
+    options.copy_from = originalVersionHash;
+
+    return await this.CreateContentObject({libraryId, options});
   }
 
   /**
@@ -1927,77 +1950,6 @@ client.FabricUrl({
       methodName: "revokeManagerAccess",
       eventName: "ManagerAccessRevoked"
     });
-  }
-
-  /* Naming */
-
-  async GetByName({name}) {
-    let path = Path.join("naming", name);
-
-    return ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "GET",
-        path: path
-      })
-    );
-  }
-
-  async SetByName({name, target}) {
-    let path = Path.join("naming");
-
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "PUT",
-        path: path,
-        body: {name, target}
-      })
-    );
-  }
-
-  async GetObjectByName({name}) {
-    let response = await this.GetByName({name});
-
-    let info = JSON.parse(response.target);
-
-    if(!info.libraryId) {
-      throw Error("No library ID");
-    }
-
-    if(!info.objectId) {
-      throw Error("No content object ID");
-    }
-
-    let contentObjectData = await this.ContentObject({libraryId: info.libraryId, objectId: info.objectId});
-    contentObjectData.meta = await this.ContentObjectMetadata({
-      libraryId: info.libraryId,
-      objectId: info.objectId
-    });
-
-    return contentObjectData;
-  }
-
-  SetObjectByName({name, libraryId, objectId}) {
-    return this.SetByName({
-      name,
-      target: JSON.stringify({
-        libraryId,
-        objectId
-      })
-    });
-  }
-
-  async DeleteName({name}) {
-    let path = Path.join("naming", name);
-
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "DELETE",
-        path: path
-      })
-    );
   }
 
   /* Verification */
