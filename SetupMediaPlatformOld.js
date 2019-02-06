@@ -10,7 +10,7 @@ const ContentContract = require("./src/contracts/BaseContent");
 const AdmgrMarketPlace = require("./src/contracts/AdmgrMarketPlace");
 const AdmgrCampaignManager = require("./src/contracts/AdmgrCampaignManager");
 const AdmgrAdvertisement = require("./src/contracts/AdmgrAdvertisement");
-const AdmgrSponsoredContent = require("./src/contracts/AdmgrSponsoredContent");
+const AdmgrCommercialOfferingManager = require("./src/contracts/AdmgrCommercialOfferingManager");
 
 const ClientConfiguration = require("./TestConfiguration.json");
 
@@ -52,7 +52,7 @@ const SetupContentTypes = async (client, enp) => {
 
   ct = {"content_types":{}};
 
-   // Make content type - Campaign
+  // Make content type - Campaign
   const mdCampaign = {name: "campaign", 'eluv.name': "campaign",
 	      class: "content_type",
 	      test: "SS002"};
@@ -83,9 +83,25 @@ const SetupContentTypes = async (client, enp) => {
 								  bitcode: bitcode,
 								  appsFileInfo: appFilesCampaignManager,
 								  schema: schemaCampaignManager,
-								  contract: emp.contracts.marketplace})
+								  contract: emp.contracts.marketplace});
   ct.content_types.campaign_manager = typeCampaignManager;
   console.log("Content Type - CampaignManager: " + typeCampaignManager);
+
+  // Make content type - CommercialOffering
+  const mdCommOff = {name: "commercial_offering", 'eluv.name': "commercial_offering",
+	      class: "content_type",
+	      test: "SS002"};
+  const appPathsCommOff = [{path: "../elv-media-platform/apps/elv-commercial-offering.html", name: "manageApp.html"},
+			   {path: "../elv-media-platform/apps/elv-commercial-offering.html", name: "displayApp.html"}];
+  const appFilesCommOff = PrepareFiles(appPathsCommOff);
+
+  const typeCommOff = await client.CreateContentTypeFull({metadata: mdCommOff,
+							  bitcode: null,
+							  appsFileInfo: appFilesCommOff,
+							  schema: {},
+							  contract: emp.contracts.commercial_offering_manager});
+  ct.content_types.commercial_offering = typeCommOff;
+  console.log("Content Type - CommercialOffering: " + typeCommOff);
 
   // Make content type - Advertisement
   const mdAd = {name: "advertisement", 'eluv.name': "advertisement",
@@ -117,7 +133,7 @@ const SetupContentTypes = async (client, enp) => {
 							    bitcode: bitcodeSponsored,
 							    appsFileInfo: appFilesSponsored,
 							    schema: {},
-							    contract: emp.contracts.sponsored_content})
+							    contract: null})
   ct.content_types.sponsored_content = typeSponsored;
   console.log("Content Type - SponsoredContent: " + typeSponsored);
 
@@ -126,7 +142,8 @@ const SetupContentTypes = async (client, enp) => {
 		 class: "content_type",
 		 test: "SS001"};
   const bitcodeIMF = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
-  const appPathsIMF = [{path: "../elv-media-platform/apps/elv-avmaster2000.imf-MP-manage.html", name: "manageApp.html"}];
+  const appPathsIMF = [{path: "../elv-media-platform/apps/elv-avmaster2000.imf-MP-manage.html", name: "manageApp.html"},
+		       {path: "../elv-media-platform/apps/elv-avmaster2000.imf-MP-display.html", name: "display.html"}];
   const appFilesIMF = PrepareFiles(appPathsIMF);
 
   const typeIMF = await client.CreateContentTypeFull({metadata: mdIMF,
@@ -178,13 +195,13 @@ const SetupMediaPlatform = async () => {
   emp.contracts.advertisement = {"address": deployResultAd.contractAddress};
   console.log("Contract - Advertisment: " + deployResultAd.contractAddress);
 
-  // Make contract SponsoredContent
-  const deployResultSp = await client.DeployContract({
-    abi: AdmgrSponsoredContent.abi,
-    bytecode: AdmgrSponsoredContent.bytecode
+  // Make contract CommercialOfferingManager
+  const deployResultCommOffMgr = await client.DeployContract({
+    abi: AdmgrCommercialOfferingManager.abi,
+    bytecode: AdmgrCommercialOfferingManager.bytecode
   });
-  emp.contracts.sponsored_content = {"address" : deployResultSp.contractAddress};
-  console.log("Contract - SponsoredContent: " + deployResultSp.contractAddress);
+  emp.contracts.commercial_offering_manager = {"address" : deployResultCommOffMgr.contractAddress};
+  console.log("Contract - Commercial Offering Manager: " + deployResultCommOffMgr.contractAddress);
 
   // Make content types
   const ct = await SetupContentTypes(client, emp);
@@ -205,6 +222,22 @@ const SetupMediaPlatform = async () => {
     customContractAddress: emp.contracts.marketplace.address
   });
   console.log("Library - Ads Marketplace: " + libraryIdAdsMarketplace);
+
+  // Make library - Commercial Offerings
+  const libraryIdCommOffs = await client.CreateContentLibrary({
+    name: "Commercial Offerings",
+    description: "Special library that creates commercial offerings",
+    publicMetadata: {
+    }
+  });
+  emp.commercial_offerings = libraryIdCommOffs;
+
+  await client.AddLibraryContentType({
+    libraryId: emp.commercial_offerings,
+    typeId: emp.content_types.commercial_offering,
+    customContractAddress: emp.contracts.commercial_offering_manager.address
+  });
+  console.log("Library - Commercial Offerings: " + libraryIdCommOffs);
 
   // Make library - Channels
   const libraryIdChannels = await client.CreateContentLibrary({
