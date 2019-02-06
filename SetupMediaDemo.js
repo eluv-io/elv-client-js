@@ -10,7 +10,6 @@ const ContentContract = require("./src/contracts/BaseContent");
 const AdmgrMarketPlace = require("./src/contracts/AdmgrMarketPlace");
 const AdmgrCampaignManager = require("./src/contracts/AdmgrCampaignManager");
 const AdmgrAdvertisement = require("./src/contracts/AdmgrAdvertisement");
-const AdmgrSponsoredContent = require("./src/contracts/AdmgrSponsoredContent");
 
 const ClientConfiguration = require("./TestConfiguration.json");
 
@@ -33,7 +32,9 @@ const empId = process.argv[2];
 const contentSpaceAddress = client.utils.HashToAddress(client.contentSpaceId);
 const contentSpaceLibraryId = client.utils.AddressToLibraryId(contentSpaceAddress);
 
-const MakeCampaignManager = async (emp, name) => {
+const demo = {};
+
+const MakeCampaignManager = async (emp, name, nameId) => {
 
   // Make library for campaigns
   const libraryCampaigns = await client.CreateContentLibrary({
@@ -91,6 +92,7 @@ const MakeCampaignManager = async (emp, name) => {
     metadataSubtree: "campaign_manager_objectId",
     metadata: cmgr.id
   });
+  demo.campaign_managers.nameId = cmgr.id;
   console.log("    Campaign Manager - " + name + ": " + cmgr.id + " hash: " + cmgr.hash);
 };
 
@@ -118,6 +120,85 @@ const MakeChannel = async (emp, name) => {
   console.log("    Channel - " + name + ": " + chan.id + " hash: " + chan.hash);
 };
 
+const MakeCampaign = async (emp, name, campaignManager) => {
+
+  const typeObj = await client.ContentObject({
+    libraryId: contentSpaceLibraryId,
+    objectId: emp.content_types.campaign
+  });
+
+  // Get the campaign manager 'campaigns library'
+  const campaignManagerMeta = client.ContentObjectMetadata({
+    libraryId: emp.ads_marketplace,
+    objectId: campaignManager
+  });
+
+  // Make the campagin obnect
+  const draft = await client.CreateContentObject({
+    libraryId: campaignManagerMeta.campaigns_library,
+    options: {
+      "type" : typeObj.hash,
+      "meta" : {
+	"name": name, "eluv.name": name
+      }
+    }
+  });
+  const campaign = await client.FinalizeContentObject({
+    libraryId: campaignManagerMeta.campaigns_library,
+    writeToken: draft.write_token
+  });
+  console.log("    Campaign - " + name + ": " + campaign.id);
+}
+
+const MakeAds = async (emp, name, fileImg, fileVideo) => {
+
+  const typeObj = await client.ContentObject({
+    libraryId: contentSpaceLibraryId,
+    objectId: emp.content_types.advertisement
+  });
+
+  const adDraft = await client.CreateContentObject({
+    libraryId: demo.ads_library,
+    options: {
+      "type" : typeObj.hash,
+      "meta" : {
+	"name": name, "eluv.name": name
+      }
+    }
+  });
+  const img = fs.readFileSync(fileImg);
+  const uploadImg = await client.UploadPart({
+    libraryId: demo.ads_library,
+    writeToken: adDraft.write_token,
+    data:img,
+    encrypted: false
+  });
+  const video = fs.readFileSync(fileVideo);
+  const uploadVideo = await client.UploadPart({
+    libraryId: demo.ads_library,
+    writeToken: adDraft.write_token,
+    data: video,
+    encrypted: false
+  });
+
+  await client.MergeMetadata({
+    libraryId: demo.ads_library,
+    objectId: adDraft.id,
+    writeToken: adDraft.write_token,
+    metadata: {
+      "image" : uploadImg.part.hash,
+      "video" : uploadVideo.part.hash
+    }
+  });
+
+  const ad = await client.FinalizeContentObject({
+    libraryId: demo.ads_library,
+    writeToken: adDraft.write_token
+  });
+  console.log("    Advertisement - " + name + ": " + ad.id);
+
+}
+
 const SetupMediaDemo = async () => {
 
   console.log("EMP: " + empId);
@@ -140,6 +221,7 @@ const SetupMediaDemo = async () => {
     typeId: emp.content_types.advertisement,
     customContractAddress: emp.contracts.advertisement.address
   });
+  demo.ads_library = libraryIdAds;
   console.log("    Ads Library: " + libraryIdAds);
 
   // Make library - Media Archive
@@ -154,9 +236,9 @@ const SetupMediaDemo = async () => {
     typeId: emp.content_types.avmaster_imf,
     customContractAddress: null
   });
-  console.log("    Media Archive: " + libraryIdMedia);
+  console.log("    Acme Media Archive: " + libraryIdMedia);
 
-  // Make library - Commercial Offering
+  // Make library - Acme Commercial Offering
   const libraryIdCO = await client.CreateContentLibrary({
     name: "Acme Commercial Offering",
     description: "Acme Commercial Offering",
@@ -166,15 +248,30 @@ const SetupMediaDemo = async () => {
   await client.AddLibraryContentType({
     libraryId: libraryIdCO,
     typeId: emp.content_types.sponsored_content,
-    customContractAddress: emp.contracts.sponsored_content.address
+    customContractAddress: null
   });
-  console.log("    Commercial Offering: " + libraryIdCO);
+  console.log("    Acme Commercial Offering: " + libraryIdCO);
 
-  await MakeCampaignManager(emp, "Open Market Campaign Manager");
-  await MakeCampaignManager(emp, "Dedicated Campaign Manager");
+  demo.campaign_managers = {};
+  await MakeCampaignManager(emp, "Open Market Campaign Manager", "open_market");
+  await MakeCampaignManager(emp, "Dedicated Campaign Manager", "dedicated");
 
   await MakeChannel(emp, "Acme All Day");
   await MakeChannel(emp, "Acme Spring Special");
+
+  await MakeAds(emp, "Axe",
+		"../demo/media/ads/axe.png", "../demo/media/ads/Axe Effect.mp4");
+  await MakeAds(emp, "Heineken",
+		"../demo/media/ads/heineken.png", "../demo/media/ads/Heineken.mp4");
+  await MakeAds(emp, "Japp La Porsche",
+		"../demo/media/ads/japp.png", "../demo/media/ads/Japp La Porsche.mp4");
+
+  try {
+    await MakeCampaign(emp, "Creative Campaign 1", demo.campaign_managers.open_market);
+  } catch (e) {
+    console.log(e);
+  }
+
 };
 
 SetupMediaDemo();
