@@ -143,7 +143,7 @@ const SetupContentTypes = async (client, enp) => {
 		 test: "SS001"};
   const bitcodeIMF = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
   const appPathsIMF = [{path: "../elv-media-platform/apps/elv-avmaster2000.imf-MP-manage.html", name: "manageApp.html"},
-		       {path: "../elv-media-platform/apps/elv-avmaster2000.imf-MP-display.html", name: "display.html"}];
+		       {path: "../elv-media-platform/apps/elv-avmaster2000.imf-MP-display.html", name: "displayApp.html"}];
   const appFilesIMF = PrepareFiles(appPathsIMF);
 
   const typeIMF = await client.CreateContentTypeFull({metadata: mdIMF,
@@ -158,7 +158,7 @@ const SetupContentTypes = async (client, enp) => {
   const mdChan = {name: "channel", 'eluv.name': "channel",
 		 class: "content_type",
 		 test: "SS001"};
-  const appPathsChan = [{path: "../elv-media-platform/apps/elv-campaign.htmp" /* SS TEMP */, name: "manageApp.html"}];
+  const appPathsChan = [];
   const appFilesChan = PrepareFiles(appPathsIMF);
 
   const typeChan = await client.CreateContentTypeFull({metadata: mdChan,
@@ -212,6 +212,7 @@ const SetupMediaPlatform = async () => {
     name: "Ads Marketplace",
     description: "Ads Marketplace",
     publicMetadata: {
+      "eluv.name": "Ads Marketplace"
     }
   });
   emp.ads_marketplace = libraryIdAdsMarketplace;
