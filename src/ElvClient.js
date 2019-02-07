@@ -18,7 +18,7 @@ const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
 
 if(typeof Response === "undefined") {
   // eslint-disable-next-line no-global-assign
-  Response = require("node-fetch-polyfill/lib/response");
+  Response = (require("node-fetch")).Response;
 }
 
 const HandleErrors = async (response) => {
@@ -996,26 +996,43 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
-   * @param {string=} versionHash - Version of the object -- if not specified, latest version is returned
+   * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
    *
    * @returns {Promise<Object>} - Description of created object
    */
   async ContentObject({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
 
-    let object = await ResponseToJson(
+    return await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
     );
+  }
 
-    // Ensure "meta" is set
-    return {
-      ...object,
-      meta: object.meta || {}
-    };
+  /**
+   * Get a specific content object in the library by version hash
+   *
+   * Note: This endpoint does not require authorization
+   *
+   * @see /q/:qhit
+   *
+   * @namedParams
+   * @param {string=} versionHash - Version hash of the object
+   *
+   * @returns {Promise<Object>} - Description of created object
+   */
+  async ContentObjectByHash({versionHash}) {
+    let path = Path.join("q", versionHash);
+
+    return await ResponseToJson(
+      this.HttpClient.Request({
+        method: "GET",
+        path: path
+      })
+    );
   }
 
   /**
@@ -1615,19 +1632,73 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
    * @param {(ArrayBuffer | Blob | Buffer)} data - Data to upload
+   * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
+   * @param {function=} callback - If specified, function will be called with upload progress after completion of each chunk
+   * - Method signatue: ({uploaded, total})
    *
    * @returns {Promise<Object>} - Response containing information about the uploaded part
    */
-  async UploadPart({libraryId, objectId, writeToken, data}) {
-    const path = Path.join("q", writeToken, "data");
+  async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, callback}) {
+    const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
+    const totalSize = data.size || data.length;
 
-    return ResponseToJson(
+    // If the file is smaller than the chunk size, just upload it in one pass
+    if(totalSize < chunkSize) {
+      const uploadResult = await ResponseToJson(
+        this.HttpClient.Request({
+          headers: authorizationHeader,
+          method: "POST",
+          path: Path.join("q", writeToken, "data"),
+          body: data,
+          bodyType: "BINARY"
+        })
+      );
+
+      if(callback) { callback({uploaded: totalSize, total: totalSize}); }
+
+      return uploadResult;
+    }
+
+    const path = Path.join("q", writeToken, "parts");
+
+    // Create the part for writing
+    let partWriteToken = (await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: authorizationHeader,
         method: "POST",
-        path: path,
-        body: data,
-        bodyType: "BINARY"
+        path,
+        bodyType: "BINARY",
+        body: ""
+      })
+    )).part.write_token;
+
+    // Upload the part in chunks, calling progressCallback after each time
+    for(let uploaded = 0; uploaded < totalSize; uploaded += chunkSize) {
+      const to = Math.min(uploaded + chunkSize, totalSize);
+
+      await ResponseToJson(
+        this.HttpClient.Request({
+          headers: authorizationHeader,
+          method: "POST",
+          path: Path.join(path, partWriteToken),
+          body: data.slice(uploaded, to),
+          bodyType: "BINARY",
+        })
+      );
+
+      if(callback) { callback({uploaded: uploaded, total: totalSize}); }
+    }
+
+    if(callback) { callback({uploaded: totalSize, total: totalSize}); }
+
+    // Finalize part
+    return await ResponseToJson(
+      await this.HttpClient.Request({
+        headers: authorizationHeader,
+        method: "POST",
+        path: Path.join(path, partWriteToken),
+        bodyType: "BINARY",
+        body: ""
       })
     );
   }
@@ -2320,8 +2391,21 @@ client.FabricUrl({
   }
 
   // Call a method specified in a message from a frame
-  async CallFromFrameMessage(message) {
+  async CallFromFrameMessage(message, Respond) {
     if(message.type !== "ElvFrameRequest") { return; }
+
+    let callback;
+    if(message.callbackId) {
+      callback = (result) => {
+        Respond(this.utils.MakeClonable({
+          type: "ElvFrameResponse",
+          requestId: message.callbackId,
+          response: result
+        }));
+      };
+
+      message.args.callback = callback;
+    }
 
     try {
       const method = message.calledMethod;
@@ -2341,17 +2425,17 @@ client.FabricUrl({
         methodResults = await this[method](message.args);
       }
 
-      return this.utils.MakeClonable({
+      Respond(this.utils.MakeClonable({
         type: "ElvFrameResponse",
         requestId: message.requestId,
         response: methodResults
-      });
+      }));
     } catch(error) {
-      return this.utils.MakeClonable({
+      Respond(this.utils.MakeClonable({
         type: "ElvFrameResponse",
         requestId: message.requestId,
         error
-      });
+      }));
     }
   }
 }

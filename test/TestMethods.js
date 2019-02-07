@@ -172,7 +172,7 @@ const TestQueries = async (client) => {
         libraryId,
         objectId,
         writeToken: createResponse.write_token,
-        data: encoder.encode("some form of data").buffer
+        data: await new Response(encoder.encode("some form of data").buffer).blob()
       })
     );
 
@@ -328,6 +328,7 @@ const TestQueries = async (client) => {
     });
 
     console.log(downloadResponse);
+    console.log(decoder.decode(downloadResponse));
 
     console.log("DOWNLOADED: ");
     console.log(decoder.decode(downloadResponse).length);
