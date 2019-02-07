@@ -163,6 +163,7 @@ class AuthorizationClient {
       id = objectId;
       abi = TypeContract.abi;
       cache = cacheCollection.objects;
+      return {transactionHash: ""};
     } else if(!objectId || isLibraryObject) {
       // Library - no object specified or library object
       id = libraryId;
