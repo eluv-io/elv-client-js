@@ -31,6 +31,7 @@
     "deep-equal": "^1.0.1",
     "ethers": "^4.0.22",
     "multihashes": "^0.4.14",
+    "node-fetch": "^2.3.0",
     "node-fetch-polyfill": "^2.0.6",
     "path": "^0.12.7",
     "sjcl": "^1.0.7",

@@ -1,6 +1,6 @@
 const Fetch = (input, init={}) => {
   if(typeof window === "undefined") {
-    return (require("node-fetch-polyfill")(input, init));
+    return (require("node-fetch")(input, init));
   } else {
     return fetch(input, init);
   }

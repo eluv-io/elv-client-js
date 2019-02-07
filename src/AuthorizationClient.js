@@ -80,6 +80,17 @@ class AuthorizationClient {
     return ownerAddress.toLowerCase() === this.client.signer.address.toLowerCase();
   }
 
+  async FormatAuthToken({libraryId, transactionHash}) {
+    const token = B64(JSON.stringify({
+      qspace_id: this.contentSpaceId,
+      qlib_id: libraryId,
+      addr: this.signer.signingKey.address,
+      txid: transactionHash
+    }));
+    const signature = B64("SIGNATURE");
+    return token + "." + signature;
+  }
+
   async GenerateAuthorizationToken({libraryId, objectId, transactionHash, update=false, noAuth=false}) {
     if(!transactionHash && !this.noAuth && !noAuth) {
       const accessTransaction = await this.MakeAccessRequest({
@@ -105,7 +116,6 @@ class AuthorizationClient {
     }));
 
     const signature = B64("SIGNATURE");
-
     return token + "." + signature;
   }
 
@@ -153,6 +163,7 @@ class AuthorizationClient {
       id = objectId;
       abi = TypeContract.abi;
       cache = cacheCollection.objects;
+      return {transactionHash: ""};
     } else if(!objectId || isLibraryObject) {
       // Library - no object specified or library object
       id = libraryId;
