@@ -1773,8 +1773,8 @@ class ElvClient {
    *
    * @namedParams
    * @param {string=} libraryId - ID of an library
-   * @param {string=} objectId - ID of an object - Required if using versionHash
-   * @param {string=} versionHash - Hash of an object version - If specified, will be used instead of objectID in URL
+   * @param {string=} objectId - ID of an object
+   * @param {string=} versionHash - Hash of an object version
    * @param {string=} partHash - Hash of a part - Requires object ID
    * @param {string=} rep - Rep parameter of the url
    * @param {string=} call - Bitcode method to call
@@ -1817,10 +1817,20 @@ client.FabricUrl({
           path = Path.join(path, "call", call);
         }
       }
-    }
 
-    if(!noAuth) {
-      queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+      if(!noAuth) {
+        queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+      }
+    } else if(versionHash) {
+      path = Path.join("q", versionHash);
+
+      if(partHash){
+        path = Path.join(path, "data", partHash);
+      } else if(rep) {
+        path = Path.join(path, "rep", rep);
+      } else if(call) {
+        path = Path.join(path, "call", call);
+      }
     }
 
     return this.HttpClient.URL({
