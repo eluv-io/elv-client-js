@@ -92,7 +92,7 @@ const MakeCampaignManager = async (emp, name, nameId) => {
     metadataSubtree: "campaign_manager_objectId",
     metadata: cmgr.id
   });
-  demo.campaign_managers.nameId = cmgr.id;
+  demo.campaign_managers[nameId] = cmgr.id;
   console.log("    Campaign Manager - " + name + ": " + cmgr.id + " hash: " + cmgr.hash);
 };
 
@@ -128,10 +128,34 @@ const MakeCampaign = async (emp, name, campaignManager) => {
   });
 
   // Get the campaign manager 'campaigns library'
-  const campaignManagerMeta = client.ContentObjectMetadata({
+  const campaignManagerMeta = await client.ContentObjectMetadata({
     libraryId: emp.ads_marketplace,
     objectId: campaignManager
   });
+
+
+  const adsMeta = {};
+  adsMeta[demo.ads.axe] = {
+    "library" : demo.ads_library,
+    "max_payout" : 10,
+    "name" : "Axe",
+    "tags" : {
+      "sports": 0.7,
+      "chocolate": 0.3,
+      "_other" : 0.1
+    }
+  };
+  adsMeta[demo.ads.heineken] = {
+    "library" : demo.ads_library,
+    "max_payout" : 10,
+    "name" : "Heineken",
+    "tags" : {
+      "beer": 1.4,
+      "drinking": 0.8,
+      "summer": 0.3,
+      "_other" : 0.1
+    }
+  };
 
   // Make the campagin obnect
   const draft = await client.CreateContentObject({
@@ -139,7 +163,8 @@ const MakeCampaign = async (emp, name, campaignManager) => {
     options: {
       "type" : typeObj.hash,
       "meta" : {
-	"name": name, "eluv.name": name
+	"name": name, "eluv.name": name,
+	"ads" : adsMeta,
       }
     }
   });
@@ -147,10 +172,14 @@ const MakeCampaign = async (emp, name, campaignManager) => {
     libraryId: campaignManagerMeta.campaigns_library,
     writeToken: draft.write_token
   });
+
+  // Send funds
+  campaignAddress = client.utils.HashToAddress(campaign.id);
+  await client.SendFunds({recipient: campaignAddress, ether: 20});
   console.log("    Campaign - " + name + ": " + campaign.id);
 }
 
-const MakeAds = async (emp, name, fileImg, fileVideo) => {
+const MakeAds = async (emp, name, nameId, fileImg, fileVideo) => {
 
   const typeObj = await client.ContentObject({
     libraryId: contentSpaceLibraryId,
@@ -195,8 +224,28 @@ const MakeAds = async (emp, name, fileImg, fileVideo) => {
     libraryId: demo.ads_library,
     writeToken: adDraft.write_token
   });
+  demo.ads[nameId] = ad.id;
   console.log("    Advertisement - " + name + ": " + ad.id);
 
+}
+
+const MakeCommercialOffering = async (emp, name) => {
+  const typeObj = await client.ContentObject({
+    libraryId: contentSpaceLibraryId,
+    objectId: emp.content_types.commercial_offering
+  });
+
+  const draft = await client.CreateContentObject({
+    libraryId: emp.commercial_offerings,
+    options: {
+      "type" : typeObj.hash,
+      "meta" : {
+	"name": name, "eluv.name": name
+      }
+    }
+  });
+
+  // SSS HERE
 }
 
 const SetupMediaDemo = async () => {
@@ -259,15 +308,19 @@ const SetupMediaDemo = async () => {
   await MakeChannel(emp, "Acme All Day");
   await MakeChannel(emp, "Acme Spring Special");
 
-  await MakeAds(emp, "Axe",
+  demo.ads = {};
+  await MakeAds(emp, "Axe", "axe",
 		"../demo/media/ads/axe.png", "../demo/media/ads/Axe Effect.mp4");
-  await MakeAds(emp, "Heineken",
+  await MakeAds(emp, "Heineken", "heineken",
 		"../demo/media/ads/heineken.png", "../demo/media/ads/Heineken.mp4");
-  await MakeAds(emp, "Japp La Porsche",
+  await MakeAds(emp, "Japp La Porsche", "japp",
 		"../demo/media/ads/japp.png", "../demo/media/ads/Japp La Porsche.mp4");
+  await MakeAds(emp, "Evinrude", "evinrude",
+		"../demo/media/ads/evinrude.png", "../demo/media/ads/Evinrude Short.mp4");
 
   try {
-    await MakeCampaign(emp, "Creative Campaign 1", demo.campaign_managers.open_market);
+    await MakeCampaign(emp, "Creative Campaign for Spring", demo.campaign_managers.open_market);
+    await MakeCampaign(emp, "Dedicated Campaign Axe and Stuff", demo.campaign_managers.dedicated);
   } catch (e) {
     console.log(e);
   }
