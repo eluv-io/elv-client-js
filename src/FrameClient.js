@@ -41,29 +41,38 @@ class FrameClient {
     // Dynamically defined methods defined in AllowedMethods
     for(const methodName of this.AllowedMethods()){
       this[methodName] = async (args) => {
+        let callback = args && args.callback;
+        if(callback) { delete args.callback; }
+
         return await this.SendMessage({
           options: {
             calledMethod: methodName,
             args: this.utils.MakeClonable(args)
-          }
+          },
+          callback
         });
       };
     }
 
     this.userProfile = {};
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
-    for(const methodName of this.AllowedUserProfileMethods()){
+    for(const methodName of this.AllowedUserProfileMethods()) {
       this.userProfile[methodName] = async (args) => {
+        let callback = args && args.callback;
+        if(callback) { delete args.callback; }
+
         return await this.SendMessage({
           options: {
             module: "userProfile",
             calledMethod: methodName,
-            args: this.utils.MakeClonable(args)
-          }
+            args: this.utils.MakeClonable(args),
+            prompted: FrameClient.PromptedMethods().includes(methodName),
+            requestor: args.requestor,
+          },
+          callback
         });
       };
     }
-
   }
 
   /**
@@ -74,10 +83,19 @@ class FrameClient {
    * @param {object} request - An ElvFrameRequest
    * @returns {object} - The resultant ElvFrameResponse
    */
-  async PassRequest({request}) {
+  async PassRequest({request, Respond}) {
     let response;
     try {
-      response = await this.SendMessage({options: request});
+      let callback;
+      if(request.callbackId) {
+        callback = (result) => Respond({
+          type: "ElvFrameResponse",
+          requestId: request.callbackId,
+          response: result
+        });
+      }
+
+      response = await this.SendMessage({options: request, callback});
     } catch(error) {
       response = JSON.parse(JSON.stringify(error));
     }
@@ -89,21 +107,70 @@ class FrameClient {
     };
   }
 
-  async SendMessage({options={}}) {
+  async SendMessage({options={}, callback}) {
     const requestId = Id.next();
+
+    let callbackId;
+    if(callback) { callbackId = Id.next(); }
 
     this.target.postMessage({
       ...options,
       type: "ElvFrameRequest",
-      requestId
+      requestId,
+      callbackId
     }, "*");
 
-    return (await this.AwaitMessage(requestId));
+    // No timeout for prompted methods
+    const timeout = options.prompted ? 0 : this.timeout;
+    return (await this.AwaitMessage(requestId, timeout, callback, callbackId));
   }
 
-  AwaitMessage(requestId) {
+  AwaitMessage(requestId, timeout, callback, callbackId) {
     return new Promise((resolve, reject) => {
-      const listener = async (event) => {
+      let methodListener;
+
+      // Initialize or reset timeout
+      let timeoutId;
+      const touchTimeout = () => {
+        if(timeoutId) {
+          clearTimeout(timeoutId);
+        }
+
+        if(timeout > 0) {
+          timeoutId = setTimeout(() => {
+            reject("Request timed out " + requestId);
+
+            window.removeEventListener("message", methodListener);
+            if(callbackListener) { window.removeEventListener("message", callbackListener); }
+          }, timeout * 1000);
+        }
+      };
+
+      // Set up callback listener
+      let callbackListener;
+      if(callbackId) {
+        callbackListener = (event) => {
+          try {
+            touchTimeout();
+
+            const message = event.data;
+
+            if (message.type !== "ElvFrameResponse" || message.requestId !== callbackId) {
+              return;
+            }
+
+            callback(message.response);
+          } catch(error) {
+            console.log("CALLBACK ERROR");
+            console.error(error);
+          }
+        };
+
+        window.addEventListener("message", callbackListener);
+      }
+
+      // Set up final method response listener
+      methodListener = async (event) => {
         try {
           const message = event.data;
 
@@ -117,25 +184,21 @@ class FrameClient {
             resolve(message.response);
           }
 
-          window.removeEventListener("message", listener);
+          window.removeEventListener("message", methodListener);
+          if(callbackListener) { window.removeEventListener("message", callbackListener); }
         } catch(error){
           reject(error);
 
-          window.removeEventListener("message", listener);
+          window.removeEventListener("message", methodListener);
+          if(callbackListener) { window.removeEventListener("message", callbackListener); }
         }
       };
 
-      if(this.timeout > 0) {
-        // If promise has not been resolved after specified timeout,
-        // remove listener and send error response
-        setTimeout(() => {
-          reject("Request timed out " + requestId);
 
-          window.removeEventListener("message", listener);
-        }, this.timeout * 1000);
-      }
+      // Start the timeout
+      touchTimeout();
 
-      window.addEventListener("message", listener);
+      window.addEventListener("message", methodListener);
     });
   }
 
@@ -154,6 +217,15 @@ class FrameClient {
         path
       }
     });
+  }
+
+  // List of methods that may require a prompt - these should have an unlimited timeout period
+  static PromptedMethods() {
+    return [
+      "CollectedTags",
+      "PublicUserMetadata",
+      "PrivateUserMetadata"
+    ];
   }
 
   // List of allowed methods available to frames
@@ -181,11 +253,13 @@ class FrameClient {
       "ContentObjectOwner",
       "ContentObjectVersions",
       "ContentObjects",
+      "ContentObjectByHash",
       "ContentParts",
       "ContentType",
       "ContentTypeOwner",
       "ContentTypes",
       "ContractEvents",
+      "CopyContentObject",
       "CreateAccessGroup",
       "CreateContentLibrary",
       "CreateContentObject",
@@ -199,7 +273,6 @@ class FrameClient {
       "DeleteContentObject",
       "DeleteContentVersion",
       "DeleteMetadata",
-      "DeleteName",
       "DeletePart",
       "DeployContract",
       "DownloadFile",
@@ -214,8 +287,6 @@ class FrameClient {
       "FinalizeUploadJobs",
       "FormatContractArguments",
       "GetBalance",
-      "GetByName",
-      "GetObjectByName",
       "LibraryContentTypes",
       "ListFiles",
       "MergeMetadata",
@@ -229,11 +300,9 @@ class FrameClient {
       "ReplaceMetadata",
       "ReplacePublicLibraryMetadata",
       "SendFunds",
-      "SetByName",
       "SetContentLibraryImage",
       "SetContentObjectImage",
       "SetCustomContentContract",
-      "SetObjectByName",
       "UploadFileData",
       "UploadFiles",
       "UploadJobStatus",
@@ -245,16 +314,19 @@ class FrameClient {
 
   AllowedUserProfileMethods() {
     return [
+      "AccessLevel",
       "CollectedTags",
       "CreateAccountLibrary",
-      "UserProfileImage",
-      "SetUserProfileImage",
+      "DeleteAccountLibrary",
+      "DeletePrivateUserMetadata",
+      "PrivateUserMetadata",
       "PublicUserMetadata",
       "RecordTags",
-      "ReplacePublicUserMetadata",
-      "PrivateUserMetadata",
       "ReplacePrivateUserMetadata",
-      "DeleteAccountLibrary"
+      "ReplacePublicUserMetadata",
+      "SetAccessLevel",
+      "SetUserProfileImage",
+      "UserProfileImage"
     ];
   }
 }

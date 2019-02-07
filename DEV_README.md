@@ -575,6 +575,9 @@ NOTE: Raw response objects cannot be passed in message. When using non-json endp
          be allowed
     - accept: mime-type-string | [ mime-type-string ]
       - Limits the allowed filetypes to be upload to the specified mime-types
+    - preview: boolean
+      - If specified, a preview of the selected image will be shown above the selection when an image is chosen
+      - "accept" should be an image type. If multiple inputs are allowed, only the first selection will be shown
   - "attachedFile":
     - hash: string
       - The hash of the content type part corresponding to the attached file

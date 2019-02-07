@@ -18,7 +18,7 @@ const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
 
 if(typeof Response === "undefined") {
   // eslint-disable-next-line no-global-assign
-  Response = require("node-fetch-polyfill/lib/response");
+  Response = (require("node-fetch")).Response;
 }
 
 const HandleErrors = async (response) => {
@@ -350,7 +350,7 @@ class ElvClient {
 
       publicMetadata = {
         ...publicMetadata,
-        "eluv.name": name,
+        name,
         "eluv.description": description
       };
 
@@ -760,7 +760,10 @@ class ElvClient {
     // Only look at latest versions of types when searching by name
     const contentTypes = await this.ContentTypes({latestOnly: true});
     const contentType = Object.values(contentTypes)
-      .find(type => type.meta && (type.meta["eluv.name"] === name));
+      .find(type => {
+        const typeName = type.meta && (type.meta.name || type.meta["eluv.name"] || type.hash || "");
+        return typeName.toLowerCase() === name.toLowerCase();
+      });
 
     if(!contentType) {
       throw Error("Unknown content type: " + (name || versionHash));
@@ -853,6 +856,84 @@ class ElvClient {
     return objectId;
   }
 
+  /**
+   * Create a new content type specifying all components.
+   *
+   * A new content type contract is deployed from
+   * the content space, and that contract ID is used to determine the object ID to
+   * create in the fabric. The content type object will be created in the special
+   * content space library (ilib<content-space-hash>)
+   *
+   * @namedParams
+   * @param {object} metadata - Metadata for the new content type
+   * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
+   * @param {object} appsFileInfo - apps in the format required by UploadFiles
+   * @param {object} schema - custom schema for the type
+   * @param {string} contract - address of the contract associated with this type
+   * @returns {Promise<string>} - Object ID of created content type
+   */
+  async CreateContentTypeFull({metadata={}, bitcode, appsFileInfo, schema, contract}) {
+    const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
+
+    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
+    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
+
+    const objectId = this.utils.AddressToObjectId(contractAddress);
+    const path = Path.join("qlibs", typeLibraryId, "q", objectId);
+
+    metadata.customContract = contract;
+    if (schema != null) {
+      metadata["eluv.schema"] = schema["eluv.schema"];
+    }
+    metadata["eluv.manageApp"] = "manageApp.html";
+    metadata["eluv.displayApp"] = "displayApp.html";
+    /* Create object, upload bitcode and finalize */
+
+    const createResponse = await ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId, transactionHash}),
+        method: "PUT",
+        path: path,
+        body: {
+          type: "",
+          meta: metadata
+        }
+      })
+    );
+
+    await this.UploadFiles({
+      libraryId: typeLibraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      fileInfo: appsFileInfo});
+
+    if(bitcode) {
+      const uploadResponse = await this.UploadPart({
+        libraryId: typeLibraryId,
+        objectId,
+        writeToken: createResponse.write_token,
+        data: bitcode,
+        encrypted: false
+      });
+
+      await this.ReplaceMetadata({
+        libraryId: typeLibraryId,
+        objectId,
+        writeToken: createResponse.write_token,
+        metadataSubtree: "bitcode_part",
+        metadata: uploadResponse.part.hash
+      });
+    }
+
+    await this.FinalizeContentObject({
+      libraryId: typeLibraryId,
+      objectId,
+      writeToken: createResponse.write_token
+    });
+
+    return objectId;
+  }
+
   /* Objects */
 
   /**
@@ -915,26 +996,43 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
-   * @param {string=} versionHash - Version of the object -- if not specified, latest version is returned
+   * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
    *
    * @returns {Promise<Object>} - Description of created object
    */
   async ContentObject({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
 
-    let object = await ResponseToJson(
+    return await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
         method: "GET",
         path: path
       })
     );
+  }
 
-    // Ensure "meta" is set
-    return {
-      ...object,
-      meta: object.meta || {}
-    };
+  /**
+   * Get a specific content object in the library by version hash
+   *
+   * Note: This endpoint does not require authorization
+   *
+   * @see /q/:qhit
+   *
+   * @namedParams
+   * @param {string=} versionHash - Version hash of the object
+   *
+   * @returns {Promise<Object>} - Description of created object
+   */
+  async ContentObjectByHash({versionHash}) {
+    let path = Path.join("q", versionHash);
+
+    return await ResponseToJson(
+      this.HttpClient.Request({
+        method: "GET",
+        path: path
+      })
+    );
   }
 
   /**
@@ -1061,6 +1159,29 @@ class ElvClient {
         body: options
       })
     );
+  }
+
+  /**
+   * Create a new content object draft from an existing content object version.
+   *
+   * Note: The type of the new copy can be different from the original object.
+   *
+   * @see <a href="#CreateContentObject">CreateContentObject</a>
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library in which to create the new object
+   * @param originalVersionHash - Version hash of the object to copy
+   * @param {Object=} options -
+   * type: Version hash of the content type to associate with the object - may be different from the original object
+   *
+   * meta: Metadata to use for the new object - This will be merged into the metadata of the original object
+   *
+   * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
+   */
+  async CopyContentObject({libraryId, originalVersionHash, options={}}) {
+    options.copy_from = originalVersionHash;
+
+    return await this.CreateContentObject({libraryId, options});
   }
 
   /**
@@ -1511,19 +1632,73 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
    * @param {(ArrayBuffer | Blob | Buffer)} data - Data to upload
+   * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
+   * @param {function=} callback - If specified, function will be called with upload progress after completion of each chunk
+   * - Method signatue: ({uploaded, total})
    *
    * @returns {Promise<Object>} - Response containing information about the uploaded part
    */
-  async UploadPart({libraryId, objectId, writeToken, data}) {
-    const path = Path.join("q", writeToken, "data");
+  async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, callback}) {
+    const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
+    const totalSize = data.size || data.length;
 
-    return ResponseToJson(
+    // If the file is smaller than the chunk size, just upload it in one pass
+    if(totalSize < chunkSize) {
+      const uploadResult = await ResponseToJson(
+        this.HttpClient.Request({
+          headers: authorizationHeader,
+          method: "POST",
+          path: Path.join("q", writeToken, "data"),
+          body: data,
+          bodyType: "BINARY"
+        })
+      );
+
+      if(callback) { callback({uploaded: totalSize, total: totalSize}); }
+
+      return uploadResult;
+    }
+
+    const path = Path.join("q", writeToken, "parts");
+
+    // Create the part for writing
+    let partWriteToken = (await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: authorizationHeader,
         method: "POST",
-        path: path,
-        body: data,
-        bodyType: "BINARY"
+        path,
+        bodyType: "BINARY",
+        body: ""
+      })
+    )).part.write_token;
+
+    // Upload the part in chunks, calling progressCallback after each time
+    for(let uploaded = 0; uploaded < totalSize; uploaded += chunkSize) {
+      const to = Math.min(uploaded + chunkSize, totalSize);
+
+      await ResponseToJson(
+        this.HttpClient.Request({
+          headers: authorizationHeader,
+          method: "POST",
+          path: Path.join(path, partWriteToken),
+          body: data.slice(uploaded, to),
+          bodyType: "BINARY",
+        })
+      );
+
+      if(callback) { callback({uploaded: uploaded, total: totalSize}); }
+    }
+
+    if(callback) { callback({uploaded: totalSize, total: totalSize}); }
+
+    // Finalize part
+    return await ResponseToJson(
+      await this.HttpClient.Request({
+        headers: authorizationHeader,
+        method: "POST",
+        path: Path.join(path, partWriteToken),
+        bodyType: "BINARY",
+        body: ""
       })
     );
   }
@@ -1846,77 +2021,6 @@ client.FabricUrl({
       methodName: "revokeManagerAccess",
       eventName: "ManagerAccessRevoked"
     });
-  }
-
-  /* Naming */
-
-  async GetByName({name}) {
-    let path = Path.join("naming", name);
-
-    return ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "GET",
-        path: path
-      })
-    );
-  }
-
-  async SetByName({name, target}) {
-    let path = Path.join("naming");
-
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "PUT",
-        path: path,
-        body: {name, target}
-      })
-    );
-  }
-
-  async GetObjectByName({name}) {
-    let response = await this.GetByName({name});
-
-    let info = JSON.parse(response.target);
-
-    if(!info.libraryId) {
-      throw Error("No library ID");
-    }
-
-    if(!info.objectId) {
-      throw Error("No content object ID");
-    }
-
-    let contentObjectData = await this.ContentObject({libraryId: info.libraryId, objectId: info.objectId});
-    contentObjectData.meta = await this.ContentObjectMetadata({
-      libraryId: info.libraryId,
-      objectId: info.objectId
-    });
-
-    return contentObjectData;
-  }
-
-  SetObjectByName({name, libraryId, objectId}) {
-    return this.SetByName({
-      name,
-      target: JSON.stringify({
-        libraryId,
-        objectId
-      })
-    });
-  }
-
-  async DeleteName({name}) {
-    let path = Path.join("naming", name);
-
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "DELETE",
-        path: path
-      })
-    );
   }
 
   /* Verification */
@@ -2287,8 +2391,21 @@ client.FabricUrl({
   }
 
   // Call a method specified in a message from a frame
-  async CallFromFrameMessage(message) {
+  async CallFromFrameMessage(message, Respond) {
     if(message.type !== "ElvFrameRequest") { return; }
+
+    let callback;
+    if(message.callbackId) {
+      callback = (result) => {
+        Respond(this.utils.MakeClonable({
+          type: "ElvFrameResponse",
+          requestId: message.callbackId,
+          response: result
+        }));
+      };
+
+      message.args.callback = callback;
+    }
 
     try {
       const method = message.calledMethod;
@@ -2308,17 +2425,17 @@ client.FabricUrl({
         methodResults = await this[method](message.args);
       }
 
-      return this.utils.MakeClonable({
+      Respond(this.utils.MakeClonable({
         type: "ElvFrameResponse",
         requestId: message.requestId,
         response: methodResults
-      });
+      }));
     } catch(error) {
-      return this.utils.MakeClonable({
+      Respond(this.utils.MakeClonable({
         type: "ElvFrameResponse",
         requestId: message.requestId,
         error
-      });
+      }));
     }
   }
 }

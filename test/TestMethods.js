@@ -101,7 +101,7 @@ const TestQueries = async (client) => {
     await client.AddLibraryContentType({libraryId, typeName: "video"});
 
     const otherType = Object.values(contentTypes)[0];
-    console.log(`ADDING ${otherType.meta["eluv.name"]} TYPE BY ID...`);
+    console.log(`ADDING ${otherType.meta.name} TYPE BY ID...`);
     await client.AddLibraryContentType({libraryId, typeId: otherType.id});
 
     console.log("NEW LIBRARY TYPES: ");
@@ -111,7 +111,7 @@ const TestQueries = async (client) => {
     console.log("REMOVING VIDEO TYPE BY NAME...");
     await client.RemoveLibraryContentType({libraryId, typeName: "video"});
 
-    console.log(`REMOVING ${otherType.meta["eluv.name"]} TYPE BY ID...`);
+    console.log(`REMOVING ${otherType.meta.name} TYPE BY ID...`);
     await client.RemoveLibraryContentType({libraryId, typeId: otherType.id});
 
     console.log("FINAL LIBRARY TYPES: ");
@@ -145,6 +145,7 @@ const TestQueries = async (client) => {
         options: {
           type: "video",
           meta: {
+            name: "Content Object",
             "meta": "data",
             "to_delete": {
               "value": "value"
@@ -171,7 +172,7 @@ const TestQueries = async (client) => {
         libraryId,
         objectId,
         writeToken: createResponse.write_token,
-        data: encoder.encode("some form of data").buffer
+        data: await new Response(encoder.encode("some form of data").buffer).blob()
       })
     );
 
@@ -268,7 +269,6 @@ const TestQueries = async (client) => {
 
     console.log("FINALIZED EDIT " + objectId);
 
-
     const contentObjects = await client.ContentObjects({libraryId: libraryId});
 
     console.log("\nLIBRARY CONTENTS " + libraryId);
@@ -328,10 +328,10 @@ const TestQueries = async (client) => {
     });
 
     console.log(downloadResponse);
+    console.log(decoder.decode(downloadResponse));
 
     console.log("DOWNLOADED: ");
     console.log(decoder.decode(downloadResponse).length);
-
 
     if(!runningInBrowser) {
       console.log("UPLOADING FILES...");
@@ -359,38 +359,27 @@ const TestQueries = async (client) => {
       console.log(fileUrl);
     }
 
+    console.log("COPYING " + objectId);
 
-    console.log("\nNAMING... ");
-
-    await client.SetObjectByName({
-      name: "test",
+    const copyResponse = await client.CopyContentObject({
       libraryId,
-      objectId
-    });
-
-    console.log("RETRIEVING OBJECT BY NAME...");
-
-    const nameResponse = await client.GetObjectByName({
-      name: "test"
-    });
-    console.log(JSON.stringify(nameResponse, null, 2));
-
-    console.log("DELETING NAME...");
-    await client.DeleteName({
-      name: "test"
-    });
-
-    try {
-      await client.GetObjectByName({
-        name: "test"
-      });
-    } catch (e) {
-      if(e.status === 404) {
-        console.log("SUCCESSFULLY DELETED NAME");
-      } else {
-        throw Error("FAILED TO DELETE NAME: " + JSON.stringify(e));
+      originalVersionHash: versionHash,
+      options: {
+        meta: {
+          name: "Copied Object"
+        }
       }
-    }
+    });
+
+    console.log(copyResponse);
+
+    const copyFinalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId: copyResponse.id,
+      writeToken: copyResponse.write_token
+    });
+
+    console.log(copyFinalizeResponse);
 
     const proofs = await client.Proofs({libraryId: libraryId, objectId, versionHash, partHash: partHash});
 

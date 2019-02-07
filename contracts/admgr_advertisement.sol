@@ -43,6 +43,13 @@ contract AdmgrAdvertisement is Content {
 
     uint256 public maxCreditPerAd = 0; //By default no maximum is set
 
+
+    function dbgRequest(uint256 request_ID, address ad_address) public view returns (bytes32)
+    {
+        return keccak256(ad_address, request_ID);
+    }
+
+
     function setMaxCreditPerAd(uint256 creditPerAd) public onlyOwner {
         maxCreditPerAd = creditPerAd;
         emit MaxCreditPerAd(maxCreditPerAd);
@@ -133,17 +140,23 @@ contract AdmgrAdvertisement is Content {
     )
         public payable returns(uint)
     {
-        address contentAddress = stake_holders[0];
-        address campaignAddress = stake_holders[1];
-        bytes32 amount = custom_values[0];
-        uint8 v = uint8(custom_values[1][0]);
-        bytes32 r = custom_values[2];
-        bytes32 s = custom_values[3];
-        if (bitcodeAddress != 0x0){
-            verifyMessage(contentAddress, campaignAddress, amount, v, r, s);
+        if (stake_holders.length == 0) {
+            return 0;
         }
-        require((maxCreditPerAd == 0) || (uint256(amount) <= maxCreditPerAd));
-        insertRequest(request_ID, contentAddress, msg.sender, campaignAddress, uint256(amount));
+
+        address contentAddress = stake_holders[0];
+        if (contentAddress != 0x0) {
+            address campaignAddress = stake_holders[1];
+            bytes32 amount = custom_values[0];
+            uint8 v = uint8(custom_values[1][0]);
+            bytes32 r = custom_values[2];
+            bytes32 s = custom_values[3];
+            if (bitcodeAddress != 0x0) {
+               verifyMessage(contentAddress, campaignAddress, amount, v, r, s);
+            }
+            require((maxCreditPerAd == 0) || (uint256(amount) <= maxCreditPerAd));
+            insertRequest(request_ID, contentAddress, msg.sender, campaignAddress, uint256(amount));
+        }
         return 0;
     }
 
