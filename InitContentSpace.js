@@ -126,7 +126,7 @@ const Init = async () => {
       path: path,
       body: {
         meta: {
-          "eluv.name": "Content Types"
+          name: "Content Types"
         }
       }
     });
@@ -178,7 +178,7 @@ const Init = async () => {
         console.log("\tCreating " + name + "...");
         await client.CreateContentType({
           metadata: {
-            "eluv.name": name,
+            name
           },
           bitcode
         });

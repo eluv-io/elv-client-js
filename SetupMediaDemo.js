@@ -60,7 +60,7 @@ const MakeCampaignManager = async (emp, name, nameId) => {
       "meta" : {
 	"campaign_content_type_id" : emp.content_types.campaign,
 	"test": "SS001", "campaigns_library": libraryCampaigns,
-	"name": name, "eluv.name": name
+	"name": name
       }
     }
   });
@@ -109,7 +109,7 @@ const MakeChannel = async (emp, name) => {
     options: {
       "type" : typeObj.hash,
       "meta" : {
-	"name": name, "eluv.name": name
+	"name": name
       }
     }
   });
@@ -163,7 +163,7 @@ const MakeCampaign = async (emp, name, campaignManager) => {
     options: {
       "type" : typeObj.hash,
       "meta" : {
-	"name": name, "eluv.name": name,
+	"name": name,
 	"ads" : adsMeta,
       }
     }
@@ -191,7 +191,7 @@ const MakeAds = async (emp, name, nameId, fileImg, fileVideo) => {
     options: {
       "type" : typeObj.hash,
       "meta" : {
-	"name": name, "eluv.name": name
+	"name": name,
       }
     }
   });
@@ -240,7 +240,7 @@ const MakeCommercialOffering = async (emp, name) => {
     options: {
       "type" : typeObj.hash,
       "meta" : {
-	"name": name, "eluv.name": name
+	"name": name
       }
     }
   });
