@@ -53,7 +53,7 @@ const SetupContentTypes = async (client, enp) => {
   ct = {"content_types":{}};
 
   // Make content type - Campaign
-  const mdCampaign = {name: "campaign", 'eluv.name': "campaign",
+  const mdCampaign = {name: "campaign", 'name': "campaign",
 	      class: "content_type",
 	      test: "SS002"};
   const appPathsCampaign = [{path: "../elv-media-platform/apps/elv-campaign.html", name: "manageApp.html"},
@@ -69,7 +69,7 @@ const SetupContentTypes = async (client, enp) => {
   console.log("Content Type - Campaign: " + typeCampaign);
 
   // Make contract - CampaignManager
-  const md = {name: "campaign_manager", 'eluv.name': "campaign_manager",
+  const md = {name: "campaign_manager", 'name': "campaign_manager",
 	      class: "content_type",
 	      campaign_content_type: ct.content_types.campaign,
 	      test: "SS001"};
@@ -88,7 +88,7 @@ const SetupContentTypes = async (client, enp) => {
   console.log("Content Type - CampaignManager: " + typeCampaignManager);
 
   // Make content type - CommercialOffering
-  const mdCommOff = {name: "commercial_offering", 'eluv.name': "commercial_offering",
+  const mdCommOff = {name: "commercial_offering", 'name': "commercial_offering",
 	      class: "content_type",
 	      test: "SS002"};
   const appPathsCommOff = [{path: "../elv-media-platform/apps/elv-commercial-offering.html", name: "manageApp.html"},
@@ -104,7 +104,7 @@ const SetupContentTypes = async (client, enp) => {
   console.log("Content Type - CommercialOffering: " + typeCommOff);
 
   // Make content type - Advertisement
-  const mdAd = {name: "advertisement", 'eluv.name': "advertisement",
+  const mdAd = {name: "advertisement", 'name': "advertisement",
 	      class: "content_type",
 	      test: "SS001"};
   const bitcodeAd = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
@@ -121,7 +121,7 @@ const SetupContentTypes = async (client, enp) => {
   console.log("Content Type - Advertisement: " + typeAd);
 
   // Make content type - SponsoredContent
-  const mdSponsored = {name: "sponsored_content", 'eluv.name': "sponsored_content",
+  const mdSponsored = {name: "sponsored_content", 'name': "sponsored_content",
 	      class: "content_type",
 	      test: "SS001"};
   const bitcodeSponsored = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
@@ -138,7 +138,7 @@ const SetupContentTypes = async (client, enp) => {
   console.log("Content Type - SponsoredContent: " + typeSponsored);
 
   // Make content type - AVMaster IMF
-  const mdIMF = {name: "avmaster_imf", 'eluv.name': "avmaster_imf",
+  const mdIMF = {name: "avmaster_imf", 'name': "avmaster_imf",
 		 class: "content_type",
 		 test: "SS001"};
   const bitcodeIMF = fs.readFileSync(Path.join(bitcodePath, "avmaster2000.imf.bc"));
@@ -155,7 +155,7 @@ const SetupContentTypes = async (client, enp) => {
   console.log("Content Type - AVMasterIMF: " + typeIMF);
 
   // Make content type - Channel
-  const mdChan = {name: "channel", 'eluv.name': "channel",
+  const mdChan = {name: "channel", 'name': "channel",
 		 class: "content_type",
 		 test: "SS001"};
   const appPathsChan = [];
@@ -212,7 +212,7 @@ const SetupMediaPlatform = async () => {
     name: "Ads Marketplace",
     description: "Ads Marketplace",
     publicMetadata: {
-      "eluv.name": "Ads Marketplace"
+      "name": "Ads Marketplace"
     }
   });
   emp.ads_marketplace = libraryIdAdsMarketplace;

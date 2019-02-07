@@ -98,7 +98,7 @@ class ImfService {
 
     objectMeta = {
       description: "Demonstration only",
-      'eluv.name': name,
+      name,
       languages: [],
       pkg: {},
       "type.qhash": contentTypeVHash,
@@ -116,7 +116,7 @@ class ImfService {
         type: contentTypeVHash,
         meta: {
           "eluv.createdAt": new Date().getTime(),
-          "eluv.name": name
+          name
         }
       }
     }));

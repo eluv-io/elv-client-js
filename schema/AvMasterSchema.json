@@ -1,7 +1,7 @@
 {
   "eluv.schema": [
     {
-      "key": "eluv.name",
+      "key": "name",
       "label": "Name",
       "type": "string",
       "required": true
