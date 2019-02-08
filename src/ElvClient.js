@@ -1194,7 +1194,7 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {object=} options -
-   * meta: New metadata for the object - will replace existing metadata if specified
+   * meta: New metadata for the object - will be merged into existing metadata if specified
    *
    * @returns {Promise<object>} - Response containing the object ID and write token of the draft
    */
@@ -2278,15 +2278,16 @@ client.FabricUrl({
    * @param {object} abi - The ABI of the contract
    * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
    * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
-   *
+   * @param {boolean=} includeSender=false - If specified, the address of the sender will be included. Note: This requires one extra network call per block.
    * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
-  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock}) {
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeSender=false}) {
     return await this.ethClient.ContractEvents({
       contractAddress,
       abi,
       fromBlock,
       toBlock,
+      includeSender,
       signer: this.signer
     });
   }
@@ -2313,10 +2314,10 @@ client.FabricUrl({
    * @param {number=} toBlock - Limit results to events before the specified block (inclusive) - If not specified, will start from latest block
    * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
    * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are unspecified)
-   *
+   * @param {boolean=} includeSender=false - If specified, the address of the sender will be included. Note: This requires one extra network call per block.
    * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
-  async Events({toBlock, fromBlock, count=10}) {
+  async Events({toBlock, fromBlock, count=10, includeSender=false}) {
     const latestBlock = await this.signer.provider.getBlockNumber();
 
     if(!toBlock) {
@@ -2346,6 +2347,7 @@ client.FabricUrl({
     return await this.ethClient.Events({
       toBlock,
       fromBlock,
+      includeSender,
       signer: this.signer
     });
   }

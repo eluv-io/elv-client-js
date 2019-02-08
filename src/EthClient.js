@@ -307,7 +307,7 @@ class EthClient {
   }
 
   // Get all logs for the specified contract in the specified range
-  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, signer}) {
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeSender=false, signer}) {
     const contractLogs = await signer.provider.getLogs({
       address: contractAddress,
       fromBlock,
@@ -315,14 +315,21 @@ class EthClient {
     });
 
     let blocks = {};
-    contractLogs.forEach(log => {
-      const eventInterface = new Ethers.utils.Interface(abi);
-      const parsedLog = {
-        ...log,
-        ...(eventInterface.parseLog(log))
-      };
-      blocks[log.blockNumber] = [parsedLog].concat((blocks[log.blockNumber] || []));
-    });
+    await Promise.all(
+      contractLogs.map(async log => {
+        const eventInterface = new Ethers.utils.Interface(abi);
+        const parsedLog = {
+          ...log,
+          ...(eventInterface.parseLog(log))
+        };
+
+        if(includeSender) {
+          parsedLog.from = (await signer.provider.getTransaction(log.transactionHash)).from;
+        }
+
+        blocks[log.blockNumber] = [parsedLog].concat((blocks[log.blockNumber] || []));
+      })
+    );
 
     return Object.values(blocks).sort((a, b) => a[0].blockNumber < b[0].blockNumber ? 1 : -1);
   }
@@ -349,7 +356,7 @@ class EthClient {
 
   // Get logs for all blocks in the specified range
   // Returns a list, sorted in descending block order, with each entry containing all logs or transactions in that block
-  async Events({toBlock, fromBlock, signer}) {
+  async Events({toBlock, fromBlock, includeSender=false, signer}) {
     const logs = await signer.provider.getLogs({fromBlock, toBlock});
 
     // Group logs by blocknumber
@@ -362,6 +369,18 @@ class EthClient {
     let output = [];
     for(let blockNumber = toBlock; blockNumber >= fromBlock; blockNumber--) {
       if(blocks[blockNumber]) {
+        if(includeSender) {
+          const transactionInfo = await signer.provider.getTransaction(blocks[blockNumber][0].transactionHash);
+
+          blocks[blockNumber] = blocks[blockNumber].map(block => {
+            return {
+              ...block,
+              to: transactionInfo.to,
+              from: transactionInfo.from
+            };
+          });
+        }
+
         output.push(blocks[blockNumber]);
       } else {
         // Block has no logs -- query transaction hash
