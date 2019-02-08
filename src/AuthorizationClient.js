@@ -287,8 +287,9 @@ class AuthorizationClient {
     // Send some bux if access charge is required
     let accessCharge = 0;
     if(!isOwner && checkAccessCharge) {
+      // Extract level, custom values and stakeholders from accessRequest arguments
+      const accessChargeArgs = [args[0], args[3], args[4]];
       // Access charge is in wei, but methods take ether - convert to charge to ether
-      const accessChargeArgs = [args[0], args[1], args[2]];
       accessCharge = Utils.WeiToEther(await this.GetAccessCharge({id, abi, args: accessChargeArgs}));
     }
 
