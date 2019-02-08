@@ -307,7 +307,7 @@ class EthClient {
   }
 
   // Get all logs for the specified contract in the specified range
-  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeSender=false, signer}) {
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false, signer}) {
     const contractLogs = await signer.provider.getLogs({
       address: contractAddress,
       fromBlock,
@@ -318,13 +318,16 @@ class EthClient {
     await Promise.all(
       contractLogs.map(async log => {
         const eventInterface = new Ethers.utils.Interface(abi);
-        const parsedLog = {
+        let parsedLog = {
           ...log,
           ...(eventInterface.parseLog(log))
         };
 
-        if(includeSender) {
-          parsedLog.from = (await signer.provider.getTransaction(log.transactionHash)).from;
+        if(includeTransaction) {
+          parsedLog = {
+            ...parsedLog,
+            ...(await signer.provider.getTransaction(log.transactionHash))
+          };
         }
 
         blocks[log.blockNumber] = [parsedLog].concat((blocks[log.blockNumber] || []));
@@ -356,7 +359,7 @@ class EthClient {
 
   // Get logs for all blocks in the specified range
   // Returns a list, sorted in descending block order, with each entry containing all logs or transactions in that block
-  async Events({toBlock, fromBlock, includeSender=false, signer}) {
+  async Events({toBlock, fromBlock, includeTransaction=false, signer}) {
     const logs = await signer.provider.getLogs({fromBlock, toBlock});
 
     // Group logs by blocknumber
@@ -368,31 +371,35 @@ class EthClient {
     // Iterate through each block, filling in any missing blocks
     let output = [];
     for(let blockNumber = toBlock; blockNumber >= fromBlock; blockNumber--) {
-      if(blocks[blockNumber]) {
-        if(includeSender) {
-          const transactionInfo = await signer.provider.getTransaction(blocks[blockNumber][0].transactionHash);
+      let blockInfo = blocks[blockNumber];
 
-          blocks[blockNumber] = blocks[blockNumber].map(block => {
+      if (!blockInfo) {
+        blockInfo = await signer.provider.getBlock(blockNumber);
+        blockInfo = blockInfo.transactions.map(transactionHash => {
+          return {
+            ...blockInfo,
+            transactionHash
+          };
+        });
+      }
+
+      if (includeTransaction) {
+        let transactionInfo = {};
+
+        blocks[blockNumber] = await Promise.all(
+          blockInfo.map(async block => {
+            if (!transactionInfo[block.transactionHash]) {
+              transactionInfo[block.transactionHash] = await signer.provider.getTransaction(block.transactionHash);
+            }
             return {
               ...block,
-              to: transactionInfo.to,
-              from: transactionInfo.from
+              ...transactionInfo[block.transactionHash]
             };
-          });
-        }
-
-        output.push(blocks[blockNumber]);
-      } else {
-        // Block has no logs -- query transaction hash
-        const blockInfo = await signer.provider.getBlock(blockNumber);
-        if(blockInfo.transactions.length > 0) {
-          output.push(
-            await Promise.all(
-              blockInfo.transactions.map(async transactionHash => await signer.provider.getTransaction(transactionHash))
-            )
-          );
-        }
+          })
+        );
       }
+
+      output.push(blocks[blockNumber]);
     }
 
     return output;

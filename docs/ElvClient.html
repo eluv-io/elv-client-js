@@ -5823,7 +5823,7 @@ looking up information about existing content object types which may have been u
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ContractEvents">
-      <span class="type-signature">(async) </span>ContractEvents<span class="signature">({<div class="block-param">contractAddress,</div><div class="block-param">abi,</div><div class="block-param">fromBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">toBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">includeSender<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Array.&lt;Array.&lt;Object>></span>
+      <span class="type-signature">(async) </span>ContractEvents<span class="signature">({<div class="block-param">contractAddress,</div><div class="block-param">abi,</div><div class="block-param">fromBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">toBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">includeTransaction<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Array.&lt;Array.&lt;Object>></span>
     </h4>
   </span>
 
@@ -6048,7 +6048,7 @@ looking up information about existing content object types which may have been u
     
       <tr>
         
-          <td class="name"><code>includeSender</code></td>
+          <td class="name"><code>includeTransaction</code></td>
         
 
         <td class="type">
@@ -6085,7 +6085,8 @@ looking up information about existing content object types which may have been u
         
 
         <td class="description last">
-          <p>If specified, the address of the sender will be included. Note: This requires one extra network call per block.</p>
+          <p>If specified, more detailed transaction info will be included.
+Note: This requires one extra network call per block, so it should not be used for very large ranges</p>
           
         </td>
       </tr>
@@ -6141,7 +6142,7 @@ looking up information about existing content object types which may have been u
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2284">line 2284</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2285">line 2285</a>
         </li>
       </ul>
     </dd>
@@ -10529,7 +10530,7 @@ content space library (ilib<content-space-hash>)</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="Events">
-      <span class="type-signature">(async) </span>Events<span class="signature">({<div class="block-param">toBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">fromBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">count<span class="signature-attributes">optional</span>,</div><div class="block-param">includeSender<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Array.&lt;Array.&lt;Object>></span>
+      <span class="type-signature">(async) </span>Events<span class="signature">({<div class="block-param">toBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">fromBlock<span class="signature-attributes">optional</span>,</div><div class="block-param">count<span class="signature-attributes">optional</span>,</div><div class="block-param">includeTransaction<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Array.&lt;Array.&lt;Object>></span>
     </h4>
   </span>
 
@@ -10719,7 +10720,7 @@ values will be included in the log entry.</p>
     
       <tr>
         
-          <td class="name"><code>includeSender</code></td>
+          <td class="name"><code>includeTransaction</code></td>
         
 
         <td class="type">
@@ -10756,7 +10757,8 @@ values will be included in the log entry.</p>
         
 
         <td class="description last">
-          <p>If specified, the address of the sender will be included. Note: This requires one extra network call per block.</p>
+          <p>If specified, more detailed transaction info will be included.
+Note: This requires one extra network call per block, so it should not be used for very large ranges</p>
           
         </td>
       </tr>
@@ -10812,7 +10814,7 @@ values will be included in the log entry.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2320">line 2320</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2322">line 2322</a>
         </li>
       </ul>
     </dd>
@@ -12945,7 +12947,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2363">line 2363</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2365">line 2365</a>
         </li>
       </ul>
     </dd>
@@ -16221,7 +16223,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2377">line 2377</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2379">line 2379</a>
         </li>
       </ul>
     </dd>
