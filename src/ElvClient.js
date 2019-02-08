@@ -1005,7 +1005,7 @@ class ElvClient {
 
     return await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, noAuth: true}),
         method: "GET",
         path: path
       })
@@ -1063,16 +1063,17 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+   * @param {bool=} noAuth=false - If specified, authorization will not be performed for this call
    *
    * @returns {Promise<Object>} - Metadata of the content object
    */
-  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/"}) {
+  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=false}) {
     let path = Path.join("q", versionHash || objectId, "meta", metadataSubtree);
 
     try {
       const metadata = await ResponseToJson(
         this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+          headers: await this.authClient.AuthorizationHeader({libraryId, objectId, noAuth}),
           method: "GET",
           path: path
         })
