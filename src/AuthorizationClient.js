@@ -178,7 +178,10 @@ class AuthorizationClient {
       cache = cacheCollection.objects;
       isObjectAccess = true;
 
-      if(!args || args.length === 0) {
+      if(args && args.length > 0) {
+        // Inject public key of requester
+        args[1] = this.client.signer.signingKey.publicKey;
+      } else {
         // Set default args
         args = [
           0, // Access level
@@ -231,7 +234,7 @@ class AuthorizationClient {
 
   /* Access */
 
-  async GetAccessCharge({id, abi}) {
+  async GetAccessCharge({id, abi, args}) {
     // Ensure contract has a getAccessCharge method
     const method = abi.find(element => element.name === "getAccessCharge" && element.type === "function");
 
@@ -241,7 +244,7 @@ class AuthorizationClient {
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "getAccessCharge",
-      methodArgs: [0, [], []]
+      methodArgs: args
     });
 
     const eventLog = this.client.ExtractEventFromLogs({
@@ -285,7 +288,8 @@ class AuthorizationClient {
     let accessCharge = 0;
     if(!isOwner && checkAccessCharge) {
       // Access charge is in wei, but methods take ether - convert to charge to ether
-      accessCharge = Utils.WeiToEther(await this.GetAccessCharge({id, abi}));
+      const accessChargeArgs = [args[0], args[1], args[2]];
+      accessCharge = Utils.WeiToEther(await this.GetAccessCharge({id, abi, args: accessChargeArgs}));
     }
 
     const formattedArgs = this.client.FormatContractArguments({
