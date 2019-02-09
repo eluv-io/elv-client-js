@@ -345,11 +345,14 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     return await this.PrivateUserMetadata({metadataSubtree: "collected_data"}) || {};
   }
 
-  async RecordTags({libraryId, objectId}) {
+  async RecordTags({libraryId, objectId, versionHash}) {
     await this.__TouchLibrary();
 
     // If this object has already been seen, don't re-record tags
-    const versionHash = (await this.client.ContentObject({libraryId, objectId})).hash;
+    if(!versionHash) {
+      versionHash = (await this.client.ContentObject({libraryId, objectId})).hash;
+    }
+
     const seen = await this.PrivateUserMetadata({metadataSubtree: Path.join("accessed_content", versionHash)});
     if(seen) { return; }
 
@@ -366,7 +369,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       metadata: Date.now()
     });
 
-    const contentTags = await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree: "video_tags"});
+    const contentTags = await this.client.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: "video_tags"});
 
     if(contentTags &amp;&amp; contentTags.length > 0) {
       let userTags = await this.CollectedTags();
