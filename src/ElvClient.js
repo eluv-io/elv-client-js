@@ -214,16 +214,18 @@ class ElvClient {
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
    * @param {Array=} args=[] - Custom arguments to the accessRequest or updateRequest methods
    * @param {boolean=} update=false - If true, will call updateRequest instead of accessRequest
    * @param {boolean=} noCache=false - If true, the resultant transaction hash will not be cached for future use
    *
    * @return {object} - Resultant AccessRequest or UpdateRequest event
    */
-  AccessRequest({libraryId, objectId, args=[], update=false, noCache=false}) {
+  AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
     return this.authClient.MakeAccessRequest({
       libraryId,
       objectId,
+      versionHash,
       args,
       update,
       checkAccessCharge: true,
