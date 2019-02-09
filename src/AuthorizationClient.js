@@ -118,7 +118,8 @@ class AuthorizationClient {
     update=false,
     checkAccessCharge=true,
     skipCache=false,
-    noCache=false
+    noCache=false,
+    cacheOnly
   }) {
     if(!this.client.signer) { throw Error("Signer not set"); }
 
@@ -188,6 +189,9 @@ class AuthorizationClient {
     if(!noCache && !skipCache) {
       if(cache[id]) { return { transactionHash: cache[id] }; }
     }
+
+    // If only checking the cache, don't continue to make access request
+    if(cacheOnly) { return; }
 
     // Make the request
     let accessRequest;
