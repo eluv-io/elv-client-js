@@ -234,6 +234,29 @@ class ElvClient {
     });
   }
 
+  /**
+   * Return the cached access transaction of the specified item, if present
+   *
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   *
+   * @return {string} - The cached transaction hash if present, otherwise undefined
+   */
+  async CachedAccessTransaction({libraryId, objectId, versionHash}) {
+    const cacheResult = await this.authClient.MakeAccessRequest({
+      libraryId,
+      objectId,
+      versionHash,
+      cacheOnly: true
+    });
+
+    if(cacheResult) {
+      return cacheResult.transactionHash;
+    }
+  }
+
   /* Content Spaces */
 
   /**
