@@ -1005,7 +1005,7 @@ class ElvClient {
 
     return await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, noAuth: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
         method: "GET",
         path: path
       })
@@ -1073,7 +1073,7 @@ class ElvClient {
     try {
       const metadata = await ResponseToJson(
         this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({libraryId, objectId, noAuth}),
+          headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
           method: "GET",
           path: path
         })
@@ -1394,7 +1394,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path,
       })
@@ -1560,7 +1560,7 @@ class ElvClient {
     return ResponseToFormat(
       format,
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
       })
@@ -1586,7 +1586,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
       })
@@ -1612,7 +1612,7 @@ class ElvClient {
 
     const response = await HandleErrors(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
       })
@@ -1820,10 +1820,14 @@ client.FabricUrl({
       }
 
       if(!noAuth) {
-        queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+        queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noCache});
       }
     } else if(versionHash) {
       path = Path.join("q", versionHash);
+
+      if(!noAuth && objectId) {
+        queryParams.authorization = await this.authClient.AuthorizationToken({objectId, versionHash, noCache});
+      }
 
       if(partHash){
         path = Path.join(path, "data", partHash);
@@ -2073,7 +2077,7 @@ client.FabricUrl({
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
       })

@@ -39,14 +39,14 @@ class AuthorizationClient {
     this.requestIds = {};
   }
 
-  async AuthorizationHeader({libraryId, objectId, transactionHash, update=false, noCache=false, noAuth=false}) {
+  async AuthorizationHeader({libraryId, objectId, versionHash, transactionHash, update=false, noCache=false, noAuth=false}) {
     const authorizationToken = await this.AuthorizationToken({libraryId, objectId, transactionHash, update, noCache, noAuth});
 
     return { Authorization: "Bearer " + authorizationToken };
   }
 
   // Wrapper for GenerateAuthorizationHeader to allow for per-call disabling of cache
-  async AuthorizationToken({libraryId, objectId, transactionHash, update=false, noCache=false, noAuth=false}) {
+  async AuthorizationToken({libraryId, objectId, versionHash, transactionHash, update=false, noCache=false, noAuth=false}) {
     const initialNoCache = this.noCache;
 
     try {
@@ -55,7 +55,7 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
-      const authorizationToken = await this.GenerateAuthorizationToken({libraryId, objectId, transactionHash, update, noAuth});
+      const authorizationToken = await this.GenerateAuthorizationToken({libraryId, objectId, versionHash, transactionHash, update, noAuth});
 
       this.noCache = initialNoCache;
 
@@ -80,22 +80,12 @@ class AuthorizationClient {
     return ownerAddress.toLowerCase() === this.client.signer.address.toLowerCase();
   }
 
-  async FormatAuthToken({libraryId, transactionHash}) {
-    const token = B64(JSON.stringify({
-      qspace_id: this.contentSpaceId,
-      qlib_id: libraryId,
-      addr: this.signer.signingKey.address,
-      txid: transactionHash
-    }));
-    const signature = B64("SIGNATURE");
-    return token + "." + signature;
-  }
-
-  async GenerateAuthorizationToken({libraryId, objectId, transactionHash, update=false, noAuth=false}) {
+  async GenerateAuthorizationToken({libraryId, objectId, versionHash, transactionHash, update=false, noAuth=false}) {
     if(!transactionHash && !this.noAuth && !noAuth) {
       const accessTransaction = await this.MakeAccessRequest({
         libraryId,
         objectId,
+        versionHash,
         transactionHash,
         update,
         checkAccessCharge: true,
@@ -123,6 +113,7 @@ class AuthorizationClient {
   async MakeAccessRequest({
     libraryId,
     objectId,
+    versionHash,
     args=[],
     update=false,
     checkAccessCharge=true,
@@ -153,8 +144,8 @@ class AuthorizationClient {
       }
 
       return userEvent.transactionHash;
-    } else if(!libraryId || (!objectId && isSpaceLibrary) || (isSpaceLibrary && isLibraryObject)) {
-      // Content Space - no library, content space library or content space library object
+    } else if((!libraryId && !objectId) || (!objectId && isSpaceLibrary) || (isSpaceLibrary && isLibraryObject)) {
+      // Content Space - no library and object, content space library or content space library object
       id = this.contentSpaceId;
       abi = SpaceContract.abi;
       cache = cacheCollection.spaces;
@@ -218,7 +209,7 @@ class AuthorizationClient {
 
     // After making an access request, record the tags in the user's profile, if appropriate
     if(isObjectAccess && !update) {
-      await this.client.userProfile.RecordTags({libraryId, objectId});
+      await this.client.userProfile.RecordTags({libraryId, objectId, versionHash});
     }
 
     return accessRequest;
