@@ -271,7 +271,7 @@ class AuthorizationClient {
     });
 
     delete this.requestIds[id];
-    delete this.accessTransactions[id];
+    delete this.accessTransactions.objects[id];
 
     return event;
   }
