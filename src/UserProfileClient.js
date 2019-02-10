@@ -298,11 +298,11 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   async RecordTags({libraryId, objectId, versionHash}) {
     await this.__TouchLibrary();
 
-    // If this object has already been seen, don't re-record tags
     if(!versionHash) {
       versionHash = (await this.client.ContentObject({libraryId, objectId})).hash;
     }
 
+    // If this object has already been seen, don't re-record tags
     const seen = await this.PrivateUserMetadata({metadataSubtree: Path.join("accessed_content", versionHash)});
     if(seen) { return; }
 
