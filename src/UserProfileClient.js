@@ -79,6 +79,13 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       return Utils.AddressToLibraryId(this.client.signer.address);
     }
 
+    // Initialize fields
+    privateMetadata = {
+      ...privateMetadata,
+      access_level: "prompt",
+      collected_data: {}
+    };
+
     return await this.client.CreateContentLibrary({
       publicMetadata,
       privateMetadata,
@@ -319,7 +326,13 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       metadata: Date.now()
     });
 
-    const contentTags = await this.client.ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree: "video_tags"});
+    const contentTags = await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      metadataSubtree: "video_tags",
+      noAuth: true
+    });
 
     if(contentTags && contentTags.length > 0) {
       let userTags = await this.CollectedTags();
