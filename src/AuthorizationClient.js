@@ -206,9 +206,12 @@ class AuthorizationClient {
       cache[id] = accessRequest.transactionHash;
 
       // Save request ID if present
-      if(accessRequest.logs.length > 0 && accessRequest.logs[0].values && accessRequest.logs[0].values.requestID) {
-        this.requestIds[id] = accessRequest.logs[0].values.requestID;
-      }
+      accessRequest.logs.some(log => {
+        if(log.values && log.values.requestID) {
+          this.requestIds[id] = log.values.requestID;
+          return true;
+        }
+      });
     }
 
     // After making an access request, record the tags in the user's profile, if appropriate
