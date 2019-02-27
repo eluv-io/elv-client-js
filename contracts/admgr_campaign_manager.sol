@@ -77,8 +77,10 @@ contract AdmgrCampaign is Content {
             BaseContent content = BaseContent(advertisementMgr.getContent(requestDataID));
             BaseLibrary lib = BaseLibrary(content.libraryAddress()); //debatable: pay library (add pull function) or owner
             lib.owner().transfer(amount_library);
+            emit LogPayment("Retrocession", lib.owner(), amount_library);
         }
         tx.origin.transfer(amount - amount_library);
+        emit LogPayment("Royalty", tx.origin, amount - amount_library);
         return true;
     }
 
@@ -134,9 +136,6 @@ contract AdmgrCampaignManager is Content {
         return 0;
     }
 
-    function markAsCampaignManager() public onlyCreator {
-
-    }
 
 
 }

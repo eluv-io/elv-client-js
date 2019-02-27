@@ -6,10 +6,11 @@ import {Ownable} from "./ownable.sol";
 contract Content is Ownable {
 
 
-    event DbgString(string s);
-    event DbgAddress(address a);
-    event DbgUint256(uint256 u);
-    event DbgUint(uint u);
+    event Log(string label);
+    event LogAddress(string label, address a);
+    event LogUint256(string label, uint256 u);
+    event LogBytes32(string label, bytes32 b);
+    event LogPayment(string label, address payee, uint256 amount);
     event RunCreate(uint result);
     event RunKill(uint result);
     event RunStatusChange(int proposedStatusCode, int returnStatusCode);
