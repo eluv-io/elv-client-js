@@ -257,7 +257,7 @@ class AuthorizationClient {
   async AccessComplete({id, abi, score}) {
     const requestId = this.requestIds[id];
 
-    if(!requestId) { throw Error("Unknown request for " + id); }
+    if(!requestId) { throw Error("Unknown request ID for " + id); }
 
     const formattedArgs = this.client.FormatContractArguments({
       abi,

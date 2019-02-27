@@ -1714,7 +1714,7 @@ class ElvClient {
    *
    * @returns {Promise&lt;Object>} - Response containing information about the uploaded part
    */
-  async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, callback}) {
+  async UploadPart({libraryId, objectId, writeToken, data, chunkSize=10000000, callback}) {
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
     const totalSize = data.size || data.length;
 

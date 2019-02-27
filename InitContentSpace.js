@@ -134,6 +134,8 @@ const Init = async () => {
     console.log("\nCreated content types library: ");
     console.log("\tID: " + libraryId + "\n");
 
+    return;
+
     /* Create content types from bitcode */
 
     console.log("Creating content types: ");

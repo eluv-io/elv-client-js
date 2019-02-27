@@ -157,7 +157,7 @@ class FrameClient {
     };
   }
 
-  async SendMessage({options={}, callback}) {
+  async SendMessage({options={}, callback, noResponse=false}) {
     const requestId = Id.next();
 
     let callbackId;
@@ -171,11 +171,14 @@ class FrameClient {
     }, "*");
 
     // No timeout for prompted methods
-    const timeout = options.prompted ? 0 : this.timeout;
-    return (await this.AwaitMessage(requestId, timeout, callback, callbackId));
+    if(!noResponse) {
+      const operation = options.calledMethod || options.operation;
+      const timeout = options.prompted ? 0 : this.timeout;
+      return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
+    }
   }
 
-  AwaitMessage(requestId, timeout, callback, callbackId) {
+  AwaitMessage(requestId, timeout, callback, callbackId, operation) {
     return new Promise((resolve, reject) => {
       let methodListener;
 
@@ -188,7 +191,7 @@ class FrameClient {
 
         if(timeout > 0) {
           timeoutId = setTimeout(() => {
-            reject("Request timed out " + requestId);
+            reject(`Request ${requestId} timed out (${operation})`);
 
             window.removeEventListener("message", methodListener);
             if(callbackListener) { window.removeEventListener("message", callbackListener); }

@@ -9,7 +9,8 @@ let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
   accountName: "Serban",
-  privateKey: "efab66c11603800aaaf5ebf135ea1c23393994c4854346949481960a7a3e2573"  // 955301
+  //privateKey: "efab66c11603800aaaf5ebf135ea1c23393994c4854346949481960a7a3e2573"  // 955301
+  privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
   //privateKey: "33235d5d6dbc0b877ce1b505068a7de0e449f77425374d67a4c44f7218c6ddf8" // Ganache
   //privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
 });
