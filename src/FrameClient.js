@@ -32,7 +32,7 @@ class FrameClient {
    * @param {number} timeout - How long to wait for a response after calling a method before giving up
    * and generating a timeout error
    */
-  constructor({target=parent, timeout=30}) {
+  constructor({target=parent, timeout=30}={}) {
     this.target = target;
     this.timeout = timeout;
 
@@ -58,6 +58,10 @@ class FrameClient {
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
     for(const methodName of this.AllowedUserProfileMethods()) {
       this.userProfile[methodName] = async (args) => {
+        if(!args || !args.requestor) {
+          throw new Error("'requestor' param required when calling user profile methods from FrameClient");
+        }
+
         let callback = args && args.callback;
         if(callback) { delete args.callback; }
 
@@ -164,7 +168,7 @@ class FrameClient {
 
             callback(message.response);
           } catch(error) {
-            console.log("CALLBACK ERROR");
+            // eslint-disable-next-line no-console
             console.error(error);
           }
         };
@@ -197,28 +201,10 @@ class FrameClient {
         }
       };
 
-
       // Start the timeout
       touchTimeout();
 
       window.addEventListener("message", methodListener);
-    });
-  }
-
-  async GetFramePath() {
-    return await this.SendMessage({
-      options: {
-        operation: "GetFramePath"
-      }
-    });
-  }
-
-  async SetFramePath({path}) {
-    await this.SendMessage({
-      options: {
-        operation: "SetFramePath",
-        path
-      }
     });
   }
 
@@ -244,9 +230,11 @@ class FrameClient {
       "AddAccessGroupManager",
       "AddAccessGroupMember",
       "AddLibraryContentType",
+      "CachedAccessTransaction",
       "CallBitcodeMethod",
       "CallContractMethod",
       "CallContractMethodAndWait",
+      "ClearCache",
       "ContentLibraries",
       "ContentLibrary",
       "ContentLibraryOwner",
@@ -268,6 +256,7 @@ class FrameClient {
       "CreateContentObject",
       "CreateContentSpace",
       "CreateContentType",
+      "CreateContentTypeFull",
       "CreateFileUploadJob",
       "CurrentAccountAddress",
       "CustomContractAddress",
@@ -277,6 +266,7 @@ class FrameClient {
       "DeleteContentVersion",
       "DeleteMetadata",
       "DeletePart",
+      "DeletePublicLibraryMetadata",
       "DeployContract",
       "DownloadFile",
       "DownloadPart",
@@ -322,6 +312,7 @@ class FrameClient {
       "CreateAccountLibrary",
       "DeleteAccountLibrary",
       "DeletePrivateUserMetadata",
+      "MergePrivateUserMetadata",
       "PrivateUserMetadata",
       "PublicUserMetadata",
       "RecordTags",

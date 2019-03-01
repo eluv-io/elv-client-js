@@ -86,12 +86,19 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       collected_data: {}
     };
 
-    return await this.client.CreateContentLibrary({
+    const libraryId = await this.client.CreateContentLibrary({
       publicMetadata,
       privateMetadata,
       image,
       isUserLibrary: true
     });
+
+    if(image) {
+      const imageHash = await this.PrivateUserMetadata({metadataSubtree: "image"});
+      await this.ReplacePublicUserMetadata({metadataSubtree: "image", metadata: imageHash});
+    }
+
+    return libraryId;
   }
 
   // Create the library if it doesn't yet exist
@@ -104,10 +111,12 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   }
 
   // Check if the account library exists
+  // TODO: Change logic when user libraries are properly implemented
   async __IsLibraryCreated({accountAddress}) {
     const libraryId = Utils.AddressToLibraryId(accountAddress);
 
-    return (!!await this.client.PublicLibraryMetadata({libraryId}));
+    const libraryIds = await this.client.ContentLibraries();
+    return libraryIds.find(id => id === libraryId);
   }
 
   /**
@@ -134,7 +143,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   async SetAccessLevel({level}) {
     if(!["private", "prompt", "public"].includes(level.toLowerCase())) { return; }
 
-    this.ReplacePublicUserMetadata({metadataSubtree: "access_level", metadata: level.toLowerCase()});
+    await this.ReplacePrivateUserMetadata({metadataSubtree: "access_level", metadata: level.toLowerCase()});
   }
 
   /**
@@ -227,13 +236,32 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    *
    * @return {Promise<Object>} - The user's private profile metadata - returns undefined if no metadata set or subtree doesn't exist
    */
-  async PrivateUserMetadata({metadataSubtree="/"}) {
+  async PrivateUserMetadata({metadataSubtree="/"}={}) {
     const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
     const objectId = Utils.AddressToObjectId(this.client.signer.address);
 
     await this.__TouchLibrary();
 
     return await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree});
+  }
+
+  /**
+   * Merge the current user's public library metadata
+   *
+   * @namedParams
+   * @param {Object} metadata - New metadata
+   * @param {string=} metadataSubtree - Subtree to merge into - modifies root metadata if not specified
+   */
+  async MergePrivateUserMetadata({metadataSubtree="/", metadata={}}) {
+    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
+    const objectId = Utils.AddressToObjectId(this.client.signer.address);
+
+    await this.__TouchLibrary();
+
+    const editRequest = await this.client.EditContentObject({libraryId, objectId});
+
+    await this.client.MergeMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
   }
 
   /**
@@ -277,6 +305,10 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    * Delete the account library for the current user
    */
   async DeleteAccountLibrary() {
+    if(!(await this.__IsLibraryCreated({accountAddress: this.client.signer.address}))) {
+      return;
+    }
+
     const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
     let path = Path.join("qlibs", libraryId);
 
@@ -302,7 +334,17 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     return await this.PrivateUserMetadata({metadataSubtree: "collected_data"}) || {};
   }
 
+  // Ensure recording tags never causes action to fail
   async RecordTags({libraryId, objectId, versionHash}) {
+    try {
+      await this.__RecordTags({libraryId, objectId, versionHash});
+    } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  }
+
+  async __RecordTags({libraryId, objectId, versionHash}) {
     await this.__TouchLibrary();
 
     if(!versionHash) {
@@ -434,7 +476,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       "PromptedMethods",
       "__IsLibraryCreated",
       "__TouchLibrary",
-      "__FormatVideoTags"
+      "__FormatVideoTags",
+      "__RecordTags"
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))

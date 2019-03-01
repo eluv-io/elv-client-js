@@ -40,7 +40,15 @@ class AuthorizationClient {
   }
 
   async AuthorizationHeader({libraryId, objectId, versionHash, transactionHash, update=false, noCache=false, noAuth=false}) {
-    const authorizationToken = await this.AuthorizationToken({libraryId, objectId, transactionHash, update, noCache, noAuth});
+    const authorizationToken = await this.AuthorizationToken({
+      libraryId,
+      objectId,
+      versionHash,
+      transactionHash,
+      update,
+      noCache,
+      noAuth
+    });
 
     return { Authorization: "Bearer " + authorizationToken };
   }
@@ -55,7 +63,14 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
-      const authorizationToken = await this.GenerateAuthorizationToken({libraryId, objectId, versionHash, transactionHash, update, noAuth});
+      const authorizationToken = await this.GenerateAuthorizationToken({
+        libraryId,
+        objectId,
+        versionHash,
+        transactionHash,
+        update,
+        noAuth
+      });
 
       this.noCache = initialNoCache;
 
@@ -392,8 +407,17 @@ class AuthorizationClient {
       this.accessTransactions.objects[objectId] = undefined;
       this.modifyTransactions.objects[objectId] = undefined;
     } else {
-      this.accessTransactions = {};
-      this.modifyTransactions = {};
+      this.accessTransactions = {
+        spaces: {},
+        libraries: {},
+        objects: {}
+      };
+
+      this.modifyTransactions = {
+        spaces: {},
+        libraries: {},
+        objects: {}
+      };
     }
   }
 }

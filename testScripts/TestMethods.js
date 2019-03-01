@@ -470,13 +470,13 @@ const TestQueries = async (client) => {
       throw Error("Address/hash conversion mismatch: " + libraryId + " : " + newLibraryId);
     }
 
-    const bytes32Hash = client.utils.HashToBytes32({hash: versionHash});
+    const bytes32Hash = client.utils.HashToBytes32(versionHash);
     console.log("CONTENT HASH TO BYTES32 STRING: ");
     console.log("HASH: " + versionHash);
     console.log("BYTES32: " + bytes32Hash + "\n");
 
     // Ensure ToBytes32 is correct
-    const bytes32Test = client.utils.ToBytes32({string: "Hello World!"});
+    const bytes32Test = client.utils.ToBytes32("Hello World!");
     const bytes32Expected = "0x48656c6c6f20576f726c64210000000000000000000000000000000000000000";
     if(bytes32Test !== bytes32Expected) {
       throw Error("Bytes 32 mismatch: " + bytes32Test + " : " + bytes32Expected);

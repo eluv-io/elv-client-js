@@ -1,5 +1,5 @@
 const Fetch = (input, init={}) => {
-  if(typeof window === "undefined") {
+  if(typeof fetch === "undefined") {
     return (require("node-fetch")(input, init));
   } else {
     return fetch(input, init);

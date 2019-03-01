@@ -68,16 +68,16 @@ class ElvClient {
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
    * @param {string} hostname - Hostname of the content fabric API
-   * @param {string} port - Port of the content fabric API
-   * @param {boolean} useHTTPS - Use HTTPS when communicating with the fabric
+   * @param {(string|number)} port - Port of the content fabric API
+   * @param {boolean=} useHTTPS=true - Use HTTPS when communicating with the fabric
    * @param {string} ethHostname - Hostname of the blockchain RPC endpoint
-   * @param {string} ethPort - Port of the blockchain RPC endpoint
-   * @param {boolean} ethUseHTTPS - Use HTTPS when communicating with the blockchain
+   * @param {(string|number)} ethPort - Port of the blockchain RPC endpoint
+   * @param {boolean=} ethUseHTTPS=true - Use HTTPS when communicating with the blockchain
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
-  constructor({contentSpaceId, hostname, port, useHTTPS, ethHostname, ethPort, ethUseHTTPS, noCache=false, noAuth=false}) {
+  constructor({contentSpaceId, hostname, port, useHTTPS=true, ethHostname, ethPort, ethUseHTTPS=true, noCache=false, noAuth=false}) {
     this.contentSpaceId = contentSpaceId;
 
     this.fabricURI = new URI()
@@ -160,6 +160,18 @@ class ElvClient {
     this.signer = undefined;
 
     this.InitializeClients();
+  }
+
+  /**
+   * Clear saved access requests
+   *
+   * @namedParams
+   * @param {string=} libraryId - If present, cached access and modification transactions for the specified library will be cleared
+   * - Note: This will not clear any transactions for any objects within the library
+   * @param {string=} objectId - If present, cached access and modification transactions for the specified object will be cleared
+   */
+  ClearCache({libraryId, objectId}) {
+    this.authClient.ClearCache({libraryId, objectId});
   }
 
   /**
@@ -352,10 +364,10 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} name - Library name
-   * @param {string} description - Library description
+   * @param {string=} description - Library description
    * @param {blob=} image - Image associated with the library
-   * @param {Object} publicMetadata - Public library metadata
-   * @param {Object} privateMetadata - Private library metadata (metadata of library object)
+   * @param {Object=} publicMetadata - Public library metadata
+   * @param {Object=} privateMetadata - Private library metadata (metadata of library object)
    *
    * @returns {Promise<string>} - Library ID of created library
    */
@@ -560,6 +572,57 @@ class ElvClient {
    */
   async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="/", metadata={}}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
+
+    await HandleErrors(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
+        method: "PUT",
+        path: path,
+        body: metadata
+      })
+    );
+  }
+
+  /**
+   * Delete the specified library's public metadata
+   *
+   * @see DELETE /qlibs/:qlibid/meta
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string=} metadataSubtree - Subtree to delete - modifies root metadata if not specified
+   */
+  async DeletePublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
+    // Note: There is currently no delete method for public metadata
+    // Instead, delete metadata manually and call replace
+    let metadata = await this.PublicLibraryMetadata({libraryId});
+
+    metadataSubtree = Path.normalize(metadataSubtree || "/");
+
+    if(metadataSubtree === "/") {
+      metadata = {};
+    } else {
+      let pointer = metadata;
+      const keys = Path.normalize(metadataSubtree || "/").replace(/^\/+/g, "").split("/");
+      for(let i = 0; i < keys.length - 1; i++) {
+        pointer = pointer[keys[i]];
+
+        if(!pointer) {
+          break;
+        }
+      }
+
+      if(!pointer || !pointer[keys[keys.length - 1]]) {
+        throw Error({
+          status: 404,
+          statusText: "Not found: " + metadataSubtree
+        });
+      }
+
+      delete pointer[keys[keys.length - 1]];
+    }
+
+    let path = Path.join("qlibs", libraryId, "meta");
 
     await HandleErrors(
       this.HttpClient.Request({
@@ -791,7 +854,7 @@ class ElvClient {
       });
 
     if(!contentType) {
-      throw Error("Unknown content type: " + (name || versionHash));
+      throw Error("Unknown content type: " + name);
     }
 
     return contentType;
@@ -801,12 +864,13 @@ class ElvClient {
    * Returns the address of the owner of the specified content type
    *
    * @namedParams
-   * @param {string} libraryId
+   * @param {string=} name - Name of the content type to find
+   * @param {string=} versionHash - Version hash of the content type to find
    *
    * @returns {Promise<string>} - The account address of the owner
    */
-  async ContentTypeOwner({name}) {
-    const contentType = await this.ContentType({name});
+  async ContentTypeOwner({name, versionHash}) {
+    const contentType = await this.ContentType({name, versionHash});
 
     return await this.ethClient.CallContractMethod({
       contractAddress: Utils.HashToAddress(contentType.id),
@@ -967,8 +1031,8 @@ class ElvClient {
    * object by this client instance.
    *
    * @namedParams
-   * @param {string=} objectId - ID of the object
-   * @param {number=} score - Percentage score (0-100)
+   * @param {string} objectId - ID of the object
+   * @param {number} score - Percentage score (0-100)
    *
    * @returns {Promise<Object>} - Transaction log of the AccessComplete event
    */
@@ -1088,7 +1152,7 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
-   * @param {bool=} noAuth=false - If specified, authorization will not be performed for this call
+   * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
    *
    * @returns {Promise<Object>} - Metadata of the content object
    */
@@ -1486,9 +1550,11 @@ class ElvClient {
     let fileDataMap = {};
     fileInfo = fileInfo.map(entry => {
       fileDataMap[entry.path] = entry.data;
-      delete entry.data;
 
-      return entry;
+      return {
+        ...entry,
+        data: undefined
+      };
     });
 
     const uploadJobs = (await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo})).upload_jobs;
@@ -1609,13 +1675,15 @@ class ElvClient {
   async ContentParts({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId, "parts");
 
-    return ResponseToJson(
+    const response = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
       })
     );
+
+    return response.parts;
   }
 
   /**
@@ -1666,7 +1734,9 @@ class ElvClient {
    */
   async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, callback}) {
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
-    const totalSize = data.size || data.length;
+    const totalSize = data.size || data.length || data.byteLength;
+
+    if(callback) { callback({uploaded: 0, total: totalSize}); }
 
     // If the file is smaller than the chunk size, just upload it in one pass
     if(totalSize < chunkSize) {
@@ -1712,10 +1782,8 @@ class ElvClient {
         })
       );
 
-      if(callback) { callback({uploaded: uploaded, total: totalSize}); }
+      if(callback) { callback({uploaded: to, total: totalSize}); }
     }
-
-    if(callback) { callback({uploaded: totalSize, total: totalSize}); }
 
     // Finalize part
     return await ResponseToJson(
@@ -1756,24 +1824,30 @@ class ElvClient {
    * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
    * URL includes authorization token.
    *
+   * Alias for the FabricUrl method with the "call" parameter
+   *
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
+   * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of whether such a request exists in the client cache. This request will not be cached.
    *
    * @see FabricUrl for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async CallBitcodeMethod({libraryId, objectId, versionHash, method, queryParams={}, noCache=false}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams, noCache});
+  async CallBitcodeMethod({libraryId, objectId, versionHash, method, queryParams={}, noAuth=false, noCache=false}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams, noAuth, noCache});
   }
 
   /**
    * Generate a URL to the specified /rep endpoint of a content object. URL includes authorization token.
+   *
+   * Alias for the FabricUrl method with the "rep" parameter
    *
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1828,6 +1902,8 @@ client.FabricUrl({
    */
   async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}, noAuth=false, noCache=false}) {
     let path = "";
+    // Clone queryParams to avoid modification of the original
+    queryParams = {...queryParams};
 
     if(libraryId) {
       path = Path.join(path, "qlibs", libraryId);
@@ -1979,7 +2055,8 @@ client.FabricUrl({
       eventValue: "candidate"
     });
 
-    if(candidate.toLowerCase() !== memberAddress.toLowerCase()) {
+    if(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress)) {
+      // eslint-disable-next-line no-console
       console.error("Mismatch: " + candidate + " :: " + memberAddress);
       throw Error("Access group method " + methodName + " failed");
     }
@@ -2246,7 +2323,7 @@ client.FabricUrl({
    * @param {string} eventName - Name of the event to parse
    * @param {string} eventValue - Name of the value to extract from the event
    *
-   * @returns {Promise<*>} - The value extracted from the event
+   * @returns The value extracted from the event
    */
   ExtractValueFromEvent({abi, event, eventName, eventValue}) {
     const eventLog = this.ethClient.ExtractEventFromLogs({abi, event, eventName, eventValue});
@@ -2475,10 +2552,14 @@ client.FabricUrl({
         response: methodResults
       }));
     } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+
+      const responseError = error.message ? error.message : error;
       Respond(this.utils.MakeClonable({
         type: "ElvFrameResponse",
         requestId: message.requestId,
-        error
+        error: responseError
       }));
     }
   }
