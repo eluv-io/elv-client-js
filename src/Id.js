@@ -7,11 +7,6 @@ class Id {
     __id++;
     return __id;
   }
-
-  static nextTag(){
-    __id++;
-    return "id-" +__id;
-  }
 }
 
 module.exports = Id;

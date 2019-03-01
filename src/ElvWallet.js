@@ -62,7 +62,7 @@ class ElvWallet {
    *
    * @returns {Promise<Signer>} - Signer with the decrypted private key, connected to the provider
    */
-  async AddAccountFromEncryptedPK({ accountName, encryptedPrivateKey, password }) {
+  async AddAccountFromEncryptedPK({accountName, encryptedPrivateKey, password}) {
     if(typeof encryptedPrivateKey === "object") {
       encryptedPrivateKey = JSON.stringify(encryptedPrivateKey);
     }
@@ -84,7 +84,7 @@ class ElvWallet {
    *
    * @returns {Signer} - Signer with the private key, connected to the provider
    */
-  AddAccount({ accountName, privateKey }) {
+  AddAccount({accountName, privateKey}) {
     let signer = new Ethers.Wallet(privateKey);
     signer = signer.connect(this.provider);
 
@@ -107,7 +107,7 @@ class ElvWallet {
    *
    * @returns {number} - Account balance of the specified account, in ETH
    */
-  async GetAccountBalance({ accountName, signer }) {
+  async GetAccountBalance({accountName, signer}) {
     const accountSigner = signer || this.GetAccount({ accountName });
 
     if(!accountSigner) {
@@ -131,7 +131,7 @@ class ElvWallet {
    *
    * @returns {Promise<string>} - The encrypted private key (in Ethereum keystore format)
    */
-  async GenerateEncryptedPrivateKey({ accountName, signer, password, options }) {
+  async GenerateEncryptedPrivateKey({accountName, signer, password, options}) {
     const accountSigner = signer || this.GetAccount({ accountName });
 
     if(!accountSigner) {
@@ -149,7 +149,7 @@ class ElvWallet {
 
    * @returns {(Signer|undefined)} - Signer of the saved account, if it exists
    */
-  GetAccount({ accountName }) {
+  GetAccount({accountName}) {
     return this.signers[accountName];
   }
 
@@ -159,7 +159,7 @@ class ElvWallet {
    * @namedParams
    * @param {string} accountName - Name of the account to delete
    */
-  RemoveAccount({ accountName }) {
+  RemoveAccount({accountName}) {
     delete this.signers[accountName];
   }
 }

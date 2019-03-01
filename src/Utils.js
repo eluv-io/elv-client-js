@@ -16,7 +16,7 @@ const Utils = {
   /**
    * Convert wei to ether
    *
-   * @param {number | string | BigNumber} wei - Wei value to convert to ether
+   * @param {string | BigNumber} wei - Wei value to convert to ether
    *
    * @see https://github.com/MikeMcl/bignumber.js
    *
@@ -135,7 +135,7 @@ const Utils = {
    *
    * @returns {string} - The given string in bytes32 format
    */
-  ToBytes32: ({string}) => {
+  ToBytes32: (string) => {
     const bytes32 = string.split("").map(char => {
       return char.charCodeAt(0).toString(16);
     }).join("");
@@ -143,7 +143,7 @@ const Utils = {
     return "0x" + bytes32.slice(0, 64).padEnd(64, "0");
   },
 
-  HashToBytes32: ({hash}) => {
+  HashToBytes32: (hash) => {
     // Parse hash as address and remove 0x and first 4 digits
     let address = Utils.HashToAddress(hash);
     return "0x" + address.replace("0x", "").slice(4);

@@ -289,7 +289,7 @@ class EthClient {
       ]
     });
 
-    return await this.CallContractMethod({
+    return await this.CallContractMethodAndWait({
       contractAddress: contentContractAddress,
       abi: ContentContract.abi,
       methodName: "setContentContractAddress",
@@ -377,10 +377,14 @@ class EthClient {
         blockInfo = await signer.provider.getBlock(blockNumber);
         blockInfo = blockInfo.transactions.map(transactionHash => {
           return {
+            blockNumber: blockInfo.number,
+            blockHash: blockInfo.hash,
             ...blockInfo,
             transactionHash
           };
         });
+
+        blocks[blockNumber] = blockInfo;
       }
 
       if (includeTransaction) {
