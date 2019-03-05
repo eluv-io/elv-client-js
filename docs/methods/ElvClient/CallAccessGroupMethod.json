@@ -1,0 +1,18 @@
+[
+  {
+    "signature": "async CallAccessGroupMethod({\"contractAddress\":\"0x397E9154ECa3e714f51eDB4aA8138994737D424A\",\"memberAddress\":\"0x51D4a37440Ad509b2B335434832A872a8cDc6449\",\"methodName\":\"grantAccess\",\"eventName\":\"MemberAdded\"});",
+    "result": "0x2e08af615878b1ceb9633d9a41159f836b630ff7e6fb17a505fb0ffdc7bbf881"
+  },
+  {
+    "signature": "async CallAccessGroupMethod({\"contractAddress\":\"0x397E9154ECa3e714f51eDB4aA8138994737D424A\",\"memberAddress\":\"0x51D4a37440Ad509b2B335434832A872a8cDc6449\",\"methodName\":\"revokeAccess\",\"eventName\":\"MemberRevoked\"});",
+    "result": "0xec0daa85f97830b416ff09d2896531b8c77ae4049e89f4a0cd26811fb95f5bf4"
+  },
+  {
+    "signature": "async CallAccessGroupMethod({\"contractAddress\":\"0x397E9154ECa3e714f51eDB4aA8138994737D424A\",\"memberAddress\":\"51D4a37440Ad509b2B335434832A872a8cDc6449\",\"methodName\":\"grantManagerAccess\",\"eventName\":\"ManagerAccessGranted\"});",
+    "result": "0xf71e404c1769667fd493256294210c39f75936159c8f232fa0f8c96ae5fcb78b"
+  },
+  {
+    "signature": "async CallAccessGroupMethod({\"contractAddress\":\"0x397E9154ECa3e714f51eDB4aA8138994737D424A\",\"memberAddress\":\"0x51D4a37440Ad509b2B335434832A872a8cDc6449\",\"methodName\":\"revokeManagerAccess\",\"eventName\":\"ManagerAccessRevoked\"});",
+    "result": "0x492f37b807930c9210247a74c25e5578993b5ee7cd56aa1112c7168e158ae345"
+  }
+]

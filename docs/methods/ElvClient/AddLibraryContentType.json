@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async AddLibraryContentType({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"typeName\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "result": "0x4060ee50a1d8148e6e1172803114c55e160bf80dcbba5b73f9cba34879b4b5d3"
+  },
+  {
+    "signature": "async AddLibraryContentType({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"typeId\":\"iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP\"});",
+    "result": "0xaa8318934d13d0d421e79109d2084a74f41591095062b4363bcd1f6180aa53f5"
+  }
+]

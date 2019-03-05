@@ -18,7 +18,8 @@
     "lint": "./node_modules/.bin/eslint \"src/**/*.js\" \"test/**/*.js\" --fix",
     "lint-docs": "./node_modules/.bin/eslint \"vendor/elv-jsdoc-template/tmpl/*.tmpl\" \"vendor/elv-jsdoc-template/**/*.js\" --fix",
     "truffle_test": "node $NODE_DEBUG_OPTION ./node_modules/.bin/truffle test",
-    "test": "jest --coverage --coverageDirectory 'test/coverage'",
+    "test": "jest",
+    "test-cov": "GENERATE_METHOD_LOGS=true jest --coverage --coverageDirectory 'test/coverage'",
     "test-update": "jest --updateSnapshot",
     "test:watch": "jest --watch"
   },

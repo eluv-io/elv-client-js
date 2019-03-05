@@ -1,0 +1,9 @@
+[
+  {
+    "signature": "async DeleteContentLibrary({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "result": {
+      "size": 0,
+      "timeout": 0
+    }
+  }
+]

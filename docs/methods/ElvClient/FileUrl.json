@@ -1,0 +1,14 @@
+[
+  {
+    "signature": "async FileUrl({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"filePath\":\"file\"});",
+    "result": "http://localhost:8008/qlibs/ilib3XLpU8s5hnMvHCNmzuBBShNKc83z/q/iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR/files/file?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMzFwVllyUG9NRnFZWnFQSGRjZ0FGbndBM3VuIiwicWxpYl9pZCI6ImlsaWIzWExwVThzNWhuTXZIQ05tenVCQlNoTktjODN6IiwiYWRkciI6IjB4NTFENGEzNzQ0MEFkNTA5YjJCMzM1NDM0ODMyQTg3MmE4Y0RjNjQ0OSIsInR4aWQiOiIweGIxZDI3OTQ0MmQwMDU0MWE3MGRlYzY1NmQ5YTNhY2VhZTIyY2Q5MGU1ZTBjY2ExOWQ1Yjc4MmQ4ZTg4N2I5YWIifQ%3D%3D.U0lHTkFUVVJF"
+  },
+  {
+    "signature": "async FileUrl({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"filePath\":\"dir/file\"});",
+    "result": "http://localhost:8008/qlibs/ilib3XLpU8s5hnMvHCNmzuBBShNKc83z/q/iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR/files/dir/file?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMzFwVllyUG9NRnFZWnFQSGRjZ0FGbndBM3VuIiwicWxpYl9pZCI6ImlsaWIzWExwVThzNWhuTXZIQ05tenVCQlNoTktjODN6IiwiYWRkciI6IjB4NTFENGEzNzQ0MEFkNTA5YjJCMzM1NDM0ODMyQTg3MmE4Y0RjNjQ0OSIsInR4aWQiOiIweGIxZDI3OTQ0MmQwMDU0MWE3MGRlYzY1NmQ5YTNhY2VhZTIyY2Q5MGU1ZTBjY2ExOWQ1Yjc4MmQ4ZTg4N2I5YWIifQ%3D%3D.U0lHTkFUVVJF"
+  },
+  {
+    "signature": "async FileUrl({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"filePath\":\"file\",\"queryParams\":{\"param1\":\"value1\",\"param2\":\"value2\",\"param3\":\"value3\"}});",
+    "result": "http://localhost:8008/qlibs/ilib3XLpU8s5hnMvHCNmzuBBShNKc83z/q/iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR/files/file?param1=value1&param2=value2&param3=value3&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMzFwVllyUG9NRnFZWnFQSGRjZ0FGbndBM3VuIiwicWxpYl9pZCI6ImlsaWIzWExwVThzNWhuTXZIQ05tenVCQlNoTktjODN6IiwiYWRkciI6IjB4NTFENGEzNzQ0MEFkNTA5YjJCMzM1NDM0ODMyQTg3MmE4Y0RjNjQ0OSIsInR4aWQiOiIweGIxZDI3OTQ0MmQwMDU0MWE3MGRlYzY1NmQ5YTNhY2VhZTIyY2Q5MGU1ZTBjY2ExOWQ1Yjc4MmQ4ZTg4N2I5YWIifQ%3D%3D.U0lHTkFUVVJF"
+  }
+]

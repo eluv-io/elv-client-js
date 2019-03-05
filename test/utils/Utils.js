@@ -2,14 +2,75 @@ const crypto = require("crypto");
 const Ethers = require("ethers");
 const {ElvClient} = require("../../src/ElvClient");
 const ClientConfiguration = require("../../TestConfiguration");
+const Path = require("path");
+const fs = require("fs");
 
-// Private key can be specified on command line as "--privateKey=<private-key>"
-let privateKey = "0xca3a2b0329b2ed1ce491643917f4b13d1619088f73a03728bb4149ed3fda3fbf";
-let pkArg = process.argv.find(arg => arg.startsWith("--privateKey="));
+// Private key can be specified as environment variable
+// e.g. PRIVATE_KEY=<private-key> npm run test
+let privateKey = process.env["PRIVATE_KEY"] || "0xca3a2b0329b2ed1ce491643917f4b13d1619088f73a03728bb4149ed3fda3fbf";
 
-if(pkArg) {
-  privateKey = pkArg.replace("--privateKey=", "");
-}
+/*
+ * Dynamically wrap class methods in logging functionality. Each time the method is called, it will
+ * log the full signature it was called with and the resultant output.
+ *
+ * If --logMethods is not specified when tests are run, no logging will be done.
+ *
+ * Results are saved in /docs/methods/<ClassName>/<MethodName>.json
+ */
+const OutputLogger = (klass, instance, exclude=[]) => {
+  if(!process.env["GENERATE_METHOD_LOGS"]) { return instance; }
+
+  const outputDir = Path.join(__dirname, "..", "..", "docs", "methods", klass.name);
+  try { fs.mkdirSync(outputDir); } catch(e) {}
+
+  let methodWritten = {};
+
+  // Wrap all methods in logging functionality
+  Object.getOwnPropertyNames(klass.prototype).forEach(methodName => {
+    if(exclude.includes(methodName)) { return; }
+
+    const file = Path.join(outputDir, methodName + ".json");
+    const originalMethod = instance[methodName].bind(instance);
+
+    const writeOutput = (args, result, async=false) => {
+      const formattedArgs = args ? JSON.stringify(args) : "";
+      let output = {
+        signature: `${(async ? "async" : "")} ${methodName}(${formattedArgs});`,
+        result: result
+      };
+
+      if(methodWritten[methodName]) {
+        const currentOutput = JSON.parse(fs.readFileSync(file, "utf8"));
+        output = [...currentOutput, output];
+      } else {
+        output = [output];
+      }
+
+      fs.writeFileSync(
+        file,
+        JSON.stringify(output, null, 2)
+      );
+
+      methodWritten[methodName] = true;
+    };
+
+    if(originalMethod.constructor.name === "AsyncFunction") {
+      instance[methodName] = async (args) => {
+        const result = await originalMethod(args);
+        if (result) { writeOutput(args, result, true); }
+        return result;
+      };
+    } else {
+      instance[methodName] = (args) => {
+        const result = originalMethod(args);
+        if (result) { writeOutput(args, result, true); }
+        return result;
+      };
+    }
+  });
+
+  return instance;
+};
 
 const BufferToArrayBuffer = (buffer) => {
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
@@ -61,5 +122,6 @@ module.exports = {
   BufferToArrayBuffer,
   RandomBytes,
   RandomString,
-  CreateClient
+  CreateClient,
+  OutputLogger
 };

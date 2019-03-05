@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async GetAccountBalance({\"accountName\":\"mnemonic\"});",
+    "result": "0.0"
+  },
+  {
+    "signature": "async GetAccountBalance({\"signer\":{\"signingKey\":{\"privateKey\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"keyPair\":{\"privateKey\":\"0x0000000000000000000000000000000000000000000000000000000000000000\",\"publicKey\":\"0x04c41cbfc96c0784c87fc6257d45d82ff022e89f8b170ab0155de2be400bca00c30fd9170ba3cd9b3743e88bef593f603aa95f95ab74fa1b4b0ad59216ffb924f2\",\"compressedPublicKey\":\"0x02c41cbfc96c0784c87fc6257d45d82ff022e89f8b170ab0155de2be400bca00c3\",\"publicKeyBytes\":[2,196,28,191,201,108,7,132,200,127,198,37,125,69,216,47,240,34,232,159,139,23,10,176,21,93,226,190,64,11,202,0,195]},\"publicKey\":\"0x04c41cbfc96c0784c87fc6257d45d82ff022e89f8b170ab0155de2be400bca00c30fd9170ba3cd9b3743e88bef593f603aa95f95ab74fa1b4b0ad59216ffb924f2\",\"address\":\"0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC\"},\"provider\":{\"ready\":{},\"_lastBlockNumber\":-2,\"_balances\":{},\"_events\":[],\"_pollingInterval\":4000,\"_emitted\":{\"block\":-2},\"_fastQueryDate\":0,\"connection\":{\"url\":\"http://localhost:8545/\"},\"_network\":{\"chainId\":955301,\"name\":\"unknown\"}}}});",
+    "result": "0.0"
+  }
+]

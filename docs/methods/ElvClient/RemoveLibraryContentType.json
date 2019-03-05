@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async RemoveLibraryContentType({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"typeName\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "result": "0x3401af78a0f6102faccc2020bf232860dc99e54ffbafc3680fc1e5f21e364395"
+  },
+  {
+    "signature": "async RemoveLibraryContentType({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"typeId\":\"iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP\"});",
+    "result": "0xf0452b22cc9016e58505a283bb23dcddd4d030867b5e73995f79619579b331dc"
+  }
+]

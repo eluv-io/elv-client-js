@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async CreateContentLibrary({\"name\":\"Test Library 8dc8357ab640818398ea\",\"description\":\"Test Library Description\",\"image\":{},\"publicMetadata\":{\"public\":{\"toReplace\":{\"meta\":\"data\"},\"toDelete\":{\"meta\":\"data\"}}},\"privateMetadata\":{\"private\":{\"meta\":\"data\"}}});",
+    "result": "ilib3XLpU8s5hnMvHCNmzuBBShNKc83z"
+  },
+  {
+    "signature": "async CreateContentLibrary({\"publicMetadata\":{},\"privateMetadata\":{\"access_level\":\"prompt\",\"collected_data\":{}},\"isUserLibrary\":true});",
+    "result": "ilib29867BcnA5onAppsYnLLbA3wZGFa"
+  }
+]

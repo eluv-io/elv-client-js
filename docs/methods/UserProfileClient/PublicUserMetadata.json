@@ -1,0 +1,26 @@
+[
+  {
+    "signature": "async PublicUserMetadata({\"accountAddress\":\"0xF1f611FCFD294eFB0715B218231dC1Bd30A8C890\"});",
+    "result": {
+      "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
+      "meta": "data",
+      "nested": {
+        "meta": "data"
+      }
+    }
+  },
+  {
+    "signature": "async PublicUserMetadata({\"accountAddress\":\"0xF1f611FCFD294eFB0715B218231dC1Bd30A8C890\",\"metadataSubtree\":\"nested\"});",
+    "result": {
+      "meta": "data"
+    }
+  },
+  {
+    "signature": "async PublicUserMetadata({\"accountAddress\":\"0xF1f611FCFD294eFB0715B218231dC1Bd30A8C890\",\"metadataSubtree\":\"image\"});",
+    "result": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
+  },
+  {
+    "signature": "async PublicUserMetadata({\"accountAddress\":\"0xF1f611FCFD294eFB0715B218231dC1Bd30A8C890\",\"metadataSubtree\":\"image\"});",
+    "result": "hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
+  }
+]

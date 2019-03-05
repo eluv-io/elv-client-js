@@ -1,0 +1,103 @@
+[
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "result": {
+      "private": {
+        "meta": "data"
+      }
+    }
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"metadataSubtree\":\"private\"});",
+    "result": {
+      "meta": "data"
+    }
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "result": {
+      "toDelete": {
+        "delete": "me"
+      },
+      "toMerge": {
+        "merge": "me"
+      },
+      "toReplace": {
+        "replace": "me"
+      }
+    }
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "result": {
+      "toDelete": {
+        "delete": "me"
+      },
+      "toMerge": {
+        "merge": "me"
+      },
+      "toReplace": {
+        "replace": "me"
+      }
+    }
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"metadataSubtree\":\"toMerge\"});",
+    "result": {
+      "merge": "me"
+    }
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "result": {
+      "toMerge": {
+        "merge": "me",
+        "new": "metadata"
+      },
+      "toReplace": {
+        "new": "metadata"
+      }
+    }
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "result": {
+      "toMerge": {
+        "merge": "me",
+        "new": "metadata"
+      },
+      "toReplace": {
+        "new": "metadata"
+      }
+    }
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__L2v8gvTSgTnEZ8QYpbVNGdUP9mq\"});",
+    "result": {
+      "copy": "metadata",
+      "toMerge": {
+        "merge": "me",
+        "new": "metadata"
+      },
+      "toReplace": {
+        "new": "metadata"
+      }
+    }
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib29867BcnA5onAppsYnLLbA3wZGFa\",\"objectId\":\"iq__29867BcnA5onAppsYnLLbA3wZGFa\",\"metadataSubtree\":\"accessed_content/hq__QmUfsaKLKh42yVSrAEQ6dKDZ7jgqaW6HrbYRFEDXYMe3BA\"});",
+    "result": 1551823477523
+  },
+  {
+    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"versionHash\":\"hq__QmfZr1g6dRdK8KFMSXjHMvyyi7kXwyiGQ9fKjWV9acfjgH\"});",
+    "result": {
+      "toMerge": {
+        "merge": "me",
+        "new": "metadata"
+      },
+      "toReplace": {
+        "new": "metadata"
+      }
+    }
+  }
+]

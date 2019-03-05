@@ -132,8 +132,8 @@ class FrameClient {
     }
   }
 
-  AwaitMessage(requestId, timeout, callback, callbackId, operation) {
-    return new Promise((resolve, reject) => {
+  async AwaitMessage(requestId, timeout, callback, callbackId, operation) {
+    return await new Promise((resolve, reject) => {
       let methodListener;
 
       // Initialize or reset timeout

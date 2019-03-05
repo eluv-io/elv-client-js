@@ -1,0 +1,18 @@
+[
+  {
+    "signature": "async CreateContentObject({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"options\":{\"type\":\"hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD\",\"meta\":{\"toMerge\":{\"merge\":\"me\"},\"toReplace\":{\"replace\":\"me\"},\"toDelete\":{\"delete\":\"me\"}}}});",
+    "result": {
+      "id": "iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR",
+      "type": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "write_token": "tqw_GXLtEKmJWvrUJyUJaCENA7LNYefNsoSrg"
+    }
+  },
+  {
+    "signature": "async CreateContentObject({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"options\":{\"type\":\"\",\"meta\":{\"copy\":\"metadata\"},\"copy_from\":\"hq__QmfZr1g6dRdK8KFMSXjHMvyyi7kXwyiGQ9fKjWV9acfjgH\"}});",
+    "result": {
+      "id": "iq__L2v8gvTSgTnEZ8QYpbVNGdUP9mq",
+      "type": "",
+      "write_token": "tqw_AD3rKDZiMfGa3SvfrSqRgxgzS1F1Cun2b"
+    }
+  }
+]

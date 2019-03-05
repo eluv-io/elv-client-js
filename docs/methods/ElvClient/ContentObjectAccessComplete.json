@@ -1,0 +1,60 @@
+[
+  {
+    "signature": "async ContentObjectAccessComplete({\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"score\":90});",
+    "result": {
+      "to": "0x84D49D3878afFF56E96E2B83925af0D1a0De4D20",
+      "from": "0x51D4a37440Ad509b2B335434832A872a8cDc6449",
+      "contractAddress": null,
+      "transactionIndex": 0,
+      "root": "0xabe3fe63c32dee88fe3f4c84de6c98482a5df65a8e15f3785a5facaed1de27f1",
+      "gasUsed": {
+        "_hex": "0x69ca"
+      },
+      "logsBloom": "0x00000000000000000000000000000000000008000002000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000",
+      "blockHash": "0xd7025c0b087a979cfb2217fe708a6a0927013488ad2d9061eccfc30057eb3ddb",
+      "transactionHash": "0x95b0cfc5c111c0b2038cdcf863ebe35d4005f8b57df10d2a89296f702bf0a40a",
+      "logs": [
+        {
+          "transactionIndex": 0,
+          "blockNumber": 66977,
+          "transactionHash": "0x95b0cfc5c111c0b2038cdcf863ebe35d4005f8b57df10d2a89296f702bf0a40a",
+          "address": "0x84D49D3878afFF56E96E2B83925af0D1a0De4D20",
+          "topics": [
+            "0x7f1f4b28434ce7beab4983e64a8b5bb96e195a67029fdaff925028aec57fbc6b"
+          ],
+          "data": "0x0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000005a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+          "logIndex": 0,
+          "blockHash": "0xd7025c0b087a979cfb2217fe708a6a0927013488ad2d9061eccfc30057eb3ddb",
+          "transactionLogIndex": 0,
+          "name": "AccessComplete",
+          "signature": "AccessComplete(uint256,uint256,bytes32,bool)",
+          "topic": "0x7f1f4b28434ce7beab4983e64a8b5bb96e195a67029fdaff925028aec57fbc6b",
+          "values": {
+            "0": {
+              "_hex": "0x02"
+            },
+            "1": {
+              "_hex": "0x5a"
+            },
+            "2": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "3": true,
+            "requestID": {
+              "_hex": "0x02"
+            },
+            "scorePct": {
+              "_hex": "0x5a"
+            },
+            "mlOutHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "customContractResult": true,
+            "length": 4
+          }
+        }
+      ],
+      "blockNumber": 66977,
+      "confirmations": 1,
+      "cumulativeGasUsed": {
+        "_hex": "0x69ca"
+      }
+    }
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "result": {
+      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
+      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "type": "",
+      "meta": {
+        "name": "Test Content Type 8dc8357ab640818398ea"
+      }
+    }
+  },
+  {
+    "signature": "async ContentType({\"versionHash\":\"iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP\"});",
+    "result": {
+      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
+      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "type": "",
+      "meta": {
+        "name": "Test Content Type 8dc8357ab640818398ea"
+      }
+    }
+  },
+  {
+    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "result": {
+      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
+      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "type": "",
+      "meta": {
+        "name": "Test Content Type 8dc8357ab640818398ea"
+      }
+    }
+  },
+  {
+    "signature": "async ContentType({\"name\":\"library\"});",
+    "result": {
+      "id": "iq__2aZY9aM9PqAcTiGwj1Eso79KVw9J",
+      "hash": "hq__QmbNCZmH3DePfeQEj9UfZPCFYzUjTs55YCsopNpVnzTrJX",
+      "type": "",
+      "meta": {
+        "bitcode_part": "hqp_QmeZ4ivmxo9UCCeNrJ2Fv9WHjDF4MLf2K3sQoar8eyERWk",
+        "name": "Library"
+      }
+    }
+  },
+  {
+    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "result": {
+      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
+      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "type": "",
+      "meta": {
+        "name": "Test Content Type 8dc8357ab640818398ea"
+      }
+    }
+  },
+  {
+    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "result": {
+      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
+      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "type": "",
+      "meta": {
+        "name": "Test Content Type 8dc8357ab640818398ea"
+      }
+    }
+  },
+  {
+    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "result": {
+      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
+      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "type": "",
+      "meta": {
+        "name": "Test Content Type 8dc8357ab640818398ea"
+      }
+    }
+  },
+  {
+    "signature": "async ContentType({\"name\":\"library\"});",
+    "result": {
+      "id": "iq__2aZY9aM9PqAcTiGwj1Eso79KVw9J",
+      "hash": "hq__QmbNCZmH3DePfeQEj9UfZPCFYzUjTs55YCsopNpVnzTrJX",
+      "type": "",
+      "meta": {
+        "bitcode_part": "hqp_QmeZ4ivmxo9UCCeNrJ2Fv9WHjDF4MLf2K3sQoar8eyERWk",
+        "name": "Library"
+      }
+    }
+  }
+]

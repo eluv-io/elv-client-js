@@ -5,7 +5,15 @@ const BaseLibraryContract = require("../src/contracts/BaseLibrary");
 const BaseContentContract = require("../src/contracts/BaseContent");
 const CustomContract = require("../src/contracts/SampleContentLicensing");
 
-const {RandomBytes, RandomString, BufferToArrayBuffer, CreateClient} = require("./utils/Utils");
+const {ElvClient} = require("../src/ElvClient");
+
+const {
+  RandomBytes,
+  RandomString,
+  BufferToArrayBuffer,
+  CreateClient,
+  OutputLogger
+} = require("./utils/Utils");
 
 const testFileSize = 100000;
 
@@ -21,7 +29,7 @@ describe("Test ElvClient", () => {
   beforeAll(async () => {
     jest.setTimeout(30000);
 
-    client = await CreateClient();
+    client = OutputLogger(ElvClient, await CreateClient());
 
     contentSpaceLibraryId = client.utils.AddressToLibraryId(client.utils.HashToAddress(client.contentSpaceId));
 

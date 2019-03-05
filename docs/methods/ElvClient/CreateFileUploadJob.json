@@ -1,0 +1,28 @@
+[
+  {
+    "signature": "async CreateFileUploadJob({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"writeToken\":\"tqw_Fw2NqegDfAzYJ27gC7aGB7EefX4dapQQp\",\"fileInfo\":[{\"path\":\"testDirectory\",\"type\":\"directory\"},{\"path\":\"testDirectory/File 1\",\"type\":\"file\",\"size\":100000},{\"path\":\"testDirectory/File 2\",\"type\":\"file\",\"size\":100000}]});",
+    "result": {
+      "upload_jobs": [
+        {
+          "id": "iqfuQSq4VAjnGEQHFbq7dK2t1s",
+          "files": [
+            {
+              "path": "testDirectory/File 1",
+              "size": 100000,
+              "off": 0,
+              "len": 100000,
+              "rem": 100000
+            },
+            {
+              "path": "testDirectory/File 2",
+              "size": 100000,
+              "off": 0,
+              "len": 100000,
+              "rem": 100000
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

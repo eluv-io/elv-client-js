@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async CopyContentObject({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"originalVersionHash\":\"hq__QmfZr1g6dRdK8KFMSXjHMvyyi7kXwyiGQ9fKjWV9acfjgH\",\"options\":{\"type\":\"\",\"meta\":{\"copy\":\"metadata\"},\"copy_from\":\"hq__QmfZr1g6dRdK8KFMSXjHMvyyi7kXwyiGQ9fKjWV9acfjgH\"}});",
+    "result": {
+      "id": "iq__L2v8gvTSgTnEZ8QYpbVNGdUP9mq",
+      "type": "",
+      "write_token": "tqw_AD3rKDZiMfGa3SvfrSqRgxgzS1F1Cun2b"
+    }
+  }
+]
