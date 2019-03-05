@@ -1,0 +1,16 @@
+[
+  {
+    "signature": "async DeleteContentObject({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "result": {
+      "size": 0,
+      "timeout": 0
+    }
+  },
+  {
+    "signature": "async DeleteContentObject({\"libraryId\":\"ilib31pVYrPoMFqYZqPHdcgAFnwA3un\",\"objectId\":\"iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP\"});",
+    "result": {
+      "size": 0,
+      "timeout": 0
+    }
+  }
+]

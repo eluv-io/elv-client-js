@@ -1,5 +1,5 @@
 const {FrameClient} = require("../src/FrameClient");
-const {RandomBytes, CreateClient} = require("./utils/Utils");
+const {RandomBytes, CreateClient, OutputLogger} = require("./utils/Utils");
 
 let frameClient;
 let client;
@@ -24,7 +24,11 @@ describe("Test FrameClient", () => {
   beforeAll(async () => {
     jest.setTimeout(30000);
 
-    frameClient = new FrameClient({target: window});
+    frameClient = OutputLogger(
+      FrameClient,
+      new FrameClient({target: window}),
+      ["AwaitMessage"]
+    );
 
     client = await CreateClient();
 
@@ -79,7 +83,7 @@ describe("Test FrameClient", () => {
 
     const callback = jest.fn();
 
-    await frameClient.UploadPart({
+    const uploadResult = await frameClient.UploadPart({
       libraryId,
       objectId: createResponse.id,
       writeToken: createResponse.write_token,
@@ -88,6 +92,8 @@ describe("Test FrameClient", () => {
       callback
     });
 
+    expect(uploadResult).toBeDefined();
+    expect(uploadResult.part.size).toEqual(100000);
     expect(callback).toHaveBeenCalledTimes(11);
 
     await frameClient.DeleteContentLibrary({libraryId});

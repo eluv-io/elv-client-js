@@ -1,0 +1,9 @@
+[
+  {
+    "signature": "async DeleteAccountLibrary();",
+    "result": {
+      "size": 0,
+      "timeout": 0
+    }
+  }
+]

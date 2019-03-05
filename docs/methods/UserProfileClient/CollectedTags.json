@@ -1,0 +1,81 @@
+[
+  {
+    "signature": "async CollectedTags();",
+    "result": {}
+  },
+  {
+    "signature": "async CollectedTags();",
+    "result": {
+      "boat": {
+        "aggregate": 0.6,
+        "occurrences": 1
+      },
+      "cherry": {
+        "aggregate": 0.3,
+        "occurrences": 1
+      },
+      "chocolate": {
+        "aggregate": 0.8,
+        "occurrences": 1
+      }
+    }
+  },
+  {
+    "signature": "async CollectedTags();",
+    "result": {
+      "boat": {
+        "aggregate": 0.6,
+        "occurrences": 1
+      },
+      "buoy": {
+        "aggregate": 0.6,
+        "occurrences": 1
+      },
+      "cherry": {
+        "aggregate": 1,
+        "occurrences": 2
+      },
+      "chocolate": {
+        "aggregate": 0.8,
+        "occurrences": 1
+      },
+      "duck": {
+        "aggregate": 0.5,
+        "occurrences": 1
+      }
+    }
+  },
+  {
+    "signature": "async CollectedTags();",
+    "result": {
+      "boat": {
+        "aggregate": 1.5,
+        "occurrences": 2
+      },
+      "buoy": {
+        "aggregate": 0.6,
+        "occurrences": 1
+      },
+      "cherry": {
+        "aggregate": 1,
+        "occurrences": 2
+      },
+      "chocolate": {
+        "aggregate": 0.8,
+        "occurrences": 1
+      },
+      "duck": {
+        "aggregate": 0.5,
+        "occurrences": 1
+      },
+      "mayhem": {
+        "aggregate": 0.5,
+        "occurrences": 1
+      },
+      "person": {
+        "aggregate": 0.8,
+        "occurrences": 1
+      }
+    }
+  }
+]

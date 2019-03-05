@@ -1,5 +1,7 @@
-const {CreateClient, BufferToArrayBuffer} = require("./utils/Utils");
+const {CreateClient, BufferToArrayBuffer, OutputLogger} = require("./utils/Utils");
 const fs = require("fs");
+
+const UserProfileClient = require("../src/UserProfileClient");
 
 let client, tagClient;
 let tagLibraryId;
@@ -28,6 +30,8 @@ describe("Test UserProfileClient", () => {
 
     client = await CreateClient();
     tagClient = await CreateClient();
+
+    client.userProfile = OutputLogger(UserProfileClient, client.userProfile);
   });
 
   test("Create User Profile", async () => {

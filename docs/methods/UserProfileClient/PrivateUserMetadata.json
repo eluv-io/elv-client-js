@@ -1,0 +1,147 @@
+[
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"image\"});",
+    "result": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
+  },
+  {
+    "signature": "async PrivateUserMetadata({});",
+    "result": {
+      "access_level": "prompt",
+      "collected_data": {},
+      "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
+      "toDelete": {
+        "meta": "data"
+      },
+      "toMerge": {
+        "meta": "data"
+      },
+      "toReplace": {
+        "meta": "data"
+      }
+    }
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"toMerge\"});",
+    "result": {
+      "meta": "data"
+    }
+  },
+  {
+    "signature": "async PrivateUserMetadata();",
+    "result": {
+      "access_level": "prompt",
+      "collected_data": {},
+      "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
+      "toMerge": {
+        "meta": "data",
+        "new": "metadata"
+      },
+      "toReplace": {
+        "new": "metadata"
+      }
+    }
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"image\"});",
+    "result": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"image\"});",
+    "result": "hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"image\"});",
+    "result": "hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"access_level\"});",
+    "result": "prompt"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"access_level\"});",
+    "result": "public"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"access_level\"});",
+    "result": "public"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"collected_data\"});",
+    "result": {}
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"collected_data\"});",
+    "result": {
+      "boat": {
+        "aggregate": 0.6,
+        "occurrences": 1
+      },
+      "cherry": {
+        "aggregate": 0.3,
+        "occurrences": 1
+      },
+      "chocolate": {
+        "aggregate": 0.8,
+        "occurrences": 1
+      }
+    }
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"collected_data\"});",
+    "result": {
+      "boat": {
+        "aggregate": 0.6,
+        "occurrences": 1
+      },
+      "buoy": {
+        "aggregate": 0.6,
+        "occurrences": 1
+      },
+      "cherry": {
+        "aggregate": 1,
+        "occurrences": 2
+      },
+      "chocolate": {
+        "aggregate": 0.8,
+        "occurrences": 1
+      },
+      "duck": {
+        "aggregate": 0.5,
+        "occurrences": 1
+      }
+    }
+  },
+  {
+    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"collected_data\"});",
+    "result": {
+      "boat": {
+        "aggregate": 1.5,
+        "occurrences": 2
+      },
+      "buoy": {
+        "aggregate": 0.6,
+        "occurrences": 1
+      },
+      "cherry": {
+        "aggregate": 1,
+        "occurrences": 2
+      },
+      "chocolate": {
+        "aggregate": 0.8,
+        "occurrences": 1
+      },
+      "duck": {
+        "aggregate": 0.5,
+        "occurrences": 1
+      },
+      "mayhem": {
+        "aggregate": 0.5,
+        "occurrences": 1
+      },
+      "person": {
+        "aggregate": 0.8,
+        "occurrences": 1
+      }
+    }
+  }
+]

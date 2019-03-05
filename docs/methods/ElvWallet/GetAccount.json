@@ -1,0 +1,130 @@
+[
+  {
+    "signature": "async GetAccount({\"accountName\":\"test\"});",
+    "result": {
+      "signingKey": {
+        "privateKey": "0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd",
+        "keyPair": {
+          "privateKey": "0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd",
+          "publicKey": "0x04c41cbfc96c0784c87fc6257d45d82ff022e89f8b170ab0155de2be400bca00c30fd9170ba3cd9b3743e88bef593f603aa95f95ab74fa1b4b0ad59216ffb924f2",
+          "compressedPublicKey": "0x02c41cbfc96c0784c87fc6257d45d82ff022e89f8b170ab0155de2be400bca00c3",
+          "publicKeyBytes": [
+            2,
+            196,
+            28,
+            191,
+            201,
+            108,
+            7,
+            132,
+            200,
+            127,
+            198,
+            37,
+            125,
+            69,
+            216,
+            47,
+            240,
+            34,
+            232,
+            159,
+            139,
+            23,
+            10,
+            176,
+            21,
+            93,
+            226,
+            190,
+            64,
+            11,
+            202,
+            0,
+            195
+          ]
+        },
+        "publicKey": "0x04c41cbfc96c0784c87fc6257d45d82ff022e89f8b170ab0155de2be400bca00c30fd9170ba3cd9b3743e88bef593f603aa95f95ab74fa1b4b0ad59216ffb924f2",
+        "address": "0x95cED938F7991cd0dFcb48F0a06a40FA1aF46EBC"
+      },
+      "provider": {
+        "ready": {},
+        "_lastBlockNumber": -2,
+        "_balances": {},
+        "_events": [],
+        "_pollingInterval": 4000,
+        "_emitted": {
+          "block": -2
+        },
+        "_fastQueryDate": 0,
+        "connection": {
+          "url": "http://localhost:8545/"
+        }
+      }
+    }
+  },
+  {
+    "signature": "async GetAccount({\"accountName\":\"mnemonic\"});",
+    "result": {
+      "signingKey": {
+        "privateKey": "0xb8720e8170d334f196742987fdfb575cf93a5a0c79bef2be829672d5bd06e4d6",
+        "keyPair": {
+          "privateKey": "0xb8720e8170d334f196742987fdfb575cf93a5a0c79bef2be829672d5bd06e4d6",
+          "publicKey": "0x049d70c766fad3e0ad9a8802276da6f785239221b3f1d536e50993067ce23b18aa9fe85ecd42f5ea510602c5ea3b1a392d51e22e84b52524d881d0a94947e80c6c",
+          "compressedPublicKey": "0x029d70c766fad3e0ad9a8802276da6f785239221b3f1d536e50993067ce23b18aa",
+          "publicKeyBytes": [
+            2,
+            157,
+            112,
+            199,
+            102,
+            250,
+            211,
+            224,
+            173,
+            154,
+            136,
+            2,
+            39,
+            109,
+            166,
+            247,
+            133,
+            35,
+            146,
+            33,
+            179,
+            241,
+            213,
+            54,
+            229,
+            9,
+            147,
+            6,
+            124,
+            226,
+            59,
+            24,
+            170
+          ]
+        },
+        "publicKey": "0x049d70c766fad3e0ad9a8802276da6f785239221b3f1d536e50993067ce23b18aa9fe85ecd42f5ea510602c5ea3b1a392d51e22e84b52524d881d0a94947e80c6c",
+        "address": "0xCCf8Fb396e1f39071E3d5498325A42a3Dd5c3c66"
+      },
+      "provider": {
+        "ready": {},
+        "_lastBlockNumber": -2,
+        "_balances": {},
+        "_events": [],
+        "_pollingInterval": 4000,
+        "_emitted": {
+          "block": -2
+        },
+        "_fastQueryDate": 0,
+        "connection": {
+          "url": "http://localhost:8545/"
+        }
+      }
+    }
+  }
+]

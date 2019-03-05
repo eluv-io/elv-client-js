@@ -1,0 +1,31 @@
+[
+  {
+    "signature": "async ListFiles({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "result": {
+      ".": {
+        "type": "directory"
+      },
+      "testDirectory": {
+        ".": {
+          "type": "directory"
+        },
+        "File 1": {
+          ".": {
+            "parts": [
+              0
+            ],
+            "size": 100000
+          }
+        },
+        "File 2": {
+          ".": {
+            "parts": [
+              1
+            ],
+            "size": 100000
+          }
+        }
+      }
+    }
+  }
+]

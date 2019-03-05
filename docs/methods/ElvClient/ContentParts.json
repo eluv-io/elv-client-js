@@ -1,0 +1,24 @@
+[
+  {
+    "signature": "async ContentParts({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "result": [
+      {
+        "hash": "hqp_QmPX3GnmoWpcSmLozqqeQVWLr9YFZjCGTM6MGi1d661MRK",
+        "size": 100000
+      },
+      {
+        "hash": "hqp_QmbT4uFRJHPwCESeqvparptiaQYQXN1kkKDocBMEe6UQrr",
+        "size": 100000
+      }
+    ]
+  },
+  {
+    "signature": "async ContentParts({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "result": [
+      {
+        "hash": "hqp_QmNZJgeSFNJMSJNMHYRHKj7Br5L8yqST5BjJAfAJReicbw",
+        "size": 200000
+      }
+    ]
+  }
+]

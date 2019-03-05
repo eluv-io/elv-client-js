@@ -1,21 +1,22 @@
-const {CreateClient} = require("./utils/Utils");
+const {CreateClient, OutputLogger} = require("./utils/Utils");
 
-let client;
+const ElvWallet = require("../src/ElvWallet");
+
+let client, wallet;
 
 // Describe blocks and tests within them are run in order
 describe("Test ElvWallet", () => {
   beforeAll(async () => {
     client = await CreateClient();
+    wallet = OutputLogger(ElvWallet, client.GenerateWallet());
   });
 
   test("Generate Wallet", () => {
-    const wallet = client.GenerateWallet();
     expect(wallet).toBeDefined();
     expect(wallet.provider).toBeDefined();
   });
 
   test("Add/Remove Accounts", () => {
-    const wallet = client.GenerateWallet();
     const privateKey = "0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd";
     const accountName = "test";
 
@@ -32,7 +33,6 @@ describe("Test ElvWallet", () => {
   });
 
   test("Mnemonic", async () => {
-    const wallet = client.GenerateWallet();
     const mnemonic = wallet.GenerateMnemonic();
     const accountName = "mnemonic";
 
@@ -48,7 +48,6 @@ describe("Test ElvWallet", () => {
   });
 
   test("Private Key", async () => {
-    const wallet = client.GenerateWallet();
     const privateKey = "0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd";
 
     const signer = wallet.AddAccount({accountName: "private key", privateKey});
@@ -62,7 +61,6 @@ describe("Test ElvWallet", () => {
   });
 
   test("Encrypted Private Key As String", async () => {
-    const wallet = client.GenerateWallet();
     const encryptedPrivateKey = "{\"address\":\"ef55143b962328914c35c16e225b8aa768434abf\",\"crypto\":{\"cipher\":\"aes-128-ctr\",\"ciphertext\":\"4314d3d5b80ac0c87add387cb3fdf940a4d6d9d999501aa18b5b224f4be70a74\",\"cipherparams\":{\"iv\":\"41cb3d70282553819d836f51540dcca3\"},\"kdf\":\"scrypt\",\"kdfparams\":{\"dklen\":32,\"n\":262144,\"p\":1,\"r\":8,\"salt\":\"03003c0e1f63de7890226b63bf0768fc4faa98eb6c7c1767a72a0cf34c791ac1\"},\"mac\":\"5afd202da30fdadb880dec99a2e8ff4a209fb7aa38c2dd662cc4a375667ce582\"},\"id\":\"05f541df-9dd5-4485-8704-71998d90e6cc\",\"version\":3}";
 
     const signer = await wallet.AddAccountFromEncryptedPK({accountName: "private key", encryptedPrivateKey, password: "test"});
@@ -76,7 +74,6 @@ describe("Test ElvWallet", () => {
   });
 
   test("Encrypted Private Key Object", async () => {
-    const wallet = client.GenerateWallet();
     const encryptedPrivateKey = {
       "address": "ef55143b962328914c35c16e225b8aa768434abf",
       "crypto": {
@@ -110,7 +107,6 @@ describe("Test ElvWallet", () => {
   });
 
   test("Encrypt/Decrypt Private Key", async () => {
-    const wallet = client.GenerateWallet();
     const privateKey = "0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd";
     const options = {
       scrypt: {N: 16384}

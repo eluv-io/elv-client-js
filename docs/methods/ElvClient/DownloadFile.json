@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async DownloadFile({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"filePath\":\"testDirectory/File 1\",\"format\":\"arrayBuffer\"});",
+    "result": {}
+  },
+  {
+    "signature": "async DownloadFile({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"filePath\":\"testDirectory/File 2\",\"format\":\"arrayBuffer\"});",
+    "result": {}
+  }
+]

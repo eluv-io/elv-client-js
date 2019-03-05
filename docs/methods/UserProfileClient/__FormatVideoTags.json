@@ -1,0 +1,26 @@
+[
+  {
+    "signature": "async __FormatVideoTags([{\"tags\":[{\"score\":0.3,\"tag\":\"cherry\"},{\"score\":0.8,\"tag\":\"chocolate\"},{\"score\":0.6,\"tag\":\"boat\"}]}]);",
+    "result": {
+      "cherry": 0.3,
+      "chocolate": 0.8,
+      "boat": 0.6
+    }
+  },
+  {
+    "signature": "async __FormatVideoTags([{\"tags\":[{\"score\":0.7,\"tag\":\"cherry\"},{\"score\":0.5,\"tag\":\"duck\"},{\"score\":0.6,\"tag\":\"buoy\"}]}]);",
+    "result": {
+      "cherry": 0.7,
+      "duck": 0.5,
+      "buoy": 0.6
+    }
+  },
+  {
+    "signature": "async __FormatVideoTags([{\"tags\":[{\"score\":0.5,\"tag\":\"mayhem\"},{\"score\":0.8,\"tag\":\"person\"},{\"score\":0.9,\"tag\":\"boat\"}]}]);",
+    "result": {
+      "mayhem": 0.5,
+      "person": 0.8,
+      "boat": 0.9
+    }
+  }
+]

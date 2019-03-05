@@ -1,0 +1,47 @@
+[
+  {
+    "signature": "async PublicLibraryMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"metadataSubtree\":\"public\"});",
+    "result": {
+      "toDelete": {
+        "meta": "data"
+      },
+      "toReplace": {
+        "meta": "data"
+      }
+    }
+  },
+  {
+    "signature": "async PublicLibraryMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"metadataSubtree\":\"public\"});",
+    "result": {
+      "toDelete": {
+        "meta": "data"
+      },
+      "toReplace": {
+        "new": "metadata"
+      }
+    }
+  },
+  {
+    "signature": "async PublicLibraryMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "result": {
+      "eluv.description": "Test Library Description",
+      "name": "Test Library 8dc8357ab640818398ea",
+      "public": {
+        "toDelete": {
+          "meta": "data"
+        },
+        "toReplace": {
+          "new": "metadata"
+        }
+      }
+    }
+  },
+  {
+    "signature": "async PublicLibraryMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"metadataSubtree\":\"public\"});",
+    "result": {
+      "toReplace": {
+        "new": "metadata"
+      }
+    }
+  }
+]

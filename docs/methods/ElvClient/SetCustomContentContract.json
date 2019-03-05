@@ -1,0 +1,46 @@
+[
+  {
+    "signature": "async SetCustomContentContract({\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"customContractAddress\":\"0x13Cc9E66C4f4FCe274267c0a1A7694fAf5daD5aA\"});",
+    "result": {
+      "to": "0x84D49D3878afFF56E96E2B83925af0D1a0De4D20",
+      "from": "0x51D4a37440Ad509b2B335434832A872a8cDc6449",
+      "contractAddress": null,
+      "transactionIndex": 0,
+      "root": "0x844ef26de314c20732222a042c355846af502ddbb4e83f9c487f9371f4e50fab",
+      "gasUsed": {
+        "_hex": "0x1837a"
+      },
+      "logsBloom": "0x00000000040000000000000000000000000008000002000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000",
+      "blockHash": "0xf997a095731cd6898ba0d4ded645c16058988905de9e2f16f5eed4d7e1191ac4",
+      "transactionHash": "0x7940e55cd34be3b107cccd58a4812dcacc3e183d2dfb5f62cd0e46b287f33dfa",
+      "logs": [
+        {
+          "transactionIndex": 0,
+          "blockNumber": 66979,
+          "transactionHash": "0x7940e55cd34be3b107cccd58a4812dcacc3e183d2dfb5f62cd0e46b287f33dfa",
+          "address": "0x84D49D3878afFF56E96E2B83925af0D1a0De4D20",
+          "topics": [
+            "0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7"
+          ],
+          "data": "0x00000000000000000000000013cc9e66c4f4fce274267c0a1a7694faf5dad5aa",
+          "logIndex": 0,
+          "blockHash": "0xf997a095731cd6898ba0d4ded645c16058988905de9e2f16f5eed4d7e1191ac4",
+          "transactionLogIndex": 0,
+          "name": "SetContentContract",
+          "signature": "SetContentContract(address)",
+          "topic": "0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7",
+          "values": {
+            "0": "0x13Cc9E66C4f4FCe274267c0a1A7694fAf5daD5aA",
+            "contentContractAddress": "0x13Cc9E66C4f4FCe274267c0a1A7694fAf5daD5aA",
+            "length": 1
+          }
+        }
+      ],
+      "blockNumber": 66979,
+      "confirmations": 1,
+      "cumulativeGasUsed": {
+        "_hex": "0x1837a"
+      }
+    }
+  }
+]

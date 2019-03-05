@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async CreateAccountLibrary({\"publicMetadata\":{\"meta\":\"data\",\"nested\":{\"meta\":\"data\"}},\"privateMetadata\":{\"toMerge\":{\"meta\":\"data\"},\"toReplace\":{\"meta\":\"data\"},\"toDelete\":{\"meta\":\"data\"}},\"image\":{}});",
+    "result": "ilib4NWoBjdjgXBkHGSY2emUe9bFCW1d"
+  }
+]
