@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ContentObjectOwner({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
-    "result": "0x51D4a37440Ad509b2B335434832A872a8cDc6449"
+    "signature": "async ContentObjectOwner({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\"\n});",
+    "result": "0xf7C6072c6d61305000E33fF8D8735b3C6af7e10D"
   }
 ]

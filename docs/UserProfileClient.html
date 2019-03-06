@@ -116,16 +116,19 @@ as normal.</p>
 
 
 
-  <div class="example-container source-container">
-    <a class="link-icon" href="#UserProfileClient-examples">
-      <svg height="20" width="20" style="fill: black;">
-        <use xlink:href="#linkIcon"></use>
-      </svg>
-    </a>
+  <div class="example">
     <h5 id="UserProfileClient-examples">Example</h5>
-    
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#UserProfileClient-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
 
-  <pre class="prettyprint"><code>let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+
+  <pre>let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
 let wallet = client.GenerateWallet();
 let signer = wallet.AddAccount({
@@ -137,9 +140,10 @@ client.SetSigner({signer});
 await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
 let frameClient = new FrameClient();
-await client.userProfile.PublicUserMetadata({accountAddress: signer.address})</code></pre>
+await client.userProfile.PublicUserMetadata({accountAddress: signer.address})</pre>
 
 
+    </div>
   </div>
 
 
@@ -261,6 +265,37 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})</c
 
 
 
+  <div class="example">
+    <h5 id="AccessLevel-examples">Examples</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#AccessLevel-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async AccessLevel();
+
+
+"prompt"</pre>
+
+  <pre>async AccessLevel();
+
+
+"public"</pre>
+
+  <pre>async AccessLevel();
+
+
+"public"</pre>
+
+
+    </div>
+  </div>
+
 
 
 
@@ -372,6 +407,105 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})</c
 
 
 
+
+  <div class="example">
+    <h5 id="CollectedTags-examples">Examples</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#CollectedTags-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async CollectedTags();
+
+
+{}</pre>
+
+  <pre>async CollectedTags();
+
+
+{
+  "boat": {
+    "aggregate": 0.6,
+    "occurrences": 1
+  },
+  "cherry": {
+    "aggregate": 0.3,
+    "occurrences": 1
+  },
+  "chocolate": {
+    "aggregate": 0.8,
+    "occurrences": 1
+  }
+}</pre>
+
+  <pre>async CollectedTags();
+
+
+{
+  "boat": {
+    "aggregate": 0.6,
+    "occurrences": 1
+  },
+  "buoy": {
+    "aggregate": 0.6,
+    "occurrences": 1
+  },
+  "cherry": {
+    "aggregate": 1,
+    "occurrences": 2
+  },
+  "chocolate": {
+    "aggregate": 0.8,
+    "occurrences": 1
+  },
+  "duck": {
+    "aggregate": 0.5,
+    "occurrences": 1
+  }
+}</pre>
+
+  <pre>async CollectedTags();
+
+
+{
+  "boat": {
+    "aggregate": 1.5,
+    "occurrences": 2
+  },
+  "buoy": {
+    "aggregate": 0.6,
+    "occurrences": 1
+  },
+  "cherry": {
+    "aggregate": 1,
+    "occurrences": 2
+  },
+  "chocolate": {
+    "aggregate": 0.8,
+    "occurrences": 1
+  },
+  "duck": {
+    "aggregate": 0.5,
+    "occurrences": 1
+  },
+  "mayhem": {
+    "aggregate": 0.5,
+    "occurrences": 1
+  },
+  "person": {
+    "aggregate": 0.8,
+    "occurrences": 1
+  }
+}</pre>
+
+
+    </div>
+  </div>
 
 
 
@@ -615,6 +749,46 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})</c
 
 
 
+
+  <div class="example">
+    <h5 id="CreateAccountLibrary-examples">Example</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#CreateAccountLibrary-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async CreateAccountLibrary({
+  "publicMetadata": {
+    "meta": "data",
+    "nested": {
+      "meta": "data"
+    }
+  },
+  "privateMetadata": {
+    "toMerge": {
+      "meta": "data"
+    },
+    "toReplace": {
+      "meta": "data"
+    },
+    "toDelete": {
+      "meta": "data"
+    }
+  },
+  "image": {}
+});
+
+
+"ilibJTRUm7JcSovveAntSpGuFBQbrwd"</pre>
+
+
+    </div>
+  </div>
 
 
 
@@ -1239,6 +1413,205 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})</c
 
 
 
+  <div class="example">
+    <h5 id="PrivateUserMetadata-examples">Examples</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#PrivateUserMetadata-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "image"
+});
+
+
+"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"</pre>
+
+  <pre>async PrivateUserMetadata({});
+
+
+{
+  "access_level": "prompt",
+  "collected_data": {},
+  "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
+  "toDelete": {
+    "meta": "data"
+  },
+  "toMerge": {
+    "meta": "data"
+  },
+  "toReplace": {
+    "meta": "data"
+  }
+}</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "toMerge"
+});
+
+
+{
+  "meta": "data"
+}</pre>
+
+  <pre>async PrivateUserMetadata();
+
+
+{
+  "access_level": "prompt",
+  "collected_data": {},
+  "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
+  "toMerge": {
+    "meta": "data",
+    "new": "metadata"
+  },
+  "toReplace": {
+    "new": "metadata"
+  }
+}</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "image"
+});
+
+
+"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "image"
+});
+
+
+"hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "image"
+});
+
+
+"hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "access_level"
+});
+
+
+"prompt"</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "access_level"
+});
+
+
+"public"</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "access_level"
+});
+
+
+"public"</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "collected_data"
+});
+
+
+{}</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "collected_data"
+});
+
+
+{
+  "boat": {
+    "aggregate": 0.6,
+    "occurrences": 1
+  },
+  "cherry": {
+    "aggregate": 0.3,
+    "occurrences": 1
+  },
+  "chocolate": {
+    "aggregate": 0.8,
+    "occurrences": 1
+  }
+}</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "collected_data"
+});
+
+
+{
+  "boat": {
+    "aggregate": 0.6,
+    "occurrences": 1
+  },
+  "buoy": {
+    "aggregate": 0.6,
+    "occurrences": 1
+  },
+  "cherry": {
+    "aggregate": 1,
+    "occurrences": 2
+  },
+  "chocolate": {
+    "aggregate": 0.8,
+    "occurrences": 1
+  },
+  "duck": {
+    "aggregate": 0.5,
+    "occurrences": 1
+  }
+}</pre>
+
+  <pre>async PrivateUserMetadata({
+  "metadataSubtree": "collected_data"
+});
+
+
+{
+  "boat": {
+    "aggregate": 1.5,
+    "occurrences": 2
+  },
+  "buoy": {
+    "aggregate": 0.6,
+    "occurrences": 1
+  },
+  "cherry": {
+    "aggregate": 1,
+    "occurrences": 2
+  },
+  "chocolate": {
+    "aggregate": 0.8,
+    "occurrences": 1
+  },
+  "duck": {
+    "aggregate": 0.5,
+    "occurrences": 1
+  },
+  "mayhem": {
+    "aggregate": 0.5,
+    "occurrences": 1
+  },
+  "person": {
+    "aggregate": 0.8,
+    "occurrences": 1
+  }
+}</pre>
+
+
+    </div>
+  </div>
+
 
 
 
@@ -1440,6 +1813,61 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})</c
 
 
 
+
+  <div class="example">
+    <h5 id="PublicUserMetadata-examples">Examples</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#PublicUserMetadata-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async PublicUserMetadata({
+  "accountAddress": "0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4"
+});
+
+
+{
+  "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
+  "meta": "data",
+  "nested": {
+    "meta": "data"
+  }
+}</pre>
+
+  <pre>async PublicUserMetadata({
+  "accountAddress": "0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4",
+  "metadataSubtree": "nested"
+});
+
+
+{
+  "meta": "data"
+}</pre>
+
+  <pre>async PublicUserMetadata({
+  "accountAddress": "0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4",
+  "metadataSubtree": "image"
+});
+
+
+"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"</pre>
+
+  <pre>async PublicUserMetadata({
+  "accountAddress": "0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4",
+  "metadataSubtree": "image"
+});
+
+
+"hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"</pre>
+
+
+    </div>
+  </div>
 
 
 
@@ -2269,6 +2697,36 @@ won't serve old cached versions when the image is updated</p>
 
 
 
+
+  <div class="example">
+    <h5 id="UserProfileImage-examples">Examples</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#UserProfileImage-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async UserProfileImage({
+  "accountAddress": "0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4"
+});
+
+
+"http://localhost:8008/qlibs/ilibJTRUm7JcSovveAntSpGuFBQbrwd/q/iq__JTRUm7JcSovveAntSpGuFBQbrwd/rep/image?hash=hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"</pre>
+
+  <pre>async UserProfileImage({
+  "accountAddress": "0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4"
+});
+
+
+"http://localhost:8008/qlibs/ilibJTRUm7JcSovveAntSpGuFBQbrwd/q/iq__JTRUm7JcSovveAntSpGuFBQbrwd/rep/image?hash=hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"</pre>
+
+
+    </div>
+  </div>
 
 
 

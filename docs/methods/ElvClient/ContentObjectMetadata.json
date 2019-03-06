@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
     "result": {
       "private": {
         "meta": "data"
@@ -8,13 +8,13 @@
     }
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"metadataSubtree\":\"private\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"metadataSubtree\": \"private\"\n});",
     "result": {
       "meta": "data"
     }
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\"\n});",
     "result": {
       "toDelete": {
         "delete": "me"
@@ -28,7 +28,7 @@
     }
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\"\n});",
     "result": {
       "toDelete": {
         "delete": "me"
@@ -42,13 +42,13 @@
     }
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"metadataSubtree\":\"toMerge\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"metadataSubtree\": \"toMerge\"\n});",
     "result": {
       "merge": "me"
     }
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\"\n});",
     "result": {
       "toMerge": {
         "merge": "me",
@@ -60,7 +60,7 @@
     }
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\"\n});",
     "result": {
       "toMerge": {
         "merge": "me",
@@ -72,7 +72,7 @@
     }
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__L2v8gvTSgTnEZ8QYpbVNGdUP9mq\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__21WvWEm24JKYLZgKRrxUNSAAMjX1\"\n});",
     "result": {
       "copy": "metadata",
       "toMerge": {
@@ -85,11 +85,11 @@
     }
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib29867BcnA5onAppsYnLLbA3wZGFa\",\"objectId\":\"iq__29867BcnA5onAppsYnLLbA3wZGFa\",\"metadataSubtree\":\"accessed_content/hq__QmUfsaKLKh42yVSrAEQ6dKDZ7jgqaW6HrbYRFEDXYMe3BA\"});",
-    "result": 1551823477523
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib4TDCVjoMGuxSpgJdDd4rHPdwQ34Y\",\n  \"objectId\": \"iq__4TDCVjoMGuxSpgJdDd4rHPdwQ34Y\",\n  \"metadataSubtree\": \"accessed_content/hq__QmcHbbxxfssMBGi1rtDWEWCxXgZCP1XgBu8QmFjNjwQXmM\"\n});",
+    "result": 1551831325119
   },
   {
-    "signature": "async ContentObjectMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"versionHash\":\"hq__QmfZr1g6dRdK8KFMSXjHMvyyi7kXwyiGQ9fKjWV9acfjgH\"});",
+    "signature": "async ContentObjectMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"versionHash\": \"hq__QmeWAPEQFuG3o4wQKtQNYfiYekpKneTetS8jQbCLXh5sBb\"\n});",
     "result": {
       "toMerge": {
         "merge": "me",

@@ -20,6 +20,8 @@ let data, view;
 
 let outdir = path.normalize(env.opts.destination);
 
+const examplesDir = path.join(__dirname, "..", "..", "docs", "methods");
+
 function find(spec) {
   return helper.find(data, spec);
 }
@@ -441,6 +443,14 @@ exports.publish = function (taffyData, opts, tutorials) {
 
   data().each(function (doclet) {
     doclet.attribs = "";
+
+    if(doclet.memberof && doclet.name) {
+      const exampleFile = path.join(examplesDir, doclet.memberof, doclet.name + ".json");
+      if (fs.existsSync(exampleFile)) {
+        doclet.examples = JSON.parse(fs.readFileSync(exampleFile, "utf8"))
+          .map(example => `${example.signature}\n\n\n${JSON.stringify(example.result, null, 2)}`);
+      }
+    }
 
     if (doclet.examples) {
       doclet.examples = doclet.examples.map(function (example) {

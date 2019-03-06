@@ -1,40 +1,40 @@
 [
   {
-    "signature": "async LibraryContentTypes({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
     "result": {}
   },
   {
-    "signature": "async LibraryContentTypes({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
     "result": {
-      "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD": {
-        "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
-        "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ": {
+        "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
+        "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
         "type": "",
         "meta": {
-          "name": "Test Content Type 8dc8357ab640818398ea"
+          "name": "Test Content Type 6d665cea2fda15b087f6"
         }
       }
     }
   },
   {
-    "signature": "async LibraryContentTypes({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
     "result": {}
   },
   {
-    "signature": "async LibraryContentTypes({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
     "result": {
-      "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD": {
-        "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
-        "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ": {
+        "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
+        "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
         "type": "",
         "meta": {
-          "name": "Test Content Type 8dc8357ab640818398ea"
+          "name": "Test Content Type 6d665cea2fda15b087f6"
         }
       }
     }
   },
   {
-    "signature": "async LibraryContentTypes({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
     "result": {}
   }
 ]

@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async VerifyContentObject({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"objectId\":\"iq__2rLFzVE48rF3WTuFNhaGZe4kQxTR\",\"versionHash\":\"hq__QmfZr1g6dRdK8KFMSXjHMvyyi7kXwyiGQ9fKjWV9acfjgH\"});",
+    "signature": "async VerifyContentObject({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"versionHash\": \"hq__QmeWAPEQFuG3o4wQKtQNYfiYekpKneTetS8jQbCLXh5sBb\"\n});",
     "result": {}
   }
 ]

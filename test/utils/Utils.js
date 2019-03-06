@@ -33,7 +33,12 @@ const OutputLogger = (klass, instance, exclude=[]) => {
     const originalMethod = instance[methodName].bind(instance);
 
     const writeOutput = (args, result, async=false) => {
-      const formattedArgs = args ? JSON.stringify(args) : "";
+      // Modify signer params and responses to be more readable
+      if(args && args.signer) { args.signer = "<Ethers#Wallet>"; }
+      if(result && result.signingKey && result.provider) { result = "<Ethers#Wallet>"; }
+
+      const formattedArgs = args ? JSON.stringify(args, null, 2) : "";
+
       let output = {
         signature: `${(async ? "async" : "")} ${methodName}(${formattedArgs});`,
         result: result
@@ -101,7 +106,7 @@ const CreateClient = async () => {
     try {
       await fundedSigner.sendTransaction({
         to: signer.address,
-        value: Ethers.utils.parseEther("2")
+        value: Ethers.utils.parseEther("3")
       });
 
       break;

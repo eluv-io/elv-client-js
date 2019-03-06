@@ -7,6 +7,8 @@ let client, wallet;
 // Describe blocks and tests within them are run in order
 describe("Test ElvWallet", () => {
   beforeAll(async () => {
+    jest.setTimeout(30000);
+
     client = await CreateClient();
     wallet = OutputLogger(ElvWallet, client.GenerateWallet());
   });
