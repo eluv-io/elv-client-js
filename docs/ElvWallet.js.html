@@ -69,10 +69,6 @@ class ElvWallet {
    * Generate a mnemonic that can be used to initialize a private key
    *
    * @returns {string} - Space-separated list of random words
-   *
-   * @example
-   * wallet.GenerateMnemonic()
-   * => message flat hospital decade burger allow foot sound hunt fiscal script top
    */
   GenerateMnemonic() {
     return Ethers.utils.HDNode.entropyToMnemonic(Ethers.utils.randomBytes(16));
@@ -86,12 +82,6 @@ class ElvWallet {
    * @param {string} mnemonic - Mnemonic from which to generate a private key
    *
    * @returns {Signer} - Signer with the generated private key, connected to the provider
-   *
-   * @example
-   * const mnemonic = wallet.GenerateMnemonic()
-   * => message flat hospital decade burger allow foot sound hunt fiscal script top
-   *
-   * const signer = wallet.AddAccountFromMnemonic({mnemonic});
    */
   AddAccountFromMnemonic({accountName, mnemonic}) {
     let signer = Ethers.Wallet.fromMnemonic(mnemonic);

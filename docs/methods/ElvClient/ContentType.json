@@ -1,39 +1,39 @@
 [
   {
-    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
     "result": {
-      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
-      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
+      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
       "type": "",
       "meta": {
-        "name": "Test Content Type 8dc8357ab640818398ea"
+        "name": "Test Content Type 6d665cea2fda15b087f6"
       }
     }
   },
   {
-    "signature": "async ContentType({\"versionHash\":\"iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP\"});",
+    "signature": "async ContentType({\n  \"versionHash\": \"iq__3fcdo3qKVAvJZCppWuxmacrrfroX\"\n});",
     "result": {
-      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
-      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
+      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
       "type": "",
       "meta": {
-        "name": "Test Content Type 8dc8357ab640818398ea"
+        "name": "Test Content Type 6d665cea2fda15b087f6"
       }
     }
   },
   {
-    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
     "result": {
-      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
-      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
+      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
       "type": "",
       "meta": {
-        "name": "Test Content Type 8dc8357ab640818398ea"
+        "name": "Test Content Type 6d665cea2fda15b087f6"
       }
     }
   },
   {
-    "signature": "async ContentType({\"name\":\"library\"});",
+    "signature": "async ContentType({\n  \"name\": \"library\"\n});",
     "result": {
       "id": "iq__2aZY9aM9PqAcTiGwj1Eso79KVw9J",
       "hash": "hq__QmbNCZmH3DePfeQEj9UfZPCFYzUjTs55YCsopNpVnzTrJX",
@@ -45,40 +45,40 @@
     }
   },
   {
-    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
     "result": {
-      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
-      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
+      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
       "type": "",
       "meta": {
-        "name": "Test Content Type 8dc8357ab640818398ea"
+        "name": "Test Content Type 6d665cea2fda15b087f6"
       }
     }
   },
   {
-    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
     "result": {
-      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
-      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
+      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
       "type": "",
       "meta": {
-        "name": "Test Content Type 8dc8357ab640818398ea"
+        "name": "Test Content Type 6d665cea2fda15b087f6"
       }
     }
   },
   {
-    "signature": "async ContentType({\"name\":\"Test Content Type 8dc8357ab640818398ea\"});",
+    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
     "result": {
-      "id": "iq__2GrQ4FJrKzX3qfz4xiPnK5BUS7sP",
-      "hash": "hq__QmTQQLVv8iK77B7oj75QZZFgk8uCUw429y9cTuAXmkMLrD",
+      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
+      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
       "type": "",
       "meta": {
-        "name": "Test Content Type 8dc8357ab640818398ea"
+        "name": "Test Content Type 6d665cea2fda15b087f6"
       }
     }
   },
   {
-    "signature": "async ContentType({\"name\":\"library\"});",
+    "signature": "async ContentType({\n  \"name\": \"library\"\n});",
     "result": {
       "id": "iq__2aZY9aM9PqAcTiGwj1Eso79KVw9J",
       "hash": "hq__QmbNCZmH3DePfeQEj9UfZPCFYzUjTs55YCsopNpVnzTrJX",

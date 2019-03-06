@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async __FormatVideoTags([{\"tags\":[{\"score\":0.3,\"tag\":\"cherry\"},{\"score\":0.8,\"tag\":\"chocolate\"},{\"score\":0.6,\"tag\":\"boat\"}]}]);",
+    "signature": "async __FormatVideoTags([\n  {\n    \"tags\": [\n      {\n        \"score\": 0.3,\n        \"tag\": \"cherry\"\n      },\n      {\n        \"score\": 0.8,\n        \"tag\": \"chocolate\"\n      },\n      {\n        \"score\": 0.6,\n        \"tag\": \"boat\"\n      }\n    ]\n  }\n]);",
     "result": {
       "cherry": 0.3,
       "chocolate": 0.8,
@@ -8,7 +8,7 @@
     }
   },
   {
-    "signature": "async __FormatVideoTags([{\"tags\":[{\"score\":0.7,\"tag\":\"cherry\"},{\"score\":0.5,\"tag\":\"duck\"},{\"score\":0.6,\"tag\":\"buoy\"}]}]);",
+    "signature": "async __FormatVideoTags([\n  {\n    \"tags\": [\n      {\n        \"score\": 0.7,\n        \"tag\": \"cherry\"\n      },\n      {\n        \"score\": 0.5,\n        \"tag\": \"duck\"\n      },\n      {\n        \"score\": 0.6,\n        \"tag\": \"buoy\"\n      }\n    ]\n  }\n]);",
     "result": {
       "cherry": 0.7,
       "duck": 0.5,
@@ -16,7 +16,7 @@
     }
   },
   {
-    "signature": "async __FormatVideoTags([{\"tags\":[{\"score\":0.5,\"tag\":\"mayhem\"},{\"score\":0.8,\"tag\":\"person\"},{\"score\":0.9,\"tag\":\"boat\"}]}]);",
+    "signature": "async __FormatVideoTags([\n  {\n    \"tags\": [\n      {\n        \"score\": 0.5,\n        \"tag\": \"mayhem\"\n      },\n      {\n        \"score\": 0.8,\n        \"tag\": \"person\"\n      },\n      {\n        \"score\": 0.9,\n        \"tag\": \"boat\"\n      }\n    ]\n  }\n]);",
     "result": {
       "mayhem": 0.5,
       "person": 0.8,

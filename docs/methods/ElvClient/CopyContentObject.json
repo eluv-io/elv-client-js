@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async CopyContentObject({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"originalVersionHash\":\"hq__QmfZr1g6dRdK8KFMSXjHMvyyi7kXwyiGQ9fKjWV9acfjgH\",\"options\":{\"type\":\"\",\"meta\":{\"copy\":\"metadata\"},\"copy_from\":\"hq__QmfZr1g6dRdK8KFMSXjHMvyyi7kXwyiGQ9fKjWV9acfjgH\"}});",
+    "signature": "async CopyContentObject({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"originalVersionHash\": \"hq__QmeWAPEQFuG3o4wQKtQNYfiYekpKneTetS8jQbCLXh5sBb\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__QmeWAPEQFuG3o4wQKtQNYfiYekpKneTetS8jQbCLXh5sBb\"\n  }\n});",
     "result": {
-      "id": "iq__L2v8gvTSgTnEZ8QYpbVNGdUP9mq",
+      "id": "iq__21WvWEm24JKYLZgKRrxUNSAAMjX1",
       "type": "",
-      "write_token": "tqw_AD3rKDZiMfGa3SvfrSqRgxgzS1F1Cun2b"
+      "write_token": "tqw_7bxBbdmRzB7BpkCZeL3xhaiZV3BNE6xnS"
     }
   }
 ]

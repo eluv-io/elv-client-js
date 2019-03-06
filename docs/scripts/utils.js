@@ -54,5 +54,18 @@ window.addEventListener("load", () => {
     }
   });
 
-  document.getElementsByClassName("nav-container")[0].scrollTo(0, 0);
+  Array.from(document.getElementsByClassName("example-toggle-button")).map(toggleButton => {
+    toggleButton.onclick = (event) => {
+      let exampleContainer = Array.from(event.target.parentNode.childNodes)
+        .find(node => node.className && node.className.includes("example-container"));
+
+      if(exampleContainer.style.display === "block") {
+        exampleContainer.style.display = "none";
+        event.target.innerHTML = "Show Examples";
+      } else {
+        exampleContainer.style.display = "block";
+        event.target.innerHTML = "Hide Examples";
+      }
+    };
+  });
 });

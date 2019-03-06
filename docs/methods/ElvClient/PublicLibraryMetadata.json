@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async PublicLibraryMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"metadataSubtree\":\"public\"});",
+    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"metadataSubtree\": \"public\"\n});",
     "result": {
       "toDelete": {
         "meta": "data"
@@ -11,7 +11,7 @@
     }
   },
   {
-    "signature": "async PublicLibraryMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"metadataSubtree\":\"public\"});",
+    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"metadataSubtree\": \"public\"\n});",
     "result": {
       "toDelete": {
         "meta": "data"
@@ -22,10 +22,10 @@
     }
   },
   {
-    "signature": "async PublicLibraryMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
     "result": {
       "eluv.description": "Test Library Description",
-      "name": "Test Library 8dc8357ab640818398ea",
+      "name": "Test Library 6d665cea2fda15b087f6",
       "public": {
         "toDelete": {
           "meta": "data"
@@ -37,7 +37,7 @@
     }
   },
   {
-    "signature": "async PublicLibraryMetadata({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\",\"metadataSubtree\":\"public\"});",
+    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"metadataSubtree\": \"public\"\n});",
     "result": {
       "toReplace": {
         "new": "metadata"

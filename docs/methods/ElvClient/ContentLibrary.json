@@ -1,12 +1,12 @@
 [
   {
-    "signature": "async ContentLibrary({\"libraryId\":\"ilib3XLpU8s5hnMvHCNmzuBBShNKc83z\"});",
+    "signature": "async ContentLibrary({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
     "result": {
-      "id": "ilib3XLpU8s5hnMvHCNmzuBBShNKc83z",
-      "qid": "iq__3XLpU8s5hnMvHCNmzuBBShNKc83z",
+      "id": "ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y",
+      "qid": "iq__3ytK8TDvpNvhNAxKdSkrNb4RMq2Y",
       "meta": {
         "eluv.description": "Test Library Description",
-        "name": "Test Library 8dc8357ab640818398ea",
+        "name": "Test Library 6d665cea2fda15b087f6",
         "public": {
           "toReplace": {
             "new": "metadata"

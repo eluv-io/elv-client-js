@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"image\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
     "result": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
   },
   {
@@ -21,7 +21,7 @@
     }
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"toMerge\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"toMerge\"\n});",
     "result": {
       "meta": "data"
     }
@@ -42,35 +42,35 @@
     }
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"image\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
     "result": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"image\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
     "result": "hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"image\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
     "result": "hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"access_level\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});",
     "result": "prompt"
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"access_level\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});",
     "result": "public"
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"access_level\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});",
     "result": "public"
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"collected_data\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
     "result": {}
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"collected_data\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
     "result": {
       "boat": {
         "aggregate": 0.6,
@@ -87,7 +87,7 @@
     }
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"collected_data\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
     "result": {
       "boat": {
         "aggregate": 0.6,
@@ -112,7 +112,7 @@
     }
   },
   {
-    "signature": "async PrivateUserMetadata({\"metadataSubtree\":\"collected_data\"});",
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
     "result": {
       "boat": {
         "aggregate": 1.5,

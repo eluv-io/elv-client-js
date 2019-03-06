@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async CreateContentLibrary({\"name\":\"Test Library 8dc8357ab640818398ea\",\"description\":\"Test Library Description\",\"image\":{},\"publicMetadata\":{\"public\":{\"toReplace\":{\"meta\":\"data\"},\"toDelete\":{\"meta\":\"data\"}}},\"privateMetadata\":{\"private\":{\"meta\":\"data\"}}});",
-    "result": "ilib3XLpU8s5hnMvHCNmzuBBShNKc83z"
+    "signature": "async CreateContentLibrary({\n  \"name\": \"Test Library 6d665cea2fda15b087f6\",\n  \"description\": \"Test Library Description\",\n  \"image\": {},\n  \"publicMetadata\": {\n    \"public\": {\n      \"toReplace\": {\n        \"meta\": \"data\"\n      },\n      \"toDelete\": {\n        \"meta\": \"data\"\n      }\n    }\n  },\n  \"privateMetadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    }\n  }\n});",
+    "result": "ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y"
   },
   {
-    "signature": "async CreateContentLibrary({\"publicMetadata\":{},\"privateMetadata\":{\"access_level\":\"prompt\",\"collected_data\":{}},\"isUserLibrary\":true});",
-    "result": "ilib29867BcnA5onAppsYnLLbA3wZGFa"
+    "signature": "async CreateContentLibrary({\n  \"publicMetadata\": {},\n  \"privateMetadata\": {\n    \"access_level\": \"prompt\",\n    \"collected_data\": {}\n  },\n  \"isUserLibrary\": true\n});",
+    "result": "ilib4TDCVjoMGuxSpgJdDd4rHPdwQ34Y"
   }
 ]

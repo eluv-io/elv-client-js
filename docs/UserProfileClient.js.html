@@ -362,7 +362,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
     let path = Path.join("qlibs", libraryId);
 
-    return HandleErrors(
+    await HandleErrors(
       this.client.HttpClient.Request({
         headers: await this.client.authClient.AuthorizationHeader({libraryId}),
         method: "DELETE",

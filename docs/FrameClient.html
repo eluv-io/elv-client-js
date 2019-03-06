@@ -323,6 +323,105 @@ and generating a timeout error</p>
 
 
 
+  <div class="example">
+    <h5 id="AllowedMethods-examples">Example</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#AllowedMethods-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async AllowedMethods();
+
+
+[
+  "AccessGroupOwner",
+  "AccessRequest",
+  "AddAccessGroupManager",
+  "AddAccessGroupMember",
+  "AddLibraryContentType",
+  "CachedAccessTransaction",
+  "CallBitcodeMethod",
+  "CallContractMethod",
+  "CallContractMethodAndWait",
+  "ClearCache",
+  "ContentLibraries",
+  "ContentLibrary",
+  "ContentLibraryOwner",
+  "ContentObject",
+  "ContentObjectAccessComplete",
+  "ContentObjectMetadata",
+  "ContentObjectOwner",
+  "ContentObjectVersions",
+  "ContentObjects",
+  "ContentObjectByHash",
+  "ContentParts",
+  "ContentType",
+  "ContentTypeOwner",
+  "ContentTypes",
+  "ContractEvents",
+  "CopyContentObject",
+  "CreateAccessGroup",
+  "CreateContentLibrary",
+  "CreateContentObject",
+  "CreateContentSpace",
+  "CreateContentType",
+  "CreateContentTypeFull",
+  "CreateFileUploadJob",
+  "CurrentAccountAddress",
+  "CustomContractAddress",
+  "DeleteAccessGroup",
+  "DeleteContentLibrary",
+  "DeleteContentObject",
+  "DeleteContentVersion",
+  "DeleteMetadata",
+  "DeletePart",
+  "DeletePublicLibraryMetadata",
+  "DeployContract",
+  "DownloadFile",
+  "DownloadPart",
+  "EditContentObject",
+  "Events",
+  "ExtractEventFromLogs",
+  "ExtractValueFromEvent",
+  "FabricUrl",
+  "FileUrl",
+  "FinalizeContentObject",
+  "FinalizeUploadJobs",
+  "FormatContractArguments",
+  "GetBalance",
+  "LibraryContentTypes",
+  "ListFiles",
+  "MergeMetadata",
+  "Proofs",
+  "PublicLibraryMetadata",
+  "QParts",
+  "RemoveAccessGroupManager",
+  "RemoveAccessGroupMember",
+  "RemoveLibraryContentType",
+  "Rep",
+  "ReplaceMetadata",
+  "ReplacePublicLibraryMetadata",
+  "SendFunds",
+  "SetContentLibraryImage",
+  "SetContentObjectImage",
+  "SetCustomContentContract",
+  "UploadFileData",
+  "UploadFiles",
+  "UploadJobStatus",
+  "UploadPart",
+  "VerifyContentObject",
+  "WithdrawContractFunds"
+]</pre>
+
+
+    </div>
+  </div>
+
 
 
 
@@ -476,6 +575,183 @@ Useful when acting as an intermediate between a contained app and a parent app.<
 
 
 
+
+  <div class="example">
+    <h5 id="PassRequest-examples">Examples</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#PassRequest-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async PassRequest({
+  "request": {
+    "calledMethod": "ContentLibraries",
+    "args": {},
+    "type": "ElvFrameRequest",
+    "requestId": 123
+  }
+});
+
+
+{
+  "type": "ElvFrameResponse",
+  "requestId": 123,
+  "response": [
+    "ilib21RA1yszYtV6t2831uAeFX5K2Mpr",
+    "ilib25dym8fXJaanXT7H9A46fU1g6ecK",
+    "ilib25we7ps9ANj6oDuDep1axWKwnod3",
+    "ilib28EmMW5wAngz6YKwqVavnrnVvFU",
+    "ilib29867BcnA5onAppsYnLLbA3wZGFa",
+    "ilib2HDcWNgRm1N2NaDozAadRvQtfWK4",
+    "ilib2HVGg37pWaG5hzT5NLgnozMjrBy6",
+    "ilib2LJy5XcCEma8JBiEvzgEiYb8W8dF",
+    "ilib2NxE42u3PL4mUzcvBwqAmCcUMFK2",
+    "ilib2QpzxgqJGuumoQ2mP7NSQrJBEPW",
+    "ilib2WUWVuyBrB49kERhroiuwyLwkFTX",
+    "ilib2WtDVRemjJsoyqgwGGGWvirpSfXX",
+    "ilib2XfHcacrjAbmKmBu7q7wSxZD5hR9",
+    "ilib2as7RrzTisizCvz3ihJz13szXzRY",
+    "ilib2bRV9Zjv86CVQM2DR9VVtkTSttdo",
+    "ilib2bqpsu9Cmx8z8MUHeaRewYxJwfTS",
+    "ilib2dZGp21QRkugNRQURAC4pe2oEk4j",
+    "ilib2drjddq6NhQ7xqSn2QPzFHA3rYFi",
+    "ilib2etX46AM29HHNGXvdmvhVTwYoXmL",
+    "ilib2gv52DwvLnj2QBu7yf3xZq85VevX",
+    "ilib2iVgNFmgLtx8UP2KCf7zztdznJTf",
+    "ilib2ja4m49y2W7YoZ9NZbtdv9MpxMhT",
+    "ilib2mLRa1YewPhUDj5SDW1FfbfGLkye",
+    "ilib2oUZVdsZWmxZAYh1WkB89eSBcU1C",
+    "ilib2ogiJaHMJTCdN7sRSCRaNtNN5Lqr",
+    "ilib2qc81KiEjoyi7MWGqEtTwBL3CFLV",
+    "ilib2uxbUoEMy8kKCfPtLyyJeUKEks5n",
+    "ilib2z9xG7d4FYYLSq2XaZoMs8LGit4Z",
+    "ilib31pVYrPoMFqYZqPHdcgAFnwA3un",
+    "ilib32mu2qKy54p9eupfJoL7bHFU6n92",
+    "ilib33QEidNEXfXHCC6KJFU7GBiJSzCU",
+    "ilib34abpinHzgkpiXNewcaBCJFrzSDY",
+    "ilib36cMXEC1xyxsfRfAgwtSwpedctKD",
+    "ilib37EdmebD61cxSrdrURhwyjtWPBpR",
+    "ilib37uVfAkbu6xGNqi545V44QkSyYiV",
+    "ilib3A45M4FY1eTmeZYukTmAhnvdQ2V8",
+    "ilib3EBLHoRhzP8nxQtbqnJz2LKYsZ5Q",
+    "ilib3EeaGjYK6Jq4pk3AP4HzmYdj4ky6",
+    "ilib3GCQvD1CtqQm7pDJzsHWcwazncSt",
+    "ilib3Np3SmyNc7MoX4g9LsqnqSVM7x8i",
+    "ilib3PMD56CaVaUkrsscyv8KnEFPaeEy",
+    "ilib3QUjuvvJgCz3yKgT8QarJkWoMMig",
+    "ilib3R1pB65NXKyCyvmnTMBFcHv5AC15",
+    "ilib3V6svERV7ra8Wt5CUxXPA45Do5GU",
+    "ilib3VJ3swJ4TeuydtoKgUXMTvBHu3Qi",
+    "ilib3dZcKpw2ke6eQtzT71kwXKj1HfuN",
+    "ilib3dudBSjTcX5ejaUUJhLTfQhzV88v",
+    "ilib3eromWEF5c7VXBRKw7PPHN8x88A4",
+    "ilib3nAT1w6h4DmThMqygQr9vJbZ6tcV",
+    "ilib3rofA1KoMKaXPLsLYPgJNCpaa3Fk",
+    "ilib3xdaQuagoDjoQ8dytk9dHcNsxq7a",
+    "ilib3xq1bq1zzFjweGNZotsUFkwvN7w3",
+    "ilib43v3Dn37h47AfQ1RdM5eRcXUtsZo",
+    "ilib44CPNnrQVRgbu7DPzHj9FWP9knfB",
+    "ilib45CoXWXEHW4mXG2uNWkydkWgG3XN",
+    "ilib45wws1Ua4raAo2kzUyG4ThfRY3V7",
+    "ilib47k5g6ADULNLpGmLb5BPPmAZRyRE",
+    "ilib47wJFmqDR23rL4BLPVXUFhW4YJVA",
+    "ilib4CEnPps1uRTszDPkPbpqZpbUEkb",
+    "ilib4CmU4rKNgep6jo4T3EjnL1TLNszd",
+    "ilib4EF5cR3csubgcxPaBKhFHHxr4Nkx",
+    "ilib4GPSGRLR5QdPZ5cUDCeJPjexPHbe",
+    "ilib4Hr64uuSnfi7m1stKqtc8b31jzcV",
+    "ilib4HvRN1vo3ydPdC5oX4bcMHNLv6N8",
+    "ilib4K714uJtC2Ry6Tn7Ae9u125uuGdX",
+    "ilib4KuXf2NspabLiKsDqxym7u7QhbfL",
+    "ilib4MGCgNWszTTbzs1XAhEqq1xv4PvZ",
+    "ilib4NEKtyQDNNCSwGa3pbbvK2LE1XA",
+    "ilib4NgZYAKXXuuJDymhWYaaRSdX2XD4",
+    "ilib4NmJJqn9N9Nw9T5A19at8JX1kmkm",
+    "ilib4R5HXKTV4iu6doZ53uMUGV6Jjmq3",
+    "ilib4R6CosuHajUB4BpLtNZu4aXrqVTa",
+    "ilib4S1BLmQRVZDjaDDVmC1JM88RnzQi",
+    "ilib4SZWW8SkEQsFkG9Y4kskyiGkhfx6",
+    "ilib4Uiwv3BzdSyqUUjdUKFHJWzzJJDe",
+    "ilib4VXpuxWkrMo8bGYGvhmnF2G2Pubo",
+    "ilib4Vk9CAYiGWNo5znQ5WYbEtYnmx6i",
+    "ilib4Z8jGf9vUuHWaNWLjB9bq5HNViLs",
+    "ilib4ZjW1X4uWo8LtUfnqu6B8tX1dH1q",
+    "ilib5tPZ6XKG7VvbsBykK6Js1k5Nz5f",
+    "ilib7XsfQT4Ju9rSrNNXzbzL7smWC8N",
+    "ilib82bu2zfkeXXDm8bqpTaPtJYzQWb",
+    "ilib8DXi2ia4AVHNKz4soAx7QpkPiH3",
+    "ilibB9kBRUTjfE5UMPzZWUZJVtr4grR",
+    "ilibFD9DYh8TuYvTTGsApXi3EnQ3HiM",
+    "ilibGSDd6tWNfYKcDf9hybSwtVxsJQn",
+    "ilibJTRUm7JcSovveAntSpGuFBQbrwd",
+    "ilibJuP2neK9DFKmXPqNiYiCbVRqFGA",
+    "ilibJwZrtKzB4i8Ceec3yHFzcQNmt47",
+    "ilibNoJERYm3EbanoRLX49KSoNjJ7ff",
+    "ilibPMdxDYYSKym97dfkf9JHZghAfVK",
+    "ilibQDERSDFoPRspeY6i5VCgJuzEcfd",
+    "ilibSScmUuYfBGkPe3kY4NjvfLiTVy6",
+    "ilibU79QJzs4zkoDcmhN8fCkVvpxQ5s",
+    "ilibUXNks5b4Rkm4jyAfifiej2WsP8p",
+    "ilibVo2JafYvMXJGU7qiyvn4Vxr6bF9",
+    "ilibXhCUCQfVU9gKWZAqiimxDEZPoij",
+    "ilibYfHdRkh22LbfvqXAjv92KBJJm6E",
+    "ilibZLusoJnHFwAX9pfFB2rYX2yLnsY",
+    "ilibZVeSA9DsDrv1r5X8mdCpnncESak",
+    "ilibcGu2CcEYEYWixvHdUpkcSDFyW17",
+    "ilibfhdqGjCCJRxCEB4qkeeGwSA5hKr",
+    "ilibh8br9vEVSuyBYhrW7K8ML3oabxP",
+    "ilibj91Px41V4RxFuRWpj864YKXXnYH",
+    "iliboPP7FJrFvw8V3PKHNTTq6FswnBT",
+    "ilibrD9ZMkFwPgqd2YeRcQGqnZzcbGG",
+    "ilibrxb8bzax7bdS6h8YP1waX9B7kD7",
+    "ilibsGeWfGhECN9qaF7NpW7ws46HUuV",
+    "ilibuDwkngNMh5Ro46tq9E3AQhWbmzi",
+    "ilibwhWqdhoSP8uTZStzhGbKqoeu48t",
+    "ilibyQf6TbUuwZcJMZG4efsUriRr6wK"
+  ]
+}</pre>
+
+  <pre>async PassRequest({
+  "request": {
+    "type": "ElvFrameRequest",
+    "requestId": 1234,
+    "calledMethod": "UploadPart",
+    "args": {
+      "libraryId": "ilib2BhNDucwPeNJCGhNAfcQmSguxVfo",
+      "objectId": "iq__3qCp7nrL19Y6B1iFX3rYJvy3KbFU",
+      "writeToken": "tqw_A9SEAdz51gskZbeojtkHJYMUth2GmmpRY",
+      "data": {},
+      "chunkSize": 10000
+    },
+    "callbackId": 321
+  }
+});
+
+
+{
+  "type": "ElvFrameResponse",
+  "requestId": 1234,
+  "response": {
+    "content": {
+      "id": "iq__3qCp7nrL19Y6B1iFX3rYJvy3KbFU",
+      "write_token": "tqw_A9SEAdz51gskZbeojtkHJYMUth2GmmpRY",
+      "type": ""
+    },
+    "part": {
+      "hash": "hqp_QmSGpsFxZ3ATtvpzTyprQfbzMMY9VDCvEmwcGiq9kNRUTd",
+      "size": 100000
+    }
+  }
+}</pre>
+
+
+    </div>
+  </div>
 
 
 

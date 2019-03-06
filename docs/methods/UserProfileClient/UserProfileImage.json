@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async UserProfileImage({\"accountAddress\":\"0xF1f611FCFD294eFB0715B218231dC1Bd30A8C890\"});",
-    "result": "http://localhost:8008/qlibs/ilib4NWoBjdjgXBkHGSY2emUe9bFCW1d/q/iq__4NWoBjdjgXBkHGSY2emUe9bFCW1d/rep/image?hash=hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
+    "signature": "async UserProfileImage({\n  \"accountAddress\": \"0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4\"\n});",
+    "result": "http://localhost:8008/qlibs/ilibJTRUm7JcSovveAntSpGuFBQbrwd/q/iq__JTRUm7JcSovveAntSpGuFBQbrwd/rep/image?hash=hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
   },
   {
-    "signature": "async UserProfileImage({\"accountAddress\":\"0xF1f611FCFD294eFB0715B218231dC1Bd30A8C890\"});",
-    "result": "http://localhost:8008/qlibs/ilib4NWoBjdjgXBkHGSY2emUe9bFCW1d/q/iq__4NWoBjdjgXBkHGSY2emUe9bFCW1d/rep/image?hash=hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
+    "signature": "async UserProfileImage({\n  \"accountAddress\": \"0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4\"\n});",
+    "result": "http://localhost:8008/qlibs/ilibJTRUm7JcSovveAntSpGuFBQbrwd/q/iq__JTRUm7JcSovveAntSpGuFBQbrwd/rep/image?hash=hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
   }
 ]

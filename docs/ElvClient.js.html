@@ -569,7 +569,7 @@ class ElvClient {
       methodArgs: []
     });
 
-    return HandleErrors(
+    await HandleErrors(
       this.HttpClient.Request({
         headers: authorizationHeader,
         method: "DELETE",
@@ -1401,7 +1401,7 @@ class ElvClient {
   async DeleteContentVersion({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
 
-    return HandleErrors(
+    await HandleErrors(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
@@ -1431,7 +1431,7 @@ class ElvClient {
       methodArgs: []
     });
 
-    return HandleErrors(
+    await HandleErrors(
       this.HttpClient.Request({
         headers: authorizationHeader,
         method: "DELETE",
@@ -1553,47 +1553,6 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the draft
    * @param {Array&lt;object>} fileInfo - List of files to upload, including their size, type, and contents
-   * @example fileInfo
-[
-  {
-    "path": "myDirectory",
-    "type": "directory"
-  },
-  {
-    "path": "myDirectory/Video.mp4",
-    "type": "file",
-    "size": 6045849,
-    "data": &lt;data>
-  },
-  {
-    "path": "myDirectory/MyImage.png",
-    "type": "file",
-    "size": 90509,
-    "data": &lt;data>
-  }
-  {
-    "path": "myDirectory/File.bin",
-    "type": "file",
-    "size": 236990304,
-    "data": &lt;data>
-  },
-  {
-    "path": "myDirectory/subDirectory",
-    "type": "directory"
-  },
-  {
-    "path": "myDirectory/subDirectory/MyVideo.mp4",
-    "type": "file",
-    "size": 6089214,
-    "data": &lt;data>
-  },
-  {
-    "path": "myDirectory/subDirectory/OtherImage.png",
-    "type": "file",
-    "size": 789561,
-    "data": &lt;data>
-  }
-]
    */
   async UploadFiles({libraryId, objectId, writeToken, fileInfo}) {
     // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
@@ -1861,7 +1820,7 @@ class ElvClient {
   async DeletePart({libraryId, objectId, writeToken, partHash}) {
     let path = Path.join("q", writeToken, "parts", partHash);
 
-    return HandleErrors(
+    await HandleErrors(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "DELETE",
@@ -1935,20 +1894,6 @@ class ElvClient {
    * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
    *
    * @returns {Promise&lt;string>} - URL to the specified endpoint with authorization token
-   *
-   * @example client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN"});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN?authorization=...
-
-client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN", objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s"});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/iq__4EwJBLZfKpdUSsF4h6pfk777pd5s?authorization=...
-
-client.FabricUrl({
-  libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN",
-  objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s",
-  versionHash: "hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL",
-  partHash: "hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB"
-});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...
    */
   async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}, noAuth=false, noCache=false}) {
     let path = "";
