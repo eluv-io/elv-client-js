@@ -50,6 +50,7 @@
     "jest": "^24.1.0",
     "jest-cli": "^24.1.0",
     "jsdoc": "^3.5.5",
+    "lodash.isequal": "^4.5.0",
     "minami": "^1.2.3",
     "raw-loader": "^0.5.1",
     "solc": "^0.4.25",

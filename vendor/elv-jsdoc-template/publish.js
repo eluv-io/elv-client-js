@@ -448,7 +448,11 @@ exports.publish = function (taffyData, opts, tutorials) {
       const exampleFile = path.join(examplesDir, doclet.memberof, doclet.name + ".json");
       if (fs.existsSync(exampleFile)) {
         doclet.examples = JSON.parse(fs.readFileSync(exampleFile, "utf8"))
-          .map(example => `${example.signature}\n\n\n${JSON.stringify(example.result, null, 2)}`);
+          .map(example => {
+            return example.result !== undefined ?
+              `${example.signature}\n\n\n${example.result}` :
+              `${example.signature}\n\n\n<No Return Value>`;
+          });
       }
     }
 

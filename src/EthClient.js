@@ -33,10 +33,10 @@ class EthClient {
     }
 
     switch(type.toLowerCase()) {
-    case "bytes32":
-      return Ethers.utils.formatBytes32String(value);
-    default:
-      return value;
+      case "bytes32":
+        return Ethers.utils.formatBytes32String(value);
+      default:
+        return value;
     }
   }
 

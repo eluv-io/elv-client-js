@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async SetContentObjectImage({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"image\": \"<ArrayBuffer 101254>\"\n});"
+  }
+]

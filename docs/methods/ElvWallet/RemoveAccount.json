@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async RemoveAccount({\n  \"accountName\": \"test\"\n});"
+  }
+]

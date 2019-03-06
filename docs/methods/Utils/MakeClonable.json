@@ -1,0 +1,67 @@
+[
+  {
+    "signature": "async MakeClonable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"set\": \"<Set>\",\n  \"map\": \"<Map>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\"\n});",
+    "result": "{\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"set\": \"<Set>\",\n  \"map\": \"<Map>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\"\n}"
+  },
+  {
+    "signature": "async MakeClonable(\"value\");",
+    "result": "\"value\""
+  },
+  {
+    "signature": "async MakeClonable(0.5);",
+    "result": "0.5"
+  },
+  {
+    "signature": "async MakeClonable({\n  \"value\": \"something\"\n});",
+    "result": "{\n  \"value\": \"something\"\n}"
+  },
+  {
+    "signature": "async MakeClonable(2);",
+    "result": "2"
+  },
+  {
+    "signature": "async MakeClonable(\"b\");",
+    "result": "\"b\""
+  },
+  {
+    "signature": "async MakeClonable({\n  \"a\": \"b\"\n});",
+    "result": "{\n  \"a\": \"b\"\n}"
+  },
+  {
+    "signature": "async MakeClonable();"
+  },
+  {
+    "signature": "async MakeClonable({});",
+    "result": "<Map>"
+  },
+  {
+    "signature": "async MakeClonable({});",
+    "result": "<Set>"
+  },
+  {
+    "signature": "async MakeClonable({\n  \"0\": 98,\n  \"1\": 52,\n  \"2\": 52,\n  \"3\": 48,\n  \"4\": 97,\n  \"5\": 100,\n  \"6\": 102,\n  \"7\": 102,\n  \"8\": 98,\n  \"9\": 52,\n  \"10\": 55,\n  \"11\": 57,\n  \"12\": 101,\n  \"13\": 57,\n  \"14\": 55,\n  \"15\": 56,\n  \"16\": 52,\n  \"17\": 57,\n  \"18\": 48,\n  \"19\": 52,\n  \"20\": 48,\n  \"21\": 100,\n  \"22\": 56,\n  \"23\": 54,\n  \"24\": 57,\n  \"25\": 98,\n  \"26\": 102,\n  \"27\": 48,\n  \"28\": 53,\n  \"29\": 51,\n  \"30\": 56,\n  \"31\": 98,\n  \"32\": 57,\n  \"33\": 97,\n  \"34\": 48,\n  \"35\": 97,\n  \"36\": 98,\n  \"37\": 52,\n  \"38\": 57,\n  \"39\": 102\n});",
+    "result": "<ArrayBuffer 40>"
+  },
+  {
+    "signature": "async MakeClonable({});",
+    "result": "<ArrayBuffer 20>"
+  },
+  {
+    "signature": "async MakeClonable({});",
+    "result": "<Blob>"
+  },
+  {
+    "signature": "async MakeClonable({\n  \"size\": 0,\n  \"timeout\": 0\n});"
+  },
+  {
+    "signature": "async MakeClonable();"
+  },
+  {
+    "signature": "async MakeClonable({});",
+    "result": "\"Error\""
+  },
+  {
+    "signature": "async MakeClonable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<Buffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"response\": \"<Response 0>\",\n  \"error\": {}\n});",
+    "result": "{\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<ArrayBuffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"error\": \"Error\"\n}"
+  }
+]

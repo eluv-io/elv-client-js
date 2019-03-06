@@ -1,0 +1,8 @@
+[
+  {
+    "signature": "async DeleteContentObject({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\"\n});"
+  },
+  {
+    "signature": "async DeleteContentObject({\n  \"libraryId\": \"ilib31pVYrPoMFqYZqPHdcgAFnwA3un\",\n  \"objectId\": \"iq__2Yo88bHSdMKabKrViQytuCPrj9C5\"\n});"
+  }
+]

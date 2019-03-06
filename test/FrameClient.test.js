@@ -1,5 +1,6 @@
 const {FrameClient} = require("../src/FrameClient");
-const {RandomBytes, CreateClient, OutputLogger} = require("./utils/Utils");
+const OutputLogger = require("./utils/OutputLogger");
+const {RandomBytes, CreateClient} = require("./utils/Utils");
 
 let frameClient;
 let client;

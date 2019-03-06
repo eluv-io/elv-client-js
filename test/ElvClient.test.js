@@ -7,12 +7,12 @@ const CustomContract = require("../src/contracts/SampleContentLicensing");
 
 const {ElvClient} = require("../src/ElvClient");
 
+const OutputLogger = require("./utils/OutputLogger");
 const {
   RandomBytes,
   RandomString,
   BufferToArrayBuffer,
-  CreateClient,
-  OutputLogger
+  CreateClient
 } = require("./utils/Utils");
 
 const testFileSize = 100000;
@@ -33,6 +33,9 @@ describe("Test ElvClient", () => {
 
     contentSpaceLibraryId = client.utils.AddressToLibraryId(client.utils.HashToAddress(client.contentSpaceId));
 
+    libraryId = "ilib4Vk9CAYiGWNo5znQ5WYbEtYnmx6i";
+    objectId = "iq__3LXmRuyGU9ZDU5Nr9MqMCkAcNViM";
+    versionHash = "hq__QmcMVMRHazNcihKUUALB3CPfX5XPnhKtJXanzGc8hpG6ch";
     //libraryId = "ilib4Vk9CAYiGWNo5znQ5WYbEtYnmx6i";
     //objectId = "iq__3fkAJTxyzVo8eYkcZTWKvaoYWYhr";
     //versionHash = "hq__QmZ293SLCn2ERxYJQFxFFs4AF5Jc4D2DxSciGZEk1poE9w";
@@ -731,11 +734,11 @@ describe("Test ElvClient", () => {
       validateUrl(noAuthUrl, Path.join("/qlibs", libraryId, "q", objectId, "rep", "image"), {}, false);
     });
 
-    test("CallBitcodeMethod URL", async () => {
-      const callUrl = await client.CallBitcodeMethod({libraryId, objectId, method: "image"});
+    test("Bitcode Method URL", async () => {
+      const callUrl = await client.BitcodeMethodUrl({libraryId, objectId, method: "image"});
       validateUrl(callUrl, Path.join("/qlibs", libraryId, "q", objectId, "call", "image"));
 
-      const noAuthUrl = await client.CallBitcodeMethod({libraryId, objectId, method: "image", noAuth: true});
+      const noAuthUrl = await client.BitcodeMethodUrl({libraryId, objectId, method: "image", noAuth: true});
       validateUrl(noAuthUrl, Path.join("/qlibs", libraryId, "q", objectId, "call", "image"), {}, false);
     });
 

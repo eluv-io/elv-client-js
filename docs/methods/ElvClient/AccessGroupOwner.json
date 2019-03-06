@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async AccessGroupOwner({\n  \"contractAddress\": \"0x5a728080836C32b364c0286af321a5c1D449586d\"\n});",
-    "result": "0xf7C6072c6d61305000E33fF8D8735b3C6af7e10D"
+    "signature": "async AccessGroupOwner({\n  \"contractAddress\": \"0x876F68c2a7DC0532E7C2a429f42E47b8054488c0\"\n});",
+    "result": "\"0x3B7746010Ac7DE2B6aEde6000324FC7CAE7cF0dc\""
   }
 ]

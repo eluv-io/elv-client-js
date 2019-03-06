@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async DeleteContentVersion({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"versionHash\": \"hq__QmTdoJPVxPqvA62xvCJ6uZi71SoJw8PfvvNVjqHQyJ7tLB\"\n});"
+  }
+]

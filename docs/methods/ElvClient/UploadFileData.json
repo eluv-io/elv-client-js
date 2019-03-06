@@ -1,31 +1,10 @@
 [
   {
-    "signature": "async UploadFileData({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"writeToken\": \"tqw_LRRSqfZ2cF4owUoiWTM9ckFyDupJaBhaH\",\n  \"jobId\": \"iqfuLZVnEini4qrswFkaNazouy\",\n  \"fileData\": {}\n});",
-    "result": {
-      "content": {
-        "id": "iq__swZ9ixuXU25LEzrw2a2vHN1uaSo",
-        "write_token": "tqw_LRRSqfZ2cF4owUoiWTM9ckFyDupJaBhaH",
-        "type": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ"
-      },
-      "part": {
-        "write_token": "tqpw7FXzfh5836Tf8PYaUnL3eYfgEPxASrHZQ",
-        "size": 100000
-      }
-    }
+    "signature": "async UploadFileData({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"writeToken\": \"tqw_LyBmaTPnjowUK4L3LGZECRxvCbUSphL1x\",\n  \"jobId\": \"iqfuFnyx65AUafT9D3owdQcpDr\",\n  \"fileData\": \"<ArrayBuffer 100000>\"\n});",
+    "result": "{\n  \"content\": {\n    \"id\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n    \"write_token\": \"tqw_LyBmaTPnjowUK4L3LGZECRxvCbUSphL1x\",\n    \"type\": \"hq__QmNTA2yaKfapTAWiDQgMkCKDUuKagZwiGvLFQJcTJMBvQC\"\n  },\n  \"part\": {\n    \"write_token\": \"tqpwHareqWQhJmenk7JDzMwfYbAPrDyxTAcbD\",\n    \"size\": 100000\n  }\n}"
   },
   {
-    "signature": "async UploadFileData({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"writeToken\": \"tqw_LRRSqfZ2cF4owUoiWTM9ckFyDupJaBhaH\",\n  \"jobId\": \"iqfuLZVnEini4qrswFkaNazouy\",\n  \"fileData\": {}\n});",
-    "result": {
-      "content": {
-        "id": "iq__swZ9ixuXU25LEzrw2a2vHN1uaSo",
-        "write_token": "tqw_LRRSqfZ2cF4owUoiWTM9ckFyDupJaBhaH",
-        "type": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ"
-      },
-      "part": {
-        "write_token": "tqpw7FXzfh5836Tf8PYaUnL3eYfgEPxASrHZQ",
-        "hash": "hqp_QmNSw9ACjKWw29UAxwH24rogsF6Fo12ut1uC878YZG2tkd",
-        "size": 200000
-      }
-    }
+    "signature": "async UploadFileData({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"writeToken\": \"tqw_LyBmaTPnjowUK4L3LGZECRxvCbUSphL1x\",\n  \"jobId\": \"iqfuFnyx65AUafT9D3owdQcpDr\",\n  \"fileData\": \"<ArrayBuffer 100000>\"\n});",
+    "result": "{\n  \"content\": {\n    \"id\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n    \"write_token\": \"tqw_LyBmaTPnjowUK4L3LGZECRxvCbUSphL1x\",\n    \"type\": \"hq__QmNTA2yaKfapTAWiDQgMkCKDUuKagZwiGvLFQJcTJMBvQC\"\n  },\n  \"part\": {\n    \"write_token\": \"tqpwHareqWQhJmenk7JDzMwfYbAPrDyxTAcbD\",\n    \"hash\": \"hqp_QmTgR4YcR4YUZWvXxqjYyJR531rR378GgJyNwPyGiEp7kG\",\n    \"size\": 200000\n  }\n}"
   }
 ]

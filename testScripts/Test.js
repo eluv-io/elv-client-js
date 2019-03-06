@@ -2,8 +2,8 @@ const { ElvClient } = require("../src/ElvClient");
 const { FrameClient } = require("../src/FrameClient");
 
 const ClientConfiguration = require("../TestConfiguration.json");
-
-
+const Response = (require("node-fetch")).Response;
+const Utils = require("../src/Utils");
 
 const Test = async () => {
   try {

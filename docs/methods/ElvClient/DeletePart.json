@@ -1,0 +1,8 @@
+[
+  {
+    "signature": "async DeletePart({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"writeToken\": \"tqw_J3XAjWDZYRUZEJp675qFiMHaD1RRpqM59\",\n  \"partHash\": \"hqp_QmeEGykRVh12eRactbChewigrcWQqGr9scTy3jN97r2p6s\"\n});"
+  },
+  {
+    "signature": "async DeletePart({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"writeToken\": \"tqw_J3XAjWDZYRUZEJp675qFiMHaD1RRpqM59\",\n  \"partHash\": \"hqp_QmZqgvMeo23YR9diyXdo3zhM8aLX3GJcPUSpEWXUvWzF8A\"\n});"
+  }
+]

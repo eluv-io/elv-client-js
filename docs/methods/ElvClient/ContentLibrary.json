@@ -1,18 +1,6 @@
 [
   {
-    "signature": "async ContentLibrary({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\"\n});",
-    "result": {
-      "id": "ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y",
-      "qid": "iq__3ytK8TDvpNvhNAxKdSkrNb4RMq2Y",
-      "meta": {
-        "eluv.description": "Test Library Description",
-        "name": "Test Library 6d665cea2fda15b087f6",
-        "public": {
-          "toReplace": {
-            "new": "metadata"
-          }
-        }
-      }
-    }
+    "signature": "async ContentLibrary({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\"\n});",
+    "result": "{\n  \"id\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"qid\": \"iq__2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"meta\": {\n    \"eluv.description\": \"Test Library Description\",\n    \"name\": \"Test Library 9b23cc0538e5396e56cf\",\n    \"public\": {\n      \"toReplace\": {\n        \"new\": \"metadata\"\n      }\n    }\n  }\n}"
   }
 ]

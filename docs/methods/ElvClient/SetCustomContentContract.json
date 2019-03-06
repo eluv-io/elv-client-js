@@ -1,46 +1,6 @@
 [
   {
-    "signature": "async SetCustomContentContract({\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"customContractAddress\": \"0x26b67d8A29A31d24CE57dC0C550c7f0D134f6fF0\"\n});",
-    "result": {
-      "to": "0x3F0AD83d1e0Ae510eb7764B52Ef21be12BEB7d3C",
-      "from": "0xf7C6072c6d61305000E33fF8D8735b3C6af7e10D",
-      "contractAddress": null,
-      "transactionIndex": 0,
-      "root": "0xceb8572525a52041b766fc9d22ea49f1fc7d11a56e5d2074b09d135ec96df941",
-      "gasUsed": {
-        "_hex": "0x1837a"
-      },
-      "logsBloom": "0x00000000040000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000008000000000000000000000000000000000000000000000000000000000000000000000",
-      "blockHash": "0x7cf6f550514cf805feb58dfadb10fbeacfad350c55bbcbd88ba0e02d234a3cb2",
-      "transactionHash": "0xdceeb6a92cf4e447c6c7c592eb04c30cedc9cc39cc9b2b16238e0f8121a013ff",
-      "logs": [
-        {
-          "transactionIndex": 0,
-          "blockNumber": 67241,
-          "transactionHash": "0xdceeb6a92cf4e447c6c7c592eb04c30cedc9cc39cc9b2b16238e0f8121a013ff",
-          "address": "0x3F0AD83d1e0Ae510eb7764B52Ef21be12BEB7d3C",
-          "topics": [
-            "0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7"
-          ],
-          "data": "0x00000000000000000000000026b67d8a29a31d24ce57dc0c550c7f0d134f6ff0",
-          "logIndex": 0,
-          "blockHash": "0x7cf6f550514cf805feb58dfadb10fbeacfad350c55bbcbd88ba0e02d234a3cb2",
-          "transactionLogIndex": 0,
-          "name": "SetContentContract",
-          "signature": "SetContentContract(address)",
-          "topic": "0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7",
-          "values": {
-            "0": "0x26b67d8A29A31d24CE57dC0C550c7f0D134f6fF0",
-            "contentContractAddress": "0x26b67d8A29A31d24CE57dC0C550c7f0D134f6fF0",
-            "length": 1
-          }
-        }
-      ],
-      "blockNumber": 67241,
-      "confirmations": 1,
-      "cumulativeGasUsed": {
-        "_hex": "0x1837a"
-      }
-    }
+    "signature": "async SetCustomContentContract({\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"customContractAddress\": \"0x8041441AFD0eB90D9fB1CfA967e3e2B398D706eA\"\n});",
+    "result": "{\n  \"to\": \"0x44d3400dDc28Ede4f687bc6d28295ae6f77FCAEB\",\n  \"from\": \"0x3B7746010Ac7DE2B6aEde6000324FC7CAE7cF0dc\",\n  \"contractAddress\": null,\n  \"transactionIndex\": 0,\n  \"root\": \"0x2851498f0df7ac09092aeb2410bbe7743ccfba27af7b6c99bce30738ae0ea1cd\",\n  \"gasUsed\": {\n    \"_hex\": \"0x1837a\"\n  },\n  \"logsBloom\": \"0x00410000040000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000\",\n  \"blockHash\": \"0x86cc5f3d1b28dda2ca563da4ad80ad4f9924ab45e451c98036d63041444b20e9\",\n  \"transactionHash\": \"0xf9dd5e3354a3333f04d0465551613221b563e8a87eee55d89830c5c3fcd08acf\",\n  \"logs\": [\n    {\n      \"transactionIndex\": 0,\n      \"blockNumber\": 67661,\n      \"transactionHash\": \"0xf9dd5e3354a3333f04d0465551613221b563e8a87eee55d89830c5c3fcd08acf\",\n      \"address\": \"0x44d3400dDc28Ede4f687bc6d28295ae6f77FCAEB\",\n      \"topics\": [\n        \"0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7\"\n      ],\n      \"data\": \"0x0000000000000000000000008041441afd0eb90d9fb1cfa967e3e2b398d706ea\",\n      \"logIndex\": 0,\n      \"blockHash\": \"0x86cc5f3d1b28dda2ca563da4ad80ad4f9924ab45e451c98036d63041444b20e9\",\n      \"transactionLogIndex\": 0,\n      \"name\": \"SetContentContract\",\n      \"signature\": \"SetContentContract(address)\",\n      \"topic\": \"0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7\",\n      \"values\": {\n        \"0\": \"0x8041441AFD0eB90D9fB1CfA967e3e2B398D706eA\",\n        \"contentContractAddress\": \"0x8041441AFD0eB90D9fB1CfA967e3e2B398D706eA\",\n        \"length\": 1\n      }\n    }\n  ],\n  \"blockNumber\": 67661,\n  \"confirmations\": 1,\n  \"cumulativeGasUsed\": {\n    \"_hex\": \"0x1837a\"\n  }\n}"
   }
 ]

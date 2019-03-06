@@ -1,31 +1,6 @@
 [
   {
-    "signature": "async ListFiles({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\"\n});",
-    "result": {
-      ".": {
-        "type": "directory"
-      },
-      "testDirectory": {
-        ".": {
-          "type": "directory"
-        },
-        "File 1": {
-          ".": {
-            "parts": [
-              0
-            ],
-            "size": 100000
-          }
-        },
-        "File 2": {
-          ".": {
-            "parts": [
-              1
-            ],
-            "size": 100000
-          }
-        }
-      }
-    }
+    "signature": "async ListFiles({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\"\n});",
+    "result": "{\n  \".\": {\n    \"type\": \"directory\"\n  },\n  \"testDirectory\": {\n    \".\": {\n      \"type\": \"directory\"\n    },\n    \"File 1\": {\n      \".\": {\n        \"parts\": [\n          0\n        ],\n        \"size\": 100000\n      }\n    },\n    \"File 2\": {\n      \".\": {\n        \"parts\": [\n          1\n        ],\n        \"size\": 100000\n      }\n    }\n  }\n}"
   }
 ]

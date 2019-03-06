@@ -1,26 +1,18 @@
 [
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4\"\n});",
-    "result": {
-      "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
-      "meta": "data",
-      "nested": {
-        "meta": "data"
-      }
-    }
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7e97153530B7d105038d25178738aA85a22EC5dC\"\n});",
+    "result": "{\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"meta\": \"data\",\n  \"nested\": {\n    \"meta\": \"data\"\n  }\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4\",\n  \"metadataSubtree\": \"nested\"\n});",
-    "result": {
-      "meta": "data"
-    }
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7e97153530B7d105038d25178738aA85a22EC5dC\",\n  \"metadataSubtree\": \"nested\"\n});",
+    "result": "{\n  \"meta\": \"data\"\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4\",\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7e97153530B7d105038d25178738aA85a22EC5dC\",\n  \"metadataSubtree\": \"image\"\n});",
+    "result": "\"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\""
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x159a372c5f45bf3232Cfa3b2E9d0dC726f4728C4\",\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7e97153530B7d105038d25178738aA85a22EC5dC\",\n  \"metadataSubtree\": \"image\"\n});",
+    "result": "\"hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN\""
   }
 ]

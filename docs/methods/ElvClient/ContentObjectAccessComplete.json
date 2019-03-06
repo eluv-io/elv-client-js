@@ -1,60 +1,6 @@
 [
   {
-    "signature": "async ContentObjectAccessComplete({\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"score\": 90\n});",
-    "result": {
-      "to": "0x3F0AD83d1e0Ae510eb7764B52Ef21be12BEB7d3C",
-      "from": "0xf7C6072c6d61305000E33fF8D8735b3C6af7e10D",
-      "contractAddress": null,
-      "transactionIndex": 0,
-      "root": "0x762f8baf65d362198b112a69bf18b70bb9fb833eb880d596ff057d67a6393ce1",
-      "gasUsed": {
-        "_hex": "0x69ca"
-      },
-      "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000080000000000000000008000000000000000000000000000000000000000000000000000000000000000000000",
-      "blockHash": "0xa83745d5a573413f12189f88f140a4f738218719e752afef3710d83b49c51da6",
-      "transactionHash": "0xbfe2e5c9f1b9fd8509b78806db5cf52ca3c8457572114e349444be0936e267a5",
-      "logs": [
-        {
-          "transactionIndex": 0,
-          "blockNumber": 67239,
-          "transactionHash": "0xbfe2e5c9f1b9fd8509b78806db5cf52ca3c8457572114e349444be0936e267a5",
-          "address": "0x3F0AD83d1e0Ae510eb7764B52Ef21be12BEB7d3C",
-          "topics": [
-            "0x7f1f4b28434ce7beab4983e64a8b5bb96e195a67029fdaff925028aec57fbc6b"
-          ],
-          "data": "0x0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000005a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
-          "logIndex": 0,
-          "blockHash": "0xa83745d5a573413f12189f88f140a4f738218719e752afef3710d83b49c51da6",
-          "transactionLogIndex": 0,
-          "name": "AccessComplete",
-          "signature": "AccessComplete(uint256,uint256,bytes32,bool)",
-          "topic": "0x7f1f4b28434ce7beab4983e64a8b5bb96e195a67029fdaff925028aec57fbc6b",
-          "values": {
-            "0": {
-              "_hex": "0x02"
-            },
-            "1": {
-              "_hex": "0x5a"
-            },
-            "2": "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "3": true,
-            "requestID": {
-              "_hex": "0x02"
-            },
-            "scorePct": {
-              "_hex": "0x5a"
-            },
-            "mlOutHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "customContractResult": true,
-            "length": 4
-          }
-        }
-      ],
-      "blockNumber": 67239,
-      "confirmations": 1,
-      "cumulativeGasUsed": {
-        "_hex": "0x69ca"
-      }
-    }
+    "signature": "async ContentObjectAccessComplete({\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"score\": 90\n});",
+    "result": "{\n  \"to\": \"0x44d3400dDc28Ede4f687bc6d28295ae6f77FCAEB\",\n  \"from\": \"0x3B7746010Ac7DE2B6aEde6000324FC7CAE7cF0dc\",\n  \"contractAddress\": null,\n  \"transactionIndex\": 0,\n  \"root\": \"0xeb01528972734bb1e97b9e37641909249a0e716323f2477908205dcd543d2eeb\",\n  \"gasUsed\": {\n    \"_hex\": \"0x69ca\"\n  },\n  \"logsBloom\": \"0x00410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000\",\n  \"blockHash\": \"0xdc34a28420c13607413756750eb54c1db0b2eadb45d5a20b248f0bf88b3cb16b\",\n  \"transactionHash\": \"0x33758cfc600d3ec2db3ca7ea52d108c6f9dd24771ff3a65edf768cd853ce23d4\",\n  \"logs\": [\n    {\n      \"transactionIndex\": 0,\n      \"blockNumber\": 67659,\n      \"transactionHash\": \"0x33758cfc600d3ec2db3ca7ea52d108c6f9dd24771ff3a65edf768cd853ce23d4\",\n      \"address\": \"0x44d3400dDc28Ede4f687bc6d28295ae6f77FCAEB\",\n      \"topics\": [\n        \"0x7f1f4b28434ce7beab4983e64a8b5bb96e195a67029fdaff925028aec57fbc6b\"\n      ],\n      \"data\": \"0x0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000005a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001\",\n      \"logIndex\": 0,\n      \"blockHash\": \"0xdc34a28420c13607413756750eb54c1db0b2eadb45d5a20b248f0bf88b3cb16b\",\n      \"transactionLogIndex\": 0,\n      \"name\": \"AccessComplete\",\n      \"signature\": \"AccessComplete(uint256,uint256,bytes32,bool)\",\n      \"topic\": \"0x7f1f4b28434ce7beab4983e64a8b5bb96e195a67029fdaff925028aec57fbc6b\",\n      \"values\": {\n        \"0\": {\n          \"_hex\": \"0x02\"\n        },\n        \"1\": {\n          \"_hex\": \"0x5a\"\n        },\n        \"2\": \"0x0000000000000000000000000000000000000000000000000000000000000000\",\n        \"3\": true,\n        \"requestID\": {\n          \"_hex\": \"0x02\"\n        },\n        \"scorePct\": {\n          \"_hex\": \"0x5a\"\n        },\n        \"mlOutHash\": \"0x0000000000000000000000000000000000000000000000000000000000000000\",\n        \"customContractResult\": true,\n        \"length\": 4\n      }\n    }\n  ],\n  \"blockNumber\": 67659,\n  \"confirmations\": 1,\n  \"cumulativeGasUsed\": {\n    \"_hex\": \"0x69ca\"\n  }\n}"
   }
 ]

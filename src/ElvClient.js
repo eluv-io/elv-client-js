@@ -44,18 +44,18 @@ const ResponseToFormat = async (format, response) => {
   response = await HandleErrors(response);
 
   switch(format.toLowerCase()) {
-  case "json":
-    return response.json();
-  case "text":
-    return response.text();
-  case "blob":
-    return response.blob();
-  case "arraybuffer":
-    return response.arrayBuffer();
-  case "formdata":
-    return response.formData();
-  default:
-    return response;
+    case "json":
+      return response.json();
+    case "text":
+      return response.text();
+    case "blob":
+      return response.blob();
+    case "arraybuffer":
+      return response.arrayBuffer();
+    case "formdata":
+      return response.formData();
+    default:
+      return response;
   }
 };
 
@@ -233,8 +233,8 @@ class ElvClient {
    *
    * @return {object} - Resultant AccessRequest or UpdateRequest event
    */
-  AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
-    return this.authClient.MakeAccessRequest({
+  async AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
+    return await this.authClient.MakeAccessRequest({
       libraryId,
       objectId,
       versionHash,
@@ -1799,7 +1799,7 @@ class ElvClient {
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async CallBitcodeMethod({libraryId, objectId, versionHash, method, queryParams={}, noAuth=false, noCache=false}) {
+  async BitcodeMethodUrl({libraryId, objectId, versionHash, method, queryParams={}, noAuth=false, noCache=false}) {
     return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams, noAuth, noCache});
   }
 
@@ -2097,8 +2097,8 @@ class ElvClient {
    *
    * @returns {Promise<Object>} - Response describing verification results
    */
-  VerifyContentObject({libraryId, objectId, versionHash}) {
-    return ContentObjectVerification.VerifyContentObject({
+  async VerifyContentObject({libraryId, objectId, versionHash}) {
+    return await ContentObjectVerification.VerifyContentObject({
       client: this,
       libraryId,
       objectId,

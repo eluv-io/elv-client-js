@@ -1,6 +1,12 @@
-const Utils = require("../src/Utils");
 const {ElvClient} = require("../src/ElvClient");
 const {FrameClient} = require("../src/FrameClient");
+const OutputLogger = require("./utils/OutputLogger");
+
+let UtilsModule = require("../src/Utils");
+const Utils = OutputLogger(UtilsModule, UtilsModule);
+//const Utils = UtilsModule;
+
+const {RandomBytes, RandomString} = require("./utils/Utils");
 
 describe("Test Utils", () => {
   test("ElvClient Utils", () => {
@@ -68,5 +74,54 @@ describe("Test Utils", () => {
 
     const wei = Utils.EtherToWei("1.0");
     expect(wei.isEqualTo(Utils.weiPerEther)).toBeTruthy();
+  });
+
+  test("Cloneable", async () => {
+    const cloneable = {
+      string: "value",
+      number: 0.5,
+      nested: {
+        value: "something"
+      },
+      set: new Set([1, 2, "a", {a: "b"}]),
+      map: new Map([[1, 2], ["a", "b"], ["obj", {a: "b"}]]),
+      arrayBuffer: RandomBytes(20),
+      blob: await new Response(RandomBytes(30)).blob()
+    };
+
+    expect(Utils.IsCloneable(cloneable)).toBeTruthy();
+    expect(Utils.MakeClonable(cloneable)).toEqual(cloneable);
+  });
+
+  test("Not Cloneable", async () => {
+    let notCloneable = {
+      string: "value",
+      number: 0.5,
+      nested: {
+        value: "something"
+      },
+      map: new Map([[1, 2], ["a", "b"], ["obj", {a: "b"}], ["fn", () => {}]]),
+      set: new Set([1, 2, "a", {a: "b"}]),
+      buffer: Buffer.from(RandomString(20)),
+      arrayBuffer: RandomBytes(20),
+      blob: await new Response(RandomBytes(30)).blob(),
+      response: new Response(RandomBytes(30)),
+      function: () => {},
+      error: new Error("Error")
+    };
+
+    expect(Utils.IsCloneable(notCloneable)).toBeFalsy();
+
+    const cloneable = Utils.MakeClonable(notCloneable);
+    expect(notCloneable).not.toEqual(cloneable);
+
+    // Remove / transform not cloneable things
+    delete notCloneable.response;
+    delete notCloneable.function;
+    notCloneable.error = "Error";
+    notCloneable.buffer = Utils.BufferToArrayBuffer(notCloneable.buffer);
+    notCloneable.map.delete("fn");
+
+    expect(notCloneable).toEqual(cloneable);
   });
 });

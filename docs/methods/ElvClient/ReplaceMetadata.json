@@ -1,0 +1,17 @@
+[
+  {
+    "signature": "async ReplaceMetadata({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"writeToken\": \"tqw_JzscMr1bCGvm8c7eJiBmxNBgyy1SYT2Ap\",\n  \"metadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    },\n    \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\"\n  }\n});"
+  },
+  {
+    "signature": "async ReplaceMetadata({\n  \"libraryId\": \"ilibq3wWS3JY443SxCBjupetNZ8z8yR\",\n  \"objectId\": \"iq__q3wWS3JY443SxCBjupetNZ8z8yR\",\n  \"writeToken\": \"tqw_GxMALDaUgHroAQCfJWnp8weXDRDLpfUfH\",\n  \"metadataSubtree\": \"accessed_content/hq__QmS1qqvPeqeWeRL73kxSxar3dR3GYUFVJTfsxAXdvyzyp4\",\n  \"metadata\": 1551913773236\n});"
+  },
+  {
+    "signature": "async ReplaceMetadata({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"writeToken\": \"tqw_MvZrJFh3uzk7kCMHscVMsJa8355m1f4Y5\",\n  \"metadataSubtree\": \"toReplace\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
+  },
+  {
+    "signature": "async ReplaceMetadata({\n  \"libraryId\": \"ilibq3wWS3JY443SxCBjupetNZ8z8yR\",\n  \"objectId\": \"iq__q3wWS3JY443SxCBjupetNZ8z8yR\",\n  \"writeToken\": \"tqw_7VyDgkHawKykMGDCJaD5Gp7frNb9QLkwv\",\n  \"metadataSubtree\": \"accessed_content/hq__QmRwXkELPWNRqh6D5pC2ZqBWzThn3PCZaeVP1r8EiLgfP4\",\n  \"metadata\": 1551913786554\n});"
+  },
+  {
+    "signature": "async ReplaceMetadata({\n  \"libraryId\": \"ilibq3wWS3JY443SxCBjupetNZ8z8yR\",\n  \"objectId\": \"iq__q3wWS3JY443SxCBjupetNZ8z8yR\",\n  \"writeToken\": \"tqw_FAcRxbbePR3LyX9aPNc2EWRacJ7d9ZKe9\",\n  \"metadataSubtree\": \"accessed_content/hq__QmUWR8NyFSFDQESKDVYTTqbaxf3QBZ79dhCDJ2u7phcKwE\",\n  \"metadata\": 1551913791253\n});"
+  }
+]
