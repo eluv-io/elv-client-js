@@ -1,4 +1,5 @@
-const {CreateClient, OutputLogger} = require("./utils/Utils");
+const OutputLogger = require("./utils/OutputLogger");
+const {CreateClient} = require("./utils/Utils");
 
 const ElvWallet = require("../src/ElvWallet");
 

@@ -4,7 +4,7 @@
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": "async AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0x2aa497f4bd0445054e5c8a0fafa2958ba086632de504348646d4fca0bb572e79\"\n});",
+    "signature": "async AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0x92116dac3bb4558c95e3f9f459f7a4ddac2f97f7e2c3453173a3d1070dae18f7\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
@@ -13,14 +13,6 @@
   },
   {
     "signature": "async AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0xf1402b0aa53279c933a099639599c47a4a6ac8af3c09335e67ffae1109cec1dc\"\n});",
-    "result": "<Ethers#Wallet>"
-  },
-  {
-    "signature": "async AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0xf1402b0aa53279c933a099639599c47a4a6ac8af3c09335e67ffae1109cec1dc\"\n});",
-    "result": "<Ethers#Wallet>"
-  },
-  {
-    "signature": "async AddAccount({\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {

@@ -129,17 +129,26 @@ button:hover {
 
 .class-link {
   display: inline-block;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  padding: 3px 10px;
+}
+
+.class-link:hover {
+  background: #ddd;
+  border-radius: 2px;
 }
 
 .class-toggle-button {
   cursor: pointer;
   display: inline-block;
-  padding: 0 10px;
+  padding: 3px;
+  margin: 3px;
 }
 
 .class-toggle-button:hover {
   color: #666;
+  background: #ddd;
+  border-radius: 5px;
 }
 
 .visible-class {

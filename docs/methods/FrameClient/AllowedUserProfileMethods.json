@@ -1,21 +1,6 @@
 [
   {
     "signature": "async AllowedUserProfileMethods();",
-    "result": [
-      "AccessLevel",
-      "CollectedTags",
-      "CreateAccountLibrary",
-      "DeleteAccountLibrary",
-      "DeletePrivateUserMetadata",
-      "MergePrivateUserMetadata",
-      "PrivateUserMetadata",
-      "PublicUserMetadata",
-      "RecordTags",
-      "ReplacePrivateUserMetadata",
-      "ReplacePublicUserMetadata",
-      "SetAccessLevel",
-      "SetUserProfileImage",
-      "UserProfileImage"
-    ]
+    "result": "[\n  \"AccessLevel\",\n  \"CollectedTags\",\n  \"CreateAccountLibrary\",\n  \"DeleteAccountLibrary\",\n  \"DeletePrivateUserMetadata\",\n  \"MergePrivateUserMetadata\",\n  \"PrivateUserMetadata\",\n  \"PublicUserMetadata\",\n  \"RecordTags\",\n  \"ReplacePrivateUserMetadata\",\n  \"ReplacePublicUserMetadata\",\n  \"SetAccessLevel\",\n  \"SetUserProfileImage\",\n  \"UserProfileImage\"\n]"
   }
 ]

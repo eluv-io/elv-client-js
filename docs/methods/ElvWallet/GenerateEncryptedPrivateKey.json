@@ -1,6 +1,6 @@
 [
   {
     "signature": "async GenerateEncryptedPrivateKey({\n  \"signer\": \"<Ethers#Wallet>\",\n  \"password\": \"test\",\n  \"options\": {\n    \"scrypt\": {\n      \"N\": 16384\n    }\n  }\n});",
-    "result": "{\"address\":\"95ced938f7991cd0dfcb48f0a06a40fa1af46ebc\",\"id\":\"9090e187-3455-4140-bb23-3df29f44a64f\",\"version\":3,\"Crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"4b6c915592ac85b82b4443d36a61c661\"},\"ciphertext\":\"fa826325ac6dd2f44eef78ed0cd1c84248ed80c75044737e38a6f38f5f0b3c8b\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"d3c537edc47d93ee7c29868d5756fbbee6efe491b1bdd646e6b033b40c80df50\",\"n\":16384,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"dcc3b1700ef751d0a7712901c785e1587f6ceef6a4746ea7933dee714f321e52\"}}"
+    "result": "\"{\\\"address\\\":\\\"95ced938f7991cd0dfcb48f0a06a40fa1af46ebc\\\",\\\"id\\\":\\\"d3dccfac-7d9d-425c-8f37-6419c4d24016\\\",\\\"version\\\":3,\\\"Crypto\\\":{\\\"cipher\\\":\\\"aes-128-ctr\\\",\\\"cipherparams\\\":{\\\"iv\\\":\\\"ae5448c0bc5af7cd12c6e912f89eb8c4\\\"},\\\"ciphertext\\\":\\\"3ff8c2c57ce27405ca22d018b205a3a5557915a783b7279e3b3b7783d699f7a4\\\",\\\"kdf\\\":\\\"scrypt\\\",\\\"kdfparams\\\":{\\\"salt\\\":\\\"b37d0089d24a443fe5e6a3168f4c1692a1c7ff6d4087fffb0b88bef011a5091a\\\",\\\"n\\\":16384,\\\"dklen\\\":32,\\\"p\\\":1,\\\"r\\\":8},\\\"mac\\\":\\\"2480bcc6fed15c6e57dcbc145998e78b8bde456b38a69a07657a9f9976121d16\\\"}}\""
   }
 ]

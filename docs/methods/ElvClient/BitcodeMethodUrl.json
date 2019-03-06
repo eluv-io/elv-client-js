@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async BitcodeMethodUrl({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"method\": \"image\"\n});",
+    "result": "\"http://localhost:8008/qlibs/ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9/q/iq__xcaGgYBhyqxDSprp7T41af65VTg/call/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMzFwVllyUG9NRnFZWnFQSGRjZ0FGbndBM3VuIiwicWxpYl9pZCI6ImlsaWIyR0hGYkRWaVl2WjNZMUxvVVdTcUxLNEU1UW85IiwiYWRkciI6IjB4M0I3NzQ2MDEwQWM3REUyQjZhRWRlNjAwMDMyNEZDN0NBRTdjRjBkYyIsInR4aWQiOiIweGY3MDkxZTI4ZWYzNmRhMmM4MjBmNjhjMTQzNWE3MTYzZTEwMWQ5MTliYjQ1ZWU3MzQ2ZDE5ZmU4Y2NmNjExMzUifQ%3D%3D.U0lHTkFUVVJF\""
+  },
+  {
+    "signature": "async BitcodeMethodUrl({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"method\": \"image\",\n  \"noAuth\": true\n});",
+    "result": "\"http://localhost:8008/qlibs/ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9/q/iq__xcaGgYBhyqxDSprp7T41af65VTg/call/image\""
+  }
+]

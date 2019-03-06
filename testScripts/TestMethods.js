@@ -447,7 +447,7 @@ const TestQueries = async (client) => {
     console.log(await client.Rep({libraryId, objectId, rep: "image", noAuth: true}));
 
     console.log("\nCALL BITCODE");
-    console.log(await client.CallBitcodeMethod({libraryId, objectId, method: "specialMethod"}));
+    console.log(await client.BitcodeMethodUrl({libraryId, objectId, method: "specialMethod"}));
 
 
     const contentVerification = await (

@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async SetUserProfileImage({\n  \"image\": \"<ArrayBuffer 102268>\"\n});"
+  }
+]

@@ -10,6 +10,8 @@ const BigNumber = require("bignumber.js");
  * It can be accessed from ElvClient and FrameClient as client.utils
  */
 const Utils = {
+  name: "Utils",
+
   nullAddress: "0x0000000000000000000000000000000000000000",
   weiPerEther: BigNumber("1000000000000000000"),
 
@@ -48,9 +50,13 @@ const Utils = {
    * @returns {string} - Formatted address
    */
   FormatAddress: (address) => {
-    if(!address || typeof address !== "string") { return ""; }
+    if (!address || typeof address !== "string") {
+      return "";
+    }
 
-    if(!address.startsWith("0x")) { address = "0x" + address; }
+    if (!address.startsWith("0x")) {
+      address = "0x" + address;
+    }
     return address.toLowerCase();
   },
 
@@ -121,7 +127,11 @@ const Utils = {
    * @returns {boolean} - Whether or not the hashes of the IDs match
    */
   EqualHash(firstHash, secondHash) {
-    if(!firstHash || !secondHash) {
+    if (!firstHash || !secondHash) {
+      return false;
+    }
+
+    if (firstHash.length <= 4 || secondHash.length <= 4) {
       return false;
     }
 
@@ -149,6 +159,10 @@ const Utils = {
     return "0x" + address.replace("0x", "").slice(4);
   },
 
+  BufferToArrayBuffer: (buffer) => {
+    return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  },
+
   /**
    * Determine if the given value is cloneable - Data passed in messages must be cloneable
    *
@@ -156,46 +170,99 @@ const Utils = {
    * @returns {boolean} - Whether or not the value is cloneable
    */
   IsCloneable: (value) => {
-    if(Object(value) !== value) {
+    if (Object(value) !== value) {
       // Primitive value
       return true;
     }
 
-    switch({}.toString.call(value).slice(8,-1)) { // Class
-    case "Boolean":
-    case "Number":
-    case "String":
-    case "Date":
-    case "RegExp":
-    case "Blob":
-    case "FileList":
-    case "ImageData":
-    case "ImageBitmap":
-    case "ArrayBuffer":
-      return true;
-    case "Array":
-    case "Object":
-      return Object.keys(value).every(prop => Utils.IsCloneable(value[prop]));
-    case "Map":
-      return [...value.keys()].every(Utils.IsCloneable)
-        && [...value.values()].every(Utils.IsCloneable);
-    case "Set":
-      return [...value.keys()].every(Utils.IsCloneable);
-    default:
-      return false;
+    switch ({}.toString.call(value).slice(8, -1)) { // Class
+      case "Boolean":
+      case "Number":
+      case "String":
+      case "Date":
+      case "RegExp":
+      case "Blob":
+      case "FileList":
+      case "ImageData":
+      case "ImageBitmap":
+      case "ArrayBuffer":
+        return true;
+      case "Array":
+      case "Object":
+        return Object.keys(value).every(prop => Utils.IsCloneable(value[prop]));
+      case "Map":
+        return [...value.keys()].every(Utils.IsCloneable)
+          && [...value.values()].every(Utils.IsCloneable);
+      case "Set":
+        return [...value.keys()].every(Utils.IsCloneable);
+      default:
+        return false;
     }
   },
 
   /**
    * Make the given value cloneable if it is not already.
    *
-   * Note: this will remove any attributes of the object that are not cloneable (e.g. functions)
+   * Note: this will remove or transform any attributes of the object that are not cloneable (e.g. functions)
+   *
+   * Transformations:
+   * - Buffer: Converted to ArrayBuffer
+   * - Error: Converted to string (error.message)
    *
    * @param {*} value - Value to check
-   * @returns {value} - Cloneable value - may be unchanged
+   * @returns {*} - Cloneable value
    */
-  MakeClonable: (value)=> {
-    return Utils.IsCloneable(value) ? value : JSON.parse(JSON.stringify(value));
+  MakeClonable: (value) => {
+    if(Utils.IsCloneable(value)) { return value; }
+
+    if(Buffer.isBuffer(value)) {
+      return Utils.BufferToArrayBuffer(value);
+    }
+
+    switch ({}.toString.call(value).slice(8, -1)) { // Class
+      case "Response":
+      case "Function":
+        return undefined;
+      case "Boolean":
+      case "Number":
+      case "String":
+      case "Date":
+      case "RegExp":
+      case "Blob":
+      case "FileList":
+      case "ImageData":
+      case "ImageBitmap":
+      case "ArrayBuffer":
+        return value;
+      case "Array":
+        return value.map(element => Utils.MakeClonable(element));
+      case "Set":
+        return new Set(Array.from(value.keys()).map(entry => Utils.MakeClonable(entry)));
+      case "Map":
+        let cloneableMap = new Map();
+        Array.from(value.keys()).forEach(key => {
+          const cloneable = Utils.MakeClonable(value.get(key));
+
+          if (cloneable) {
+            cloneableMap.set(key, cloneable);
+          }
+        });
+        return cloneableMap;
+      case "Error":
+        return value.message;
+      case "Object":
+        let cloneableObject = {};
+        Object.keys(value).map(key => {
+          const cloneable = Utils.MakeClonable(value[key]);
+
+          if (cloneable) {
+            cloneableObject[key] = cloneable;
+          }
+        });
+        return cloneableObject;
+      default:
+        return JSON.parse(JSON.stringify(value));
+    }
   }
 };
 

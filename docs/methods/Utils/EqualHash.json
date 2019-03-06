@@ -1,0 +1,30 @@
+[
+  {
+    "signature": "async EqualHash(\"ispcZLusoJnHFwAX9pfFB2rYX2yLnsY\", \"ilibZLusoJnHFwAX9pfFB2rYX2yLnsY\");",
+    "result": "true"
+  },
+  {
+    "signature": "async EqualHash(\"ilibZLusoJnHFwAX9pfFB2rYX2yLnsY\", \"ispcZLusoJnHFwAX9pfFB2rYX2yLnsY\");",
+    "result": "true"
+  },
+  {
+    "signature": "async EqualHash(\"ispcZLusoJnHFwAX9pfFB2rYX2yLnsY\", \"iq__ZLusoJnHFwAX9pfFB2rYX2yLnsY\");",
+    "result": "true"
+  },
+  {
+    "signature": "async EqualHash(\"iq__ZLusoJnHFwAX9pfFB2rYX2yLnsY\", \"ispcZLusoJnHFwAX9pfFB2rYX2yLnsY\");",
+    "result": "true"
+  },
+  {
+    "signature": "async EqualHash(\"ilibZLusoJnHFwAX9pfFB2rYX2yLnsY\", \"iq__ZLusoJnHFwAX9pfFB2rYX2yLnsY\");",
+    "result": "true"
+  },
+  {
+    "signature": "async EqualHash(\"iq__ZLusoJnHFwAX9pfFB2rYX2yLnsY\", \"ilibZLusoJnHFwAX9pfFB2rYX2yLnsY\");",
+    "result": "true"
+  },
+  {
+    "signature": "async EqualHash(\"iq__ZLusoJnHFwAX9pfFB2rYX2yLnsY\", \"iq__3WDneTPchE1qG7w4rpTQWzCZnBTR\");",
+    "result": "false"
+  }
+]

@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"writeToken\": \"tqw_MvZrJFh3uzk7kCMHscVMsJa8355m1f4Y5\",\n  \"metadataSubtree\": \"toMerge\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
+  }
+]

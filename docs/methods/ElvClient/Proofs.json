@@ -1,20 +1,6 @@
 [
   {
-    "signature": "async Proofs({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"partHash\": \"hqp_Qmcqq9xKuYBNE5St6hMAWsfzkQTwJpTvJ4yfwDy3M5n6GK\"\n});",
-    "result": {
-      "root_hash": "c80ccc419f70632a533006ec9059f77f6e43c73c22eb0f8d7ae3c70357e96e66",
-      "proofs": [
-        {
-          "byte_beg": 0,
-          "byte_end": 99999,
-          "proof": [
-            "c80ccc419f70632a533006ec9059f77f6e43c73c22eb0f8d7ae3c70357e96e66"
-          ]
-        }
-      ],
-      "proof_data": {
-        "c80ccc419f70632a533006ec9059f77f6e43c73c22eb0f8d7ae3c70357e96e66": "+FyhINd9RXi7VIcyykp48X/aUCok/9o7/Qy5OmjZ2iHzZSt0uDgAAAAAAAAAAAAAAAAAAAAAn4YBAAAAAADXfUV4u1SHMspKePF/2lAqJP/aO/0MuTpo2doh82UrdA=="
-      }
-    }
+    "signature": "async Proofs({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"partHash\": \"hqp_QmZqgvMeo23YR9diyXdo3zhM8aLX3GJcPUSpEWXUvWzF8A\"\n});",
+    "result": "{\n  \"root_hash\": \"75323542aa76f4308d640a392130e564faf85ea7dfa421db8140cc68b5a7a04a\",\n  \"proofs\": [\n    {\n      \"byte_beg\": 0,\n      \"byte_end\": 99999,\n      \"proof\": [\n        \"75323542aa76f4308d640a392130e564faf85ea7dfa421db8140cc68b5a7a04a\"\n      ]\n    }\n  ],\n  \"proof_data\": {\n    \"75323542aa76f4308d640a392130e564faf85ea7dfa421db8140cc68b5a7a04a\": \"+FyhIKrg5l5b9s9/T7DFCdUvegcds1p13R9Xg+8MxdjHwUgvuDgAAAAAAAAAAAAAAAAAAAAAn4YBAAAAAACq4OZeW/bPf0+wxQnVL3oHHbNadd0fV4PvDMXYx8FILw==\"\n  }\n}"
   }
 ]

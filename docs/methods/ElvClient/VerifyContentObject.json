@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async VerifyContentObject({\n  \"libraryId\": \"ilib3ytK8TDvpNvhNAxKdSkrNb4RMq2Y\",\n  \"objectId\": \"iq__swZ9ixuXU25LEzrw2a2vHN1uaSo\",\n  \"versionHash\": \"hq__QmeWAPEQFuG3o4wQKtQNYfiYekpKneTetS8jQbCLXh5sBb\"\n});",
-    "result": {}
+    "signature": "async VerifyContentObject({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"objectId\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"versionHash\": \"hq__QmTdoJPVxPqvA62xvCJ6uZi71SoJw8PfvvNVjqHQyJ7tLB\"\n});",
+    "result": "{\n  \"hash\": \"hq__QmTdoJPVxPqvA62xvCJ6uZi71SoJw8PfvvNVjqHQyJ7tLB\",\n  \"qref\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmTdoJPVxPqvA62xvCJ6uZi71SoJw8PfvvNVjqHQyJ7tLB\"\n  },\n  \"qmd\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmQNGx4dX7eiQbBffXtrDd6Xg13osamJCVujxVLym5y6SU\",\n    \"check\": {\n      \"valid\": true,\n      \"invalidValues\": []\n    }\n  },\n  \"qstruct\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmcBN4PCVAe4zJrYUn3Pi51ESH6vuDQ9EQTN1htuKehr2n\",\n    \"parts\": []\n  },\n  \"valid\": true\n}"
   }
 ]

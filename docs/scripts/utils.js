@@ -30,10 +30,11 @@ window.addEventListener("load", () => {
     const methodContainer = classLink.nextSibling;
 
     const toggleButton = document.createElement("div");
+    toggleButton.tabIndex = "0";
     toggleButton.className = "class-toggle-button";
     toggleButton.innerText = "▼";
 
-    toggleButton.onclick = () => {
+    toggleButton.onclick = toggleButton.onkeypress = () => {
       if(methodContainer.style.display !== "block") {
         methodContainer.style.display = "block";
         classLink.className = classLink.className + " visible-class";

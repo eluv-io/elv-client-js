@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"sting public desk amused avoid link update vessel session chaos hole until\"\n});",
+    "signature": "async AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"mesh cotton silk project solar drive hurry unfair unique library legend cup\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

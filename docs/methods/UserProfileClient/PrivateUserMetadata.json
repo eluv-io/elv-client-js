@@ -1,147 +1,55 @@
 [
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
+    "result": "\"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\""
   },
   {
     "signature": "async PrivateUserMetadata({});",
-    "result": {
-      "access_level": "prompt",
-      "collected_data": {},
-      "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
-      "toDelete": {
-        "meta": "data"
-      },
-      "toMerge": {
-        "meta": "data"
-      },
-      "toReplace": {
-        "meta": "data"
-      }
-    }
+    "result": "{\n  \"access_level\": \"prompt\",\n  \"collected_data\": {},\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"toMerge\"\n});",
-    "result": {
-      "meta": "data"
-    }
+    "result": "{\n  \"meta\": \"data\"\n}"
   },
   {
     "signature": "async PrivateUserMetadata();",
-    "result": {
-      "access_level": "prompt",
-      "collected_data": {},
-      "image": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB",
-      "toMerge": {
-        "meta": "data",
-        "new": "metadata"
-      },
-      "toReplace": {
-        "new": "metadata"
-      }
-    }
+    "result": "{\n  \"access_level\": \"prompt\",\n  \"collected_data\": {},\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"toMerge\": {\n    \"meta\": \"data\",\n    \"new\": \"metadata\"\n  },\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB"
-  },
-  {
-    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
-  },
-  {
-    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN"
+    "result": "\"hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN\""
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});",
-    "result": "prompt"
+    "result": "\"prompt\""
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});",
-    "result": "public"
+    "result": "\"public\""
   },
   {
-    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});",
-    "result": "public"
-  },
-  {
-    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
-    "result": {}
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__QmWwDNRBmgttR9isbCYzPqRRe1BFwRYbvcsy8RX11RuPEt\"\n});"
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
-    "result": {
-      "boat": {
-        "aggregate": 0.6,
-        "occurrences": 1
-      },
-      "cherry": {
-        "aggregate": 0.3,
-        "occurrences": 1
-      },
-      "chocolate": {
-        "aggregate": 0.8,
-        "occurrences": 1
-      }
-    }
+    "result": "{}"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__QmT9EqERhafZF9nDEqi5gGRjyxNKWc6NBrSUzz6hderZKY\"\n});"
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
-    "result": {
-      "boat": {
-        "aggregate": 0.6,
-        "occurrences": 1
-      },
-      "buoy": {
-        "aggregate": 0.6,
-        "occurrences": 1
-      },
-      "cherry": {
-        "aggregate": 1,
-        "occurrences": 2
-      },
-      "chocolate": {
-        "aggregate": 0.8,
-        "occurrences": 1
-      },
-      "duck": {
-        "aggregate": 0.5,
-        "occurrences": 1
-      }
-    }
+    "result": "{\n  \"boat\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 0.3,\n    \"occurrences\": 1\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__QmV3D4qCAs7B37G2vea2qhFxzXwxnycQ2HmJAHTmZkYYDw\"\n});"
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
-    "result": {
-      "boat": {
-        "aggregate": 1.5,
-        "occurrences": 2
-      },
-      "buoy": {
-        "aggregate": 0.6,
-        "occurrences": 1
-      },
-      "cherry": {
-        "aggregate": 1,
-        "occurrences": 2
-      },
-      "chocolate": {
-        "aggregate": 0.8,
-        "occurrences": 1
-      },
-      "duck": {
-        "aggregate": 0.5,
-        "occurrences": 1
-      },
-      "mayhem": {
-        "aggregate": 0.5,
-        "occurrences": 1
-      },
-      "person": {
-        "aggregate": 0.8,
-        "occurrences": 1
-      }
-    }
+    "result": "{\n  \"boat\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"buoy\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 1,\n    \"occurrences\": 2\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  },\n  \"duck\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  }\n}"
+  },
+  {
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
+    "result": "{\n  \"boat\": {\n    \"aggregate\": 1.5,\n    \"occurrences\": 2\n  },\n  \"buoy\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 1,\n    \"occurrences\": 2\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  },\n  \"duck\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"mayhem\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"person\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
   }
 ]

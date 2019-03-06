@@ -1,5 +1,6 @@
-const {CreateClient, BufferToArrayBuffer, OutputLogger} = require("./utils/Utils");
 const fs = require("fs");
+const OutputLogger = require("./utils/OutputLogger");
+const {CreateClient, BufferToArrayBuffer} = require("./utils/Utils");
 
 const UserProfileClient = require("../src/UserProfileClient");
 

@@ -1,92 +1,14 @@
 [
   {
-    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
-    "result": {
-      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
-      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
-      "type": "",
-      "meta": {
-        "name": "Test Content Type 6d665cea2fda15b087f6"
-      }
-    }
+    "signature": "async ContentType({\n  \"name\": \"Test Content Type 9b23cc0538e5396e56cf\"\n});",
+    "result": "{\n  \"id\": \"iq__2Yo88bHSdMKabKrViQytuCPrj9C5\",\n  \"hash\": \"hq__QmNTA2yaKfapTAWiDQgMkCKDUuKagZwiGvLFQJcTJMBvQC\",\n  \"type\": \"\",\n  \"meta\": {\n    \"name\": \"Test Content Type 9b23cc0538e5396e56cf\"\n  }\n}"
   },
   {
-    "signature": "async ContentType({\n  \"versionHash\": \"iq__3fcdo3qKVAvJZCppWuxmacrrfroX\"\n});",
-    "result": {
-      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
-      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
-      "type": "",
-      "meta": {
-        "name": "Test Content Type 6d665cea2fda15b087f6"
-      }
-    }
-  },
-  {
-    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
-    "result": {
-      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
-      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
-      "type": "",
-      "meta": {
-        "name": "Test Content Type 6d665cea2fda15b087f6"
-      }
-    }
+    "signature": "async ContentType({\n  \"versionHash\": \"iq__2Yo88bHSdMKabKrViQytuCPrj9C5\"\n});",
+    "result": "{\n  \"id\": \"iq__2Yo88bHSdMKabKrViQytuCPrj9C5\",\n  \"hash\": \"hq__QmNTA2yaKfapTAWiDQgMkCKDUuKagZwiGvLFQJcTJMBvQC\",\n  \"type\": \"\",\n  \"meta\": {\n    \"name\": \"Test Content Type 9b23cc0538e5396e56cf\"\n  }\n}"
   },
   {
     "signature": "async ContentType({\n  \"name\": \"library\"\n});",
-    "result": {
-      "id": "iq__2aZY9aM9PqAcTiGwj1Eso79KVw9J",
-      "hash": "hq__QmbNCZmH3DePfeQEj9UfZPCFYzUjTs55YCsopNpVnzTrJX",
-      "type": "",
-      "meta": {
-        "bitcode_part": "hqp_QmeZ4ivmxo9UCCeNrJ2Fv9WHjDF4MLf2K3sQoar8eyERWk",
-        "name": "Library"
-      }
-    }
-  },
-  {
-    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
-    "result": {
-      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
-      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
-      "type": "",
-      "meta": {
-        "name": "Test Content Type 6d665cea2fda15b087f6"
-      }
-    }
-  },
-  {
-    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
-    "result": {
-      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
-      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
-      "type": "",
-      "meta": {
-        "name": "Test Content Type 6d665cea2fda15b087f6"
-      }
-    }
-  },
-  {
-    "signature": "async ContentType({\n  \"name\": \"Test Content Type 6d665cea2fda15b087f6\"\n});",
-    "result": {
-      "id": "iq__3fcdo3qKVAvJZCppWuxmacrrfroX",
-      "hash": "hq__QmVfCWTTLFwR2Nzeb4hda2boGoRyhcLi4K12MEWDT9VwuQ",
-      "type": "",
-      "meta": {
-        "name": "Test Content Type 6d665cea2fda15b087f6"
-      }
-    }
-  },
-  {
-    "signature": "async ContentType({\n  \"name\": \"library\"\n});",
-    "result": {
-      "id": "iq__2aZY9aM9PqAcTiGwj1Eso79KVw9J",
-      "hash": "hq__QmbNCZmH3DePfeQEj9UfZPCFYzUjTs55YCsopNpVnzTrJX",
-      "type": "",
-      "meta": {
-        "bitcode_part": "hqp_QmeZ4ivmxo9UCCeNrJ2Fv9WHjDF4MLf2K3sQoar8eyERWk",
-        "name": "Library"
-      }
-    }
+    "result": "{\n  \"id\": \"iq__2aZY9aM9PqAcTiGwj1Eso79KVw9J\",\n  \"hash\": \"hq__QmbNCZmH3DePfeQEj9UfZPCFYzUjTs55YCsopNpVnzTrJX\",\n  \"type\": \"\",\n  \"meta\": {\n    \"bitcode_part\": \"hqp_QmeZ4ivmxo9UCCeNrJ2Fv9WHjDF4MLf2K3sQoar8eyERWk\",\n    \"name\": \"Library\"\n  }\n}"
   }
 ]

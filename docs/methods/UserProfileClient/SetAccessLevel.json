@@ -1,0 +1,8 @@
+[
+  {
+    "signature": "async SetAccessLevel({\n  \"level\": \"public\"\n});"
+  },
+  {
+    "signature": "async SetAccessLevel({\n  \"level\": \"invalid\"\n});"
+  }
+]
