@@ -14,6 +14,8 @@ import {BaseContent} from "./base_content.sol";
 
 contract SampleContentAdvertising is Content {
 
+    bytes32 public version ="SplContAdvertsng20190226115400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
 
     event TokenCreditPerAd(uint256 tokenCreditPerAd);
 
@@ -24,16 +26,16 @@ contract SampleContentAdvertising is Content {
         emit TokenCreditPerAd(tokenCreditPerAd);
     }
 
-    function runFinalize(uint256 request_ID) public payable returns(uint) {
+    function runFinalize(uint256 request_ID, uint256 /*score_pct*/) public payable returns(uint) {
         BaseContent contentObj = BaseContent(msg.sender);
         address originator;
-        uint256 nothing;
+        uint256 amountPaid;
+        uint256 settled;
         int8 status;
-        (originator, nothing, status) = contentObj.requestMap(request_ID);
+        (originator, amountPaid, status, settled) = contentObj.requestMap(request_ID);
         require((originator == tx.origin) && (status == 1));
         // check that the runFinalize is initiated by content requestor to avoid paying wrong User
-        // and that payment was not made yet (upon accessComplete status is change from 0 to 1 or -1)
-        // status codes: 0 in escrow, 1 paid to content owner, -1 refunded to originator
+        // and that payment was not made yet (upon accessComplete status is changed to 2 or -2)
         tx.origin.transfer(tokenCreditPerAd);
         emit RunFinalize(request_ID, 0);
         return 0;

@@ -1,15 +1,16 @@
+/* eslint-disable no-console,no-unused-vars */
 const fs = require("fs");
 const path = require("path");
 
 const LOG = true;
 
 const LANGUAGE_NAMES = {
-  'de': 'German',
-  'en': 'English',
-  'es': 'Spanish',
-  'fr': 'French',
-  'it': 'Italian',
-  'ja': 'Japanese',
+  "de": "German",
+  "en": "English",
+  "es": "Spanish",
+  "fr": "French",
+  "it": "Italian",
+  "ja": "Japanese",
 };
 
 const HandleErrors = async (response) => {
@@ -93,7 +94,7 @@ class ImfService {
           fileExtension: path.extname(singleFilePath).slice(1), // remove '.' from start
           file: fileContents
         }
-      )
+      );
     }
 
     objectMeta = {
@@ -102,6 +103,7 @@ class ImfService {
       languages: [],
       pkg: {},
       "type.qhash": contentTypeVHash,
+      video_tags: payload.video_tags,
       watermark: {
         font_size: "(h/20)",
         pos_x: "(w-tw)/8",
@@ -110,6 +112,8 @@ class ImfService {
       }
     };
     xmlTexts = {};
+
+    console.log("IMF creating content object libraryId: " + libId + " hash: " + contentTypeVHash);
     createDraftResponse = (await this.elvclient.CreateContentObject({
       libraryId: libId,
       options: {
@@ -123,6 +127,8 @@ class ImfService {
 
     writeToken = createDraftResponse.write_token;
     contentId = createDraftResponse.id;
+    console.log("IMF create content object write_token: " + writeToken);
+
     video_reps = [
       {
         BitRate: 10000000,
@@ -153,10 +159,10 @@ class ImfService {
       // LOG && console.log("ext " + f.fileExtension);
       // LOG && console.log("f.fileExtension === 'xml'");
       // LOG && console.log(f.fileExtension === 'xml');
-      if (f.fileExtension === 'xml') {
+      if (f.fileExtension === "xml") {
         // LOG && console.log("adding xml string to xmlTexts for " + f.filename);
         xmlTexts[f.filename] = f.file.toString();
-      } else if (f.filename === 'ladder.json') {
+      } else if (f.filename === "ladder.json") {
         ladderText = f.file.toString();
         ladderJson = JSON.parse(ladderText);
         video_reps = [];
@@ -179,7 +185,7 @@ class ImfService {
         uploadPartResult = (await this.elvclient.UploadPart(args));
         phash = uploadPartResult.part.hash;
         objectMeta.pkg[f.filename] = phash;
-        if (f.fileExtension === 'jpg') {
+        if (f.fileExtension === "jpg") {
           objectMeta.image = phash;
         }
       }
@@ -203,11 +209,11 @@ class ImfService {
     try {
       headers = await this.elvclient.authClient.AuthorizationHeader({libraryId: libId});
       imfJsonExtract = await ResponseToJson(this.elvclient.HttpClient.Request({
-          headers: headers,
-          method: "POST",
-          path: "avtest/q/" + contentTypeVHash + "/rep/imf",
-          body: goPostBody
-        })
+        headers: headers,
+        method: "POST",
+        path: "avtest/q/" + contentTypeVHash + "/rep/imf",
+        body: goPostBody
+      })
       );
 
     } catch (error) {
@@ -229,7 +235,7 @@ class ImfService {
     // set languages
     for (k in imfJsonExtract) {
       v = imfJsonExtract[k];
-      languageCode = k.split('.').pop();
+      languageCode = k.split(".").pop();
       objectMeta.languages.push(languageCode);
       dashManifestUrl = `http://${payload.hostname}:${payload.port}` + `/qlibs/${payload.libraryId}/q/${contentId}/rep/dash/${languageCode}.mpd`;
       hlsManifestUrl = `http://${payload.hostname}:${payload.port}` + `/qlibs/${payload.libraryId}/q/${contentId}/rep/hls/${languageCode}-master.m3u8`;
@@ -256,7 +262,7 @@ class ImfService {
       writeToken: writeToken
     }));
 
-    return finalizeResponse
+    return finalizeResponse;
   }
 
 }

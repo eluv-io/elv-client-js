@@ -16,6 +16,7 @@ import {AdmgrCampaign} from "./admgr_campaign_manager.sol";
 
 contract AdmgrAdvertisement is Content {
 
+    bytes32 public version ="AdmgrAdvertismnt20190222152600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event MaxCreditPerAd(uint256 maxCreditPerAd);
     event BitcodeAddress(address bitcode);
@@ -44,7 +45,7 @@ contract AdmgrAdvertisement is Content {
     uint256 public maxCreditPerAd = 0; //By default no maximum is set
 
 
-    function dbgRequest(uint256 request_ID, address ad_address) public view returns (bytes32)
+    function dbgRequest(uint256 request_ID, address ad_address) public pure returns (bytes32)
     {
         return keccak256(ad_address, request_ID);
     }
@@ -155,13 +156,16 @@ contract AdmgrAdvertisement is Content {
                verifyMessage(contentAddress, campaignAddress, amount, v, r, s);
             }
             require((maxCreditPerAd == 0) || (uint256(amount) <= maxCreditPerAd));
+            BaseContent campaignObj = BaseContent(campaignAddress);
+            AdmgrCampaign campaign = AdmgrCampaign(campaignObj.contentContractAddress());
+            campaign.validateRequest(msg.sender, uint256(amount));
             insertRequest(request_ID, contentAddress, msg.sender, campaignAddress, uint256(amount));
         }
         return 0;
     }
 
     // Upon completion, the promised amount is divided between the library owner and the viewer and paid off.
-    function runFinalize(uint256 request_ID) public payable returns(uint) {
+    function runFinalize(uint256 request_ID, uint256 /*score_pct*/) public payable returns(uint) {
         bytes32 req_data_id = keccak256(msg.sender, request_ID);
         RequestData storage req = requestMap[req_data_id];
         require((req.originator == tx.origin) && (req.status == 0));
