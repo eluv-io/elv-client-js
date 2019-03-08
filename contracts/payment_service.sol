@@ -18,7 +18,7 @@ contract PaymentService is Ownable {
 
     string tokenCurrency;
     uint256 tokenValue;
-    address payerAddress;
+    address public payerAddress;
 
     event RedeemTokenRequest(uint256 numtokens, string pay_to, string nonce);
     event RedeemTokenExecuted(string currency, uint256 value, string payment_proof, string nonce);

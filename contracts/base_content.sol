@@ -4,9 +4,13 @@ import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {BaseLibrary} from "./base_library.sol";
 
+/* -- Revision history --
+BaseContent20190221101600ML: First versioned released
+BaseContent20190301121900ML: Adds support for getAccessInfo, to replace getAccessCharge (not deprecated yet)
+*/
 
 contract BaseContent is Editable {
-
+    bytes32 public version ="BaseContent20190301121900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -26,7 +30,8 @@ contract BaseContent is Editable {
     struct RequestData {
         address originator; // client address requesting
         uint256 amountPaid; // number of token received
-        int8 status; //0 in escrow, 1 paid to content owner, -1 refunded to originator
+        int8 status; //0 access requested, 1 access granted, -1 access refused, 2 access completed, -2 access error
+        uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
     }
 
     mapping(uint256 => RequestData) public requestMap;
@@ -41,7 +46,7 @@ contract BaseContent is Editable {
         string pkeRequestor,
         string pkeAFGH
     );
-
+    event LogPayment(uint256 requestID, string label, address payee, uint256 amount);
     event AccessGrant(uint256 requestID, bool access_granted, string reKey, string encryptedAESKey);
     event AccessRequestValue(bytes32 customValue);
     event AccessRequestStakeholder(address stakeholder);
@@ -153,16 +158,32 @@ contract BaseContent is Editable {
         emit SetContentContract(contentContractAddress);
     }
 
-    function getAccessCharge(uint8 level, bytes32[] custom_values, address[] stakeholders) public returns (uint256) {
-        uint256 levelAccessCharge = accessCharge;
+    // Access codes
+    // 0   -> accessible
+    // 100 -> calculation of price exceeds specified cap (accessCharge)
+    function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (int8, uint256) {
+        uint256 levelAccessCharge;
+        int8 accessCode = -1;
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            int256 calculatedCharge = c.runAccessCharge(level, custom_values, stakeholders);
-            if (calculatedCharge >= 0) {
-                levelAccessCharge = uint256(calculatedCharge);
+            (accessCode, levelAccessCharge) = c.runAccessInfo(level, custom_values, stakeholders);
+            if (levelAccessCharge > accessCharge) {
+                accessCode = 100;
             }
-            require(levelAccessCharge <= accessCharge);
         }
+        if (accessCode == -1) { //No custom calculations
+            return (0, accessCharge);
+        } else {
+            return (accessCode, levelAccessCharge);
+        }
+    }
+
+    //This function should be deprecated as it is very costly, getAccessInfo, which is a view, can be used instead
+    function getAccessCharge(uint8 level, bytes32[] custom_values, address[] stakeholders) public returns (uint256) {
+        uint256 levelAccessCharge;
+        int8 accessCode;
+        (accessCode, levelAccessCharge) = getAccessInfo(level, custom_values, stakeholders);
+        require(accessCode == 0);
         emit GetAccessCharge(level, levelAccessCharge);
         return levelAccessCharge;
     }
@@ -206,6 +227,22 @@ contract BaseContent is Editable {
         return statusCode;
     }
 
+
+    //this function allows custom content contract to call makeRequestPayment
+    function processRequestPayment(uint256 request_ID, address payee, string label, uint256 amount) public returns (bool) {
+        require((contentContractAddress != 0x0) && (msg.sender == contentContractAddress));
+        return makeRequestPayment(request_ID, payee, label, amount);
+    }
+
+    function makeRequestPayment(uint256 request_ID, address payee, string label, uint256 amount) private returns (bool) {
+        RequestData storage r = requestMap[request_ID];
+        if ((r.settled + amount) <= r.amountPaid) {
+            payee.transfer(amount);
+            r.settled = r.settled + amount;
+            emit LogPayment(request_ID, label, payee, amount);
+        }
+    }
+
     //  level - the security group for which the access request is for
     //  pkeRequestor - ethereum public key of the requestor (ECIES)
     //  pkeAFGH - ephemeral public key of the requestor (AFGH)
@@ -229,7 +266,7 @@ contract BaseContent is Editable {
             uint256 requiredFund = getAccessCharge(level, custom_values, stakeholders);
             require(msg.value >= uint(requiredFund));
         }
-        RequestData memory r = RequestData(msg.sender, msg.value, 0);
+        RequestData memory r = RequestData(msg.sender, msg.value, 0, 0);
         // status of 0 indicates the payment received is in escrow in the content contract
         requestMap[requestID] = r;
         if (contentContractAddress != 0x0) {
@@ -269,22 +306,32 @@ contract BaseContent is Editable {
 
         RequestData storage r = requestMap[request_ID];
         require(r.originator != 0x0);
-
-        if (r.status == 0) {
-            if (access_granted == false) {
-                //escrowed fund to be refunded to accessor
-                r.originator.transfer(r.amountPaid);
-                r.status = -1;
-                emit AccessGrant(request_ID, false, "", "");
-            } else {
-                //escrowed fund to be paid to owner
-                owner.transfer(r.amountPaid);
-                r.status = 1;
-                emit AccessGrant(request_ID, true, re_key, encrypted_AES_key);
+        bool result = access_granted;
+        if (contentContractAddress != 0x0) {
+            Content c = Content(contentContractAddress);
+            result = (c.runGrant(request_ID, access_granted) == 0);
+        } else { //default behavior is settlement upon access grant
+            if (r.settled < r.amountPaid) {
+                if (access_granted == false) {
+                    //escrowed fund to be refunded to accessor
+                    makeRequestPayment(request_ID, r.originator, "access declined", r.amountPaid - r.settled);
+                } else {
+                    //escrowed fund to be paid to owner
+                    makeRequestPayment(request_ID, owner, "owner payment", r.amountPaid - r.settled);
+                }
             }
         }
-        return true;
+        if (result == true) {
+            r.status = 1;
+            emit AccessGrant(request_ID, true, re_key, encrypted_AES_key);
+        } else {
+            r.status = -1;
+            emit AccessGrant(request_ID, false, "", "");
+        }
+        return result;
     }
+
+
 
     // sender passes the quality score as pct of best possible (converted to 1-100 scale)
     // the fabric provides to this access,
@@ -299,22 +346,34 @@ contract BaseContent is Editable {
     // add a state variable in the contract indicating whether to credit back based on quality score
     function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 ml_out_hash) public payable returns (bool) {
         RequestData storage r = requestMap[request_ID];
-        require((r.originator != 0x0) && (msg.sender == r.originator));
-        bool result = true;
+        require((r.originator != 0x0) && ((msg.sender == r.originator) || (msg.sender == owner)));
+        bool success = (score_pct != 0);
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            result = (c.runFinalize(request_ID) == 0);
+            uint256 result = uint256(c.runFinalize(request_ID, score_pct));
+            success = (result == 0);
+        }
+        if (msg.sender == r.originator) {//Owner direct call can't modify status to avoid premature clearing of escrow
+            if (success){
+             r.status = 2; //access completeted, by default score_pct is not taken into account
+            } else {
+             r.status = -2; //access error, only if finalize is returning non-zero code
+          }
         }
         // Delete request from map after customContract in case it was needed for execution of custom wrap-up
-        if (r.status == 0) {
-            //if access was not granted, payment is returned to originator
-            msg.sender.transfer(r.amountPaid);
+        if (r.settled < r.amountPaid) {
+            if (r.status <= 0) {
+                //if access was not granted, payment is returned to originator
+                makeRequestPayment(request_ID, r.originator, "refund", r.amountPaid - r.settled);
+            } else {
+                //if access was not granted and no error was registered, escrow is released to the owner
+                makeRequestPayment(request_ID, owner, "release escrow", r.amountPaid - r.settled);
+            }
         }
         delete requestMap[request_ID];
-
         // record to event
-        emit AccessComplete(request_ID, score_pct, ml_out_hash, result);
-        return result;
+        emit AccessComplete(request_ID, score_pct, ml_out_hash, success);
+        return success;
     }
 
     function kill() public onlyOwner {

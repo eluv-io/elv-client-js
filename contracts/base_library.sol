@@ -9,6 +9,7 @@ import "./accessible.sol";
 
 contract BaseLibrary is Accessible, Editable {
 
+    bytes32 public version ="BaseLibrary20190221101700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
@@ -40,8 +41,8 @@ contract BaseLibrary is Accessible, Editable {
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContent(address contentAddress, bool approved, string note);
 
-    function BaseLibrary(address address_KMS) public payable {
-        contentSpace = msg.sender;
+    function BaseLibrary(address address_KMS, address content_space) public payable {
+        contentSpace = content_space;
         contributorGroupsLength = 0;
         reviewerGroupsLength = 0;
         accessorGroupsLength = 0;
@@ -144,14 +145,15 @@ contract BaseLibrary is Accessible, Editable {
     }
 
     function removeContentType(address content_type) public onlyOwner returns (bool) {
-        for (uint i = 0; i < contentTypesLength; i++) {
+        uint256 latestIndex = contentTypesLength - 1;
+        for (uint256 i = 0; i < contentTypesLength; i++) {
             if (contentTypes[i] == content_type) {
                 delete contentTypes[i];
-                if (i != (contentTypesLength - 1)) {
-                    contentTypes[i] = contentTypes[contentTypesLength - 1];
-                    delete contentTypes[contentTypesLength - 1];
+                if (i != latestIndex) {
+                    contentTypes[i] = contentTypes[latestIndex];
+                    delete contentTypes[latestIndex];
                 }
-                contentTypesLength--;
+                contentTypesLength = latestIndex; //decrease by 1
                 delete contentTypeContracts[content_type];
                 emit ContentTypeRemoved(content_type);
                 return true;

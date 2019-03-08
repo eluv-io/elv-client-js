@@ -970,12 +970,11 @@ class ElvClient {
     const objectId = this.utils.AddressToObjectId(contractAddress);
     const path = Path.join("qlibs", typeLibraryId, "q", objectId);
 
-    metadata.customContract = contract;
+    metadata.custom_contract = contract;
     if (schema != null) {
       metadata["eluv.schema"] = schema["eluv.schema"];
     }
-    metadata["eluv.manageApp"] = "manageApp.html";
-    metadata["eluv.displayApp"] = "displayApp.html";
+
     /* Create object, upload bitcode and finalize */
 
     const createResponse = await ResponseToJson(

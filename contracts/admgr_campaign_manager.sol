@@ -8,6 +8,8 @@ import {AdmgrAdvertisement} from "./admgr_advertisement.sol";
 
 contract AdmgrCampaign is Content {
 
+    bytes32 public version ="AdmgrCampaign20190222153200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
     address public campaignManagerAddress;
 
     struct AdData {
@@ -57,8 +59,20 @@ contract AdmgrCampaign is Content {
         return ((duration == 0) || (startDate + duration >= timeNow));
     }
 
+
+    function validateRequest(address adAddress, uint256 amount) public view returns (bool){
+        require(isActive());
+        //emit LogBool("isActive", isActive());
+        AdData storage adData = adDataMap[adAddress];
+        //emit LogUint256("adData.budget", adData.budget);
+        //emit LogUint256("adData.paidOut", adData.paidOut);
+        //emit LogUint256("amount", amount);
+        require((adData.budget == 0) || (adData.budget - adData.paidOut >= amount));
+        return true;
+    }
+
     function payout(bytes32 requestDataID) public returns (bool) {
-        //require(isActive());
+        require(isActive());
         AdmgrAdvertisement advertisementMgr = AdmgrAdvertisement(msg.sender);
         uint256 amount = advertisementMgr.getAmount(requestDataID);
         address ad = advertisementMgr.getAdvertisement(requestDataID);
@@ -67,9 +81,9 @@ contract AdmgrCampaign is Content {
         require(advertisementMgr.getOriginator(requestDataID) == tx.origin); //ensure caller match request
         AdData storage adData = adDataMap[ad];
         require(adData.status == 1);
-        require(adData.budget - adData.paidOut >= amount);
+        require((adData.budget == 0) || (adData.budget - adData.paidOut >= amount));
         adDataMap[ad].paidOut = adData.paidOut + amount;
-        if (adDataMap[ad].paidOut == adData.budget) {
+        if ((adData.budget != 0) && (adDataMap[ad].paidOut == adData.budget)) {
             adDataMap[ad].status = -1;
         }
         uint256 amount_library = amount / 100 * libraryRetrocession;
@@ -80,7 +94,7 @@ contract AdmgrCampaign is Content {
             emit LogPayment("Retrocession", lib.owner(), amount_library);
         }
         tx.origin.transfer(amount - amount_library);
-        emit LogPayment("Royalty", tx.origin, amount - amount_library);
+        emit LogPayment("Reward", tx.origin, amount - amount_library);
         return true;
     }
 
@@ -96,10 +110,28 @@ contract AdmgrCampaign is Content {
         return true;
     }
 
+    function removeAd(address adAddress) public onlyOwner returns (bool){
+        delete adDataMap[adAddress];
+        for (uint i = 0; i < campaignAdsLength; i++) {
+            if (campaignAds[i] == adAddress) {
+                delete campaignAds[i];
+                if (i != (campaignAdsLength - 1)) {
+                    campaignAds[i] = campaignAds[campaignAdsLength - 1];
+                    delete campaignAds[campaignAdsLength - 1];
+                }
+                campaignAdsLength--;
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
 
 
 contract AdmgrCampaignManager is Content {
+
+    bytes32 public version ="AdmgrCampaignMgr20190222153600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint8 public libraryRetrocession = 0;
 
@@ -142,6 +174,8 @@ contract AdmgrCampaignManager is Content {
 
 
 contract AdmgrMarketPlace is Content {
+
+    bytes32 public version ="AdmgrMarketPlace20190222153700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function runCreate() public payable returns (uint) {
         address campaignMgrAddress = new AdmgrCampaignManager();
