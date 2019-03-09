@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"options\": {\n    \"type\": \"hq__QmNTA2yaKfapTAWiDQgMkCKDUuKagZwiGvLFQJcTJMBvQC\",\n    \"meta\": {\n      \"toMerge\": {\n        \"merge\": \"me\"\n      },\n      \"toReplace\": {\n        \"replace\": \"me\"\n      },\n      \"toDelete\": {\n        \"delete\": \"me\"\n      }\n    }\n  }\n});",
-    "result": "{\n  \"id\": \"iq__xcaGgYBhyqxDSprp7T41af65VTg\",\n  \"type\": \"hq__QmNTA2yaKfapTAWiDQgMkCKDUuKagZwiGvLFQJcTJMBvQC\",\n  \"write_token\": \"tqw_6g53BzbUyJm1jFSaJ1KAKdpmKUUmrLtCk\"\n}"
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\",\n  \"options\": {\n    \"type\": \"hq__QmUUUh4tmMw7JqQHYiB3ko67G4BAaY1ZJDkw4vT1SXSozx\",\n    \"meta\": {\n      \"toMerge\": {\n        \"merge\": \"me\"\n      },\n      \"toReplace\": {\n        \"replace\": \"me\"\n      },\n      \"toDelete\": {\n        \"delete\": \"me\"\n      }\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__3q3e3xt88FTabQHqZFd88a6yzCCf\",\n  \"type\": \"hq__QmUUUh4tmMw7JqQHYiB3ko67G4BAaY1ZJDkw4vT1SXSozx\",\n  \"write_token\": \"tqw_Aw8enCp4f5c2sEe7gkedto7RhShvwacE9\"\n}"
   },
   {
-    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__QmTdoJPVxPqvA62xvCJ6uZi71SoJw8PfvvNVjqHQyJ7tLB\"\n  }\n});",
-    "result": "{\n  \"id\": \"iq__sw61efTk9qKJv1xKdkSWExerEB1\",\n  \"type\": \"\",\n  \"write_token\": \"tqw_HR3ycLVbBgCv6su6SSwwfCG9pCa8kK8rD\"\n}"
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__QmeFYBJAhE2U2AhQ7d7CthceuED2HXfCzKN8auXpUGQi3W\"\n  }\n});",
+    "result": "{\n  \"id\": \"iq__uKL2Nv95JMSJvZKNEvFNnV5ZzbB\",\n  \"type\": \"\",\n  \"write_token\": \"tqw_8LNSGsHMYrDQeamQ2BHwkv6YcxzdfD26Y\"\n}"
   }
 ]

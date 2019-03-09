@@ -1,21 +1,6 @@
 const Path = require("path");
 const Utils = require("./Utils");
 
-const HandleErrors = async (response) => {
-  response = await response;
-
-  if(!response.ok){
-    let errorInfo = {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url
-    };
-    throw errorInfo;
-  }
-
-  return response;
-};
-
 class UserProfileClient {
   /**
    * Methods used to access and modify information about the user
@@ -312,13 +297,11 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
     let path = Path.join("qlibs", libraryId);
 
-    await HandleErrors(
-      this.client.HttpClient.Request({
-        headers: await this.client.authClient.AuthorizationHeader({libraryId}),
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.client.HttpClient.Request({
+      headers: await this.client.authClient.AuthorizationHeader({libraryId}),
+      method: "DELETE",
+      path: path
+    });
   }
 
   /**

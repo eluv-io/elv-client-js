@@ -21,27 +21,12 @@ if(typeof Response === "undefined") {
   Response = (require("node-fetch")).Response;
 }
 
-const HandleErrors = async (response) => {
-  response = await response;
-
-  if(!response.ok){
-    let errorInfo = {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url
-    };
-    throw errorInfo;
-  }
-
-  return response;
-};
-
 const ResponseToJson = async (response) => {
   return ResponseToFormat("json", response);
 };
 
 const ResponseToFormat = async (format, response) => {
-  response = await HandleErrors(response);
+  response = await response;
 
   switch(format.toLowerCase()) {
     case "json":
@@ -398,17 +383,15 @@ class ElvClient {
     const path = Path.join("qlibs", libraryId);
 
     // Create library in fabric
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
-        method: "PUT",
-        path: path,
-        body: {
-          meta: publicMetadata,
-          private_meta: privateMetadata
-        }
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
+      method: "PUT",
+      path: path,
+      body: {
+        meta: publicMetadata,
+        private_meta: privateMetadata
+      }
+    });
 
     // Set library content object type on automatically created library object
     const objectId = libraryId.replace("ilib", "iq__");
@@ -519,13 +502,11 @@ class ElvClient {
       methodArgs: []
     });
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: authorizationHeader,
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: authorizationHeader,
+      method: "DELETE",
+      path: path
+    });
   }
 
   /* Library metadata */
@@ -573,14 +554,12 @@ class ElvClient {
   async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="/", metadata={}}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
-        method: "PUT",
-        path: path,
-        body: metadata
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
+      method: "PUT",
+      path: path,
+      body: metadata
+    });
   }
 
   /**
@@ -624,14 +603,12 @@ class ElvClient {
 
     let path = Path.join("qlibs", libraryId, "meta");
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
-        method: "PUT",
-        path: path,
-        body: metadata
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
+      method: "PUT",
+      path: path,
+      body: metadata
+    });
   }
 
   /* Library Content Type Management */
@@ -1328,13 +1305,43 @@ class ElvClient {
   async FinalizeContentObject({libraryId, objectId, writeToken}) {
     let path = Path.join("q", writeToken);
 
-    return ResponseToJson(
+    const finalizeResponse = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path
       })
     );
+
+    await this.PublishContentVersion({
+      libraryId,
+      objectId,
+      versionHash: finalizeResponse.hash
+    });
+
+    return finalizeResponse;
+  }
+
+  /**
+   * Publish a content object version
+   *
+   * NOTE: Not yet intended for use - publishing is done in FinalizeContentObject
+   *
+   * @see POST /qlibs/:qlibid/q/:write_token
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} versionHash - The version hash of the content object to publish
+   */
+  async PublishContentVersion({libraryId, objectId, versionHash}) {
+    let path = Path.join("q", versionHash);
+
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "PUT",
+      path: path
+    });
   }
 
   /**
@@ -1350,13 +1357,11 @@ class ElvClient {
   async DeleteContentVersion({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "DELETE",
+      path: path
+    });
   }
 
   /**
@@ -1380,13 +1385,11 @@ class ElvClient {
       methodArgs: []
     });
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: authorizationHeader,
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: authorizationHeader,
+      method: "DELETE",
+      path: path
+    });
   }
 
   /* Content object metadata */
@@ -1406,14 +1409,12 @@ class ElvClient {
   async MergeMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "POST",
-        path: path,
-        body: metadata
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "POST",
+      path: path,
+      body: metadata
+    });
   }
 
   /**
@@ -1431,14 +1432,12 @@ class ElvClient {
   async ReplaceMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "PUT",
-        path: path,
-        body: metadata
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "PUT",
+      path: path,
+      body: metadata
+    });
   }
 
   /**
@@ -1456,13 +1455,11 @@ class ElvClient {
   async DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree="/"}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "DELETE",
+      path: path
+    });
   }
 
   /* Files */
@@ -1580,13 +1577,11 @@ class ElvClient {
   async FinalizeUploadJobs({libraryId, objectId, writeToken}) {
     let path = Path.join("q", writeToken, "files");
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
-        method: "POST",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+      method: "POST",
+      path: path
+    });
   }
 
   /**
@@ -1661,13 +1656,12 @@ class ElvClient {
   async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
     const path = Path.join("q", versionHash || objectId, "data", partHash);
 
-    const response = await HandleErrors(
-      this.HttpClient.Request({
+    const response =
+      await this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
-      })
-    );
+      });
 
     let data = await response.arrayBuffer();
 
@@ -1769,13 +1763,11 @@ class ElvClient {
   async DeletePart({libraryId, objectId, writeToken, partHash}) {
     let path = Path.join("q", writeToken, "parts", partHash);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "DELETE",
+      path: path
+    });
   }
 
   /**

@@ -22,7 +22,7 @@ class HttpClient {
     return headers;
   }
 
-  Request({method, path, queryParams={}, body={}, bodyType="JSON", headers={}}) {
+  async Request({method, path, queryParams={}, body={}, bodyType="JSON", headers={}}) {
     let uri = this.baseURI
       .path(path)
       .query(queryParams)
@@ -41,19 +41,36 @@ class HttpClient {
       }
     }
 
-    return (
-      Fetch(
-        uri.toString(),
-        fetchParameters
-      ).catch(error => {
-        return ({
-          ok: false,
-          status: 500,
-          statusText: error.message,
-          url: uri.toString()
-        });
-      })
-    );
+    let response;
+
+    try {
+      response =
+        await Fetch(
+          uri.toString(),
+          fetchParameters
+        );
+    } catch(error) {
+      response = {
+        ok: false,
+        status: 500,
+        statusText: error.message,
+        url: uri.toString(),
+        ...fetchParameters
+      };
+    }
+
+    if(!response.ok) {
+      throw {
+        name: "ElvHttpClientError",
+        status: response.status,
+        statusText: response.statusText,
+        message: response.statusText,
+        url: uri.toString(),
+        ...fetchParameters
+      };
+    }
+
+    return response;
   }
 
   URL({path, queryParams={}}) {

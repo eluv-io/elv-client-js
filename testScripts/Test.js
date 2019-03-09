@@ -18,6 +18,8 @@ const Test = async () => {
       privateKey: "0xbf092a5c94988e2f7a1d00d0db309fc492fe38ddb57fc6d102d777373389c5e6"
     });
     client.SetSigner({signer});
+
+    console.log(await client.ContentLibrary({libraryId: "ilibnonexistant"}));
   } catch(error) {
     console.error(error);
   }

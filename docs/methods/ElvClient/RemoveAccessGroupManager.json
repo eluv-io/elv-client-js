@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async RemoveAccessGroupManager({\n  \"contractAddress\": \"0x876F68c2a7DC0532E7C2a429f42E47b8054488c0\",\n  \"memberAddress\": \"0x3B7746010Ac7DE2B6aEde6000324FC7CAE7cF0dc\"\n});",
-    "result": "\"0xfd094eb8899c3741a2d60825e2a0fd1dad3b0633458de3728c96c2d86697aa70\""
+    "signature": "async RemoveAccessGroupManager({\n  \"contractAddress\": \"0xA0f361d73A98Bd9E9705Fb2FD45c20b287648BF0\",\n  \"memberAddress\": \"0x25e7a03ECF558261c088AdD4ce0aaC9936cAB774\"\n});",
+    "result": "\"0x838c4258bed08aa13526e68156ff51a6c6ea9bc382e4c24a9b907e21628a1d92\""
   }
 ]

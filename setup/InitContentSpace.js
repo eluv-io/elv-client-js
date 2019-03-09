@@ -3,6 +3,7 @@ const { ElvClient } = require("../src/ElvClient");
 const ClientConfiguration = require("../TestConfiguration.json");
 const fs = require("fs");
 const Path = require("path");
+const readLine = require("readline");
 
 let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
@@ -14,6 +15,33 @@ if(process.argv.length !== 3) {
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({privateKey: process.argv[2]});
 client.SetSigner({signer});
+
+const PromptRestart = async () => {
+  console.log("\n\n==============================");
+  console.log("UPDATE QFAB CONFIG AND RESTART");
+  console.log("==============================\n\n");
+
+  const rl = readLine.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  let restarted = false;
+
+  while(!restarted) {
+    restarted = await new Promise(
+      resolve => rl.question("QFab daemon restarted? (y/n) ", (answer) => {
+        if(answer === "y") {
+          rl.close();
+          resolve(true);
+        } else {
+          resolve(false);
+        }
+      })
+    );
+  }
+};
+
 
 const Init = async () => {
   try {
@@ -35,6 +63,8 @@ const Init = async () => {
     console.log("Updating TestConfiguration.json\n");
     ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
     fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
+
+    await PromptRestart();
 
     // Reinitialize client
     client = ElvClient.FromConfiguration({configuration: ClientConfiguration});

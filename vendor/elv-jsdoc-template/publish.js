@@ -117,7 +117,7 @@ function buildAttribsString(attribs) {
   let attribsString = "";
 
   if (attribs && attribs.length) {
-    attribsString = htmlsafe(util.format("(%s) ", attribs.join(", ")));
+    attribsString = htmlsafe(util.format("%s ", attribs.join(", ")));
   }
 
   return attribsString;
