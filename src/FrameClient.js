@@ -285,6 +285,7 @@ class FrameClient {
       "MergeMetadata",
       "Proofs",
       "PublicLibraryMetadata",
+      "PublishContentVersion",
       "QParts",
       "RemoveAccessGroupManager",
       "RemoveAccessGroupMember",

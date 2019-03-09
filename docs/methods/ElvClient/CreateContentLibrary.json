@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async CreateContentLibrary({\n  \"name\": \"Test Library 9b23cc0538e5396e56cf\",\n  \"description\": \"Test Library Description\",\n  \"image\": \"<ArrayBuffer 101254>\",\n  \"publicMetadata\": {\n    \"public\": {\n      \"toReplace\": {\n        \"meta\": \"data\"\n      },\n      \"toDelete\": {\n        \"meta\": \"data\"\n      }\n    }\n  },\n  \"privateMetadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    }\n  }\n});",
-    "result": "\"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\""
+    "signature": "async CreateContentLibrary({\n  \"name\": \"Test Library 0d597461ef0e24d70b3b\",\n  \"description\": \"Test Library Description\",\n  \"image\": \"<ArrayBuffer 101254>\",\n  \"publicMetadata\": {\n    \"public\": {\n      \"toReplace\": {\n        \"meta\": \"data\"\n      },\n      \"toDelete\": {\n        \"meta\": \"data\"\n      }\n    }\n  },\n  \"privateMetadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    }\n  }\n});",
+    "result": "\"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\""
   },
   {
     "signature": "async CreateContentLibrary({\n  \"publicMetadata\": {},\n  \"privateMetadata\": {\n    \"access_level\": \"prompt\",\n    \"collected_data\": {}\n  },\n  \"isUserLibrary\": true\n});",
-    "result": "\"ilibq3wWS3JY443SxCBjupetNZ8z8yR\""
+    "result": "\"ilibXdTEzvEmUHpUHd2bhCp9Eeu2vrX\""
   }
 ]

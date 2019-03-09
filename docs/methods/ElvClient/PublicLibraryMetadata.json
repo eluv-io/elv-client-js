@@ -1,18 +1,18 @@
 [
   {
-    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"metadataSubtree\": \"public\"\n});",
+    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\",\n  \"metadataSubtree\": \"public\"\n});",
     "result": "{\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
   },
   {
-    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"metadataSubtree\": \"public\"\n});",
+    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\",\n  \"metadataSubtree\": \"public\"\n});",
     "result": "{\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
   },
   {
-    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\"\n});",
-    "result": "{\n  \"eluv.description\": \"Test Library Description\",\n  \"name\": \"Test Library 9b23cc0538e5396e56cf\",\n  \"public\": {\n    \"toDelete\": {\n      \"meta\": \"data\"\n    },\n    \"toReplace\": {\n      \"new\": \"metadata\"\n    }\n  }\n}"
+    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\"\n});",
+    "result": "{\n  \"eluv.description\": \"Test Library Description\",\n  \"name\": \"Test Library 0d597461ef0e24d70b3b\",\n  \"public\": {\n    \"toDelete\": {\n      \"meta\": \"data\"\n    },\n    \"toReplace\": {\n      \"new\": \"metadata\"\n    }\n  }\n}"
   },
   {
-    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilib2GHFbDViYvZ3Y1LoUWSqLK4E5Qo9\",\n  \"metadataSubtree\": \"public\"\n});",
+    "signature": "async PublicLibraryMetadata({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\",\n  \"metadataSubtree\": \"public\"\n});",
     "result": "{\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
   }
 ]
