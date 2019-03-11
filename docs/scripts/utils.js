@@ -27,31 +27,23 @@ window.addEventListener("load", () => {
 window.addEventListener("load", () => {
   Array.from(document.getElementsByClassName("class-link")).map(classLink => {
     const classContainer = classLink.parentElement;
-    const methodContainer = classLink.nextSibling;
+    const methodContainer = classLink.parentElement.nextSibling;
 
-    const toggleButton = document.createElement("div");
-    toggleButton.tabIndex = "0";
-    toggleButton.className = "class-toggle-button";
-    toggleButton.innerText = "▼";
+    classLink.tabIndex = "0";
 
-    toggleButton.onclick = toggleButton.onkeypress = () => {
+    classLink.onclick = classLink.onkeypress = () => {
       if(methodContainer.style.display !== "block") {
         methodContainer.style.display = "block";
         classLink.className = classLink.className + " visible-class";
-        toggleButton.innerText = "▲";
       } else {
         methodContainer.style.display = "none";
         classLink.className = classLink.className.replace("visible-class", "");
-        toggleButton.innerText = "▼";
       }
-
-      classLink.scrollIntoView();
     };
 
-    classContainer.insertBefore(toggleButton, methodContainer);
-
     if(window.location.toString().includes(classLink.innerText)) {
-      toggleButton.click();
+      classLink.click();
+      classContainer.className = classContainer.className + " active";
     }
   });
 

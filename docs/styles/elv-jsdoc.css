@@ -26,6 +26,7 @@ ul li {
   list-style-type: none;
 }
 
+a.button,
 button {
   user-select: none;
   background-color: white;
@@ -41,10 +42,19 @@ button {
   text-align: center;
 }
 
+a.button:hover,
 button:hover {
   background-color: #0095dd;
   border: 1px solid #0095dd;
   color: white;
+}
+
+a.button {
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-size: 20px;
 }
 
 .example-toggle-button {
@@ -57,20 +67,23 @@ button:hover {
   position: fixed;
   top: 0;
   display: block;
-  width: 300px;
+  width: 275px;
   height: 100%;
   max-height: 100%;
-  overflow-y: auto;
   background: #f5f5f5;
 }
 
 .nav-content {
-  padding: 60px 0 20px 20px;
+  padding: 60px 0 20px 0;
+  overflow: auto;
+  overflow: overlay;
+  max-height: 100%;
+  font-size: 14px;
 }
 
 .main {
-  margin-left: 300px;
-  width: calc(100% - 300px);
+  margin-left: 275px;
+  width: calc(100% - 275px);
 }
 
 .main-content {
@@ -93,7 +106,7 @@ button:hover {
 
 .nav-container .header {
   position: fixed;
-  width: 300px;
+  width: 275px;
 }
 
 .header {
@@ -118,37 +131,39 @@ button:hover {
 }
 
 .header .title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: bold;
   margin-top: 2px;
-  color: #204c69;
-  font-variant: small-caps;
+  -moz-user-select: none;
+  user-select: none;
 }
 
 /*** Nav ***/
 
+.class-link-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 35px;
+}
+
+.class-link-container.active {
+  background-color: #ddd;
+}
+
+.class-link-container *:hover {
+  background: #555;
+  color: white;
+}
+
 .class-link {
-  display: inline-block;
-  margin-bottom: 10px;
-  padding: 3px 10px;
-}
-
-.class-link:hover {
-  background: #ddd;
-  border-radius: 2px;
-}
-
-.class-toggle-button {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+  padding-left: 30px;
   cursor: pointer;
-  display: inline-block;
-  padding: 3px;
-  margin: 3px;
-}
-
-.class-toggle-button:hover {
-  color: #666;
-  background: #ddd;
-  border-radius: 5px;
+  user-select: none;
 }
 
 .visible-class {
@@ -156,38 +171,48 @@ button:hover {
 }
 
 nav h3 {
-  margin: 0 0 20px;
-  font-size: 24px;
+  margin: 10px 0 10px 20px;
+  font-size: 20px;
   font-variant: all-small-caps;
-  color: black;
+  color: #333;
 }
 
 /* Class name */
+nav ul li {
+  cursor: pointer;
+}
+
 nav ul li a {
-  font-size: 18px;
-  font-weight: bold;
+  font-weight: 600;
   color: #3e3c42;
 }
 
 nav ul.methods {
   border-left: 3px solid #0095dd;
-  margin: 10px 0 25px;
 }
 
 /* Method entries */
+nav ul.methods li {
+  height: 30px;
+}
+
 nav ul.methods li a {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
   color: #0095dd;
-  font-size: 16px;
   font-weight: normal;
-  padding-left: 20px;
+  padding-left: 40px;
   line-height: 1.5;
 }
 
-/*** Main ***/
-
-.container-overview .description {
-  font-size: 18px;
+nav ul.methods li a:hover {
+  background-color: #555;
+  color: white;
 }
+
+/*** Main ***/
 
 /* Method descriptions */
 
@@ -196,17 +221,12 @@ nav ul.methods li a {
 }
 
 .main h3 {
-  font-size: 24px;
+  font-size: 20px;
   margin: 20px 0 40px;
 }
 
 .type-signature {
   color: #666;
-}
-
-.description {
-  margin: 10px 0;
-  font-size: 16px;
 }
 
 .description p {
@@ -215,7 +235,7 @@ nav ul.methods li a {
 
 .description,
 .return-description-block {
-  margin: 20px 0;
+  margin: 15px 0;
 }
 
 .return-description-block {
@@ -249,6 +269,7 @@ nav ul.methods li a {
 
 h4.name {
   font-weight: bold;
+  font-size: 18px;
 }
 
 .signature,
@@ -267,11 +288,6 @@ h4.name {
 
 .block-param {
   padding-left: 30px;
-}
-
-.block-param,
-.inline-param {
-  color: #204c69;
 }
 
 /* Params table */
@@ -394,6 +410,10 @@ td table.params, td table.props {
 }
 
 /* See */
+.see-description {
+  font-size: 14px;
+}
+
 .see-description dt {
   color: #666;
 }
@@ -417,8 +437,8 @@ td table.params, td table.props {
 .source-container,
 .example-container pre {
   padding: 15px 30px 15px 45px;
-  font-size: 16px;
-  background: #eee;
+  font-size: 14px;
+  background: #e5e5e5;
   border: 1px solid lightgray;
   overflow: hidden;
   max-width: 70vw;
@@ -431,9 +451,6 @@ td table.params, td table.props {
   margin-bottom: 10px;
 }
 
-section.source-section {
-  margin: 0 20px;
-}
-
 pre.source {
+  margin: 0 20px;
 }
