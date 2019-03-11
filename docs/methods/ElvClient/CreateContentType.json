@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async CreateContentType({\n  \"metadata\": {\n    \"name\": \"Test Content Type 0d597461ef0e24d70b3b\"\n  }\n});",
-    "result": "\"iq__2UqFXw9r4Gpxk3WnLncGAPc9LSy8\""
+    "signature": "async CreateContentType({\n  \"metadata\": {\n    \"name\": \"Test Content Type d14529926549d0706549\"\n  }\n});",
+    "result": "\"iq__2Y8yMjXBazkggbx6MAWgM7NT8ePB\""
   }
 ]

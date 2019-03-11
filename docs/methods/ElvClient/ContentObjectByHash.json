@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async ContentObjectByHash({\n  \"versionHash\": \"hq__QmQM3FwqbooV8J6Tu9sGzmSpPjqsbxBpg3hiphwHNfcZCX\"\n});",
+    "result": "{\n  \"id\": \"iq__2TNa8MHbemZsgjxgcfqoGTR82Sop\",\n  \"hash\": \"hq__QmQM3FwqbooV8J6Tu9sGzmSpPjqsbxBpg3hiphwHNfcZCX\",\n  \"type\": \"hq__QmPF8VyYS2vfvXpEjvznpPzU2TEFnjr8fFYsPpPddJBkZK\"\n}"
+  }
+]

@@ -8,7 +8,7 @@
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": "async AddAccountFromEncryptedPK({\n  \"encryptedPrivateKey\": \"{\\\"address\\\":\\\"95ced938f7991cd0dfcb48f0a06a40fa1af46ebc\\\",\\\"id\\\":\\\"922a0ea1-1e18-4bf5-85e4-3e5003610866\\\",\\\"version\\\":3,\\\"Crypto\\\":{\\\"cipher\\\":\\\"aes-128-ctr\\\",\\\"cipherparams\\\":{\\\"iv\\\":\\\"b277ee6e6cd81d94130748d399ddfa29\\\"},\\\"ciphertext\\\":\\\"e024edb23716536b55dcad696295468129907b5f3a518683aa8f9a805fdcd579\\\",\\\"kdf\\\":\\\"scrypt\\\",\\\"kdfparams\\\":{\\\"salt\\\":\\\"4e7bb8e54074df8ff1272c4e470e5e57d25c918471a03daf36ff4b5aeab26c85\\\",\\\"n\\\":16384,\\\"dklen\\\":32,\\\"p\\\":1,\\\"r\\\":8},\\\"mac\\\":\\\"98b6137e0e565dc434b4e57ebecd9fc11a559bdcb8622ab3de2de9ae082248d6\\\"}}\",\n  \"password\": \"test\"\n});",
+    "signature": "async AddAccountFromEncryptedPK({\n  \"encryptedPrivateKey\": \"{\\\"address\\\":\\\"95ced938f7991cd0dfcb48f0a06a40fa1af46ebc\\\",\\\"id\\\":\\\"30872756-5496-4806-9855-0059dc7f76c5\\\",\\\"version\\\":3,\\\"Crypto\\\":{\\\"cipher\\\":\\\"aes-128-ctr\\\",\\\"cipherparams\\\":{\\\"iv\\\":\\\"83b43325ff23ba14430f08046394e9f7\\\"},\\\"ciphertext\\\":\\\"6a73039303d8080127c68d0b2e6b4b4c3b78288afae307f6d091f55fc9a9d8d6\\\",\\\"kdf\\\":\\\"scrypt\\\",\\\"kdfparams\\\":{\\\"salt\\\":\\\"8ba43c3591ad4ef1291d2e4ac471c807e2e458af4d99502d68b399128d8bd200\\\",\\\"n\\\":16384,\\\"dklen\\\":32,\\\"p\\\":1,\\\"r\\\":8},\\\"mac\\\":\\\"d29cc0959ad32600ec4f7855520c5e57f5dd13ece83b104c6e912add65497498\\\"}}\",\n  \"password\": \"test\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

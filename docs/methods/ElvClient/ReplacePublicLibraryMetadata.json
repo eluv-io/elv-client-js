@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async ReplacePublicLibraryMetadata({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\",\n  \"metadataSubtree\": \"public/toReplace\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
+    "signature": "async ReplacePublicLibraryMetadata({\n  \"libraryId\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"metadataSubtree\": \"public/toReplace\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
   }
 ]

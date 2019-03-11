@@ -361,9 +361,21 @@ describe("Test ElvClient", () => {
       const object = await client.ContentObject({libraryId, objectId});
 
       expect(object).toBeDefined();
+      expect(object.id).toEqual(objectId);
+      expect(object.hash).toEqual(versionHash);
+      expect(object.type).toEqual(typeHash);
 
       const versions = await client.ContentObjectVersions({libraryId, objectId});
       expect(versions).toBeDefined();
+    });
+
+    test("Get Content Object By Version Hash", async () => {
+      const object = await client.ContentObject({libraryId, objectId});
+      const objectByHash = await client.ContentObjectByHash({versionHash});
+
+      expect(object).toBeDefined();
+      expect(objectByHash).toBeDefined();
+      expect(objectByHash).toMatchObject(object);
     });
 
     test("Get Content Object Owner", async () => {
