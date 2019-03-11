@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async SetContentObjectImage({\n  \"libraryId\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"objectId\": \"iq__4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"image\": \"<ArrayBuffer 101254>\"\n});"
+    "signature": "async SetContentObjectImage({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"image\": \"<ArrayBuffer 101254>\"\n});"
   }
 ]

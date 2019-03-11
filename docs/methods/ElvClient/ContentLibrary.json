@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ContentLibrary({\n  \"libraryId\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\"\n});",
-    "result": "{\n  \"id\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"qid\": \"iq__4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"meta\": {\n    \"eluv.description\": \"Test Library Description\",\n    \"name\": \"Test Library d14529926549d0706549\",\n    \"public\": {\n      \"toReplace\": {\n        \"new\": \"metadata\"\n      }\n    }\n  }\n}"
+    "signature": "async ContentLibrary({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\"\n});",
+    "result": "{\n  \"id\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"qid\": \"iq__22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"meta\": {\n    \"eluv.description\": \"Test Library Description\",\n    \"name\": \"Test Library a04695a13128498c795f\",\n    \"public\": {\n      \"toReplace\": {\n        \"new\": \"metadata\"\n      }\n    }\n  }\n}"
   }
 ]

@@ -5,7 +5,7 @@ const ClientConfiguration = require("../../TestConfiguration");
 
 // Private key can be specified as environment variable
 // e.g. PRIVATE_KEY=<private-key> npm run test
-let privateKey = process.env["PRIVATE_KEY"] || "0xca3a2b0329b2ed1ce491643917f4b13d1619088f73a03728bb4149ed3fda3fbf";
+let privateKey = process.env["PRIVATE_KEY"] || "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 const BufferToArrayBuffer = (buffer) => {
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);

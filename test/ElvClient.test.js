@@ -27,15 +27,15 @@ let partInfo = {};
 // Describe blocks and tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(60000);
 
     client = OutputLogger(ElvClient, await CreateClient());
 
     contentSpaceLibraryId = client.utils.AddressToLibraryId(client.utils.HashToAddress(client.contentSpaceId));
 
-    libraryId = "ilib4Vk9CAYiGWNo5znQ5WYbEtYnmx6i";
-    objectId = "iq__3LXmRuyGU9ZDU5Nr9MqMCkAcNViM";
-    versionHash = "hq__QmcMVMRHazNcihKUUALB3CPfX5XPnhKtJXanzGc8hpG6ch";
+    libraryId = "ilib2t71GCq5VNaAkg9ZAkmy1EJJss3";
+    objectId = "iq__4XyAFvdwaTWxa4rkKhvgDXvUhRzB";
+    versionHash = "hq__QmNjMeY9B9M6T7sHBcdnryMeyHC5BkztC3aATHkSnbfj79";
     //libraryId = "ilib4Vk9CAYiGWNo5znQ5WYbEtYnmx6i";
     //objectId = "iq__3fkAJTxyzVo8eYkcZTWKvaoYWYhr";
     //versionHash = "hq__QmZ293SLCn2ERxYJQFxFFs4AF5Jc4D2DxSciGZEk1poE9w";
@@ -588,8 +588,13 @@ describe("Test ElvClient", () => {
       expect(contractAddress).toBeDefined();
 
       const event = await client.SetCustomContentContract({
+        libraryId,
         objectId,
-        customContractAddress: contractAddress
+        name: "Custom Contract",
+        description: "Custom Contract Description",
+        customContractAddress: contractAddress,
+        abi: CustomContract.abi,
+        factoryAbi: CustomContract.abi
       });
 
       expect(event).toBeDefined();
@@ -611,6 +616,17 @@ describe("Test ElvClient", () => {
 
       expect(client.utils.FormatAddress(customContractAddress))
         .toEqual(client.utils.FormatAddress(contractAddress));
+
+      const customContractMetadata = await client.ContentObjectMetadata({libraryId, objectId, metadataSubtree: "custom_contract"});
+
+      expect(customContractMetadata).toBeDefined();
+      expect(customContractMetadata).toMatchObject({
+        address: contractAddress,
+        name: "Custom Contract",
+        description: "Custom Contract Description",
+        abi: CustomContract.abi,
+        factoryAbi: CustomContract.abi
+      });
     });
 
     test("Send Funds To Contract", async () => {

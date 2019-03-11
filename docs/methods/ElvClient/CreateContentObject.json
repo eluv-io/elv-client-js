@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"options\": {\n    \"type\": \"hq__QmPF8VyYS2vfvXpEjvznpPzU2TEFnjr8fFYsPpPddJBkZK\",\n    \"meta\": {\n      \"toMerge\": {\n        \"merge\": \"me\"\n      },\n      \"toReplace\": {\n        \"replace\": \"me\"\n      },\n      \"toDelete\": {\n        \"delete\": \"me\"\n      }\n    }\n  }\n});",
-    "result": "{\n  \"id\": \"iq__2TNa8MHbemZsgjxgcfqoGTR82Sop\",\n  \"type\": \"hq__QmPF8VyYS2vfvXpEjvznpPzU2TEFnjr8fFYsPpPddJBkZK\",\n  \"write_token\": \"tqw_6edSZnv54ekPjKjqeJaeyE1iw4mjk6JaE\"\n}"
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"options\": {\n    \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\",\n    \"meta\": {\n      \"toMerge\": {\n        \"merge\": \"me\"\n      },\n      \"toReplace\": {\n        \"replace\": \"me\"\n      },\n      \"toDelete\": {\n        \"delete\": \"me\"\n      }\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\",\n  \"write_token\": \"tqw_MpqoWrM7hCRKGFx5Va8517syTQgEjLqgc\"\n}"
   },
   {
-    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__QmQM3FwqbooV8J6Tu9sGzmSpPjqsbxBpg3hiphwHNfcZCX\"\n  }\n});",
-    "result": "{\n  \"id\": \"iq__2xRKKMUYwworv6LSX73aNgNvJPEk\",\n  \"type\": \"\",\n  \"write_token\": \"tqw_8R6pgEZLhoeF3vzatM4N8gcm3Tm8MMEYh\"\n}"
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\"\n  }\n});",
+    "result": "{\n  \"id\": \"iq__4YeMzaSmxHt6nL23sJSq1tJrep7B\",\n  \"type\": \"\",\n  \"write_token\": \"tqw_uziuGp9TaeBpt82WxV4AksGtYMAUwAjq\"\n}"
   }
 ]
