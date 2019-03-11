@@ -204,14 +204,14 @@ class ImfService {
       VideoReps: video_reps
     };
 
-    LOG && console.log("calling avtest/../imf");
+    LOG && console.log("calling test/../imf");
 
     try {
       headers = await this.elvclient.authClient.AuthorizationHeader({libraryId: libId});
       imfJsonExtract = await ResponseToJson(this.elvclient.HttpClient.Request({
         headers: headers,
         method: "POST",
-        path: "avtest/q/" + contentTypeVHash + "/rep/imf",
+        path: "test/q/" + contentTypeVHash + "/imf",
         body: goPostBody
       })
       );

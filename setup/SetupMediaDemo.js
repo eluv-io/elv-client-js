@@ -55,7 +55,6 @@ const MakeCampaignManager = async (emp, name, nameId) => {
       "campaign_manager_objectId": "unset"
     }
   });
-
   const typeObj = await client.ContentObject({
     libraryId: contentSpaceLibraryId,
     objectId: emp.content_types.campaign_manager
@@ -78,7 +77,6 @@ const MakeCampaignManager = async (emp, name, nameId) => {
     libraryId: emp.ads_marketplace,
     writeToken: cmgrDraft.write_token
   });
-
   // Retrieve cusstom contract fom the campaign manager
   const contractAddress = client.utils.HashToAddress(cmgr.id);
   const customContractAddress = await client.CallContractMethod({
@@ -375,7 +373,7 @@ const SetupMediaDemo = async () => {
     await client.AddLibraryContentType({
       libraryId: libraryIdSocial,
       typeId: emp.content_types.submission,
-      customContractAddress: emp.contracts.licensing.address
+      customContractAddress: emp.contracts.submission.address
     });
     console.log("    Social Contributions: " + libraryIdSocial);
 
