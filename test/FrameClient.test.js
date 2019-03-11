@@ -68,11 +68,24 @@ describe("Test FrameClient", () => {
     expect(frameResult).toEqual(result);
   });
 
-  test("Call ElvClient Method - Errors", async () => {
+  test.only("Call ElvClient Method - Errors", async () => {
     console.error = jest.fn();
 
-    await expect(frameClient.ContentLibrary({libraryId: "ilibabcd"}))
-      .rejects.toMatchObject({status: 404});
+    try {
+      await frameClient.ContentLibrary({libraryId: "ilibabcd"});
+    } catch(e) {
+      expect(e).toMatchObject({
+        name: "ElvHttpClientError",
+        method: "GET",
+        status: 404,
+      });
+
+      expect(e.message).toBeDefined();
+      expect(e.statusText).toBeDefined();
+      expect(e.url).toBeDefined();
+      expect(e.headers).toBeDefined();
+      expect(e.headers.Authorization).toBeDefined();
+    }
 
     expect(console.error).toHaveBeenCalled();
   });

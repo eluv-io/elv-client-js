@@ -1342,6 +1342,18 @@ class ElvClient {
       method: "PUT",
       path: path
     });
+
+    // Temporary - wait for publish to go through and for version to be accessible
+    for(let i = 0; i < 3; i++) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      try {
+        return await this.ContentObject({libraryId, objectId, versionHash});
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
+    }
+
+    throw Error("Version not published");
   }
 
   /**
@@ -2491,7 +2503,7 @@ class ElvClient {
       // eslint-disable-next-line no-console
       console.error(error);
 
-      const responseError = error.message ? error.message : error;
+      const responseError = error instanceof Error ? error.message : error;
       Respond(this.utils.MakeClonable({
         type: "ElvFrameResponse",
         requestId: message.requestId,

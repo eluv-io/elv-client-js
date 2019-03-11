@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ListFiles({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\",\n  \"objectId\": \"iq__3q3e3xt88FTabQHqZFd88a6yzCCf\"\n});",
+    "signature": "async ListFiles({\n  \"libraryId\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"objectId\": \"iq__2TNa8MHbemZsgjxgcfqoGTR82Sop\"\n});",
     "result": "{\n  \".\": {\n    \"type\": \"directory\"\n  },\n  \"testDirectory\": {\n    \".\": {\n      \"type\": \"directory\"\n    },\n    \"File 1\": {\n      \".\": {\n        \"parts\": [\n          0\n        ],\n        \"size\": 100000\n      }\n    },\n    \"File 2\": {\n      \".\": {\n        \"parts\": [\n          1\n        ],\n        \"size\": 100000\n      }\n    }\n  }\n}"
   }
 ]

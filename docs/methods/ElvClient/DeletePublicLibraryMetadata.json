@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async DeletePublicLibraryMetadata({\n  \"libraryId\": \"ilibVKoRA2edGszb4m2j4zWaHAfD7gf\",\n  \"metadataSubtree\": \"public/toDelete\"\n});"
+    "signature": "async DeletePublicLibraryMetadata({\n  \"libraryId\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"metadataSubtree\": \"public/toDelete\"\n});"
   }
 ]
