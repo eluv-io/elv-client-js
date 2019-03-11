@@ -80,7 +80,7 @@ class EthClient {
     await contract.deployed();
 
     return {
-      contractAddress: contract.address,
+      contractAddress: Utils.FormatAddress(contract.address),
       transactionHash: contract.deployTransaction.hash
     };
   }
@@ -203,7 +203,7 @@ class EthClient {
     const newContractAddress = eventLog.values[eventValue];
 
     return {
-      contractAddress: newContractAddress,
+      contractAddress: Utils.FormatAddress(newContractAddress),
       transactionHash: event.transactionHash
     };
   }

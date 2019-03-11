@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"ostrich rail bid little dove open ranch mail food crime jar effort\"\n});",
+    "signature": "async AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"across allow trigger require day category tortoise multiply chalk camp meat pretty\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

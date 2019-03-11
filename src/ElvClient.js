@@ -2281,16 +2281,49 @@ class ElvClient {
   /**
    * Set the custom contract of the specified object with the contract at the specified address
    *
+   * Note: This also updates the content object metadata with information about the contract - particularly the ABI
+   *
    * @namedParams
+   * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} customContractAddress - Address of the deployed custom contract
+   * @param {string=} name - Optional name of the custom contract
+   * @param {string=} description - Optional description of the custom contract
+   * @param {Object} abi - ABI of the custom contract
+   * @param {Object=} factoryAbi - If the custom contract is a factory, the ABI of the contract it deploys
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - Result transaction of calling the setCustomContract method on the content object contract
    */
-  async SetCustomContentContract({objectId, customContractAddress, overrides={}}) {
-    const contentContractAddress = Utils.HashToAddress(objectId);
-    return await this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
+  async SetCustomContentContract({libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, overrides={}}) {
+    customContractAddress = this.utils.FormatAddress(customContractAddress);
+
+    const setResult = await this.ethClient.SetCustomContentContract({
+      contentContractAddress: Utils.HashToAddress(objectId),
+      customContractAddress,
+      overrides,
+      signer: this.signer
+    });
+
+    const writeToken = (await this.EditContentObject({libraryId, objectId})).write_token;
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "custom_contract",
+      metadata: {
+        name,
+        description,
+        address: customContractAddress,
+        abi,
+        factoryAbi
+      }
+    });
+
+    await this.FinalizeContentObject({libraryId, objectId, writeToken});
+
+    return setResult;
   }
 
   /**

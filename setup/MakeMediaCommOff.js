@@ -105,7 +105,7 @@ const MakeMediaCommOff = async (emp, name, libraryId, copyFromHash, campaignMana
     console.log("DBG offering cc: " + cc);
 
     // Set the custom contract of the new commercial offering mediia
-    const setcc = await client.SetCustomContentContract({objectId: q.id, customContractAddress: cc});
+    //const setcc = await client.SetCustomContentContract({objectId: q.id, customContractAddress: cc});
 
     console.log("    AVMaster Commercial OFfering - " + name + ": " + q.id);
 

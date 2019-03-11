@@ -4,7 +4,7 @@
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": "async AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0xc0b55d156b170fd57a3ae680dcdba0f90e4adcb24fd45e528697d464671ffc60\"\n});",
+    "signature": "async AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0x3625630c3e54c3f4818a6d388c1f763e22007a69ae91852715b04be17de0e6ff\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {

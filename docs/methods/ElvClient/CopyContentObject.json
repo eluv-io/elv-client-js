@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async CopyContentObject({\n  \"libraryId\": \"ilib4Sg6w2cDVmzsznD7DVEPrpY1u1wa\",\n  \"originalVersionHash\": \"hq__QmQM3FwqbooV8J6Tu9sGzmSpPjqsbxBpg3hiphwHNfcZCX\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__QmQM3FwqbooV8J6Tu9sGzmSpPjqsbxBpg3hiphwHNfcZCX\"\n  }\n});",
-    "result": "{\n  \"id\": \"iq__2xRKKMUYwworv6LSX73aNgNvJPEk\",\n  \"type\": \"\",\n  \"write_token\": \"tqw_8R6pgEZLhoeF3vzatM4N8gcm3Tm8MMEYh\"\n}"
+    "signature": "async CopyContentObject({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"originalVersionHash\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\"\n  }\n});",
+    "result": "{\n  \"id\": \"iq__4YeMzaSmxHt6nL23sJSq1tJrep7B\",\n  \"type\": \"\",\n  \"write_token\": \"tqw_uziuGp9TaeBpt82WxV4AksGtYMAUwAjq\"\n}"
   }
 ]

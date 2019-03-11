@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ContentObjectByHash({\n  \"versionHash\": \"hq__QmQM3FwqbooV8J6Tu9sGzmSpPjqsbxBpg3hiphwHNfcZCX\"\n});",
-    "result": "{\n  \"id\": \"iq__2TNa8MHbemZsgjxgcfqoGTR82Sop\",\n  \"hash\": \"hq__QmQM3FwqbooV8J6Tu9sGzmSpPjqsbxBpg3hiphwHNfcZCX\",\n  \"type\": \"hq__QmPF8VyYS2vfvXpEjvznpPzU2TEFnjr8fFYsPpPddJBkZK\"\n}"
+    "signature": "async ContentObjectByHash({\n  \"versionHash\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\"\n});",
+    "result": "{\n  \"id\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"hash\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n}"
   }
 ]
