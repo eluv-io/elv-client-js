@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async VerifyContentObject({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"versionHash\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\"\n});",
+    "result": "{\n  \"hash\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\",\n  \"qref\": {\n    \"valid\": true,\n    \"hash\": \"hqp_Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\"\n  },\n  \"qmd\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmQNGx4dX7eiQbBffXtrDd6Xg13osamJCVujxVLym5y6SU\",\n    \"check\": {\n      \"valid\": true,\n      \"invalidValues\": []\n    }\n  },\n  \"qstruct\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmckXcYtjQATR4nXVaNRdbKDHfhZJLKSc84ekLdgPv5yia\",\n    \"parts\": []\n  },\n  \"valid\": true\n}"
+  }
+]

@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"across allow trigger require day category tortoise multiply chalk camp meat pretty\"\n});",
+    "result": "<Ethers#Wallet>"
+  }
+]

@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async AllowedUserProfileMethods();",
+    "result": "[\n  \"AccessLevel\",\n  \"CollectedTags\",\n  \"CreateAccountLibrary\",\n  \"DeleteAccountLibrary\",\n  \"DeletePrivateUserMetadata\",\n  \"MergePrivateUserMetadata\",\n  \"PrivateUserMetadata\",\n  \"PublicUserMetadata\",\n  \"RecordTags\",\n  \"ReplacePrivateUserMetadata\",\n  \"ReplacePublicUserMetadata\",\n  \"SetAccessLevel\",\n  \"SetUserProfileImage\",\n  \"UserProfileImage\"\n]"
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "signature": "async GetAccount({\n  \"accountName\": \"test\"\n});",
+    "result": "<Ethers#Wallet>"
+  },
+  {
+    "signature": "async GetAccount({\n  \"accountName\": \"test\"\n});"
+  },
+  {
+    "signature": "async GetAccount({\n  \"accountName\": \"mnemonic\"\n});",
+    "result": "<Ethers#Wallet>"
+  }
+]

@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async ReplacePublicLibraryMetadata({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"metadataSubtree\": \"public/toReplace\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
+  }
+]

@@ -21,41 +21,26 @@ if(typeof Response === "undefined") {
   Response = (require("node-fetch")).Response;
 }
 
-const HandleErrors = async (response) => {
-  response = await response;
-
-  if(!response.ok){
-    let errorInfo = {
-      status: response.status,
-      statusText: response.statusText,
-      url: response.url
-    };
-    throw errorInfo;
-  }
-
-  return response;
-};
-
 const ResponseToJson = async (response) => {
   return ResponseToFormat("json", response);
 };
 
 const ResponseToFormat = async (format, response) => {
-  response = await HandleErrors(response);
+  response = await response;
 
   switch(format.toLowerCase()) {
-  case "json":
-    return response.json();
-  case "text":
-    return response.text();
-  case "blob":
-    return response.blob();
-  case "arraybuffer":
-    return response.arrayBuffer();
-  case "formdata":
-    return response.formData();
-  default:
-    return response;
+    case "json":
+      return response.json();
+    case "text":
+      return response.text();
+    case "blob":
+      return response.blob();
+    case "arraybuffer":
+      return response.arrayBuffer();
+    case "formdata":
+      return response.formData();
+    default:
+      return response;
   }
 };
 
@@ -68,16 +53,16 @@ class ElvClient {
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
    * @param {string} hostname - Hostname of the content fabric API
-   * @param {string} port - Port of the content fabric API
-   * @param {boolean} useHTTPS - Use HTTPS when communicating with the fabric
+   * @param {(string|number)} port - Port of the content fabric API
+   * @param {boolean=} useHTTPS=true - Use HTTPS when communicating with the fabric
    * @param {string} ethHostname - Hostname of the blockchain RPC endpoint
-   * @param {string} ethPort - Port of the blockchain RPC endpoint
-   * @param {boolean} ethUseHTTPS - Use HTTPS when communicating with the blockchain
+   * @param {(string|number)} ethPort - Port of the blockchain RPC endpoint
+   * @param {boolean=} ethUseHTTPS=true - Use HTTPS when communicating with the blockchain
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
-  constructor({contentSpaceId, hostname, port, useHTTPS, ethHostname, ethPort, ethUseHTTPS, noCache=false, noAuth=false}) {
+  constructor({contentSpaceId, hostname, port, useHTTPS=true, ethHostname, ethPort, ethUseHTTPS=true, noCache=false, noAuth=false}) {
     this.contentSpaceId = contentSpaceId;
 
     this.fabricURI = new URI()
@@ -163,6 +148,18 @@ class ElvClient {
   }
 
   /**
+   * Clear saved access requests
+   *
+   * @namedParams
+   * @param {string=} libraryId - If present, cached access and modification transactions for the specified library will be cleared
+   * - Note: This will not clear any transactions for any objects within the library
+   * @param {string=} objectId - If present, cached access and modification transactions for the specified object will be cleared
+   */
+  ClearCache({libraryId, objectId}) {
+    this.authClient.ClearCache({libraryId, objectId});
+  }
+
+  /**
    * Set the signer for this client to use for blockchain transactions
    *
    * @namedParams
@@ -221,8 +218,8 @@ class ElvClient {
    *
    * @return {object} - Resultant AccessRequest or UpdateRequest event
    */
-  AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
-    return this.authClient.MakeAccessRequest({
+  async AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
+    return await this.authClient.MakeAccessRequest({
       libraryId,
       objectId,
       versionHash,
@@ -352,10 +349,10 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} name - Library name
-   * @param {string} description - Library description
+   * @param {string=} description - Library description
    * @param {blob=} image - Image associated with the library
-   * @param {Object} publicMetadata - Public library metadata
-   * @param {Object} privateMetadata - Private library metadata (metadata of library object)
+   * @param {Object=} publicMetadata - Public library metadata
+   * @param {Object=} privateMetadata - Private library metadata (metadata of library object)
    *
    * @returns {Promise<string>} - Library ID of created library
    */
@@ -386,17 +383,15 @@ class ElvClient {
     const path = Path.join("qlibs", libraryId);
 
     // Create library in fabric
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
-        method: "PUT",
-        path: path,
-        body: {
-          meta: publicMetadata,
-          private_meta: privateMetadata
-        }
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
+      method: "PUT",
+      path: path,
+      body: {
+        meta: publicMetadata,
+        private_meta: privateMetadata
+      }
+    });
 
     // Set library content object type on automatically created library object
     const objectId = libraryId.replace("ilib", "iq__");
@@ -507,13 +502,11 @@ class ElvClient {
       methodArgs: []
     });
 
-    return HandleErrors(
-      this.HttpClient.Request({
-        headers: authorizationHeader,
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: authorizationHeader,
+      method: "DELETE",
+      path: path
+    });
   }
 
   /* Library metadata */
@@ -561,14 +554,61 @@ class ElvClient {
   async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="/", metadata={}}) {
     let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
-        method: "PUT",
-        path: path,
-        body: metadata
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
+      method: "PUT",
+      path: path,
+      body: metadata
+    });
+  }
+
+  /**
+   * Delete the specified library's public metadata
+   *
+   * @see DELETE /qlibs/:qlibid/meta
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string=} metadataSubtree - Subtree to delete - modifies root metadata if not specified
+   */
+  async DeletePublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
+    // Note: There is currently no delete method for public metadata
+    // Instead, delete metadata manually and call replace
+    let metadata = await this.PublicLibraryMetadata({libraryId});
+
+    metadataSubtree = Path.normalize(metadataSubtree || "/");
+
+    if(metadataSubtree === "/") {
+      metadata = {};
+    } else {
+      let pointer = metadata;
+      const keys = Path.normalize(metadataSubtree || "/").replace(/^\/+/g, "").split("/");
+      for(let i = 0; i < keys.length - 1; i++) {
+        pointer = pointer[keys[i]];
+
+        if(!pointer) {
+          break;
+        }
+      }
+
+      if(!pointer || !pointer[keys[keys.length - 1]]) {
+        throw Error({
+          status: 404,
+          statusText: "Not found: " + metadataSubtree
+        });
+      }
+
+      delete pointer[keys[keys.length - 1]];
+    }
+
+    let path = Path.join("qlibs", libraryId, "meta");
+
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
+      method: "PUT",
+      path: path,
+      body: metadata
+    });
   }
 
   /* Library Content Type Management */
@@ -791,7 +831,7 @@ class ElvClient {
       });
 
     if(!contentType) {
-      throw Error("Unknown content type: " + (name || versionHash));
+      throw Error("Unknown content type: " + name);
     }
 
     return contentType;
@@ -801,12 +841,13 @@ class ElvClient {
    * Returns the address of the owner of the specified content type
    *
    * @namedParams
-   * @param {string} libraryId
+   * @param {string=} name - Name of the content type to find
+   * @param {string=} versionHash - Version hash of the content type to find
    *
    * @returns {Promise<string>} - The account address of the owner
    */
-  async ContentTypeOwner({name}) {
-    const contentType = await this.ContentType({name});
+  async ContentTypeOwner({name, versionHash}) {
+    const contentType = await this.ContentType({name, versionHash});
 
     return await this.ethClient.CallContractMethod({
       contractAddress: Utils.HashToAddress(contentType.id),
@@ -906,12 +947,11 @@ class ElvClient {
     const objectId = this.utils.AddressToObjectId(contractAddress);
     const path = Path.join("qlibs", typeLibraryId, "q", objectId);
 
-    metadata.customContract = contract;
+    metadata.custom_contract = contract;
     if (schema != null) {
       metadata["eluv.schema"] = schema["eluv.schema"];
     }
-    metadata["eluv.manageApp"] = "manageApp.html";
-    metadata["eluv.displayApp"] = "displayApp.html";
+
     /* Create object, upload bitcode and finalize */
 
     const createResponse = await ResponseToJson(
@@ -967,8 +1007,8 @@ class ElvClient {
    * object by this client instance.
    *
    * @namedParams
-   * @param {string=} objectId - ID of the object
-   * @param {number=} score - Percentage score (0-100)
+   * @param {string} objectId - ID of the object
+   * @param {number} score - Percentage score (0-100)
    *
    * @returns {Promise<Object>} - Transaction log of the AccessComplete event
    */
@@ -1088,7 +1128,7 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
-   * @param {bool=} noAuth=false - If specified, authorization will not be performed for this call
+   * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
    *
    * @returns {Promise<Object>} - Metadata of the content object
    */
@@ -1265,13 +1305,55 @@ class ElvClient {
   async FinalizeContentObject({libraryId, objectId, writeToken}) {
     let path = Path.join("q", writeToken);
 
-    return ResponseToJson(
+    const finalizeResponse = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path
       })
     );
+
+    await this.PublishContentVersion({
+      libraryId,
+      objectId,
+      versionHash: finalizeResponse.hash
+    });
+
+    return finalizeResponse;
+  }
+
+  /**
+   * Publish a content object version
+   *
+   * NOTE: Not yet intended for use - publishing is done in FinalizeContentObject
+   *
+   * @see POST /qlibs/:qlibid/q/:write_token
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} versionHash - The version hash of the content object to publish
+   */
+  async PublishContentVersion({libraryId, objectId, versionHash}) {
+    let path = Path.join("q", versionHash);
+
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "PUT",
+      path: path
+    });
+
+    // Temporary - wait for publish to go through and for version to be accessible
+    for(let i = 0; i < 3; i++) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      try {
+        return await this.ContentObject({libraryId, objectId, versionHash});
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
+    }
+
+    throw Error("Version not published");
   }
 
   /**
@@ -1287,13 +1369,11 @@ class ElvClient {
   async DeleteContentVersion({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId);
 
-    return HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "DELETE",
+      path: path
+    });
   }
 
   /**
@@ -1317,13 +1397,11 @@ class ElvClient {
       methodArgs: []
     });
 
-    return HandleErrors(
-      this.HttpClient.Request({
-        headers: authorizationHeader,
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: authorizationHeader,
+      method: "DELETE",
+      path: path
+    });
   }
 
   /* Content object metadata */
@@ -1343,14 +1421,12 @@ class ElvClient {
   async MergeMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "POST",
-        path: path,
-        body: metadata
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "POST",
+      path: path,
+      body: metadata
+    });
   }
 
   /**
@@ -1368,14 +1444,12 @@ class ElvClient {
   async ReplaceMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "PUT",
-        path: path,
-        body: metadata
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "PUT",
+      path: path,
+      body: metadata
+    });
   }
 
   /**
@@ -1393,13 +1467,11 @@ class ElvClient {
   async DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree="/"}) {
     let path = Path.join("q", writeToken, "meta", metadataSubtree);
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "DELETE",
+      path: path
+    });
   }
 
   /* Files */
@@ -1439,56 +1511,17 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the draft
    * @param {Array<object>} fileInfo - List of files to upload, including their size, type, and contents
-   * @example fileInfo
-[
-  {
-    "path": "myDirectory",
-    "type": "directory"
-  },
-  {
-    "path": "myDirectory/Video.mp4",
-    "type": "file",
-    "size": 6045849,
-    "data": <data>
-  },
-  {
-    "path": "myDirectory/MyImage.png",
-    "type": "file",
-    "size": 90509,
-    "data": <data>
-  }
-  {
-    "path": "myDirectory/File.bin",
-    "type": "file",
-    "size": 236990304,
-    "data": <data>
-  },
-  {
-    "path": "myDirectory/subDirectory",
-    "type": "directory"
-  },
-  {
-    "path": "myDirectory/subDirectory/MyVideo.mp4",
-    "type": "file",
-    "size": 6089214,
-    "data": <data>
-  },
-  {
-    "path": "myDirectory/subDirectory/OtherImage.png",
-    "type": "file",
-    "size": 789561,
-    "data": <data>
-  }
-]
    */
   async UploadFiles({libraryId, objectId, writeToken, fileInfo}) {
     // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
     let fileDataMap = {};
     fileInfo = fileInfo.map(entry => {
       fileDataMap[entry.path] = entry.data;
-      delete entry.data;
 
-      return entry;
+      return {
+        ...entry,
+        data: undefined
+      };
     });
 
     const uploadJobs = (await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo})).upload_jobs;
@@ -1556,13 +1589,11 @@ class ElvClient {
   async FinalizeUploadJobs({libraryId, objectId, writeToken}) {
     let path = Path.join("q", writeToken, "files");
 
-    await HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
-        method: "POST",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+      method: "POST",
+      path: path
+    });
   }
 
   /**
@@ -1609,13 +1640,15 @@ class ElvClient {
   async ContentParts({libraryId, objectId, versionHash}) {
     let path = Path.join("q", versionHash || objectId, "parts");
 
-    return ResponseToJson(
+    const response = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
       })
     );
+
+    return response.parts;
   }
 
   /**
@@ -1635,13 +1668,12 @@ class ElvClient {
   async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
     const path = Path.join("q", versionHash || objectId, "data", partHash);
 
-    const response = await HandleErrors(
-      this.HttpClient.Request({
+    const response =
+      await this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
-      })
-    );
+      });
 
     let data = await response.arrayBuffer();
 
@@ -1666,7 +1698,9 @@ class ElvClient {
    */
   async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, callback}) {
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
-    const totalSize = data.size || data.length;
+    const totalSize = data.size || data.length || data.byteLength;
+
+    if(callback) { callback({uploaded: 0, total: totalSize}); }
 
     // If the file is smaller than the chunk size, just upload it in one pass
     if(totalSize < chunkSize) {
@@ -1712,10 +1746,8 @@ class ElvClient {
         })
       );
 
-      if(callback) { callback({uploaded: uploaded, total: totalSize}); }
+      if(callback) { callback({uploaded: to, total: totalSize}); }
     }
-
-    if(callback) { callback({uploaded: totalSize, total: totalSize}); }
 
     // Finalize part
     return await ResponseToJson(
@@ -1743,18 +1775,18 @@ class ElvClient {
   async DeletePart({libraryId, objectId, writeToken, partHash}) {
     let path = Path.join("q", writeToken, "parts", partHash);
 
-    return HandleErrors(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-        method: "DELETE",
-        path: path
-      })
-    );
+    await this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      method: "DELETE",
+      path: path
+    });
   }
 
   /**
    * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
    * URL includes authorization token.
+   *
+   * Alias for the FabricUrl method with the "call" parameter
    *
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1762,18 +1794,22 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
+   * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of whether such a request exists in the client cache. This request will not be cached.
    *
    * @see FabricUrl for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async CallBitcodeMethod({libraryId, objectId, versionHash, method, queryParams={}, noCache=false}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams, noCache});
+  async BitcodeMethodUrl({libraryId, objectId, versionHash, method, queryParams={}, noAuth=false, noCache=false}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams, noAuth, noCache});
   }
 
   /**
    * Generate a URL to the specified /rep endpoint of a content object. URL includes authorization token.
+   *
+   * Alias for the FabricUrl method with the "rep" parameter
    *
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1811,23 +1847,11 @@ class ElvClient {
    * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
    *
    * @returns {Promise<string>} - URL to the specified endpoint with authorization token
-   *
-   * @example client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN"});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN?authorization=...
-
-client.FabricUrl({libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN", objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s"});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/iq__4EwJBLZfKpdUSsF4h6pfk777pd5s?authorization=...
-
-client.FabricUrl({
-  libraryId: "ilibVdci1v3nUgXdMxMznXny5NfaPRN",
-  objectId: "iq__4EwJBLZfKpdUSsF4h6pfk777pd5s",
-  versionHash: "hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL",
-  partHash: "hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB"
-});
-=> http://localhost:8008/qlibs/ilibVdci1v3nUgXdMxMznXny5NfaPRN/q/hq__QmNxqnnEakWBMyW3yxghJekadnxUSjaStjAhHqAp8yaBhL/data/hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB?authorization=...
    */
   async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}, noAuth=false, noCache=false}) {
     let path = "";
+    // Clone queryParams to avoid modification of the original
+    queryParams = {...queryParams};
 
     if(libraryId) {
       path = Path.join(path, "qlibs", libraryId);
@@ -1979,7 +2003,8 @@ client.FabricUrl({
       eventValue: "candidate"
     });
 
-    if(candidate.toLowerCase() !== memberAddress.toLowerCase()) {
+    if(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress)) {
+      // eslint-disable-next-line no-console
       console.error("Mismatch: " + candidate + " :: " + memberAddress);
       throw Error("Access group method " + methodName + " failed");
     }
@@ -2075,8 +2100,8 @@ client.FabricUrl({
    *
    * @returns {Promise<Object>} - Response describing verification results
    */
-  VerifyContentObject({libraryId, objectId, versionHash}) {
-    return ContentObjectVerification.VerifyContentObject({
+  async VerifyContentObject({libraryId, objectId, versionHash}) {
+    return await ContentObjectVerification.VerifyContentObject({
       client: this,
       libraryId,
       objectId,
@@ -2246,7 +2271,7 @@ client.FabricUrl({
    * @param {string} eventName - Name of the event to parse
    * @param {string} eventValue - Name of the value to extract from the event
    *
-   * @returns {Promise<*>} - The value extracted from the event
+   * @returns The value extracted from the event
    */
   ExtractValueFromEvent({abi, event, eventName, eventValue}) {
     const eventLog = this.ethClient.ExtractEventFromLogs({abi, event, eventName, eventValue});
@@ -2256,16 +2281,49 @@ client.FabricUrl({
   /**
    * Set the custom contract of the specified object with the contract at the specified address
    *
+   * Note: This also updates the content object metadata with information about the contract - particularly the ABI
+   *
    * @namedParams
+   * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} customContractAddress - Address of the deployed custom contract
+   * @param {string=} name - Optional name of the custom contract
+   * @param {string=} description - Optional description of the custom contract
+   * @param {Object} abi - ABI of the custom contract
+   * @param {Object=} factoryAbi - If the custom contract is a factory, the ABI of the contract it deploys
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - Result transaction of calling the setCustomContract method on the content object contract
    */
-  async SetCustomContentContract({objectId, customContractAddress, overrides={}}) {
-    const contentContractAddress = Utils.HashToAddress(objectId);
-    return await this.ethClient.SetCustomContentContract({contentContractAddress, customContractAddress, overrides, signer: this.signer});
+  async SetCustomContentContract({libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, overrides={}}) {
+    customContractAddress = this.utils.FormatAddress(customContractAddress);
+
+    const setResult = await this.ethClient.SetCustomContentContract({
+      contentContractAddress: Utils.HashToAddress(objectId),
+      customContractAddress,
+      overrides,
+      signer: this.signer
+    });
+
+    const writeToken = (await this.EditContentObject({libraryId, objectId})).write_token;
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: "custom_contract",
+      metadata: {
+        name,
+        description,
+        address: customContractAddress,
+        abi,
+        factoryAbi
+      }
+    });
+
+    await this.FinalizeContentObject({libraryId, objectId, writeToken});
+
+    return setResult;
   }
 
   /**
@@ -2475,10 +2533,14 @@ client.FabricUrl({
         response: methodResults
       }));
     } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+
+      const responseError = error instanceof Error ? error.message : error;
       Respond(this.utils.MakeClonable({
         type: "ElvFrameResponse",
         requestId: message.requestId,
-        error
+        error: responseError
       }));
     }
   }

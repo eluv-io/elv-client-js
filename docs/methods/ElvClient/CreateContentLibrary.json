@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async CreateContentLibrary({\n  \"name\": \"Test Library a04695a13128498c795f\",\n  \"description\": \"Test Library Description\",\n  \"image\": \"<ArrayBuffer 101254>\",\n  \"publicMetadata\": {\n    \"public\": {\n      \"toReplace\": {\n        \"meta\": \"data\"\n      },\n      \"toDelete\": {\n        \"meta\": \"data\"\n      }\n    }\n  },\n  \"privateMetadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    }\n  }\n});",
+    "result": "\"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\""
+  },
+  {
+    "signature": "async CreateContentLibrary({\n  \"publicMetadata\": {},\n  \"privateMetadata\": {\n    \"access_level\": \"prompt\",\n    \"collected_data\": {}\n  },\n  \"isUserLibrary\": true\n});",
+    "result": "\"ilib3qcps4nX8hXDjHAgBbG2ooK1SXXo\""
+  }
+]

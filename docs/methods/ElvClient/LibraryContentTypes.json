@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\"\n});",
+    "result": "{}"
+  },
+  {
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\"\n});",
+    "result": "{\n  \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\": {\n    \"id\": \"iq__2FaMdpXauckXonv5E62ABhtByyfL\",\n    \"hash\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\",\n    \"type\": \"\",\n    \"meta\": {\n      \"name\": \"Test Content Type a04695a13128498c795f\"\n    }\n  }\n}"
+  }
+]

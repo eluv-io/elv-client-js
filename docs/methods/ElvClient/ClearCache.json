@@ -1,0 +1,11 @@
+[
+  {
+    "signature": "async ClearCache({\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\"\n});"
+  },
+  {
+    "signature": "async ClearCache({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\"\n});"
+  },
+  {
+    "signature": "async ClearCache({});"
+  }
+]

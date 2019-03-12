@@ -20,6 +20,8 @@ let data, view;
 
 let outdir = path.normalize(env.opts.destination);
 
+const examplesDir = path.join(__dirname, "..", "..", "docs", "methods");
+
 function find(spec) {
   return helper.find(data, spec);
 }
@@ -115,7 +117,7 @@ function buildAttribsString(attribs) {
   let attribsString = "";
 
   if (attribs && attribs.length) {
-    attribsString = htmlsafe(util.format("(%s) ", attribs.join(", ")));
+    attribsString = htmlsafe(util.format("%s ", attribs.join(", ")));
   }
 
   return attribsString;
@@ -243,12 +245,13 @@ function generateSourceFiles(sourceFiles, encoding) {
     let source;
     // links are keyed to the shortened path in each doclet's `meta.shortpath` property
     let sourceOutfile = helper.getUniqueFilename(sourceFiles[file].shortened);
+    const name = sourceOutfile.replace(".js", "");
 
     helper.registerLink(sourceFiles[file].shortened, sourceOutfile);
-
     try {
       source = {
         kind: "source",
+        backLink: linkto(name, name),
         code: helper.htmlsafe(fs.readFileSync(sourceFiles[file].resolved, encoding))
       };
     } catch (e) {
@@ -312,9 +315,14 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
         itemsNav += "</li>";
       } else if (!hasOwnProp.call(itemsSeen, item.longname)) {
         // replace '/' in url to match ID in some section
-        itemsNav += "<li id=\"" + item.name.replace("/", "_") + "-nav\">" + linktoFn(item.longname, item.name.replace(/^module:/, ""), "class-link");
+        itemsNav += `<li id="${item.name.replace("/", "_")}-nav">
+          <div data-name="${item.name}" class="class-link-container"><a class="class-link">${item.name}</a></div>`;
         if (methods.length) {
           itemsNav += "<ul class='methods'>";
+
+          itemsNav += "<li data-type=\"method\" id=\"" + item.name.replace("/", "_") + "-" + item.name + "-nav\">";
+          itemsNav += linktoFn(item.longname, item.name.replace(/^module:/, ""));
+          itemsNav += "</li>";
 
           methods.forEach(function (method) {
             itemsNav += "<li data-type=\"method\" id=\"" + item.name.replace("/", "_") + "-" + method.name + "-nav\">";
@@ -441,6 +449,18 @@ exports.publish = function (taffyData, opts, tutorials) {
 
   data().each(function (doclet) {
     doclet.attribs = "";
+
+    if(doclet.memberof && doclet.name) {
+      const exampleFile = path.join(examplesDir, doclet.memberof, doclet.name + ".json");
+      if (fs.existsSync(exampleFile)) {
+        doclet.examples = JSON.parse(fs.readFileSync(exampleFile, "utf8"))
+          .map(example => {
+            return example.result !== undefined ?
+              `${example.signature}\n\n\n${example.result}` :
+              `${example.signature}\n\n\n<No Return Value>`;
+          });
+      }
+    }
 
     if (doclet.examples) {
       doclet.examples = doclet.examples.map(function (example) {

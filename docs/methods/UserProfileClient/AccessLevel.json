@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async AccessLevel();",
+    "result": "\"prompt\""
+  },
+  {
+    "signature": "async AccessLevel();",
+    "result": "\"public\""
+  }
+]

@@ -32,7 +32,7 @@ class FrameClient {
    * @param {number} timeout - How long to wait for a response after calling a method before giving up
    * and generating a timeout error
    */
-  constructor({target=parent, timeout=30}) {
+  constructor({target=parent, timeout=30}={}) {
     this.target = target;
     this.timeout = timeout;
 
@@ -58,6 +58,10 @@ class FrameClient {
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
     for(const methodName of this.AllowedUserProfileMethods()) {
       this.userProfile[methodName] = async (args) => {
+        if(!args || !args.requestor) {
+          throw new Error("'requestor' param required when calling user profile methods from FrameClient");
+        }
+
         let callback = args && args.callback;
         if(callback) { delete args.callback; }
 
@@ -107,7 +111,7 @@ class FrameClient {
     };
   }
 
-  async SendMessage({options={}, callback}) {
+  async SendMessage({options={}, callback, noResponse=false}) {
     const requestId = Id.next();
 
     let callbackId;
@@ -121,12 +125,15 @@ class FrameClient {
     }, "*");
 
     // No timeout for prompted methods
-    const timeout = options.prompted ? 0 : this.timeout;
-    return (await this.AwaitMessage(requestId, timeout, callback, callbackId));
+    if(!noResponse) {
+      const operation = options.calledMethod || options.operation;
+      const timeout = options.prompted ? 0 : this.timeout;
+      return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
+    }
   }
 
-  AwaitMessage(requestId, timeout, callback, callbackId) {
-    return new Promise((resolve, reject) => {
+  async AwaitMessage(requestId, timeout, callback, callbackId, operation) {
+    return await new Promise((resolve, reject) => {
       let methodListener;
 
       // Initialize or reset timeout
@@ -138,7 +145,7 @@ class FrameClient {
 
         if(timeout > 0) {
           timeoutId = setTimeout(() => {
-            reject("Request timed out " + requestId);
+            reject(`Request ${requestId} timed out (${operation})`);
 
             window.removeEventListener("message", methodListener);
             if(callbackListener) { window.removeEventListener("message", callbackListener); }
@@ -161,7 +168,7 @@ class FrameClient {
 
             callback(message.response);
           } catch(error) {
-            console.log("CALLBACK ERROR");
+            // eslint-disable-next-line no-console
             console.error(error);
           }
         };
@@ -194,28 +201,10 @@ class FrameClient {
         }
       };
 
-
       // Start the timeout
       touchTimeout();
 
       window.addEventListener("message", methodListener);
-    });
-  }
-
-  async GetFramePath() {
-    return await this.SendMessage({
-      options: {
-        operation: "GetFramePath"
-      }
-    });
-  }
-
-  async SetFramePath({path}) {
-    await this.SendMessage({
-      options: {
-        operation: "SetFramePath",
-        path
-      }
     });
   }
 
@@ -241,9 +230,11 @@ class FrameClient {
       "AddAccessGroupManager",
       "AddAccessGroupMember",
       "AddLibraryContentType",
-      "CallBitcodeMethod",
+      "BitcodeMethodUrl",
+      "CachedAccessTransaction",
       "CallContractMethod",
       "CallContractMethodAndWait",
+      "ClearCache",
       "ContentLibraries",
       "ContentLibrary",
       "ContentLibraryOwner",
@@ -265,6 +256,7 @@ class FrameClient {
       "CreateContentObject",
       "CreateContentSpace",
       "CreateContentType",
+      "CreateContentTypeFull",
       "CreateFileUploadJob",
       "CurrentAccountAddress",
       "CustomContractAddress",
@@ -274,6 +266,7 @@ class FrameClient {
       "DeleteContentVersion",
       "DeleteMetadata",
       "DeletePart",
+      "DeletePublicLibraryMetadata",
       "DeployContract",
       "DownloadFile",
       "DownloadPart",
@@ -292,6 +285,7 @@ class FrameClient {
       "MergeMetadata",
       "Proofs",
       "PublicLibraryMetadata",
+      "PublishContentVersion",
       "QParts",
       "RemoveAccessGroupManager",
       "RemoveAccessGroupMember",
@@ -319,6 +313,7 @@ class FrameClient {
       "CreateAccountLibrary",
       "DeleteAccountLibrary",
       "DeletePrivateUserMetadata",
+      "MergePrivateUserMetadata",
       "PrivateUserMetadata",
       "PublicUserMetadata",
       "RecordTags",

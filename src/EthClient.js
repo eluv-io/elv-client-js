@@ -33,10 +33,10 @@ class EthClient {
     }
 
     switch(type.toLowerCase()) {
-    case "bytes32":
-      return Ethers.utils.formatBytes32String(value);
-    default:
-      return value;
+      case "bytes32":
+        return Ethers.utils.formatBytes32String(value);
+      default:
+        return value;
     }
   }
 
@@ -80,7 +80,7 @@ class EthClient {
     await contract.deployed();
 
     return {
-      contractAddress: contract.address,
+      contractAddress: Utils.FormatAddress(contract.address),
       transactionHash: contract.deployTransaction.hash
     };
   }
@@ -203,7 +203,7 @@ class EthClient {
     const newContractAddress = eventLog.values[eventValue];
 
     return {
-      contractAddress: newContractAddress,
+      contractAddress: Utils.FormatAddress(newContractAddress),
       transactionHash: event.transactionHash
     };
   }
@@ -289,7 +289,7 @@ class EthClient {
       ]
     });
 
-    return await this.CallContractMethod({
+    return await this.CallContractMethodAndWait({
       contractAddress: contentContractAddress,
       abi: ContentContract.abi,
       methodName: "setContentContractAddress",
@@ -377,10 +377,14 @@ class EthClient {
         blockInfo = await signer.provider.getBlock(blockNumber);
         blockInfo = blockInfo.transactions.map(transactionHash => {
           return {
+            blockNumber: blockInfo.number,
+            blockHash: blockInfo.hash,
             ...blockInfo,
             transactionHash
           };
         });
+
+        blocks[blockNumber] = blockInfo;
       }
 
       if (includeTransaction) {
