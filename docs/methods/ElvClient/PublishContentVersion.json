@@ -1,0 +1,62 @@
+[
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib3npSux6gntRjEbxCQ855RQVzhR93\",\n  \"objectId\": \"iq__2FaMdpXauckXonv5E62ABhtByyfL\",\n  \"versionHash\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n});",
+    "result": "{\n  \"id\": \"iq__2FaMdpXauckXonv5E62ABhtByyfL\",\n  \"hash\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\",\n  \"type\": \"\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"versionHash\": \"hq__Qmc31KVgbWTgpSTkMHbL3o9HAoGhE17HS4hFu4DZoFZoZH\"\n});",
+    "result": "{\n  \"id\": \"iq__22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"hash\": \"hq__Qmc31KVgbWTgpSTkMHbL3o9HAoGhE17HS4hFu4DZoFZoZH\",\n  \"type\": \"hq__QmUDYt9VYh9an1y8R4JMQUmVWfxDyhrpAiTepG4soq1BEr\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"versionHash\": \"hq__QmPx3v9KMBoNow7G8fB3mFQe5VSiNQuhPaszvE1d2YNxrW\"\n});",
+    "result": "{\n  \"id\": \"iq__22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"hash\": \"hq__QmPx3v9KMBoNow7G8fB3mFQe5VSiNQuhPaszvE1d2YNxrW\",\n  \"type\": \"hq__QmUDYt9VYh9an1y8R4JMQUmVWfxDyhrpAiTepG4soq1BEr\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"versionHash\": \"hq__QmSMi2mfZV4RZwRYe6jhhcs5xKhQ9boqz8tY1uqW3DC3Ht\"\n});",
+    "result": "{\n  \"id\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"hash\": \"hq__QmSMi2mfZV4RZwRYe6jhhcs5xKhQ9boqz8tY1uqW3DC3Ht\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"objectId\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"versionHash\": \"hq__QmafyixgqNcAkNqpM229oAKuK6pcbEKjHkb3kfCCXKG6KK\"\n});",
+    "result": "{\n  \"id\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"hash\": \"hq__QmafyixgqNcAkNqpM229oAKuK6pcbEKjHkb3kfCCXKG6KK\",\n  \"type\": \"hq__QmUDYt9VYh9an1y8R4JMQUmVWfxDyhrpAiTepG4soq1BEr\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"objectId\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"versionHash\": \"hq__QmeqxbZba9t7qxeXtJUnyYjCHfzYrLgu9fB2GqpCXfCNMU\"\n});",
+    "result": "{\n  \"id\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"hash\": \"hq__QmeqxbZba9t7qxeXtJUnyYjCHfzYrLgu9fB2GqpCXfCNMU\",\n  \"type\": \"hq__QmUDYt9VYh9an1y8R4JMQUmVWfxDyhrpAiTepG4soq1BEr\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"versionHash\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\"\n});",
+    "result": "{\n  \"id\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"hash\": \"hq__Qmb6RuZWD1e8UTQYJyBT7stjnQRCnvR1qdiSYVoQyGDNzh\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__4YeMzaSmxHt6nL23sJSq1tJrep7B\",\n  \"versionHash\": \"hq__QmVrNqymtJEsWhLVrnGoTLvAsQpB1hMgvCRAZT3An7sbgn\"\n});",
+    "result": "{\n  \"id\": \"iq__4YeMzaSmxHt6nL23sJSq1tJrep7B\",\n  \"hash\": \"hq__QmVrNqymtJEsWhLVrnGoTLvAsQpB1hMgvCRAZT3An7sbgn\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"objectId\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"versionHash\": \"hq__QmUV742GWHMv6BKLuoSeRMGUcVUCYmhW72iqmsvPeeUdeH\"\n});",
+    "result": "{\n  \"id\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"hash\": \"hq__QmUV742GWHMv6BKLuoSeRMGUcVUCYmhW72iqmsvPeeUdeH\",\n  \"type\": \"hq__QmUDYt9VYh9an1y8R4JMQUmVWfxDyhrpAiTepG4soq1BEr\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"versionHash\": \"hq__QmQsJc4sFhRx7qKyGJAqizomd1FVQD8ZyaesURvj9hbgRY\"\n});",
+    "result": "{\n  \"id\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"hash\": \"hq__QmQsJc4sFhRx7qKyGJAqizomd1FVQD8ZyaesURvj9hbgRY\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"versionHash\": \"hq__QmbcMvo1cRb66GzGY1gCYo4TBYK5WQXno1yNU5YkJuNm7M\"\n});",
+    "result": "{\n  \"id\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"hash\": \"hq__QmbcMvo1cRb66GzGY1gCYo4TBYK5WQXno1yNU5YkJuNm7M\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"objectId\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"versionHash\": \"hq__QmVHwTwnhULCrLLNxwqgYko6AHUBiRmbEpnFzcNf7V1Xw1\"\n});",
+    "result": "{\n  \"id\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"hash\": \"hq__QmVHwTwnhULCrLLNxwqgYko6AHUBiRmbEpnFzcNf7V1Xw1\",\n  \"type\": \"hq__QmUDYt9VYh9an1y8R4JMQUmVWfxDyhrpAiTepG4soq1BEr\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"versionHash\": \"hq__Qmbe4gH1LFZAaEuYPcEN58BwhcRnaDaipWocmvZMkkwf4M\"\n});",
+    "result": "{\n  \"id\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"hash\": \"hq__Qmbe4gH1LFZAaEuYPcEN58BwhcRnaDaipWocmvZMkkwf4M\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"objectId\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"versionHash\": \"hq__QmP4AvVQHQ3gJMfGCkQJkhbWkszLB83VN9o3rKVL2V8M9N\"\n});",
+    "result": "{\n  \"id\": \"iq__3qcps4nX8hXDjHAgBbG2ooK1SXXo\",\n  \"hash\": \"hq__QmP4AvVQHQ3gJMfGCkQJkhbWkszLB83VN9o3rKVL2V8M9N\",\n  \"type\": \"hq__QmUDYt9VYh9an1y8R4JMQUmVWfxDyhrpAiTepG4soq1BEr\"\n}"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"versionHash\": \"hq__QmYyEkLuy1vt5LXcx6CmzfeigtYuu2whcjK7xXM2AbMDWp\"\n});",
+    "result": "{\n  \"id\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"hash\": \"hq__QmYyEkLuy1vt5LXcx6CmzfeigtYuu2whcjK7xXM2AbMDWp\",\n  \"type\": \"hq__QmfGXMQUofbuAMcy9DTyGCo8jGKujj2xsdUpSr3Rp2zQwi\"\n}"
+  }
+]

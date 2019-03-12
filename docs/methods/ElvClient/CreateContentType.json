@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async CreateContentType({\n  \"metadata\": {\n    \"name\": \"Test Content Type a04695a13128498c795f\"\n  }\n});",
+    "result": "\"iq__2FaMdpXauckXonv5E62ABhtByyfL\""
+  }
+]

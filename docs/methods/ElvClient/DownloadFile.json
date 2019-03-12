@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"filePath\": \"testDirectory/File 1\",\n  \"format\": \"arrayBuffer\"\n});",
+    "result": "<ArrayBuffer 100000>"
+  },
+  {
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"filePath\": \"testDirectory/File 2\",\n  \"format\": \"arrayBuffer\"\n});",
+    "result": "<ArrayBuffer 100000>"
+  }
+]

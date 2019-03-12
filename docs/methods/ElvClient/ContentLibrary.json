@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async ContentLibrary({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\"\n});",
+    "result": "{\n  \"id\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"qid\": \"iq__22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"meta\": {\n    \"eluv.description\": \"Test Library Description\",\n    \"name\": \"Test Library a04695a13128498c795f\",\n    \"public\": {\n      \"toReplace\": {\n        \"new\": \"metadata\"\n      }\n    }\n  }\n}"
+  }
+]

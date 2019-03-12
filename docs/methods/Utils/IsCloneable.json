@@ -1,0 +1,118 @@
+[
+  {
+    "signature": "async IsCloneable(\"value\");",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(0.5);",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"something\");",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable({\n  \"value\": \"something\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(2, 1, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"a\", 2, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"b\");",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable({\n  \"a\": \"b\"\n}, 3, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable({});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"a\", 1, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"obj\", 2, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(2, 0, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"b\", 1, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable({\n  \"a\": \"b\"\n}, 2, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"set\": \"<Set>\",\n  \"map\": \"<Map>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"a\", 1, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"obj\", 2, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(\"fn\", 3, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable(, 3, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "result": "false"
+  },
+  {
+    "signature": "async IsCloneable({});",
+    "result": "false"
+  },
+  {
+    "signature": "async IsCloneable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<Buffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"response\": \"<Response 0>\",\n  \"error\": {}\n});",
+    "result": "false"
+  },
+  {
+    "signature": "async IsCloneable(2);",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable({\n  \"a\": \"b\"\n});",
+    "result": "true"
+  },
+  {
+    "signature": "async IsCloneable();",
+    "result": "false"
+  },
+  {
+    "signature": "async IsCloneable({\n  \"0\": 52,\n  \"1\": 49,\n  \"2\": 98,\n  \"3\": 51,\n  \"4\": 52,\n  \"5\": 49,\n  \"6\": 49,\n  \"7\": 52,\n  \"8\": 48,\n  \"9\": 98,\n  \"10\": 56,\n  \"11\": 56,\n  \"12\": 100,\n  \"13\": 51,\n  \"14\": 51,\n  \"15\": 55,\n  \"16\": 53,\n  \"17\": 55,\n  \"18\": 55,\n  \"19\": 48,\n  \"20\": 56,\n  \"21\": 97,\n  \"22\": 101,\n  \"23\": 52,\n  \"24\": 55,\n  \"25\": 100,\n  \"26\": 52,\n  \"27\": 51,\n  \"28\": 101,\n  \"29\": 101,\n  \"30\": 98,\n  \"31\": 51,\n  \"32\": 53,\n  \"33\": 56,\n  \"34\": 50,\n  \"35\": 101,\n  \"36\": 99,\n  \"37\": 55,\n  \"38\": 98,\n  \"39\": 102\n});",
+    "result": "false"
+  },
+  {
+    "signature": "async IsCloneable({\n  \"size\": 0,\n  \"timeout\": 0\n});",
+    "result": "false"
+  }
+]

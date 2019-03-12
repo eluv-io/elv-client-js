@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async AddAccessGroupManager({\n  \"contractAddress\": \"0x6256050c8105d87e214273d2b0ac56fd556429d0\",\n  \"memberAddress\": \"cbB9aD0a2ac56689925d209b4D94962d143f75Da\"\n});",
+    "result": "\"0xa464a281884d944538fa496a5ffba2828b4daca19b16799886919efd059065db\""
+  }
+]

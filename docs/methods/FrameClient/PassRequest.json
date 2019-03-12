@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async PassRequest({\n  \"request\": {\n    \"calledMethod\": \"ContentLibraries\",\n    \"args\": {},\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 123\n  }\n});",
+    "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 123,\n  \"response\": [\n    \"ilib2AeJf3ud7ANhy2AH7zkMGjU9y7Zz\",\n    \"ilib2NHJT59QXSEU9JurSema3sN3Aa4y\",\n    \"ilib2dV9wJvrvyCdmE3pD2aqvHVbf3Xw\",\n    \"ilib31FK8XgkwMguhFpyyFkvQfq4zFZS\",\n    \"ilib3joW4qrHLgevARpWYL1eJ5K4qnBZ\",\n    \"ilib3npSux6gntRjEbxCQ855RQVzhR93\",\n    \"ilib4CmU4rKNgep6jo4T3EjnL1TLNszd\",\n    \"ilib4K172bTzyH2V7Lta6imVpB8W45KV\",\n    \"ilibh2dDVRAgxcqrgPZTREuc7P9jXzt\",\n    \"iliboJKh2Jn3JghW4DMhtiCUGZt38is\",\n    \"ilibuYevMHGCs1okYoGFUfE65FWV3JT\",\n    \"ilibx3EacSCXZxNZaS3ZakX5X5xrMmo\"\n  ]\n}"
+  },
+  {
+    "signature": "async PassRequest({\n  \"request\": {\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 1234,\n    \"calledMethod\": \"UploadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib2ZX78NLoADv9p9Bsqoye75sCNXrx\",\n      \"objectId\": \"iq__3mSuH8iNVYVmVBffF3wH9jSG9i4N\",\n      \"writeToken\": \"tqw_6MpVz9ecYv9Bbz3iRoPGpEy2wQNRCSJjS\",\n      \"data\": \"<ArrayBuffer 100000>\",\n      \"chunkSize\": 10000\n    },\n    \"callbackId\": 321\n  }\n});",
+    "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 1234,\n  \"response\": {\n    \"content\": {\n      \"id\": \"iq__3mSuH8iNVYVmVBffF3wH9jSG9i4N\",\n      \"write_token\": \"tqw_6MpVz9ecYv9Bbz3iRoPGpEy2wQNRCSJjS\",\n      \"type\": \"\"\n    },\n    \"part\": {\n      \"hash\": \"hqp_QmSKS1PQQGw1PLPnZfz1vgMcMiVNLdMu5RBDVJhzi4yFLx\",\n      \"size\": 100000\n    }\n  }\n}"
+  }
+]

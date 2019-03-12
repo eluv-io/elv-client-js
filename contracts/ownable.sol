@@ -8,8 +8,10 @@ pragma solidity 0.4.21;
 
 contract Ownable {
 
+    bytes32 public version ="Ownable20190221100500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
     address public creator;
     address public owner;
+
 
     function Ownable() public payable {
         creator = tx.origin;

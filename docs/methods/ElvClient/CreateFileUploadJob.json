@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async CreateFileUploadJob({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"writeToken\": \"tqw_965nBEUBaVd3RnUwmrKjC5jwVdbzTP34B\",\n  \"fileInfo\": [\n    {\n      \"path\": \"testDirectory\",\n      \"type\": \"directory\"\n    },\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"size\": 100000\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"size\": 100000\n    }\n  ]\n});",
+    "result": "{\n  \"upload_jobs\": [\n    {\n      \"id\": \"iqfuHBXn9Eev1yGVQL9wj3P2F9\",\n      \"files\": [\n        {\n          \"path\": \"testDirectory/File 1\",\n          \"size\": 100000,\n          \"off\": 0,\n          \"len\": 100000,\n          \"rem\": 100000\n        },\n        {\n          \"path\": \"testDirectory/File 2\",\n          \"size\": 100000,\n          \"off\": 0,\n          \"len\": 100000,\n          \"rem\": 100000\n        }\n      ]\n    }\n  ]\n}"
+  }
+]

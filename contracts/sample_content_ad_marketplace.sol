@@ -16,17 +16,11 @@ import {Certifyer} from "./lib_certifyer.sol";
 
 contract SampleContentAdMarketplace is Content {
 
+    bytes32 public version ="SplContAdMktplce20190226115400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
 
     event MaxCreditPerAd(uint256 maxCreditPerAd);
     event BitcodeAddress(address bitcode);
-
-
-    event dbgBool(string msg, bool flag);
-    event dbgAddress(string msg, address addr);
-    event dbgUint256(string msg, uint256 num);
-    event dbgUint8(string msg, uint8 num);
-    event dbgByte32(string msg, bytes32 b);
-    event dbgBytes(string msg, bytes b);
 
     address public bitcodeAddress;
 
@@ -45,8 +39,7 @@ contract SampleContentAdMarketplace is Content {
         int8 status; //0 unpaid, 1 paid off
     }
 
-    mapping(uint256 => RequestData) public requestMap;
-
+    mapping(bytes32 => RequestData) public requestMap;
 
     uint256 public maxCreditPerAd = 0; //By default no maximum is set
 
@@ -91,13 +84,16 @@ contract SampleContentAdMarketplace is Content {
         bytes memory messageStr =  createMessage(content_address, msg.sender, amount);
         bytes32 messageHash = keccak256("\x19Ethereum Signed Message:\n75", messageStr);
         address signee = ecrecover(messageHash, v, r, s);
-        //emit dbgUint256("amount", uint256(amount));
+        //emit LogUint256("amount", uint256(amount));
         require(signee == bitcodeAddress);
     }
 
+
+
     function insertRequest(uint256 request_ID, address content_address, uint256 amount) private {
+        bytes32 adRequestID = keccak256(request_ID, msg.sender); //Hash of ads object and content request ID
         RequestData memory req = RequestData(tx.origin, content_address, amount, 0);
-        requestMap[request_ID] = req;
+        requestMap[adRequestID] = req;
     }
 
     function runAccess(
@@ -124,9 +120,11 @@ contract SampleContentAdMarketplace is Content {
     }
 
     // Upon completion, the promised amount is divided between the library owner and the viewer and paid off.
-    function runFinalize(uint256 request_ID) public payable returns(uint) {
-        RequestData storage req = requestMap[request_ID];
+    function runFinalize(uint256 request_ID, uint256 /*score_pct*/) public payable returns(uint) {
+        bytes32 adRequestID = keccak256(request_ID, msg.sender); //Hash of ads object and content request ID
+        RequestData storage req = requestMap[adRequestID];
         require((req.originator == tx.origin) && (req.status == 0));
+        //emit LogInt256("req.status", int256(req.status));
         BaseContent contentObj = BaseContent(req.content);
         address libraryAddr = contentObj.libraryAddress();
         BaseLibrary lib = BaseLibrary(contentObj.libraryAddress());
@@ -137,7 +135,7 @@ contract SampleContentAdMarketplace is Content {
         tx.origin.transfer(payToViewer);
         lib.owner().transfer(payToLibrary);
         req.status = 1; //mark as paid, not really needed as we delete req anyway
-        delete requestMap[request_ID];
+        delete requestMap[adRequestID];
         emit RunFinalize(request_ID, 0);
         return 0;
     }

@@ -1,0 +1,18 @@
+[
+  {
+    "signature": "async CollectedTags();",
+    "result": "{}"
+  },
+  {
+    "signature": "async CollectedTags();",
+    "result": "{\n  \"boat\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 0.3,\n    \"occurrences\": 1\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
+  },
+  {
+    "signature": "async CollectedTags();",
+    "result": "{\n  \"boat\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"buoy\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 1,\n    \"occurrences\": 2\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  },\n  \"duck\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  }\n}"
+  },
+  {
+    "signature": "async CollectedTags();",
+    "result": "{\n  \"boat\": {\n    \"aggregate\": 1.5,\n    \"occurrences\": 2\n  },\n  \"buoy\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 1,\n    \"occurrences\": 2\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  },\n  \"duck\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"mayhem\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"person\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
+  }
+]

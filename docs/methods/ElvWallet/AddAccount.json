@@ -1,0 +1,22 @@
+[
+  {
+    "signature": "async AddAccount({\n  \"accountName\": \"test\",\n  \"privateKey\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n});",
+    "result": "<Ethers#Wallet>"
+  },
+  {
+    "signature": "async AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0x3625630c3e54c3f4818a6d388c1f763e22007a69ae91852715b04be17de0e6ff\"\n});",
+    "result": "<Ethers#Wallet>"
+  },
+  {
+    "signature": "async AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n});",
+    "result": "<Ethers#Wallet>"
+  },
+  {
+    "signature": "async AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0xf1402b0aa53279c933a099639599c47a4a6ac8af3c09335e67ffae1109cec1dc\"\n});",
+    "result": "<Ethers#Wallet>"
+  },
+  {
+    "signature": "async AddAccount({\n  \"privateKey\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n});",
+    "result": "<Ethers#Wallet>"
+  }
+]
