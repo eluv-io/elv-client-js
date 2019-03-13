@@ -12,9 +12,6 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      accountName: "Alice",
-      //privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
-      //privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
       privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
     });
     client.SetSigner({signer});
@@ -26,3 +23,13 @@ const Test = async () => {
 };
 
 Test();
+
+
+client.ContentLibraries()
+  .then(libraries => console.log(libraries))
+  .catch(error => console.log(error));
+
+
+const Path = require("path");
+
+console.log(Path.join("qlibs", "someid"));
