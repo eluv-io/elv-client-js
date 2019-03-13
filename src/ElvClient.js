@@ -1,5 +1,5 @@
 const URI = require("urijs");
-const Path = require("path");
+const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 
 const AuthorizationClient = require("./AuthorizationClient");
@@ -280,7 +280,7 @@ class ElvClient {
    * @returns {Promise<Array<string>>}
    */
   async ContentLibraries() {
-    let path = Path.join("qlibs");
+    let path = UrlJoin("qlibs");
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -302,7 +302,7 @@ class ElvClient {
    * @returns {Promise<*>}
    */
   async ContentLibrary({libraryId}) {
-    let path = Path.join("qlibs", libraryId);
+    let path = UrlJoin("qlibs", libraryId);
 
     let library = await ResponseToJson(
       this.HttpClient.Request({
@@ -380,7 +380,7 @@ class ElvClient {
       libraryId = this.utils.AddressToLibraryId(createRequest.contractAddress);
     }
 
-    const path = Path.join("qlibs", libraryId);
+    const path = UrlJoin("qlibs", libraryId);
 
     // Create library in fabric
     await this.HttpClient.Request({
@@ -491,7 +491,7 @@ class ElvClient {
    * @param {string} libraryId - ID of the library to delete
    */
   async DeleteContentLibrary({libraryId}) {
-    let path = Path.join("qlibs", libraryId);
+    let path = UrlJoin("qlibs", libraryId);
 
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
 
@@ -522,7 +522,7 @@ class ElvClient {
    * @returns {Promise<Object>} - Public metadata of the library
    */
   async PublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
-    let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
+    let path = UrlJoin("qlibs", libraryId, "meta", metadataSubtree);
 
     try {
       const metadata = await ResponseToJson(
@@ -552,7 +552,7 @@ class ElvClient {
    * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
    */
   async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="/", metadata={}}) {
-    let path = Path.join("qlibs", libraryId, "meta", metadataSubtree);
+    let path = UrlJoin("qlibs", libraryId, "meta", metadataSubtree);
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
@@ -576,13 +576,13 @@ class ElvClient {
     // Instead, delete metadata manually and call replace
     let metadata = await this.PublicLibraryMetadata({libraryId});
 
-    metadataSubtree = Path.normalize(metadataSubtree || "/");
+    metadataSubtree = UrlJoin(metadataSubtree || "/");
 
     if(metadataSubtree === "/") {
       metadata = {};
     } else {
       let pointer = metadata;
-      const keys = Path.normalize(metadataSubtree || "/").replace(/^\/+/g, "").split("/");
+      const keys = UrlJoin(metadataSubtree || "/").replace(/^\/+/g, "").split("/");
       for(let i = 0; i < keys.length - 1; i++) {
         pointer = pointer[keys[i]];
 
@@ -601,7 +601,7 @@ class ElvClient {
       delete pointer[keys[keys.length - 1]];
     }
 
-    let path = Path.join("qlibs", libraryId, "meta");
+    let path = UrlJoin("qlibs", libraryId, "meta");
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
@@ -746,7 +746,7 @@ class ElvClient {
     const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
     const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
 
-    let path = Path.join("qlibs", typeLibraryId, "q");
+    let path = UrlJoin("qlibs", typeLibraryId, "q");
 
     // Does the same as ContentObjects(), but authorization cannot be performed
     // against the content type library because it does not have a library contract
@@ -807,13 +807,13 @@ class ElvClient {
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId}),
           method: "GET",
-          path: Path.join("q", versionHash)
+          path: UrlJoin("q", versionHash)
         }));
       const contentTypeMetadata = await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId}),
           method: "GET",
-          path: Path.join("q", versionHash, "meta")
+          path: UrlJoin("q", versionHash, "meta")
         }));
 
       return {
@@ -879,7 +879,7 @@ class ElvClient {
     const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = Path.join("qlibs", typeLibraryId, "q", objectId);
+    const path = UrlJoin("qlibs", typeLibraryId, "q", objectId);
 
     /* Create object, upload bitcode and finalize */
 
@@ -945,7 +945,7 @@ class ElvClient {
     const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = Path.join("qlibs", typeLibraryId, "q", objectId);
+    const path = UrlJoin("qlibs", typeLibraryId, "q", objectId);
 
     metadata.custom_contract = contract;
     if (schema != null) {
@@ -1029,7 +1029,7 @@ class ElvClient {
    * @returns {Promise<Array<Object>>} - List of objects in library
    */
   async ContentObjects({libraryId}) {
-    let path = Path.join("qlibs", libraryId, "q");
+    let path = UrlJoin("qlibs", libraryId, "q");
 
     let objects = (await ResponseToJson(
       this.HttpClient.Request({
@@ -1066,7 +1066,7 @@ class ElvClient {
    * @returns {Promise<Object>} - Description of created object
    */
   async ContentObject({libraryId, objectId, versionHash}) {
-    let path = Path.join("q", versionHash || objectId);
+    let path = UrlJoin("q", versionHash || objectId);
 
     return await ResponseToJson(
       this.HttpClient.Request({
@@ -1090,7 +1090,7 @@ class ElvClient {
    * @returns {Promise<Object>} - Description of created object
    */
   async ContentObjectByHash({versionHash}) {
-    let path = Path.join("q", versionHash);
+    let path = UrlJoin("q", versionHash);
 
     return await ResponseToJson(
       this.HttpClient.Request({
@@ -1133,7 +1133,7 @@ class ElvClient {
    * @returns {Promise<Object>} - Metadata of the content object
    */
   async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=false}) {
-    let path = Path.join("q", versionHash || objectId, "meta", metadataSubtree);
+    let path = UrlJoin("q", versionHash || objectId, "meta", metadataSubtree);
 
     try {
       const metadata = await ResponseToJson(
@@ -1164,7 +1164,7 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing versions of the object
    */
   async ContentObjectVersions({libraryId, objectId}) {
-    let path = Path.join("qid", objectId);
+    let path = UrlJoin("qid", objectId);
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -1215,7 +1215,7 @@ class ElvClient {
     const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId, typeId});
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = Path.join("q", objectId);
+    const path = UrlJoin("q", objectId);
 
     return await ResponseToJson(
       this.HttpClient.Request({
@@ -1280,7 +1280,7 @@ class ElvClient {
       }
     }
 
-    let path = Path.join("qid", objectId);
+    let path = UrlJoin("qid", objectId);
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -1303,7 +1303,7 @@ class ElvClient {
    * @param {string} writeToken - Write token of the draft
    */
   async FinalizeContentObject({libraryId, objectId, writeToken}) {
-    let path = Path.join("q", writeToken);
+    let path = UrlJoin("q", writeToken);
 
     const finalizeResponse = await ResponseToJson(
       this.HttpClient.Request({
@@ -1335,7 +1335,7 @@ class ElvClient {
    * @param {string} versionHash - The version hash of the content object to publish
    */
   async PublishContentVersion({libraryId, objectId, versionHash}) {
-    let path = Path.join("q", versionHash);
+    let path = UrlJoin("q", versionHash);
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
@@ -1367,7 +1367,7 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
    */
   async DeleteContentVersion({libraryId, objectId, versionHash}) {
-    let path = Path.join("q", versionHash || objectId);
+    let path = UrlJoin("q", versionHash || objectId);
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
@@ -1386,7 +1386,7 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    */
   async DeleteContentObject({libraryId, objectId}) {
-    let path = Path.join("qid", objectId);
+    let path = UrlJoin("qid", objectId);
 
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
 
@@ -1419,7 +1419,7 @@ class ElvClient {
    * @param {string=} metadataSubtree - Subtree of the object metadata to modify
    */
   async MergeMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
-    let path = Path.join("q", writeToken, "meta", metadataSubtree);
+    let path = UrlJoin("q", writeToken, "meta", metadataSubtree);
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
@@ -1442,7 +1442,7 @@ class ElvClient {
    * @param {string=} metadataSubtree - Subtree of the object metadata to modify
    */
   async ReplaceMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
-    let path = Path.join("q", writeToken, "meta", metadataSubtree);
+    let path = UrlJoin("q", writeToken, "meta", metadataSubtree);
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
@@ -1465,7 +1465,7 @@ class ElvClient {
    * - if not specified, all metadata will be deleted
    */
   async DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree="/"}) {
-    let path = Path.join("q", writeToken, "meta", metadataSubtree);
+    let path = UrlJoin("q", writeToken, "meta", metadataSubtree);
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
@@ -1487,7 +1487,7 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
    */
   async ListFiles({libraryId, objectId, versionHash}) {
-    let path = Path.join("q", versionHash || objectId, "meta", "files");
+    let path = UrlJoin("q", versionHash || objectId, "meta", "files");
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -1545,7 +1545,7 @@ class ElvClient {
   }
 
   async CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo}) {
-    let path = Path.join("q", writeToken, "upload_jobs");
+    let path = UrlJoin("q", writeToken, "upload_jobs");
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -1558,7 +1558,7 @@ class ElvClient {
   }
 
   async UploadFileData({libraryId, objectId, writeToken, jobId, fileData}) {
-    let path = Path.join("q", writeToken, "upload_jobs", jobId);
+    let path = UrlJoin("q", writeToken, "upload_jobs", jobId);
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -1575,7 +1575,7 @@ class ElvClient {
   }
 
   async UploadJobStatus({libraryId, objectId, writeToken, jobId}) {
-    let path = Path.join("q", writeToken, "upload_jobs", jobId);
+    let path = UrlJoin("q", writeToken, "upload_jobs", jobId);
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -1587,7 +1587,7 @@ class ElvClient {
   }
 
   async FinalizeUploadJobs({libraryId, objectId, writeToken}) {
-    let path = Path.join("q", writeToken, "files");
+    let path = UrlJoin("q", writeToken, "files");
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
@@ -1611,7 +1611,7 @@ class ElvClient {
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
   async DownloadFile({libraryId, objectId, versionHash, filePath, format="blob"}) {
-    let path = Path.join("q", versionHash || objectId, "files", filePath);
+    let path = UrlJoin("q", versionHash || objectId, "files", filePath);
 
     return ResponseToFormat(
       format,
@@ -1638,7 +1638,7 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing list of parts of the object
    */
   async ContentParts({libraryId, objectId, versionHash}) {
-    let path = Path.join("q", versionHash || objectId, "parts");
+    let path = UrlJoin("q", versionHash || objectId, "parts");
 
     const response = await ResponseToJson(
       this.HttpClient.Request({
@@ -1666,7 +1666,7 @@ class ElvClient {
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
   async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
-    const path = Path.join("q", versionHash || objectId, "data", partHash);
+    const path = UrlJoin("q", versionHash || objectId, "data", partHash);
 
     const response =
       await this.HttpClient.Request({
@@ -1708,7 +1708,7 @@ class ElvClient {
         this.HttpClient.Request({
           headers: authorizationHeader,
           method: "POST",
-          path: Path.join("q", writeToken, "data"),
+          path: UrlJoin("q", writeToken, "data"),
           body: data,
           bodyType: "BINARY"
         })
@@ -1719,7 +1719,7 @@ class ElvClient {
       return uploadResult;
     }
 
-    const path = Path.join("q", writeToken, "parts");
+    const path = UrlJoin("q", writeToken, "parts");
 
     // Create the part for writing
     let partWriteToken = (await ResponseToJson(
@@ -1740,7 +1740,7 @@ class ElvClient {
         this.HttpClient.Request({
           headers: authorizationHeader,
           method: "POST",
-          path: Path.join(path, partWriteToken),
+          path: UrlJoin(path, partWriteToken),
           body: data.slice(uploaded, to),
           bodyType: "BINARY",
         })
@@ -1754,7 +1754,7 @@ class ElvClient {
       await this.HttpClient.Request({
         headers: authorizationHeader,
         method: "POST",
-        path: Path.join(path, partWriteToken),
+        path: UrlJoin(path, partWriteToken),
         bodyType: "BINARY",
         body: ""
       })
@@ -1773,7 +1773,7 @@ class ElvClient {
    * @param {string} partHash - Hash of the part to delete
    */
   async DeletePart({libraryId, objectId, writeToken, partHash}) {
-    let path = Path.join("q", writeToken, "parts", partHash);
+    let path = UrlJoin("q", writeToken, "parts", partHash);
 
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
@@ -1854,17 +1854,17 @@ class ElvClient {
     queryParams = {...queryParams};
 
     if(libraryId) {
-      path = Path.join(path, "qlibs", libraryId);
+      path = UrlJoin(path, "qlibs", libraryId);
 
       if(objectId || versionHash) {
-        path = Path.join(path, "q", versionHash || objectId);
+        path = UrlJoin(path, "q", versionHash || objectId);
 
         if(partHash){
-          path = Path.join(path, "data", partHash);
+          path = UrlJoin(path, "data", partHash);
         } else if(rep) {
-          path = Path.join(path, "rep", rep);
+          path = UrlJoin(path, "rep", rep);
         } else if(call) {
-          path = Path.join(path, "call", call);
+          path = UrlJoin(path, "call", call);
         }
       }
 
@@ -1872,18 +1872,18 @@ class ElvClient {
         queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noCache});
       }
     } else if(versionHash) {
-      path = Path.join("q", versionHash);
+      path = UrlJoin("q", versionHash);
 
       if(!noAuth && objectId) {
         queryParams.authorization = await this.authClient.AuthorizationToken({objectId, versionHash, noCache});
       }
 
       if(partHash){
-        path = Path.join(path, "data", partHash);
+        path = UrlJoin(path, "data", partHash);
       } else if(rep) {
-        path = Path.join(path, "rep", rep);
+        path = UrlJoin(path, "rep", rep);
       } else if(call) {
-        path = Path.join(path, "call", call);
+        path = UrlJoin(path, "call", call);
       }
     }
 
@@ -1908,7 +1908,7 @@ class ElvClient {
    * @returns {Promise<string>} - URL to the specified file with authorization token
    */
   async FileUrl({libraryId, objectId, versionHash, filePath, queryParams={}, noCache=false}) {
-    let path = Path.join("qlibs", libraryId, "q", versionHash || objectId, "files", filePath);
+    let path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "files", filePath);
 
     const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
 
@@ -2123,7 +2123,7 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing proof information
    */
   async Proofs({libraryId, objectId, versionHash, partHash}) {
-    let path = Path.join("q", versionHash || objectId, "data", partHash, "proofs");
+    let path = UrlJoin("q", versionHash || objectId, "data", partHash, "proofs");
 
     return ResponseToJson(
       this.HttpClient.Request({
@@ -2148,7 +2148,7 @@ class ElvClient {
    * @returns {Promise<Format>} - Response containing the CBOR response in the specified format
    */
   async QParts({libraryId, objectId, partHash, format="blob"}) {
-    let path = Path.join("qparts", partHash);
+    let path = UrlJoin("qparts", partHash);
 
     return ResponseToFormat(
       format,
