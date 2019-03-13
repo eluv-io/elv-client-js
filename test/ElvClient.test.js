@@ -1,4 +1,4 @@
-const Path = require("path");
+const UrlJoin = require("url-join");
 const URI = require("urijs");
 const fs = require("fs");
 const BaseLibraryContract = require("../src/contracts/BaseLibrary");
@@ -167,7 +167,7 @@ describe("Test ElvClient", () => {
     test("Update Public Content Library Metadata", async () => {
       await client.ReplacePublicLibraryMetadata({
         libraryId,
-        metadataSubtree: Path.join("public", "toReplace"),
+        metadataSubtree: UrlJoin("public", "toReplace"),
         metadata: {new: "metadata"}
       });
 
@@ -181,7 +181,7 @@ describe("Test ElvClient", () => {
     test("Delete Public Content Library Metadata", async () => {
       await client.DeletePublicLibraryMetadata({
         libraryId,
-        metadataSubtree: Path.join("public", "toDelete"),
+        metadataSubtree: UrlJoin("public", "toDelete"),
       });
 
       const publicMetadata = await client.PublicLibraryMetadata({libraryId, metadataSubtree: "public"});
@@ -718,28 +718,28 @@ describe("Test ElvClient", () => {
 
     test("FabricURL", async () => {
       const libraryUrl = await client.FabricUrl({libraryId});
-      validateUrl(libraryUrl, Path.join("/qlibs", libraryId));
+      validateUrl(libraryUrl, UrlJoin("/qlibs", libraryId));
 
       const objectUrl = await client.FabricUrl({libraryId, objectId});
-      validateUrl(objectUrl, Path.join("/qlibs", libraryId, "q", objectId));
+      validateUrl(objectUrl, UrlJoin("/qlibs", libraryId, "q", objectId));
 
       const versionUrl = await client.FabricUrl({libraryId, objectId, versionHash});
-      validateUrl(versionUrl, Path.join("/qlibs", libraryId, "q", versionHash));
+      validateUrl(versionUrl, UrlJoin("/qlibs", libraryId, "q", versionHash));
 
       const partUrl = await client.FabricUrl({libraryId, objectId, partHash: partInfo.whole});
-      validateUrl(partUrl, Path.join("/qlibs", libraryId, "q", objectId, "data", partInfo.whole));
+      validateUrl(partUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "data", partInfo.whole));
 
       const versionOnlyPartUrl = await client.FabricUrl({versionHash, partHash: partInfo.whole});
-      validateUrl(versionOnlyPartUrl, Path.join("/q", versionHash, "data", partInfo.whole), {}, false);
+      validateUrl(versionOnlyPartUrl, UrlJoin("/q", versionHash, "data", partInfo.whole), {}, false);
 
       const versionOnlyCallUrl = await client.FabricUrl({versionHash, call: "method"});
-      validateUrl(versionOnlyCallUrl, Path.join("/q", versionHash, "call", "method"), {}, false);
+      validateUrl(versionOnlyCallUrl, UrlJoin("/q", versionHash, "call", "method"), {}, false);
 
       const versionOnlyRepUrl = await client.FabricUrl({versionHash, rep: "image"});
-      validateUrl(versionOnlyRepUrl, Path.join("/q", versionHash, "rep", "image"), {}, false);
+      validateUrl(versionOnlyRepUrl, UrlJoin("/q", versionHash, "rep", "image"), {}, false);
 
       const versionOnlyAuthUrl = await client.FabricUrl({versionHash, objectId, partHash: partInfo.whole});
-      validateUrl(versionOnlyAuthUrl, Path.join("/q", versionHash, "data", partInfo.whole));
+      validateUrl(versionOnlyAuthUrl, UrlJoin("/q", versionHash, "data", partInfo.whole));
 
       const testQuery = {
         param1: "value1",
@@ -748,34 +748,34 @@ describe("Test ElvClient", () => {
       };
 
       const paramUrl = await client.FabricUrl({libraryId, objectId, queryParams: testQuery});
-      validateUrl(paramUrl, Path.join("/qlibs", libraryId, "q", objectId), testQuery);
+      validateUrl(paramUrl, UrlJoin("/qlibs", libraryId, "q", objectId), testQuery);
 
       const noAuthUrl = await client.FabricUrl({libraryId, objectId, noAuth: true});
-      validateUrl(noAuthUrl, Path.join("/qlibs", libraryId, "q", objectId), {}, false);
+      validateUrl(noAuthUrl, UrlJoin("/qlibs", libraryId, "q", objectId), {}, false);
     });
 
     test("Rep URL", async () => {
       const repUrl = await client.Rep({libraryId, objectId, rep: "image"});
-      validateUrl(repUrl, Path.join("/qlibs", libraryId, "q", objectId, "rep", "image"));
+      validateUrl(repUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "rep", "image"));
 
       const noAuthUrl = await client.Rep({libraryId, objectId, rep: "image", noAuth: true});
-      validateUrl(noAuthUrl, Path.join("/qlibs", libraryId, "q", objectId, "rep", "image"), {}, false);
+      validateUrl(noAuthUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "rep", "image"), {}, false);
     });
 
     test("Bitcode Method URL", async () => {
       const callUrl = await client.BitcodeMethodUrl({libraryId, objectId, method: "image"});
-      validateUrl(callUrl, Path.join("/qlibs", libraryId, "q", objectId, "call", "image"));
+      validateUrl(callUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "call", "image"));
 
       const noAuthUrl = await client.BitcodeMethodUrl({libraryId, objectId, method: "image", noAuth: true});
-      validateUrl(noAuthUrl, Path.join("/qlibs", libraryId, "q", objectId, "call", "image"), {}, false);
+      validateUrl(noAuthUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "call", "image"), {}, false);
     });
 
     test("File URL", async () => {
       const topLevelFile = await client.FileUrl({libraryId, objectId, filePath: "file"});
-      validateUrl(topLevelFile, Path.join("/qlibs", libraryId, "q", objectId, "files", "file"));
+      validateUrl(topLevelFile, UrlJoin("/qlibs", libraryId, "q", objectId, "files", "file"));
 
-      const nestedFile = await client.FileUrl({libraryId, objectId, filePath: Path.join("dir", "file")});
-      validateUrl(nestedFile, Path.join("/qlibs", libraryId, "q", objectId, "files", "dir", "file"));
+      const nestedFile = await client.FileUrl({libraryId, objectId, filePath: UrlJoin("dir", "file")});
+      validateUrl(nestedFile, UrlJoin("/qlibs", libraryId, "q", objectId, "files", "dir", "file"));
 
       const testQuery = {
         param1: "value1",
@@ -784,7 +784,7 @@ describe("Test ElvClient", () => {
       };
 
       const withQueryParams = await client.FileUrl({libraryId, objectId, filePath: "file", queryParams: testQuery});
-      validateUrl(withQueryParams, Path.join("/qlibs", libraryId, "q", objectId, "files", "file"), testQuery);
+      validateUrl(withQueryParams, UrlJoin("/qlibs", libraryId, "q", objectId, "files", "file"), testQuery);
     });
   });
 

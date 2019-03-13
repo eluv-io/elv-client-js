@@ -39,7 +39,8 @@
     "node-fetch-polyfill": "^2.0.6",
     "path": "^0.12.7",
     "sjcl": "^1.0.7",
-    "urijs": "^1.19.1"
+    "urijs": "^1.19.1",
+    "url-join": "^4.0.0"
   },
   "devDependencies": {
     "buffer": "^5.2.1",

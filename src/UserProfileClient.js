@@ -1,5 +1,5 @@
-const Path = require("path");
 const Utils = require("./Utils");
+const UrlJoin = require("url-join");
 
 class UserProfileClient {
   /**
@@ -295,7 +295,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     }
 
     const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-    let path = Path.join("qlibs", libraryId);
+    const path = UrlJoin("qlibs", libraryId);
 
     await this.client.HttpClient.Request({
       headers: await this.client.authClient.AuthorizationHeader({libraryId}),
@@ -335,7 +335,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     }
 
     // If this object has already been seen, don't re-record tags
-    const seen = await this.PrivateUserMetadata({metadataSubtree: Path.join("accessed_content", versionHash)});
+    const seen = await this.PrivateUserMetadata({metadataSubtree: UrlJoin("accessed_content", versionHash)});
     if(seen) { return; }
 
     const userLibraryId = Utils.AddressToLibraryId(this.client.signer.address);
@@ -347,7 +347,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       libraryId: userLibraryId,
       objectId: userObjectId,
       writeToken: editRequest.write_token,
-      metadataSubtree: Path.join("accessed_content", versionHash),
+      metadataSubtree: UrlJoin("accessed_content", versionHash),
       metadata: Date.now()
     });
 
