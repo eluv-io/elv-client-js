@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity ^0.4.21;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
@@ -14,9 +14,16 @@ import {AdmgrCampaign} from "./admgr_campaign_manager.sol";
 // for watching the ad.
 //
 
+
+/* -- Revision history --
+AdmgrAdvertismnt20190222152600ML: First versioned released
+AdmgrAdvertismnt20190318103000ML: Migrated to 0.4.24
+*/
+
+
 contract AdmgrAdvertisement is Content {
 
-    bytes32 public version ="AdmgrAdvertismnt20190222152600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrAdvertismnt20190318103000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event MaxCreditPerAd(uint256 maxCreditPerAd);
     event BitcodeAddress(address bitcode);
@@ -47,7 +54,7 @@ contract AdmgrAdvertisement is Content {
 
     function dbgRequest(uint256 request_ID, address ad_address) public pure returns (bytes32)
     {
-        return keccak256(ad_address, request_ID);
+        return keccak256(abi.encodePacked(ad_address, request_ID));
     }
 
 
@@ -111,7 +118,7 @@ contract AdmgrAdvertisement is Content {
 
     function verifyMessage(address content_address, address campaign_address, bytes32 amount, uint8 v, bytes32 r, bytes32 s) private view {
         bytes memory messageStr = createMessage(content_address, campaign_address, msg.sender, amount);
-        bytes32 messageHash = keccak256("\x19Ethereum Signed Message:\n96", messageStr);
+        bytes32 messageHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n96", messageStr));
         address signee = ecrecover(messageHash, v, r, s);
         //emit dbgBytes("message rebuilt", messageStr);
         //emit dbgAddress("signee", signee);
@@ -128,7 +135,7 @@ contract AdmgrAdvertisement is Content {
     )
         private
     {
-        bytes32 req_data_id = keccak256(ad_address, request_ID);
+        bytes32 req_data_id = keccak256(abi.encodePacked(ad_address, request_ID));
         RequestData memory req = RequestData(tx.origin, content_address, ad_address, campaign_address, amount, 0);
         requestMap[req_data_id] = req;
     }
@@ -166,7 +173,7 @@ contract AdmgrAdvertisement is Content {
 
     // Upon completion, the promised amount is divided between the library owner and the viewer and paid off.
     function runFinalize(uint256 request_ID, uint256 /*score_pct*/) public payable returns(uint) {
-        bytes32 req_data_id = keccak256(msg.sender, request_ID);
+        bytes32 req_data_id = keccak256(abi.encodePacked(msg.sender, request_ID));
         RequestData storage req = requestMap[req_data_id];
         require((req.originator == tx.origin) && (req.status == 0));
         BaseContent campaignObj = BaseContent(requestMap[req_data_id].campaign);

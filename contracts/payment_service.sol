@@ -1,9 +1,15 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.24;
 
-import {Ownable} from './ownable.sol';
+import {Content} from "./content.sol";
 
-contract PaymentService is Ownable {
 
+/* -- Revision history --
+PaymentService20190318102800ML: First versioned released, migrated to 0.4.24, made a Content object
+*/
+
+contract PaymentService is Content {
+
+    bytes32 public version ="PaymentService20190318102800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     struct RedeemRequest {
         address id; // client address requesting
@@ -16,28 +22,13 @@ contract PaymentService is Ownable {
     RedeemRequest[]  redeemRequests;
     uint256 redeemRequestsLength = 0;
 
-    string tokenCurrency;
-    uint256 tokenValue;
+    string tokenCurrency = "USD";
+    uint256 tokenValue = 1;
     address public payerAddress;
 
     event RedeemTokenRequest(uint256 numtokens, string pay_to, string nonce);
     event RedeemTokenExecuted(string currency, uint256 value, string payment_proof, string nonce);
     event SetTokenValue(string currency, uint256 value);
-
-    event DbgString(string s);
-    event DbgAddress(address a);
-    event DbgUint256(uint256 u);
-    event DbgUint(uint u);
-    event DbgBytes32(bytes32 b);
-
-    function PaymentService(address payer_address) public payable {
-        tokenValue = 1; //default value
-        tokenCurrency = 'USD'; //default currency
-        payerAddress = payer_address;
-    }
-
-
-
 
 
     function redeemTokenRequest(string payment_account, string tx_nonce) public payable returns (uint) {
@@ -56,7 +47,6 @@ contract PaymentService is Ownable {
         return 0;
     }
 
-
     function getPendingRedeemRequest() public constant returns ( address, string, uint256, string, string) {
         if (redeemRequestsLength == 0) {
             return (0, "", 0, "", "");
@@ -65,12 +55,11 @@ contract PaymentService is Ownable {
         return (req.id, req.redeemCurrency, req.numTokens, req.payTo, req.nonce);
     }
 
-
     function redeemTokenExecuted(string currency, uint256 value, string payment_proof, string tx_nonce) public returns (uint) {
         if ((msg.sender != creator) && (msg.sender != payerAddress)) {
             return 3;
         }
-        if (keccak256(redeemRequests[0].nonce) == keccak256(tx_nonce)) {
+        if (keccak256(abi.encodePacked(redeemRequests[0].nonce)) == keccak256(abi.encodePacked(tx_nonce))) {
             delete redeemRequests[0];
             redeemRequestsLength --;
             if (redeemRequestsLength > 0) {
@@ -83,11 +72,9 @@ contract PaymentService is Ownable {
         return 1;
     }
 
-
     function redeemDbg(uint256 idx) public constant returns (uint256, uint256, string) {
         return (redeemRequests.length, redeemRequestsLength, redeemRequests[idx].nonce);
     }
-
 
     function setPayerAdress(address payer_address) public onlyOwner {
         payerAddress = payer_address;
@@ -98,7 +85,6 @@ contract PaymentService is Ownable {
         tokenValue = value;
         emit SetTokenValue(currency, value);
     }
-
 
     function getTokenValue() public constant returns(string, uint256) {
         return (tokenCurrency, tokenValue);

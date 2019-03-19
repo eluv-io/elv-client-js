@@ -1,12 +1,18 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 import "./ownable.sol";
 import {BaseFactory} from "./base_content_space.sol";
 
 
+/* -- Revision history --
+BsAccessCtrlGrp20190222140700ML: First versioned released
+BsAccessCtrlGrp20190315172900ML: Migrated to 0.4.24
+*/
+
+
 contract BaseAccessControlGroup is Ownable {
 
-    bytes32 public version ="BsAccessCtrlGrp20190222140700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20190315172900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
 
@@ -19,7 +25,7 @@ contract BaseAccessControlGroup is Ownable {
     event ManagerAccessRevoked(address candidate);
     event UnauthorizedOperation(uint operationCode, address candidate);
 
-    function BaseAccessControlGroup(address content_space) public {
+    constructor(address content_space) public {
         contentSpace = content_space;
         managers[creator] = true;
         members[creator] = true;

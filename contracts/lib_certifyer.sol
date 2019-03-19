@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 
 library Certifyer {
@@ -41,7 +41,7 @@ library Certifyer {
     }
 
     function messageHash(bytes message) pure public returns (bytes32) {
-        return keccak256("\x19Ethereum Signed Message:\n",uint2str(message.length), message);
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n",uint2str(message.length), message));
         //return keccak256("\x19Ethereum Signed Message:\n\x32\x30",  message);
     }
 
