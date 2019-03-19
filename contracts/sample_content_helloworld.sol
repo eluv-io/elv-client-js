@@ -1,15 +1,22 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
+
+
+/* -- Revision history --
+SplContHelloWrld20190318114800ML: First versioned released, Migrated to 0.4.24
+*/
+
 
 
 contract SampleContentHelloWorld is Content {
 
     event HelloWorldEvent(string message, address stakeHolder0);
 
-    uint256 public credit = 1 * 1000000000000000000;
+    bytes32 public version ="SplContHelloWrld20190318114800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    uint256 public credit = 1 * 1000000000000000000;
     bytes32 public constant STATUS_PUBLISHED = "Ready";
 
     function runDescribeStatus(int status_code) public pure returns (bytes32) {

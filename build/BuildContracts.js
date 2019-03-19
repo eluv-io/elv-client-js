@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const solc = require("solc").setupMethods(require("./soljson-v0.4.21+commit.dfe3193c"));
+const solc = require("solc");
 const ethers = require("ethers");
 
 // Create minimal JS containing ABI and bytecode from compiled contract

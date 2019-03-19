@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 /**
  * Ownable
@@ -6,14 +6,20 @@ pragma solidity 0.4.21;
  * functions, this simplifies the implementation of "user permissions".
  */
 
+/* -- Revision history --
+Ownable20190221100500ML: First versioned released
+Ownable20190315141500ML: Migrated to 0.4.24
+*/
+
+
 contract Ownable {
 
-    bytes32 public version ="Ownable20190221100500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Ownable20190315141500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
     address public creator;
     address public owner;
 
 
-    function Ownable() public payable {
+    constructor() public payable {
         creator = tx.origin;
         owner = tx.origin;
     }
