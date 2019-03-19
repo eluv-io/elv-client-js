@@ -1,15 +1,16 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
 
 /* -- Revision history --
 Content20190221101700ML: First versioned released
 Content20190301121800ML: Adds stub for runAccessInfo
+Content20190315171500ML: Migrated to 0.4.24
 */
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20190301121800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20190315171500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event Log(string label);
     event LogBool(string label, bool b);

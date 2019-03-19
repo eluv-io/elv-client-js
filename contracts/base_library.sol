@@ -1,24 +1,31 @@
-pragma solidity 0.4.21;
+pragma solidity ^0.4.21;
 
 import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
 import "./accessible.sol";
+import "./base_content_space.sol";
+
+
+/* -- Revision history --
+BaseLibrary20190221101700ML: First versioned released
+BaseLibrary20190318101300ML: Migrated to 0.4.24
+*/
 
 
 contract BaseLibrary is Accessible, Editable {
 
-    bytes32 public version ="BaseLibrary20190221101700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190318101300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentSpace;
     address[] public contributorGroups;
     address[] public reviewerGroups;
     address[] public accessorGroups;
     address[] public contentTypes;
-    uint256 public contributorGroupsLength;
-    uint256 public reviewerGroupsLength;
-    uint256 public accessorGroupsLength;
+    uint256 public contributorGroupsLength = 0;
+    uint256 public reviewerGroupsLength = 0;
+    uint256 public accessorGroupsLength = 0;
     uint256 public contentTypesLength = 0;
 
     mapping ( address => address ) public contentTypeContracts;  // custom contracts map
@@ -41,11 +48,8 @@ contract BaseLibrary is Accessible, Editable {
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContent(address contentAddress, bool approved, string note);
 
-    function BaseLibrary(address address_KMS, address content_space) public payable {
+    constructor(address address_KMS, address content_space) public payable {
         contentSpace = content_space;
-        contributorGroupsLength = 0;
-        reviewerGroupsLength = 0;
-        accessorGroupsLength = 0;
         addressKMS = address_KMS;
     }
 
@@ -222,6 +226,12 @@ contract BaseLibrary is Accessible, Editable {
         return false;
     }
 
+    // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
+    function canNodePublish(address candidate) public view returns (bool) {
+        BaseContentSpace bcs = BaseContentSpace(contentSpace);
+        return bcs.canNodePublish(candidate);
+    }
+
     function submitApprovalRequest() public returns (bool) {
         address contentContract = msg.sender;
         BaseContent c = BaseContent(contentContract);
@@ -310,13 +320,11 @@ contract BaseLibrary is Accessible, Editable {
         if (contentTypesLength != 0) {
             require(validType(content_type));
         }
-        address contentAddress = new BaseContent(content_type);
-        BaseContent content = BaseContent(contentAddress);
+        BaseContent content = new BaseContent(content_type);
         content.setAddressKMS(addressKMS);
         content.setContentContractAddress(contentTypeContracts[content_type]);
-
-        emit ContentObjectCreated(contentAddress, content_type);
-        return contentAddress;
+        emit ContentObjectCreated(address(content), content_type);
+        return address(content);
     }
 
     function accessRequest() public returns (bool) {

@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity ^0.4.21;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
@@ -12,10 +12,16 @@ import {BaseContent} from "./base_content.sol";
 // for watching the ad.
 //
 
+
+/* -- Revision history --
+SplContAdvertsng20190226115400ML: First versioned released
+SplContAdvertsng20190318114600ML: Migrated to 0.4.24
+*/
+
+
 contract SampleContentAdvertising is Content {
 
     bytes32 public version ="SplContAdvertsng20190226115400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
 
     event TokenCreditPerAd(uint256 tokenCreditPerAd);
 

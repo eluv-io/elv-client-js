@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
@@ -7,10 +7,12 @@ import {BaseLibrary} from "./base_library.sol";
 /* -- Revision history --
 BaseContent20190221101600ML: First versioned released
 BaseContent20190301121900ML: Adds support for getAccessInfo, to replace getAccessCharge (not deprecated yet)
+BaseContent20190315175100ML: Migrated to 0.4.24
 */
 
+
 contract BaseContent is Editable {
-    bytes32 public version ="BaseContent20190301121900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190315175100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -25,7 +27,7 @@ contract BaseContent is Editable {
     bytes32 public constant STATUS_DRAFT = "Draft";
     bytes32 public constant STATUS_REVIEW = "Draft in review";
 
-    uint256 public requestID;
+    uint256 public requestID = 0;
 
     struct RequestData {
         address originator; // client address requesting
@@ -64,10 +66,9 @@ contract BaseContent is Editable {
     event ReturnCustomHook(address custom_contract, uint256 result);
     event InvokeCustomPostHook(address custom_contract);
 
-    function BaseContent(address content_type) public payable {
+    constructor(address content_type) public payable {
         libraryAddress = msg.sender;
         statusCode = -1;
-        requestID = 0;
         contentType = content_type;
         //get custom contract address associated with content_type from hash
         /*
@@ -194,7 +195,39 @@ contract BaseContent is Editable {
         return accessCharge;
     }
 
-    function publish() public payable onlyOwner returns (bool) {
+    bytes32[] public versionHashes;
+    bytes32 pendingHash;
+
+    event CommitPending(bytes32 objectHash);
+
+    //    function commit(bytes32 object_hash) public onlyOwner {
+//        objectHash = object_hash;
+//        emit Commit(objectHash);
+//    }
+    function commit(bytes32 _objectHash) public onlyOwner {
+        // TODO: what to do if there already *is* a pendingHash?
+        pendingHash = _objectHash;
+        emit CommitPending(pendingHash);
+    }
+
+    function canPublish() public view returns (bool) {
+        if (msg.sender == owner || msg.sender == libraryAddress) return true;
+        BaseLibrary lib = BaseLibrary(libraryAddress);
+        return lib.canNodePublish(msg.sender);
+    }
+
+    // TODO: why payable?
+    // function confirm() public payable onlyOwner returns (bool) {
+    function publish() public payable returns (bool) {
+        require(canPublish());
+
+        // TODO: hmmmm... this doesn't quite make sense WRT current code ...
+        //require(pendingHash != ""); //ML: commented for now, as commit is typically not called in current code base
+        if (objectHash != "") {
+            versionHashes.push(objectHash); // save existing version info
+        }
+        super.commit(pendingHash);
+        pendingHash = "";
 
         // Update the content contract to reflect the approval process
         updateStatus(1); //update status to in-review
@@ -205,12 +238,13 @@ contract BaseContent is Editable {
             submitStatus = lib.submitApprovalRequest();
         }
         // Log event
-        emit Publish(submitStatus, statusCode, objectHash);
+        emit Publish(submitStatus, statusCode, objectHash); // TODO: confirm?
         return submitStatus;
     }
 
     function updateStatus(int status_code) public returns (int) {
-        require((tx.origin == owner) || (msg.sender == owner) || (msg.sender == libraryAddress));
+        // require((tx.origin == owner) || (msg.sender == owner) || (msg.sender == libraryAddress));
+        require(canPublish());
         int newStatusCode;
         if (contentContractAddress == 0x0) {
             if (((tx.origin == owner) || (msg.sender == owner)) && ((status_code == -1) || (status_code == 1))) {

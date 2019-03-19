@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity ^0.4.21;
 
 contract Utils {
     function getBalance(address addr) public constant returns (uint256) {
