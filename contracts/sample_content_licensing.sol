@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
@@ -11,9 +11,18 @@ import {BaseLibrary} from "./base_library.sol";
 // full, final approval.
 //
 
+
+/* -- Revision history --
+SplContLicensing20190318105700ML: First versioned released, Migrated to 0.4.24
+*/
+
+
 contract SampleContentLicensing is Content {
 
     event PayCredit(address payee, address content, uint256 amount);
+
+    bytes32 public version ="SplContLicensing20190318105700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
 
     uint256 public licensingFee = 10000000000000000000; //defaulted to 10 ethers
     uint8 public percentPartial = 60; // percentage threshold for content to trigger partial payment

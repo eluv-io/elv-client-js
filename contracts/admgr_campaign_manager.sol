@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity 0.4.24;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
@@ -6,9 +6,15 @@ import {BaseLibrary} from "./base_library.sol";
 import {AdmgrAdvertisement} from "./admgr_advertisement.sol";
 
 
+/* -- Revision history --
+AdmgrCampaign20190222153200ML: First versioned released
+AdmgrCampaign20190318105100ML: Migrated to 0.4.24
+*/
+
+
 contract AdmgrCampaign is Content {
 
-    bytes32 public version ="AdmgrCampaign20190222153200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrCampaign20190318105100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public campaignManagerAddress;
 

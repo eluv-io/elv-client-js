@@ -1,4 +1,4 @@
-pragma solidity 0.4.21;
+pragma solidity ^0.4.21;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
