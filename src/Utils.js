@@ -16,6 +16,19 @@ const Utils = {
   weiPerEther: BigNumber("1000000000000000000"),
 
   /**
+   * Convert number or string to BigNumber
+   *
+   * @param {string | number} value - Value to convert to BigNumber
+   *
+   * @see https://github.com/MikeMcl/bignumber.js
+   *
+   * @returns {BigNumber} - Given value as a BigNumber
+   */
+  ToBigNumber: (value) => {
+    return new BigNumber(value);
+  },
+
+  /**
    * Convert wei to ether
    *
    * @param {string | BigNumber} wei - Wei value to convert to ether
