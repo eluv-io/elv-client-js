@@ -136,7 +136,7 @@ class AuthorizationClient {
     noCache=false,
     cacheOnly
   }) {
-    if(!this.client.signer) { throw Error("Signer not set"); }
+    if(!this.client.signer) { return {transactionHash: ""}; }
 
     const isUserLibrary = libraryId && libraryId === Utils.AddressToLibraryId(this.client.signer.address);
     const isSpaceLibrary = Utils.EqualHash(this.contentSpaceId, libraryId);
