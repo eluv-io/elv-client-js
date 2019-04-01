@@ -104,7 +104,7 @@ const MakeCampaignManager = async (emp, name, nameId) => {
   console.log("    Campaign Manager - " + name + ": " + cmgr.id + " hash: " + cmgr.hash);
 };
 
-const MakeChannel = async (emp, name) => {
+const MakeChannel = async (emp, name, type="vod") => {
 
   const typeObj = await client.ContentObject({
     libraryId: contentSpaceLibraryId,
@@ -117,7 +117,8 @@ const MakeChannel = async (emp, name) => {
     options: {
       "type" : typeObj.hash,
       "meta" : {
-        "name": name
+        "name": name,
+        "channelType": type
       }
     }
   });
