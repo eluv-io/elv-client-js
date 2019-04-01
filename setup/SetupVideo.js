@@ -114,7 +114,7 @@ class VideoService {
       description: "Demonstration only",
       name: name,
       languages: [],
-      phash: '', // phash for file
+      phash: "", // phash for file
       "type.qhash": contentTypeVHash,
       video_tags: payload.video_tags,
       watermark: {
@@ -134,7 +134,7 @@ class VideoService {
         }
       }
     }));
-    console.log('createDraftResponse');
+    console.log("createDraftResponse");
     console.log(createDraftResponse);
 
     writeToken = createDraftResponse.write_token;
@@ -177,7 +177,7 @@ class VideoService {
     for (i = j = 0, len = files.length; j < len; i = ++j) {
       f = files[i];
       switch (false) {
-        case f.filename !== 'ladder.json':
+        case f.filename !== "ladder.json":
           ladderText = (await readUploadedFileAsText(f.file));
           ladderJson = JSON.parse(ladderText);
           video_reps = [];
@@ -204,7 +204,7 @@ class VideoService {
           console.log("upload part finished");
           console.log(uploadPartResult);
           phash = uploadPartResult.part.hash;
-          if (f.fileExtension === 'jpg' || f.fileExtension === 'png') {
+          if (f.fileExtension === "jpg" || f.fileExtension === "png") {
             objectMeta.image = phash;
           } else {
             mediaFilePhash = phash;
@@ -229,15 +229,15 @@ class VideoService {
     try {
       headers = await this.elvclient.authClient.AuthorizationHeader({libraryId: libId});
       videoJsonExtract = await ResponseToJson(this.elvclient.HttpClient.Request({
-          headers: headers,
-          method: "POST",
-          path: "qlibs/" + libId + "/test/q/" + contentTypeVHash + "/video",
-          body: goPostBody
-        })
+        headers: headers,
+        method: "POST",
+        path: "qlibs/" + libId + "/test/q/" + contentTypeVHash + "/video",
+        body: goPostBody
+      })
       );
     } catch (error) {
       e = error;
-      e.message = e.message + ' ' + JSON.stringify(e.response.data);
+      e.message = e.message + " " + JSON.stringify(e.response.data);
       throw e;
     }
     console.log("returned from test:");
@@ -245,10 +245,10 @@ class VideoService {
     objectMeta = Object.assign(objectMeta, videoJsonExtract);
     // add choice key
     objectMeta.choices = [];
-// set languages
+    // set languages
     for (k in videoJsonExtract) {
       v = videoJsonExtract[k];
-      languageCode = k.split('.').pop();
+      languageCode = k.split(".").pop();
       objectMeta.languages.push(languageCode);
       dashManifestUrl = `http://${payload.hostname}:${payload.port}` + `/qlibs/${payload.libraryId}/q/${contentId}/rep/dash/${languageCode}.mpd`;
       hlsManifestUrl = `http://${payload.hostname}:${payload.port}` + `/qlibs/${payload.libraryId}/q/${contentId}/rep/hls/${languageCode}-master.m3u8`;
@@ -264,18 +264,18 @@ class VideoService {
       writeToken: writeToken,
       metadata: objectMeta
     }));
-    console.log('mergeMetadataResponse');
+    console.log("mergeMetadataResponse");
     console.log(mergeMetadataResponse);
     // finalize object
     finalizeResponse = (await this.elvclient.FinalizeContentObject({
       libraryId: libId,
       writeToken: writeToken
     }));
-    console.log('finalizeResponse');
+    console.log("finalizeResponse");
     return console.log(finalizeResponse);
   }
 
-};
+}
 
 
 

@@ -2204,7 +2204,7 @@ class ElvClient {
    * @param {string} methodName - Method to call on the contract
    * @param {Array<string>} methodArgs - List of arguments to the contract constructor
    * - it is recommended to format these arguments using the FormatContractArguments method
-   * @param {number | BigNumber} value - Amount of ether to include in the transaction
+   * @param {(number | BigNumber)=} value - Amount of ether to include in the transaction
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - Response containing information about the transaction

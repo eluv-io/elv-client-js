@@ -28,21 +28,21 @@
     "result": "\"public\""
   },
   {
-    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__Qmcs7jxyYTFyxPnMdRbqMD87yjhqDv4QJctTA1AJKSjjhk\"\n});"
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__QmdziafQDWqGcYVjeRzPuhviYdsEbEcBk3uj5bCgC99Fq7\"\n});"
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
     "result": "{}"
   },
   {
-    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__QmQAwKJfUeyeh2rtDfgDjzisMcqK4t36DEzu5qTzKJiA88\"\n});"
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__QmUryewiLUfWTWy1o1gxnowqXsocYcfsWmXjQgukxHSNej\"\n});"
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",
     "result": "{\n  \"boat\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 0.3,\n    \"occurrences\": 1\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
   },
   {
-    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__QmVUnSxcJFJmZ4p5WQYACHmfySh2itE1UCRVkpjC92UtWF\"\n});"
+    "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"accessed_content/hq__QmWA5mC36uMqC9aoptRMpqZKoVQmv1t5P7BQ2APerhbuot\"\n});"
   },
   {
     "signature": "async PrivateUserMetadata({\n  \"metadataSubtree\": \"collected_data\"\n});",

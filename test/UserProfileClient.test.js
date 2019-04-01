@@ -40,7 +40,10 @@ describe("Test UserProfileClient", () => {
 
     const publicMetadata = {
       meta: "data",
-      nested: {
+      toReplace: {
+        meta: "data"
+      },
+      toDelete: {
         meta: "data"
       }
     };
@@ -73,14 +76,30 @@ describe("Test UserProfileClient", () => {
     expect(publicMetadata.image).toBeDefined();
     expect(publicMetadata).toMatchObject({
       meta: "data",
-      nested: {
+      toReplace: {
+        meta: "data"
+      },
+      toDelete: {
         meta: "data"
       }
     });
 
-    const subPublicMetadata = await client.userProfile.PublicUserMetadata({accountAddress: client.signer.address, metadataSubtree: "nested"});
+    const subPublicMetadata = await client.userProfile.PublicUserMetadata({accountAddress: client.signer.address, metadataSubtree: "toReplace"});
     expect(subPublicMetadata).toBeDefined();
     expect(subPublicMetadata).toEqual({meta: "data"});
+
+    await client.userProfile.ReplacePublicUserMetadata({metadataSubtree: "toReplace", metadata: {new: "metadata"}});
+    await client.userProfile.DeletePublicUserMetadata({metadataSubtree: "toDelete"});
+
+    const updatedMetadata = await client.userProfile.PublicUserMetadata({accountAddress: client.signer.address});
+    expect(updatedMetadata).toBeDefined();
+    expect(updatedMetadata).toMatchObject({
+      meta: "data",
+      toReplace: {
+        new: "metadata"
+      }
+    });
+    expect(updatedMetadata.toDelete).not.toBeDefined();
   });
 
   test("Private Metadata", async () => {
@@ -198,7 +217,7 @@ describe("Test UserProfileClient", () => {
       person: { aggregate: 0.8, occurrences: 1 }
     });
 
-    await client.DeleteContentLibrary({libraryId: tagLibraryId});
+    await client.userProfile.DeleteAccountLibrary({libraryId: tagLibraryId});
   });
 
   test("Delete User Profile", async () => {
