@@ -18,8 +18,12 @@ class ElvMediaPlatform {
     presetAccessCharge, mandatoryPresetAccessCharge
   }) {
 
+    var campaignsLibrary = null;
+    if (campaignManager != null) {
+      campaignsLibrary = campaignManager.campaigns_library;
+    }
     var md = {
-      campaign_manager: campaignManager,
+      campaign_manager: campaignsLibrary,
       mandatory_sponsoring: mandatorySponsoring,
       preset_access_charge: presetAccessCharge,
       mandatory_preset_access_charge: mandatoryPresetAccessCharge,
@@ -30,11 +34,11 @@ class ElvMediaPlatform {
       libraryId: libraryId,
       objectId: objectId});
 
-    if (campaignManager != "") {
-    // Find campain manager's library ID
+    if (campaignManager != null) {
+      // Find campaign manager's library ID
       const campaignManagerMeta = await client.ContentObjectMetadata({
         libraryId: emp.ads_marketplace,
-        objectId: campaignManager
+        objectId: campaignManager.id
       });
 
       const campaignManagerLib = campaignManagerMeta.campaigns_library;

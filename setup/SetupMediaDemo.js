@@ -100,7 +100,7 @@ const MakeCampaignManager = async (emp, name, nameId) => {
     metadataSubtree: "campaign_manager_objectId",
     metadata: cmgr.id
   });
-  demo.campaign_managers[nameId] = cmgr.id;
+  demo.campaign_managers[nameId] = {id: cmgr.id, campaigns_library: libraryCampaigns};
   console.log("    Campaign Manager - " + name + ": " + cmgr.id + " hash: " + cmgr.hash);
 };
 
@@ -144,26 +144,30 @@ const MakeCampaign = async (emp, name, campaignManager) => {
 
 
   const adsMeta = {};
-  adsMeta[demo.ads.axe] = {
+  adsMeta[demo.ads.axe.id] = {
     "library" : demo.ads_library,
+    "versionHash" : demo.ads.axe.hash,
     "max_payout" : 10,
     "name" : "Axe",
     "tags" : assets.axe.pay_tags
   };
-  adsMeta[demo.ads.heineken] = {
+  adsMeta[demo.ads.heineken.id] = {
     "library" : demo.ads_library,
+    "versionHash" : demo.ads.heineken.hash,
     "max_payout" : 10,
     "name" : "Heineken",
     "tags" : assets.heineken.pay_tags
   };
-  adsMeta[demo.ads.japp] = {
+  adsMeta[demo.ads.japp.id] = {
     "library" : demo.ads_library,
+    "versionHash" : demo.ads.japp.hash,
     "max_payout" : 10,
     "name" : "Japp",
     "tags" : assets.japp.pay_tags
   };
-  adsMeta[demo.ads.evinrude] = {
+  adsMeta[demo.ads.evinrude.id] = {
     "library" : demo.ads_library,
+    "versionHash" : demo.ads.evinrude.hash,
     "max_payout" : 10,
     "name" : "Evinrude",
     "tags" : assets.evinrude.pay_tags
@@ -193,28 +197,28 @@ const MakeCampaign = async (emp, name, campaignManager) => {
   const txFunds = await client.SendFunds({recipient: cc, ether: 20});
 
   // Set ads contract
-  const adArgsAxe = [client.utils.HashToAddress(demo.ads.axe), "10000000000000000000"];
+  const adArgsAxe = [client.utils.HashToAddress(demo.ads.axe.id), "10000000000000000000"];
   const txAxe = await client.CallContractMethodAndWait({
     contractAddress: cc,
     abi: AdmgrCampaign.abi,
     methodName: "setupAd",
     methodArgs: adArgsAxe});
 
-  const adArgsHeineken = [client.utils.HashToAddress(demo.ads.heineken), "10000000000000000000"];
+  const adArgsHeineken = [client.utils.HashToAddress(demo.ads.heineken.id), "10000000000000000000"];
   const txHeineken = await client.CallContractMethodAndWait({
     contractAddress: cc,
     abi: AdmgrCampaign.abi,
     methodName: "setupAd",
     methodArgs: adArgsHeineken});
 
-  const adArgsJapp = [client.utils.HashToAddress(demo.ads.japp), "10000000000000000000"];
+  const adArgsJapp = [client.utils.HashToAddress(demo.ads.japp.id), "10000000000000000000"];
   const txJapp = await client.CallContractMethodAndWait({
     contractAddress: cc,
     abi: AdmgrCampaign.abi,
     methodName: "setupAd",
     methodArgs: adArgsJapp});
 
-  const adArgsEvinrude = [client.utils.HashToAddress(demo.ads.evinrude), "10000000000000000000"];
+  const adArgsEvinrude = [client.utils.HashToAddress(demo.ads.evinrude.id), "10000000000000000000"];
   const txEvinrude = await client.CallContractMethodAndWait({
     contractAddress: cc,
     abi: AdmgrCampaign.abi,
@@ -269,8 +273,8 @@ const MakeAds = async (emp, name, nameId, fileImg, fileVideo) => {
     libraryId: demo.ads_library,
     writeToken: adDraft.write_token
   });
-  demo.ads[nameId] = ad.id;
-  console.log("    Advertisement - " + name + ": " + ad.id);
+  demo.ads[nameId] = {id: ad.id, hash: ad.hash}
+  console.log("    Advertisement - " + name + ": " + ad.id, " ", ad.hash);
 
 };
 
@@ -398,14 +402,14 @@ const SetupMediaDemo = async () => {
     await MakeAds(emp, "Evinrude", "evinrude",
       "../demo/media/ads/evinrude.png", "../demo/media/ads/Evinrude Short.mp4");
 
-    await MakeCampaign(emp, "Recreation", demo.campaign_managers.open_market);
-    await MakeCampaign(emp, "Dedicated - Axe and Stuff", demo.campaign_managers.dedicated);
+    await MakeCampaign(emp, "Recreation", demo.campaign_managers.open_market.id);
+    await MakeCampaign(emp, "Dedicated - Axe and Stuff", demo.campaign_managers.dedicated.id);
   } // if (false)
 
   try {
     demo.commoff = {};
     await MakeCommercialOffering(emp, "Pay per view - No Ads", "airline",
-      "", false); // Only pay option
+      null, false); // Only pay option
     await MakeCommercialOffering(emp, "Ad Sponsored - Open Market", "open",
       demo.campaign_managers.open_market, false); // Either pay or ads
     await MakeCommercialOffering(emp, "Ad Sponsored - Dedicated", "dedicated",
