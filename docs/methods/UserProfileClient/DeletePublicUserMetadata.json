@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async DeletePublicUserMetadata({\n  \"metadataSubtree\": \"toDelete\"\n});"
+  }
+]

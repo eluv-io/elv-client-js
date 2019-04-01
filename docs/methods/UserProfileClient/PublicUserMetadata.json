@@ -1,18 +1,22 @@
 [
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0xF81cE696EedA74722Aa9C735C18312D85D6167c9\"\n});",
-    "result": "{\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"meta\": \"data\",\n  \"nested\": {\n    \"meta\": \"data\"\n  }\n}"
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\"\n});",
+    "result": "{\n  \"class\": \"elv-user-library\",\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"meta\": \"data\",\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0xF81cE696EedA74722Aa9C735C18312D85D6167c9\",\n  \"metadataSubtree\": \"nested\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\",\n  \"metadataSubtree\": \"toReplace\"\n});",
     "result": "{\n  \"meta\": \"data\"\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0xF81cE696EedA74722Aa9C735C18312D85D6167c9\",\n  \"metadataSubtree\": \"image\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\"\n});",
+    "result": "{\n  \"class\": \"elv-user-library\",\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"meta\": \"data\",\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
+  },
+  {
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\",\n  \"metadataSubtree\": \"image\"\n});",
     "result": "\"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\""
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0xF81cE696EedA74722Aa9C735C18312D85D6167c9\",\n  \"metadataSubtree\": \"image\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\",\n  \"metadataSubtree\": \"image\"\n});",
     "result": "\"hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN\""
   }
 ]

@@ -1,5 +1,8 @@
 [
   {
+    "signature": "async DeleteAccountLibrary({\n  \"libraryId\": \"ilib3XxtJsRr1qvM18qRGJfmcELzTX1k\"\n});"
+  },
+  {
     "signature": "async DeleteAccountLibrary();"
   }
 ]

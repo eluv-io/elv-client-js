@@ -313,6 +313,7 @@ class FrameClient {
       "CreateAccountLibrary",
       "DeleteAccountLibrary",
       "DeletePrivateUserMetadata",
+      "DeletePublicUserMetadata",
       "MergePrivateUserMetadata",
       "PrivateUserMetadata",
       "PublicUserMetadata",
