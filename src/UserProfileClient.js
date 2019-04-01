@@ -64,6 +64,11 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       return Utils.AddressToLibraryId(this.client.signer.address);
     }
 
+    publicMetadata = {
+      ...publicMetadata,
+      class: "elv-user-library"
+    };
+
     // Initialize fields
     privateMetadata = {
       ...privateMetadata,
@@ -208,6 +213,21 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
     return await this.client.ReplacePublicLibraryMetadata({libraryId, metadataSubtree, metadata});
   }
+
+  /**
+   * Delete the specified subtree of the current user's public metadata
+   *
+   * @namedParams
+   * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
+   */
+  async DeletePublicUserMetadata({metadataSubtree="/"}) {
+    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
+
+    await this.__TouchLibrary();
+
+    return await this.client.DeletePublicLibraryMetadata({libraryId, metadataSubtree});
+  }
+
 
   /**
    * Access the current user's private metadata

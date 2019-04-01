@@ -149,7 +149,6 @@ class AuthorizationClient {
       // User profile library - library ID corresponds to signer's address
       if(!noCache && !skipCache && this.userProfileTransaction) { return this.userProfileTransaction; }
 
-      return {transactionHash: ""};
       const userEvent = await this.client.ethClient.EngageAccountLibrary({
         contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
         signer: this.client.signer

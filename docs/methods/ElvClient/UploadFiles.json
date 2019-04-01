@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async UploadFiles({\n  \"libraryId\": \"ilib22zDKQk2uSQkgkdsAYsLYsRUFLYL\",\n  \"objectId\": \"iq__rntQJ8cH7KbKuG1D6D8d91vGHgm\",\n  \"writeToken\": \"tqw_965nBEUBaVd3RnUwmrKjC5jwVdbzTP34B\",\n  \"fileInfo\": [\n    {\n      \"path\": \"testDirectory\",\n      \"type\": \"directory\"\n    },\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"size\": 100000,\n      \"data\": \"<ArrayBuffer 100000>\"\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"size\": 100000,\n      \"data\": \"<ArrayBuffer 100000>\"\n    }\n  ]\n});"
+    "signature": "async UploadFiles({\n  \"libraryId\": \"ilibTF13gT9S9dD5gMvGvGiyE66wtks\",\n  \"objectId\": \"iq__GPrvedQjwNDTdGqRyrko2z2ksuC\",\n  \"writeToken\": \"tqw_2SHD8QcBBPp5aHzKVrXti91MzZf1FAt6p\",\n  \"fileInfo\": [\n    {\n      \"path\": \"testDirectory\",\n      \"type\": \"directory\"\n    },\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"size\": 100000,\n      \"data\": \"<ArrayBuffer 100000>\"\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"size\": 100000,\n      \"data\": \"<ArrayBuffer 100000>\"\n    }\n  ]\n});"
   }
 ]
