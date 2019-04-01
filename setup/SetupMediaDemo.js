@@ -366,6 +366,11 @@ const SetupMediaDemo = async () => {
       typeId: emp.content_types.sponsored_content,
       customContractAddress: null
     });
+    await client.AddLibraryContentType({
+      libraryId: libraryIdCO,
+      typeId: emp.content_types.sponsored_content_abrmaster,
+      customContractAddress: null
+    });
     console.log("    Acme Commercial Offering: " + libraryIdCO);
 
     // Make library - Social Contributions
