@@ -4,20 +4,20 @@ const path = require("path");
 
 const LOG = true;
 
-const LANGUAGE_NAMES = {
-  "de": "German",
-  "en": "English",
-  "es": "Spanish",
-  "fr": "French",
-  "it": "Italian",
-  "ja": "Japanese",
-};
+// const LANGUAGE_NAMES = {
+//   "de": "German",
+//   "en": "English",
+//   "es": "Spanish",
+//   "fr": "French",
+//   "it": "Italian",
+//   "ja": "Japanese",
+// };
 
 const HandleErrors = async (response) => {
   response = await response;
 
   if (!response.ok) {
-    let errorInfo = {
+    errorInfo = {
       status: response.status,
       statusText: response.statusText,
       url: response.url
@@ -68,12 +68,12 @@ class ImfService {
   //   type: content version hash for the avmaster2000.imf content type
   //
   async createImfTitle(payload) {
-    let args, contentId, contentTypeVHash, createDraftResponse,
-      dashManifestUrl, e, entry, f, fileContents, files, finalizeResponse,
-      goPostBody, headers, hlsManifestUrl, i, imfJsonExtract, j, k, ladderJson,
-      ladderText, languageCode, len, len1, libId,
+    let args, contentTypeVHash, createDraftResponse,
+      e, entry, f, fileContents, files, finalizeResponse,
+      goPostBody, headers, i, imfJsonExtract, j, ladderJson,
+      ladderText, len, len1, libId,
       name, objectMeta, phash, singleFilePath,
-      uploadPartResult, v, video_reps, writeToken, xmlTexts;
+      uploadPartResult, video_reps, writeToken, xmlTexts;
 
     libId = payload.libraryId;
     name = payload.name;
@@ -100,7 +100,6 @@ class ImfService {
     objectMeta = {
       description: "Demonstration only",
       name,
-      languages: [],
       pkg: {},
       "type.qhash": contentTypeVHash,
       video_tags: payload.video_tags,
@@ -126,7 +125,7 @@ class ImfService {
     }));
 
     writeToken = createDraftResponse.write_token;
-    contentId = createDraftResponse.id;
+    //contentId = createDraftResponse.id;
     console.log("IMF create content object write_token: " + writeToken);
 
     video_reps = [
@@ -230,21 +229,21 @@ class ImfService {
     objectMeta = Object.assign(objectMeta, imfJsonExtract);
 
     // add choice key
-    objectMeta.choices = [];
+    //objectMeta.choices = [];
 
     // set languages
-    for (k in imfJsonExtract) {
-      v = imfJsonExtract[k];
-      languageCode = k.split(".").pop();
-      objectMeta.languages.push(languageCode);
-      dashManifestUrl = `http://${payload.hostname}:${payload.port}` + `/qlibs/${payload.libraryId}/q/${contentId}/rep/dash/${languageCode}.mpd`;
-      hlsManifestUrl = `http://${payload.hostname}:${payload.port}` + `/qlibs/${payload.libraryId}/q/${contentId}/rep/hls/${languageCode}-master.m3u8`;
-      objectMeta.choices.push({
-        name: LANGUAGE_NAMES[languageCode],
-        dashManifestUrl: dashManifestUrl,
-        hlsPlaylistUrl: hlsManifestUrl
-      });
-    }
+    // for (k in imfJsonExtract) {
+    //   v = imfJsonExtract[k];
+    //   languageCode = k.split(".").pop();
+    //   objectMeta.languages.push(languageCode);
+    //   dashManifestUrl = `http://${payload.hostname}:${payload.port}` + `/qlibs/${payload.libraryId}/q/${contentId}/rep/dash/${languageCode}.mpd`;
+    //   hlsManifestUrl = `http://${payload.hostname}:${payload.port}` + `/qlibs/${payload.libraryId}/q/${contentId}/rep/hls/${languageCode}-master.m3u8`;
+    //   objectMeta.choices.push({
+    //     name: LANGUAGE_NAMES[languageCode],
+    //     dashManifestUrl: dashManifestUrl,
+    //     hlsPlaylistUrl: hlsManifestUrl
+    //   });
+    // }
 
     LOG && console.log("calling MergeMetadata to add IMF info");
 
