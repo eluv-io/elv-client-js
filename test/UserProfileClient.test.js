@@ -217,7 +217,7 @@ describe("Test UserProfileClient", () => {
       person: { aggregate: 0.8, occurrences: 1 }
     });
 
-    await client.userProfile.DeleteAccountLibrary({libraryId: tagLibraryId});
+    await tagClient.DeleteContentLibrary({libraryId: tagLibraryId});
   });
 
   test("Delete User Profile", async () => {
