@@ -15,6 +15,7 @@ const Topics = require("./events/Topics");
 class EthClient {
   constructor(ethereumURI) {
     this.ethereumURI = ethereumURI;
+    this.locked = false;
   }
 
   /* General contract management */
@@ -96,40 +97,50 @@ class EthClient {
     overrides={},
     signer
   }) {
-    if(value) {
-      // Convert Ether to Wei
-      overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
+    while(this.locked) {
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    this.ValidateSigner(signer);
+    this.locked = true;
 
-    if(!contract) {
-      contract = new Ethers.Contract(contractAddress, abi, signer.provider);
-      contract = contract.connect(signer);
-    }
+    try {
+      if (value) {
+        // Convert Ether to Wei
+        overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
+      }
 
-    if(!contract.functions[methodName]) {
-      throw Error("Unknown method: " + methodName);
-    }
+      this.ValidateSigner(signer);
 
-    let result;
-    let success = false;
-    while(!success) {
-      try {
-        result = await contract.functions[methodName](...methodArgs, overrides);
-        success = true;
-      } catch(error) {
-        if(error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
-          const latestBlock = await signer.provider.getBlock("latest");
-          overrides.gasLimit = latestBlock.gasLimit;
-          overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-        } else {
-          throw error;
+      if (!contract) {
+        contract = new Ethers.Contract(contractAddress, abi, signer.provider);
+        contract = contract.connect(signer);
+      }
+
+      if (!contract.functions[methodName]) {
+        throw Error("Unknown method: " + methodName);
+      }
+
+      let result;
+      let success = false;
+      while (!success) {
+        try {
+          result = await contract.functions[methodName](...methodArgs, overrides);
+          success = true;
+        } catch (error) {
+          if (error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
+            const latestBlock = await signer.provider.getBlock("latest");
+            overrides.gasLimit = latestBlock.gasLimit;
+            overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
+          } else {
+            throw error;
+          }
         }
       }
-    }
 
-    return result;
+      return result;
+    } finally {
+      this.locked = false;
+    }
   }
 
   async CallContractMethodAndWait({
