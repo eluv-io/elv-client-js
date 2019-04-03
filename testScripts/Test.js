@@ -12,24 +12,18 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      privateKey: "0xbf092a5c94988e2f7a1d00d0db309fc492fe38ddb57fc6d102d777373389c5e6"
+      privateKey: "0x55320cdb03a77d941ad41d15c5920d67cb51723aed691f6e2d03be609475017b"
     });
     client.SetSigner({signer});
 
-    console.log(await client.ContentLibrary({libraryId: "ilibnonexistant"}));
+    const libraryId = "ilib3XxtJsRr1qvM18qRGJfmcELzTX1k";
+    const objectId = "iq__2XdCuga9NbAZK7NN3F4Pa3umPbAK";
+
+    await client.ContentObjectMetadata({libraryId, objectId});
+
   } catch(error) {
     console.error(error);
   }
 };
 
 Test();
-
-
-client.ContentLibraries()
-  .then(libraries => console.log(libraries))
-  .catch(error => console.log(error));
-
-
-const Path = require("path");
-
-console.log(Path.join("qlibs", "someid"));

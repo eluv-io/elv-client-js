@@ -149,6 +149,7 @@ class AuthorizationClient {
       // User profile library - library ID corresponds to signer's address
       if(!noCache && !skipCache && this.userProfileTransaction) { return this.userProfileTransaction; }
 
+      return {transactionHash: ""};
       const userEvent = await this.client.ethClient.EngageAccountLibrary({
         contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
         signer: this.client.signer
@@ -247,25 +248,19 @@ class AuthorizationClient {
   /* Access */
 
   async GetAccessCharge({id, abi, args}) {
-    // Ensure contract has a getAccessCharge method
-    const method = abi.find(element => element.name === "getAccessCharge" && element.type === "function");
+    // Ensure contract has a getAccessInfo method
+    const method = abi.find(element => element.name === "getAccessInfo" && element.type === "function");
 
     if(!method) { return 0; }
 
-    const event = await this.client.CallContractMethodAndWait({
+    const info = await this.client.CallContractMethod({
       contractAddress: Utils.HashToAddress(id),
       abi,
-      methodName: "getAccessCharge",
+      methodName: "getAccessInfo",
       methodArgs: args
     });
 
-    const eventLog = this.client.ExtractEventFromLogs({
-      abi: ContentContract.abi,
-      event,
-      eventName: "GetAccessCharge"
-    });
-
-    return eventLog.values.accessCharge;
+    return info[1];
   }
 
   async AccessComplete({id, abi, score}) {
