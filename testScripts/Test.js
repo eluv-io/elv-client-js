@@ -16,20 +16,14 @@ const Test = async () => {
     });
     client.SetSigner({signer});
 
-    console.log(await client.ContentLibrary({libraryId: "ilibnonexistant"}));
+    const libraryId = "ilib3XxtJsRr1qvM18qRGJfmcELzTX1k";
+    const objectId = "iq__2XdCuga9NbAZK7NN3F4Pa3umPbAK";
+
+    await client.ContentObjectMetadata({libraryId, objectId});
+
   } catch(error) {
     console.error(error);
   }
 };
 
 Test();
-
-
-client.ContentLibraries()
-  .then(libraries => console.log(libraries))
-  .catch(error => console.log(error));
-
-
-const Path = require("path");
-
-console.log(Path.join("qlibs", "someid"));
