@@ -19,8 +19,7 @@ const Test = async () => {
     const libraryId = "ilib3XxtJsRr1qvM18qRGJfmcELzTX1k";
     const objectId = "iq__2XdCuga9NbAZK7NN3F4Pa3umPbAK";
 
-    await client.ContentObjectMetadata({libraryId, objectId});
-
+    console.log(await client.ContentObjectMetadata({libraryId, objectId}));
   } catch(error) {
     console.error(error);
   }

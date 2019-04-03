@@ -167,6 +167,7 @@ class ElvClient {
    */
   SetSigner({signer}) {
     signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
+    signer.provider.pollingInterval = 500;
     this.signer = signer;
 
     this.InitializeClients();
