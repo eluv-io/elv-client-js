@@ -149,6 +149,7 @@ class EthClient {
     methodName,
     methodArgs,
     value,
+    timeout=10000,
     signer
   }) {
     let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
@@ -165,14 +166,18 @@ class EthClient {
     });
 
     // Await completion of call and get event
-    let methodEvent = await new Promise((resolve) => {
-      signer.provider.on(createMethodCall.hash, async (event) => {
+    let methodEvent = await new Promise((resolve, reject) => {
+      const handleTimeout = setTimeout(() => {
+        signer.provider.removeAllListeners(createMethodCall.hash);
+        reject(`Timed out waiting for completion of ${methodName}`);
+      }, timeout);
+
+      signer.provider.on(createMethodCall.hash, event => {
+        signer.provider.removeAllListeners(createMethodCall.hash);
+        clearTimeout(handleTimeout);
         resolve(event);
       });
     });
-
-    // Make sure to remove listener when done
-    signer.provider.removeAllListeners(createMethodCall.hash);
 
     // Parse logs
     methodEvent.logs = methodEvent.logs.map(log => {
