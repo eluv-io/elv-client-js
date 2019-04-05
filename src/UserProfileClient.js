@@ -230,6 +230,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    * @return {Promise<Object>} - The user's public profile metadata - returns undefined if no metadata set or subtree doesn't exist
    */
   async PublicUserMetadata({accountAddress, metadataSubtree="/"}) {
+    if(!accountAddress) { return undefined; }
+
     const libraryId = Utils.AddressToLibraryId(accountAddress);
 
     try {
@@ -541,6 +543,9 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       "constructor",
       "FrameAllowedMethods",
       "PromptedMethods",
+      "__CacheMetadata",
+      "__GetCachedMetadata",
+      "__InvalidateCache",
       "__IsLibraryCreated",
       "__TouchLibrary",
       "__FormatVideoTags",

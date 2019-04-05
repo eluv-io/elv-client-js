@@ -34,6 +34,8 @@ const Test = async () => {
 
     const libraryId = "ilib3XxtJsRr1qvM18qRGJfmcELzTX1k";
     const objectId = "iq__2XdCuga9NbAZK7NN3F4Pa3umPbAK";
+
+    console.log(parseFloat(await client.GetBalance({address: signer.address})));
   } catch(error) {
     console.error(error);
   }

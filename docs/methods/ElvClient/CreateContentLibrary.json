@@ -1,10 +1,6 @@
 [
   {
-    "signature": "async CreateContentLibrary({\n  \"name\": \"Test Library b415a31d999246a06076\",\n  \"description\": \"Test Library Description\",\n  \"image\": \"<ArrayBuffer 101254>\",\n  \"publicMetadata\": {\n    \"public\": {\n      \"toReplace\": {\n        \"meta\": \"data\"\n      },\n      \"toDelete\": {\n        \"meta\": \"data\"\n      }\n    }\n  },\n  \"privateMetadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    }\n  }\n});",
-    "result": "\"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\""
-  },
-  {
     "signature": "async CreateContentLibrary({\n  \"publicMetadata\": {\n    \"class\": \"elv-user-library\"\n  },\n  \"privateMetadata\": {\n    \"access_level\": \"prompt\",\n    \"collected_data\": {}\n  },\n  \"isUserLibrary\": true\n});",
-    "result": "\"ilib3i5E9XMi4N8o2jMd7F9S6phDz87e\""
+    "result": "\"ilibUZbQCvhh7oVxUvWBrjQ73xV6WL9\""
   }
 ]

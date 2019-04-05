@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async UserProfileImage({\n  \"accountAddress\": \"0xbDe039b7297208DD479264400f6D03654B759621\"\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib3eRkrUkJPvL88fV3WH3EnmY7hdRa/q/iq__3eRkrUkJPvL88fV3WH3EnmY7hdRa/rep/image?hash=hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\""
+    "signature": "async UserProfileImage({\n  \"accountAddress\": \"0x51E2C24910910ADA9Bf6e2f1DcA52c17C3c262F4\"\n});",
+    "result": "\"http://localhost:8008/qlibs/ilib29Ag3GLKjGiYvK2SjQSqNveucbt7/q/iq__29Ag3GLKjGiYvK2SjQSqNveucbt7/rep/image?hash=hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\""
   }
 ]

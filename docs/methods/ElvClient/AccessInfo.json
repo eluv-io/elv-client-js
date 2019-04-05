@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async AccessInfo({\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\"\n});",
+    "result": "{\n  \"accessible\": true,\n  \"accessCode\": 0,\n  \"accessCharge\": \"0.5\"\n}"
+  }
+]
