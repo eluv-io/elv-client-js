@@ -48,6 +48,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   constructor({client}) {
     this.client = client;
 
+    this.libraryCreated = false;
     this.cachedPrivateMetadata = undefined;
   }
 
@@ -132,12 +133,16 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       if (!(await this.__IsLibraryCreated({accountAddress: this.client.signer.address}))) {
         await this.CreateAccountLibrary();
       }
+
+      this.libraryCreated = true;
     }
   }
 
   // Check if the account library exists
   // TODO: Change logic when user libraries are properly implemented
   async __IsLibraryCreated({accountAddress}) {
+    if(this.libraryCreated) { return true; }
+
     const libraryId = Utils.AddressToLibraryId(accountAddress);
 
     const libraryIds = await this.client.ContentLibraries();
@@ -377,6 +382,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       method: "DELETE",
       path: path
     });
+
+    this.libraryCreated = false;
   }
 
   /**
