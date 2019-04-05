@@ -5,23 +5,15 @@ const {CreateClient, BufferToArrayBuffer} = require("./utils/Utils");
 const UserProfileClient = require("../src/UserProfileClient");
 
 let client, tagClient;
-let tagLibraryId;
 
-const CreateTaggedObject = async (tags) => {
-  if(!tagLibraryId) {
-    tagLibraryId = await tagClient.CreateContentLibrary({name: "Test Tagging"});
-  }
-
+const CreateTaggedObject = async (tagLibraryId, tags) => {
   const createResponse = await tagClient.CreateContentObject({
     libraryId: tagLibraryId,
     options: { meta: { video_tags: [{ tags }] } }
   });
   await tagClient.FinalizeContentObject({libraryId: tagLibraryId, objectId: createResponse.id, writeToken: createResponse.write_token});
 
-  return {
-    libraryId: tagLibraryId,
-    objectId: createResponse.id
-  };
+  return createResponse.id;
 };
 
 // Describe blocks and tests within them are run in order
@@ -197,10 +189,11 @@ describe("Test UserProfileClient", () => {
 
     const recordTagsSpy = jest.spyOn(client.userProfile, "RecordTags");
 
+    const tagLibraryId = await tagClient.CreateContentLibrary({name: "Test Tagging"});
     // Create tagged objects with another user, then access them with this user
     for(let i = 0; i < testTags.length; i++) {
-      const {libraryId, objectId} = await CreateTaggedObject(testTags[i]);
-      await client.ContentObjectMetadata({libraryId, objectId});
+      const objectId = await CreateTaggedObject(tagLibraryId, testTags[i]);
+      await client.ContentObjectMetadata({libraryId: tagLibraryId, objectId});
     }
 
     expect(recordTagsSpy).toHaveBeenCalledTimes(testTags.length);
