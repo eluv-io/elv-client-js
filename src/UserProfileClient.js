@@ -47,6 +47,41 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    */
   constructor({client}) {
     this.client = client;
+
+    this.cachedPrivateMetadata = undefined;
+  }
+
+  __InvalidateCache() {
+    this.cachedPrivateMetadata = undefined;
+  }
+
+  __CacheMetadata(metadata) {
+    this.cachedPrivateMetadata = metadata;
+  }
+
+  __GetCachedMetadata(subtree) {
+    subtree = subtree.replace(/\/*/, "");
+
+    if(!subtree) { return this.cachedPrivateMetadata; }
+
+    let pointer = this.cachedPrivateMetadata || {};
+
+    subtree = subtree.replace(/\/*/, "");
+
+    const keys = subtree.split("/");
+    for(let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i];
+      if(!pointer || !pointer.hasOwnProperty(key)) {
+        return undefined;
+      }
+
+      pointer = pointer[key];
+    }
+
+    const lastKey = keys[keys.length - 1];
+    if(pointer && pointer.hasOwnProperty(lastKey)) {
+      return pointer[lastKey];
+    }
   }
 
   /**
@@ -176,6 +211,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     // Set image hash in public metadata so it is publicly accessible
     const imageHash = await this.PrivateUserMetadata({metadataSubtree: "image"});
     await this.client.ReplacePublicLibraryMetadata({libraryId, metadataSubtree: "image", metadata: imageHash});
+
+    this.__InvalidateCache();
   }
 
   /**
@@ -238,16 +275,28 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    *
    * @namedParams
    * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
+   * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
    *
    * @return {Promise<Object>} - The user's private profile metadata - returns undefined if no metadata set or subtree doesn't exist
    */
-  async PrivateUserMetadata({metadataSubtree="/"}={}) {
+  async PrivateUserMetadata({metadataSubtree="/", noCache=false}={}) {
+    if(!noCache && this.cachedPrivateMetadata) {
+      return this.__GetCachedMetadata(metadataSubtree);
+    }
+
     const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
     const objectId = Utils.AddressToObjectId(this.client.signer.address);
 
     await this.__TouchLibrary();
 
-    return await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree});
+    if(noCache) {
+      return await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree});
+    }
+
+    // If caching is enabled, just get all the metadata and store it.
+    const metadata = await this.client.ContentObjectMetadata({libraryId, objectId});
+    this.__CacheMetadata(metadata);
+    return this.__GetCachedMetadata(metadataSubtree);
   }
 
   /**
@@ -267,6 +316,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
     await this.client.MergeMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+
+    this.__InvalidateCache();
   }
 
   /**
@@ -286,6 +337,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
     await this.client.ReplaceMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+
+    this.__InvalidateCache();
   }
 
   /**
@@ -304,6 +357,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
     await this.client.DeleteMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree});
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+
+    this.__InvalidateCache();
   }
 
   /**
@@ -345,6 +400,8 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       // eslint-disable-next-line no-console
       console.error(error);
     }
+
+    this.__InvalidateCache();
   }
 
   async __RecordTags({libraryId, objectId, versionHash}) {

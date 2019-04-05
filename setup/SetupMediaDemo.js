@@ -273,7 +273,7 @@ const MakeAds = async (emp, name, nameId, fileImg, fileVideo) => {
     libraryId: demo.ads_library,
     writeToken: adDraft.write_token
   });
-  demo.ads[nameId] = {id: ad.id, hash: ad.hash}
+  demo.ads[nameId] = {id: ad.id, hash: ad.hash};
   console.log("    Advertisement - " + name + ": " + ad.id, " ", ad.hash);
 
 };
