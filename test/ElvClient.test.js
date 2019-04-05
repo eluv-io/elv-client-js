@@ -17,7 +17,7 @@ const {
 
 const testFileSize = 100000;
 
-let client;
+let client, accessClient;
 let contentSpaceLibraryId, libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 
 let testFile1, testFile2, testHash;
@@ -30,6 +30,7 @@ describe("Test ElvClient", () => {
     jest.setTimeout(60000);
 
     client = OutputLogger(ElvClient, await CreateClient());
+    accessClient = OutputLogger(ElvClient, await CreateClient("1"));
 
     contentSpaceLibraryId = client.utils.AddressToLibraryId(client.utils.HashToAddress(client.contentSpaceId));
 
@@ -544,6 +545,24 @@ describe("Test ElvClient", () => {
       });
     });
 
+    test("Access Charge and Info", async () => {
+      await client.SetAccessCharge({objectId, accessCharge: "0.5"});
+
+      const {accessible, accessCode, accessCharge} = await accessClient.AccessInfo({
+        objectId,
+      });
+
+      expect(accessible).toBeTruthy();
+      expect(accessCode).toEqual(0);
+      expect(accessCharge).toEqual("0.5");
+
+      const initialBalance = parseFloat(await accessClient.GetBalance({address: accessClient.signer.address}));
+      await accessClient.ContentObjectMetadata({libraryId, objectId});
+      const finalBalance = parseFloat(await accessClient.GetBalance({address: accessClient.signer.address}));
+
+      expect(finalBalance < (initialBalance - 0.5));
+    });
+
     test("Make Manual Access Request", async () => {
       const accessRequest = await client.AccessRequest({
         libraryId,
@@ -785,6 +804,9 @@ describe("Test ElvClient", () => {
 
       const withQueryParams = await client.FileUrl({libraryId, objectId, filePath: "file", queryParams: testQuery});
       validateUrl(withQueryParams, UrlJoin("/qlibs", libraryId, "q", objectId, "files", "file"), testQuery);
+
+      const withVersionOnly = await client.FileUrl({objectId, versionHash, filePath: "file"});
+      validateUrl(withVersionOnly, UrlJoin("/q", versionHash, "files", "file"));
     });
   });
 

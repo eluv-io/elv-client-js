@@ -21,7 +21,7 @@ const RandomString = (size) => {
   return crypto.randomBytes(size).toString("hex");
 };
 
-const CreateClient = async () => {
+const CreateClient = async (bux="2") => {
   const client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
   const wallet = client.GenerateWallet();
   const fundedSigner = wallet.AddAccount({privateKey});
@@ -36,7 +36,7 @@ const CreateClient = async () => {
     try {
       await fundedSigner.sendTransaction({
         to: signer.address,
-        value: Ethers.utils.parseEther("2")
+        value: Ethers.utils.parseEther(bux)
       });
 
       break;

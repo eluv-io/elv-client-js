@@ -68,7 +68,7 @@ describe("Test FrameClient", () => {
     expect(frameResult).toEqual(result);
   });
 
-  test.only("Call ElvClient Method - Errors", async () => {
+  test("Call ElvClient Method - Errors", async () => {
     console.error = jest.fn();
 
     try {

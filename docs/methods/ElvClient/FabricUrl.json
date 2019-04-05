@@ -1,58 +1,58 @@
 [
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\"\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliMlVOZTRaQTZLY0ZZWExxZlk5YjR4elZUWVBZRSIsImFkZHIiOiIweGMyNjM1QWIzMEZjMTlGNjE2MzMyYzZkMmQ3RjE0Y2RBZjdjZTE5NjUiLCJ0eGlkIjoiIn0%3D.U0lHTkFUVVJF\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\"\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliU0o4aVl2ekt3U2hzZlZoVTNwSDhDSkR3dU1YIiwiYWRkciI6IjB4RDMwYUJCNzVFMTRDNTlkYUQyNWI3RTVkZEI5ZTY5OUZENjJGNUYyMSIsInR4aWQiOiIifQ%3D%3D.U0lHTkFUVVJF\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\"\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliMlVOZTRaQTZLY0ZZWExxZlk5YjR4elZUWVBZRSIsImFkZHIiOiIweGMyNjM1QWIzMEZjMTlGNjE2MzMyYzZkMmQ3RjE0Y2RBZjdjZTE5NjUiLCJ0eGlkIjoiMHg5YTc5ZDc0OWU5YWVhODA1ZmIwZWM5NDMxNjc4YWJlN2YxM2Q5MWY2ZjFmNGU3ZGFjNTNiMDk2ZjQxNmJmZGRkIn0%3D.U0lHTkFUVVJF\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\"\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliU0o4aVl2ekt3U2hzZlZoVTNwSDhDSkR3dU1YIiwiYWRkciI6IjB4RDMwYUJCNzVFMTRDNTlkYUQyNWI3RTVkZEI5ZTY5OUZENjJGNUYyMSIsInR4aWQiOiIweDUxNTZmYThjYzZmNmE3ZmQ2NWI2ZmYyMWEwY2RhYWFmZjdmNWI5OWFjMWYyMGUwYTcwYTk2ZTJkMWI5NzAyOTYifQ%3D%3D.U0lHTkFUVVJF\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"versionHash\": \"hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq\"\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliMlVOZTRaQTZLY0ZZWExxZlk5YjR4elZUWVBZRSIsImFkZHIiOiIweGMyNjM1QWIzMEZjMTlGNjE2MzMyYzZkMmQ3RjE0Y2RBZjdjZTE5NjUiLCJ0eGlkIjoiMHg5YTc5ZDc0OWU5YWVhODA1ZmIwZWM5NDMxNjc4YWJlN2YxM2Q5MWY2ZjFmNGU3ZGFjNTNiMDk2ZjQxNmJmZGRkIn0%3D.U0lHTkFUVVJF\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"versionHash\": \"hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8\"\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliU0o4aVl2ekt3U2hzZlZoVTNwSDhDSkR3dU1YIiwiYWRkciI6IjB4RDMwYUJCNzVFMTRDNTlkYUQyNWI3RTVkZEI5ZTY5OUZENjJGNUYyMSIsInR4aWQiOiIweDUxNTZmYThjYzZmNmE3ZmQ2NWI2ZmYyMWEwY2RhYWFmZjdmNWI5OWFjMWYyMGUwYTcwYTk2ZTJkMWI5NzAyOTYifQ%3D%3D.U0lHTkFUVVJF\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"partHash\": \"hqp_QmXqqdLkXEMEb5Q61XNqHeeasWJb48cThcwXEyoCgiZxt7\"\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY/data/hqp_QmXqqdLkXEMEb5Q61XNqHeeasWJb48cThcwXEyoCgiZxt7?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliMlVOZTRaQTZLY0ZZWExxZlk5YjR4elZUWVBZRSIsImFkZHIiOiIweGMyNjM1QWIzMEZjMTlGNjE2MzMyYzZkMmQ3RjE0Y2RBZjdjZTE5NjUiLCJ0eGlkIjoiMHg5YTc5ZDc0OWU5YWVhODA1ZmIwZWM5NDMxNjc4YWJlN2YxM2Q5MWY2ZjFmNGU3ZGFjNTNiMDk2ZjQxNmJmZGRkIn0%3D.U0lHTkFUVVJF\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"partHash\": \"hqp_QmVakk2B5jcwxESwgQYSX6MtfHo48tpvV6rUxY2ZBCKL3i\"\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg/data/hqp_QmVakk2B5jcwxESwgQYSX6MtfHo48tpvV6rUxY2ZBCKL3i?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliU0o4aVl2ekt3U2hzZlZoVTNwSDhDSkR3dU1YIiwiYWRkciI6IjB4RDMwYUJCNzVFMTRDNTlkYUQyNWI3RTVkZEI5ZTY5OUZENjJGNUYyMSIsInR4aWQiOiIweDUxNTZmYThjYzZmNmE3ZmQ2NWI2ZmYyMWEwY2RhYWFmZjdmNWI5OWFjMWYyMGUwYTcwYTk2ZTJkMWI5NzAyOTYifQ%3D%3D.U0lHTkFUVVJF\""
   },
   {
-    "signature": "async FabricUrl({\n  \"versionHash\": \"hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq\",\n  \"partHash\": \"hqp_QmXqqdLkXEMEb5Q61XNqHeeasWJb48cThcwXEyoCgiZxt7\"\n});",
-    "result": "\"http://localhost:8008/q/hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq/data/hqp_QmXqqdLkXEMEb5Q61XNqHeeasWJb48cThcwXEyoCgiZxt7\""
+    "signature": "async FabricUrl({\n  \"versionHash\": \"hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8\",\n  \"partHash\": \"hqp_QmVakk2B5jcwxESwgQYSX6MtfHo48tpvV6rUxY2ZBCKL3i\"\n});",
+    "result": "\"http://localhost:8008/q/hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8/data/hqp_QmVakk2B5jcwxESwgQYSX6MtfHo48tpvV6rUxY2ZBCKL3i\""
   },
   {
-    "signature": "async FabricUrl({\n  \"versionHash\": \"hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq\",\n  \"call\": \"method\"\n});",
-    "result": "\"http://localhost:8008/q/hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq/call/method\""
+    "signature": "async FabricUrl({\n  \"versionHash\": \"hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8\",\n  \"call\": \"method\"\n});",
+    "result": "\"http://localhost:8008/q/hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8/call/method\""
   },
   {
-    "signature": "async FabricUrl({\n  \"versionHash\": \"hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq\",\n  \"rep\": \"image\"\n});",
-    "result": "\"http://localhost:8008/q/hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq/rep/image\""
+    "signature": "async FabricUrl({\n  \"versionHash\": \"hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8\",\n  \"rep\": \"image\"\n});",
+    "result": "\"http://localhost:8008/q/hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8/rep/image\""
   },
   {
-    "signature": "async FabricUrl({\n  \"versionHash\": \"hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"partHash\": \"hqp_QmXqqdLkXEMEb5Q61XNqHeeasWJb48cThcwXEyoCgiZxt7\"\n});",
-    "result": "\"http://localhost:8008/q/hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq/data/hqp_QmXqqdLkXEMEb5Q61XNqHeeasWJb48cThcwXEyoCgiZxt7?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsImFkZHIiOiIweGMyNjM1QWIzMEZjMTlGNjE2MzMyYzZkMmQ3RjE0Y2RBZjdjZTE5NjUiLCJ0eGlkIjoiMHg5YTc5ZDc0OWU5YWVhODA1ZmIwZWM5NDMxNjc4YWJlN2YxM2Q5MWY2ZjFmNGU3ZGFjNTNiMDk2ZjQxNmJmZGRkIn0%3D.U0lHTkFUVVJF\""
+    "signature": "async FabricUrl({\n  \"versionHash\": \"hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"partHash\": \"hqp_QmVakk2B5jcwxESwgQYSX6MtfHo48tpvV6rUxY2ZBCKL3i\"\n});",
+    "result": "\"http://localhost:8008/q/hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8/data/hqp_QmVakk2B5jcwxESwgQYSX6MtfHo48tpvV6rUxY2ZBCKL3i?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsImFkZHIiOiIweEQzMGFCQjc1RTE0QzU5ZGFEMjViN0U1ZGRCOWU2OTlGRDYyRjVGMjEiLCJ0eGlkIjoiMHg1MTU2ZmE4Y2M2ZjZhN2ZkNjViNmZmMjFhMGNkYWFhZmY3ZjViOTlhYzFmMjBlMGE3MGE5NmUyZDFiOTcwMjk2In0%3D.U0lHTkFUVVJF\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"queryParams\": {\n    \"param1\": \"value1\",\n    \"param2\": \"value2\",\n    \"param3\": \"value3\"\n  }\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY?param1=value1&param2=value2&param3=value3&authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliMlVOZTRaQTZLY0ZZWExxZlk5YjR4elZUWVBZRSIsImFkZHIiOiIweGMyNjM1QWIzMEZjMTlGNjE2MzMyYzZkMmQ3RjE0Y2RBZjdjZTE5NjUiLCJ0eGlkIjoiMHg5YTc5ZDc0OWU5YWVhODA1ZmIwZWM5NDMxNjc4YWJlN2YxM2Q5MWY2ZjFmNGU3ZGFjNTNiMDk2ZjQxNmJmZGRkIn0%3D.U0lHTkFUVVJF\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"queryParams\": {\n    \"param1\": \"value1\",\n    \"param2\": \"value2\",\n    \"param3\": \"value3\"\n  }\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg?param1=value1&param2=value2&param3=value3&authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliU0o4aVl2ekt3U2hzZlZoVTNwSDhDSkR3dU1YIiwiYWRkciI6IjB4RDMwYUJCNzVFMTRDNTlkYUQyNWI3RTVkZEI5ZTY5OUZENjJGNUYyMSIsInR4aWQiOiIweDUxNTZmYThjYzZmNmE3ZmQ2NWI2ZmYyMWEwY2RhYWFmZjdmNWI5OWFjMWYyMGUwYTcwYTk2ZTJkMWI5NzAyOTYifQ%3D%3D.U0lHTkFUVVJF\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"noAuth\": true\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"noAuth\": true\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"rep\": \"image\",\n  \"queryParams\": {},\n  \"noAuth\": false,\n  \"noCache\": false\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY/rep/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliMlVOZTRaQTZLY0ZZWExxZlk5YjR4elZUWVBZRSIsImFkZHIiOiIweGMyNjM1QWIzMEZjMTlGNjE2MzMyYzZkMmQ3RjE0Y2RBZjdjZTE5NjUiLCJ0eGlkIjoiMHg5YTc5ZDc0OWU5YWVhODA1ZmIwZWM5NDMxNjc4YWJlN2YxM2Q5MWY2ZjFmNGU3ZGFjNTNiMDk2ZjQxNmJmZGRkIn0%3D.U0lHTkFUVVJF\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"rep\": \"image\",\n  \"queryParams\": {},\n  \"noAuth\": false,\n  \"noCache\": false\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg/rep/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliU0o4aVl2ekt3U2hzZlZoVTNwSDhDSkR3dU1YIiwiYWRkciI6IjB4RDMwYUJCNzVFMTRDNTlkYUQyNWI3RTVkZEI5ZTY5OUZENjJGNUYyMSIsInR4aWQiOiIweDUxNTZmYThjYzZmNmE3ZmQ2NWI2ZmYyMWEwY2RhYWFmZjdmNWI5OWFjMWYyMGUwYTcwYTk2ZTJkMWI5NzAyOTYifQ%3D%3D.U0lHTkFUVVJF\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"rep\": \"image\",\n  \"queryParams\": {},\n  \"noAuth\": true,\n  \"noCache\": false\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY/rep/image\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"rep\": \"image\",\n  \"queryParams\": {},\n  \"noAuth\": true,\n  \"noCache\": false\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg/rep/image\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"call\": \"image\",\n  \"queryParams\": {},\n  \"noAuth\": false,\n  \"noCache\": false\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY/call/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliMlVOZTRaQTZLY0ZZWExxZlk5YjR4elZUWVBZRSIsImFkZHIiOiIweGMyNjM1QWIzMEZjMTlGNjE2MzMyYzZkMmQ3RjE0Y2RBZjdjZTE5NjUiLCJ0eGlkIjoiMHg5YTc5ZDc0OWU5YWVhODA1ZmIwZWM5NDMxNjc4YWJlN2YxM2Q5MWY2ZjFmNGU3ZGFjNTNiMDk2ZjQxNmJmZGRkIn0%3D.U0lHTkFUVVJF\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"call\": \"image\",\n  \"queryParams\": {},\n  \"noAuth\": false,\n  \"noCache\": false\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg/call/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliU0o4aVl2ekt3U2hzZlZoVTNwSDhDSkR3dU1YIiwiYWRkciI6IjB4RDMwYUJCNzVFMTRDNTlkYUQyNWI3RTVkZEI5ZTY5OUZENjJGNUYyMSIsInR4aWQiOiIweDUxNTZmYThjYzZmNmE3ZmQ2NWI2ZmYyMWEwY2RhYWFmZjdmNWI5OWFjMWYyMGUwYTcwYTk2ZTJkMWI5NzAyOTYifQ%3D%3D.U0lHTkFUVVJF\""
   },
   {
-    "signature": "async FabricUrl({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"call\": \"image\",\n  \"queryParams\": {},\n  \"noAuth\": true,\n  \"noCache\": false\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE/q/iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY/call/image\""
+    "signature": "async FabricUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"call\": \"image\",\n  \"queryParams\": {},\n  \"noAuth\": true,\n  \"noCache\": false\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg/call/image\""
   }
 ]

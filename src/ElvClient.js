@@ -195,66 +195,6 @@ class ElvClient {
     return this.signer ? this.utils.FormatAddress(this.signer.address) : "";
   }
 
-  /**
-   * Make an explicit call to accessRequest or updateRequest of the appropriate contract. Unless noCache is specified on
-   * this method or on the client, the resultant transaction hash of this method will be cached for all subsequent
-   * access to this contract.
-   *
-   * Note: Access and update requests are handled automatically by ElvClient. Use this method only if you need to make
-   * an explicit call. For example, if you need to specify custom arguments to access a content object, you can call
-   * this method explicitly with those arguments. Since the result is cached (by default), all subsequent calls to
-   * that content object will be authorized with that AccessRequest transaction.
-   *
-   * Note: If the access request has an associated charge, this charge will be determined and supplied automatically.
-   *
-   * TODO: Content space and library access requests are currently disabled for performance reasons
-   *
-   * @namedParams
-   * @param {string=} libraryId - ID of the library
-   * @param {string=} objectId - ID of the object
-   * @param {string=} versionHash - Version hash of the object
-   * @param {Array=} args=[] - Custom arguments to the accessRequest or updateRequest methods
-   * @param {boolean=} update=false - If true, will call updateRequest instead of accessRequest
-   * @param {boolean=} noCache=false - If true, the resultant transaction hash will not be cached for future use
-   *
-   * @return {object} - Resultant AccessRequest or UpdateRequest event
-   */
-  async AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
-    return await this.authClient.MakeAccessRequest({
-      libraryId,
-      objectId,
-      versionHash,
-      args,
-      update,
-      checkAccessCharge: true,
-      skipCache: true,
-      noCache
-    });
-  }
-
-  /**
-   * Return the cached access transaction of the specified item, if present
-   *
-   * @namedParams
-   * @param {string=} libraryId - ID of the library
-   * @param {string=} objectId - ID of the object
-   * @param {string=} versionHash - Version hash of the object
-   *
-   * @return {string} - The cached transaction hash if present, otherwise undefined
-   */
-  async CachedAccessTransaction({libraryId, objectId, versionHash}) {
-    const cacheResult = await this.authClient.MakeAccessRequest({
-      libraryId,
-      objectId,
-      versionHash,
-      cacheOnly: true
-    });
-
-    if(cacheResult) {
-      return cacheResult.transactionHash;
-    }
-  }
-
   /* Content Spaces */
 
   /**
@@ -923,101 +863,7 @@ class ElvClient {
     return objectId;
   }
 
-  /**
-   * Create a new content type specifying all components.
-   *
-   * A new content type contract is deployed from
-   * the content space, and that contract ID is used to determine the object ID to
-   * create in the fabric. The content type object will be created in the special
-   * content space library (ilib<content-space-hash>)
-   *
-   * @namedParams
-   * @param {object} metadata - Metadata for the new content type
-   * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
-   * @param {object} appsFileInfo - apps in the format required by UploadFiles
-   * @param {object} schema - custom schema for the type
-   * @param {string} contract - address of the contract associated with this type
-   * @returns {Promise<string>} - Object ID of created content type
-   */
-  async CreateContentTypeFull({metadata={}, bitcode, appsFileInfo, schema, contract}) {
-    const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
-
-    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
-    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
-
-    const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = UrlJoin("qlibs", typeLibraryId, "q", objectId);
-
-    metadata.custom_contract = contract;
-    if (schema != null) {
-      metadata["eluv.schema"] = schema["eluv.schema"];
-    }
-
-    /* Create object, upload bitcode and finalize */
-
-    const createResponse = await ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId, transactionHash}),
-        method: "PUT",
-        path: path,
-        body: {
-          type: "",
-          meta: metadata
-        }
-      })
-    );
-
-    await this.UploadFiles({
-      libraryId: typeLibraryId,
-      objectId,
-      writeToken: createResponse.write_token,
-      fileInfo: appsFileInfo});
-
-    if(bitcode) {
-      const uploadResponse = await this.UploadPart({
-        libraryId: typeLibraryId,
-        objectId,
-        writeToken: createResponse.write_token,
-        data: bitcode,
-        encrypted: false
-      });
-
-      await this.ReplaceMetadata({
-        libraryId: typeLibraryId,
-        objectId,
-        writeToken: createResponse.write_token,
-        metadataSubtree: "bitcode_part",
-        metadata: uploadResponse.part.hash
-      });
-    }
-
-    await this.FinalizeContentObject({
-      libraryId: typeLibraryId,
-      objectId,
-      writeToken: createResponse.write_token
-    });
-
-    return objectId;
-  }
-
   /* Objects */
-
-  /**
-   * Call accessComplete on the specified content object contract using a previously cached requestID.
-   * Caching must be enabled and an access request must have been previously made on the specified
-   * object by this client instance.
-   *
-   * @namedParams
-   * @param {string} objectId - ID of the object
-   * @param {number} score - Percentage score (0-100)
-   *
-   * @returns {Promise<Object>} - Transaction log of the AccessComplete event
-   */
-  async ContentObjectAccessComplete({objectId, score=100}) {
-    if(score < 0 || score > 100) { throw Error("Invalid AccessComplete score: " + score); }
-
-    return await this.authClient.AccessComplete({id: objectId, abi: ContentContract.abi, score});
-  }
 
   /**
    * List content objects in the specified library
@@ -1783,6 +1629,139 @@ class ElvClient {
     });
   }
 
+  /* Content Object Access */
+
+  /**
+   * Set the access charge for the specified object
+   *
+   * @namedParams
+   * @param {string} objectId - ID of the object
+   * @param {number | string} accessCharge - The new access charge, in ether
+   */
+  async SetAccessCharge({objectId, accessCharge}) {
+    await this.ethClient.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "setAccessCharge",
+      methodArgs: [Utils.EtherToWei(accessCharge).toString()],
+      signer: this.signer
+    });
+  }
+
+  /**
+   * Retrieve info about the access charge and permissions for the specified object.
+   *
+   * Note: Access charge is specified in ether
+   *
+   * @namedParams
+   * @param {string} objectId - ID of the object
+   * @param {object=} args - Arguments to the getAccessInfo method - See the base content contract
+   *
+   * @return {object} - Info about the access charge and whether or not the object is accessible to the current user
+   */
+  async AccessInfo({objectId, args}) {
+    if(!args) {
+      args = [
+        0, // Access level
+        [], // Custom values
+        [] // Stakeholders
+      ];
+    }
+
+    const info = await this.ethClient.CallContractMethod({
+      contractAddress: Utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "getAccessInfo",
+      methodArgs: args,
+      signer: this.signer
+    });
+
+    return {
+      accessible: info[0] === 0,
+      accessCode: info[0],
+      accessCharge: Utils.WeiToEther(info[1]).toString()
+    };
+  }
+
+  /**
+   * Make an explicit call to accessRequest or updateRequest of the appropriate contract. Unless noCache is specified on
+   * this method or on the client, the resultant transaction hash of this method will be cached for all subsequent
+   * access to this contract.
+   *
+   * Note: Access and update requests are handled automatically by ElvClient. Use this method only if you need to make
+   * an explicit call. For example, if you need to specify custom arguments to access a content object, you can call
+   * this method explicitly with those arguments. Since the result is cached (by default), all subsequent calls to
+   * that content object will be authorized with that AccessRequest transaction.
+   *
+   * Note: If the access request has an associated charge, this charge will be determined and supplied automatically.
+   *
+   * TODO: Content space and library access requests are currently disabled for performance reasons
+   *
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   * @param {Array=} args=[] - Custom arguments to the accessRequest or updateRequest methods
+   * @param {boolean=} update=false - If true, will call updateRequest instead of accessRequest
+   * @param {boolean=} noCache=false - If true, the resultant transaction hash will not be cached for future use
+   *
+   * @return {object} - Resultant AccessRequest or UpdateRequest event
+   */
+  async AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
+    return await this.authClient.MakeAccessRequest({
+      libraryId,
+      objectId,
+      versionHash,
+      args,
+      update,
+      checkAccessCharge: true,
+      skipCache: true,
+      noCache
+    });
+  }
+
+  /**
+   * Return the cached access transaction of the specified item, if present
+   *
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   *
+   * @return {string} - The cached transaction hash if present, otherwise undefined
+   */
+  async CachedAccessTransaction({libraryId, objectId, versionHash}) {
+    const cacheResult = await this.authClient.MakeAccessRequest({
+      libraryId,
+      objectId,
+      versionHash,
+      cacheOnly: true
+    });
+
+    if(cacheResult) {
+      return cacheResult.transactionHash;
+    }
+  }
+
+  /**
+   * Call accessComplete on the specified content object contract using a previously cached requestID.
+   * Caching must be enabled and an access request must have been previously made on the specified
+   * object by this client instance.
+   *
+   * @namedParams
+   * @param {string} objectId - ID of the object
+   * @param {number} score - Percentage score (0-100)
+   *
+   * @returns {Promise<Object>} - Transaction log of the AccessComplete event
+   */
+  async ContentObjectAccessComplete({objectId, score=100}) {
+    if(score < 0 || score > 100) { throw Error("Invalid AccessComplete score: " + score); }
+
+    return await this.authClient.AccessComplete({id: objectId, abi: ContentContract.abi, score});
+  }
+
+  /* URL Methods */
+
   /**
    * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
    * URL includes authorization token.
@@ -1898,9 +1877,9 @@ class ElvClient {
    * Generate a URL to the specified content object file with appropriate authorization token.
    *
    * @namedParams
-   * @param {string} libraryId - ID of an library
-   * @param {string} objectId - ID of an object - Required if using versionHash
-   * @param {string=} versionHash - Hash of an object version - If specified, will be used instead of objectID in URL
+   * @param {string=} libraryId - ID of an library - Required if versionHash not specified
+   * @param {string} objectId - ID of an object
+   * @param {string=} versionHash - Hash of an object version - Required if libraryId is not specified
    * @param {string} filePath - Path to the content object file
    * @param {Object=} queryParams - Query params to add to the URL
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -1909,7 +1888,13 @@ class ElvClient {
    * @returns {Promise<string>} - URL to the specified file with authorization token
    */
   async FileUrl({libraryId, objectId, versionHash, filePath, queryParams={}, noCache=false}) {
-    let path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "files", filePath);
+    let path;
+
+    if(libraryId) {
+      path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "files", filePath);
+    } else {
+      path = UrlJoin("q", versionHash, "files", filePath);
+    }
 
     const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
 

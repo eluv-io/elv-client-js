@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async VerifyContentObject({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\",\n  \"versionHash\": \"hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq\"\n});",
-    "result": "{\n  \"hash\": \"hq__QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq\",\n  \"qref\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmfBLLtdq3g4U1TEMW3E5vYcJeL8rppnE1Ct54BZQN8eQq\"\n  },\n  \"qmd\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmQNGx4dX7eiQbBffXtrDd6Xg13osamJCVujxVLym5y6SU\",\n    \"check\": {\n      \"valid\": true,\n      \"invalidValues\": []\n    }\n  },\n  \"qstruct\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmfZh1MbHfNGyFqn9U7u8Xg3kB2LNxCdncK7poBEwaQv1e\",\n    \"parts\": []\n  },\n  \"valid\": true\n}"
+    "signature": "async VerifyContentObject({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"versionHash\": \"hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8\"\n});",
+    "result": "{\n  \"hash\": \"hq__QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8\",\n  \"qref\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmYRRkkwghdhksw3pcnNwhjKQWCkWowDwMY7Kg21ZU1nf8\"\n  },\n  \"qmd\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmQNGx4dX7eiQbBffXtrDd6Xg13osamJCVujxVLym5y6SU\",\n    \"check\": {\n      \"valid\": true,\n      \"invalidValues\": []\n    }\n  },\n  \"qstruct\": {\n    \"valid\": true,\n    \"hash\": \"hqp_QmTF5DchL9iNLvtuD4h1W8ZBDZcvPzKePxvzGQfNDUdvdm\",\n    \"parts\": []\n  },\n  \"valid\": true\n}"
   }
 ]
