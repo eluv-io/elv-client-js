@@ -1,22 +1,18 @@
 [
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0xbDe039b7297208DD479264400f6D03654B759621\"\n});",
     "result": "{\n  \"class\": \"elv-user-library\",\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"meta\": \"data\",\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\",\n  \"metadataSubtree\": \"toReplace\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0xbDe039b7297208DD479264400f6D03654B759621\",\n  \"metadataSubtree\": \"toReplace\"\n});",
     "result": "{\n  \"meta\": \"data\"\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0xbDe039b7297208DD479264400f6D03654B759621\"\n});",
     "result": "{\n  \"class\": \"elv-user-library\",\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"meta\": \"data\",\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\",\n  \"metadataSubtree\": \"image\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0xbDe039b7297208DD479264400f6D03654B759621\",\n  \"metadataSubtree\": \"image\"\n});",
     "result": "\"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\""
-  },
-  {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x7995D3d82C264c3cC4B042CEA2ff66E25355F601\",\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "\"hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN\""
   }
 ]
