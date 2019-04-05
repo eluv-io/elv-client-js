@@ -1,8 +1,8 @@
 [
   {
-    "signature": "async DeleteContentObject({\n  \"libraryId\": \"ilibTF13gT9S9dD5gMvGvGiyE66wtks\",\n  \"objectId\": \"iq__GPrvedQjwNDTdGqRyrko2z2ksuC\"\n});"
+    "signature": "async DeleteContentObject({\n  \"libraryId\": \"ilib2UNe4ZA6KcFYXLqfY9b4xzVTYPYE\",\n  \"objectId\": \"iq__2N7PMP7v1Xsn6j2FgjcX6Zp5SiWY\"\n});"
   },
   {
-    "signature": "async DeleteContentObject({\n  \"libraryId\": \"ilib458u7vxkS2o9XyE3HoqEKZuZ9h8w\",\n  \"objectId\": \"iq__JTDeZd2nrjquEMYgSyXkCBKhbye\"\n});"
+    "signature": "async DeleteContentObject({\n  \"libraryId\": \"ilib458u7vxkS2o9XyE3HoqEKZuZ9h8w\",\n  \"objectId\": \"iq__37keCEKAAWbKRnsz9pKGkfsjqDvv\"\n});"
   }
 ]

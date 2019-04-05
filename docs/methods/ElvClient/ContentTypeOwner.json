@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ContentTypeOwner({\n  \"name\": \"Test Content Type 34ada2ad5608d932f195\"\n});",
-    "result": "\"0x21E73695d51D829E2bbb5d420f48776132AE2E44\""
+    "signature": "async ContentTypeOwner({\n  \"name\": \"Test Content Type b415a31d999246a06076\"\n});",
+    "result": "\"0xc2635Ab30Fc19F616332c6d2d7F14cdAf7ce1965\""
   }
 ]

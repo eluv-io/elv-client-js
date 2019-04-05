@@ -66,29 +66,29 @@ const MakeIMFs = async (assets) => {
 
 const MakeIMF = async (emp, demo, asset) => {
   try{
-  let imf = new ImfService(client);
+    let imf = new ImfService(client);
 
-  const dir = Path.join(assetsDir, asset.path);
-  //const dir = "/s/QCODE/TEST/MEDIA/IMF-STARWARS-v3";
-  const pathlist = await ReadDir(dir);
+    const dir = Path.join(assetsDir, asset.path);
+    //const dir = "/s/QCODE/TEST/MEDIA/IMF-STARWARS-v3";
+    const pathlist = await ReadDir(dir);
 
-  const typeObj = await client.ContentObject({
-    libraryId: contentSpaceLibraryId,
-    objectId: emp.content_types.avmaster_imf
-  });
+    const typeObj = await client.ContentObject({
+      libraryId: contentSpaceLibraryId,
+      objectId: emp.content_types.avmaster_imf
+    });
 
-  const payload = {
-    name: asset.name,
-    libraryId: demo.acme_movie_archive,
-    files: pathlist,
-    type: typeObj.hash,
-    video_tags: asset.video_tags
-  };
+    const payload = {
+      name: asset.name,
+      libraryId: demo.acme_movie_archive,
+      files: pathlist,
+      type: typeObj.hash,
+      video_tags: asset.video_tags
+    };
 
-  console.log("Creating IMF: " + asset.name + " payload: " + JSON.stringify(payload));
-  const q = await imf.createImfTitle(payload);
-  console.log("Content IMF: " + asset.name + " id: " + q.id + " hash: " + q.hash);
-}catch(err){
+    console.log("Creating IMF: " + asset.name + " payload: " + JSON.stringify(payload));
+    const q = await imf.createImfTitle(payload);
+    console.log("Content IMF: " + asset.name + " id: " + q.id + " hash: " + q.hash);
+  }catch(err){
     console.log(err);
   }
 };

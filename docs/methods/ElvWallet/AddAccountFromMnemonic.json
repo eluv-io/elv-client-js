@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"gift fun grain soon slam pill version subway leisure utility only laptop\"\n});",
+    "signature": "async AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"favorite best walnut stove column pause hidden rail hundred draw crew visual\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

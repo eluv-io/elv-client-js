@@ -36,7 +36,7 @@ const CreateClient = async () => {
     try {
       await fundedSigner.sendTransaction({
         to: signer.address,
-        value: Ethers.utils.parseEther("3")
+        value: Ethers.utils.parseEther("2")
       });
 
       break;
