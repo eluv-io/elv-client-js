@@ -191,6 +191,11 @@ nav ul.methods {
   border-left: 3px solid #0095dd;
 }
 
+nav ul.methods h4 {
+  padding: 10px 0 8px 40px;
+  cursor: default;
+}
+
 /* Method entries */
 nav ul.methods li {
   height: 30px;

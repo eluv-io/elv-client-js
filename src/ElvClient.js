@@ -106,11 +106,27 @@ class ElvClient {
    * Create a new ElvClient from a formatted configuration
    * @see TestConfiguration.json for format of configuration
    *
+   * @methodGroup Constructor
    * @namedParams
    * @param {Object} configuration - Configuration containing information on connecting
    * to the content fabric and blockchain
    *
-   *
+   * @example
+const client = ElvClient.FromConfiguration({
+  configuration: {
+    "fabric": {
+      "contentSpaceId": "ispc458u7vxkS2o9XyE3HoqEKZuZ9h8w",
+      "hostname": "localhost",
+      "port": 8008,
+      "use_https": false
+    },
+    "ethereum": {
+      "hostname": "localhost",
+      "port": 8545,
+      "use_https": false
+    }
+  }
+});
    * @returns {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
   static FromConfiguration({configuration}) {
@@ -132,6 +148,7 @@ class ElvClient {
   /**
    * Generate a new ElvWallet that is connected to the client's provider
    *
+   * @methodGroup Signers
    * @returns {ElvWallet} - ElvWallet instance with this client's provider
    */
   GenerateWallet() {
@@ -140,6 +157,8 @@ class ElvClient {
 
   /**
    * Remove the signer from this client
+   *
+   * @methodGroup Signers
    */
   ClearSigner() {
     this.signer = undefined;
@@ -150,6 +169,7 @@ class ElvClient {
   /**
    * Clear saved access requests
    *
+   * @methodGroup Access Requests
    * @namedParams
    * @param {string=} libraryId - If present, cached access and modification transactions for the specified library will be cleared
    * - Note: This will not clear any transactions for any objects within the library
@@ -162,6 +182,7 @@ class ElvClient {
   /**
    * Set the signer for this client to use for blockchain transactions
    *
+   * @methodGroup Signers
    * @namedParams
    * @param {object} signer - The ethers.js signer object
    */
@@ -179,6 +200,7 @@ class ElvClient {
    *
    * @see https://github.com/ethers-io/ethers.js/issues/59#issuecomment-358224800
    *
+   * @methodGroup Signers
    * @namedParams
    * @param {object} provider - The web3 provider object
    */
@@ -189,6 +211,7 @@ class ElvClient {
   /**
    * Get the account address of the current signer
    *
+   * @methodGroup Signers
    * @returns {string} - The address of the current signer
    */
   CurrentAccountAddress() {
@@ -200,6 +223,7 @@ class ElvClient {
   /**
    * Deploy a new content space contract
    *
+   * @methodGroup Content Spaces
    * @namedParams
    * @param {String} name - Name of the content space
    *
@@ -216,6 +240,7 @@ class ElvClient {
   /**
    * List content libraries - returns a list of content library IDs
    *
+   * @methodGroup Content Libraries
    * @see GET /qlibs
    *
    * @returns {Promise<Array<string>>}
@@ -235,6 +260,7 @@ class ElvClient {
   /**
    * Returns information about the content library
    *
+   * @methodGroup Content Libraries
    * @see GET /qlibs/:qlibid
    *
    * @namedParams
@@ -262,6 +288,7 @@ class ElvClient {
   /**
    * Returns the address of the owner of the specified content library
    *
+   * @methodGroup Content Libraries
    * @namedParams
    * @param {string} libraryId
    *
@@ -286,6 +313,7 @@ class ElvClient {
    * the content space, and that contract ID is used to determine the library ID to
    * create in the fabric.
    *
+   * @methodGroup Content Libraries
    * @see PUT /qlibs/:qlibid
    *
    * @namedParams
@@ -365,6 +393,7 @@ class ElvClient {
   /**
    * Set the image associated with this library
    *
+   * @methodGroup Content Libraries
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {blob} image - Image to upload
@@ -380,8 +409,11 @@ class ElvClient {
   }
 
   /**
-   * Set the image associated with this library
+   * Set the image associated with this object
    *
+   * Note: The content type of the object must support /rep/image
+   *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -426,6 +458,7 @@ class ElvClient {
   /**
    * Delete the specified content library
    *
+   * @methodGroup Content Libraries
    * @see DELETE /qlibs/:qlibid
    *
    * @namedParams
@@ -455,6 +488,7 @@ class ElvClient {
   /**
    * Get the public metadata of the specified library
    *
+   * @methodGroup Content Libraries
    * @see GET /qlibs/:qlibid/meta
    *
    * @namedParams
@@ -485,6 +519,7 @@ class ElvClient {
   /**
    * Replace the specified library's public metadata
    *
+   * @methodGroup Content Libraries
    * @see PUT /qlibs/:qlibid/meta
    *
    * @namedParams
@@ -506,6 +541,7 @@ class ElvClient {
   /**
    * Delete the specified library's public metadata
    *
+   * @methodGroup Content Libraries
    * @see DELETE /qlibs/:qlibid/meta
    *
    * @namedParams
@@ -557,6 +593,7 @@ class ElvClient {
   /**
    * Add a specified content type to a library
    *
+   * @methodGroup Content Libraries
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string=} typeId - ID of the content type (required unless typeName is specified)
@@ -590,6 +627,7 @@ class ElvClient {
   /**
    * Remove the specified content type from a library
    *
+   * @methodGroup Content Libraries
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string=} typeId - ID of the content type (required unless typeName is specified)
@@ -624,6 +662,7 @@ class ElvClient {
    *
    * @see <a href="#ContentTypes">ContentTypes</a>
    *
+   * @methodGroup Content Libraries
    * @namedParams
    * @param {string} libraryId - ID of the library
    *
@@ -675,6 +714,7 @@ class ElvClient {
   /**
    * List the content types available in this content space
    *
+   * @methodGroup Content Types
    * @namedParams
    * @param {boolean=} latestOnly=true - If specified, only the most recent version of the content type will be included.
    *
@@ -727,6 +767,7 @@ class ElvClient {
   /**
    * Look up content type record by name or by version hash
    *
+   * @methodGroup Content Types
    * @namedParams
    * @param {string=} name - Name of the content type to find
    * @param {string=} versionHash - Version hash of the content type to find
@@ -781,6 +822,7 @@ class ElvClient {
   /**
    * Returns the address of the owner of the specified content type
    *
+   * @methodGroup Content Types
    * @namedParams
    * @param {string=} name - Name of the content type to find
    * @param {string=} versionHash - Version hash of the content type to find
@@ -807,6 +849,7 @@ class ElvClient {
    * create in the fabric. The content type object will be created in the special
    * content space library (ilib<content-space-hash>)
    *
+   * @methodGroup Content Types
    * @namedParams
    * @param {object} metadata - Metadata for the new content type
    * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
@@ -870,6 +913,7 @@ class ElvClient {
    *
    * @see /qlibs/:qlibid/q
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param libraryId - ID of the library
    *
@@ -905,6 +949,7 @@ class ElvClient {
    *
    * @see /qlibs/:qlibid/q/:qhit
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -931,6 +976,7 @@ class ElvClient {
    *
    * @see /q/:qhit
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string=} versionHash - Version hash of the object
    *
@@ -950,6 +996,7 @@ class ElvClient {
   /**
    * Returns the address of the owner of the specified content object
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId
    *
@@ -970,6 +1017,7 @@ class ElvClient {
    *
    * @see /qlibs/:qlibid/q/:qhit/meta
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1004,6 +1052,7 @@ class ElvClient {
    *
    * @see /qlibs/:qlibid/qid/:objectid
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1033,6 +1082,7 @@ class ElvClient {
    *
    * @see PUT /qlibs/:qlibid/q/:objectid
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {Object=} options -
@@ -1081,6 +1131,7 @@ class ElvClient {
    *
    * @see <a href="#CreateContentObject">CreateContentObject</a>
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library in which to create the new object
    * @param originalVersionHash - Version hash of the object to copy
@@ -1102,6 +1153,7 @@ class ElvClient {
    *
    * @see POST /qlibs/:qlibid/qid/:objectid
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1144,6 +1196,7 @@ class ElvClient {
    *
    * @see POST /qlibs/:qlibid/q/:write_token
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1176,6 +1229,7 @@ class ElvClient {
    *
    * @see POST /qlibs/:qlibid/q/:write_token
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1208,6 +1262,7 @@ class ElvClient {
    *
    * @see DELETE /qlibs/:qlibid/q/:qhit
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1228,6 +1283,7 @@ class ElvClient {
    *
    * @see DELETE /qlibs/:qlibid/qid/:objectid
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1258,6 +1314,7 @@ class ElvClient {
    *
    * @see POST /qlibs/:qlibid/q/:write_token/meta
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1281,6 +1338,7 @@ class ElvClient {
    *
    * @see PUT /qlibs/:qlibid/q/:write_token/meta
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1304,6 +1362,7 @@ class ElvClient {
    *
    * @see DELETE /qlibs/:qlibid/q/:write_token/meta
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1328,6 +1387,7 @@ class ElvClient {
    *
    * @see GET /qlibs/:qlibid/q/:qhit/meta/files
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1353,6 +1413,7 @@ class ElvClient {
    *
    * @see GET /qlibs/:qlibid/q/:qhit/meta/files
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1448,6 +1509,7 @@ class ElvClient {
    *
    * @see GET /qlibs/:qlibid/q/:qhit/files/:filePath
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1477,6 +1539,7 @@ class ElvClient {
    *
    * @see GET /qlibs/:qlibid/q/:qhit/parts
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1503,6 +1566,7 @@ class ElvClient {
    *
    * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1532,6 +1596,7 @@ class ElvClient {
    *
    * @see POST /qlibs/:qlibid/q/:write_token/data
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1613,6 +1678,7 @@ class ElvClient {
    *
    * @see DELETE /qlibs/:qlibid/q/:write_token/parts/:qparthash
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1634,6 +1700,7 @@ class ElvClient {
   /**
    * Set the access charge for the specified object
    *
+   * @methodGroup Access Requests
    * @namedParams
    * @param {string} objectId - ID of the object
    * @param {number | string} accessCharge - The new access charge, in ether
@@ -1653,6 +1720,7 @@ class ElvClient {
    *
    * Note: Access charge is specified in ether
    *
+   * @methodGroup Access Requests
    * @namedParams
    * @param {string} objectId - ID of the object
    * @param {object=} args - Arguments to the getAccessInfo method - See the base content contract
@@ -1697,6 +1765,7 @@ class ElvClient {
    *
    * TODO: Content space and library access requests are currently disabled for performance reasons
    *
+   * @methodGroup Access Requests
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -1723,6 +1792,7 @@ class ElvClient {
   /**
    * Return the cached access transaction of the specified item, if present
    *
+   * @methodGroup Access Requests
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -1748,6 +1818,7 @@ class ElvClient {
    * Caching must be enabled and an access request must have been previously made on the specified
    * object by this client instance.
    *
+   * @methodGroup Access Requests
    * @namedParams
    * @param {string} objectId - ID of the object
    * @param {number} score - Percentage score (0-100)
@@ -1768,6 +1839,7 @@ class ElvClient {
    *
    * Alias for the FabricUrl method with the "call" parameter
    *
+   * @methodGroup URL Generation
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1791,6 +1863,7 @@ class ElvClient {
    *
    * Alias for the FabricUrl method with the "rep" parameter
    *
+   * @methodGroup URL Generation
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1813,6 +1886,7 @@ class ElvClient {
   /**
    * Generate a URL to the specified item in the content fabric with appropriate authorization token.
    *
+   * @methodGroup URL Generation
    * @namedParams
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
@@ -1876,6 +1950,7 @@ class ElvClient {
   /**
    * Generate a URL to the specified content object file with appropriate authorization token.
    *
+   * @methodGroup URL Generation
    * @namedParams
    * @param {string=} libraryId - ID of an library - Required if versionHash not specified
    * @param {string} objectId - ID of an object
@@ -1914,6 +1989,8 @@ class ElvClient {
    *
    * A new access group contract is deployed from the content space
    *
+   * @methodGroup Access Groups
+   *
    * @returns {Promise<string>} - Contract address of created access group
    */
   async CreateAccessGroup() {
@@ -1925,6 +2002,7 @@ class ElvClient {
   /**
    * Returns the address of the owner of the specified content object
    *
+   * @methodGroup Access Groups
    * @namedParams
    * @param {string} libraryId
    *
@@ -1945,6 +2023,7 @@ class ElvClient {
    *
    * Calls the kill method on the specified access group's contract
    *
+   * @methodGroup Access Groups
    * @namedParams
    * @param {string} contractAddress - The address of the access group contract
    */
@@ -2002,6 +2081,7 @@ class ElvClient {
    * Add a member to the access group at the specified contract address. This client's signer must
    * be a manager of the access group.
    *
+   * @methodGroup Access Groups
    * @namedParams
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the member to add
@@ -2021,6 +2101,7 @@ class ElvClient {
    * Remove a member from the access group at the specified contract address. This client's signer must
    * be a manager of the access group.
    *
+   * @methodGroup Access Groups
    * @namedParams
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the member to remove
@@ -2040,6 +2121,7 @@ class ElvClient {
    * Add a manager to the access group at the specified contract address. This client's signer must
    * be a manager of the access group.
    *
+   * @methodGroup Access Groups
    * @namedParams
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the manager to add
@@ -2059,6 +2141,7 @@ class ElvClient {
    * Remove a manager from the access group at the specified contract address. This client's signer must
    * be a manager of the access group.
    *
+   * @methodGroup Access Groups
    * @namedParams
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the manager to remove
@@ -2079,6 +2162,7 @@ class ElvClient {
   /**
    * Verify the specified content object
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -2100,6 +2184,7 @@ class ElvClient {
    *
    * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash/proofs
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -2125,6 +2210,7 @@ class ElvClient {
    *
    * @see GET /qparts/:qparthash
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library - required for authentication
    * @param {string} objectId - ID of the object - required for authentication
@@ -2151,6 +2237,7 @@ class ElvClient {
   /**
    * Format the arguments to be used for the specified method of the contract
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {Object} abi - ABI of contract
    * @param {string} methodName - Name of method for which arguments will be formatted
@@ -2165,6 +2252,7 @@ class ElvClient {
   /**
    * Deploy a contract from ABI and bytecode. This client's signer will be the owner of the contract.
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {Object} abi - ABI of contract
    * @param {string} bytecode - Bytecode of the contract
@@ -2184,6 +2272,7 @@ class ElvClient {
    * NOTE: This method will only wait for the transaction to be created. If you want to wait for the transaction
    * to be mined, use the CallContractMethodAndWait method.
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
@@ -2203,6 +2292,7 @@ class ElvClient {
    * Call the specified method on a deployed contract and wait for the transaction to be mined.
    * This action will be performed by this client's signer.
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
@@ -2232,6 +2322,7 @@ class ElvClient {
    * Extract the specified event log from the given event obtained from the
    * CallContractAndMethodAndWait method
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
@@ -2250,6 +2341,7 @@ class ElvClient {
    * Extract the specified value from the specified event log from the given event obtained
    * from the CallContractAndMethodAndWait method
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
@@ -2269,6 +2361,7 @@ class ElvClient {
    *
    * Note: This also updates the content object metadata with information about the contract - particularly the ABI
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -2315,6 +2408,7 @@ class ElvClient {
   /**
    * Get the custom contract of the specified object
    *
+   * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -2346,6 +2440,7 @@ class ElvClient {
   /**
    * Get all events on the specified contract
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {string} contractAddress - The address of the contract
    * @param {object} abi - The ABI of the contract
@@ -2384,6 +2479,7 @@ class ElvClient {
    * to identify and parse any known Eluvio contract methods. If successful, the method name, signature, and input
    * values will be included in the log entry.
    *
+   * @methodGroup Contracts
    * @namedParams
    * @param {number=} toBlock - Limit results to events before the specified block (inclusive) - If not specified, will start from latest block
    * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
@@ -2430,6 +2526,7 @@ class ElvClient {
   /**
    * Get the balance (in ether) of the specified address
    *
+   * @methodGroup Signers
    * @namedParams
    * @param {string} address - Address to query
    *
@@ -2443,6 +2540,7 @@ class ElvClient {
   /**
    * Send ether from this client's current signer to the specified recipient address
    *
+   * @methodGroup Signers
    * @namedParams
    * @param {string} recipient - Address of the recipient
    * @param {number} ether - Amount of ether to send

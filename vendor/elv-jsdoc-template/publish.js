@@ -302,12 +302,53 @@ function attachModuleSymbols(doclets, modules) {
     }
   });
 }
+
+function MethodEntry(item, method) {
+  return (
+    "<li data-type=\"method\" id=\"" + item.name.replace("/", "_") + "-" + method.name + "-nav\">" +
+    linkto(method.longname, method.name, "method-link") +
+    "</li>"
+  );
+}
+
+// Use the @methodGroup tag to group methods
+function GroupedMethods(item, methods) {
+  const groupedMethods = {};
+  methods.forEach(method => {
+    let group = (method.tags && method.tags.find(tag => tag.originalTitle === "methodGroup"));
+    group = group ? group.text : "Methods";
+    groupedMethods[group] = groupedMethods[group] ? [...groupedMethods[group], method] : [method];
+  });
+
+  delete groupedMethods["Constructor"];
+
+  const groups = Object.keys(groupedMethods).sort((a, b) => {
+    if(a === "Methods") {
+      return 1;
+    } else if(b === "Methods") {
+      return -1;
+    } else {
+      return a > b ? 1 : -1;
+    }
+  });
+
+  return (
+    groups.map(group =>
+      `<h4 class="methodGroupHeader">${group}</h4>` +
+      groupedMethods[group].map(method => MethodEntry(item, method)).join("")
+    ).join("")
+  );
+}
+
 function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
   let nav = "";
   let itemsNav = "";
 
   if (items && items.length) {
     items.forEach(function (item) {
+      console.log(item.longname)
+      console.log(item);
+      console.log("\n\n\n\n\n");
       let methods = find({kind: "function", memberof: item.longname});
 
       if (!hasOwnProp.call(item, "longname")) {
@@ -320,15 +361,31 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
         if (methods.length) {
           itemsNav += "<ul class='methods'>";
 
+          // Constructor
+          if(item.kind === "class") {
+            itemsNav += "<h4 class=\"methodGroupHeader\">Constructor</h4>";
+          }
+          itemsNav += MethodEntry(item, {...item, name: item.name.replace(/^module:/, "")});
+          /*
           itemsNav += "<li data-type=\"method\" id=\"" + item.name.replace("/", "_") + "-" + item.name + "-nav\">";
           itemsNav += linktoFn(item.longname, item.name.replace(/^module:/, ""));
           itemsNav += "</li>";
+          */
 
+          // If any methods are tagged with "Constructor", group them with the actual constructor
+          const constructorMethods = methods.filter(method =>
+            method.tags && method.tags.some(tag => tag.originalTitle === "methodGroup" && tag.text === "Constructor"));
+          itemsNav += constructorMethods.map(method => MethodEntry(item, method)).join("");
+
+          itemsNav += GroupedMethods(item, methods);
+          /*
           methods.forEach(function (method) {
+            //console.log(method);
             itemsNav += "<li data-type=\"method\" id=\"" + item.name.replace("/", "_") + "-" + method.name + "-nav\">";
             itemsNav += linkto(method.longname, method.name, "method-link");
             itemsNav += "</li>";
           });
+          */
 
           itemsNav += "</ul>";
         }
