@@ -346,9 +346,6 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
 
   if (items && items.length) {
     items.forEach(function (item) {
-      console.log(item.longname)
-      console.log(item);
-      console.log("\n\n\n\n\n");
       let methods = find({kind: "function", memberof: item.longname});
 
       if (!hasOwnProp.call(item, "longname")) {
