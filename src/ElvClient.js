@@ -205,7 +205,11 @@ const client = ElvClient.FromConfiguration({
    * @param {object} provider - The web3 provider object
    */
   SetSignerFromWeb3Provider({provider}) {
-    this.SetSigner({signer: new Ethers.providers.Web3Provider(provider).getSigner()});
+    let ethProvider = new Ethers.providers.Web3Provider(provider);
+    ethProvider.pollingInterval = 250;
+    this.signer = ethProvider.getSigner();
+    this.signer.address = await this.signer.getAddress();
+    this.InitializeClients();
   }
 
   /**
