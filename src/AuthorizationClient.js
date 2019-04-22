@@ -116,7 +116,7 @@ class AuthorizationClient {
     const token = B64(JSON.stringify({
       qspace_id: this.contentSpaceId,
       qlib_id: libraryId,
-      addr: (this.client.signer && this.client.signer.signingKey.address) || "",
+      addr: (this.client.signer && this.client.signer.address) || "",
       txid: transactionHash
     }));
 
@@ -187,12 +187,12 @@ class AuthorizationClient {
 
       if(args && args.length > 0) {
         // Inject public key of requester
-        args[1] = this.client.signer.signingKey.publicKey;
+        args[1] = this.client.signer.signingKey?this.client.signer.signingKey.publicKey:"";
       } else {
         // Set default args
         args = [
           0, // Access level
-          this.client.signer.signingKey.publicKey, // Public key of requester
+          this.client.signer.signingKey? this.client.signer.signingKey.publicKey : "", // Public key of requester
           "", // AFGH string
           [], // Custom values
           [] // Stakeholders
