@@ -315,13 +315,6 @@ class EthClient {
     });
   }
 
-  FormatEvent(event, contractInterface) {
-    return {
-      ...event,
-      ...(contractInterface.parseLog(event))
-    };
-  }
-
   // Get all logs for the specified contract in the specified range
   async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false, signer}) {
     const contractLogs = await signer.provider.getLogs({
@@ -389,7 +382,7 @@ class EthClient {
     for(let blockNumber = toBlock; blockNumber >= fromBlock; blockNumber--) {
       let blockInfo = blocks[blockNumber];
 
-      if (!blockInfo) {
+      if(!blockInfo) {
         blockInfo = await signer.provider.getBlock(blockNumber);
         blockInfo = blockInfo.transactions.map(transactionHash => {
           return {
@@ -403,13 +396,16 @@ class EthClient {
         blocks[blockNumber] = blockInfo;
       }
 
-      if (includeTransaction) {
+      if(includeTransaction) {
         let transactionInfo = {};
 
         blocks[blockNumber] = await Promise.all(
           blockInfo.map(async block => {
-            if (!transactionInfo[block.transactionHash]) {
-              transactionInfo[block.transactionHash] = await signer.provider.getTransaction(block.transactionHash);
+            if(!transactionInfo[block.transactionHash]) {
+              transactionInfo[block.transactionHash] = {
+                ...(await signer.provider.getTransaction(block.transactionHash)),
+                ...(await signer.provider.getTransactionReceipt(block.transactionHash))
+              };
             }
             return {
               ...block,

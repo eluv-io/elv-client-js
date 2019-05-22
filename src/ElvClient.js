@@ -1592,7 +1592,11 @@ const client = ElvClient.FromConfiguration({
 
     let data = await response.arrayBuffer();
 
-    return (format && format.toLowerCase() === "blob") ? await new Response(data).blob() : data;
+
+    return await ResponseToFormat(
+      format,
+      new Response(data)
+    );
   }
 
   /**
@@ -2489,7 +2493,7 @@ const client = ElvClient.FromConfiguration({
    * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
    * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are unspecified)
    * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
-   * Note: This requires one extra network call per block, so it should not be used for very large ranges
+   * Note: This requires two extra network calls per transaction, so it should not be used for very large ranges
    * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
   async Events({toBlock, fromBlock, count=10, includeTransaction=false}) {
@@ -2525,6 +2529,10 @@ const client = ElvClient.FromConfiguration({
       includeTransaction,
       signer: this.signer
     });
+  }
+
+  async BlockNumber() {
+    return await this.signer.provider.getBlockNumber();
   }
 
   /**

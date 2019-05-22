@@ -232,6 +232,7 @@ class FrameClient {
       "AddAccessGroupMember",
       "AddLibraryContentType",
       "BitcodeMethodUrl",
+      "BlockNumber",
       "CachedAccessTransaction",
       "CallContractMethod",
       "CallContractMethodAndWait",
