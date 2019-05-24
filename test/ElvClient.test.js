@@ -129,31 +129,16 @@ describe("Test ElvClient", () => {
     test("Create Content Library", async () => {
       const image = BufferToArrayBuffer(fs.readFileSync("test/images/test-image1.png"));
 
-      const testPublicMetadata = {
-        toReplace: {
-          meta: "data"
-        },
-        toDelete: {
-          meta: "data"
-        }
-      };
-
       libraryId = await client.CreateContentLibrary({
         name: "Test Library " + testHash,
         description: "Test Library Description",
         image,
-        publicMetadata: {
-          public: testPublicMetadata
-        },
-        privateMetadata: {
+        metadata: {
           private: {
             meta: "data"
           }
         }
       });
-
-      const publicMetadata = await client.PublicLibraryMetadata({libraryId, metadataSubtree: "public"});
-      expect(publicMetadata).toEqual(testPublicMetadata);
 
       const libraryObjectId = client.utils.AddressToObjectId(client.utils.HashToAddress(libraryId));
       const privateMetadata = await client.ContentObjectMetadata({
@@ -163,31 +148,6 @@ describe("Test ElvClient", () => {
       });
 
       expect(privateMetadata).toEqual({meta: "data"});
-    });
-
-    test("Update Public Content Library Metadata", async () => {
-      await client.ReplacePublicLibraryMetadata({
-        libraryId,
-        metadataSubtree: UrlJoin("public", "toReplace"),
-        metadata: {new: "metadata"}
-      });
-
-      const publicMetadata = await client.PublicLibraryMetadata({libraryId, metadataSubtree: "public"});
-
-      expect(publicMetadata.toReplace).toEqual({
-        new: "metadata"
-      });
-    });
-
-    test("Delete Public Content Library Metadata", async () => {
-      await client.DeletePublicLibraryMetadata({
-        libraryId,
-        metadataSubtree: UrlJoin("public", "toDelete"),
-      });
-
-      const publicMetadata = await client.PublicLibraryMetadata({libraryId, metadataSubtree: "public"});
-
-      expect(publicMetadata.toDelete).not.toBeDefined();
     });
 
     test("Get Content Library", async () => {
