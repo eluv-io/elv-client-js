@@ -17,10 +17,7 @@ contract Node is Ownable {
     event LogInt256(string label, int256 u);
     event LogBytes32(string label, bytes32 b);
 
-
     function log(string label) public onlyOwner {
         emit Log(label);
     }
-
-
 }

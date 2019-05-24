@@ -1,11 +1,9 @@
 pragma solidity 0.4.24;
 
-
 /* -- Revision history --
 Accessible20190222135900ML: First versioned released
 Accessible20190315141600ML: Migrated to 0.4.24
 */
-
 
 contract Accessible {
 

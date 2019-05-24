@@ -166,12 +166,6 @@ const Utils = {
     return "0x" + bytes32.slice(0, 64).padEnd(64, "0");
   },
 
-  HashToBytes32: (hash) => {
-    // Parse hash as address and remove 0x and first 4 digits
-    let address = Utils.HashToAddress(hash);
-    return "0x" + address.replace("0x", "").slice(4);
-  },
-
   BufferToArrayBuffer: (buffer) => {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   },

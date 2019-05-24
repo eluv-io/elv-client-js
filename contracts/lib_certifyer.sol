@@ -1,6 +1,5 @@
 pragma solidity 0.4.24;
 
-
 library Certifyer {
 
     //event Vrs(uint8 v, bytes32 r, bytes32 s);

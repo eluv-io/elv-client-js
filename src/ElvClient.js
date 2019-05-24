@@ -242,26 +242,6 @@ const client = ElvClient.FromConfiguration({
   /* Libraries */
 
   /**
-   * List content libraries - returns a list of content library IDs
-   *
-   * @methodGroup Content Libraries
-   * @see GET /qlibs
-   *
-   * @returns {Promise<Array<string>>}
-   */
-  async ContentLibraries() {
-    let path = UrlJoin("qlibs");
-
-    return ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "GET",
-        path: path
-      })
-    );
-  }
-
-  /**
    * Returns information about the content library
    *
    * @methodGroup Content Libraries
@@ -335,9 +315,9 @@ const client = ElvClient.FromConfiguration({
     image,
     publicMetadata={},
     privateMetadata={},
-    isUserLibrary
+    isUserLibrary=false
   }) {
-    let libraryId, transactionHash;
+    let libraryId;
     if(isUserLibrary) {
       libraryId = this.utils.AddressToLibraryId(this.signer.address);
     } else {
@@ -349,32 +329,31 @@ const client = ElvClient.FromConfiguration({
         "eluv.description": description
       };
 
-      transactionHash = createRequest.transactionHash;
       libraryId = this.utils.AddressToLibraryId(createRequest.contractAddress);
     }
 
-    const path = UrlJoin("qlibs", libraryId);
-
-    // Create library in fabric
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
-      method: "PUT",
-      path: path,
-      body: {
-        meta: publicMetadata,
-        private_meta: privateMetadata
-      }
+    // Set public library metadata
+    await this.ReplacePublicLibraryMetadata({
+      libraryId,
+      metadata: publicMetadata
     });
 
-    // Set library content object type on automatically created library object
+    // Set library content object type and metadata on automatically created library object
     const objectId = libraryId.replace("ilib", "iq__");
 
     const editResponse = await this.EditContentObject({
       libraryId,
       objectId,
       options: {
-        type: "library"
+        //type: "library"
       }
+    });
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      metadata: privateMetadata,
+      writeToken: editResponse.write_token
     });
 
     await this.FinalizeContentObject({
@@ -867,21 +846,24 @@ const client = ElvClient.FromConfiguration({
     const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = UrlJoin("qlibs", typeLibraryId, "q", objectId);
+    const path = UrlJoin("qlibs", typeLibraryId, "qid", objectId);
 
     /* Create object, upload bitcode and finalize */
 
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId, transactionHash}),
-        method: "PUT",
-        path: path,
-        body: {
-          type: "",
-          meta: metadata
-        }
+        method: "POST",
+        path: path
       })
     );
+
+    await this.ReplaceMetadata({
+      libraryId: typeLibraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      metadata
+    });
 
     if(bitcode) {
       const uploadResponse = await this.UploadPart({
@@ -1116,12 +1098,12 @@ const client = ElvClient.FromConfiguration({
     const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId, typeId});
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = UrlJoin("q", objectId);
+    const path = UrlJoin("qid", objectId);
 
     return await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
-        method: "PUT",
+        method: "POST",
         path: path,
         body: options
       })
@@ -1218,7 +1200,6 @@ const client = ElvClient.FromConfiguration({
     );
 
     await this.PublishContentVersion({
-      libraryId,
       objectId,
       versionHash: finalizeResponse.hash
     });
@@ -1235,30 +1216,15 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} versionHash - The version hash of the content object to publish
    */
-  async PublishContentVersion({libraryId, objectId, versionHash}) {
-    let path = UrlJoin("q", versionHash);
-
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "PUT",
-      path: path
+  async PublishContentVersion({objectId, versionHash}) {
+    await this.ethClient.CommitContent({
+      contentObjectAddress: this.utils.HashToAddress(objectId),
+      versionHash,
+      signer: this.signer
     });
-
-    // Temporary - wait for publish to go through and for version to be accessible
-    for(let i = 0; i < 3; i++) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      try {
-        return await this.ContentObject({libraryId, objectId, versionHash});
-      // eslint-disable-next-line no-empty
-      } catch(error) {}
-    }
-
-    throw Error("Version not published");
   }
 
   /**
@@ -2496,7 +2462,7 @@ const client = ElvClient.FromConfiguration({
    * Note: This requires two extra network calls per transaction, so it should not be used for very large ranges
    * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
-  async Events({toBlock, fromBlock, count=10, includeTransaction=false}) {
+  async Events({toBlock, fromBlock, count=10, includeTransaction=false}={}) {
     const latestBlock = await this.signer.provider.getBlockNumber();
 
     if(!toBlock) {

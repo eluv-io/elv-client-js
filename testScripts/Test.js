@@ -5,6 +5,8 @@ const ClientConfiguration = require("../TestConfiguration.json");
 const Response = (require("node-fetch")).Response;
 const Utils = require("../src/Utils");
 
+const ContentContract = require("../src/contracts/BaseContent");
+
 const KickReplacementFee = async (signer, gasPrice) => {
   try {
     const transaction = await signer.sendTransaction({
@@ -15,11 +17,10 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
     return await transaction.wait();
   } catch(error) {
+    console.log(error.message);
     await KickReplacementFee(signer, error.transaction.gasPrice.mul(10));
   }
 };
-
-const UserProfileClient = require("../src/UserProfileClient");
 
 const Test = async () => {
   try {
@@ -32,10 +33,60 @@ const Test = async () => {
     });
     client.SetSigner({signer});
 
-    const libraryId = "ilib3XxtJsRr1qvM18qRGJfmcELzTX1k";
-    const objectId = "iq__2XdCuga9NbAZK7NN3F4Pa3umPbAK";
+    const libraryId = await client.CreateContentLibrary({
+      name: "Library",
+      publicMetadata: {public: "metadata"},
+      privateMetadata: {private: "metadata"}
+    });
 
-    console.log(parseFloat(await client.GetBalance({address: signer.address})));
+    console.log(libraryId);
+
+    const createResponse = await client.CreateContentObject({libraryId});
+    const objectId = createResponse.id;
+
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: createResponse.write_token
+    });
+
+    const finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: createResponse.write_token
+    });
+
+    console.log("Create Response:");
+    console.log(createResponse);
+    console.log("\nFinalize Response:");
+    console.log(finalizeResponse);
+
+    const editResponse = await client.EditContentObject({libraryId, objectId});
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId: editResponse.id,
+      writeToken: editResponse.write_token,
+      metadata: {meta: {data: "here"}}
+    });
+
+    const finalizeResponse2 = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token
+    });
+
+    console.log("\nEdit Response: ");
+    console.log(createResponse);
+    console.log("\nFinalize Response:")
+    console.log(finalizeResponse2);
+
+    await client.CallContractMethod({
+      contractAddress: client.utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "publish"
+    });
+
+    console.log("\nPublished");
   } catch(error) {
     console.error(error);
   }
