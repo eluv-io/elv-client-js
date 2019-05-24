@@ -17,7 +17,6 @@
     "build-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme DEV_README.md",
     "lint": "./node_modules/.bin/eslint \"src/**/*.js\" \"test/**/*.js\" \"setup/**/*.js\" --fix",
     "lint-docs": "./node_modules/.bin/eslint \"vendor/elv-jsdoc-template/tmpl/*.tmpl\" \"vendor/elv-jsdoc-template/**/*.js\" --fix",
-    "truffle_test": "node $NODE_DEBUG_OPTION ./node_modules/.bin/truffle test",
     "test": "jest",
     "test-cov": "GENERATE_METHOD_LOGS=true jest --coverage --coverageDirectory 'test/coverage'",
     "test-update": "jest --updateSnapshot",
@@ -45,7 +44,7 @@
   "devDependencies": {
     "buffer": "^5.2.1",
     "copy-webpack-plugin": "^4.5.2",
-    "elv-contracts": "git+https://github.com/eluv-io/contracts.git#js-import",
+    "elv-contracts": "git+https://github.com/eluv-io/contracts.git#dev-apr7",
     "eslint": "^5.15.0",
     "eslint-plugin-html": "^5.0.0",
     "eslint-plugin-react": "^7.11.1",

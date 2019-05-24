@@ -4,6 +4,11 @@ const Ethers = require("ethers");
 const URI = require("urijs");
 
 // -- Contract javascript files built using build/BuildContracts.js
+const FactoryContract = require("./contracts/BaseFactory");
+const WalletFactoryContract = require("./contracts/BaseAccessWalletFactory");
+const LibraryFactoryContract = require("./contracts/BaseLibraryFactory");
+const ContentFactoryContract = require("./contracts/BaseContentFactory");
+
 const ContentSpaceContract = require("./contracts/BaseContentSpace");
 const ContentLibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
@@ -227,12 +232,42 @@ class EthClient {
   /* Specific contract management */
 
   async DeployContentSpaceContract({name, signer}) {
-    return this.DeployContract({
+    const deploySpaceEvent = await this.DeployContract({
       abi: ContentSpaceContract.abi,
       bytecode: ContentSpaceContract.bytecode,
       constructorArgs: [name],
       signer
     });
+
+    const factoryContracts = [
+      [FactoryContract, "setFactory"],
+      [WalletFactoryContract, "setWalletFactory"],
+      [LibraryFactoryContract, "setLibraryFactory"],
+      [ContentFactoryContract, "setContentFactory"]
+    ];
+
+    for(let i = 0; i < factoryContracts.length; i++) {
+      const [contract, setMethod] = factoryContracts[i];
+
+      const factoryAddress = (
+        await this.DeployContract({
+          abi: contract.abi,
+          bytecode: contract.bytecode,
+          constructorArgs: [],
+          signer
+        })
+      ).contractAddress;
+
+      await this.CallContractMethodAndWait({
+        contractAddress: deploySpaceEvent.contractAddress,
+        abi: ContentSpaceContract.abi,
+        methodName: setMethod,
+        methodArgs: [factoryAddress],
+        signer
+      });
+    }
+
+    return deploySpaceEvent;
   }
 
   async DeployAccessGroupContract({contentSpaceAddress, signer}) {
@@ -284,6 +319,20 @@ class EthClient {
       eventValue: "contentAddress",
       signer
     });
+  }
+
+  async CommitContent({contentObjectAddress, versionHash, signer}) {
+    const event = await this.CallContractMethodAndWait({
+      contractAddress: contentObjectAddress,
+      abi: ContentContract.abi,
+      methodName: "commit",
+      methodArgs: [versionHash],
+      eventName: "Publish",
+      eventValue: "submitStatus",
+      signer
+    });
+
+    return event;
   }
 
   async EngageAccountLibrary({contentSpaceAddress, signer}) {

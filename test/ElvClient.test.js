@@ -190,13 +190,6 @@ describe("Test ElvClient", () => {
       expect(publicMetadata.toDelete).not.toBeDefined();
     });
 
-    test("List Content Libraries", async () => {
-      const libraries = await client.ContentLibraries();
-
-      expect(libraries).toBeDefined();
-      expect(libraries).toContain(libraryId);
-    });
-
     test("Get Content Library", async () => {
       const library = await client.ContentLibrary({libraryId});
 

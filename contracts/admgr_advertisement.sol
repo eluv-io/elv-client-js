@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.4.24;
 
 import {Content} from "./content.sol";
 import {BaseContent} from "./base_content.sol";
@@ -18,12 +18,14 @@ import {AdmgrCampaign} from "./admgr_campaign_manager.sol";
 /* -- Revision history --
 AdmgrAdvertismnt20190222152600ML: First versioned released
 AdmgrAdvertismnt20190318103000ML: Migrated to 0.4.24
+AdmgrAdvertismnt20190404103100ML: Made 0.4.24 explicit
+AdmgrAdvertismnt20190510152200ML: updated for new runAccessInfo API
 */
 
 
 contract AdmgrAdvertisement is Content {
 
-    bytes32 public version ="AdmgrAdvertismnt20190318103000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrAdvertismnt20190510152200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event MaxCreditPerAd(uint256 maxCreditPerAd);
     event BitcodeAddress(address bitcode);
