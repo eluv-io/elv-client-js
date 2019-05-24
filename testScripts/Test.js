@@ -33,13 +33,32 @@ const Test = async () => {
     });
     client.SetSigner({signer});
 
+    /*
+    client.authClient.ChannelContentRequest({
+      objectId: "iq__BC9GKQqfxmewmakxKzRz13WLS94",
+      value: 1
+    });
+    */
+
+
+
     const libraryId = await client.CreateContentLibrary({
       name: "Library",
       publicMetadata: {public: "metadata"},
       privateMetadata: {private: "metadata"}
     });
 
+
     console.log(libraryId);
+
+    const response = await client.CreateContentType({
+      libraryId,
+      metadata: {meta: "data"}
+    });
+
+    console.log(response);
+    return;
+
 
     const createResponse = await client.CreateContentObject({libraryId});
     const objectId = createResponse.id;

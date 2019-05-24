@@ -304,8 +304,7 @@ const client = ElvClient.FromConfiguration({
    * @param {string} name - Library name
    * @param {string=} description - Library description
    * @param {blob=} image - Image associated with the library
-   * @param {Object=} publicMetadata - Public library metadata
-   * @param {Object=} privateMetadata - Private library metadata (metadata of library object)
+   * @param {Object=} metadata - Metadata of library object
    *
    * @returns {Promise<string>} - Library ID of created library
    */
@@ -313,8 +312,7 @@ const client = ElvClient.FromConfiguration({
     name,
     description,
     image,
-    publicMetadata={},
-    privateMetadata={},
+    metadata={},
     isUserLibrary=false
   }) {
     let libraryId;
@@ -323,20 +321,14 @@ const client = ElvClient.FromConfiguration({
     } else {
       const createRequest = await this.authClient.CreateContentLibrary();
 
-      publicMetadata = {
-        ...publicMetadata,
+      metadata = {
+        ...metadata,
         name,
         "eluv.description": description
       };
 
       libraryId = this.utils.AddressToLibraryId(createRequest.contractAddress);
     }
-
-    // Set public library metadata
-    await this.ReplacePublicLibraryMetadata({
-      libraryId,
-      metadata: publicMetadata
-    });
 
     // Set library content object type and metadata on automatically created library object
     const objectId = libraryId.replace("ilib", "iq__");
@@ -352,7 +344,7 @@ const client = ElvClient.FromConfiguration({
     await this.ReplaceMetadata({
       libraryId,
       objectId,
-      metadata: privateMetadata,
+      metadata,
       writeToken: editResponse.write_token
     });
 
@@ -463,111 +455,6 @@ const client = ElvClient.FromConfiguration({
       headers: authorizationHeader,
       method: "DELETE",
       path: path
-    });
-  }
-
-  /* Library metadata */
-
-  /**
-   * Get the public metadata of the specified library
-   *
-   * @methodGroup Content Libraries
-   * @see GET /qlibs/:qlibid/meta
-   *
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string=} metadataSubtree - Subtree of the library metadata to retrieve
-   * @returns {Promise<Object>} - Public metadata of the library
-   */
-  async PublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
-    let path = UrlJoin("qlibs", libraryId, "meta", metadataSubtree);
-
-    try {
-      const metadata = await ResponseToJson(
-        this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({libraryId, noAuth: true}),
-          method: "GET",
-          path: path
-        })
-      );
-
-      return metadata || {};
-    } catch(error) {
-      if(error.status !== 404) {
-        throw error;
-      }
-    }
-  }
-
-  /**
-   * Replace the specified library's public metadata
-   *
-   * @methodGroup Content Libraries
-   * @see PUT /qlibs/:qlibid/meta
-   *
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {Object} metadata - New metadata
-   * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
-   */
-  async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="/", metadata={}}) {
-    let path = UrlJoin("qlibs", libraryId, "meta", metadataSubtree);
-
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
-      method: "PUT",
-      path: path,
-      body: metadata
-    });
-  }
-
-  /**
-   * Delete the specified library's public metadata
-   *
-   * @methodGroup Content Libraries
-   * @see DELETE /qlibs/:qlibid/meta
-   *
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string=} metadataSubtree - Subtree to delete - modifies root metadata if not specified
-   */
-  async DeletePublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
-    // Note: There is currently no delete method for public metadata
-    // Instead, delete metadata manually and call replace
-    let metadata = await this.PublicLibraryMetadata({libraryId});
-
-    metadataSubtree = UrlJoin(metadataSubtree || "/");
-
-    if(metadataSubtree === "/") {
-      metadata = {};
-    } else {
-      let pointer = metadata;
-      const keys = UrlJoin(metadataSubtree || "/").replace(/^\/+/g, "").split("/");
-      for(let i = 0; i < keys.length - 1; i++) {
-        pointer = pointer[keys[i]];
-
-        if(!pointer) {
-          break;
-        }
-      }
-
-      if(!pointer || !pointer[keys[keys.length - 1]]) {
-        throw Error({
-          status: 404,
-          statusText: "Not found: " + metadataSubtree
-        });
-      }
-
-      delete pointer[keys[keys.length - 1]];
-    }
-
-    let path = UrlJoin("qlibs", libraryId, "meta");
-
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
-      method: "PUT",
-      path: path,
-      body: metadata
     });
   }
 
@@ -834,32 +721,35 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Types
    * @namedParams
+   * @param libraryId {string=} - ID of the library in which to create the content type. If not specified,
+   * it will be created in the content space library
    * @param {object} metadata - Metadata for the new content type
    * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
    *
    * @returns {Promise<string>} - Object ID of created content type
    */
-  async CreateContentType({metadata={}, bitcode}) {
+  async CreateContentType({libraryId, metadata={}, bitcode}) {
+    if(!libraryId) {
+      libraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
+    }
+
     const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
 
-    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
-    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
-
     const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = UrlJoin("qlibs", typeLibraryId, "qid", objectId);
+    const path = UrlJoin("qlibs", libraryId, "qid", objectId);
 
     /* Create object, upload bitcode and finalize */
 
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId, transactionHash}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
         method: "POST",
         path: path
       })
     );
 
     await this.ReplaceMetadata({
-      libraryId: typeLibraryId,
+      libraryId,
       objectId,
       writeToken: createResponse.write_token,
       metadata
@@ -867,7 +757,7 @@ const client = ElvClient.FromConfiguration({
 
     if(bitcode) {
       const uploadResponse = await this.UploadPart({
-        libraryId: typeLibraryId,
+        libraryId,
         objectId,
         writeToken: createResponse.write_token,
         data: bitcode,
@@ -875,7 +765,7 @@ const client = ElvClient.FromConfiguration({
       });
 
       await this.ReplaceMetadata({
-        libraryId: typeLibraryId,
+        libraryId,
         objectId,
         writeToken: createResponse.write_token,
         metadataSubtree: "bitcode_part",
@@ -884,7 +774,7 @@ const client = ElvClient.FromConfiguration({
     }
 
     await this.FinalizeContentObject({
-      libraryId: typeLibraryId,
+      libraryId,
       objectId,
       writeToken: createResponse.write_token
     });
@@ -1225,6 +1115,15 @@ const client = ElvClient.FromConfiguration({
       versionHash,
       signer: this.signer
     });
+
+    await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "publish",
+      methodArgs: []
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
   /**

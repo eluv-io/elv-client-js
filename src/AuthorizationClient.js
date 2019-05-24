@@ -1,3 +1,5 @@
+const Id = require("./Id");
+const Ethers = require("ethers");
 const Utils = require("./Utils");
 
 // -- Contract javascript files built using build/BuildContracts.js
@@ -95,6 +97,37 @@ class AuthorizationClient {
     return ownerAddress.toLowerCase() === this.client.signer.address.toLowerCase();
   }
 
+  Nonce() {
+    return (Date.now() + Id.next()).toString() + "000000";
+  }
+
+  async ChannelContentRequest({objectId, value=0}) {
+    const paramTypes = [
+      "address",
+      "address",
+      "uint",
+      "uint"
+    ];
+
+    let params = [
+      this.client.signer.address,
+      Utils.HashToAddress(objectId),
+      value,
+      this.Nonce()
+    ];
+
+    console.log(params);
+
+    console.log(Ethers.utils.solidityKeccak256(paramTypes, params));
+    const signature = await this.client.signer.signMessage(Ethers.utils.solidityKeccak256(paramTypes, params));
+
+    console.log(signature);
+
+    params[4] = signature;
+
+    this.client.signer.provider.send("elv_channelContentRequest", params);
+  }
+
   async GenerateAuthorizationToken({libraryId, objectId, versionHash, transactionHash, update=false, noAuth=false}) {
     if(!transactionHash && !this.noAuth && !noAuth) {
       const accessTransaction = await this.MakeAccessRequest({
@@ -113,15 +146,15 @@ class AuthorizationClient {
       transactionHash = undefined;
     }
 
-    const token = B64(JSON.stringify({
+    const token = JSON.stringify({
       qspace_id: this.contentSpaceId,
       qlib_id: libraryId,
       addr: (this.client.signer && this.client.signer.address) || "",
       txid: transactionHash
-    }));
+    });
+    const signature = await this.client.signer.signMessage(token);
 
-    const signature = B64("SIGNATURE");
-    return token + "." + signature;
+    return B64(token) + "." + B64(signature);
   }
 
   // Generate proper authorization header based on the information provided
