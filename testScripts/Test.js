@@ -50,6 +50,7 @@ const Test = async () => {
 
 
     console.log(libraryId);
+    return;
 
     const response = await client.CreateContentType({
       libraryId,
@@ -98,14 +99,6 @@ const Test = async () => {
     console.log(createResponse);
     console.log("\nFinalize Response:")
     console.log(finalizeResponse2);
-
-    await client.CallContractMethod({
-      contractAddress: client.utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "publish"
-    });
-
-    console.log("\nPublished");
   } catch(error) {
     console.error(error);
   }

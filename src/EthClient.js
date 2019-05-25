@@ -170,27 +170,32 @@ class EthClient {
       signer
     });
 
-    // Await completion of call and get event
-    let methodEvent = await new Promise((resolve, reject) => {
-      const handleTimeout = setTimeout(() => {
-        signer.provider.removeAllListeners(createMethodCall.hash);
-        reject(`Timed out waiting for completion of ${methodName}`);
-      }, timeout);
+    // Poll for transaction completion
+    const interval = 250;
+    let elapsed = 0;
+    let methodEvent;
 
-      signer.provider.on(createMethodCall.hash, event => {
-        signer.provider.removeAllListeners(createMethodCall.hash);
-        clearTimeout(handleTimeout);
-        resolve(event);
-      });
-    });
+    while(elapsed < timeout) {
+      methodEvent = await signer.provider.getTransactionReceipt(createMethodCall.hash);
 
-    // Parse logs
-    methodEvent.logs = methodEvent.logs.map(log => {
-      return {
-        ...log,
-        ...(contract.interface.parseLog(log))
-      };
-    });
+      if(methodEvent) {
+        methodEvent.logs = methodEvent.logs.map(log => {
+          return {
+            ...log,
+            ...(contract.interface.parseLog(log))
+          };
+        });
+
+        break;
+      }
+
+      elapsed += interval;
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    if(!methodEvent) {
+      throw Error(`Timed out waiting for completion of ${methodName}`);
+    }
 
     return methodEvent;
   }
