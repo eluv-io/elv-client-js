@@ -10,7 +10,9 @@ import {BaseContent} from "./base_content.sol";
 import {BaseAccessWalletFactory} from "./base_access_wallet.sol";
 import {BaseAccessWallet} from "./base_access_wallet.sol";
 import {AccessIndexor} from "./access_indexor.sol";
+import {Container} from "./container.sol";
 import "./user_space.sol";
+import "./node_space.sol";
 import "./node.sol";
 import "./meta_object.sol";
 
@@ -20,12 +22,13 @@ BaseContentSpace20190319194900ML: Requires 0.4.24
 BaseContentSpace20190320114200ML: Adding support for user-wallet
 BaseContentSpace20190506153400ML: Moves dependant creation to factories, requires factory to be set after instantiation
 BaseContentSpace20190510150900ML: Moves content creation from library to a dedicated content space factory
+BaseContentSpace20190528193500ML: Moves node management to a parent class (NodeSpace)
 */
 
 
-contract BaseContentSpace is MetaObject, Accessible, Editable, UserSpace {
+contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
 
-    bytes32 public version ="BaseContentSpace20190510150900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20190528193500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -36,136 +39,25 @@ contract BaseContentSpace is MetaObject, Accessible, Editable, UserSpace {
 
     address public guarantor;
 
-    address[] public activeNodeAddresses;
-    bytes[] public activeNodeLocators;
-
-    address[] public pendingNodeAddresses;
-    bytes[] public pendingNodeLocators;
-
-
-    function checkRedundantEntry(address[] _addrs, bytes[] _locators, address _nodeAddr, bytes _nodeLocator) pure internal returns (bool) {
-        require(_addrs.length == _locators.length);
-        for (uint i = 0; i < _addrs.length; i++) {
-            // right now we assume that neither the address or the locator can be used redundantly
-            if (keccak256(_locators[i]) == keccak256(_nodeLocator) || _addrs[i] == _nodeAddr) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    event NodeSubmitted(address addr, bytes locator);
-
-    function numActiveNodes() public view returns (uint) {
-        return activeNodeLocators.length;
-    }
-
-    function numPendingNodes() public view returns (uint) {
-        return pendingNodeLocators.length;
-    }
-
-    // we assume that this call is made from the submitted node - that is, from their address
-    function submitNode(bytes _locator) public {
-        require(!checkRedundantEntry(pendingNodeAddresses, pendingNodeLocators, msg.sender, _locator));
-        require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, msg.sender, _locator));
-        require(pendingNodeAddresses.length < 100); // don't allow *too* much abuse - TODO: what value?
-        pendingNodeLocators.push(_locator);
-        pendingNodeAddresses.push(msg.sender);
-        emit NodeSubmitted(msg.sender, _locator);
-    }
-
-    event NodeApproved(address addr, bytes locator);
-
-    function removeNodeInternal(uint nodeOrd, address[] storage _nodeAddresses, bytes[] storage _nodeLocators) internal {
-        require(nodeOrd < _nodeAddresses.length && nodeOrd < _nodeLocators.length);
-        if (nodeOrd != _nodeAddresses.length - 1) {
-            _nodeLocators[nodeOrd] = _nodeLocators[_nodeLocators.length - 1];
-            _nodeAddresses[nodeOrd] = _nodeAddresses[_nodeAddresses.length - 1];
-        }
-        delete _nodeLocators[_nodeLocators.length - 1];
-        _nodeLocators.length--;
-        delete _nodeAddresses[_nodeAddresses.length - 1];
-        _nodeAddresses.length--;
-    }
-
-    function approveNode(address _nodeAddr) public onlyOwner {
-        bool found = false;
-        for (uint i = 0; i < pendingNodeAddresses.length; i++) {
-            if (pendingNodeAddresses[i] == _nodeAddr) {
-                activeNodeAddresses.push(pendingNodeAddresses[i]);
-                activeNodeLocators.push(pendingNodeLocators[i]);
-                emit NodeApproved(pendingNodeAddresses[i], pendingNodeLocators[i]);
-                removeNodeInternal(i, pendingNodeAddresses, pendingNodeLocators);
-                found = true;
-                break;
-            }
-        }
-        require(found);
-    }
-
-    // direct method for owner to add node(s)
-    function addNode(address _nodeAddr, bytes _locator) public onlyOwner {
-        require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, _nodeAddr, _locator));
-        activeNodeAddresses.push(_nodeAddr);
-        activeNodeLocators.push(_locator);
-    }
-
-    // direct method for owner to remove node(s)
-    function removeNode(address _nodeAddr) public onlyOwner {
-        for (uint i = 0; i < activeNodeAddresses.length; i++) {
-            if (activeNodeAddresses[i] == _nodeAddr) {
-                removeNodeInternal(i, activeNodeAddresses, activeNodeLocators);
-            }
-        }
-    }
-
-    // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
-    function canNodePublish(address candidate) public view returns (bool) {
-        for (uint i = 0; i < activeNodeAddresses.length; i++) {
-            if (activeNodeAddresses[i] == candidate) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    event RegisterNode(address nodeObjAddr);
-    event UnregisterNode(address nodeObjAddr);
     mapping(address => address) public nodeMapping;
 
-    // used to create a node contract instance. should be called by the address of the node that wishes to register.
-    function registerSpaceNode() public returns (address) {
-        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
-        uint i = 0;
-        for (; i < activeNodeAddresses.length; i++) {
-            if (activeNodeAddresses[i] == msg.sender) {
-                break;
-            }
-        }
-        require(i < activeNodeAddresses.length); // node should be in active list
-        address nodeAddr = BaseFactory(factory).createNode(msg.sender);
-        nodeMapping[msg.sender] = nodeAddr;
-        emit RegisterNode(nodeAddr);
-        return nodeAddr;
-    }
-
-    function unregisterSpaceNode() public returns (bool) {
-        require(nodeMapping[msg.sender] != 0x0);
-        address nodeAddr = nodeMapping[msg.sender];
-        delete nodeMapping[msg.sender];
-        Node(nodeAddr).kill();
-        emit UnregisterNode(nodeAddr);
-    }
 
     event CreateContentType(address contentTypeAddress);
     event CreateLibrary(address libraryAddress);
     event CreateGroup(address groupAddress);
+    event CreateContent(address contentAddress);
+    event CreateAccessWallet(address wallet);
+
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
-    event CreateAccessWallet(address wallet);
+
+    event RegisterNode(address nodeObjAddr);
+    event UnregisterNode(address nodeObjAddr);
+
 
     constructor(string memory content_space_name) public {
         name = content_space_name;
+        contentSpace = address(this);
     }
 
     function setFactory(address new_factory) public onlyOwner {
@@ -192,6 +84,32 @@ contract BaseContentSpace is MetaObject, Accessible, Editable, UserSpace {
         description = content_space_description;
     }
 
+
+    // used to create a node contract instance. should be called by the address of the node that wishes to register.
+    function registerSpaceNode() public returns (address) {
+        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
+        uint i = 0;
+        for (; i < activeNodeAddresses.length; i++) {
+            if (activeNodeAddresses[i] == msg.sender) {
+                break;
+            }
+        }
+        require(i < activeNodeAddresses.length); // node should be in active list
+        address nodeAddr = BaseFactory(factory).createNode(msg.sender);
+        nodeMapping[msg.sender] = nodeAddr;
+        emit RegisterNode(nodeAddr);
+        return nodeAddr;
+    }
+
+    function unregisterSpaceNode() public returns (bool) {
+        require(nodeMapping[msg.sender] != 0x0);
+        address nodeAddr = nodeMapping[msg.sender];
+        delete nodeMapping[msg.sender];
+        Node(nodeAddr).kill();
+        emit UnregisterNode(nodeAddr);
+    }
+
+
     function createContentType() public returns (address) {
         address contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
@@ -206,6 +124,7 @@ contract BaseContentSpace is MetaObject, Accessible, Editable, UserSpace {
 
     function createContent(address lib, address content_type) public returns (address) {
         address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
+        emit CreateContent(contentAddress);
         return contentAddress;
     }
 
@@ -327,12 +246,11 @@ contract BaseContentFactory is Ownable {
     bytes32 public version ="BaseCtFactory20190509171900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
-        BaseLibrary libraryObj = BaseLibrary(lib);
+        Container libraryObj = Container(lib);
         require(libraryObj.canContribute(tx.origin)); //check if sender has contributor access
-        if (libraryObj.contentTypesLength() != 0) {
-            require(libraryObj.validType(content_type));
-        }
-        BaseContent content = new BaseContent(lib, content_type);
+        require(libraryObj.validType(content_type));
+
+        BaseContent content = new BaseContent(msg.sender, lib, content_type);
         content.setAddressKMS(libraryObj.addressKMS());
         content.setContentContractAddress(libraryObj.contentTypeContracts(content_type));
 

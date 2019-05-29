@@ -2,7 +2,6 @@
 const { ElvClient } = require("../src/ElvClient");
 const ClientConfiguration = require("../TestConfiguration.json");
 const fs = require("fs");
-const Path = require("path");
 
 let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
