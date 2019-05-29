@@ -1,11 +1,10 @@
 pragma solidity ^0.4.21;
 
 import {Accessible} from "./accessible.sol";
-import {Editable} from "./editable.sol";
+import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
 import {BaseContentSpace} from "./base_content_space.sol";
-import {BaseContentType} from "./base_content_type.sol";
 import "./access_indexor.sol";
 import "./meta_object.sol";
 
@@ -18,27 +17,22 @@ BaseLibrary20190510151800ML: Modified createContent to use contentspace factory
 BaseLibrary20190515103800ML: Overloads canPublish to take into account EDIT privilege granted for update request and commit
 BaseLibrary20190522154000SS: Changed hash bytes32 to string
 BaseLibrary20190523121700ML: Fixes logic of add/remove of groups to revert to compact arrays
+BaseLibrary20190528151200ML: Uses Container abstraction
 */
 
 
-contract BaseLibrary is MetaObject, Accessible, Editable {
+contract BaseLibrary is MetaObject, Accessible, Container {
 
-    bytes32 public version ="BaseLibrary20190523121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190528151200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    address public contentSpace;
     address[] public contributorGroups;
     address[] public reviewerGroups;
     address[] public accessorGroups;
-    address[] public contentTypes;
     uint256 public contributorGroupsLength = 0;
     uint256 public reviewerGroupsLength = 0;
     uint256 public accessorGroupsLength = 0;
-    uint256 public contentTypesLength = 0;
-
-    mapping ( address => address ) public contentTypeContracts;  // custom contracts map
 
     address[] public approvalRequests;
-    address public addressKMS;
     uint256 public approvalRequestsLength = 0;
     mapping (address => uint256) private approvalRequestsMap; //index offset by 1 to avoid confusing 0 for removed
 
@@ -49,8 +43,6 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
     event ReviewerGroupRemoved(address group);
     event AccessorGroupAdded(address group);
     event AccessorGroupRemoved(address group);
-    event ContentTypeAdded(address contentType, address contentContract);
-    event ContentTypeRemoved(address contentType);
     event UnauthorizedOperation(uint operationCode, address candidate);
     event ApproveContentRequest(address contentAddress, address submitter);
     event ApproveContent(address contentAddress, bool approved, string note);
@@ -72,10 +64,6 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
             }
         }
         return false;
-    }
-
-    function setAddressKMS(address address_KMS) public onlyOwner {
-        addressKMS = address_KMS;
     }
 
     function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
@@ -173,36 +161,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         return false;
     }
 
-    function addContentType(address content_type, address content_contract) public onlyOwner {
-        if ((contentTypeContracts[content_type] == 0x0) && (validType(content_type) == false)) {
-            if (contentTypesLength < contentTypes.length) {
-                contentTypes[contentTypesLength] = content_type;
-            } else {
-                contentTypes.push(content_type);
-            }
-            contentTypesLength = contentTypesLength + 1;
-        }
-        contentTypeContracts[content_type] = content_contract;
-        emit ContentTypeAdded(content_type, content_contract);
-    }
 
-    function removeContentType(address content_type) public onlyOwner returns (bool) {
-        uint256 latestIndex = contentTypesLength - 1;
-        for (uint256 i = 0; i < contentTypesLength; i++) {
-            if (contentTypes[i] == content_type) {
-                delete contentTypes[i];
-                if (i != latestIndex) {
-                    contentTypes[i] = contentTypes[latestIndex];
-                    delete contentTypes[latestIndex];
-                }
-                contentTypesLength = latestIndex; //decrease by 1
-                delete contentTypeContracts[content_type];
-                emit ContentTypeRemoved(content_type);
-                return true;
-            }
-        }
-        return false;
-    }
 
     function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
         for (uint i = 0; i < _groupList.length; i++) {
@@ -240,10 +199,9 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         return hasGroupAccess(_candidate, reviewerGroups);
     }
 
-    // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
-    function canNodePublish(address candidate) public view returns (bool) {
-        BaseContentSpace bcs = BaseContentSpace(contentSpace);
-        return bcs.canNodePublish(candidate);
+
+    function requiresReview() public view returns (bool) {
+        return (reviewerGroupsLength > 0);
     }
 
     function submitApprovalRequest() public returns (bool) {
@@ -251,7 +209,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         BaseContent c = BaseContent(contentContract);
         //require((c.owner() == tx.origin)); the publish already check authorization
 
-        if (reviewerGroupsLength == 0) { //No review required
+        if (requiresReview() == false) { //No review required
             // 0 indicates approval, custom contract might overwrite that decision
             c.updateStatus(0);
 
@@ -319,15 +277,7 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         }
     }
 
-    function validType(address content_type) public view returns (bool) {
-        bool isValidType = false;
-        for (uint i = 0; i < contentTypesLength; i++) {
-            if (contentTypes[i] == content_type) {
-                isValidType = true;
-            }
-        }
-        return isValidType;
-    }
+
 
     function createContent(address content_type) public  returns (address) {
         address content = BaseContentSpace(contentSpace).createContent(address(this), content_type);
@@ -357,14 +307,18 @@ contract BaseLibrary is MetaObject, Accessible, Editable {
         indexor.setLibraryRights(address(this), access_type, access);
     }
 
-    function findTypeByHash(bytes32 typeHash) public view returns (address) {
-        for (uint i = 0; i < contentTypes.length; i++) {
-            BaseContentType contentType = BaseContentType(contentTypes[i]);
-            if (keccak256(abi.encodePacked(contentType.objectHash())) == keccak256(abi.encodePacked(typeHash))) {
-                return contentTypes[i];
-            }
+    function publish(address contentObj) public returns (bool) {
+        require(msg.sender == contentObj);
+        BaseContent content = BaseContent(contentObj);
+        // Update the content contract to reflect the approval process
+        content.updateStatus(1); //update status to in-review
+        // mark with statusCode 1, which is the default for in-review - NOTE: could be change to be (currentStatus * -1)
+        bool submitStatus = false;
+        if (content.statusCode() > 0) {
+            submitStatus = submitApprovalRequest();
         }
-        return 0x0;
+        return submitStatus;
     }
+
 }
 

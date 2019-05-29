@@ -12,14 +12,13 @@ BaseContentType20190222145700ML: First versioned released
 BaseContentType20190318101200ML: Migrated to 0.4.24
 BaseContentType20190506153900ML: Adds access indexing
 BaseContentType20190515104000ML: Overloads canPublish to take into account EDIT privilege granted for update request and commit
+BaseContentType20190528194000ML: Removes contentSpace is field as it is now inherited from Ownable
 */
 
 
 contract BaseContentType is Accessible, Editable {
 
-    bytes32 public version ="BaseContentType20190515104000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    address public contentSpace;
+    bytes32 public version ="BaseContentType20190528194000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space) public payable {
         contentSpace = content_space;

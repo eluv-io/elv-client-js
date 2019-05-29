@@ -1,6 +1,8 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
+import {Accessible} from "./accessible.sol";
+import {Container} from "./container.sol";
 import {BaseContent} from "./base_content.sol";
 import "./access_indexor.sol";
 
@@ -8,21 +10,13 @@ import "./access_indexor.sol";
 BaseAccessWallet20190320114000ML: First versioned released
 BaseAccessWallet20190506154400ML: Adds instantiation via factory, adds access indexing
 BaseAccessWallet20190510151100ML: Supports modified getAccessInfo API
+BaseAccessWallet20190528124400ML: Change base to be Accessible and Editable (thru Container)
 */
 
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
-contract BaseAccessWallet is AccessIndexor {
-    bytes32 public version = "BaseAccessWallet20190510151100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    event AccessRequest(
-        uint256 requestID,
-        uint8 level,
-        address content,
-        address accessor
-    );
-    event AccessComplete(uint256 requestID, uint256 scorePct, address content, address accessor);
-
+contract BaseAccessWallet is Accessible, Container, AccessIndexor {
+    bytes32 public version = "BaseAccessWallet20190528124400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space)  public payable {
         contentSpace = content_space;
@@ -48,7 +42,7 @@ contract BaseAccessWallet is AccessIndexor {
         return keccak256(abi.encodePacked(content_address, request_ID, score_pct, ml_out_hash));
     }
 
-    function accessRequest(
+    function contentAccessRequest(
         address content_address,
         bytes /*signature*/,
         uint8 level,
@@ -70,12 +64,11 @@ contract BaseAccessWallet is AccessIndexor {
         (visibilityCode, accessCode, requiredFund) = content.getAccessInfo( level, custom_values, stakeholders);
         require(visibilityCode == 0);
         uint256 requestID = content.accessRequest.value((accessCode != 0) ? requiredFund : 0)(level, pke_requestor, pke_AFGH, custom_values, stakeholders);
-        emit AccessRequest(requestID, level, content_address, owner);
         return requestID;
 
     }
 
-    function accessComplete(
+    function contentAccessComplete(
         address content_address,
         bytes /*signature*/,
         uint256 request_ID,
@@ -89,7 +82,6 @@ contract BaseAccessWallet is AccessIndexor {
         */
 
         BaseContent content = BaseContent(content_address);
-        emit AccessComplete(request_ID, score_pct, content_address, owner);
         return content.accessComplete(request_ID, score_pct, ml_out_hash);
 
     }

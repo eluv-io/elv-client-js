@@ -38,16 +38,28 @@ class AuthorizationClient {
       objects: {}
     };
 
+    this.channelContentTokens = {};
+
     this.requestIds = {};
   }
 
-  async AuthorizationHeader({libraryId, objectId, versionHash, transactionHash, update=false, noCache=false, noAuth=false}) {
+  async AuthorizationHeader({
+    libraryId,
+    objectId,
+    versionHash,
+    transactionHash,
+    update=false,
+    channelAuth=false,
+    noCache=false,
+    noAuth=false
+  }) {
     const authorizationToken = await this.AuthorizationToken({
       libraryId,
       objectId,
       versionHash,
       transactionHash,
       update,
+      channelAuth,
       noCache,
       noAuth
     });
@@ -56,7 +68,16 @@ class AuthorizationClient {
   }
 
   // Wrapper for GenerateAuthorizationHeader to allow for per-call disabling of cache
-  async AuthorizationToken({libraryId, objectId, versionHash, transactionHash, update=false, noCache=false, noAuth=false}) {
+  async AuthorizationToken({
+    libraryId,
+    objectId,
+    versionHash,
+    transactionHash,
+    update=false,
+    channelAuth=false,
+    noCache=false,
+    noAuth=false
+  }) {
     const initialNoCache = this.noCache;
 
     try {
@@ -65,14 +86,19 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
-      const authorizationToken = await this.GenerateAuthorizationToken({
-        libraryId,
-        objectId,
-        versionHash,
-        transactionHash,
-        update,
-        noAuth
-      });
+      let authorizationToken;
+      if(channelAuth) {
+        authorizationToken = await this.GenerateChannelContentToken({objectId});
+      } else {
+        authorizationToken = await this.GenerateAuthorizationToken({
+          libraryId,
+          objectId,
+          versionHash,
+          transactionHash,
+          update,
+          noAuth
+        });
+      }
 
       this.noCache = initialNoCache;
 
@@ -97,11 +123,13 @@ class AuthorizationClient {
     return ownerAddress.toLowerCase() === this.client.signer.address.toLowerCase();
   }
 
-  Nonce() {
-    return (Date.now() + Id.next()).toString() + "000000";
-  }
+  async GenerateChannelContentToken({objectId, value=0}) {
+    if(!this.noCache && this.channelContentTokens[objectId]) {
+      return this.channelContentTokens[objectId];
+    }
 
-  async ChannelContentRequest({objectId, value=0}) {
+    const nonce = (Date.now() + Id.next());
+
     const paramTypes = [
       "address",
       "address",
@@ -113,19 +141,25 @@ class AuthorizationClient {
       this.client.signer.address,
       Utils.HashToAddress(objectId),
       value,
-      this.Nonce()
+      nonce
     ];
 
-    console.log(params);
+    // Signature
+    const Sign = async (message) =>
+      await Promise.resolve(Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message)));
 
-    console.log(Ethers.utils.solidityKeccak256(paramTypes, params));
-    const signature = await this.client.signer.signMessage(Ethers.utils.solidityKeccak256(paramTypes, params));
+    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+    params[4] = await Sign(packedHash);
 
-    console.log(signature);
+    const payload = await this.client.signer.provider.send("elv_channelContentRequest", params);
+    const signature = await Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
+    const token = `${payload}.${signature}`;
 
-    params[4] = signature;
+    if(!this.noCache) {
+      this.channelContentTokens[objectId] = token;
+    }
 
-    this.client.signer.provider.send("elv_channelContentRequest", params);
+    return token;
   }
 
   async GenerateAuthorizationToken({libraryId, objectId, versionHash, transactionHash, update=false, noAuth=false}) {
@@ -178,7 +212,7 @@ class AuthorizationClient {
 
     let id, abi, cache;
     let isObjectAccess = false;
-    if (isUserLibrary) {
+    if(isUserLibrary) {
       // User profile library - library ID corresponds to signer's address
       if(!noCache && !skipCache && this.userProfileTransaction) { return this.userProfileTransaction; }
 
@@ -433,6 +467,7 @@ class AuthorizationClient {
     } else if(objectId) {
       this.accessTransactions.objects[objectId] = undefined;
       this.modifyTransactions.objects[objectId] = undefined;
+      this.channelContentTokens[objectId] = undefined;
     } else {
       this.accessTransactions = {
         spaces: {},
@@ -445,6 +480,8 @@ class AuthorizationClient {
         libraries: {},
         objects: {}
       };
+
+      this.channelContentTokens = {};
     }
   }
 }

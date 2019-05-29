@@ -6,17 +6,16 @@ import {UserSpace} from "./user_space.sol";
 /* -- Revision history --
 AccessIndexor20190423111800ML: First versioned release
 AccessIndexor20190510150600ML: Removes debug events
+AccessIndexor20190528194200ML: Removes contentSpace is field as it is now inherited from Ownable
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20190510150600ML";
+    bytes32 public version = "AccessIndexor20190528194200ML";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
     //event dbUint8(string label, uint8 value);
-
-    address public contentSpace;
 
     uint8 public CATEGORY_CONTENT_OBJECT = 1;
     uint8 public CATEGORY_GROUP = 2;

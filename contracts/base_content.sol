@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
-import {BaseLibrary} from "./base_library.sol";
+import {Container} from "./container.sol";
 import {BaseContentSpace} from "./base_content_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 
@@ -13,12 +13,13 @@ BaseContent20190315175100ML: Migrated to 0.4.24
 BaseContent20190321122100ML: accessRequest returns requestID, removed ml_hash from access_complete event
 BaseContent20190510151500ML: creation via ContentSpace factory, modified getAccessInfo API
 BaseContent20190522154000SS: Changed hash bytes32 to string
+BaseContent20190528193400ML: Modified to support non-library containers
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190522154000SS"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190528193400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -77,7 +78,8 @@ contract BaseContent is Editable {
     event ReturnCustomHook(address custom_contract, uint256 result);
     event InvokeCustomPostHook(address custom_contract);
 
-    constructor(address lib, address content_type) public payable {
+    constructor(address content_space, address lib, address content_type) public payable {
+        contentSpace = content_space;
         libraryAddress = lib;
         statusCode = -1;
         contentType = content_type;
@@ -189,8 +191,7 @@ contract BaseContent is Editable {
         if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
             return (0, 0, accessCharge);
         }
-        BaseLibrary lib = BaseLibrary(libraryAddress);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(lib.contentSpace());
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address userWallet = contentSpaceObj.userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
@@ -198,7 +199,7 @@ contract BaseContent is Editable {
                 return (0, 0, accessCharge);
             }
         }
-        if (lib.canReview(tx.origin) == true) { //special case of pre-publish review
+        if (Container(libraryAddress).canReview(tx.origin) == true) { //special case of pre-publish review
             return (0, 0, accessCharge);
         }
         return (10, 10, accessCharge);
@@ -243,8 +244,7 @@ contract BaseContent is Editable {
         (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo( level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
-            BaseLibrary lib = BaseLibrary(libraryAddress);
-            BaseContentSpace contentSpaceObj = BaseContentSpace(lib.contentSpace());
+            BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
             address userWallet = contentSpaceObj.userWallets(tx.origin);
             if (userWallet != 0x0) {
                 AccessIndexor wallet = AccessIndexor(userWallet);
@@ -341,52 +341,16 @@ contract BaseContent is Editable {
         return accessCharge;
     }
 
-    string[] public versionHashes;
-    string pendingHash;
-
-    function countVersionHashes() public view returns (uint256) {
-        return versionHashes.length;
-    }
-
-    event CommitPending(string objectHash);
-
-    //    function commit(bytes32 object_hash) public onlyOwner {
-//        objectHash = object_hash;
-//        emit Commit(objectHash);
-//    }
-    function commit(string _objectHash) public onlyOwner {
-        // TODO: what to do if there already *is* a pendingHash?
-        pendingHash = _objectHash;
-        emit CommitPending(pendingHash);
-    }
-
     function canPublish() public view returns (bool) {
         if (msg.sender == owner || msg.sender == libraryAddress) return true;
-        BaseLibrary lib = BaseLibrary(libraryAddress);
+        Container lib = Container(libraryAddress);
         return lib.canNodePublish(msg.sender);
     }
 
     // TODO: why payable?
-    // function confirm() public payable onlyOwner returns (bool) {
     function publish() public payable returns (bool) {
-        require(canPublish());
-
-        // TODO: hmmmm... this doesn't quite make sense WRT current code ...
-        //require(pendingHash != ""); //ML: commented for now, as commit is typically not called in current code base
-        if (bytes(objectHash).length > 0) {
-            versionHashes.push(objectHash); // save existing version info
-        }
-        super.commit(pendingHash);
-        pendingHash = "";
-
-        // Update the content contract to reflect the approval process
-        updateStatus(1); //update status to in-review
-        // mark with statusCode 1, which is the default for in-review - NOTE: could be change to be (currentStatus * -1)
-        bool submitStatus = false;
-        if (statusCode > 0) {
-            BaseLibrary lib = BaseLibrary(libraryAddress);
-            submitStatus = lib.submitApprovalRequest();
-        }
+        super.publish();
+        bool submitStatus = Container(libraryAddress).publish(address(this));
         // Log event
         emit Publish(submitStatus, statusCode, objectHash); // TODO: confirm?
         return submitStatus;
@@ -578,16 +542,14 @@ contract BaseContent is Editable {
     }
 
     function setAccessRights() public {
-        BaseLibrary lib = BaseLibrary(libraryAddress);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(lib.contentSpace());
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address walletAddress = contentSpaceObj.getAccessWallet();
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setContentObjectRights(address(this), indexor.TYPE_ACCESS(), indexor.ACCESS_CONFIRMED());
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        BaseLibrary lib = BaseLibrary(libraryAddress);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(lib.contentSpace());
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address walletAddress = contentSpaceObj.userWallets(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)

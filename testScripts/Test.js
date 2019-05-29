@@ -6,6 +6,8 @@ const Response = (require("node-fetch")).Response;
 const Utils = require("../src/Utils");
 
 const ContentContract = require("../src/contracts/BaseContent");
+const LibraryContract = require("../src/contracts/BaseLibrary");
+const SpaceContract = require("../src/contracts/BaseContentSpace");
 
 const KickReplacementFee = async (signer, gasPrice) => {
   try {
@@ -24,22 +26,41 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
 const Test = async () => {
   try {
-    //ClientConfiguration.noAuth = true;
+    //ClientConfiguration.noCache = true;
     let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
+      privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000",
     });
-    client.SetSigner({signer});
+    await client.SetSigner({signer});
+
+
 
     /*
-    client.authClient.ChannelContentRequest({
-      objectId: "iq__BC9GKQqfxmewmakxKzRz13WLS94",
-      value: 1
+    const res = await client.authClient.ChannelContentRequest({
+      objectId: "iq__KziRWKBkYe2sFqUNeyRFvYcwrxM",
+      value: 0
     });
+
+    console.log(res);
     */
 
+    let rep = await client.Rep({
+      libraryId: "ilibKziRWKBkYe2sFqUNeyRFvYcwrxM",
+      objectId: "iq__KziRWKBkYe2sFqUNeyRFvYcwrxM",
+      rep: "dash",
+    });
+
+    console.log(rep);
+
+    rep = await client.Rep({
+      libraryId: "ilibKziRWKBkYe2sFqUNeyRFvYcwrxM",
+      objectId: "iq__KziRWKBkYe2sFqUNeyRFvYcwrxM",
+      rep: "dash",
+    });
+
+    console.log(rep);
 
 
     const libraryId = await client.CreateContentLibrary({
@@ -48,18 +69,26 @@ const Test = async () => {
       privateMetadata: {private: "metadata"}
     });
 
-
     console.log(libraryId);
-    return;
-
+    /*
     const response = await client.CreateContentType({
-      libraryId,
-      metadata: {meta: "data"}
+      metadata: {name: "test CT", meta: "data"}
     });
 
     console.log(response);
-    return;
 
+
+    console.log(await client.ContentTypes());
+    console.log(await client.ContentType({name: "test CT"}));
+    console.log(await client.ContentType({versionHash: response.hash}));
+
+    //const ct = await client.ContentType()
+    //return;
+
+    */
+
+    //const libraryId = "ilib4Ag3gNpoSGszapPya7LEFzjBXhb2";
+    //const objectId = "iq__4Ag3gNpoSGszapPya7LEFzjBXhb2";
 
     const createResponse = await client.CreateContentObject({libraryId});
     const objectId = createResponse.id;
@@ -81,6 +110,9 @@ const Test = async () => {
     console.log("\nFinalize Response:");
     console.log(finalizeResponse);
 
+
+
+
     const editResponse = await client.EditContentObject({libraryId, objectId});
     await client.ReplaceMetadata({
       libraryId,
@@ -99,6 +131,8 @@ const Test = async () => {
     console.log(createResponse);
     console.log("\nFinalize Response:")
     console.log(finalizeResponse2);
+
+
   } catch(error) {
     console.error(error);
   }
