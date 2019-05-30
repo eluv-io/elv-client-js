@@ -74,6 +74,18 @@ const Utils = {
   },
 
   /**
+   * Formats a signature into multi-sig
+   *
+   * @param {string} sig - Hex representation of signature
+   *
+   * @returns {string} - Multi-sig string representation of signature
+   */
+  FormatSignature: (sig) => {
+    sig = sig.replace("0x", "");
+    return "ES256K_" + bs58.encode(Buffer.from(sig, "hex"));
+  },
+
+  /**
    * Convert contract address to multiformat hash
    *
    * @param {string} address - Address of contract

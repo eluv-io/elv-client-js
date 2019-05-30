@@ -153,7 +153,9 @@ class AuthorizationClient {
 
     const payload = await this.client.signer.provider.send("elv_channelContentRequest", params);
     const signature = await Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
-    const token = `${payload}.${signature}`;
+    const multiSig = Utils.FormatSignature(signature);
+    // final bearer token is [PAYLOAD].[BASE64(MULTI-SIG)]
+    const token = `${payload}.${B64(multiSig)}`;
 
     if(!this.noCache) {
       this.channelContentTokens[objectId] = token;
