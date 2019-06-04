@@ -15,9 +15,9 @@ contract Editable is Ownable {
 
     bytes32 public version ="Editable20190522154000SS"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    event Commit(string objectHash);
     event CommitPending(string objectHash);
     event UpdateRequest(string objectHash);
+    event VersionPublish(string objectHash);
 
     string public objectHash;
     string[] public versionHashes;
@@ -47,6 +47,7 @@ contract Editable is Ownable {
         }
         objectHash = pendingHash;
         pendingHash = "";
+        emit VersionPublish(objectHash);
     }
 
     function updateRequest() public {

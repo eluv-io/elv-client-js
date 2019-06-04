@@ -10,12 +10,13 @@ import {NodeSpace} from "./node_space.sol";
 
 /* -- Revision history --
 Container20190528144600ML: First versioned released
+Container20190529091800ML: Remove warning on hasAccess
 */
 
 
 contract Container is Editable {
 
-    bytes32 public version = "Container20190528144600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "Container20190529091800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public addressKMS;
 
@@ -97,7 +98,7 @@ contract Container is Editable {
         return false;
     }
 
-    function hasAccess(address _candidate) public constant returns (bool) {
+    function hasAccess(address /*_candidate*/) public constant returns (bool) {
         return true;
     }
 
