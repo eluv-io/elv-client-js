@@ -23,7 +23,7 @@ BaseLibrary20190528151200ML: Uses Container abstraction
 
 contract BaseLibrary is MetaObject, Accessible, Container {
 
-    bytes32 public version ="BaseLibrary20190528151200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190602093600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public contributorGroups;
     address[] public reviewerGroups;
@@ -56,6 +56,10 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         if ((tx.origin == owner) || (msg.sender == owner)) {
             return true;
         }
+
+        bool nodePublish = canNodePublish(msg.sender);
+        if (nodePublish) return true;
+
         address userWallet = BaseContentSpace(contentSpace).userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);

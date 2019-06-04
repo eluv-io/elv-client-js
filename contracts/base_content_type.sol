@@ -13,12 +13,13 @@ BaseContentType20190318101200ML: Migrated to 0.4.24
 BaseContentType20190506153900ML: Adds access indexing
 BaseContentType20190515104000ML: Overloads canPublish to take into account EDIT privilege granted for update request and commit
 BaseContentType20190528194000ML: Removes contentSpace is field as it is now inherited from Ownable
+BaseContentType20190604112500ML: Fixed setGroupRights to use the right index.
 */
 
 
 contract BaseContentType is Accessible, Editable {
 
-    bytes32 public version ="BaseContentType20190528194000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentType20190604112500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space) public payable {
         contentSpace = content_space;
@@ -28,7 +29,12 @@ contract BaseContentType is Accessible, Editable {
         if ((tx.origin == owner) || (msg.sender == owner)) {
             return true;
         }
-        address userWallet = BaseContentSpace(contentSpace).userWallets(tx.origin);
+
+        BaseContentSpace spc = BaseContentSpace(contentSpace);
+        bool nodePublish = spc.canNodePublish(msg.sender);
+        if (nodePublish) return true;
+
+        address userWallet = spc.userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT()) == true) {
@@ -52,7 +58,7 @@ contract BaseContentType is Accessible, Editable {
 
     function setGroupRights(address group, uint8 access_type, uint8 access) public {
         AccessIndexor indexor = AccessIndexor(group);
-        indexor.setContentObjectRights(address(this), access_type, access);
+        indexor.setContentTypeRights(address(this), access_type, access);
     }
 
 }
