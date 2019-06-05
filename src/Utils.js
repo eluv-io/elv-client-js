@@ -1,5 +1,7 @@
 const bs58 = require("bs58");
 const BigNumber = require("bignumber.js");
+const MultiHash = require("multihashes");
+const VarInt = require("varint");
 
 /**
  * @namespace
@@ -83,6 +85,41 @@ const Utils = {
   FormatSignature: (sig) => {
     sig = sig.replace("0x", "");
     return "ES256K_" + bs58.encode(Buffer.from(sig, "hex"));
+  },
+
+  DecodeVersionHash: (versionHash) => {
+    if(!versionHash.startsWith("hq__")) {
+      throw new Error(`Invalid version hash: "${versionHash}"`);
+    }
+
+    versionHash = versionHash.replace("hq__", "");
+
+    // Decode base58 payload
+    let bytes = MultiHash.fromB58String(versionHash);
+
+    // Remove 32 byte SHA256 digest
+    const digest = bytes.slice(0, 32).toString("hex");
+    bytes = bytes.slice(32);
+
+    // Determine size of varint content size
+    let sizeLength = 0;
+    while(bytes[sizeLength] >= 128) {
+      sizeLength++;
+    }
+    sizeLength++;
+
+    // Remove size
+    const size = VarInt.decode(bytes.slice(0, sizeLength));
+    bytes = bytes.slice(sizeLength);
+
+    // Remaining bytes is object ID
+    const objectId = "iq__" + MultiHash.toB58String(bytes);
+
+    return {
+      digest,
+      size,
+      objectId
+    };
   },
 
   /**

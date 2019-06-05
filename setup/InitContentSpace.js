@@ -30,9 +30,10 @@ const Init = async () => {
     console.log("\tAddress: " + deployResult.contractAddress);
     console.log("\tID: " + contentSpaceId + "\n");
 
-    console.log("Updating TestConfiguration.json\n");
     ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
     fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
+
+    console.log("Updated TestConfiguration.json\n");
   } catch(error) {
     console.log("Error initializing fabric:");
     console.error(error);

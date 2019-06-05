@@ -186,9 +186,11 @@ class AuthorizationClient {
       qspace_id: this.contentSpaceId,
       qlib_id: libraryId,
       addr: (this.client.signer && this.client.signer.address) || "",
-      txid: transactionHash
+      //tx_id: transactionHash
     });
-    const signature = await this.client.signer.signMessage(token);
+
+    const signature = "SIGNATURE"; //await this.client.signer.signMessage(token);
+
 
     return B64(token) + "." + B64(signature);
   }
@@ -234,19 +236,16 @@ class AuthorizationClient {
       id = this.contentSpaceId;
       abi = SpaceContract.abi;
       cache = cacheCollection.spaces;
-      return {transactionHash: ""};
     } else if(isSpaceLibrary) {
       // Content type - content space library but not content space library object
       id = objectId;
       abi = TypeContract.abi;
       cache = cacheCollection.objects;
-      return {transactionHash: ""};
     } else if(!objectId || isLibraryObject) {
       // Library - no object specified or library object
       id = libraryId;
       abi = LibraryContract.abi;
       cache = cacheCollection.libraries;
-      return {transactionHash: ""};
     } else {
       // Object - any other case
       id = objectId;
@@ -256,7 +255,7 @@ class AuthorizationClient {
 
       if(args && args.length > 0) {
         // Inject public key of requester
-        args[1] = this.client.signer.signingKey?this.client.signer.signingKey.publicKey:"";
+        args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
       } else {
         // Set default args
         args = [

@@ -16,6 +16,7 @@ const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
+const WalletContract = require("./contracts/BaseAccessWallet");
 
 if(typeof Response === "undefined") {
   // eslint-disable-next-line no-global-assign
@@ -282,6 +283,19 @@ const client = ElvClient.FromConfiguration({
   /* Libraries */
 
   /**
+   * List content libraries - returns a list of content library IDs available to the current user
+   *
+   * @methodGroup Content Libraries
+   *
+   * @returns {Promise<Array<string>>}
+   */
+  async ContentLibraries() {
+    const libraryAddresses = await this.Collection({collectionType: "libraries"});
+
+    return libraryAddresses.map(address => this.utils.AddressToLibraryId(address));
+  }
+
+  /**
    * Returns information about the content library
    *
    * @methodGroup Content Libraries
@@ -377,7 +391,7 @@ const client = ElvClient.FromConfiguration({
       libraryId,
       objectId,
       options: {
-        //type: "library"
+        type: "library"
       }
     });
 
@@ -643,73 +657,55 @@ const client = ElvClient.FromConfiguration({
     });
   }
 
+  async ContentType({name, versionHash, typeId}) {
+    // TODO: pull object ID out of version hash
+    if(!typeId) {
+      const types = await this.ContentTypes();
+
+      if(name) {
+        return Object.values(types).find(type => (type.name || "").toLowerCase() === name.toLowerCase());
+      } else {
+        return Object.values(types).find(type => type.hash === versionHash);
+      }
+    }
+
+    const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
+
+    const typeInfo = await this.ContentObject({
+      libraryId: contentSpaceLibraryId,
+      objectId: typeId
+    });
+
+    delete typeInfo.type;
+
+    const metadata = (await this.ContentObjectMetadata({
+      libraryId: contentSpaceLibraryId,
+      objectId: typeId
+    })) || {};
+
+    return {
+      ...typeInfo,
+      name: metadata.name,
+      meta: metadata
+    };
+  }
+
   async ContentTypes() {
-    const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
-    const contentSpaceObjectId = this.utils.AddressToObjectId(this.utils.HashToAddress(this.contentSpaceId));
+    this.contentTypes = this.contentTypes || {};
 
-    return await this.ContentObjectMetadata({
-      libraryId: contentSpaceLibraryId,
-      objectId: contentSpaceObjectId,
-      metadataSubtree: "elv-content-types"
-    });
-  }
+    const typeAddresses = await this.Collection({collectionType: "contentTypes"});
 
-  async ContentType({name, versionHash}) {
-    const types = await this.ContentTypes();
+    await Promise.all(
+      typeAddresses.map(async typeAddress => {
+        const typeId = this.utils.AddressToObjectId(typeAddress);
 
-    return Object.values(types).find(type => type.name === name || type.versionHash === versionHash);
-  }
+        if(!this.contentTypes[typeId]) {
+          this.contentTypes[typeId] = await this.ContentType({typeId});
+        }
+      })
+    );
 
-  async AddContentType({name, objectId, versionHash}) {
-    const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
-    const contentSpaceObjectId = this.utils.AddressToObjectId(this.utils.HashToAddress(this.contentSpaceId));
-
-    const editResponse = await this.EditContentObject({
-      libraryId: contentSpaceLibraryId,
-      objectId: contentSpaceObjectId
-    });
-
-    await this.ReplaceMetadata({
-      libraryId: contentSpaceLibraryId,
-      objectId: contentSpaceObjectId,
-      metadata: {
-        name,
-        id: objectId,
-        objectId,
-        versionHash
-      },
-      metadataSubtree: UrlJoin("elv-content-types", versionHash),
-      writeToken: editResponse.write_token
-    });
-
-    await this.FinalizeContentObject({
-      libraryId: contentSpaceLibraryId,
-      objectId: contentSpaceObjectId,
-      writeToken: editResponse.write_token
-    });
-  }
-
-  async RemoveContentType({versionHash}) {
-    const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
-    const contentSpaceObjectId = this.utils.AddressToObjectId(this.utils.HashToAddress(this.contentSpaceId));
-
-    const editResponse = await this.EditContentObject({
-      libraryId: contentSpaceLibraryId,
-      objectId: contentSpaceObjectId
-    });
-
-    await this.DeleteMetadata({
-      libraryId: contentSpaceLibraryId,
-      objectId: contentSpaceObjectId,
-      metadataSubtree: UrlJoin("elv-content-types", versionHash),
-      writeToken: editResponse.writeToken
-    });
-
-    await this.FinalizeContentObject({
-      libraryId: contentSpaceLibraryId,
-      objectId: contentSpaceObjectId,
-      writeToken: editResponse.writeToken
-    });
+    return this.contentTypes;
   }
 
   /**
@@ -724,12 +720,19 @@ const client = ElvClient.FromConfiguration({
    * @namedParams
    * @param libraryId {string=} - ID of the library in which to create the content type. If not specified,
    * it will be created in the content space library
+   * @param {string} name - Name of the content type
    * @param {object} metadata - Metadata for the new content type
    * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
    *
    * @returns {Promise<string>} - Object ID of created content type
    */
-  async CreateContentType({metadata={}, bitcode}) {
+  async CreateContentType({name, metadata={}, bitcode}) {
+    metadata.name = name;
+
+    if(await this.ContentType({name})) {
+      throw new Error(`Content type "${name}" already exists`);
+    }
+
     const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
 
     const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
@@ -738,7 +741,6 @@ const client = ElvClient.FromConfiguration({
     const path = UrlJoin("qlibs", contentSpaceLibraryId, "qid", objectId);
 
     /* Create object, upload bitcode and finalize */
-
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId: contentSpaceLibraryId, transactionHash}),
@@ -772,19 +774,11 @@ const client = ElvClient.FromConfiguration({
       });
     }
 
-    const finalizeResponse = await this.FinalizeContentObject({
+    await this.FinalizeContentObject({
       libraryId: contentSpaceLibraryId,
       objectId,
       writeToken: createResponse.write_token
     });
-
-    /*
-    await this.AddContentType({
-      name: metadata.name,
-      objectId: objectId,
-      versionHash: finalizeResponse.hash
-    });
-    */
 
     return objectId;
   }
@@ -994,6 +988,13 @@ const client = ElvClient.FromConfiguration({
 
     const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId, typeId});
 
+    await this.CallContractMethod({
+      abi: ContentContract.abi,
+      contractAddress,
+      methodName: "setVisibility",
+      methodArgs: [10]
+    });
+
     const objectId = this.utils.AddressToObjectId(contractAddress);
     const path = UrlJoin("qid", objectId);
 
@@ -1052,12 +1053,15 @@ const client = ElvClient.FromConfiguration({
     } else {
       // Unless modifying the content library object
       if(options.type) {
-        if(!options.type.startsWith("hq__")) {
-          // Type name specified
-          options.type = (await this.ContentType({name: options.type})).hash;
-        } else {
+        if(options.type.startsWith("hq__")) {
           // Type hash specified
           options.type = (await this.ContentType({versionHash: options.type})).hash;
+        } else if(options.type.startsWith("iq__")) {
+          // Type ID specified
+          options.type = (await this.ContentType({typeId: options.type})).hash;
+        } else {
+          // Type name specified
+          options.type = (await this.ContentType({name: options.type})).hash;
         }
       }
     }
@@ -1626,8 +1630,12 @@ const client = ElvClient.FromConfiguration({
     });
 
     return {
-      accessible: info[0] === 0,
-      accessCode: info[0],
+      visibilityCode: info[0],
+      visible: info[0] >= 1,
+      accessible: info[0] >= 10,
+      editable: info[0] >= 100,
+      hasAccess: info[1] === 0,
+      accessCode: info[1],
       accessCharge: Utils.WeiToEther(info[1]).toString()
     };
   }
@@ -1886,7 +1894,7 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<string>} - Contract address of created access group
    */
   async CreateAccessGroup() {
-    const { contractAddress, transactionHash } = await this.authClient.CreateAccessGroup();
+    const { contractAddress } = await this.authClient.CreateAccessGroup();
 
     return contractAddress;
   }
@@ -1928,7 +1936,7 @@ const client = ElvClient.FromConfiguration({
     });
   }
 
-  async CallAccessGroupMethod({contractAddress, memberAddress, methodName, eventName}) {
+  async AccessGroupMembershipMethod({contractAddress, memberAddress, methodName, eventName}) {
     // Ensure address starts with 0x
     if(!memberAddress.startsWith("0x")) { memberAddress = "0x" + memberAddress; }
 
@@ -1981,7 +1989,7 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<transactionHash>} - The transaction hash of the call to the grantAccess method
    */
   async AddAccessGroupMember({contractAddress, memberAddress}) {
-    return await this.CallAccessGroupMethod({
+    return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "grantAccess",
@@ -2001,7 +2009,7 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<transactionHash>} - The transaction hash of the call to the revokeAccess method
    */
   async RemoveAccessGroupMember({contractAddress, memberAddress}) {
-    return await this.CallAccessGroupMethod({
+    return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "revokeAccess",
@@ -2021,7 +2029,7 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<transactionHash>} - The transaction hash of the call to the grantManagerAccess method
    */
   async AddAccessGroupManager({contractAddress, memberAddress}) {
-    return await this.CallAccessGroupMethod({
+    return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "grantManagerAccess",
@@ -2041,12 +2049,145 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<transactionHash>} - The transaction hash of the call to the revokeManagerAccess method
    */
   async RemoveAccessGroupManager({contractAddress, memberAddress}) {
-    return await this.CallAccessGroupMethod({
+    return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "revokeManagerAccess",
       eventName: "ManagerAccessRevoked"
     });
+  }
+
+  /* Collection / Access Indexor methods */
+
+  async ContractCollection({contractAddress, abi, lengthMethod, itemMethod}) {
+    const nCollection = (await this.CallContractMethod({
+      contractAddress,
+      abi,
+      methodName: lengthMethod
+    })).toNumber();
+
+    return await Promise.all(
+      [...Array(nCollection)].map(async (_, i) => {
+        const itemAddress = await this.CallContractMethod({
+          contractAddress,
+          abi,
+          methodName: itemMethod,
+          methodArgs: [i]
+        });
+
+        return itemAddress;
+      })
+    );
+  }
+
+  CollectionMethods(collectionType) {
+    let lengthMethod, itemMethod;
+    switch(collectionType) {
+      case "accessGroups":
+        lengthMethod = "getAccessGroupsLength";
+        itemMethod = "getAccessGroup";
+        break;
+      case "contentObjects":
+        lengthMethod = "getContentObjectsLength";
+        itemMethod = "getContentObject";
+        break;
+      case "contentTypes":
+        lengthMethod = "getContentTypesLength";
+        itemMethod = "getContentType";
+        break;
+      case "contracts":
+        lengthMethod = "getContractsLength";
+        itemMethod = "getContract";
+        break;
+      case "libraries":
+        lengthMethod = "getLibrariesLength";
+        itemMethod = "getLibrary";
+        break;
+      default:
+        throw Error("Invalid access group collection type: " + collectionType);
+    }
+
+    return {lengthMethod, itemMethod};
+  }
+
+  /**
+   * Get a list of addresses of all of the specified type the current user has access
+   * to through their user wallet
+   *
+   * @param {string} collectionType - Type of collection to retrieve
+   * - accessGroups
+   * - contentObjects
+   * - contentTypes
+   * - contracts
+   * - libraries
+   *
+   * @return {Promise<string[]>} - List of addresses of available items
+   */
+  async WalletCollection({collectionType}) {
+    const {lengthMethod, itemMethod} = this.CollectionMethods(collectionType);
+
+    return await this.ContractCollection({
+      contractAddress: this.walletAddress,
+      abi: WalletContract.abi,
+      lengthMethod,
+      itemMethod
+    });
+  }
+
+  /**
+   * Get a list of addresses of all of the specified type the current user has access
+   * to through access groups
+   *
+   * @param {string} collectionType - Type of collection to retrieve
+   * - accessGroups
+   * - contentObjects
+   * - contentTypes
+   * - contracts
+   * - libraries
+   *
+   * @return {Promise<string[]>} - List of addresses of available items
+   */
+  async AccessGroupsCollection({collectionType}) {
+    const {lengthMethod, itemMethod} = this.CollectionMethods(collectionType);
+
+    const accessGroups = await this.ContractCollection({
+      contractAddress: this.walletAddress,
+      abi: WalletContract.abi,
+      lengthMethod: "getAccessGroupsLength",
+      itemMethod: "getAccessGroup"
+    });
+
+    const collections = await Promise.all(
+      accessGroups.map(async accessGroupAddress => {
+        return await this.ContractCollection({
+          contractAddress: accessGroupAddress,
+          abi: AccessGroupContract.abi,
+          lengthMethod,
+          itemMethod
+        });
+      })
+    );
+
+    return collections.flat();
+  }
+
+  /**
+   * Get a list of unique addresses of all of the specified type the current user has access
+   * to through both their user wallet and through access groups
+   *
+   * @param {string} collectionType - Type of collection to retrieve
+   * - accessGroups
+   * - contentObjects
+   * - contentTypes
+   * - contracts
+   * - libraries
+   *
+   * @return {Promise<string[]>} - List of addresses of available items
+   */
+  async Collection({collectionType}) {
+    return (await this.WalletCollection({collectionType}))
+      .concat(await this.AccessGroupsCollection({collectionType}))
+      .filter((v, i, s) => s.indexOf(v) === i);
   }
 
   /* Verification */
@@ -2169,7 +2310,7 @@ const client = ElvClient.FromConfiguration({
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
    * @param {string} methodName - Method to call on the contract
-   * @param {Array<string>} methodArgs - List of arguments to the contract constructor
+   * @param {Array=} methodArgs - List of arguments to the contract constructor
    * - it is recommended to format these arguments using the FormatContractArguments method
    * @param {(number | BigNumber)=} value - Amount of ether to include in the transaction
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
@@ -2459,7 +2600,7 @@ const client = ElvClient.FromConfiguration({
     const forbiddenMethods = [
       "constructor",
       "InitializeClients",
-      "CallAccessGroupMethod",
+      "AccessGroupMembershipMethod",
       "CallFromFrameMessage",
       "FrameAllowedMethods",
       "GenerateWallet",
