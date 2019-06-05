@@ -194,7 +194,7 @@ class EthClient {
     }
 
     if(!methodEvent) {
-      throw Error(`Timed out waiting for completion of ${methodName}`);
+      throw Error(`Timed out waiting for completion of ${methodName}. TXID: ${transactionHash}`);
     }
 
     return methodEvent;

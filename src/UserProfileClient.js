@@ -403,6 +403,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
   // Ensure recording tags never causes action to fail
   async RecordTags({libraryId, objectId, versionHash}) {
+    return;
     try {
       await this.__RecordTags({libraryId, objectId, versionHash});
     } catch(error) {

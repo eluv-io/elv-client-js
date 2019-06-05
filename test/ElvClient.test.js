@@ -86,11 +86,7 @@ describe("Test ElvClient", () => {
       // Ensure unique name for later lookup
       typeName = "Test Content Type " + testHash;
 
-      typeId = await client.CreateContentType({
-        metadata: {
-          name: typeName
-        }
-      });
+      typeId = await client.CreateContentType({name: typeName});
     });
 
     test("List Content Types", async () => {
@@ -101,20 +97,22 @@ describe("Test ElvClient", () => {
     });
 
     test("Get Content Type", async () => {
+      const typeById = await client.ContentType({typeId});
+      expect(typeById).toBeDefined();
+      expect(typeById.id).toEqual(typeId);
+
+      typeHash = typeById.hash;
+
       const typeByName = await client.ContentType({name: typeName});
       expect(typeByName).toBeDefined();
       expect(typeByName.id).toEqual(typeId);
 
-      const typeByHash = await client.ContentType({versionHash: typeId});
+      const typeByHash = await client.ContentType({versionHash: typeHash});
       expect(typeByHash).toBeDefined();
       expect(typeByHash.id).toEqual(typeId);
 
-      expect(typeByName.hash).toEqual(typeByHash.hash);
-
-      typeHash = typeByName.hash;
-
-      await expect(client.ContentType({name: "Invalid Type Name"}))
-        .rejects.toEqual(new Error("Unknown content type: Invalid Type Name"));
+      const invalidType = await client.ContentType({name: "Invalid Type Name"});
+      expect(invalidType).not.toBeDefined();
     });
 
     test("Get Content Type Owner", async () => {
@@ -148,6 +146,13 @@ describe("Test ElvClient", () => {
       });
 
       expect(privateMetadata).toEqual({meta: "data"});
+    });
+
+    test("List Content Libraries", async () => {
+      const libraries = await client.ContentLibraries();
+
+      expect(libraries).toBeDefined();
+      expect(libraries).toContain(libraryId);
     });
 
     test("Get Content Library", async () => {
@@ -499,6 +504,20 @@ describe("Test ElvClient", () => {
     });
 
     test("Access Charge and Info", async () => {
+      await client.CallContractMethod({
+        abi: BaseContentContract.abi,
+        contractAddress: client.utils.HashToAddress(objectId),
+        methodName: "setVisibility",
+        methodArgs: [10]
+      });
+
+      console.log("VIS");
+      console.log(await client.CallContractMethod({
+        abi: BaseContentContract.abi,
+        contractAddress: client.utils.HashToAddress(objectId),
+        methodName: "visibility"
+      }));
+
       await client.SetAccessCharge({objectId, accessCharge: "0.5"});
 
       const {accessible, accessCode, accessCharge} = await accessClient.AccessInfo({

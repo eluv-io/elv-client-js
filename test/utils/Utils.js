@@ -22,9 +22,13 @@ const RandomString = (size) => {
 };
 
 const CreateClient = async (bux="2") => {
+  const fundedClient = ElvClient.FromConfiguration({configuration: ClientConfiguration});
   const client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+
   const wallet = client.GenerateWallet();
   const fundedSigner = wallet.AddAccount({privateKey});
+
+  await fundedClient.SetSigner({signer: fundedSigner});
 
   // Create a new account and send some ether
   const signer = wallet.AddAccountFromMnemonic({
@@ -48,7 +52,14 @@ const CreateClient = async (bux="2") => {
   // Ensure transaction has time to resolve fully before continuing
   await new Promise(resolve => setTimeout(resolve, 1000));
 
-  client.SetSigner({signer});
+  await client.SetSigner({signer});
+
+  // Add new account to content space group
+  // TODO: Pull access group address from content space when implemented
+  await fundedClient.AddAccessGroupManager({
+    contractAddress: "0x066a7bf5792b0b15c5d14a995ac9085c62bf15e9",
+    memberAddress: signer.address
+  });
 
   return client;
 };
