@@ -1754,7 +1754,9 @@ const client = ElvClient.FromConfiguration({
       const drm = option.properties.drm;
 
       // Exclude any options that do not satisfy the specified protocols and/or DRMs
-      if(!protocols.includes(protocol) || !drms.includes(drm) || (drms.length === 0 && drm)) {
+      const protocolMatch = protocols.includes(protocol);
+      const drmMatch = drms.includes(drm) || (drms.length === 0 && !drm);
+      if(!protocolMatch || !drmMatch) {
         continue;
       }
 
