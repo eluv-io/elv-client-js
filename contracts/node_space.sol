@@ -85,11 +85,14 @@ contract NodeSpace is Ownable {
         require(found);
     }
 
+    event AddNode(address ownerAddr, address nodeAddr);
+
     // direct method for owner to add node(s)
     function addNode(address _nodeAddr, bytes _locator) public onlyOwner {
         require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, _nodeAddr, _locator));
         activeNodeAddresses.push(_nodeAddr);
         activeNodeLocators.push(_locator);
+        emit AddNode(msg.sender, _nodeAddr);
     }
 
     // direct method for owner to remove node(s)

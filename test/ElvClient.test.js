@@ -37,9 +37,6 @@ describe("Test ElvClient", () => {
     libraryId = "ilib2t71GCq5VNaAkg9ZAkmy1EJJss3";
     objectId = "iq__4XyAFvdwaTWxa4rkKhvgDXvUhRzB";
     versionHash = "hq__QmNjMeY9B9M6T7sHBcdnryMeyHC5BkztC3aATHkSnbfj79";
-    //libraryId = "ilib4Vk9CAYiGWNo5znQ5WYbEtYnmx6i";
-    //objectId = "iq__3fkAJTxyzVo8eYkcZTWKvaoYWYhr";
-    //versionHash = "hq__QmZ293SLCn2ERxYJQFxFFs4AF5Jc4D2DxSciGZEk1poE9w";
 
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
@@ -796,6 +793,8 @@ describe("Test ElvClient", () => {
       expect(parts.find(part => part.hash === partInfo.whole)).not.toBeDefined();
     });
 
+    /*
+
     test("Delete Content Version", async () => {
       await client.DeleteContentVersion({libraryId, objectId, versionHash});
 
@@ -839,6 +838,7 @@ describe("Test ElvClient", () => {
         expect(error.status).toEqual(404);
       }
     });
+    */
 
     test("Delete Access Group", async () => {
       await client.DeleteAccessGroup({contractAddress: accessGroupAddress});

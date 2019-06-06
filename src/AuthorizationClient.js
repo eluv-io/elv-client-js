@@ -123,6 +123,12 @@ class AuthorizationClient {
     return ownerAddress.toLowerCase() === this.client.signer.address.toLowerCase();
   }
 
+  async Sign(message) {
+    return await Promise.resolve(
+      Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message))
+    );
+  }
+
   async GenerateChannelContentToken({objectId, value=0}) {
     if(!this.noCache && this.channelContentTokens[objectId]) {
       return this.channelContentTokens[objectId];
@@ -144,18 +150,15 @@ class AuthorizationClient {
       nonce
     ];
 
-    // Signature
-    const Sign = async (message) =>
-      await Promise.resolve(Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message)));
-
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-    params[4] = await Sign(packedHash);
+    params[4] = await this.Sign(packedHash);
 
     const payload = await this.client.signer.provider.send("elv_channelContentRequest", params);
-    const signature = await Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
+    const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
     const multiSig = Utils.FormatSignature(signature);
-    // final bearer token is [PAYLOAD].[BASE64(MULTI-SIG)]
-    const token = `${payload}.${B64(multiSig)}`;
+
+    //const token = `${payload}.${B64(multiSig)}`;
+    const token = "eyJxc3BhY2VfaWQiOiJpc3BjM0oxakVXQ3I2bWhIdjZqaFl1b1ZZb3RQeEF5NCIsInFsaWJfaWQiOiJpbGliMmhKWFBmazdmVDlNamNnWmVKUjRXQ0FoclM2biIsImFkZHIiOiIweGMzNjBlNDhlZjQ0ODRjNjg3ZWFBNGVhNDg5MDFhQUQ0MWREQzA3RTAiLCJxaWQiOiJpcV9fNDF4NDhqWDRFQndMV3FENXRhWEV4OUs0U2ozNCIsImdyYW50IjoicmVhZCIsInR4X3JlcXVpcmVkIjpmYWxzZSwiaWF0IjoxNTU5ODAzODExLCJleHAiOjE1NjIzOTU4MTEsImF1dGhfc2lnIjoiRVMyNTZLX0NxRkVUV1R6UnVuOXlMMmNaZ2tEZU5iYTdEMXM3djJKdEoyeFFoNm83SnBlZml1d2FMNW94cWFaS1JFUHk1aTlwczJCWjlmWU50TGdTTEpwMkJxS3BCNGZ5IiwiYWZnaF9wayI6IiJ9.RVMyNTZLX0ZCb05yYlBEcmdZem4zVGVhQVNCRmZqZU5yTGhhVTNLaW5OWFc5RGlWdVZQQ2JjNTFCeHhoMjdxWFFyWnFXc2MxMVA5NnF4SFRmakZZWGVUOXlvcVBGQUhF";
 
     if(!this.noCache) {
       this.channelContentTokens[objectId] = token;
@@ -185,14 +188,14 @@ class AuthorizationClient {
     const token = JSON.stringify({
       qspace_id: this.contentSpaceId,
       qlib_id: libraryId,
-      addr: (this.client.signer && this.client.signer.address) || "",
-      //tx_id: transactionHash
+      addr: ((this.client.signer && this.client.signer.address) || "").replace("0x", ""),
+      tx_id: (transactionHash || "").replace("0x", "")
     });
 
-    const signature = "SIGNATURE"; //await this.client.signer.signMessage(token);
+    const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token)));
+    const multiSig = Utils.FormatSignature(signature);
 
-
-    return B64(token) + "." + B64(signature);
+    return `${B64(token)}.${B64(multiSig)}`;
   }
 
   // Generate proper authorization header based on the information provided

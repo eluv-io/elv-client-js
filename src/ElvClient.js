@@ -1723,6 +1723,99 @@ const client = ElvClient.FromConfiguration({
   /* URL Methods */
 
   /**
+   * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
+   *
+   * @param {string=} versionHash - Version hash of the content
+   * @param {Array<string>} protocols - Acceptable playout protocols
+   * @param {Array<string>} drms - Acceptable DRM formats
+   */
+  async PlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
+    protocols = protocols.map(p => p.toLowerCase());
+    drms = drms.map(d => d.toLowerCase());
+
+    const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+
+    let path = UrlJoin("q", versionHash, "rep", "playout", "main", "options.json");
+
+    const playoutOptions = Object.values(
+      await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({objectId, channelAuth: true, noAuth: true}),
+          method: "GET",
+          path: path
+        })
+      )
+    );
+
+    let playoutMap = {};
+    for(let i = 0; i < playoutOptions.length; i++) {
+      const option = playoutOptions[i];
+      const protocol = option.properties.protocol;
+      const drm = option.properties.drm;
+
+      // Exclude any options that do not satisfy the specified protocols and/or DRMs
+      if(!protocols.includes(protocol) || !drms.includes(drm) || (drms.length === 0 && drm)) {
+        continue;
+      }
+
+      if(!playoutMap[protocol]) {
+        playoutMap[protocol] = {
+          playoutUrl: await this.Rep({
+            versionHash,
+            rep: UrlJoin("playout", "main", option.uri)
+          }),
+        };
+      }
+
+      if(drm) {
+        playoutMap[protocol].drms = {
+          ...(playoutMap[protocol].drms || {}),
+          [drm]: "TBD"
+        };
+      }
+    }
+
+    return playoutMap;
+  }
+
+  /**
+   * Retrieve playout options in BitMovin player format for the specified content that satisfy
+   * the given protocol and DRM requirements
+   *
+   * @param {string=} versionHash - Version hash of the content
+   * @param {Array<string>} protocols - Acceptable playout protocols
+   * @param {Array<string>} drms - Acceptable DRM formats
+   */
+  async BitmovinPlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
+    const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    const playoutOptions = await this.PlayoutOptions({versionHash, protocols, drms});
+
+    let config = {
+      drm: {}
+    };
+
+    Object.keys(playoutOptions).forEach(protocol => {
+      const option = playoutOptions[protocol];
+      config[protocol] = option.playoutUrl;
+
+      if(option.drms) {
+        Object.keys(option.drms).forEach(drm => {
+          if(!config.drm[drm]) {
+            config.drm[drm] = {
+              LA_URL: `http://66.220.3.82:6545/wv?qhash=${versionHash}`,
+              headers: {
+                Authorization: `Bearer ${this.authClient.channelContentTokens[objectId]}`
+              }
+            };
+          }
+        });
+      }
+    });
+
+    return config;
+  }
+
+  /**
    * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
    * URL includes authorization token.
    *
@@ -1803,10 +1896,12 @@ const client = ElvClient.FromConfiguration({
     noAuth=false,
     noCache=false
   }) {
-    let path = "";
+    objectId = objectId || this.utils.DecodeVersionHash(versionHash).objectId;
+
     // Clone queryParams to avoid modification of the original
     queryParams = {...queryParams};
 
+    let path = "";
     if(libraryId) {
       path = UrlJoin(path, "qlibs", libraryId);
 
@@ -1828,7 +1923,7 @@ const client = ElvClient.FromConfiguration({
     } else if(versionHash) {
       path = UrlJoin("q", versionHash);
 
-      if(!noAuth && objectId) {
+      if(!noAuth) {
         queryParams.authorization = await this.authClient.AuthorizationToken({objectId, versionHash, channelAuth, noCache});
       }
 
