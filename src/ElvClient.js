@@ -1735,7 +1735,7 @@ const client = ElvClient.FromConfiguration({
 
     const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
 
-    let path = UrlJoin("q", versionHash, "rep", "playout", "main", "options.json");
+    let path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
 
     const playoutOptions = Object.values(
       await ResponseToJson(
@@ -1762,7 +1762,7 @@ const client = ElvClient.FromConfiguration({
         playoutMap[protocol] = {
           playoutUrl: await this.Rep({
             versionHash,
-            rep: UrlJoin("playout", "main", option.uri)
+            rep: UrlJoin("playout", "default", option.uri)
           }),
         };
       }
