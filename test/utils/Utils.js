@@ -49,6 +49,8 @@ const CreateClient = async (bux="2") => {
     }
   }
 
+  //const signer = wallet.AddAccount({privateKey: "0xb1b912ab6d2024b9edd77a34837e48cb5e1aaac591d964cb3dd1311c131d02e2"});
+
   // Ensure transaction has time to resolve fully before continuing
   await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -57,7 +59,7 @@ const CreateClient = async (bux="2") => {
   // Add new account to content space group
   // TODO: Pull access group address from content space when implemented
   await fundedClient.AddAccessGroupManager({
-    contractAddress: "0x066a7bf5792b0b15c5d14a995ac9085c62bf15e9",
+    contractAddress: "0x77b0ed22c92514d63de5b6334c6a47c48c135f30",
     memberAddress: signer.address
   });
 
