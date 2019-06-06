@@ -154,11 +154,11 @@ class AuthorizationClient {
     params[4] = await this.Sign(packedHash);
 
     const payload = await this.client.signer.provider.send("elv_channelContentRequest", params);
+
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
     const multiSig = Utils.FormatSignature(signature);
 
-    //const token = `${payload}.${B64(multiSig)}`;
-    const token = "eyJxc3BhY2VfaWQiOiJpc3BjM0oxakVXQ3I2bWhIdjZqaFl1b1ZZb3RQeEF5NCIsInFsaWJfaWQiOiJpbGliMmhKWFBmazdmVDlNamNnWmVKUjRXQ0FoclM2biIsImFkZHIiOiIweGMzNjBlNDhlZjQ0ODRjNjg3ZWFBNGVhNDg5MDFhQUQ0MWREQzA3RTAiLCJxaWQiOiJpcV9fNDF4NDhqWDRFQndMV3FENXRhWEV4OUs0U2ozNCIsImdyYW50IjoicmVhZCIsInR4X3JlcXVpcmVkIjpmYWxzZSwiaWF0IjoxNTU5ODAzODExLCJleHAiOjE1NjIzOTU4MTEsImF1dGhfc2lnIjoiRVMyNTZLX0NxRkVUV1R6UnVuOXlMMmNaZ2tEZU5iYTdEMXM3djJKdEoyeFFoNm83SnBlZml1d2FMNW94cWFaS1JFUHk1aTlwczJCWjlmWU50TGdTTEpwMkJxS3BCNGZ5IiwiYWZnaF9wayI6IiJ9.RVMyNTZLX0ZCb05yYlBEcmdZem4zVGVhQVNCRmZqZU5yTGhhVTNLaW5OWFc5RGlWdVZQQ2JjNTFCeHhoMjdxWFFyWnFXc2MxMVA5NnF4SFRmakZZWGVUOXlvcVBGQUhF";
+    const token = `${payload}.${B64(multiSig)}`;
 
     if(!this.noCache) {
       this.channelContentTokens[objectId] = token;
