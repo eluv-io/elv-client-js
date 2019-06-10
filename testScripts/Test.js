@@ -30,6 +30,7 @@ const Test = async () => {
   try {
     console.log(ClientConfiguration);
     const client = new ElvClient(ClientConfiguration);
+
     /*
     const client = await ElvClient.FromBootstrap({
       domain: "contentfabric.io",
@@ -38,7 +39,12 @@ const Test = async () => {
       port: 80,
       useHTTPS: false
     });
-*/
+
+    const client = await ElvClient.FromBootstrap({
+      configUrl: "http://main.net955304.contentfabric.io:80/config"
+    });
+    */
+
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000",
