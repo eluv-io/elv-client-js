@@ -674,23 +674,27 @@ class ElvClient {
 
     const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
 
-    const typeInfo = await this.ContentObject({
-      libraryId: contentSpaceLibraryId,
-      objectId: typeId
-    });
+    try {
+      const typeInfo = await this.ContentObject({
+        libraryId: contentSpaceLibraryId,
+        objectId: typeId
+      });
 
-    delete typeInfo.type;
+      delete typeInfo.type;
 
-    const metadata = (await this.ContentObjectMetadata({
-      libraryId: contentSpaceLibraryId,
-      objectId: typeId
-    })) || {};
+      const metadata = (await this.ContentObjectMetadata({
+        libraryId: contentSpaceLibraryId,
+        objectId: typeId
+      })) || {};
 
-    return {
-      ...typeInfo,
-      name: metadata.name,
-      meta: metadata
-    };
+      return {
+        ...typeInfo,
+        name: metadata.name,
+        meta: metadata
+      };
+    } catch(error) {
+      throw new Error(`Content Type ${name || typeId} is invalid`);
+    }
   }
 
   async ContentTypes() {
@@ -703,7 +707,11 @@ class ElvClient {
         const typeId = this.utils.AddressToObjectId(typeAddress);
 
         if(!this.contentTypes[typeId]) {
-          this.contentTypes[typeId] = await this.ContentType({typeId});
+          try {
+            this.contentTypes[typeId] = await this.ContentType({typeId});
+          } catch(error) {
+            console.error(error);
+          }
         }
       })
     );
@@ -732,15 +740,10 @@ class ElvClient {
   async CreateContentType({name, metadata={}, bitcode}) {
     metadata.name = name;
 
-    /*
-    if(await this.ContentType({name})) {
-      throw new Error(`Content type "${name}" already exists`);
-    }
-    */
-
     const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
 
     const { contractAddress } = await this.authClient.CreateContentType();
+    return;
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
     const path = UrlJoin("qlibs", contentSpaceLibraryId, "qid", objectId);
