@@ -1,13 +1,12 @@
 {
-  "fabric": {
-    "contentSpaceId": "ispc2LHLYiQZkfL5gbiTiLKyFbFqt8A9",
-    "hostname": "localhost",
-    "port": 8008,
-    "use_https": false
-  },
-  "ethereum": {
-    "hostname": "localhost",
-    "port": 8545,
-    "use_https": false
-  }
+  "contentSpaceId": "ispcdQPfuUsVAk7pKdoQ7x49QPM2b25",
+  "fabricURIs": [
+    "http://localhost:8008"
+  ],
+  "ethereumURIs": [
+    "http://localhost:8545"
+  ],
+  "stateChannelURIs": [
+    "http://localhost:8545"
+  ]
 }

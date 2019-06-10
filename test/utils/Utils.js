@@ -22,8 +22,8 @@ const RandomString = (size) => {
 };
 
 const CreateClient = async (bux="2") => {
-  const fundedClient = ElvClient.FromConfiguration({configuration: ClientConfiguration});
-  const client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+  const fundedClient = new ElvClient(ClientConfiguration);
+  const client = new ElvClient(ClientConfiguration);
 
   const wallet = client.GenerateWallet();
   const fundedSigner = wallet.AddAccount({privateKey});

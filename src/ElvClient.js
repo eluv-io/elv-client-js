@@ -54,45 +54,29 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
-   * @param {string} hostname - Hostname of the content fabric API
-   * @param {(string|number)} port - Port of the content fabric API
-   * @param {boolean=} useHTTPS=true - Use HTTPS when communicating with the fabric
-   * @param {string} ethHostname - Hostname of the blockchain RPC endpoint
-   * @param {(string|number)} ethPort - Port of the blockchain RPC endpoint
-   * @param {boolean=} ethUseHTTPS=true - Use HTTPS when communicating with the blockchain
-   * @param {boolean=} viewOnly -
+   * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
+   * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+   * @param {Array<string>} stateChannelURIs - A list of full URIs to state channel nodes
+   * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   *
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
   constructor({
     contentSpaceId,
-    hostname,
-    port,
-    useHTTPS=true,
-    ethHostname,
-    ethPort,
-    ethUseHTTPS=true,
+    fabricURIs,
+    ethereumURIs,
+    stateChannelURIs,
     viewOnly=false,
     noCache=false,
     noAuth=false
   }) {
     this.contentSpaceId = contentSpaceId;
 
-    this.fabricURI = new URI()
-      .protocol(useHTTPS ? "https" : "http")
-      .host(hostname)
-      .port(port);
-
-    this.HttpClient = new HttpClient(this.fabricURI);
-
-    this.ethereumURI = new URI()
-      .protocol(ethUseHTTPS ? "https" : "http")
-      .host(ethHostname)
-      .port(ethPort)
-      .path("")
-      .hash("")
-      .toString();
+    this.fabricURIs = fabricURIs;
+    this.ethereumURIs = ethereumURIs;
+    this.stateChannelURIs = stateChannelURIs || ethereumURIs;
 
     this.viewOnly = viewOnly;
     this.noCache = noCache;
@@ -103,59 +87,78 @@ class ElvClient {
     this.InitializeClients();
   }
 
+  static async FromBootstrap({
+    domain="contentfabric.io",
+    networkName="main",
+    networkId,
+    port,
+    useHTTPS=true,
+    viewOnly=false,
+    noCache=false,
+    noAuth=false
+  }) {
+    port = port || (useHTTPS ? 443 : 80);
+    const bootstrapURI = new URI()
+      .protocol(useHTTPS ? "https" : "http")
+      .host(domain)
+      .subdomain(`${networkName}.net${networkId}`)
+      .port(port);
+
+    const httpClient = new HttpClient([bootstrapURI]);
+    const fabricInfo = await ResponseToJson(httpClient.Request({method: "GET", path: "/config"}));
+
+    const seedNodes = fabricInfo.network.seed_nodes;
+    const fabricURIs = seedNodes.map(ip =>
+      new URI()
+        .protocol(useHTTPS ? "https" : "http")
+        .host(ip)
+        .port(80)
+        .toString()
+    );
+
+    fabricURIs[0] = new URI().host("localhost").port(444).protocol("http");
+
+    const ethereumURIs = seedNodes.map(ip =>
+      new URI()
+        .protocol(useHTTPS ? "https" : "http")
+        .host(ip)
+        .port(8545)
+        .toString()
+    );
+
+    const rpcSeedNodes = fabricInfo.qspace.ethereum.rpc_seed_nodes;
+    const stateChannelURIs = rpcSeedNodes.map(ip =>
+      new URI()
+        .protocol(useHTTPS ? "https" : "http")
+        .host(ip)
+        .port(8545)
+        .toString()
+    );
+
+    return new ElvClient({
+      contentSpaceId: fabricInfo.qspace.id,
+      fabricURIs,
+      ethereumURIs,
+      stateChannelURIs,
+      viewOnly,
+      noCache,
+      noAuth
+    });
+  }
+
   InitializeClients() {
-    this.ethClient = new EthClient(this.ethereumURI);
+    this.HttpClient = new HttpClient(this.fabricURIs);
+    this.ethClient = new EthClient(this.ethereumURIs);
 
     this.userProfile = new UserProfileClient({client: this});
 
     this.authClient = new AuthorizationClient({
       client: this,
       contentSpaceId: this.contentSpaceId,
+      stateChannelURIs: this.stateChannelURIs,
       signer: this.signer,
       noCache: this.noCache,
       noAuth: this.noAuth
-    });
-  }
-
-  /**
-   * Create a new ElvClient from a formatted configuration
-   * @see TestConfiguration.json for format of configuration
-   *
-   * @methodGroup Constructor
-   * @namedParams
-   * @param {Object} configuration - Configuration containing information on connecting
-   * to the content fabric and blockchain
-   *
-   * @example
-const client = ElvClient.FromConfiguration({
-  configuration: {
-    "fabric": {
-      "contentSpaceId": "ispc458u7vxkS2o9XyE3HoqEKZuZ9h8w",
-      "hostname": "localhost",
-      "port": 8008,
-      "use_https": false
-    },
-    "ethereum": {
-      "hostname": "localhost",
-      "port": 8545,
-      "use_https": false
-    }
-  }
-});
-   * @returns {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
-   */
-  static FromConfiguration({configuration}) {
-    return new ElvClient({
-      contentSpaceId: configuration.fabric.contentSpaceId,
-      hostname: configuration.fabric.hostname,
-      port: configuration.fabric.port,
-      useHTTPS: configuration.fabric.use_https,
-      ethHostname: configuration.ethereum.hostname,
-      ethPort: configuration.ethereum.port,
-      ethUseHTTPS: configuration.ethereum.use_https,
-      viewOnly: configuration.viewOnly,
-      noCache: configuration.noCache,
-      noAuth: configuration.noAuth,
     });
   }
 
@@ -168,7 +171,7 @@ const client = ElvClient.FromConfiguration({
    * @returns {ElvWallet} - ElvWallet instance with this client's provider
    */
   GenerateWallet() {
-    return new ElvWallet(this.ethereumURI);
+    return new ElvWallet(this.ethClient.Provider());
   }
 
   /**
@@ -203,7 +206,7 @@ const client = ElvClient.FromConfiguration({
    * @param {object} signer - The ethers.js signer object
    */
   async SetSigner({signer}) {
-    signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
+    signer.connect(this.ethClient.Provider());
     signer.provider.pollingInterval = 250;
     this.signer = signer;
 
@@ -391,7 +394,7 @@ const client = ElvClient.FromConfiguration({
       libraryId,
       objectId,
       options: {
-        type: "library"
+        //type: "library"
       }
     });
 
@@ -729,13 +732,15 @@ const client = ElvClient.FromConfiguration({
   async CreateContentType({name, metadata={}, bitcode}) {
     metadata.name = name;
 
+    /*
     if(await this.ContentType({name})) {
       throw new Error(`Content type "${name}" already exists`);
     }
+    */
 
     const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
 
-    const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
+    const { contractAddress } = await this.authClient.CreateContentType();
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
     const path = UrlJoin("qlibs", contentSpaceLibraryId, "qid", objectId);
@@ -743,7 +748,11 @@ const client = ElvClient.FromConfiguration({
     /* Create object, upload bitcode and finalize */
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId: contentSpaceLibraryId, transactionHash}),
+        headers: await this.authClient.AuthorizationHeader({
+          libraryId: contentSpaceLibraryId,
+          objectId,
+          update: true
+        }),
         method: "POST",
         path: path
       })
@@ -828,8 +837,8 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
    *
    * @returns {Promise<Object>} - Description of created object
@@ -2619,7 +2628,7 @@ const client = ElvClient.FromConfiguration({
    * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
   async Events({toBlock, fromBlock, count=10, includeTransaction=false}={}) {
-    const latestBlock = await this.signer.provider.getBlockNumber();
+    const latestBlock = await this.BlockNumber();
 
     if(!toBlock) {
       if(!fromBlock) {
@@ -2654,7 +2663,7 @@ const client = ElvClient.FromConfiguration({
   }
 
   async BlockNumber() {
-    return await this.signer.provider.getBlockNumber();
+    return await this.ethClient.MakeProviderCall({methodName: "getBlockNumber"});
   }
 
   /**
@@ -2667,8 +2676,8 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<number>} - Balance of the account, in ether
    */
   async GetBalance({address}) {
-    const provider = new Ethers.providers.JsonRpcProvider(this.ethereumURI);
-    return await Ethers.utils.formatEther(await provider.getBalance(address));
+    const balance = await this.ethClient.MakeProviderCall({methodName: "getBalance", args: [address]});
+    return await Ethers.utils.formatEther(balance);
   }
 
   /**

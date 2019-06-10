@@ -18,9 +18,28 @@ const Utils = require("./Utils");
 const Topics = require("./events/Topics");
 
 class EthClient {
-  constructor(ethereumURI) {
-    this.ethereumURI = ethereumURI;
+  constructor(ethereumURIs) {
+    this.ethereumURIs = ethereumURIs;
+    this.ethereumURIIndex = 0;
     this.locked = false;
+  }
+
+  Provider() {
+    return new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]);
+  }
+
+  async MakeProviderCall({methodName, args=[], attempts=0}) {
+    try {
+      return await this.Provider()[methodName](...args);
+    } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+
+      if(attempts < this.ethereumURIs.length) {
+        this.ethereumURIIndex = (this.ethereumURIIndex + 1) % this.ethereumURIs.length;
+        return this.MakeProviderCall({methodName, args, attempts: attempts + 1});
+      }
+    }
   }
 
   /* General contract management */
@@ -65,9 +84,9 @@ class EthClient {
       throw Error("Signer not set");
     }
 
-    if(!URI(signer.provider.connection.url).equals(this.ethereumURI)) {
+    if(!this.ethereumURIs.find(ethereumURI => URI(signer.provider.connection.url).equals(ethereumURI))) {
       throw Error("Signer provider '" + signer.provider.connection.url +
-        "' does not match client provider '" + this.ethereumURI + "'");
+        "' does not match client provider");
     }
   }
 
@@ -78,6 +97,7 @@ class EthClient {
     overrides={},
     signer
   }) {
+    signer = signer.connect(this.Provider());
     this.ValidateSigner(signer);
 
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
@@ -117,7 +137,7 @@ class EthClient {
       this.ValidateSigner(signer);
 
       if (!contract) {
-        contract = new Ethers.Contract(contractAddress, abi, signer.provider);
+        contract = new Ethers.Contract(contractAddress, abi, this.Provider());
         contract = contract.connect(signer);
       }
 
@@ -133,7 +153,7 @@ class EthClient {
           success = true;
         } catch (error) {
           if (error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
-            const latestBlock = await signer.provider.getBlock("latest");
+            const latestBlock = await this.MakeProviderCall({methodName: "getBlock", args: ["latest"]});
             overrides.gasLimit = latestBlock.gasLimit;
             overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
           } else {
@@ -157,7 +177,7 @@ class EthClient {
     timeout=10000,
     signer
   }) {
-    let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
+    let contract = new Ethers.Contract(contractAddress, abi, this.Provider());
     contract = contract.connect(signer);
 
     // Make method call
@@ -176,7 +196,7 @@ class EthClient {
     let methodEvent;
 
     while(elapsed < timeout) {
-      methodEvent = await signer.provider.getTransactionReceipt(createMethodCall.hash);
+      methodEvent = await this.MakeProviderCall({methodName: "getTransactionReceipt", args: [createMethodCall.hash]});
 
       if(methodEvent) {
         methodEvent.logs = methodEvent.logs.map(log => {
@@ -371,10 +391,13 @@ class EthClient {
 
   // Get all logs for the specified contract in the specified range
   async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false, signer}) {
-    const contractLogs = await signer.provider.getLogs({
-      address: contractAddress,
-      fromBlock,
-      toBlock
+    const contractLogs = await this.MakeProviderCall({
+      methodName: "getLogs",
+      args: [{
+        address: contractAddress,
+        fromBlock,
+        toBlock
+      }]
     });
 
     let blocks = {};
@@ -389,7 +412,7 @@ class EthClient {
         if(includeTransaction) {
           parsedLog = {
             ...parsedLog,
-            ...(await signer.provider.getTransaction(log.transactionHash))
+            ...(await this.MakeProviderCall({methodName: "getTransaction", args: [log.transactionHash]}))
           };
         }
 
@@ -423,7 +446,7 @@ class EthClient {
   // Get logs for all blocks in the specified range
   // Returns a list, sorted in descending block order, with each entry containing all logs or transactions in that block
   async Events({toBlock, fromBlock, includeTransaction=false, signer}) {
-    const logs = await signer.provider.getLogs({fromBlock, toBlock});
+    const logs = await this.MakeProviderCall({methodName: "getLogs", args: [{fromBlock, toBlock}]});
 
     // Group logs by blocknumber
     let blocks = {};
@@ -437,7 +460,7 @@ class EthClient {
       let blockInfo = blocks[blockNumber];
 
       if(!blockInfo) {
-        blockInfo = await signer.provider.getBlock(blockNumber);
+        blockInfo = await this.MakeProviderCall({methodName: "getBlock", args: [blockNumber]});
         blockInfo = blockInfo.transactions.map(transactionHash => {
           return {
             blockNumber: blockInfo.number,
@@ -457,8 +480,8 @@ class EthClient {
           blockInfo.map(async block => {
             if(!transactionInfo[block.transactionHash]) {
               transactionInfo[block.transactionHash] = {
-                ...(await signer.provider.getTransaction(block.transactionHash)),
-                ...(await signer.provider.getTransactionReceipt(block.transactionHash))
+                ...(await this.MakeProviderCall({methodName: "getTransaction", args: [block.transactionHash]})),
+                ...(await this.MakeProviderCall({methodName: "getTransactionReceipt", args: [block.transactionHash]})),
               };
             }
             return {
