@@ -18,9 +18,11 @@ const B64 = (str) => {
 };
 
 class AuthorizationClient {
-  constructor({client, contentSpaceId, noCache=false, noAuth=false}) {
+  constructor({client, contentSpaceId, stateChannelURIs, noCache=false, noAuth=false}) {
     this.client = client;
     this.contentSpaceId = contentSpaceId;
+    this.stateChannelURIs = stateChannelURIs;
+    this.stateChannelURIIndex = 0;
     this.noCache = noCache;
     this.noAuth = noAuth;
 
@@ -129,6 +131,20 @@ class AuthorizationClient {
     );
   }
 
+  async MakeStateChannelRequest(params, attempts=0) {
+    try {
+      const stateChannelProvider = new Ethers.providers.JsonRpcProvider(this.stateChannelURIs[this.stateChannelURIIndex]);
+      return await stateChannelProvider.send("elv_channelContentRequest", params);
+    } catch(error) {
+      if(attempts < this.stateChannelURIs.length) {
+        this.stateChannelURIIndex = (this.stateChannelURIIndex + 1) % this.stateChannelURIs.length;
+        return await this.MakeStateChannelRequest(params, attempts+1);
+      }
+
+      throw error;
+    }
+  }
+
   async GenerateChannelContentToken({objectId, value=0}) {
     if(!this.noCache && this.channelContentTokens[objectId]) {
       return this.channelContentTokens[objectId];
@@ -153,7 +169,7 @@ class AuthorizationClient {
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
     params[4] = await this.Sign(packedHash);
 
-    const payload = await this.client.signer.provider.send("elv_channelContentRequest", params);
+    const payload = await this.MakeStateChannelRequest(params);
 
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
     const multiSig = Utils.FormatSignature(signature);
@@ -185,12 +201,17 @@ class AuthorizationClient {
       transactionHash = undefined;
     }
 
-    const token = JSON.stringify({
+    let token = {
       qspace_id: this.contentSpaceId,
-      qlib_id: libraryId,
       addr: ((this.client.signer && this.client.signer.address) || "").replace("0x", ""),
       tx_id: (transactionHash || "").replace("0x", "")
-    });
+    };
+
+    if(libraryId) {
+      token.qlib_id = libraryId;
+    }
+
+    token = JSON.stringify(token);
 
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token)));
     const multiSig = Utils.FormatSignature(signature);

@@ -3,7 +3,7 @@ const { ElvClient } = require("../src/ElvClient");
 const ClientConfiguration = require("../TestConfiguration.json");
 const fs = require("fs");
 
-let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+const client = new ElvClient(ClientConfiguration);
 
 if(process.argv.length !== 3) {
   console.error("Usage: node InitContentSpace.js <private-key>");
@@ -30,7 +30,7 @@ const Init = async () => {
     console.log("\tAddress: " + deployResult.contractAddress);
     console.log("\tID: " + contentSpaceId + "\n");
 
-    ClientConfiguration.fabric.contentSpaceId = contentSpaceId;
+    ClientConfiguration.contentSpaceId = contentSpaceId;
     fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
 
     console.log("Updated TestConfiguration.json\n");

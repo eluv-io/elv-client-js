@@ -7,6 +7,7 @@ import {UserSpace} from "./user_space.sol";
 AccessIndexor20190423111800ML: First versioned release
 AccessIndexor20190510150600ML: Removes debug events
 AccessIndexor20190528194200ML: Removes contentSpace is field as it is now inherited from Ownable
+AccessIndexor20190605162000ML: Adds cleanUp functions to remove references to dead objects
 */
 
 
@@ -324,5 +325,53 @@ contract AccessIndexor is Ownable {
         return false;
     }
 
+    function contractExists(address addr) public view returns (bool) {
+        uint size;
+        assembly {
+            size := extcodesize(addr)
+        }
+        return (size > 0);
+    }
 
+    event dbgAddress(string label, uint index, address a);
+    function cleanUp(AccessIndex storage index) private returns (uint) {
+        uint cleansedCount = 0;
+        uint i = 0;
+        while (i < index.length) {
+            if (contractExists(index.list[i]) == false) {
+                emit dbgAddress("dead", i, index.list[i]);
+                delete index.list[i];
+                cleansedCount++;
+                if (i != (index.length - 1)) {
+                    index.list[i] = index.list[index.length - 1];
+                    delete index.list[index.length - 1];
+                }
+                index.length--;
+            } else {
+                emit dbgAddress("alive", i, index.list[i]);
+                i++;
+            }
+        }
+        return cleansedCount;
+    }
+
+    function cleanUpLibraries() public returns (uint) {
+        return cleanUp(libraries);
+    }
+
+    function cleanUpAccessGroups() public returns (uint) {
+        return cleanUp(accessGroups);
+    }
+
+    function cleanUpContentObjects() public returns (uint) {
+        return cleanUp(contentObjects);
+    }
+
+    function cleanUpContentTypes() public returns (uint) {
+        return cleanUp(contentTypes);
+    }
+    
+    function cleanUpAll() public returns (uint, uint, uint, uint, uint) {
+        return (cleanUp(libraries), cleanUp(accessGroups), cleanUp(contentObjects), cleanUp(contentTypes), cleanUp(contracts));
+   }
 }

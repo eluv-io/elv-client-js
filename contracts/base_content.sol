@@ -14,12 +14,13 @@ BaseContent20190321122100ML: accessRequest returns requestID, removed ml_hash fr
 BaseContent20190510151500ML: creation via ContentSpace factory, modified getAccessInfo API
 BaseContent20190522154000SS: Changed hash bytes32 to string
 BaseContent20190528193400ML: Modified to support non-library containers
+BaseContent20190605203200ML: Split publish and confirm logic
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190528193400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190605203200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -341,15 +342,29 @@ contract BaseContent is Editable {
         return accessCharge;
     }
 
+
+    function canEdit() public view returns (bool) {
+        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
+        address walletAddress = contentSpaceObj.getAccessWallet();
+        AccessIndexor wallet = AccessIndexor(walletAddress);
+        return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
+    }
+
     function canPublish() public view returns (bool) {
-        if (msg.sender == owner || msg.sender == libraryAddress) return true;
+        return (canEdit() || msg.sender == libraryAddress);
+    }
+
+    function canCommit() public view returns (bool) {
+        return canEdit();
+    }
+
+    function canConfirm() public view returns (bool) {
         Container lib = Container(libraryAddress);
         return lib.canNodePublish(msg.sender);
     }
 
     // TODO: why payable?
     function publish() public payable returns (bool) {
-        super.publish();
         bool submitStatus = Container(libraryAddress).publish(address(this));
         // Log event
         emit Publish(submitStatus, statusCode, objectHash); // TODO: confirm?

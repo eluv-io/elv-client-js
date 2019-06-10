@@ -18,12 +18,13 @@ BaseLibrary20190515103800ML: Overloads canPublish to take into account EDIT priv
 BaseLibrary20190522154000SS: Changed hash bytes32 to string
 BaseLibrary20190523121700ML: Fixes logic of add/remove of groups to revert to compact arrays
 BaseLibrary20190528151200ML: Uses Container abstraction
+BaseLibrary20190605150200ML: Splits out canConfirm from canPublish
 */
 
 
 contract BaseLibrary is MetaObject, Accessible, Container {
 
-    bytes32 public version ="BaseLibrary20190602093600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20190605150200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public contributorGroups;
     address[] public reviewerGroups;
@@ -52,13 +53,14 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         addressKMS = address_KMS;
     }
 
+    function canConfirm() public view returns (bool) {
+        return canNodePublish(msg.sender);
+    }
+
     function canPublish() public view returns (bool) {
         if ((tx.origin == owner) || (msg.sender == owner)) {
             return true;
         }
-
-        bool nodePublish = canNodePublish(msg.sender);
-        if (nodePublish) return true;
 
         address userWallet = BaseContentSpace(contentSpace).userWallets(tx.origin);
         if (userWallet != 0x0) {

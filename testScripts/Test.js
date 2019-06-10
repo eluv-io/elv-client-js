@@ -28,31 +28,8 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
 const Test = async () => {
   try {
-    //ClientConfiguration.noCache = true;
-    let client = ElvClient.FromConfiguration({
-      configuration: ClientConfiguration
-    });
-
-    let client2 = ElvClient.FromConfiguration({
-      configuration: ClientConfiguration
-    });
-
-    let wallet2 = client2.GenerateWallet();
-    let signer2 = wallet2.AddAccount({
-      privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
-    });
-    await client2.SetSigner({signer: signer2});
-
-    //console.log(await client2.AccessGroupsCollection({collectionType: "contentTypes"}));
-
-    //console.log(await client2.ContentTypes());
-    //console.log(await client2.ContentLibraries());
-    console.log(await client2.CreateContentType({
-      name: "somethign unqique",
-      metadata: {"meta": "data"}
-    }));
-
-    return;
+    console.log(ClientConfiguration);
+    const client = new ElvClient(ClientConfiguration);
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
@@ -60,20 +37,16 @@ const Test = async () => {
     });
     await client.SetSigner({signer});
 
-    console.log("ADDING");
-    await client.AddAccessGroupManager({
-      contractAddress: "0xe198294999e2ecce8f4882753213b33494c6d635",
-      memberAddress: "0xc04e30b4d747afb72e2239b42c174b42dc6f7039"
-    });
-    console.log("ADDED");
+    //const libraryId = "ilibax7Sxmp8Lxt3mLEPCMNPvWRnVSM";
+    const objectId = "iq__2811NmMonbk9dNJ9KQ1tPHg1MZZ";
+    const hash = "hq__MWLkjLTyQhayHd8NXJfjnr14xXvvRuSNmiJYk8bZU26vJczLRRHmDZwaX4fYrFTxtvjY7jLKXu";
 
 
-
-    console.log(await client2.ContentTypes());
-
+    const libraryId = await client.CreateContentLibrary({name: "Test library"});
+    console.log(await client.CreateContentObject({libraryId}));
     return;
 
-    console.log(await client.ContentType({name: "library"}));
+    console.log(await client.CreateContentType({name: "test type"}));
 
     return;
     const CT = await client.CreateContentType({
