@@ -390,7 +390,7 @@ class EthClient {
   }
 
   // Get all logs for the specified contract in the specified range
-  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false, signer}) {
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false}) {
     const contractLogs = await this.MakeProviderCall({
       methodName: "getLogs",
       args: [{
@@ -445,7 +445,7 @@ class EthClient {
 
   // Get logs for all blocks in the specified range
   // Returns a list, sorted in descending block order, with each entry containing all logs or transactions in that block
-  async Events({toBlock, fromBlock, includeTransaction=false, signer}) {
+  async Events({toBlock, fromBlock, includeTransaction=false}) {
     const logs = await this.MakeProviderCall({methodName: "getLogs", args: [{fromBlock, toBlock}]});
 
     // Group logs by blocknumber

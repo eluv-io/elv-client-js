@@ -87,7 +87,26 @@ class ElvClient {
     this.InitializeClients();
   }
 
+  /**
+   * Create a new ElvClient using automatic configuration
+   *
+   * @constructor
+   *
+   * @namedParams
+   * @param {string=} configUrl - Full URL to the config endpoint
+   * @param {string=} domain - Domain of the config URL
+   * @param {string=} networkName - Name of the network
+   * @param {string=} networkId - ID of the network
+   * @param {number=} port - Port of the config URL
+   * @param {boolean=} useHTTPS - Whether or not to use HTTPS for the config URL
+   * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
+   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   *
+   * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
+   */
   static async FromBootstrap({
+    configUrl,
     domain="contentfabric.io",
     networkName="main",
     networkId,
@@ -97,14 +116,17 @@ class ElvClient {
     noCache=false,
     noAuth=false
   }) {
-    port = port || (useHTTPS ? 443 : 80);
-    const bootstrapURI = new URI()
-      .protocol(useHTTPS ? "https" : "http")
-      .host(domain)
-      .subdomain(`${networkName}.net${networkId}`)
-      .port(port);
+    if(!configUrl) {
+      port = port || (useHTTPS ? 443 : 80);
+      configUrl = new URI()
+        .protocol(useHTTPS ? "https" : "http")
+        .host(domain)
+        .subdomain(`${networkName}.net${networkId}`)
+        .port(port)
+        .path("config");
+    }
 
-    const httpClient = new HttpClient([bootstrapURI]);
+    const httpClient = new HttpClient([configUrl]);
     const fabricInfo = await ResponseToJson(httpClient.Request({method: "GET", path: "/config"}));
 
     const seedNodes = fabricInfo.network.seed_nodes;
@@ -394,7 +416,7 @@ class ElvClient {
       libraryId,
       objectId,
       options: {
-        //type: "library"
+        type: "library"
       }
     });
 
@@ -710,6 +732,7 @@ class ElvClient {
           try {
             this.contentTypes[typeId] = await this.ContentType({typeId});
           } catch(error) {
+            // eslint-disable-next-line no-console
             console.error(error);
           }
         }
@@ -743,7 +766,6 @@ class ElvClient {
     const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
 
     const { contractAddress } = await this.authClient.CreateContentType();
-    return;
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
     const path = UrlJoin("qlibs", contentSpaceLibraryId, "qid", objectId);
@@ -2598,8 +2620,7 @@ class ElvClient {
       abi,
       fromBlock,
       toBlock,
-      includeTransaction,
-      signer: this.signer
+      includeTransaction
     });
   }
 
@@ -2660,8 +2681,7 @@ class ElvClient {
     return await this.ethClient.Events({
       toBlock,
       fromBlock,
-      includeTransaction,
-      signer: this.signer
+      includeTransaction
     });
   }
 
