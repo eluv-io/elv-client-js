@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async WalletCollection({\n  \"collectionType\": \"contentTypes\"\n});",
+    "result": "[\n  \"0xce9A8ce12cDc9Cc6690b8f5d935334b94D7ED074\"\n]"
+  },
+  {
+    "signature": "async WalletCollection({\n  \"collectionType\": \"libraries\"\n});",
+    "result": "[\n  \"0x516B62470f82aD74859509B1651512B04735174B\"\n]"
+  }
+]

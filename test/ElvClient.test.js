@@ -43,6 +43,20 @@ describe("Test ElvClient", () => {
     testHash = RandomString(10);
   });
 
+  describe("Initialize From Configuration Url", () => {
+    test("Initialization", async () => {
+      const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
+
+      expect(bootstrapClient).toBeDefined();
+      expect(bootstrapClient.fabricURIs).toBeDefined();
+      expect(bootstrapClient.fabricURIs.length).toBeGreaterThan(0);
+      expect(bootstrapClient.ethereumURIs).toBeDefined();
+      expect(bootstrapClient.ethereumURIs.length).toBeGreaterThan(0);
+      expect(bootstrapClient.stateChannelURIs).toBeDefined();
+      expect(bootstrapClient.stateChannelURIs.length).toBeGreaterThan(0);
+    });
+  });
+
   describe("Access Groups", () => {
     test("Create Access Group", async () => {
       accessGroupAddress = await client.CreateAccessGroup();
@@ -122,12 +136,12 @@ describe("Test ElvClient", () => {
 
   describe("Content Libraries", () => {
     test("Create Content Library", async () => {
-      const image = BufferToArrayBuffer(fs.readFileSync("test/images/test-image1.png"));
+      //const image = BufferToArrayBuffer(fs.readFileSync("test/images/test-image1.png"));
 
       libraryId = await client.CreateContentLibrary({
         name: "Test Library " + testHash,
         description: "Test Library Description",
-        image,
+        //image,
         metadata: {
           private: {
             meta: "data"
@@ -326,12 +340,12 @@ describe("Test ElvClient", () => {
     });
 
     test("Get Content Object By Version Hash", async () => {
-      const object = await client.ContentObject({libraryId, objectId});
-      const objectByHash = await client.ContentObjectByHash({versionHash});
+      const object = await client.ContentObject({versionHash});
 
       expect(object).toBeDefined();
-      expect(objectByHash).toBeDefined();
-      expect(objectByHash).toMatchObject(object);
+      expect(object.id).toEqual(objectId);
+      expect(object.hash).toEqual(versionHash);
+      expect(object.type).toEqual(typeHash);
     });
 
     test("Get Content Object Owner", async () => {
@@ -507,13 +521,6 @@ describe("Test ElvClient", () => {
         methodName: "setVisibility",
         methodArgs: [10]
       });
-
-      console.log("VIS");
-      console.log(await client.CallContractMethod({
-        abi: BaseContentContract.abi,
-        contractAddress: client.utils.HashToAddress(objectId),
-        methodName: "visibility"
-      }));
 
       await client.SetAccessCharge({objectId, accessCharge: "0.5"});
 
@@ -718,13 +725,13 @@ describe("Test ElvClient", () => {
       validateUrl(partUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "data", partInfo.whole));
 
       const versionOnlyPartUrl = await client.FabricUrl({versionHash, partHash: partInfo.whole});
-      validateUrl(versionOnlyPartUrl, UrlJoin("/q", versionHash, "data", partInfo.whole), {}, false);
+      validateUrl(versionOnlyPartUrl, UrlJoin("/q", versionHash, "data", partInfo.whole), {});
 
       const versionOnlyCallUrl = await client.FabricUrl({versionHash, call: "method"});
-      validateUrl(versionOnlyCallUrl, UrlJoin("/q", versionHash, "call", "method"), {}, false);
+      validateUrl(versionOnlyCallUrl, UrlJoin("/q", versionHash, "call", "method"), {});
 
       const versionOnlyRepUrl = await client.FabricUrl({versionHash, rep: "image"});
-      validateUrl(versionOnlyRepUrl, UrlJoin("/q", versionHash, "rep", "image"), {}, false);
+      validateUrl(versionOnlyRepUrl, UrlJoin("/q", versionHash, "rep", "image"), {});
 
       const versionOnlyAuthUrl = await client.FabricUrl({versionHash, objectId, partHash: partInfo.whole});
       validateUrl(versionOnlyAuthUrl, UrlJoin("/q", versionHash, "data", partInfo.whole));

@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async BitcodeMethodUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"method\": \"image\"\n});",
-    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg/call/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNDU4dTd2eGtTMm85WHlFM0hvcUVLWnVaOWg4dyIsInFsaWJfaWQiOiJpbGliU0o4aVl2ekt3U2hzZlZoVTNwSDhDSkR3dU1YIiwiYWRkciI6IjB4RDMwYUJCNzVFMTRDNTlkYUQyNWI3RTVkZEI5ZTY5OUZENjJGNUYyMSIsInR4aWQiOiIweDUxNTZmYThjYzZmNmE3ZmQ2NWI2ZmYyMWEwY2RhYWFmZjdmNWI5OWFjMWYyMGUwYTcwYTk2ZTJkMWI5NzAyOTYifQ%3D%3D.U0lHTkFUVVJF\""
+    "signature": "async BitcodeMethodUrl({\n  \"libraryId\": \"ilib28npW48W6R2GX8u2TpmHkUpxsgJN\",\n  \"objectId\": \"iq__Zi58CBovNU1aAtrVzAAC6R5mfRi\",\n  \"method\": \"image\"\n});",
+    "result": "\"http://localhost:8008/qlibs/ilib28npW48W6R2GX8u2TpmHkUpxsgJN/q/iq__Zi58CBovNU1aAtrVzAAC6R5mfRi/call/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnROcU1UcjUxc3pQR3N0dEZRSlNxNmdSZEthWiIsImFkZHIiOiIwN0FkMjU0OTZlODIyYzcwNGQ3REI3NzRjZDFmMDg1RUQyNmFEYTQwIiwidHhfaWQiOiI1NDdkYzY1ZTlmMTUyNGY2ZWU2NWY5YjU5NjJjOGQ3ZjUxZGQ1YjZiYTExNjVhZDQ4NDkxYWYyNTk4YTIyMDVkIiwicWxpYl9pZCI6ImlsaWIyOG5wVzQ4VzZSMkdYOHUyVHBtSGtVcHhzZ0pOIn0%3D.RVMyNTZLXzUzMmZhckNMNzN2TkFLc0R1SEFLaHY0ZXMyNW4yWllOeUtUUTNHc2Q2TXJKb1RZaVRMUXN0eXNBWUVoOXVIb0dIWlc3ZVVKVHp5b0Y0cFRiWU1TekJwa1VU\""
   },
   {
-    "signature": "async BitcodeMethodUrl({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\",\n  \"method\": \"image\",\n  \"noAuth\": true\n});",
-    "result": "\"http://localhost:8008/qlibs/ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX/q/iq__3SJTyndAy3kCDpbfe2R19qMDHrQg/call/image\""
+    "signature": "async BitcodeMethodUrl({\n  \"libraryId\": \"ilib28npW48W6R2GX8u2TpmHkUpxsgJN\",\n  \"objectId\": \"iq__Zi58CBovNU1aAtrVzAAC6R5mfRi\",\n  \"method\": \"image\",\n  \"noAuth\": true\n});",
+    "result": "\"http://localhost:8008/qlibs/ilib28npW48W6R2GX8u2TpmHkUpxsgJN/q/iq__Zi58CBovNU1aAtrVzAAC6R5mfRi/call/image\""
   }
 ]

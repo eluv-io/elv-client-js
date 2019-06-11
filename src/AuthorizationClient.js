@@ -55,6 +55,7 @@ class AuthorizationClient {
     noCache=false,
     noAuth=false
   }) {
+    update=true;
     const authorizationToken = await this.AuthorizationToken({
       libraryId,
       objectId,

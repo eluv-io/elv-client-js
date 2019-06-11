@@ -1,118 +1,118 @@
 [
   {
-    "signature": "async IsCloneable(\"value\");",
+    "signature": " IsCloneable(\"value\");",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(0.5);",
+    "signature": " IsCloneable(0.5);",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"something\");",
+    "signature": " IsCloneable(\"something\");",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable({\n  \"value\": \"something\"\n});",
+    "signature": " IsCloneable({\n  \"value\": \"something\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(2, 1, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(2, 1, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"a\", 2, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(\"a\", 2, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"b\");",
+    "signature": " IsCloneable(\"b\");",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable({\n  \"a\": \"b\"\n}, 3, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable({\n  \"a\": \"b\"\n}, 3, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable({});",
+    "signature": " IsCloneable({});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "signature": " IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"a\", 1, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "signature": " IsCloneable(\"a\", 1, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"obj\", 2, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "signature": " IsCloneable(\"obj\", 2, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(2, 0, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(2, 0, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"b\", 1, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(\"b\", 1, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable({\n  \"a\": \"b\"\n}, 2, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable({\n  \"a\": \"b\"\n}, 2, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"set\": \"<Set>\",\n  \"map\": \"<Map>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\"\n});",
+    "signature": " IsCloneable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"set\": \"<Set>\",\n  \"map\": \"<Map>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "signature": " IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"a\", 1, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "signature": " IsCloneable(\"a\", 1, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"obj\", 2, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "signature": " IsCloneable(\"obj\", 2, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(\"fn\", 3, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "signature": " IsCloneable(\"fn\", 3, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable(, 3, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(, 3, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
     "result": "false"
   },
   {
-    "signature": "async IsCloneable({});",
+    "signature": " IsCloneable({});",
     "result": "false"
   },
   {
-    "signature": "async IsCloneable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<Buffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"response\": \"<Response 0>\",\n  \"error\": {}\n});",
+    "signature": " IsCloneable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<Buffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"response\": \"<Response 0>\",\n  \"error\": {}\n});",
     "result": "false"
   },
   {
-    "signature": "async IsCloneable(2);",
+    "signature": " IsCloneable(2);",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable({\n  \"a\": \"b\"\n});",
+    "signature": " IsCloneable({\n  \"a\": \"b\"\n});",
     "result": "true"
   },
   {
-    "signature": "async IsCloneable();",
+    "signature": " IsCloneable();",
     "result": "false"
   },
   {
-    "signature": "async IsCloneable({\n  \"0\": 102,\n  \"1\": 54,\n  \"2\": 53,\n  \"3\": 55,\n  \"4\": 51,\n  \"5\": 48,\n  \"6\": 101,\n  \"7\": 54,\n  \"8\": 102,\n  \"9\": 101,\n  \"10\": 51,\n  \"11\": 100,\n  \"12\": 54,\n  \"13\": 55,\n  \"14\": 101,\n  \"15\": 49,\n  \"16\": 100,\n  \"17\": 50,\n  \"18\": 101,\n  \"19\": 55,\n  \"20\": 98,\n  \"21\": 100,\n  \"22\": 98,\n  \"23\": 98,\n  \"24\": 97,\n  \"25\": 101,\n  \"26\": 99,\n  \"27\": 102,\n  \"28\": 57,\n  \"29\": 98,\n  \"30\": 48,\n  \"31\": 49,\n  \"32\": 51,\n  \"33\": 51,\n  \"34\": 100,\n  \"35\": 57,\n  \"36\": 53,\n  \"37\": 48,\n  \"38\": 102,\n  \"39\": 50\n});",
+    "signature": " IsCloneable({\n  \"0\": 99,\n  \"1\": 52,\n  \"2\": 49,\n  \"3\": 51,\n  \"4\": 52,\n  \"5\": 49,\n  \"6\": 97,\n  \"7\": 51,\n  \"8\": 53,\n  \"9\": 101,\n  \"10\": 53,\n  \"11\": 97,\n  \"12\": 50,\n  \"13\": 57,\n  \"14\": 49,\n  \"15\": 51,\n  \"16\": 53,\n  \"17\": 54,\n  \"18\": 101,\n  \"19\": 102,\n  \"20\": 50,\n  \"21\": 97,\n  \"22\": 54,\n  \"23\": 53,\n  \"24\": 54,\n  \"25\": 53,\n  \"26\": 100,\n  \"27\": 48,\n  \"28\": 53,\n  \"29\": 56,\n  \"30\": 102,\n  \"31\": 99,\n  \"32\": 100,\n  \"33\": 102,\n  \"34\": 55,\n  \"35\": 56,\n  \"36\": 102,\n  \"37\": 52,\n  \"38\": 52,\n  \"39\": 97\n});",
     "result": "false"
   },
   {
-    "signature": "async IsCloneable({\n  \"size\": 0,\n  \"timeout\": 0\n});",
+    "signature": " IsCloneable({\n  \"size\": 0,\n  \"timeout\": 0\n});",
     "result": "false"
   }
 ]

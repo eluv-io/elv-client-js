@@ -59,7 +59,7 @@ const CreateClient = async (bux="2") => {
   // Add new account to content space group
   // TODO: Pull access group address from content space when implemented
   await fundedClient.AddAccessGroupManager({
-    contractAddress: "0x77b0ed22c92514d63de5b6334c6a47c48c135f30",
+    contractAddress: "0x6b609282d747ded092066728bc7b3071e94384a8",
     memberAddress: signer.address
   });
 

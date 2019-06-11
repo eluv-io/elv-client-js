@@ -1,0 +1,10 @@
+[
+  {
+    "signature": " CollectionMethods(\"contentTypes\");",
+    "result": "{\n  \"lengthMethod\": \"getContentTypesLength\",\n  \"itemMethod\": \"getContentType\"\n}"
+  },
+  {
+    "signature": " CollectionMethods(\"libraries\");",
+    "result": "{\n  \"lengthMethod\": \"getLibrariesLength\",\n  \"itemMethod\": \"getLibrary\"\n}"
+  }
+]
