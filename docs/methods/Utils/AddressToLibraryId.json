@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async AddressToLibraryId(\"0x2806e87e50dd3d9873c8487573ea512c6861c0df\");",
+    "signature": " AddressToLibraryId(\"0x2806e87e50dd3d9873c8487573ea512c6861c0df\");",
     "result": "\"ilibZLusoJnHFwAX9pfFB2rYX2yLnsY\""
   }
 ]

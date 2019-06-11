@@ -9,7 +9,7 @@ const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
-const Crypto = require("./Crypto");
+//const Crypto = require("./Crypto");
 
 const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
@@ -84,47 +84,30 @@ class ElvClient {
 
     this.utils = Utils;
 
+    this.contentTypes = {};
+
     this.InitializeClients();
   }
 
   /**
-   * Create a new ElvClient using automatic configuration
+   * Create a new ElvClient from the specified configuration URL
    *
-   * @constructor
-   *
+   * @methodGroup Constructor
    * @namedParams
-   * @param {string=} configUrl - Full URL to the config endpoint
-   * @param {string=} domain - Domain of the config URL
-   * @param {string=} networkName - Name of the network
-   * @param {string=} networkId - ID of the network
-   * @param {number=} port - Port of the config URL
-   * @param {boolean=} useHTTPS - Whether or not to use HTTPS for the config URL
+   * @param {string} configUrl - Full URL to the config endpoint
    * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
-   * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
+   * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
    */
-  static async FromBootstrap({
+  static async FromConfigurationUrl({
     configUrl,
-    domain="contentfabric.io",
-    networkName="main",
-    networkId,
-    port,
-    useHTTPS=true,
     viewOnly=false,
     noCache=false,
     noAuth=false
   }) {
-    if(!configUrl) {
-      port = port || (useHTTPS ? 443 : 80);
-      configUrl = new URI()
-        .protocol(useHTTPS ? "https" : "http")
-        .host(domain)
-        .subdomain(`${networkName}.net${networkId}`)
-        .port(port)
-        .path("config");
-    }
+    const useHTTPS = configUrl.startsWith("https://");
 
     const httpClient = new HttpClient([configUrl]);
     const fabricInfo = await ResponseToJson(httpClient.Request({method: "GET", path: "/config"}));
@@ -132,16 +115,16 @@ class ElvClient {
     const seedNodes = fabricInfo.network.seed_nodes;
     const fabricURIs = seedNodes.map(ip =>
       new URI()
+        .path("")
         .protocol(useHTTPS ? "https" : "http")
         .host(ip)
         .port(80)
         .toString()
     );
 
-    fabricURIs[0] = new URI().host("localhost").port(444).protocol("http");
-
     const ethereumURIs = seedNodes.map(ip =>
       new URI()
+        .path("")
         .protocol(useHTTPS ? "https" : "http")
         .host(ip)
         .port(8545)
@@ -151,6 +134,7 @@ class ElvClient {
     const rpcSeedNodes = fabricInfo.qspace.ethereum.rpc_seed_nodes;
     const stateChannelURIs = rpcSeedNodes.map(ip =>
       new URI()
+        .path("")
         .protocol(useHTTPS ? "https" : "http")
         .host(ip)
         .port(8545)
@@ -329,7 +313,7 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId
    *
-   * @returns {Promise<*>}
+   * @returns {Promise<Object>}
    */
   async ContentLibrary({libraryId}) {
     let path = UrlJoin("qlibs", libraryId);
@@ -398,7 +382,7 @@ class ElvClient {
     if(isUserLibrary) {
       libraryId = this.utils.AddressToLibraryId(this.signer.address);
     } else {
-      const createRequest = await this.authClient.CreateContentLibrary();
+      const { contractAddress } = await this.authClient.CreateContentLibrary();
 
       metadata = {
         ...metadata,
@@ -406,7 +390,7 @@ class ElvClient {
         "eluv.description": description
       };
 
-      libraryId = this.utils.AddressToLibraryId(createRequest.contractAddress);
+      libraryId = this.utils.AddressToLibraryId(contractAddress);
     }
 
     // Set library content object type and metadata on automatically created library object
@@ -550,7 +534,7 @@ class ElvClient {
    * @param {string=} customContractAddress - Address of the custom contract to associate with
    * this content type for this library
    *
-   * @returns {string} - Hash of the addContentType transaction
+   * @returns {Promise<string>} - Hash of the addContentType transaction
    */
   async AddLibraryContentType({libraryId, typeId, typeName, customContractAddress}) {
     if(!typeId) {
@@ -582,7 +566,7 @@ class ElvClient {
    * @param {string=} typeId - ID of the content type (required unless typeName is specified)
    * @param {string=} typeName - Name of the content type (required unless typeId is specified)
    *
-   * @returns {string} - Hash of the removeContentType transaction
+   * @returns {Promise<string>} - Hash of the removeContentType transaction
    */
   async RemoveLibraryContentType({libraryId, typeId, typeName}) {
     if(!typeId) {
@@ -615,7 +599,7 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    *
-   * @returns {Array<object>} - List of accepted content types - return format is equivalent to ContentTypes method
+   * @returns {Promise<Array<object>>} - List of accepted content types - return format is equivalent to ContentTypes method
    */
   async LibraryContentTypes({libraryId}) {
     const typesLength = (await this.ethClient.CallContractMethod({
@@ -644,7 +628,7 @@ class ElvClient {
       })
     );
 
-    const contentTypes = await this.ContentTypes({});
+    const contentTypes = await this.ContentTypes();
 
     let allowedTypes = {};
     Object.values(contentTypes).map(type => {
@@ -666,12 +650,13 @@ class ElvClient {
    * @methodGroup Content Types
    * @namedParams
    * @param {string=} name - Name of the content type to find
+   * @param {string=} typeId - ID of the content type to find
    * @param {string=} versionHash - Version hash of the content type to find
    *
    * @returns {Promise<string>} - The account address of the owner
    */
-  async ContentTypeOwner({name, versionHash}) {
-    const contentType = await this.ContentType({name, versionHash});
+  async ContentTypeOwner({name, typeId, versionHash}) {
+    const contentType = await this.ContentType({name, typeId, versionHash});
 
     return await this.ethClient.CallContractMethod({
       contractAddress: Utils.HashToAddress(contentType.id),
@@ -682,8 +667,20 @@ class ElvClient {
     });
   }
 
-  async ContentType({name, versionHash, typeId}) {
-    // TODO: pull object ID out of version hash
+  /**
+   * Find the content type accessible to the current user by name, ID, or version hash
+   *
+   * @methodGroup Content Types
+   * @namedParams
+   * @param {string=} name - Name of the content type to find
+   * @param {string=} typeId - ID of the content type to find
+   * @param {string=} versionHash - Version hash of the content type to find
+   *
+   * @return {Promise<Object>} - The content type, if found
+   */
+  async ContentType({name, typeId, versionHash}) {
+    if(versionHash) { typeId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     if(!typeId) {
       const types = await this.ContentTypes();
 
@@ -719,6 +716,14 @@ class ElvClient {
     }
   }
 
+  /**
+   * List all content types accessible to this user.
+   *
+   * @methodGroup Content Types
+   * @namedParams
+   *
+   * @return {Promise<Array<Object>>} - A list of content types
+   */
   async ContentTypes() {
     this.contentTypes = this.contentTypes || {};
 
@@ -869,35 +874,13 @@ class ElvClient {
    * @returns {Promise<Object>} - Description of created object
    */
   async ContentObject({libraryId, objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId);
 
     return await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
-        method: "GET",
-        path: path
-      })
-    );
-  }
-
-  /**
-   * Get a specific content object in the library by version hash
-   *
-   * Note: This endpoint does not require authorization
-   *
-   * @see /q/:qhit
-   *
-   * @methodGroup Content Objects
-   * @namedParams
-   * @param {string=} versionHash - Version hash of the object
-   *
-   * @returns {Promise<Object>} - Description of created object
-   */
-  async ContentObjectByHash({versionHash}) {
-    let path = UrlJoin("q", versionHash);
-
-    return await ResponseToJson(
-      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         method: "GET",
         path: path
       })
@@ -930,8 +913,8 @@ class ElvClient {
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -939,6 +922,8 @@ class ElvClient {
    * @returns {Promise<Object>} - Metadata of the content object
    */
   async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=false}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "meta", metadataSubtree);
 
     try {
@@ -955,6 +940,8 @@ class ElvClient {
       if(error.status !== 404) {
         throw error;
       }
+
+      return metadataSubtree === "/" ? {} : undefined;
     }
   }
 
@@ -1020,7 +1007,7 @@ class ElvClient {
       options.type = type.hash;
     }
 
-    const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId, typeId});
+    const { contractAddress } = await this.authClient.CreateContentObject({libraryId, typeId});
 
     await this.CallContractMethod({
       abi: ContentContract.abi,
@@ -1034,7 +1021,7 @@ class ElvClient {
 
     return await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: options
@@ -1139,6 +1126,9 @@ class ElvClient {
       objectId,
       versionHash: finalizeResponse.hash
     });
+
+    // Invalidate cached content type, if this is one.
+    delete this.contentTypes[objectId];
 
     return finalizeResponse;
   }
@@ -1304,11 +1294,13 @@ class ElvClient {
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
-   * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be used
    */
   async ListFiles({libraryId, objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "meta", "files");
 
     return ResponseToJson(
@@ -1426,8 +1418,8 @@ class ElvClient {
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} filePath - Path to the file to download
    * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
@@ -1435,6 +1427,8 @@ class ElvClient {
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
   async DownloadFile({libraryId, objectId, versionHash, filePath, format="blob"}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "files", filePath);
 
     return ResponseToFormat(
@@ -1456,13 +1450,15 @@ class ElvClient {
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    *
    * @returns {Promise<Object>} - Response containing list of parts of the object
    */
   async ContentParts({libraryId, objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "parts");
 
     const response = await ResponseToJson(
@@ -1483,8 +1479,8 @@ class ElvClient {
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} partHash - Hash of the part to download
    * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
@@ -1492,6 +1488,8 @@ class ElvClient {
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
   async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     const path = UrlJoin("q", versionHash || objectId, "data", partHash);
 
     const response =
@@ -1644,8 +1642,7 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {object=} args - Arguments to the getAccessInfo method - See the base content contract
    *
-   * @return {object} - Info about the access charge and whether or not the object is accessible to the current user
-   */
+   * @return {Promise<Object>} - Info about the access charge and whether or not the object is accessible to the current user   */
   async AccessInfo({objectId, args}) {
     if(!args) {
       args = [
@@ -1697,9 +1694,11 @@ class ElvClient {
    * @param {boolean=} update=false - If true, will call updateRequest instead of accessRequest
    * @param {boolean=} noCache=false - If true, the resultant transaction hash will not be cached for future use
    *
-   * @return {object} - Resultant AccessRequest or UpdateRequest event
+   * @return {Promise<Object>} - Resultant AccessRequest or UpdateRequest event
    */
   async AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     return await this.authClient.MakeAccessRequest({
       libraryId,
       objectId,
@@ -1721,9 +1720,11 @@ class ElvClient {
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Version hash of the object
    *
-   * @return {string} - The cached transaction hash if present, otherwise undefined
+   * @return {Promise<string>} - The cached transaction hash if present, otherwise undefined
    */
   async CachedAccessTransaction({libraryId, objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     const cacheResult = await this.authClient.MakeAccessRequest({
       libraryId,
       objectId,
@@ -1759,7 +1760,9 @@ class ElvClient {
   /**
    * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
    *
-   * @param {string=} versionHash - Version hash of the content
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string} versionHash - Version hash of the content
    * @param {Array<string>} protocols - Acceptable playout protocols
    * @param {Array<string>} drms - Acceptable DRM formats
    */
@@ -1818,9 +1821,11 @@ class ElvClient {
    * Retrieve playout options in BitMovin player format for the specified content that satisfy
    * the given protocol and DRM requirements
    *
-   * @param {string=} versionHash - Version hash of the content
-   * @param {Array<string>} protocols - Acceptable playout protocols
-   * @param {Array<string>} drms - Acceptable DRM formats
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string} versionHash - Version hash of the content
+   * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
+   * @param {Array<string>=} drms=[] - Acceptable DRM formats
    */
   async BitmovinPlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
     const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -1859,8 +1864,8 @@ class ElvClient {
    *
    * @methodGroup URL Generation
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
@@ -1883,8 +1888,8 @@ class ElvClient {
    *
    * @methodGroup URL Generation
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
@@ -1932,7 +1937,7 @@ class ElvClient {
     noAuth=false,
     noCache=false
   }) {
-    objectId = objectId || this.utils.DecodeVersionHash(versionHash).objectId;
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     // Clone queryParams to avoid modification of the original
     queryParams = {...queryParams};
@@ -1973,7 +1978,7 @@ class ElvClient {
     }
 
     return this.HttpClient.URL({
-      path: path,
+      path,
       queryParams
     });
   }
@@ -1984,7 +1989,7 @@ class ElvClient {
    * @methodGroup URL Generation
    * @namedParams
    * @param {string=} libraryId - ID of an library - Required if versionHash not specified
-   * @param {string} objectId - ID of an object
+   * @param {string=} objectId - ID of an object
    * @param {string=} versionHash - Hash of an object version - Required if libraryId is not specified
    * @param {string} filePath - Path to the content object file
    * @param {Object=} queryParams - Query params to add to the URL
@@ -1994,6 +1999,8 @@ class ElvClient {
    * @returns {Promise<string>} - URL to the specified file with authorization token
    */
   async FileUrl({libraryId, objectId, versionHash, filePath, queryParams={}, noCache=false}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path;
 
     if(libraryId) {
@@ -2117,7 +2124,7 @@ class ElvClient {
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the member to add
    *
-   * @returns {Promise<transactionHash>} - The transaction hash of the call to the grantAccess method
+   * @returns {Promise<string>} - The transaction hash of the call to the grantAccess method
    */
   async AddAccessGroupMember({contractAddress, memberAddress}) {
     return await this.AccessGroupMembershipMethod({
@@ -2137,7 +2144,7 @@ class ElvClient {
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the member to remove
    *
-   * @returns {Promise<transactionHash>} - The transaction hash of the call to the revokeAccess method
+   * @returns {Promise<string>} - The transaction hash of the call to the revokeAccess method
    */
   async RemoveAccessGroupMember({contractAddress, memberAddress}) {
     return await this.AccessGroupMembershipMethod({
@@ -2157,7 +2164,7 @@ class ElvClient {
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the manager to add
    *
-   * @returns {Promise<transactionHash>} - The transaction hash of the call to the grantManagerAccess method
+   * @returns {Promise<string>} - The transaction hash of the call to the grantManagerAccess method
    */
   async AddAccessGroupManager({contractAddress, memberAddress}) {
     return await this.AccessGroupMembershipMethod({
@@ -2177,7 +2184,7 @@ class ElvClient {
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the manager to remove
    *
-   * @returns {Promise<transactionHash>} - The transaction hash of the call to the revokeManagerAccess method
+   * @returns {Promise<string>} - The transaction hash of the call to the revokeManagerAccess method
    */
   async RemoveAccessGroupManager({contractAddress, memberAddress}) {
     return await this.AccessGroupMembershipMethod({
@@ -2245,6 +2252,8 @@ class ElvClient {
    * Get a list of addresses of all of the specified type the current user has access
    * to through their user wallet
    *
+   * @methodGroup Collections
+   * @namedParams
    * @param {string} collectionType - Type of collection to retrieve
    * - accessGroups
    * - contentObjects
@@ -2252,7 +2261,7 @@ class ElvClient {
    * - contracts
    * - libraries
    *
-   * @return {Promise<string[]>} - List of addresses of available items
+   * @return {Promise<Array<string>>} - List of addresses of available items
    */
   async WalletCollection({collectionType}) {
     const {lengthMethod, itemMethod} = this.CollectionMethods(collectionType);
@@ -2269,6 +2278,8 @@ class ElvClient {
    * Get a list of addresses of all of the specified type the current user has access
    * to through access groups
    *
+   * @methodGroup Collections
+   * @namedParams
    * @param {string} collectionType - Type of collection to retrieve
    * - accessGroups
    * - contentObjects
@@ -2276,7 +2287,7 @@ class ElvClient {
    * - contracts
    * - libraries
    *
-   * @return {Promise<string[]>} - List of addresses of available items
+   * @return {Promise<Array<string>>} - List of addresses of available items
    */
   async AccessGroupsCollection({collectionType}) {
     const {lengthMethod, itemMethod} = this.CollectionMethods(collectionType);
@@ -2306,6 +2317,8 @@ class ElvClient {
    * Get a list of unique addresses of all of the specified type the current user has access
    * to through both their user wallet and through access groups
    *
+   * @methodGroup Collections
+   * @namedParams
    * @param {string} collectionType - Type of collection to retrieve
    * - accessGroups
    * - contentObjects
@@ -2313,7 +2326,7 @@ class ElvClient {
    * - contracts
    * - libraries
    *
-   * @return {Promise<string[]>} - List of addresses of available items
+   * @return {Promise<Array<string>>} - List of addresses of available items
    */
   async Collection({collectionType}) {
     return (await this.WalletCollection({collectionType}))
@@ -2350,14 +2363,16 @@ class ElvClient {
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
    * @param {string} partHash - Hash of the part
    *
    * @returns {Promise<Object>} - Response containing proof information
    */
   async Proofs({libraryId, objectId, versionHash, partHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "data", partHash, "proofs");
 
     return ResponseToJson(
@@ -2495,7 +2510,7 @@ class ElvClient {
    *
    * @see Utils.WeiToEther
    *
-   * @returns {Promise<*>} - The parsed event log from the event
+   * @returns {Promise<Object>} - The parsed event log from the event
    */
   ExtractEventFromLogs({abi, event, eventName}) {
     return this.ethClient.ExtractEventFromLogs({abi, event, eventName});
@@ -2513,7 +2528,7 @@ class ElvClient {
    * @param {string} eventName - Name of the event to parse
    * @param {string} eventValue - Name of the value to extract from the event
    *
-   * @returns The value extracted from the event
+   * @returns {Promise<string>} The value extracted from the event
    */
   ExtractValueFromEvent({abi, event, eventName, eventValue}) {
     const eventLog = this.ethClient.ExtractEventFromLogs({abi, event, eventName, eventValue});
@@ -2612,7 +2627,7 @@ class ElvClient {
    * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
    * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
    * Note: This requires one extra network call per block, so it should not be used for very large ranges
-   * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+   * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
   async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false}) {
     return await this.ethClient.ContractEvents({
@@ -2649,7 +2664,7 @@ class ElvClient {
    * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are unspecified)
    * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
    * Note: This requires two extra network calls per transaction, so it should not be used for very large ranges
-   * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+   * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
   async Events({toBlock, fromBlock, count=10, includeTransaction=false}={}) {
     const latestBlock = await this.BlockNumber();
@@ -2711,7 +2726,7 @@ class ElvClient {
    * @param {string} recipient - Address of the recipient
    * @param {number} ether - Amount of ether to send
    *
-   * @returns {Promise<TransactionReceipt>}
+   * @returns {Promise<Object>} - The transaction receipt
    */
   async SendFunds({recipient, ether}) {
     const transaction = await this.signer.sendTransaction({

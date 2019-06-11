@@ -1,9 +1,5 @@
 [
   {
-    "signature": "async CachedAccessTransaction({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\"\n});",
-    "result": "\"0x50e0c37c85b9702a14b7345803ee117c9b2a22a10b8111805dbc3581e6bd468e\""
-  },
-  {
-    "signature": "async CachedAccessTransaction({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\"\n});"
+    "signature": "async CachedAccessTransaction({\n  \"libraryId\": \"ilib28npW48W6R2GX8u2TpmHkUpxsgJN\",\n  \"objectId\": \"iq__Zi58CBovNU1aAtrVzAAC6R5mfRi\"\n});"
   }
 ]

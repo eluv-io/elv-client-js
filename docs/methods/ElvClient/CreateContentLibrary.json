@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async CreateContentLibrary({\n  \"publicMetadata\": {\n    \"class\": \"elv-user-library\"\n  },\n  \"privateMetadata\": {\n    \"access_level\": \"prompt\",\n    \"collected_data\": {}\n  },\n  \"isUserLibrary\": true\n});",
-    "result": "\"ilibUZbQCvhh7oVxUvWBrjQ73xV6WL9\""
+    "signature": "async CreateContentLibrary({\n  \"name\": \"Test Library eacd02f3c9ad8a20836a\",\n  \"description\": \"Test Library Description\",\n  \"metadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    }\n  }\n});",
+    "result": "\"ilib28npW48W6R2GX8u2TpmHkUpxsgJN\""
   }
 ]

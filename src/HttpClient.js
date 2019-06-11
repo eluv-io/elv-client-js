@@ -14,6 +14,10 @@ class HttpClient {
     this.uriIndex = 0;
   }
 
+  BaseURI() {
+    return new URI(this.uris[this.uriIndex]);
+  }
+
   RequestHeaders(bodyType, headers={}) {
     headers["Accept"] = "application/json";
     if(bodyType === "JSON") {
@@ -26,7 +30,7 @@ class HttpClient {
   }
 
   async Request({method, path, queryParams={}, body={}, bodyType="JSON", headers={}, attempts=0}) {
-    let uri = new URI(this.uris[this.uriIndex])
+    let uri = this.BaseURI()
       .path(path)
       .query(queryParams)
       .hash("");
@@ -94,7 +98,7 @@ class HttpClient {
 
   URL({path, queryParams={}}) {
     return (
-      this.baseURI
+      this.BaseURI()
         .path(path)
         .query(queryParams)
         .hash("").toString()

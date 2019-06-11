@@ -1,0 +1,6 @@
+[
+  {
+    "signature": " DecodeVersionHash(\"hq__7cTGD2eMTZMrvLT7SqCtsoJx9cWzy5QBLqcBqSdPtGaXuoYJPaEA22CX3LGZPpMXURCdpzFwS1\");",
+    "result": "{\n  \"digest\": \"51ffc779deeaab3224c5cc9abc3279effe0768864f8eb1d9356ad608eda12b3e\",\n  \"size\": 136,\n  \"objectId\": \"iq__2tNqMTr51szPGsttFQJSq6gRdKaZ\"\n}"
+  }
+]

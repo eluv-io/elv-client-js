@@ -29,18 +29,16 @@ const KickReplacementFee = async (signer, gasPrice) => {
 const Test = async () => {
   try {
     console.log(ClientConfiguration);
-    const client = new ElvClient(ClientConfiguration);
+    //const client = new ElvClient(ClientConfiguration);
 
+    const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io"});
+
+    console.log(client);
+    return;
     /*
-    const client = await ElvClient.FromBootstrap({
-      domain: "contentfabric.io",
-      networkName: "main",
-      networkId: 955304,
-      port: 80,
-      useHTTPS: false
-    });
 
-    const client = await ElvClient.FromBootstrap({
+
+    const client = await ElvClient.FromConfigurationUrl({
       configUrl: "http://main.net955304.contentfabric.io:80/config"
     });
     */
@@ -51,10 +49,63 @@ const Test = async () => {
     });
     await client.SetSigner({signer});
 
+    /*
+    const libraryId = await client.CreateContentLibrary({name: "Test"});
+    console.log(libraryId);
 
-    //console.log(await client.CreateContentLibrary({name: "Test"}));
-    console.log(await client.ContentTypes());
+    const createResponse = await client.CreateContentObject({libraryId});
+    const objectId = createResponse.id;
 
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      metadata: {meta: "Data"}
+    });
+
+    const finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: createResponse.write_token
+    });
+
+    console.log("Create Response:");
+    console.log(createResponse);
+    console.log("\nFinalize Response:");
+    console.log(finalizeResponse);
+
+    console.log(libraryId);
+    console.log(objectId);
+    return;
+    */
+    const libraryId = "ilib2tNqMTr51szPGsttFQJSq6gRdKaZ";
+    const objectId = "iq__2tNqMTr51szPGsttFQJSq6gRdKaZ";
+
+    console.log(await client.ContentObject({
+      versionHash: "hq__7cTGD2eMTZMrvLT7SqCtsoJx9cWzy5QBLqcBqSdPtGaXuoYJPaEA22CX3LGZPpMXURCdpzFwS1"
+    }));
+    /*
+
+    const editResponse = await client.EditContentObject({libraryId, objectId});
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId: editResponse.id,
+      writeToken: editResponse.write_token,
+      metadata: {your: {meta: {data: "here"}}}
+    });
+
+    const finalizeResponse2 = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token
+    });
+
+    console.log("\nEdit Response: ");
+    console.log(editResponse);
+    console.log("\nFinalize Response:");
+    console.log(finalizeResponse2);
+
+    console.log(await client.ContentObjectMetadata({libraryId, objectId}));
     return;
 
     /*
@@ -81,24 +132,7 @@ const Test = async () => {
 
 
 
-    const editResponse = await client.EditContentObject({libraryId, objectId});
-    await client.ReplaceMetadata({
-      libraryId,
-      objectId: editResponse.id,
-      writeToken: editResponse.write_token,
-      metadata: {meta: {data: "here"}}
-    });
 
-    const finalizeResponse2 = await client.FinalizeContentObject({
-      libraryId,
-      objectId,
-      writeToken: editResponse.write_token
-    });
-
-    console.log("\nEdit Response: ");
-    console.log(editResponse);
-    console.log("\nFinalize Response:");
-    console.log(finalizeResponse2);
 
     let rep = await client.Rep({libraryId, objectId, rep: "dash"});
 

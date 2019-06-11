@@ -87,6 +87,13 @@ const Utils = {
     return "ES256K_" + bs58.encode(Buffer.from(sig, "hex"));
   },
 
+  /**
+   * Decode the specified version hash into its component parts
+   *
+   * @param versionHash
+   *
+   * @returns {Object} - Components of the version hash.
+   */
   DecodeVersionHash: (versionHash) => {
     if(!versionHash.startsWith("hq__")) {
       throw new Error(`Invalid version hash: "${versionHash}"`);

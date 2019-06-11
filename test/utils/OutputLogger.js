@@ -125,7 +125,7 @@ const OutputLogger = (klass, instance, exclude=[]) => {
     } else {
       instance[methodName] = (...args) => {
         const result = originalMethod(...args);
-        writeOutput(args, result, true);
+        writeOutput(args, result, false);
         return result;
       };
     }
