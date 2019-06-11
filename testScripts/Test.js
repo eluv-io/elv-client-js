@@ -28,13 +28,9 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
 const Test = async () => {
   try {
-    console.log(ClientConfiguration);
-    //const client = new ElvClient(ClientConfiguration);
+    const client = new ElvClient(ClientConfiguration);
+    //const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
 
-    const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io"});
-
-    console.log(client);
-    return;
     /*
 
 
@@ -49,6 +45,10 @@ const Test = async () => {
     });
     await client.SetSigner({signer});
 
+    const libraryId = "ilibyCL2gSUQEWPaQYJzFWaEWwjkwTX";
+    const objectId = "iq__yCL2gSUQEWPaQYJzFWaEWwjkwTX";
+
+    console.log(await client.ContentObjectMetadata({libraryId, objectId}));
     /*
     const libraryId = await client.CreateContentLibrary({name: "Test"});
     console.log(libraryId);
@@ -78,12 +78,7 @@ const Test = async () => {
     console.log(objectId);
     return;
     */
-    const libraryId = "ilib2tNqMTr51szPGsttFQJSq6gRdKaZ";
-    const objectId = "iq__2tNqMTr51szPGsttFQJSq6gRdKaZ";
 
-    console.log(await client.ContentObject({
-      versionHash: "hq__7cTGD2eMTZMrvLT7SqCtsoJx9cWzy5QBLqcBqSdPtGaXuoYJPaEA22CX3LGZPpMXURCdpzFwS1"
-    }));
     /*
 
     const editResponse = await client.EditContentObject({libraryId, objectId});
