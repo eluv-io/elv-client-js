@@ -56,7 +56,6 @@ class ElvClient {
    * @param {string} contentSpaceId - ID of the content space
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {Array<string>} stateChannelURIs - A list of full URIs to state channel nodes
    * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
@@ -67,7 +66,6 @@ class ElvClient {
     contentSpaceId,
     fabricURIs,
     ethereumURIs,
-    stateChannelURIs,
     viewOnly=false,
     noCache=false,
     noAuth=false
@@ -76,7 +74,6 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
-    this.stateChannelURIs = stateChannelURIs || ethereumURIs;
 
     this.viewOnly = viewOnly;
     this.noCache = noCache;
@@ -131,21 +128,10 @@ class ElvClient {
         .toString()
     );
 
-    const rpcSeedNodes = fabricInfo.qspace.ethereum.rpc_seed_nodes;
-    const stateChannelURIs = rpcSeedNodes.map(ip =>
-      new URI()
-        .path("")
-        .protocol(useHTTPS ? "https" : "http")
-        .host(ip)
-        .port(8545)
-        .toString()
-    );
-
     return new ElvClient({
       contentSpaceId: fabricInfo.qspace.id,
       fabricURIs,
       ethereumURIs,
-      stateChannelURIs,
       viewOnly,
       noCache,
       noAuth
@@ -161,7 +147,6 @@ class ElvClient {
     this.authClient = new AuthorizationClient({
       client: this,
       contentSpaceId: this.contentSpaceId,
-      stateChannelURIs: this.stateChannelURIs,
       signer: this.signer,
       noCache: this.noCache,
       noAuth: this.noAuth
