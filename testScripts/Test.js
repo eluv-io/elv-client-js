@@ -2,8 +2,6 @@ const { ElvClient } = require("../src/ElvClient");
 const { FrameClient } = require("../src/FrameClient");
 
 const ClientConfiguration = require("../TestConfiguration.json");
-const Response = (require("node-fetch")).Response;
-const Utils = require("../src/Utils");
 
 const ContentContract = require("../src/contracts/BaseContent");
 const LibraryContract = require("../src/contracts/BaseLibrary");
@@ -28,9 +26,10 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
 const Test = async () => {
   try {
-    const client = new ElvClient(ClientConfiguration);
-    //const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
+    //const client = new ElvClient(ClientConfiguration);
+    const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
 
+    console.log(client);
     /*
 
 
@@ -45,10 +44,42 @@ const Test = async () => {
     });
     await client.SetSigner({signer});
 
-    const libraryId = "ilibyCL2gSUQEWPaQYJzFWaEWwjkwTX";
-    const objectId = "iq__yCL2gSUQEWPaQYJzFWaEWwjkwTX";
 
-    console.log(await client.ContentObjectMetadata({libraryId, objectId}));
+    /*
+    const libraryId = await client.CreateContentLibrary({name: "Test"});
+    console.log(libraryId);
+
+    const createResponse = await client.CreateContentObject({libraryId});
+    const objectId = createResponse.id;
+
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      metadata: {meta: "Data"}
+    });
+
+    const finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: createResponse.write_token
+    });
+
+    console.log("Create Response:");
+    console.log(createResponse);
+    console.log("\nFinalize Response:");
+    console.log(finalizeResponse);
+
+    console.log(libraryId);
+    console.log(objectId);
+
+    console.log(await client.CallContractMethod({
+      contractAddress: client.utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "getKMSInfo",
+      methodArgs: [[]]
+    }));
+
     /*
     const libraryId = await client.CreateContentLibrary({name: "Test"});
     console.log(libraryId);

@@ -187,6 +187,22 @@ const Utils = {
   },
 
   /**
+   * Compare two addresses to determine if they are the same, regardless of format/capitalization
+   *
+   * @param firstAddress
+   * @param secondAddress
+   *
+   * @returns {boolean} - Whether or not the addresses match
+   */
+  EqualAddress(firstAddress, secondAddress) {
+    if (!firstAddress || !secondAddress) {
+      return false;
+    }
+
+    return (Utils.FormatAddress(firstAddress) === Utils.FormatAddress(secondAddress));
+  },
+
+  /**
    * Compare two IDs to determine if the hashes are the same
    * by comparing the contract address they resolve to
    *

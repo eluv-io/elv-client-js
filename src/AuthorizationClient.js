@@ -154,24 +154,20 @@ class AuthorizationClient {
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
     params[4] = await this.Sign(packedHash);
 
-    /*
     // Get KMS info for the object
-    const methodArgs = this.client.ethClient.FormatContractArguments({
+    const KMSInfo = await this.client.CallContractMethod({
       contractAddress: Utils.HashToAddress(objectId),
       abi: ContentContract.abi,
       methodName: "getKMSInfo",
-      args: ["http"]
+      methodArgs: [[]]
     });
 
-    const stateChannelUri = this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "getKMSInfo",
-      methodArgs
-    });
-    */
+    // Randomize order of URLs so the same one isn't chosen every time
+    const KMSUrls = KMSInfo[0].split(",").sort(() => 0.5 - Math.random());
 
-    const stateChannelUri = this.client.ethereumURIs[0];
+    // Prefer HTTPS urls
+    const stateChannelUri = KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
+
     const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
     const payload = await stateChannelProvider.send("elv_channelContentRequest", params);
 
@@ -364,18 +360,12 @@ class AuthorizationClient {
 
     if(!requestId) { throw Error("Unknown request ID for " + id); }
 
-    const formattedArgs = this.client.FormatContractArguments({
-      abi,
-      methodName: "accessComplete",
-      args: [requestId, score, ""]
-    });
-
     // If access request did not succeed, no event will be emitted
     const event = await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "accessComplete",
-      methodArgs: formattedArgs
+      methodArgs: [requestId, score, ""]
     });
 
     delete this.requestIds[id];
@@ -396,18 +386,12 @@ class AuthorizationClient {
       accessCharge = Utils.WeiToEther(await this.GetAccessCharge({id, abi, args: accessChargeArgs}));
     }
 
-    const formattedArgs = this.client.FormatContractArguments({
-      abi,
-      methodName: "accessRequest",
-      args
-    });
-
     // If access request did not succeed, no event will be emitted
     const event = await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "accessRequest",
-      methodArgs: formattedArgs,
+      methodArgs: args,
       value: accessCharge,
     });
 
@@ -461,10 +445,11 @@ class AuthorizationClient {
     };
   }
 
-  async CreateContentLibrary() {
+  async CreateContentLibrary({kmsId}) {
     // Deploy contract
     const {contractAddress, transactionHash} = await this.client.ethClient.DeployLibraryContract({
       contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
+      kmsId,
       signer: this.client.signer
     });
 

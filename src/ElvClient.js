@@ -70,7 +70,12 @@ class ElvClient {
     noCache=false,
     noAuth=false
   }) {
+    this.utils = Utils;
+
     this.contentSpaceId = contentSpaceId;
+    this.contentSpaceAddress = this.utils.HashToAddress(contentSpaceId);
+    this.contentSpaceLibraryId = this.utils.AddressToLibraryId(this.contentSpaceAddress);
+    this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
@@ -78,8 +83,6 @@ class ElvClient {
     this.viewOnly = viewOnly;
     this.noCache = noCache;
     this.noAuth = noAuth;
-
-    this.utils = Utils;
 
     this.contentTypes = {};
 
@@ -353,6 +356,8 @@ class ElvClient {
    * @param {string=} description - Library description
    * @param {blob=} image - Image associated with the library
    * @param {Object=} metadata - Metadata of library object
+   * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
+   * the default KMS will be used.
    *
    * @returns {Promise<string>} - Library ID of created library
    */
@@ -361,13 +366,22 @@ class ElvClient {
     description,
     image,
     metadata={},
+    kmsId,
     isUserLibrary=false
   }) {
+    if(!kmsId) {
+      kmsId = await this.ContentObjectMetadata({
+        libraryId: this.contentSpaceLibraryId,
+        objectId: this.contentSpaceObjectId,
+        metadataSubtree: "kmsId"
+      });
+    }
+
     let libraryId;
     if(isUserLibrary) {
       libraryId = this.utils.AddressToLibraryId(this.signer.address);
     } else {
-      const { contractAddress } = await this.authClient.CreateContentLibrary();
+      const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
       metadata = {
         ...metadata,
@@ -676,18 +690,16 @@ class ElvClient {
       }
     }
 
-    const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
-
     try {
       const typeInfo = await this.ContentObject({
-        libraryId: contentSpaceLibraryId,
+        libraryId: this.contentSpaceLibraryId,
         objectId: typeId
       });
 
       delete typeInfo.type;
 
       const metadata = (await this.ContentObjectMetadata({
-        libraryId: contentSpaceLibraryId,
+        libraryId: this.contentSpaceLibraryId,
         objectId: typeId
       })) || {};
 
@@ -753,18 +765,16 @@ class ElvClient {
   async CreateContentType({name, metadata={}, bitcode}) {
     metadata.name = name;
 
-    const contentSpaceLibraryId = this.utils.AddressToLibraryId(this.utils.HashToAddress(this.contentSpaceId));
-
     const { contractAddress } = await this.authClient.CreateContentType();
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = UrlJoin("qlibs", contentSpaceLibraryId, "qid", objectId);
+    const path = UrlJoin("qlibs", this.contentSpaceLibraryId, "qid", objectId);
 
     /* Create object, upload bitcode and finalize */
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({
-          libraryId: contentSpaceLibraryId,
+          libraryId: this.contentSpaceLibraryId,
           objectId,
           update: true
         }),
@@ -774,7 +784,7 @@ class ElvClient {
     );
 
     await this.ReplaceMetadata({
-      libraryId: contentSpaceLibraryId,
+      libraryId: this.contentSpaceLibraryId,
       objectId,
       writeToken: createResponse.write_token,
       metadata
@@ -782,7 +792,7 @@ class ElvClient {
 
     if(bitcode) {
       const uploadResponse = await this.UploadPart({
-        libraryId: contentSpaceLibraryId,
+        libraryId: this.contentSpaceLibraryId,
         objectId,
         writeToken: createResponse.write_token,
         data: bitcode,
@@ -790,7 +800,7 @@ class ElvClient {
       });
 
       await this.ReplaceMetadata({
-        libraryId: contentSpaceLibraryId,
+        libraryId: this.contentSpaceLibraryId,
         objectId,
         writeToken: createResponse.write_token,
         metadataSubtree: "bitcode_part",
@@ -799,7 +809,7 @@ class ElvClient {
     }
 
     await this.FinalizeContentObject({
-      libraryId: contentSpaceLibraryId,
+      libraryId: this.contentSpaceLibraryId,
       objectId,
       writeToken: createResponse.write_token
     });
@@ -1511,6 +1521,8 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing information about the uploaded part
    */
   async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, callback}) {
+
+    // TODO: New header to specify encryption scheme
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
     const totalSize = data.size || data.length || data.byteLength;
 
@@ -2421,7 +2433,6 @@ class ElvClient {
    * @param {Object} abi - ABI of contract
    * @param {string} bytecode - Bytecode of the contract
    * @param {Array<string>} constructorArgs - List of arguments to the contract constructor
-   * - it is recommended to format these arguments using the FormatContractArguments method
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - Response containing the deployed contract address and the transaction hash of the deployment
@@ -2442,14 +2453,23 @@ class ElvClient {
    * @param {Object} abi - ABI of contract
    * @param {string} methodName - Method to call on the contract
    * @param {Array=} methodArgs - List of arguments to the contract constructor
-   * - it is recommended to format these arguments using the FormatContractArguments method
    * @param {(number | BigNumber)=} value - Amount of ether to include in the transaction
+   * @param {boolean=} formatArguments=true - If specified, the arguments will automatically be formatted to the ABI specification
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - Response containing information about the transaction
    */
-  async CallContractMethod({contractAddress, abi, methodName, methodArgs=[], value, overrides={}}) {
-    return await this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides, signer: this.signer});
+  async CallContractMethod({contractAddress, abi, methodName, methodArgs=[], value, overrides={}, formatArguments=true}) {
+    return await this.ethClient.CallContractMethod({
+      contractAddress,
+      abi,
+      methodName,
+      methodArgs,
+      value,
+      overrides,
+      formatArguments,
+      signer: this.signer
+    });
   }
 
   /**
@@ -2461,16 +2481,16 @@ class ElvClient {
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
    * @param {string} methodName - Method to call on the contract
-   * @param {Array<string>} methodArgs - List of arguments to the contract constructor
-   * - it is recommended to format these arguments using the FormatContractArguments method
-   * @param {number | BigNumber} value - Amount of ether to include in the transaction
+   * @param {Array<string>=} methodArgs=[] - List of arguments to the contract constructor
+   * @param {(number | BigNumber)=} value - Amount of ether to include in the transaction
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   * @param {boolean=} formatArguments=true - If specified, the arguments will automatically be formatted to the ABI specification
    *
    * @see Utils.WeiToEther
    *
    * @returns {Promise<Object>} - The event object of this transaction
    */
-  async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
+  async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}, formatArguments=true}) {
     return await this.ethClient.CallContractMethodAndWait({
       contractAddress,
       abi,
@@ -2478,6 +2498,7 @@ class ElvClient {
       methodArgs,
       value,
       overrides,
+      formatArguments,
       signer: this.signer
     });
   }
@@ -2580,10 +2601,7 @@ class ElvClient {
    * @returns {Promise<string> | undefined} - If the object has a custom contract, this will return the address of the custom contract
    */
   async CustomContractAddress({libraryId, objectId}) {
-    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
-    const contentSpaceLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
-
-    if(libraryId === contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId)) {
+    if(libraryId === this.contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId)) {
       // Content type or content library object - no custom contract
       return;
     }

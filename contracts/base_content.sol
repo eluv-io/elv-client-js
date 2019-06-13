@@ -20,7 +20,7 @@ BaseContent20190605203200ML: Split publish and confirm logic
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190605203200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -161,7 +161,7 @@ contract BaseContent is Editable {
         addressKMS = address_KMS;
     }
 
-    function getKMSInfo(byte[] prefix) public view returns (string, string) {
+    function getKMSInfo(bytes prefix) public view returns (string, string) {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         if (addressKMS == 0x0 || contentSpaceObj.checkKMSAddr(addressKMS) == 0) {
             return ("", "");

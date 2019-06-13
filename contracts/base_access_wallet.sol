@@ -18,7 +18,7 @@ BaseAccessWallet20190528124400ML: Change base to be Accessible and Editable (thr
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
 contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable {
-    bytes32 public version = "BaseAccessWallet20190528124400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "BaseAccessWallet20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space)  public payable {
         contentSpace = content_space;

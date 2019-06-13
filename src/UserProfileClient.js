@@ -215,7 +215,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
     // Set image hash in public metadata so it is publicly accessible
     const imageHash = await this.PrivateUserMetadata({metadataSubtree: "image"});
-    await this.client.ReplacePublicLibraryMetadata({libraryId, metadataSubtree: "image", metadata: imageHash});
+    //await this.client.ReplacePublicLibraryMetadata({libraryId, metadataSubtree: "image", metadata: imageHash});
 
     this.__InvalidateCache();
   }
@@ -235,7 +235,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     const libraryId = Utils.AddressToLibraryId(accountAddress);
 
     try {
-      return await this.client.PublicLibraryMetadata({libraryId, metadataSubtree});
+      //return await this.client.PublicLibraryMetadata({libraryId, metadataSubtree});
     } catch(error) {
       if(error.status !== 404) {
         throw error;

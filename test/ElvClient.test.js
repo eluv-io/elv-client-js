@@ -52,8 +52,6 @@ describe("Test ElvClient", () => {
       expect(bootstrapClient.fabricURIs.length).toBeGreaterThan(0);
       expect(bootstrapClient.ethereumURIs).toBeDefined();
       expect(bootstrapClient.ethereumURIs.length).toBeGreaterThan(0);
-      expect(bootstrapClient.stateChannelURIs).toBeDefined();
-      expect(bootstrapClient.stateChannelURIs.length).toBeGreaterThan(0);
     });
   });
 

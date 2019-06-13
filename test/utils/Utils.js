@@ -30,6 +30,12 @@ const CreateClient = async (bux="2") => {
 
   await fundedClient.SetSigner({signer: fundedSigner});
 
+  const groupAddress = await fundedClient.ContentObjectMetadata({
+    libraryId: fundedClient.contentSpaceLibraryId,
+    objectId: fundedClient.contentSpaceObjectId,
+    metadataSubtree: "contentSpaceGroupAddress"
+  });
+
   // Create a new account and send some ether
   const signer = wallet.AddAccountFromMnemonic({
     mnemonic: wallet.GenerateMnemonic()
@@ -59,7 +65,7 @@ const CreateClient = async (bux="2") => {
   // Add new account to content space group
   // TODO: Pull access group address from content space when implemented
   await fundedClient.AddAccessGroupManager({
-    contractAddress: "0x6b609282d747ded092066728bc7b3071e94384a8",
+    contractAddress: groupAddress,
     memberAddress: signer.address
   });
 
