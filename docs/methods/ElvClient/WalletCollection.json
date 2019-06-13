@@ -1,10 +1,10 @@
 [
   {
     "signature": "async WalletCollection({\n  \"collectionType\": \"contentTypes\"\n});",
-    "result": "[\n  \"0x72615A7CAB672aF8d4E181B5B27cbc0bB4Aa75B0\"\n]"
+    "result": "[\n  \"0xc9EB97ceb421A394867c1085390Aa9975d72C795\"\n]"
   },
   {
     "signature": "async WalletCollection({\n  \"collectionType\": \"libraries\"\n});",
-    "result": "[\n  \"0x0EaC1DD1BA8Bc931D334639bc5622823085aEd86\"\n]"
+    "result": "[\n  \"0x6c6b38a25cAC18189295941Ce0ECC5f37f2b302b\"\n]"
   }
 ]

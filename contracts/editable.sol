@@ -16,7 +16,7 @@ contract Editable is Ownable {
 
     bytes32 public version ="Editable20190607105600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    event CommitPending(string objectHash);
+    event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
     event VersionConfirm(string objectHash);
 
@@ -37,11 +37,16 @@ contract Editable is Ownable {
         return (tx.origin == owner);
     }
 
+    // overridden in BaseContent to return library
+    function parentAddress() returns (address) {
+        return contentSpace;
+    }
+
     function commit(string _objectHash) public {
         require(canCommit());
 	    require(bytes(_objectHash).length < 128);
         pendingHash = _objectHash;
-        emit CommitPending(pendingHash);
+        emit CommitPending(contentSpace, parentAddress(), pendingHash);
     }
 
     function confirmCommit() public payable returns (bool) {
