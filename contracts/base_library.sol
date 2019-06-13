@@ -37,7 +37,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     uint256 public approvalRequestsLength = 0;
     mapping (address => uint256) private approvalRequestsMap; //index offset by 1 to avoid confusing 0 for removed
 
-    event ContentObjectCreated(address contentAddress, address content_type);
+    event ContentObjectCreated(address contentAddress, address content_type, address spaceAddress);
     event ContributorGroupAdded(address group);
     event ContributorGroupRemoved(address group);
     event ReviewerGroupAdded(address group);
@@ -287,7 +287,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
 
     function createContent(address content_type) public  returns (address) {
         address content = BaseContentSpace(contentSpace).createContent(address(this), content_type);
-        emit ContentObjectCreated(content, content_type);
+        emit ContentObjectCreated(content, content_type, contentSpace);
         return content;
     }
 

@@ -53,6 +53,15 @@ const Init = async () => {
       eventValue: "status"
     });
 
+    await client.CallContractMethod({
+      contractAddress: deployResult.contractAddress,
+      abi: SpaceContract.abi,
+      methodName: "setAddressKMS",
+      methodArgs: [
+        kmsSigner.address
+      ]
+    });
+
     if(kmsStatus.toNumber() !== 0) {
       console.error("Error adding KMS");
       return;

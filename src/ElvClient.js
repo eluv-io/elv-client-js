@@ -263,13 +263,28 @@ class ElvClient {
   /* Content Spaces */
 
   /**
+   * Get the address of the default KMS of the content space
+   *
+   * @methodGroup Content Spaces
+   *
+   * @returns {Promise<string>} - Address of the KMS
+   */
+  async DefaultKMSAddress() {
+    return await this.CallContractMethod({
+      contractAddress: this.contentSpaceAddress,
+      abi: SpaceContract.abi,
+      methodName: "addressKMS",
+    });
+  }
+
+  /**
    * Deploy a new content space contract
    *
    * @methodGroup Content Spaces
    * @namedParams
    * @param {String} name - Name of the content space
    *
-   * @returns {Promise<contentSpaceId>} - Content space ID of the created content space
+   * @returns {Promise<string>} - Content space ID of the created content space
    */
   async CreateContentSpace({name}) {
     const contentSpaceAddress = await this.ethClient.DeployContentSpaceContract({name, signer: this.signer});
@@ -370,11 +385,7 @@ class ElvClient {
     isUserLibrary=false
   }) {
     if(!kmsId) {
-      kmsId = await this.ContentObjectMetadata({
-        libraryId: this.contentSpaceLibraryId,
-        objectId: this.contentSpaceObjectId,
-        metadataSubtree: "kmsId"
-      });
+      kmsId = `ikms${this.utils.AddressToHash(await this.DefaultKMSAddress())}`;
     }
 
     let libraryId;
@@ -2457,7 +2468,7 @@ class ElvClient {
    * @param {boolean=} formatArguments=true - If specified, the arguments will automatically be formatted to the ABI specification
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
-   * @returns {Promise<Object>} - Response containing information about the transaction
+   * @returns {Promise<*>} - Response containing information about the transaction
    */
   async CallContractMethod({contractAddress, abi, methodName, methodArgs=[], value, overrides={}, formatArguments=true}) {
     return await this.ethClient.CallContractMethod({
@@ -2488,7 +2499,7 @@ class ElvClient {
    *
    * @see Utils.WeiToEther
    *
-   * @returns {Promise<Object>} - The event object of this transaction
+   * @returns {Promise<*>} - The event object of this transaction
    */
   async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}, formatArguments=true}) {
     return await this.ethClient.CallContractMethodAndWait({

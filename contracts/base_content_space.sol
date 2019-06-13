@@ -31,7 +31,7 @@ BaseContentSpace20190605144600ML: Implements canConfirm to overloads default fro
 
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
 
-    bytes32 public version ="BaseContentSpace20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20190612120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -60,9 +60,12 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     event AddKMSLocator(address sender,uint status);
     event RemoveKMSLocator(address sender, uint status);
 
+    event CreateSpace(bytes32 version, address owner);
+
     constructor(string memory content_space_name) public {
         name = content_space_name;
         contentSpace = address(this);
+        emit CreateSpace(version, owner);
     }
 
     function setFactory(address new_factory) public onlyOwner {

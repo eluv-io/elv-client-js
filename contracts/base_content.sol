@@ -371,6 +371,11 @@ contract BaseContent is Editable {
         return lib.canNodePublish(msg.sender);
     }
 
+    // override from Editable
+    function parentAddress() returns (address) {
+        return libraryAddress;
+    }
+
     // TODO: why payable?
     function publish() public payable returns (bool) {
         bool submitStatus = Container(libraryAddress).publish(address(this));

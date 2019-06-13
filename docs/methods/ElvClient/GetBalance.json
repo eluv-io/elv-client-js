@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async GetBalance({\n  \"address\": \"0x0f67f972c413f0577008bb42d8ebccb114f79c42\"\n});",
+    "signature": "async GetBalance({\n  \"address\": \"0xcb5f59c58988cd065fd4cbe07df0cb486ba07c87\"\n});",
     "result": "\"0.01\""
   }
 ]
