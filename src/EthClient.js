@@ -25,7 +25,11 @@ class EthClient {
   }
 
   Provider() {
-    return new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]);
+    if(!this.provider) {
+      this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]);
+    }
+
+    return this.provider;
   }
 
   async MakeProviderCall({methodName, args=[], attempts=0}) {
@@ -36,6 +40,7 @@ class EthClient {
       console.error(error);
 
       if(attempts < this.ethereumURIs.length) {
+        this.provider = undefined;
         this.ethereumURIIndex = (this.ethereumURIIndex + 1) % this.ethereumURIs.length;
         return this.MakeProviderCall({methodName, args, attempts: attempts + 1});
       }
@@ -60,6 +65,8 @@ class EthClient {
     switch(type.toLowerCase()) {
       case "bytes32":
         return Ethers.utils.formatBytes32String(value);
+      case "bytes":
+        return Ethers.utils.toUtf8Bytes(value);
       default:
         return value;
     }
@@ -120,6 +127,7 @@ class EthClient {
     methodArgs=[],
     value,
     overrides={},
+    formatArguments=true,
     signer
   }) {
     while(this.locked) {
@@ -129,6 +137,15 @@ class EthClient {
     this.locked = true;
 
     try {
+      // Automatically format contract arguments
+      if(formatArguments) {
+        methodArgs = this.FormatContractArguments({
+          abi,
+          methodName,
+          args: methodArgs
+        });
+      }
+
       if (value) {
         // Convert Ether to Wei
         overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
@@ -175,6 +192,7 @@ class EthClient {
     methodArgs,
     value,
     timeout=10000,
+    formatArguments=true,
     signer
   }) {
     let contract = new Ethers.Contract(contractAddress, abi, this.Provider());
@@ -187,6 +205,7 @@ class EthClient {
       methodName,
       methodArgs,
       value,
+      formatArguments,
       signer
     });
 
@@ -242,8 +261,7 @@ class EthClient {
     eventValue,
     signer
   }) {
-    const methodArgs = this.FormatContractArguments({abi, methodName, args});
-    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, signer});
+    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs: args, signer});
 
     const eventLog = this.ExtractEventFromLogs({abi, event, eventName, eventValue});
     const newContractAddress = eventLog.values[eventValue];
@@ -319,12 +337,14 @@ class EthClient {
     });
   }
 
-  async DeployLibraryContract({contentSpaceAddress, signer}) {
+  async DeployLibraryContract({contentSpaceAddress, kmsId, signer}) {
+    const kmsAddress = Utils.HashToAddress(kmsId);
+
     return this.DeployDependentContract({
       contractAddress: contentSpaceAddress,
       abi: ContentSpaceContract.abi,
       methodName: "createLibrary",
-      args: [Utils.nullAddress],
+      args: [kmsAddress],
       eventName: "CreateLibrary",
       eventValue: "libraryAddress",
       signer
@@ -371,19 +391,11 @@ class EthClient {
   }
 
   async SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}, signer}) {
-    const methodArgs = this.FormatContractArguments({
-      abi: ContentContract.abi,
-      methodName: "setContentContractAddress",
-      args: [
-        customContractAddress
-      ]
-    });
-
     return await this.CallContractMethodAndWait({
       contractAddress: contentContractAddress,
       abi: ContentContract.abi,
       methodName: "setContentContractAddress",
-      methodArgs,
+      methodArgs: [customContractAddress],
       overrides,
       signer
     });

@@ -1,9 +1,11 @@
 {
-  "name": "elv-client-js",
-  "version": "1.0.0",
-  "description": "Javascript client for Eluvio fabric",
+  "name": "@eluvio/elv-client-js",
+  "version": "0.1.1",
+  "description": "Javascript client for the  Eluvio Content Fabric",
   "main": "src/ElvClient.js",
   "author": "Kevin Talmadge",
+  "license": "MIT",
+  "homepage": "https://github.com/eluv-io/elv-client-js",
   "scripts": {
     "build": "npm run build-contracts && npm run build-prod && npm run build-frame-client && npm run build-docs",
     "build-prod": "npm run build-web && npm run build-node",
@@ -25,6 +27,18 @@
   "browser": {
     "fs": false
   },
+  "files": [
+    "/build",
+    "/contracts",
+    "/setup",
+    "/src",
+    "ElvClient-min.js",
+    "ElvClient-node-min.js",
+    "LICENSE",
+    "package.json",
+    "package-lock.json",
+    "webpack.config.js"
+  ],
   "dependencies": {
     "@babel/polyfill": "^7.0.0",
     "@eluvio/crypto": "^1.0.6",
