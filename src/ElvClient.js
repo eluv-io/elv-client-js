@@ -107,29 +107,21 @@ class ElvClient {
     noCache=false,
     noAuth=false
   }) {
-    const useHTTPS = configUrl.startsWith("https://");
-
     const httpClient = new HttpClient([configUrl]);
     const fabricInfo = await ResponseToJson(httpClient.Request({method: "GET", path: "/config"}));
 
-    const seedNodes = fabricInfo.network.seed_nodes;
-    const fabricURIs = seedNodes.map(ip =>
-      new URI()
-        .path("")
-        .protocol(useHTTPS ? "https" : "http")
-        .host(ip)
-        .port(80)
-        .toString()
-    );
+    // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
+    const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
 
-    const ethereumURIs = seedNodes.map(ip =>
-      new URI()
-        .path("")
-        .protocol(useHTTPS ? "https" : "http")
-        .host(ip)
-        .port(8545)
-        .toString()
-    );
+    let fabricURIs = fabricInfo.network.seed_nodes.fabric_api;
+    if(fabricURIs.find(filterHTTPS)) {
+      fabricURIs = fabricURIs.filter(filterHTTPS);
+    }
+
+    let ethereumURIs = fabricInfo.network.seed_nodes.ethereum_api;
+    if(ethereumURIs.find(filterHTTPS)) {
+      ethereumURIs = ethereumURIs.filter(filterHTTPS);
+    }
 
     return new ElvClient({
       contentSpaceId: fabricInfo.qspace.id,
@@ -1843,6 +1835,11 @@ class ElvClient {
       drm: {}
     };
 
+    const licenseUrl =
+      new URI(await this.authClient.KMSUrl(objectId))
+        .path("wv")
+        .query({qhash: versionHash});
+
     Object.keys(playoutOptions).forEach(protocol => {
       const option = playoutOptions[protocol];
       config[protocol] = option.playoutUrl;
@@ -1851,7 +1848,7 @@ class ElvClient {
         Object.keys(option.drms).forEach(drm => {
           if(!config.drm[drm]) {
             config.drm[drm] = {
-              LA_URL: `http://66.220.3.82:6545/wv?qhash=${versionHash}`,
+              LA_URL: licenseUrl,
               headers: {
                 Authorization: `Bearer ${this.authClient.channelContentTokens[objectId]}`
               }

@@ -130,6 +130,26 @@ class AuthorizationClient {
     );
   }
 
+  async KMSUrl(objectId, versionHash) {
+    if(versionHash) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    // Get KMS info for the object
+    const KMSInfo = await this.client.CallContractMethod({
+      contractAddress: Utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "getKMSInfo",
+      methodArgs: [[]]
+    });
+
+    // Randomize order of URLs so the same one isn't chosen every time
+    const KMSUrls = KMSInfo[0].split(",").sort(() => 0.5 - Math.random());
+
+    // Prefer HTTPS urls
+    return KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
+  }
+
   async GenerateChannelContentToken({objectId, value=0}) {
     if(!this.noCache && this.channelContentTokens[objectId]) {
       return this.channelContentTokens[objectId];
@@ -154,20 +174,7 @@ class AuthorizationClient {
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
     params[4] = await this.Sign(packedHash);
 
-    // Get KMS info for the object
-    const KMSInfo = await this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "getKMSInfo",
-      methodArgs: [[]]
-    });
-
-    // Randomize order of URLs so the same one isn't chosen every time
-    const KMSUrls = KMSInfo[0].split(",").sort(() => 0.5 - Math.random());
-
-    // Prefer HTTPS urls
-    const stateChannelUri = KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
-
+    const stateChannelUri = await this.KMSUrl(objectId);
     const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
     const payload = await stateChannelProvider.send("elv_channelContentRequest", params);
 

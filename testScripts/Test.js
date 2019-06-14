@@ -26,8 +26,10 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
 const Test = async () => {
   try {
-    const client = new ElvClient(ClientConfiguration);
-    //const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
+    ///const client = new ElvClient(ClientConfiguration);
+    const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
+    console.log(client);
+    return;
 
     /*
 
