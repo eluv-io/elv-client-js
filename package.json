@@ -51,7 +51,7 @@
     "node-fetch": "^2.3.0",
     "node-fetch-polyfill": "^2.0.6",
     "path": "^0.12.7",
-    "sjcl": "^1.0.7",
+    "react-native-sjcl": "git@github.com:netbeast/react-native-sjcl.git",
     "urijs": "^1.19.1",
     "url-join": "^4.0.0",
     "varint": "^5.0.0"

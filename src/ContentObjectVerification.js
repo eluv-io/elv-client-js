@@ -1,5 +1,5 @@
 const CBOR = require("cbor");
-const SJCL = require("sjcl");
+const SJCL = require("react-native-sjcl");
 const MultiHash = require("multihashes");
 const DeepEqual = require("deep-equal");
 
