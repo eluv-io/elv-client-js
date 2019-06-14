@@ -26,18 +26,8 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
 const Test = async () => {
   try {
-    ///const client = new ElvClient(ClientConfiguration);
-    const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
-    console.log(client);
-    return;
-
-    /*
-
-
-    const client = await ElvClient.FromConfigurationUrl({
-      configUrl: "http://main.net955304.contentfabric.io:80/config"
-    });
-    */
+    const client = new ElvClient(ClientConfiguration);
+    //const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
@@ -46,9 +36,14 @@ const Test = async () => {
     await client.SetSigner({signer});
 
 
-    console.log(await client.ContentObjectMetadata({libraryId: client.contentSpaceLibraryId,
-    objectId: client.contentSpaceObjectId}));
-    return;
+    console.log(
+      await client.VerifyContentObject({
+        libraryId: "ilibeyHYr6z36fJHM4vB6Qrc6RGnznz",
+        objectId: "iq__22STFBv6i4NzrLa7UdgzUYYo17LQ",
+        versionHash: "hq__EzaLo8mXoAUYKgXbBy6Ksfo3M72rmgFo7PLrRfn18nRYXuxmTfrEusSnBJxyB8guST4pZ8eLxc"
+      })
+    );
+
 
     /*
     const libraryId = await client.CreateContentLibrary({name: "Test"});
