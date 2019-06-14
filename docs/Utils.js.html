@@ -161,7 +161,8 @@ const Utils = {
     let bytes = MultiHash.fromB58String(versionHash);
 
     // Remove 32 byte SHA256 digest
-    const digest = bytes.slice(0, 32).toString("hex");
+    const digestBytes = bytes.slice(0, 32);
+    const digest = digestBytes.toString("hex");
     bytes = bytes.slice(32);
 
     // Determine size of varint content size
@@ -172,16 +173,21 @@ const Utils = {
     sizeLength++;
 
     // Remove size
-    const size = VarInt.decode(bytes.slice(0, sizeLength));
+    const sizeBytes = bytes.slice(0, sizeLength);
+    const size = VarInt.decode(sizeBytes);
     bytes = bytes.slice(sizeLength);
 
     // Remaining bytes is object ID
     const objectId = "iq__" + MultiHash.toB58String(bytes);
 
+    // Part hash is B58 encoded version hash without the ID
+    const partHash = "hqp_" + MultiHash.toB58String(Buffer.concat([digestBytes, sizeBytes]));
+
     return {
       digest,
       size,
-      objectId
+      objectId,
+      partHash
     };
   },
 

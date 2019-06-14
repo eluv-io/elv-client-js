@@ -2,6 +2,7 @@
 const { ElvClient } = require("../src/ElvClient");
 const ClientConfiguration = require("../TestConfiguration.json");
 const fs = require("fs");
+const CBOR = require("cbor");
 
 const SpaceContract = require("../src/contracts/BaseContentSpace");
 
@@ -70,8 +71,24 @@ const Init = async () => {
     console.log("\tKMS ID: " + kmsId);
     console.log("\tKMS URL: " + kmsUrl);
 
+    /*
     const nodeAddress = process.argv[5];
     const nodeId = `inod${client.utils.AddressToHash(nodeAddress)}`;
+
+    const nodeLocators = [
+      {
+        api: "fabric",
+        scheme: "http",
+        host: "localhost",
+        port: "8008"
+      },
+      {
+        api: "eth",
+        scheme: "http",
+        host: "localhost",
+        port: "8545"
+      }
+    ];
 
     const addNodeResult = await client.CallContractMethodAndWait({
       contractAddress: deployResult.contractAddress,
@@ -79,8 +96,9 @@ const Init = async () => {
       methodName: "addNode",
       methodArgs: [
         nodeAddress,
-        "http://localhost:8008"
-      ]
+        CBOR.encode(nodeLocators)
+      ],
+      formatArguments: false
     });
 
     const nodeAddressFromEvent = client.ExtractValueFromEvent({
@@ -96,6 +114,7 @@ const Init = async () => {
     }
 
     console.log("\tNode ID: " + nodeId);
+*/
 
     ClientConfiguration.contentSpaceId = contentSpaceId;
     fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));

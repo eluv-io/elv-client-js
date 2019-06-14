@@ -1,7 +1,8 @@
 const CBOR = require("cbor");
-const SJCL = require("react-native-sjcl");
+const SJCL = require("sjcl");
 const MultiHash = require("multihashes");
 const DeepEqual = require("deep-equal");
+const Utils = require("./Utils");
 
 const ContentObjectVerification = {
   async VerifyContentObject({client, libraryId, objectId, versionHash}) {
@@ -9,7 +10,7 @@ const ContentObjectVerification = {
       hash: versionHash
     };
 
-    const partHash = versionHash.replace("hq__", "hqp_");
+    const partHash = Utils.DecodeVersionHash(versionHash).partHash;
 
     const qpartsResponse = await client.QParts({libraryId, objectId, partHash, format: "arrayBuffer"})
       .then(response => Buffer.from(response));
