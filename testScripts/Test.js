@@ -7,7 +7,10 @@ const ContentContract = require("../src/contracts/BaseContent");
 const LibraryContract = require("../src/contracts/BaseLibrary");
 const SpaceContract = require("../src/contracts/BaseContentSpace");
 const WalletContract = require("../src/contracts/BaseAccessWallet");
+const cbor = require("cbor");
+const fs = require("fs");
 
+const Crypto = require("../src/Crypto");
 
 const KickReplacementFee = async (signer, gasPrice) => {
   try {
@@ -35,16 +38,49 @@ const Test = async () => {
     });
     await client.SetSigner({signer});
 
+    const file = fs.readFileSync("ElvClient-min-dev.js.map");
 
-    console.log(
-      await client.VerifyContentObject({
-        libraryId: "ilibeyHYr6z36fJHM4vB6Qrc6RGnznz",
-        objectId: "iq__22STFBv6i4NzrLa7UdgzUYYo17LQ",
-        versionHash: "hq__EzaLo8mXoAUYKgXbBy6Ksfo3M72rmgFo7PLrRfn18nRYXuxmTfrEusSnBJxyB8guST4pZ8eLxc"
-      })
-    );
+    const libraryId = "ilib2AwHNWBtUm75E4hxBUx8UohsrfBg";
+    const objectId = "iq__PbkfXcVNLSjApBxozxeG34oaLUG";
 
+    console.log(await client.BitmovinPlayoutOptions({versionHash: "hq__E964vNCbW8EwZQKJcxx1vxQzpwDQeuge4sNxxR7ij7hMzscfZvg1D9dkn5B6KoCYFWyg8UiCuv", drms: ["widevine"]}));
+    return;
 
+    /*
+    const editResponse = await client.CreateContentObject({libraryId});
+    const objectId = editResponse.id;
+
+    const uploadResponse = await client.UploadPart({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token,
+      data: file,
+      encryption: "cgck",
+      chunkSize: 123456
+    });
+
+    const partHash = uploadResponse.part.hash;
+    console.log(partHash);
+
+    const finalizeResponse = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token
+    });
+
+    console.log("\nFinalize Response:");
+    console.log(finalizeResponse);
+
+    console.log(await client.ContentParts({
+      versionHash: finalizeResponse.hash
+    }));
+*/
+    console.log(await client.DownloadPart({
+      libraryId,
+      objectId,
+      partHash: "hqpe27mbSmA4yhd7evLN7mGSiTyjBv3q3ScGLv3gweBeQEkiTErr8G",
+      format: "text"
+    }));
     /*
     const libraryId = await client.CreateContentLibrary({name: "Test"});
     console.log(libraryId);

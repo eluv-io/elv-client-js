@@ -3,6 +3,7 @@ const { ElvClient } = require("../src/ElvClient");
 const ClientConfiguration = require("../TestConfiguration.json");
 const fs = require("fs");
 const CBOR = require("cbor");
+const multicodec = require("multicodec");
 
 const SpaceContract = require("../src/contracts/BaseContentSpace");
 
@@ -35,6 +36,7 @@ const Init = async () => {
 
     const kmsSigner = wallet.AddAccount({privateKey: process.argv[3]});
     const kmsId = `ikms${client.utils.AddressToHash(kmsSigner.address)}`;
+    const kmsPublicKey = kmsSigner.signingKey.publicKey;
     const kmsUrl = process.argv[4];
 
     const addKMSResult = await client.CallContractMethodAndWait({
@@ -63,6 +65,16 @@ const Init = async () => {
       ]
     });
 
+    await client.CallContractMethod({
+      contractAddress: deployResult.contractAddress,
+      abi: SpaceContract.abi,
+      methodName: "setKMSPublicKey",
+      methodArgs: [
+        kmsId,
+        kmsPublicKey
+      ]
+    });
+
     if(kmsStatus.toNumber() !== 0) {
       console.error("Error adding KMS");
       return;
@@ -70,11 +82,12 @@ const Init = async () => {
 
     console.log("\tKMS ID: " + kmsId);
     console.log("\tKMS URL: " + kmsUrl);
+    console.log("\tKMS Public Key: " + kmsPublicKey);
 
-    /*
     const nodeAddress = process.argv[5];
     const nodeId = `inod${client.utils.AddressToHash(nodeAddress)}`;
 
+    /*
     const nodeLocators = [
       {
         api: "fabric",
@@ -90,13 +103,17 @@ const Init = async () => {
       }
     ];
 
+    console.log(nodeLocators);
+    console.log(multicodec.addPrefix("cbor", CBOR.encode(nodeLocators)));
+    console.log(multicodec.addPrefix("cbor", CBOR.encode(nodeLocators)).toString());
+
     const addNodeResult = await client.CallContractMethodAndWait({
       contractAddress: deployResult.contractAddress,
       abi: SpaceContract.abi,
       methodName: "addNode",
       methodArgs: [
         nodeAddress,
-        CBOR.encode(nodeLocators)
+        multicodec.addPrefix("cbor", CBOR.encode(nodeLocators))
       ],
       formatArguments: false
     });
@@ -114,7 +131,7 @@ const Init = async () => {
     }
 
     console.log("\tNode ID: " + nodeId);
-*/
+    */
 
     ClientConfiguration.contentSpaceId = contentSpaceId;
     fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));

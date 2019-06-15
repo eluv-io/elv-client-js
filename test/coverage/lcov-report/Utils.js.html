@@ -20,9 +20,9 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">44.05% </span>
+        <span class="strong">45.98% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>37/84</span>
+        <span class='fraction'>40/87</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">18.46% </span>
@@ -35,9 +35,9 @@
         <span class='fraction'>10/23</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">46.25% </span>
+        <span class="strong">48.19% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>37/80</span>
+        <span class='fraction'>40/83</span>
       </div>
     </div>
     <p class="quiet">
@@ -394,7 +394,13 @@
 <a name='L346'></a><a href='#L346'>346</a>
 <a name='L347'></a><a href='#L347'>347</a>
 <a name='L348'></a><a href='#L348'>348</a>
-<a name='L349'></a><a href='#L349'>349</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L349'></a><a href='#L349'>349</a>
+<a name='L350'></a><a href='#L350'>350</a>
+<a name='L351'></a><a href='#L351'>351</a>
+<a name='L352'></a><a href='#L352'>352</a>
+<a name='L353'></a><a href='#L353'>353</a>
+<a name='L354'></a><a href='#L354'>354</a>
+<a name='L355'></a><a href='#L355'>355</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -491,34 +497,40 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -849,7 +861,8 @@ const Utils = {
     let bytes = MultiHash.fromB58String(versionHash);
 &nbsp;
     // Remove 32 byte SHA256 digest
-    const digest = bytes.slice(0, 32).toString("hex");
+    const digestBytes = bytes.slice(0, 32);
+    const digest = digestBytes.toString("hex");
     bytes = bytes.slice(32);
 &nbsp;
     // Determine size of varint content size
@@ -860,16 +873,21 @@ const Utils = {
     sizeLength++;
 &nbsp;
     // Remove size
-    const size = VarInt.decode(bytes.slice(0, sizeLength));
+    const sizeBytes = bytes.slice(0, sizeLength);
+    const size = VarInt.decode(sizeBytes);
     bytes = bytes.slice(sizeLength);
 &nbsp;
     // Remaining bytes is object ID
     const objectId = "iq__" + MultiHash.toB58String(bytes);
 &nbsp;
+    // Part hash is B58 encoded version hash without the ID
+    const partHash = "hqp_" + MultiHash.toB58String(Buffer.concat([digestBytes, sizeBytes]));
+&nbsp;
     return {
       digest,
       size,
-      objectId
+      objectId,
+      partHash
     };
   },
 &nbsp;
@@ -1096,7 +1114,7 @@ module.exports = Utils;
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Thu Jun 13 2019 12:52:55 GMT-0700 (Pacific Daylight Time)
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Fri Jun 14 2019 19:08:01 GMT-0700 (Pacific Daylight Time)
 </div>
 </div>
 <script src="prettify.js"></script>

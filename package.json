@@ -47,6 +47,7 @@
     "cbor": "^4.1.5",
     "deep-equal": "^1.0.1",
     "ethers": "^4.0.26",
+    "multicodec": "^0.5.3",
     "multihashes": "^0.4.14",
     "node-fetch": "^2.3.0",
     "node-fetch-polyfill": "^2.0.6",
