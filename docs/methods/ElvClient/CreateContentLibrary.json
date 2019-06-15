@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async CreateContentLibrary({\n  \"name\": \"Test Library 3b36c9dd49bbb6097035\",\n  \"description\": \"Test Library Description\",\n  \"metadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    }\n  }\n});",
-    "result": "\"ilib2WcBCjpYX87fzt9DnxJv331DcraN\""
+    "signature": "async CreateContentLibrary({\n  \"name\": \"Test Library 830073c459cc27d5d9d6\",\n  \"description\": \"Test Library Description\",\n  \"metadata\": {\n    \"private\": {\n      \"meta\": \"data\"\n    }\n  }\n});",
+    "result": "\"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\""
   }
 ]

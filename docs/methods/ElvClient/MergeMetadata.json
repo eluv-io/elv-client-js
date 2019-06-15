@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilib2WcBCjpYX87fzt9DnxJv331DcraN\",\n  \"objectId\": \"iq__3qLHnBDiXoGNwbwy4oi32VJJ9mT4\",\n  \"writeToken\": \"tqw_5dCje4cEnBy9KWaspSCfnpJnS6CiAHi74\",\n  \"metadataSubtree\": \"toMerge\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
+    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"writeToken\": \"tqw_9Cjkocoz2Ko9n6uDiuWJ14AZuTrWCP2Zd\",\n  \"metadataSubtree\": \"toMerge\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
   }
 ]

@@ -1,4 +1,3 @@
-const URI = require("urijs");
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 
@@ -9,7 +8,7 @@ const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
-//const Crypto = require("./Crypto");
+const Crypto = require("./Crypto");
 
 const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
@@ -1499,11 +1498,78 @@ class ElvClient {
 
     let data = await response.arrayBuffer();
 
+    if(partHash.startsWith("hqpe")) {
+      // Decrypt content
+      const cap = await this.EncryptionCap({libraryId, objectId});
+
+      if(!cap) {
+        throw Error("No encryption capsule for " + partHash);
+      }
+
+      data = await Crypto.PrimaryDecrypt(cap, data);
+    }
+
 
     return await ResponseToFormat(
       format,
       new Response(data)
     );
+  }
+
+  async EncryptionCap({libraryId, objectId, writeToken, blockSize=1000000}) {
+    const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+    const existingCap = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: capKey
+    });
+
+    if(existingCap) { return await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey); }
+
+    const cap = await Crypto.GeneratePrimaryCap(blockSize);
+
+    // If write token is specified, add it to the metadata
+    if(writeToken) {
+      const kmsAddress = await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(objectId),
+        abi: ContentContract.abi,
+        methodName: "addressKMS"
+      });
+
+      const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
+      const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+      await this.MergeMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadata: {
+          [capKey]: await Crypto.EncryptCap(cap, this.signer.signingKey.publicKey),
+          [kmsCapKey]: await Crypto.EncryptCap(cap, kmsPublicKey)
+        }
+      });
+    }
+
+    return cap;
+  }
+
+  async EncryptChunk(cap, dataBuffer) {
+    // Convert Blob to ArrayBuffer if necessary
+    if(!(dataBuffer instanceof ArrayBuffer) && !(typeof Buffer !== "undefined" && dataBuffer instanceof Buffer)) {
+      // Blob
+      dataBuffer = await new Response(data).arrayBuffer();
+    }
+
+    dataBuffer = await Crypto.Encrypt(cap, dataBuffer);
+
+    if(dataBuffer instanceof ArrayBuffer) {
+      if(typeof window === "undefined") {
+        dataBuffer = Buffer.from(dataBuffer);
+      } else {
+        await new Response([dataBuffer]).blob();
+      }
+    }
+
+    return dataBuffer;
   }
 
   /**
@@ -1518,24 +1584,33 @@ class ElvClient {
    * @param {string} writeToken - Write token of the content object draft
    * @param {(ArrayBuffer | Blob | Buffer)} data - Data to upload
    * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
+   * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
    * @param {function=} callback - If specified, function will be called with upload progress after completion of each chunk
    * - Method signatue: ({uploaded, total})
    *
    * @returns {Promise<Object>} - Response containing information about the uploaded part
    */
-  async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, callback}) {
+  async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, encryption="none", callback}) {
+    const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
+    headers["X-Content-Fabric-Encryption-Scheme"] = encryption || "none";
 
-    // TODO: New header to specify encryption scheme
-    const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
+    const encrypt = encryption === "cgck";
+    const encryptionCap = encrypt ?
+      await this.EncryptionCap({libraryId, objectId, writeToken, blockSize: chunkSize}) : undefined;
+
     const totalSize = data.size || data.length || data.byteLength;
 
     if(callback) { callback({uploaded: 0, total: totalSize}); }
 
     // If the file is smaller than the chunk size, just upload it in one pass
     if(totalSize < chunkSize) {
+      if(encrypt) {
+        data = await this.EncryptChunk(encryptionCap, data);
+      }
+
       const uploadResult = await ResponseToJson(
         this.HttpClient.Request({
-          headers: authorizationHeader,
+          headers,
           method: "POST",
           path: UrlJoin("q", writeToken, "data"),
           body: data,
@@ -1553,7 +1628,7 @@ class ElvClient {
     // Create the part for writing
     let partWriteToken = (await ResponseToJson(
       this.HttpClient.Request({
-        headers: authorizationHeader,
+        headers: headers,
         method: "POST",
         path,
         bodyType: "BINARY",
@@ -1565,12 +1640,17 @@ class ElvClient {
     for(let uploaded = 0; uploaded < totalSize; uploaded += chunkSize) {
       const to = Math.min(uploaded + chunkSize, totalSize);
 
+      let chunk = data.slice(uploaded, to);
+      if(encrypt) {
+        chunk = await this.EncryptChunk(encryptionCap, chunk);
+      }
+
       await ResponseToJson(
         this.HttpClient.Request({
-          headers: authorizationHeader,
+          headers: headers,
           method: "POST",
           path: UrlJoin(path, partWriteToken),
-          body: data.slice(uploaded, to),
+          body: chunk,
           bodyType: "BINARY",
         })
       );
@@ -1581,7 +1661,7 @@ class ElvClient {
     // Finalize part
     return await ResponseToJson(
       await this.HttpClient.Request({
-        headers: authorizationHeader,
+        headers: headers,
         method: "POST",
         path: UrlJoin(path, partWriteToken),
         bodyType: "BINARY",
@@ -1789,6 +1869,7 @@ class ElvClient {
       const option = playoutOptions[i];
       const protocol = option.properties.protocol;
       const drm = option.properties.drm;
+      const licenseServers = option.properties.license_servers;
 
       // Exclude any options that do not satisfy the specified protocols and/or DRMs
       const protocolMatch = protocols.includes(protocol);
@@ -1809,7 +1890,9 @@ class ElvClient {
       if(drm) {
         playoutMap[protocol].drms = {
           ...(playoutMap[protocol].drms || {}),
-          [drm]: "TBD"
+          [drm]: {
+            licenseServers
+          }
         };
       }
     }
@@ -1835,17 +1918,16 @@ class ElvClient {
       drm: {}
     };
 
-    const licenseUrl =
-      new URI(await this.authClient.KMSUrl(objectId))
-        .path("wv")
-        .query({qhash: versionHash});
-
     Object.keys(playoutOptions).forEach(protocol => {
       const option = playoutOptions[protocol];
       config[protocol] = option.playoutUrl;
 
       if(option.drms) {
         Object.keys(option.drms).forEach(drm => {
+          // Choose a random license server from the available list
+          const licenseUrl = option.drms[drm].licenseServers
+            .sort(() => 0.5 - Math.random())[0];
+
           if(!config.drm[drm]) {
             config.drm[drm] = {
               LA_URL: licenseUrl,

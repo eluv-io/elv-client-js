@@ -233,7 +233,7 @@
       <line num="208" count="0" type="stmt"/>
       <line num="212" count="1" type="stmt"/>
     </file>
-    <file name="Crypto.js" path="/Users/ktalmadge/dev/elv-client-js/src/Crypto.js">
+    <file name="ElvCryptopto.js" path="/Users/ktalmadge/dev/elv-client-js/src/ElvCryptopto.js">
       <metrics statements="24" coveredstatements="8" conditionals="2" coveredconditionals="1" methods="6" coveredmethods="2"/>
       <line num="2" count="1" type="cond" truecount="1" falsecount="1"/>
       <line num="4" count="0" type="stmt"/>
