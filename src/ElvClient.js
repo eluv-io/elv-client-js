@@ -1,5 +1,7 @@
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
+// TODO: react native only
+require("@babel/polyfill");
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 
@@ -8,7 +10,7 @@ const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
 const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
-const ContentObjectVerification = require("./ContentObjectVerification");
+// const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 
