@@ -1,7 +1,11 @@
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 // TODO: react native only
+// Polyfill for most things like typedarray
 require("@babel/polyfill");
+// Polyfill for string.normalized
+require("unorm");
+
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 

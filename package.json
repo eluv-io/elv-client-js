@@ -56,6 +56,7 @@
     "node-fetch-polyfill": "^2.0.6",
     "path": "^0.12.7",
     "typedarray": "0.0.6",
+    "unorm": "^1.5.0",
     "urijs": "^1.19.1",
     "url-join": "^4.0.0",
     "varint": "^5.0.0"
