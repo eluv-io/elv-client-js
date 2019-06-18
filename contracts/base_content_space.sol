@@ -268,7 +268,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     // status -> 1 not added
     function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
-        require(kmsLocators.length < 3);
+        
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
                 emit AddKMSLocator(msg.sender, 1);

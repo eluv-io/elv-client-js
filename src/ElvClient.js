@@ -1,3 +1,5 @@
+if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 
@@ -256,7 +258,7 @@ class ElvClient {
   /**
    * Get the address of the default KMS of the content space
    *
-   * @methodGroup Content Spaces
+   * @methodGroup Content Space
    *
    * @returns {Promise<string>} - Address of the KMS
    */
@@ -269,9 +271,20 @@ class ElvClient {
   }
 
   /**
+   * Get the ID of the current content space
+   *
+   * @methodGroup Content Space
+   *
+   * @return {string} contentSpaceId - The ID of the current content space
+   */
+  ContentSpaceId() {
+    return this.contentSpaceId;
+  }
+
+  /**
    * Deploy a new content space contract
    *
-   * @methodGroup Content Spaces
+   * @methodGroup Content Space
    * @namedParams
    * @param {String} name - Name of the content space
    *
@@ -1469,6 +1482,25 @@ class ElvClient {
     return response.parts;
   }
 
+  async DecryptPart({libraryId, objectId, partHash, data}) {
+    const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
+
+    let cap;
+    if(this.utils.EqualAddress(owner, this.signer.address)) {
+      // Primary decryption
+      cap = await this.EncryptionCap({libraryId, objectId});
+    } else {
+      // Target decryption
+      cap = await this.authClient.ReencryptionKey(objectId);
+    }
+
+    if(!cap) {
+      throw Error("No encryption capsule for " + partHash);
+    }
+
+    return await Crypto.Decrypt(cap, data);
+  }
+
   /**
    * Download a part from a content object
    *
@@ -1487,28 +1519,21 @@ class ElvClient {
   async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
+    const encrypted = partHash.startsWith("hqpe");
     const path = UrlJoin("q", versionHash || objectId, "data", partHash);
 
-    const response =
-      await this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-        method: "GET",
-        path: path
-      });
+    let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash});
+    if(encrypted) {
+      headers["X-Content-Fabric-Encryption-Scheme"] = "cgck";
+    }
+
+    const response = await this.HttpClient.Request({headers, method: "GET", path: path});
 
     let data = await response.arrayBuffer();
 
-    if(partHash.startsWith("hqpe")) {
-      // Decrypt content
-      const cap = await this.EncryptionCap({libraryId, objectId});
-
-      if(!cap) {
-        throw Error("No encryption capsule for " + partHash);
-      }
-
-      data = await Crypto.PrimaryDecrypt(cap, data);
+    if(encrypted) {
+      data = await this.DecryptPart({libraryId, objectId, partHash, data});
     }
-
 
     return await ResponseToFormat(
       format,
@@ -2836,14 +2861,15 @@ class ElvClient {
   FrameAllowedMethods() {
     const forbiddenMethods = [
       "constructor",
-      "InitializeClients",
       "AccessGroupMembershipMethod",
       "CallFromFrameMessage",
+      "ClearSigner",
       "FrameAllowedMethods",
+      "FromConfigurationUrl",
       "GenerateWallet",
+      "InitializeClients",
       "SetSigner",
       "SetSignerFromWeb3Provider",
-      "ClearSigner"
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))

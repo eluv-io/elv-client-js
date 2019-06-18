@@ -1,3 +1,11 @@
+const crypto = require("crypto");
+
+Object.defineProperty(global.self, "crypto", {
+  value: {
+    getRandomValues: arr => crypto.randomBytes(arr.length),
+  },
+});
+
 const UrlJoin = require("url-join");
 const URI = require("urijs");
 const fs = require("fs");
@@ -11,16 +19,15 @@ const OutputLogger = require("./utils/OutputLogger");
 const {
   RandomBytes,
   RandomString,
-  BufferToArrayBuffer,
   CreateClient
 } = require("./utils/Utils");
 
 const testFileSize = 100000;
 
 let client, accessClient;
-let contentSpaceLibraryId, libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
+let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 
-let testFile1, testFile2, testHash;
+let testFile1, testFile2, testFile3, testHash;
 let fileInfo = [];
 let partInfo = {};
 
@@ -32,14 +39,13 @@ describe("Test ElvClient", () => {
     client = OutputLogger(ElvClient, await CreateClient());
     accessClient = OutputLogger(ElvClient, await CreateClient("1"));
 
-    contentSpaceLibraryId = client.utils.AddressToLibraryId(client.utils.HashToAddress(client.contentSpaceId));
-
     libraryId = "ilib2t71GCq5VNaAkg9ZAkmy1EJJss3";
     objectId = "iq__4XyAFvdwaTWxa4rkKhvgDXvUhRzB";
     versionHash = "hq__QmNjMeY9B9M6T7sHBcdnryMeyHC5BkztC3aATHkSnbfj79";
 
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
+    testFile3 = fs.readFileSync("./test/images/test-image1.png");
     testHash = RandomString(10);
   });
 
@@ -380,7 +386,7 @@ describe("Test ElvClient", () => {
   });
 
   describe("Parts", () => {
-    test("Upload Part", async () => {
+    test("Upload Parts", async () => {
       const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
 
       // Upload first part as a single chunk
@@ -414,6 +420,22 @@ describe("Test ElvClient", () => {
 
       partInfo.chunked = chunkedUploadResponse.part.hash;
 
+      // Upload encrypted part
+      const encryptedCallback = jest.fn();
+      const encryptedUploadResponse = await client.UploadPart({
+        libraryId,
+        objectId,
+        writeToken,
+        data: testFile3,
+        encryption: "cgck",
+        chunkSize: testFile3.length,
+        callback: encryptedCallback
+      });
+      expect(encryptedCallback).toBeCalledTimes(2);
+      expect(encryptedUploadResponse).toBeDefined();
+
+      partInfo.encrypted = encryptedUploadResponse.part.hash;
+
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
     });
 
@@ -424,6 +446,14 @@ describe("Test ElvClient", () => {
 
       const chunkedPart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.chunked, format: "arrayBuffer"});
       expect(new Uint8Array(chunkedPart).toString()).toEqual(new Uint8Array(testFile2).toString());
+
+      const encryptedPart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.encrypted, format: "arrayBuffer"});
+      expect(new Uint8Array(encryptedPart).toString()).toEqual(new Uint8Array(testFile3).toString());
+    });
+
+    test("Download Part With Proxy Re-encryption", async () => {
+      const encryptedPart = await accessClient.DownloadPart({libraryId, objectId, partHash: partInfo.encrypted, format: "arrayBuffer"});
+      expect(new Uint8Array(encryptedPart).toString()).toEqual(new Uint8Array(encryptedPart).toString());
     });
 
     test("List Parts", async () => {
@@ -431,6 +461,7 @@ describe("Test ElvClient", () => {
 
       expect(parts.find(part => part.hash === partInfo.whole)).toBeDefined();
       expect(parts.find(part => part.hash === partInfo.chunked)).toBeDefined();
+      expect(parts.find(part => part.hash === partInfo.encrypted)).toBeDefined();
     });
 
     test("Proofs", async () => {

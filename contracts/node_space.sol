@@ -95,11 +95,14 @@ contract NodeSpace is Ownable {
         emit AddNode(msg.sender, _nodeAddr);
     }
 
+    event RemoveNode (address ownerAddr, address nodeAddr);
+
     // direct method for owner to remove node(s)
     function removeNode(address _nodeAddr) public onlyOwner {
         for (uint i = 0; i < activeNodeAddresses.length; i++) {
             if (activeNodeAddresses[i] == _nodeAddr) {
                 removeNodeInternal(i, activeNodeAddresses, activeNodeLocators);
+                emit RemoveNode(msg.sender, _nodeAddr);
             }
         }
     }

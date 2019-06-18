@@ -22,54 +22,56 @@ const RandomString = (size) => {
 };
 
 const CreateClient = async (bux="2") => {
-  const fundedClient = new ElvClient(ClientConfiguration);
-  const client = new ElvClient(ClientConfiguration);
+  try {
+    const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
+    const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
 
-  const wallet = client.GenerateWallet();
-  const fundedSigner = wallet.AddAccount({privateKey});
+    const wallet = client.GenerateWallet();
+    const fundedSigner = wallet.AddAccount({privateKey});
 
-  await fundedClient.SetSigner({signer: fundedSigner});
+    await fundedClient.SetSigner({signer: fundedSigner});
 
-  const groupAddress = await fundedClient.ContentObjectMetadata({
-    libraryId: fundedClient.contentSpaceLibraryId,
-    objectId: fundedClient.contentSpaceObjectId,
-    metadataSubtree: "contentSpaceGroupAddress"
-  });
+    const groupAddress = await fundedClient.ContentObjectMetadata({
+      libraryId: fundedClient.contentSpaceLibraryId,
+      objectId: fundedClient.contentSpaceObjectId,
+      metadataSubtree: "contentSpaceGroupAddress"
+    });
 
-  // Create a new account and send some ether
-  const signer = wallet.AddAccountFromMnemonic({
-    mnemonic: wallet.GenerateMnemonic()
-  });
+    // Create a new account and send some ether
+    const signer = wallet.AddAccountFromMnemonic({
+      mnemonic: wallet.GenerateMnemonic()
+    });
 
-  // Each test file is run in parallel, so there may be collisions when initializing - retry until success
-  for(let i = 0; i < 5; i++) {
-    try {
-      await fundedSigner.sendTransaction({
-        to: signer.address,
-        value: Ethers.utils.parseEther(bux)
-      });
+    // Each test file is run in parallel, so there may be collisions when initializing - retry until success
+    for (let i = 0; i < 5; i++) {
+      try {
+        await fundedSigner.sendTransaction({
+          to: signer.address,
+          value: Ethers.utils.parseEther(bux)
+        });
 
-      break;
-    } catch (e) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+        break;
+      } catch (e) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
+
+    // Ensure transaction has time to resolve fully before continuing
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await client.SetSigner({signer});
+
+    // Add new account to content space group
+    await fundedClient.AddAccessGroupManager({
+      contractAddress: groupAddress,
+      memberAddress: signer.address
+    });
+
+    return client;
+  } catch(error) {
+    console.error("ERROR INITIALIZING TEST CLIENT: ");
+    console.error(error);
   }
-
-  //const signer = wallet.AddAccount({privateKey: "0xb1b912ab6d2024b9edd77a34837e48cb5e1aaac591d964cb3dd1311c131d02e2"});
-
-  // Ensure transaction has time to resolve fully before continuing
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  await client.SetSigner({signer});
-
-  // Add new account to content space group
-  // TODO: Pull access group address from content space when implemented
-  await fundedClient.AddAccessGroupManager({
-    contractAddress: groupAddress,
-    memberAddress: signer.address
-  });
-
-  return client;
 };
 
 module.exports = {

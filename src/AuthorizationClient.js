@@ -1,5 +1,6 @@
-const Id = require("./Id");
 const Ethers = require("ethers");
+const Id = require("./Id");
+const Crypto = require("./Crypto");
 const Utils = require("./Utils");
 
 // -- Contract javascript files built using build/BuildContracts.js
@@ -7,15 +8,6 @@ const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
 const TypeContract = require("./contracts/BaseContentType");
 const ContentContract = require("./contracts/BaseContent");
-
-// Node doesn't implement btoa
-const B64 = (str) => {
-  if(typeof btoa !== "undefined") {
-    return btoa(str);
-  }
-
-  return Buffer.from(str).toString("base64");
-};
 
 class AuthorizationClient {
   constructor({client, contentSpaceId, noCache=false, noAuth=false}) {
@@ -39,7 +31,7 @@ class AuthorizationClient {
     };
 
     this.channelContentTokens = {};
-
+    this.reencryptionKeys = {};
     this.requestIds = {};
   }
 
@@ -111,7 +103,7 @@ class AuthorizationClient {
     }
   }
 
-  async IsOwner({id, abi}) {
+  async Owner({id, abi}) {
     if(!this.client.signer) { return false; }
 
     const ownerAddress = await this.client.CallContractMethod({
@@ -121,7 +113,7 @@ class AuthorizationClient {
       methodArgs: []
     });
 
-    return ownerAddress.toLowerCase() === this.client.signer.address.toLowerCase();
+    return Utils.FormatAddress(ownerAddress);
   }
 
   async Sign(message) {
@@ -159,6 +151,14 @@ class AuthorizationClient {
     return KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
   }
 
+  async ReencryptionKey(objectId) {
+    if(!this.reencryptionKeys[objectId]) {
+      this.reencryptionKeys[objectId] = await Crypto.GenerateTargetCap();
+    }
+
+    return this.reencryptionKeys[objectId];
+  }
+
   async GenerateChannelContentToken({objectId, value=0}) {
     if(!this.noCache && this.channelContentTokens[objectId]) {
       return this.channelContentTokens[objectId];
@@ -190,7 +190,7 @@ class AuthorizationClient {
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
     const multiSig = Utils.FormatSignature(signature);
 
-    const token = `${payload}.${B64(multiSig)}`;
+    const token = `${payload}.${Utils.B64(multiSig)}`;
 
     if(!this.noCache) {
       this.channelContentTokens[objectId] = token;
@@ -227,12 +227,12 @@ class AuthorizationClient {
       token.qlib_id = libraryId;
     }
 
-    token = B64(JSON.stringify(token));
+    token = Utils.B64(JSON.stringify(token));
 
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token)));
     const multiSig = Utils.FormatSignature(signature);
 
-    return `${token}.${B64(multiSig)}`;
+    return `${token}.${Utils.B64(multiSig)}`;
   }
 
   // Generate proper authorization header based on the information provided
@@ -297,11 +297,13 @@ class AuthorizationClient {
         // Inject public key of requester
         args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
       } else {
+        const cap = await this.ReencryptionKey(objectId);
+
         // Set default args
         args = [
           0, // Access level
-          this.client.signer.signingKey? this.client.signer.signingKey.publicKey : "", // Public key of requester
-          "", // AFGH string
+          this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+          "", //cap.public_key,
           [], // Custom values
           [] // Stakeholders
         ];
@@ -391,11 +393,11 @@ class AuthorizationClient {
   }
 
   async AccessRequest({id, abi, args=[], checkAccessCharge=false}) {
-    const isOwner = await this.IsOwner({id, abi});
+    const owner = await this.Owner({id, abi});
 
     // Send some bux if access charge is required
     let accessCharge = 0;
-    if(!isOwner && checkAccessCharge) {
+    if(Utils.EqualAddress(owner, this.client.signer.address) && checkAccessCharge) {
       // Extract level, custom values and stakeholders from accessRequest arguments
       const accessChargeArgs = [args[0], args[3], args[4]];
       // Access charge is in wei, but methods take ether - convert to charge to ether

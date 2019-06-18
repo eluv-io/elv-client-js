@@ -1,23 +1,17 @@
+if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+
 const bs58 = require("bs58");
 const Stream = require("stream");
+const Utils = require("./Utils");
 
 let ElvCrypto;
-if(typeof window === "undefined") {
+if(typeof window === "undefined" || typeof window.crypto === "undefined") {
   // Running in node
   ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;
 } else {
   // Running in browser
   ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.js").default;
 }
-
-// Node doesn't implement btoa
-const B64 = (str) => {
-  if(typeof btoa !== "undefined") {
-    return btoa(str);
-  }
-
-  return Buffer.from(str).toString("base64");
-};
 
 /**
  * @namespace
@@ -26,11 +20,18 @@ const B64 = (str) => {
  */
 const Crypto = {
   ElvCrypto: async () => {
-    if(!Crypto.elvCrypto) {
-      Crypto.elvCrypto = await new ElvCrypto().init();
-    }
+    try {
+      if (!Crypto.elvCrypto) {
+        Crypto.elvCrypto = await new ElvCrypto().init();
+      }
 
-    return Crypto.elvCrypto;
+      return Crypto.elvCrypto;
+    } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error("Error initializing ElvCrypto:");
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
   },
 
   async EncryptCap(cap, publicKey) {
@@ -42,12 +43,11 @@ const Crypto = {
 
     const encryptedCap = Buffer.concat([ephemeralKey, tag, data]);
 
-    return B64(encryptedCap);
+    return Utils.B64(encryptedCap);
   },
 
   async DecryptCap(encryptedCap, privateKey) {
     const elvCrypto = await Crypto.ElvCrypto();
-
     privateKey = new Uint8Array(Buffer.from(privateKey.replace("0x", ""), "hex"));
 
     encryptedCap = Buffer.from(encryptedCap, "base64");
@@ -75,6 +75,20 @@ const Crypto = {
       symm_key: `kpsy${bs58.encode(Buffer.from(symmetricKey))}`,
       secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
       public_key: `kppk${bs58.encode(Buffer.from(publicKey))}`,
+      block_size: blockSize
+    };
+  },
+
+  async GenerateTargetCap(blockSize=1000000) {
+    const elvCrypto = await Crypto.ElvCrypto();
+
+    const {secretKey, publicKey} = elvCrypto.generateTargetKeys();
+    const symmetricKey = (elvCrypto.generateSymmetricKey()).key;
+
+    return {
+      symm_key: `kpsy${bs58.encode(Buffer.from(symmetricKey))}`,
+      secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
+      public_key: `ktpk${bs58.encode(Buffer.from(publicKey))}`,
       block_size: blockSize
     };
   },
@@ -127,18 +141,31 @@ const Crypto = {
    *
    * @returns {Promise<Buffer>} - Decrypted data
    */
-  PrimaryDecrypt: async (cap, encryptedData) => {
+  Decrypt: async (cap, encryptedData) => {
     const elvCrypto = await Crypto.ElvCrypto();
 
     const {symmetricKey, secretKey, publicKey} = Crypto.CapToKeys(cap);
-    const context = elvCrypto.newPrimaryContext(
-      publicKey,
-      secretKey,
-      symmetricKey
-    );
+
+    let context, type;
+    if(publicKey.length === elvCrypto.PRIMARY_PK_KEY_SIZE) {
+      // Primary context
+      type = elvCrypto.CRYPTO_TYPE_PRIMARY;
+      context = elvCrypto.newPrimaryContext(
+        publicKey,
+        secretKey,
+        symmetricKey
+      );
+    } else {
+      // Target context
+      type = elvCrypto.CRYPTO_TYPE_TARGET;
+      context = elvCrypto.newTargetDecryptionContext(
+        secretKey,
+        symmetricKey
+      );
+    }
 
     const input = new Stream.PassThrough();
-    const decipher = elvCrypto.createDecipher(elvCrypto.CRYPTO_TYPE_PRIMARY, context);
+    const decipher = elvCrypto.createDecipher(type, context);
     input.end(new Uint8Array(encryptedData));
 
     let decryptedChunks = [];
