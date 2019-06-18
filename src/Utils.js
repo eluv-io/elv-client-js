@@ -1,3 +1,5 @@
+if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+
 const bs58 = require("bs58");
 const BigNumber = require("bignumber.js");
 const MultiHash = require("multihashes");
@@ -246,6 +248,10 @@ const Utils = {
 
   BufferToArrayBuffer: (buffer) => {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  },
+
+  B64: (str) => {
+    return Buffer.from(str).toString("base64");
   },
 
   /**

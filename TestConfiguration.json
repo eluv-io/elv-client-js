@@ -1,12 +1,10 @@
 {
-  "contentSpaceId": "ispc4PBWYG3p6pi3Fxh3KR6yke8KSNE9",
+  "config-url": "http://main.localhost:8008/config",
+  "contentSpaceId": "ispc3xbgTUFgUp28y3Wct4R24ZTXR5mJ",
   "fabricURIs": [
     "http://localhost:8008"
   ],
   "ethereumURIs": [
-    "http://localhost:8545"
-  ],
-  "stateChannelURIs": [
     "http://localhost:8545"
   ]
 }

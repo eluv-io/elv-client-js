@@ -29,24 +29,108 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
 const Test = async () => {
   try {
-    const client = new ElvClient(ClientConfiguration);
+    /*
+    const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io"});
+
+    let wallet = client.GenerateWallet();
+    let signer = wallet.AddAccount({
+      privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
+      //privateKey: "0x09e180efeacdd2bdae9292bb5cb85cf9668217eed44447008604ecb7f26c1ab1"
+    });
+    await client.SetSigner({signer});
+
+
+
+    const versionHash = "hq__3Z6RkcawgYv24kJX5YPGYRGuaP4w7ctchnda4BiRbbkC3X1qmfjwXh9EimjMx4R1zikkuVbXQ2";
+    console.log(await client.ContentObject({
+
+      versionHash
+    }));
+
+    console.log(await client.BitmovinPlayoutOptions({
+      versionHash,
+      drms: ["widevine"]
+    }));
+
+*/
+
+    const client = await ElvClient.FromConfigurationUrl({
+      configUrl: ClientConfiguration["config-url"]
+    });
+
     //const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
+      //privateKey: "0x09e180efeacdd2bdae9292bb5cb85cf9668217eed44447008604ecb7f26c1ab1"
     });
     await client.SetSigner({signer});
 
-    const file = fs.readFileSync("ElvClient-min-dev.js.map");
 
-    const libraryId = "ilib2AwHNWBtUm75E4hxBUx8UohsrfBg";
-    const objectId = "iq__PbkfXcVNLSjApBxozxeG34oaLUG";
 
-    console.log(await client.BitmovinPlayoutOptions({versionHash: "hq__E964vNCbW8EwZQKJcxx1vxQzpwDQeuge4sNxxR7ij7hMzscfZvg1D9dkn5B6KoCYFWyg8UiCuv", drms: ["widevine"]}));
+    const libraryId = "ilib4CRR6P5RYnLmfxqsXrriTjskKo2x";
+    const objectId = "iq__3naFPRP4m5NX1BMxor2WJRUHLvLv";
+
+    const file = fs.readFileSync("test/images/test-image1.png");
+
+    const editResponse = await client.EditContentObject({libraryId, objectId});
+
+    const upload = await client.UploadPart({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token,
+      data: file,
+      encryption: "cgck"
+    });
+
+    const partHash = upload.part.hash;
+
+    console.log(partHash);
+
+    await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token
+    });
+
+    const part1 = (await client.DownloadPart({
+      libraryId,
+      objectId,
+      partHash,
+      format: "arrayBuffer"
+    }));
+
+    const client2 = await ElvClient.FromConfigurationUrl({
+      configUrl: ClientConfiguration["config-url"]
+    });
+
+    const signer2 = client2.GenerateWallet().AddAccount({
+      privateKey: "0x09e180efeacdd2bdae9292bb5cb85cf9668217eed44447008604ecb7f26c1ab1",
+    });
+    await client2.SetSigner({signer: signer2});
+
+    const part2 = (await client2.DownloadPart({
+      libraryId,
+      objectId,
+      partHash,
+      format: "arrayBuffer"
+    }));
+
+    console.log(part2);
+
+
+    fs.writeFileSync("./enc-download.png", Buffer.from(part2));
+
     return;
 
     /*
+
+
+    /*
+
+
+  /*
     const editResponse = await client.CreateContentObject({libraryId});
     const objectId = editResponse.id;
 
@@ -74,13 +158,17 @@ const Test = async () => {
     console.log(await client.ContentParts({
       versionHash: finalizeResponse.hash
     }));
-*/
+
     console.log(await client.DownloadPart({
       libraryId,
       objectId,
-      partHash: "hqpe27mbSmA4yhd7evLN7mGSiTyjBv3q3ScGLv3gweBeQEkiTErr8G",
+      partHash,
       format: "text"
     }));
+
+    console.log("====");
+    console.log(objectId);
+    console.log(partHash);
     /*
     const libraryId = await client.CreateContentLibrary({name: "Test"});
     console.log(libraryId);
