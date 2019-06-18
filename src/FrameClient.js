@@ -100,7 +100,7 @@ class FrameClient {
       }
 
       response = await this.SendMessage({options: request, callback});
-    } catch(error) {
+    } catch (error) {
       response = JSON.parse(JSON.stringify(error));
     }
 
@@ -162,12 +162,12 @@ class FrameClient {
 
             const message = event.data;
 
-            if (message.type !== "ElvFrameResponse" || message.requestId !== callbackId) {
+            if(message.type !== "ElvFrameResponse" || message.requestId !== callbackId) {
               return;
             }
 
             callback(message.response);
-          } catch(error) {
+          } catch (error) {
             // eslint-disable-next-line no-console
             console.error(error);
           }
@@ -181,11 +181,11 @@ class FrameClient {
         try {
           const message = event.data;
 
-          if (message.type !== "ElvFrameResponse" || message.requestId !== requestId) {
+          if(message.type !== "ElvFrameResponse" || message.requestId !== requestId) {
             return;
           }
 
-          if (message.error) {
+          if(message.error) {
             reject(message.error);
           } else {
             resolve(message.response);
@@ -193,7 +193,7 @@ class FrameClient {
 
           window.removeEventListener("message", methodListener);
           if(callbackListener) { window.removeEventListener("message", callbackListener); }
-        } catch(error){
+        } catch (error){
           reject(error);
 
           window.removeEventListener("message", methodListener);

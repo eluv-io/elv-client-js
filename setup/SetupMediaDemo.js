@@ -18,7 +18,7 @@ const AdmgrCommercialOffering = require("../src/contracts/AdmgrCommercialOfferin
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
-if (process.argv.length < 4) {
+if(process.argv.length < 4) {
   console.log("Usage: <private-key> <emp>");
   process.exit(1);
 }
@@ -322,7 +322,7 @@ const SetupMediaDemo = async () => {
   const emp = await client.PublicLibraryMetadata({libraryId: empId, metadataSubtree: "/emp"});
   console.log("EMP: " + JSON.stringify(emp));
 
-  if (true) {
+  if(true) {
     console.log("Creating libraries:");
 
     // Make library - Ads
@@ -393,7 +393,7 @@ const SetupMediaDemo = async () => {
   await MakeCampaignManager(emp, "Open Market Campaign Manager", "open_market");
   await MakeCampaignManager(emp, "Dedicated Campaign Manager", "dedicated");
 
-  if (true) {
+  if(true) {
     await MakeChannel(emp, "Acme All Day");
     await MakeChannel(emp, "Acme Spring Special");
 

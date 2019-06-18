@@ -43,7 +43,7 @@ const CreateClient = async (bux="2") => {
     });
 
     // Each test file is run in parallel, so there may be collisions when initializing - retry until success
-    for (let i = 0; i < 5; i++) {
+    for(let i = 0; i < 5; i++) {
       try {
         await fundedSigner.sendTransaction({
           to: signer.address,
@@ -68,7 +68,7 @@ const CreateClient = async (bux="2") => {
     });
 
     return client;
-  } catch(error) {
+  } catch (error) {
     console.error("ERROR INITIALIZING TEST CLIENT: ");
     console.error(error);
   }

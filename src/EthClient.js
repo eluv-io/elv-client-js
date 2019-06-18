@@ -35,7 +35,7 @@ class EthClient {
   async MakeProviderCall({methodName, args=[], attempts=0}) {
     try {
       return await this.Provider()[methodName](...args);
-    } catch(error) {
+    } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
 
@@ -62,7 +62,7 @@ class EthClient {
       return value.map(element => this.FormatContractArgument({type: singleType, value: element}));
     }
 
-    switch(type.toLowerCase()) {
+    switch (type.toLowerCase()) {
       case "bytes32":
         return Ethers.utils.formatBytes32String(value);
       case "bytes":
@@ -146,30 +146,30 @@ class EthClient {
         });
       }
 
-      if (value) {
+      if(value) {
         // Convert Ether to Wei
         overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
       }
 
       this.ValidateSigner(signer);
 
-      if (!contract) {
+      if(!contract) {
         contract = new Ethers.Contract(contractAddress, abi, this.Provider());
         contract = contract.connect(signer);
       }
 
-      if (!contract.functions[methodName]) {
+      if(!contract.functions[methodName]) {
         throw Error("Unknown method: " + methodName);
       }
 
       let result;
       let success = false;
-      while (!success) {
+      while(!success) {
         try {
           result = await contract.functions[methodName](...methodArgs, overrides);
           success = true;
         } catch (error) {
-          if (error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
+          if(error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
             const latestBlock = await this.MakeProviderCall({methodName: "getBlock", args: ["latest"]});
             overrides.gasLimit = latestBlock.gasLimit;
             overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;

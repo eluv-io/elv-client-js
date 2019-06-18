@@ -12,12 +12,12 @@ const Replacer = (name, value) => {
   const objectName = (value.toString().match(/\[object\s+(.*)\]/) || [])[1];
   if(!objectName || objectName === "Object") { return value; }
 
-  switch(objectName) {
-    case("ArrayBuffer"):
+  switch (objectName) {
+    case ("ArrayBuffer"):
       return `<ArrayBuffer ${value.byteLength}>`;
-    case("Response"):
+    case ("Response"):
       return `<Response ${value.size}>`;
-    case("Object"):
+    case ("Object"):
       return value;
     default:
       return `<${objectName}>`;
@@ -74,7 +74,7 @@ const OutputLogger = (klass, instance, exclude=[]) => {
   const outputDir = Path.join(__dirname, "..", "..", "docs", "methods", klass.name);
 
   // eslint-disable-next-line no-empty
-  try { fs.mkdirSync(outputDir); } catch(e) {}
+  try { fs.mkdirSync(outputDir); } catch (e) {}
 
   let methodWritten = {};
 

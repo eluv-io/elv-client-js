@@ -75,7 +75,7 @@ class AuthorizationClient {
 
     try {
       // noCache enabled for this call
-      if (noCache && !this.noCache) {
+      if(noCache && !this.noCache) {
         this.noCache = true;
       }
 
@@ -96,7 +96,7 @@ class AuthorizationClient {
       this.noCache = initialNoCache;
 
       return authorizationToken;
-    } catch(error) {
+    } catch (error) {
       // Ensure nocache is properly reset
       this.noCache = initialNoCache;
       throw error;
@@ -370,7 +370,7 @@ class AuthorizationClient {
       methodArgs: args
     });
 
-    return info[1];
+    return info[2];
   }
 
   async AccessComplete({id, abi, score}) {

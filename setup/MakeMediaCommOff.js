@@ -110,7 +110,7 @@ const MakeMediaCommOff = async (emp, name, libraryId, copyFromHash, campaignMana
     console.log("    AVMaster Commercial OFfering - " + name + ": " + q.id);
 
 
-  } catch(e) {
+  } catch (e) {
     console.log(e);
   }
 

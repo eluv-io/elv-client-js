@@ -19,7 +19,7 @@ class ElvMediaPlatform {
   }) {
 
     var campaignsLibrary = null;
-    if (campaignManager != null) {
+    if(campaignManager != null) {
       campaignsLibrary = campaignManager.campaigns_library;
     }
     var md = {
@@ -34,7 +34,7 @@ class ElvMediaPlatform {
       libraryId: libraryId,
       objectId: objectId});
 
-    if (campaignManager != null) {
+    if(campaignManager != null) {
       // Find campaign manager's library ID
       const campaignManagerMeta = await client.ContentObjectMetadata({
         libraryId: emp.ads_marketplace,

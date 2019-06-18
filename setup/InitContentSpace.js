@@ -137,7 +137,7 @@ const Init = async () => {
     fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
 
     console.log("\nUpdated TestConfiguration.json\n");
-  } catch(error) {
+  } catch (error) {
     console.log("Error initializing fabric:");
     console.error(error);
   }

@@ -10,7 +10,7 @@ const CompareMethods = (frameClientMethods, elvClientMethods) => {
     .filter(x => !elvClientMethods.includes(x))
     .concat(elvClientMethods.filter(x => !frameClientMethods.includes(x)));
 
-  if (differentKeys.length > 0) {
+  if(differentKeys.length > 0) {
     console.log("DIFFERING KEYS: ");
     console.error(differentKeys);
 
@@ -73,7 +73,7 @@ describe("Test FrameClient", () => {
 
     try {
       await frameClient.ContentLibrary({libraryId: "ilibabcd"});
-    } catch(e) {
+    } catch (e) {
       expect(e).toMatchObject({
         name: "ElvHttpClientError",
         method: "GET",

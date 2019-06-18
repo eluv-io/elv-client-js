@@ -67,11 +67,11 @@ const Utils = {
    * @returns {string} - Formatted address
    */
   FormatAddress: (address) => {
-    if (!address || typeof address !== "string") {
+    if(!address || typeof address !== "string") {
       return "";
     }
 
-    if (!address.startsWith("0x")) {
+    if(!address.startsWith("0x")) {
       address = "0x" + address;
     }
     return address.toLowerCase();
@@ -203,7 +203,7 @@ const Utils = {
    * @returns {boolean} - Whether or not the addresses match
    */
   EqualAddress(firstAddress, secondAddress) {
-    if (!firstAddress || !secondAddress) {
+    if(!firstAddress || !secondAddress) {
       return false;
     }
 
@@ -220,11 +220,11 @@ const Utils = {
    * @returns {boolean} - Whether or not the hashes of the IDs match
    */
   EqualHash(firstHash, secondHash) {
-    if (!firstHash || !secondHash) {
+    if(!firstHash || !secondHash) {
       return false;
     }
 
-    if (firstHash.length <= 4 || secondHash.length <= 4) {
+    if(firstHash.length <= 4 || secondHash.length <= 4) {
       return false;
     }
 
@@ -261,7 +261,7 @@ const Utils = {
    * @returns {boolean} - Whether or not the value is cloneable
    */
   IsCloneable: (value) => {
-    if (Object(value) !== value) {
+    if(Object(value) !== value) {
       // Primitive value
       return true;
     }
@@ -334,7 +334,7 @@ const Utils = {
         Array.from(value.keys()).forEach(key => {
           const cloneable = Utils.MakeClonable(value.get(key));
 
-          if (cloneable) {
+          if(cloneable) {
             cloneableMap.set(key, cloneable);
           }
         });
@@ -346,7 +346,7 @@ const Utils = {
         Object.keys(value).map(key => {
           const cloneable = Utils.MakeClonable(value[key]);
 
-          if (cloneable) {
+          if(cloneable) {
             cloneableObject[key] = cloneable;
           }
         });
