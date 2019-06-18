@@ -31,7 +31,7 @@ const ResponseToJson = async (response) => {
 const ResponseToFormat = async (format, response) => {
   response = await response;
 
-  switch(format.toLowerCase()) {
+  switch (format.toLowerCase()) {
     case "json":
       return response.json();
     case "text":
@@ -207,7 +207,7 @@ class ElvClient {
         methodArgs: [signer.address]
       });
 
-      if (!this.walletAddress || this.walletAddress === this.utils.nullAddress) {
+      if(!this.walletAddress || this.walletAddress === this.utils.nullAddress) {
         const walletCreationEvent = await this.CallContractMethodAndWait({
           contractAddress: this.utils.HashToAddress(this.contentSpaceId),
           abi: SpaceContract.abi,
@@ -723,7 +723,7 @@ class ElvClient {
         name: metadata.name,
         meta: metadata
       };
-    } catch(error) {
+    } catch (error) {
       throw new Error(`Content Type ${name || typeId} is invalid`);
     }
   }
@@ -748,7 +748,7 @@ class ElvClient {
         if(!this.contentTypes[typeId]) {
           try {
             this.contentTypes[typeId] = await this.ContentType({typeId});
-          } catch(error) {
+          } catch (error) {
             // eslint-disable-next-line no-console
             console.error(error);
           }
@@ -946,7 +946,7 @@ class ElvClient {
       );
 
       return metadata || {};
-    } catch(error) {
+    } catch (error) {
       if(error.status !== 404) {
         throw error;
       }
@@ -1578,12 +1578,6 @@ class ElvClient {
   }
 
   async EncryptChunk(cap, dataBuffer) {
-    // Convert Blob to ArrayBuffer if necessary
-    if(!(dataBuffer instanceof ArrayBuffer) && !(typeof Buffer !== "undefined" && dataBuffer instanceof Buffer)) {
-      // Blob
-      dataBuffer = await new Response(data).arrayBuffer();
-    }
-
     dataBuffer = await Crypto.Encrypt(cap, dataBuffer);
 
     if(dataBuffer instanceof ArrayBuffer) {
@@ -1772,7 +1766,7 @@ class ElvClient {
       editable: info[0] >= 100,
       hasAccess: info[1] === 0,
       accessCode: info[1],
-      accessCharge: Utils.WeiToEther(info[1]).toString()
+      accessCharge: Utils.WeiToEther(info[2]).toString()
     };
   }
 
@@ -2332,7 +2326,7 @@ class ElvClient {
 
   CollectionMethods(collectionType) {
     let lengthMethod, itemMethod;
-    switch(collectionType) {
+    switch (collectionType) {
       case "accessGroups":
         lengthMethod = "getAccessGroupsLength";
         itemMethod = "getAccessGroup";
@@ -2898,13 +2892,13 @@ class ElvClient {
 
       let methodResults;
       if(message.module === "userProfile") {
-        if (!this.userProfile.FrameAllowedMethods().includes(method)) {
+        if(!this.userProfile.FrameAllowedMethods().includes(method)) {
           throw Error("Invalid user profile method: " + method);
         }
 
         methodResults = await this.userProfile[method](message.args);
       } else {
-        if (!this.FrameAllowedMethods().includes(method)) {
+        if(!this.FrameAllowedMethods().includes(method)) {
           throw Error("Invalid method: " + method);
         }
 
@@ -2916,7 +2910,7 @@ class ElvClient {
         requestId: message.requestId,
         response: methodResults
       }));
-    } catch(error) {
+    } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
 

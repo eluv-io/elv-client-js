@@ -67,7 +67,20 @@ const Test = async () => {
     });
     await client.SetSigner({signer});
 
+    //http://localhost:8008/qlibs/ilib1mGTeSAJ8WzJDgyuxRKKUYTwA4K/q/iq__3N7wV3bFbwXrENqbE9Bk1gVLpBXC/data/hqp_DPzN7Vjct4kf3ydeU6HegaXXxgQbGYKX7dVkjh3DzhfLFXPEB?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMmFxZjV6cnN0bzcyS3RSYmd2WDkyV3NzY29YUCIsImFkZHIiOiI1MDY2Q0VhOWJiNDY0YTcwZDdEZDFENTI3OUNCMUQ4M2Q4Y2FlYTNFIiwidHhfaWQiOiI1YTI1MTg3YmE2NWFjMjRkYjdlZTJmNWMwYjA0ZTBlNTJmOGIzMmViZjJhOGY1ZWI3MGRkZTM1ZWE1NzEwODkxIiwicWxpYl9pZCI6ImlsaWIxbUdUZVNBSjhXekpEZ3l1eFJLS1VZVHdBNEsifQ%3D%3D.RVMyNTZLX0RFYm90alpydGlqQ3JqVUJBQW83UGJzdUJpbXp1UEZ3dGtZZlpKVVZGM2szcU5aYWRIY0FjVWU2WmZzS2lYd2toejZ3TGZ0NFpKYTFNNFpVd1pxYkd2TFRN
 
+    console.log(await client.DownloadPart({
+      libraryId: "ilib38jyeQdw3cB4hzWhkeg4Fux3dw82",
+      objectId: "iq__449HPG2MfgM9QFXZFKRtCT56pQFM",
+      partHash: "hqpePMMjDcbrxGVo3NR2g7eq7TeFQDETzY16MK2qtJboM1Eyha3T"
+    }));
+    return;
+
+    console.log(await client.Collection({
+      collectionType: "accessGroups"
+    }));
+
+    return;
 
     const libraryId = "ilib4CRR6P5RYnLmfxqsXrriTjskKo2x";
     const objectId = "iq__3naFPRP4m5NX1BMxor2WJRUHLvLv";

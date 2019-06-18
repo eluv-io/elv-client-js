@@ -24,6 +24,16 @@
         "ignoredNodes": ["TemplateLiteral"]
       }
     ],
+    "keyword-spacing": [
+      "warn", {
+        "before": true,
+        "after": true,
+        "overrides": {
+          "if": { "after": false },
+          "for": { "after": false },
+          "while": { "after": false }
+        }
+      }],
     "linebreak-style": [
       "error",
       "unix"

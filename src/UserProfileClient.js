@@ -130,7 +130,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   // Create the library if it doesn't yet exist
   async __TouchLibrary() {
     if(this.client.signer) {
-      if (!(await this.__IsLibraryCreated({accountAddress: this.client.signer.address}))) {
+      if(!(await this.__IsLibraryCreated({accountAddress: this.client.signer.address}))) {
         await this.CreateAccountLibrary();
       }
 
@@ -236,7 +236,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
     try {
       //return await this.client.PublicLibraryMetadata({libraryId, metadataSubtree});
-    } catch(error) {
+    } catch (error) {
       if(error.status !== 404) {
         throw error;
       }
@@ -406,7 +406,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
     return;
     try {
       await this.__RecordTags({libraryId, objectId, versionHash});
-    } catch(error) {
+    } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
     }
@@ -451,7 +451,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       const formattedTags = this.__FormatVideoTags(contentTags);
 
       Object.keys(formattedTags).forEach(tag => {
-        if (userTags[tag]) {
+        if(userTags[tag]) {
           // User has seen this tag before
           userTags[tag].occurrences += 1;
           userTags[tag].aggregate += formattedTags[tag];

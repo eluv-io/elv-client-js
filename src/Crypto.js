@@ -21,12 +21,12 @@ if(typeof window === "undefined" || typeof window.crypto === "undefined") {
 const Crypto = {
   ElvCrypto: async () => {
     try {
-      if (!Crypto.elvCrypto) {
+      if(!Crypto.elvCrypto) {
         Crypto.elvCrypto = await new ElvCrypto().init();
       }
 
       return Crypto.elvCrypto;
-    } catch(error) {
+    } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Error initializing ElvCrypto:");
       // eslint-disable-next-line no-console
@@ -41,7 +41,11 @@ const Crypto = {
 
     const {data, ephemeralKey, tag} = await elvCrypto.encryptECIES(cap, publicKey);
 
-    const encryptedCap = Buffer.concat([ephemeralKey, tag, data]);
+    const encryptedCap = Buffer.concat([
+      Buffer.from(ephemeralKey),
+      Buffer.from(tag),
+      Buffer.from(data)
+    ]);
 
     return Utils.B64(encryptedCap);
   },
@@ -114,6 +118,11 @@ const Crypto = {
    * @returns {Promise<Buffer>} - Encrypted data
    */
   Encrypt: async (cap, data) => {
+    // Convert Blob to ArrayBuffer if necessary
+    if(!Buffer.isBuffer(data) && !(data instanceof ArrayBuffer)) {
+      data = Buffer.from(await new Response(data).arrayBuffer());
+    }
+
     const elvCrypto = await Crypto.ElvCrypto();
 
     const {symmetricKey, secretKey, publicKey} = Crypto.CapToKeys(cap);
