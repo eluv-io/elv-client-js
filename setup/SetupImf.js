@@ -36,7 +36,7 @@ const ResponseToJson = async (response) => {
 const ResponseToFormat = async (format, response) => {
   response = await HandleErrors(response);
 
-  switch (format.toLowerCase()) {
+  switch(format.toLowerCase()) {
     case "json":
       return response.json();
     case "text":
