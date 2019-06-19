@@ -12,7 +12,7 @@ const Replacer = (name, value) => {
   const objectName = (value.toString().match(/\[object\s+(.*)\]/) || [])[1];
   if(!objectName || objectName === "Object") { return value; }
 
-  switch (objectName) {
+  switch(objectName) {
     case ("ArrayBuffer"):
       return `<ArrayBuffer ${value.byteLength}>`;
     case ("Response"):

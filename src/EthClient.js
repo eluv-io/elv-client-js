@@ -62,7 +62,7 @@ class EthClient {
       return value.map(element => this.FormatContractArgument({type: singleType, value: element}));
     }
 
-    switch (type.toLowerCase()) {
+    switch(type.toLowerCase()) {
       case "bytes32":
         return Ethers.utils.formatBytes32String(value);
       case "bytes":

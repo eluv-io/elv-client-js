@@ -266,7 +266,7 @@ const Utils = {
       return true;
     }
 
-    switch ({}.toString.call(value).slice(8, -1)) { // Class
+    switch({}.toString.call(value).slice(8, -1)) { // Class
       case "Boolean":
       case "Number":
       case "String":
@@ -310,7 +310,7 @@ const Utils = {
       return Utils.BufferToArrayBuffer(value);
     }
 
-    switch ({}.toString.call(value).slice(8, -1)) { // Class
+    switch({}.toString.call(value).slice(8, -1)) { // Class
       case "Response":
       case "Function":
         return undefined;
@@ -354,7 +354,21 @@ const Utils = {
       default:
         return JSON.parse(JSON.stringify(value));
     }
-  }
+  },
+
+  PLATFORM_NODE: "node",
+  PLATFORM_WEB: "web",
+  PLATFORM_REACT_NATIVE: "react-native",
+
+  Platform: () => {
+    if(typeof navigator !== "undefined" && navigator.product === "ReactNative") {
+      return Utils.PLATFORM_REACT_NATIVE;
+    } else if((typeof process !== "undefined") && (typeof process.versions.node !== "undefined")) {
+      return Utils.PLATFORM_NODE;
+    } else {
+      return Utils.PLATFORM_WEB;
+    }
+  },
 };
 
 module.exports = Utils;

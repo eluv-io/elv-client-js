@@ -29,7 +29,6 @@ const KickReplacementFee = async (signer, gasPrice) => {
 
 const Test = async () => {
   try {
-    /*
     const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io"});
 
     let wallet = client.GenerateWallet();
@@ -52,7 +51,8 @@ const Test = async () => {
       drms: ["widevine"]
     }));
 
-*/
+
+    /*
 
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
