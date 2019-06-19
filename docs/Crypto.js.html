@@ -61,12 +61,13 @@ const Stream = require("stream");
 const Utils = require("./Utils");
 
 let ElvCrypto;
-if(typeof window === "undefined" || typeof window.crypto === "undefined") {
-  // Running in node
-  ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;
-} else {
-  // Running in browser
-  ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.js").default;
+switch(Utils.Platform()) {
+  case Utils.PLATFORM_WEB:
+    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.js").default;
+    break;
+  default:
+    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;
+    break;
 }
 
 /**

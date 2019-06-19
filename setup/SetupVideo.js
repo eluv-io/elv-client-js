@@ -39,7 +39,7 @@ const ResponseToJson = async (response) => {
 const ResponseToFormat = async (format, response) => {
   response = await HandleErrors(response);
 
-  switch (format.toLowerCase()) {
+  switch(format.toLowerCase()) {
     case "json":
       return response.json();
     case "text":
@@ -176,7 +176,7 @@ class VideoService {
 
     for(i = j = 0, len = files.length; j < len; i = ++j) {
       f = files[i];
-      switch (false) {
+      switch(false) {
         case f.filename !== "ladder.json":
           ladderText = (await readUploadedFileAsText(f.file));
           ladderJson = JSON.parse(ladderText);

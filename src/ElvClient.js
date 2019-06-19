@@ -1,11 +1,5 @@
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
-// TODO: react native only
-// Polyfill for most things like typedarray
-require("@babel/polyfill");
-// Polyfill for string.normalized
-require("unorm");
-
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 
@@ -25,9 +19,20 @@ const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
 const WalletContract = require("./contracts/BaseAccessWallet");
 
-if(typeof Response === "undefined") {
-  // eslint-disable-next-line no-global-assign
-  Response = (require("node-fetch")).Response;
+// Platform specific polyfills
+switch(Utils.Platform()) {
+  case Utils.PLATFORM_REACT_NATIVE:
+    // React native polyfills
+    // Polyfill for most things like typedarray
+    require("@babel/polyfill");
+    // Polyfill for string.normalized
+    require("unorm");
+    break;
+  case Utils.PLATFORM_NODE:
+    // Define Response in node
+    // eslint-disable-next-line no-global-assign
+    global.Response = (require("node-fetch")).Response;
+    break;
 }
 
 const ResponseToJson = async (response) => {
@@ -37,7 +42,7 @@ const ResponseToJson = async (response) => {
 const ResponseToFormat = async (format, response) => {
   response = await response;
 
-  switch (format.toLowerCase()) {
+  switch(format.toLowerCase()) {
     case "json":
       return response.json();
     case "text":
@@ -1583,20 +1588,6 @@ class ElvClient {
     return cap;
   }
 
-  async EncryptChunk(cap, dataBuffer) {
-    dataBuffer = await Crypto.Encrypt(cap, dataBuffer);
-
-    if(dataBuffer instanceof ArrayBuffer) {
-      if(typeof window === "undefined") {
-        dataBuffer = Buffer.from(dataBuffer);
-      } else {
-        await new Response([dataBuffer]).blob();
-      }
-    }
-
-    return dataBuffer;
-  }
-
   /**
    * Upload part to an object draft
    *
@@ -1630,7 +1621,7 @@ class ElvClient {
     // If the file is smaller than the chunk size, just upload it in one pass
     if(totalSize < chunkSize) {
       if(encrypt) {
-        data = await this.EncryptChunk(encryptionCap, data);
+        data = await Crypto.Encrypt(encryptionCap, data);
       }
 
       const uploadResult = await ResponseToJson(
@@ -1667,7 +1658,7 @@ class ElvClient {
 
       let chunk = data.slice(uploaded, to);
       if(encrypt) {
-        chunk = await this.EncryptChunk(encryptionCap, chunk);
+        chunk = await Crypto.Encrypt(encryptionCap, chunk);
       }
 
       await ResponseToJson(
@@ -1938,7 +1929,6 @@ class ElvClient {
   async BitmovinPlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
     const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     const playoutOptions = await this.PlayoutOptions({versionHash, protocols, drms});
-
     let config = {
       drm: {}
     };
@@ -1949,9 +1939,18 @@ class ElvClient {
 
       if(option.drms) {
         Object.keys(option.drms).forEach(drm => {
+          // No license URL specified
+          if(!option.drms[drm].licenseServers || option.drms[drm].licenseServers.length === 0) { return; }
+
+          // Opt for https urls
+          const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
+          let licenseUrls = option.drms[drm].licenseServers;
+          if(licenseUrls.find(filterHTTPS)) {
+            licenseUrls = licenseUrls.filter(filterHTTPS);
+          }
+
           // Choose a random license server from the available list
-          const licenseUrl = option.drms[drm].licenseServers
-            .sort(() => 0.5 - Math.random())[0];
+          const licenseUrl = licenseUrls.sort(() => 0.5 - Math.random())[0];
 
           if(!config.drm[drm]) {
             config.drm[drm] = {
@@ -2332,7 +2331,7 @@ class ElvClient {
 
   CollectionMethods(collectionType) {
     let lengthMethod, itemMethod;
-    switch (collectionType) {
+    switch(collectionType) {
       case "accessGroups":
         lengthMethod = "getAccessGroupsLength";
         itemMethod = "getAccessGroup";
