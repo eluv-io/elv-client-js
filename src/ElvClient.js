@@ -184,16 +184,12 @@ class ElvClient {
   }
 
   /**
-   * Clear saved access requests
+   * Clear saved access and state channel tokens
    *
    * @methodGroup Access Requests
-   * @namedParams
-   * @param {string=} libraryId - If present, cached access and modification transactions for the specified library will be cleared
-   * - Note: This will not clear any transactions for any objects within the library
-   * @param {string=} objectId - If present, cached access and modification transactions for the specified object will be cleared
    */
-  ClearCache({libraryId, objectId}) {
-    this.authClient.ClearCache({libraryId, objectId});
+  ClearCache() {
+    this.authClient.ClearCache();
   }
 
   /**
@@ -1801,7 +1797,6 @@ class ElvClient {
       versionHash,
       args,
       update,
-      checkAccessCharge: true,
       skipCache: true,
       noCache
     });
