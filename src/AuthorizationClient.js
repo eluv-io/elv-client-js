@@ -8,6 +8,17 @@ const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
 const TypeContract = require("./contracts/BaseContentType");
 const ContentContract = require("./contracts/BaseContent");
+const OwnableContract = require("./contracts/Ownable");
+const AccessibleContract = require("./contracts/Accessible");
+const EditableContract = require("./contracts/Editable");
+
+const ACCESS_TYPES = {
+  SPACE: "space",
+  LIBRARY: "library",
+  TYPE: "type",
+  OBJECT: "object",
+  OTHER: "other"
+};
 
 class AuthorizationClient {
   constructor({client, contentSpaceId, noCache=false, noAuth=false}) {
@@ -21,13 +32,17 @@ class AuthorizationClient {
     this.accessTransactions = {
       spaces: {},
       libraries: {},
-      objects: {}
+      objects: {},
+      types: {},
+      other: {}
     };
 
     this.modifyTransactions = {
       spaces: {},
       libraries: {},
-      objects: {}
+      objects: {},
+      types: {},
+      other: {}
     };
 
     this.channelContentTokens = {};
@@ -207,7 +222,6 @@ class AuthorizationClient {
         versionHash,
         transactionHash,
         update,
-        checkAccessCharge: true,
         noCache: this.noCache,
         noAuth
       });
@@ -242,72 +256,58 @@ class AuthorizationClient {
     versionHash,
     args=[],
     update=false,
-    checkAccessCharge=true,
     skipCache=false,
     noCache=false,
     cacheOnly
   }) {
     if(!this.client.signer) { return {transactionHash: ""}; }
 
-    const isUserLibrary = libraryId && libraryId === Utils.AddressToLibraryId(this.client.signer.address);
-    const isSpaceLibrary = Utils.EqualHash(this.contentSpaceId, libraryId);
-    const isLibraryObject = Utils.EqualHash(libraryId, objectId);
+    if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
+
+    const id = objectId || libraryId || this.contentSpaceId;
+    const accessType = await this.AccessType(id);
     const cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
 
-    let id, abi, cache;
-    let isObjectAccess = false;
-    if(isUserLibrary) {
-      // User profile library - library ID corresponds to signer's address
-      if(!noCache && !skipCache && this.userProfileTransaction) { return this.userProfileTransaction; }
+    let abi, cache;
+    let checkAccessCharge = false;
 
-      return {transactionHash: ""};
-      const userEvent = await this.client.ethClient.EngageAccountLibrary({
-        contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-        signer: this.client.signer
-      });
+    switch(accessType) {
+      case ACCESS_TYPES.SPACE:
+        abi = SpaceContract.abi;
+        cache = cacheCollection.spaces;
+        break;
+      case ACCESS_TYPES.LIBRARY:
+        abi = LibraryContract.abi;
+        cache = cacheCollection.libraries;
+        break;
+      case ACCESS_TYPES.TYPE:
+        abi = TypeContract.abi;
+        cache = cacheCollection.types;
+        break;
+      case ACCESS_TYPES.OBJECT:
+        abi = ContentContract.abi;
+        cache = cacheCollection.objects;
+        checkAccessCharge = true;
 
-      if(!noCache) {
-        this.userProfileTransaction = userEvent.transactionHash;
-      }
+        if(args && args.length > 0) {
+          // Inject public key of requester
+          args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
+        } else {
+          const cap = await this.ReencryptionKey(objectId);
 
-      return userEvent.transactionHash;
-    } else if((!libraryId && !objectId) || (!objectId && isSpaceLibrary) || (isSpaceLibrary && isLibraryObject)) {
-      // Content Space - no library and object, content space library or content space library object
-      id = this.contentSpaceId;
-      abi = SpaceContract.abi;
-      cache = cacheCollection.spaces;
-    } else if(isSpaceLibrary) {
-      // Content type - content space library but not content space library object
-      id = objectId;
-      abi = TypeContract.abi;
-      cache = cacheCollection.objects;
-    } else if(!objectId || isLibraryObject) {
-      // Library - no object specified or library object
-      id = libraryId;
-      abi = LibraryContract.abi;
-      cache = cacheCollection.libraries;
-    } else {
-      // Object - any other case
-      id = objectId;
-      abi = ContentContract.abi;
-      cache = cacheCollection.objects;
-      isObjectAccess = true;
-
-      if(args && args.length > 0) {
-        // Inject public key of requester
-        args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
-      } else {
-        const cap = await this.ReencryptionKey(objectId);
-
-        // Set default args
-        args = [
-          0, // Access level
-          this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-          "", //cap.public_key,
-          [], // Custom values
-          [] // Stakeholders
-        ];
-      }
+          // Set default args
+          args = [
+            0, // Access level
+            this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+            "", //cap.public_key,
+            [], // Custom values
+            [] // Stakeholders
+          ];
+        }
+        break;
+      default:
+        abi = update ? EditableContract.abi : AccessibleContract.abi;
+        cache = cacheCollection.other;
     }
 
     // Check cache for existing transaction
@@ -339,10 +339,12 @@ class AuthorizationClient {
       });
     }
 
+    /*
     // After making an access request, record the tags in the user's profile, if appropriate
-    if(isObjectAccess && !update) {
+    if(accessType === ACCESS_TYPES.OBJECT && !update) {
       await this.client.userProfile.RecordTags({libraryId, objectId, versionHash});
     }
+    */
 
     return accessRequest;
   }
@@ -356,16 +358,41 @@ class AuthorizationClient {
   }
 
   /* Access */
+  async AccessType(id) {
+    try {
+      const version =
+        Ethers.utils.parseBytes32String(
+          await this.client.CallContractMethod({
+            contractAddress: Utils.HashToAddress(id),
+            abi: OwnableContract.abi,
+            methodName: "version"
+          })
+        );
 
-  async GetAccessCharge({id, abi, args}) {
-    // Ensure contract has a getAccessInfo method
-    const method = abi.find(element => element.name === "getAccessInfo" && element.type === "function");
+      if(version.match(/BaseContentSpace\d+.*/)) {
+        // BaseContentSpace20190612120000PO
+        return ACCESS_TYPES.SPACE;
+      } else if(version.match(/BaseLibrary\d+.*/)) {
+        // BaseLibrary20190605150200ML
+        return ACCESS_TYPES.LIBRARY;
+      } else if(version.match(/BaseContentType\d+.*/)) {
+        // BaseContentType20190605150100ML
+        return ACCESS_TYPES.TYPE;
+      } else if(version.match(/BaseContent\d+.*/)) {
+        // BaseContent20190611120000PO
+        return ACCESS_TYPES.OBJECT;
+      } else {
+        return ACCESS_TYPES.OTHER;
+      }
+    } catch (error) {
+      return ACCESS_TYPES.OTHER;
+    }
+  }
 
-    if(!method) { return 0; }
-
+  async GetAccessCharge({objectId, args}) {
     const info = await this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(id),
-      abi,
+      contractAddress: Utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
       methodName: "getAccessInfo",
       methodArgs: args
     });
@@ -397,11 +424,11 @@ class AuthorizationClient {
 
     // Send some bux if access charge is required
     let accessCharge = 0;
-    if(Utils.EqualAddress(owner, this.client.signer.address) && checkAccessCharge) {
+    if(checkAccessCharge && Utils.EqualAddress(owner, this.client.signer.address)) {
       // Extract level, custom values and stakeholders from accessRequest arguments
       const accessChargeArgs = [args[0], args[3], args[4]];
       // Access charge is in wei, but methods take ether - convert to charge to ether
-      accessCharge = Utils.WeiToEther(await this.GetAccessCharge({id, abi, args: accessChargeArgs}));
+      accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
     }
 
     // If access request did not succeed, no event will be emitted
@@ -491,30 +518,25 @@ class AuthorizationClient {
     };
   }
 
-  // Clear cached access transaction IDs for either a specific library/object or all
-  ClearCache({libraryId, objectId}) {
-    if(libraryId) {
-      this.accessTransactions.libraries[libraryId] = undefined;
-      this.modifyTransactions.libraries[libraryId] = undefined;
-    } else if(objectId) {
-      this.accessTransactions.objects[objectId] = undefined;
-      this.modifyTransactions.objects[objectId] = undefined;
-      this.channelContentTokens[objectId] = undefined;
-    } else {
-      this.accessTransactions = {
-        spaces: {},
-        libraries: {},
-        objects: {}
-      };
+  // Clear cached access transaction IDs and state channel tokens
+  ClearCache() {
+    this.accessTransactions = {
+      spaces: {},
+      libraries: {},
+      types: {},
+      objects: {},
+      other: {}
+    };
 
-      this.modifyTransactions = {
-        spaces: {},
-        libraries: {},
-        objects: {}
-      };
+    this.modifyTransactions = {
+      spaces: {},
+      libraries: {},
+      types: {},
+      objects: {},
+      other: {}
+    };
 
-      this.channelContentTokens = {};
-    }
+    this.channelContentTokens = {};
   }
 }
 

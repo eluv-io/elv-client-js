@@ -216,6 +216,7 @@ describe("Test ElvClient", () => {
   describe("Content Objects", () => {
     test("Create Content Object", async () => {
       const testMetadata = {
+        name: "Test Content Object",
         toMerge: {
           merge: "me"
         },
@@ -254,6 +255,7 @@ describe("Test ElvClient", () => {
     test("Content Object Metadata", async () => {
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
       expect(metadata).toEqual({
+        name: "Test Content Object",
         toMerge: {
           merge: "me"
         },
@@ -309,6 +311,7 @@ describe("Test ElvClient", () => {
 
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
       expect(metadata).toEqual({
+        name: "Test Content Object",
         toMerge: {
           new: "metadata",
           merge: "me"
@@ -522,24 +525,26 @@ describe("Test ElvClient", () => {
 
   describe("Access Requests", () => {
     test("Cached Access Transactions", async () => {
-      const transactionHash = await client.CachedAccessTransaction({libraryId, objectId});
+      const transactionHash = await client.CachedAccessTransaction({versionHash});
       expect(transactionHash).toBeDefined();
 
-      client.ClearCache({objectId});
-      const noTransaction = await client.CachedAccessTransaction({libraryId, objectId});
+      client.ClearCache();
+      const noTransaction = await client.CachedAccessTransaction({versionHash});
       expect(noTransaction).not.toBeDefined();
 
-      client.ClearCache({libraryId});
-      client.ClearCache({});
       expect(client.authClient.accessTransactions).toEqual({
         spaces: {},
         libraries: {},
-        objects: {}
+        types: {},
+        objects: {},
+        other: {}
       });
       expect(client.authClient.modifyTransactions).toEqual({
         spaces: {},
         libraries: {},
-        objects: {}
+        types: {},
+        objects: {},
+        other: {}
       });
     });
 
@@ -570,8 +575,7 @@ describe("Test ElvClient", () => {
 
     test("Make Manual Access Request", async () => {
       const accessRequest = await client.AccessRequest({
-        libraryId,
-        objectId,
+        versionHash,
         args: [
           0, // Access level
           undefined, // Public key - will be injected automatically
