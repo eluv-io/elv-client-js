@@ -11,6 +11,7 @@ const cbor = require("cbor");
 const fs = require("fs");
 
 const Crypto = require("../src/Crypto");
+const Ethers = require("ethers");
 
 const KickReplacementFee = async (signer, gasPrice) => {
   try {
@@ -27,8 +28,47 @@ const KickReplacementFee = async (signer, gasPrice) => {
   }
 };
 
+const Create = async (client) => {
+  const libraryId = await client.CreateContentLibrary({name: "Test"});
+
+  const createResponse = await client.CreateContentObject({libraryId});
+  const objectId = createResponse.id;
+
+  await client.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken: createResponse.write_token,
+    metadata: {meta: "Data"}
+  });
+
+  const finalizeResponse = await client.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken: createResponse.write_token
+  });
+
+  console.log(libraryId);
+  console.log(objectId);
+  console.log(finalizeResponse.hash);
+};
+
+const Update = async (client, libraryId, objectId, todo) => {
+  const editResponse = await client.EditContentObject({libraryId, objectId});
+
+  await todo(editResponse.write_token);
+
+  await client.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken: editResponse.write_token
+  });
+};
+
+
+
 const Test = async () => {
   try {
+    /*
     const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io"});
 
     let wallet = client.GenerateWallet();
@@ -40,7 +80,7 @@ const Test = async () => {
 
 
 
-    const versionHash = "hq__3Z6RkcawgYv24kJX5YPGYRGuaP4w7ctchnda4BiRbbkC3X1qmfjwXh9EimjMx4R1zikkuVbXQ2";
+    const versionHash = "hq__9RA3BAcDQ8qcf77r3dLLtJjgomSbqEFven6AfrDutWzABPQwJAJpLEULXCgjCSA2FRrnCq5LXe";
     console.log(await client.ContentObject({
 
       versionHash
@@ -48,11 +88,10 @@ const Test = async () => {
 
     console.log(await client.BitmovinPlayoutOptions({
       versionHash,
-      drms: ["widevine"]
+      drms: ["widevine", "aes-128"]
     }));
 
-
-    /*
+*/
 
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
@@ -67,7 +106,38 @@ const Test = async () => {
     });
     await client.SetSigner({signer});
 
+
     //http://localhost:8008/qlibs/ilib1mGTeSAJ8WzJDgyuxRKKUYTwA4K/q/iq__3N7wV3bFbwXrENqbE9Bk1gVLpBXC/data/hqp_DPzN7Vjct4kf3ydeU6HegaXXxgQbGYKX7dVkjh3DzhfLFXPEB?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMmFxZjV6cnN0bzcyS3RSYmd2WDkyV3NzY29YUCIsImFkZHIiOiI1MDY2Q0VhOWJiNDY0YTcwZDdEZDFENTI3OUNCMUQ4M2Q4Y2FlYTNFIiwidHhfaWQiOiI1YTI1MTg3YmE2NWFjMjRkYjdlZTJmNWMwYjA0ZTBlNTJmOGIzMmViZjJhOGY1ZWI3MGRkZTM1ZWE1NzEwODkxIiwicWxpYl9pZCI6ImlsaWIxbUdUZVNBSjhXekpEZ3l1eFJLS1VZVHdBNEsifQ%3D%3D.RVMyNTZLX0RFYm90alpydGlqQ3JqVUJBQW83UGJzdUJpbXp1UEZ3dGtZZlpKVVZGM2szcU5aYWRIY0FjVWU2WmZzS2lYd2toejZ3TGZ0NFpKYTFNNFpVd1pxYkd2TFRN
+
+    const libraryId = "ilib1mGTeSAJ8WzJDgyuxRKKUYTwA4K";
+    const objectId = "iq__1mGTeSAJ8WzJDgyuxRKKUYTwA4K";
+    console.log(await client.FabricUrl({libraryId, objectId}));
+
+/*
+    const libraryId = "ilib3LDeDsNEeSnLJF3Ky8nxZkFiBNHu";
+    const objectId = "iq__2jp6AedVJULoLboZp6HVb7HmKUFE";
+    const partHash = "hqpe63e1MckwkkotZs41WXzA2tmYC3PDktgMoPAtwEM2fxmF2Gq";
+
+    console.log(await client.DownloadPart({
+      libraryId,
+      objectId,
+      partHash,
+      format: "text"
+    }));
+
+    /*
+
+
+    const Upload = async (writeToken) => {
+      const file = fs.readFileSync("LICENSE");
+
+      console.log(await client.UploadPart({libraryId, objectId, writeToken, data: file, encryption: "cgck"}));
+    };
+
+    await Update(client, libraryId, objectId, Upload);
+
+    /*
+    return;
 
     console.log(await client.DownloadPart({
       libraryId: "ilib38jyeQdw3cB4hzWhkeg4Fux3dw82",

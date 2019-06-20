@@ -89,7 +89,7 @@ class HttpClient {
         statusText: response.statusText,
         message: response.statusText,
         url: uri.toString(),
-        body: await response.text(),
+        body: response.text ? await response.text() : "",
         ...fetchParameters,
       };
     }
