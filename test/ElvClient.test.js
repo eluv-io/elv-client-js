@@ -193,7 +193,7 @@ describe("Test ElvClient", () => {
       await client.AddLibraryContentType({libraryId, typeName});
 
       libraryTypes = await client.LibraryContentTypes({libraryId});
-      expect(libraryTypes[typeHash]).toBeDefined();
+      expect(libraryTypes[typeId]).toBeDefined();
 
       await client.RemoveLibraryContentType({libraryId, typeName});
 
@@ -204,7 +204,7 @@ describe("Test ElvClient", () => {
       await client.AddLibraryContentType({libraryId, typeId});
 
       libraryTypes = await client.LibraryContentTypes({libraryId});
-      expect(libraryTypes[typeHash]).toBeDefined();
+      expect(libraryTypes[typeId]).toBeDefined();
 
       await client.RemoveLibraryContentType({libraryId, typeId});
 

@@ -928,7 +928,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2155">line 2155</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2161">line 2161</a>
         </li>
       </ul>
     </dd>
@@ -1139,7 +1139,7 @@ to through access groups</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2398">line 2398</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2404">line 2404</a>
         </li>
       </ul>
     </dd>
@@ -1373,7 +1373,7 @@ to through access groups</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1738">line 1738</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1744">line 1744</a>
         </li>
       </ul>
     </dd>
@@ -1857,7 +1857,7 @@ that content object will be authorized with that AccessRequest transaction.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1791">line 1791</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1797">line 1797</a>
         </li>
       </ul>
     </dd>
@@ -2064,7 +2064,7 @@ be a manager of the access group.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2275">line 2275</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2281">line 2281</a>
         </li>
       </ul>
     </dd>
@@ -2271,7 +2271,7 @@ be a manager of the access group.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2235">line 2235</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2241">line 2241</a>
         </li>
       </ul>
     </dd>
@@ -2294,7 +2294,7 @@ be a manager of the access group.</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="AddLibraryContentType">
-      <span class="type-signature">async </span>AddLibraryContentType<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">typeId<span class="signature-attributes">optional</span>,</div><div class="block-param">typeName<span class="signature-attributes">optional</span>,</div><div class="block-param">customContractAddress<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">async </span>AddLibraryContentType<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">typeId<span class="signature-attributes">optional</span>,</div><div class="block-param">typeName<span class="signature-attributes">optional</span>,</div><div class="block-param">typeHash<span class="signature-attributes">optional</span>,</div><div class="block-param">customContractAddress<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -2417,7 +2417,7 @@ be a manager of the access group.</p>
         
 
         <td class="description last">
-          <p>ID of the content type (required unless typeName is specified)</p>
+          <p>ID of the content type</p>
           
         </td>
       </tr>
@@ -2456,7 +2456,46 @@ be a manager of the access group.</p>
         
 
         <td class="description last">
-          <p>Name of the content type (required unless typeId is specified)</p>
+          <p>Name of the content type</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>typeHash</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>Version hash of the content type</p>
           
         </td>
       </tr>
@@ -2584,7 +2623,7 @@ this content type for this library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line560">line 560</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line561">line 561</a>
         </li>
       </ul>
     </dd>
@@ -3066,7 +3105,7 @@ token. This is useful for accessing public assets.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1986">line 1986</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1992">line 1992</a>
         </li>
       </ul>
     </dd>
@@ -3319,7 +3358,7 @@ the given protocol and DRM requirements</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1924">line 1924</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1930">line 1930</a>
         </li>
       </ul>
     </dd>
@@ -3586,7 +3625,7 @@ the given protocol and DRM requirements</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1816">line 1816</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1822">line 1822</a>
         </li>
       </ul>
     </dd>
@@ -55853,7 +55892,7 @@ true</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2571">line 2571</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2577">line 2577</a>
         </li>
       </ul>
     </dd>
@@ -77098,7 +77137,7 @@ This action will be performed by this client's signer.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2602">line 2602</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2608">line 2608</a>
         </li>
       </ul>
     </dd>
@@ -77528,7 +77567,7 @@ to through both their user wallet and through access groups</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2437">line 2437</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2443">line 2443</a>
         </li>
       </ul>
     </dd>
@@ -78472,7 +78511,7 @@ to through both their user wallet and through access groups</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line893">line 893</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line899">line 899</a>
         </li>
       </ul>
     </dd>
@@ -78733,7 +78772,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1843">line 1843</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1849">line 1849</a>
         </li>
       </ul>
     </dd>
@@ -87768,7 +87807,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line941">line 941</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line947">line 947</a>
         </li>
       </ul>
     </dd>
@@ -87945,7 +87984,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line916">line 916</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line922">line 922</a>
         </li>
       </ul>
     </dd>
@@ -88161,7 +88200,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line855">line 855</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line861">line 861</a>
         </li>
       </ul>
     </dd>
@@ -88394,7 +88433,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line977">line 977</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line983">line 983</a>
         </li>
       </ul>
     </dd>
@@ -88696,7 +88735,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1476">line 1476</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1482">line 1482</a>
         </li>
       </ul>
     </dd>
@@ -96118,7 +96157,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line702">line 702</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line708">line 708</a>
         </li>
       </ul>
     </dd>
@@ -96384,7 +96423,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line679">line 679</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line685">line 685</a>
         </li>
       </ul>
     </dd>
@@ -103435,7 +103474,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line746">line 746</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line752">line 752</a>
         </li>
       </ul>
     </dd>
@@ -105217,7 +105256,7 @@ Note: This requires one extra network call per block, so it should not be used f
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2744">line 2744</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2750">line 2750</a>
         </li>
       </ul>
     </dd>
@@ -105497,7 +105536,7 @@ Note: This requires one extra network call per block, so it should not be used f
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1067">line 1067</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1073">line 1073</a>
         </li>
       </ul>
     </dd>
@@ -105617,7 +105656,7 @@ Note: This requires one extra network call per block, so it should not be used f
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2140">line 2140</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2146">line 2146</a>
         </li>
       </ul>
     </dd>
@@ -106260,7 +106299,7 @@ create in the fabric.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1010">line 1010</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1016">line 1016</a>
         </li>
       </ul>
     </dd>
@@ -106725,7 +106764,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line787">line 787</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line793">line 793</a>
         </li>
       </ul>
     </dd>
@@ -107029,7 +107068,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2712">line 2712</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2718">line 2718</a>
         </li>
       </ul>
     </dd>
@@ -107318,7 +107357,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2174">line 2174</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2180">line 2180</a>
         </li>
       </ul>
     </dd>
@@ -107720,7 +107759,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1213">line 1213</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1219">line 1219</a>
         </li>
       </ul>
     </dd>
@@ -107990,7 +108029,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1193">line 1193</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1199">line 1199</a>
         </li>
       </ul>
     </dd>
@@ -108301,7 +108340,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1295">line 1295</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1301">line 1301</a>
         </li>
       </ul>
     </dd>
@@ -108583,7 +108622,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1697">line 1697</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1703">line 1703</a>
         </li>
       </ul>
     </dd>
@@ -109693,7 +109732,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2549">line 2549</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2555">line 2555</a>
         </li>
       </ul>
     </dd>
@@ -110085,7 +110124,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1446">line 1446</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1452">line 1452</a>
         </li>
       </ul>
     </dd>
@@ -110477,7 +110516,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1526">line 1526</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1532">line 1532</a>
         </li>
       </ul>
     </dd>
@@ -110820,7 +110859,7 @@ it will be created in the content space library</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1087">line 1087</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1093">line 1093</a>
         </li>
       </ul>
     </dd>
@@ -125132,7 +125171,7 @@ Note: This requires two extra network calls per transaction, so it should not be
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2781">line 2781</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2787">line 2787</a>
         </li>
       </ul>
     </dd>
@@ -130534,7 +130573,7 @@ CallContractAndMethodAndWait method</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2630">line 2630</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2636">line 2636</a>
         </li>
       </ul>
     </dd>
@@ -136136,7 +136175,7 @@ from the CallContractAndMethodAndWait method</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2648">line 2648</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2654">line 2654</a>
         </li>
       </ul>
     </dd>
@@ -136811,7 +136850,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2034">line 2034</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2040">line 2040</a>
         </li>
       </ul>
     </dd>
@@ -137255,7 +137294,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2107">line 2107</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2113">line 2113</a>
         </li>
       </ul>
     </dd>
@@ -137614,7 +137653,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1130">line 1130</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1136">line 1136</a>
         </li>
       </ul>
     </dd>
@@ -141401,7 +141440,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2533">line 2533</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2539">line 2539</a>
         </li>
       </ul>
     </dd>
@@ -141675,7 +141714,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2828">line 2828</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2834">line 2834</a>
         </li>
       </ul>
     </dd>
@@ -141881,7 +141920,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line625">line 625</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line631">line 631</a>
         </li>
       </ul>
     </dd>
@@ -142179,7 +142218,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1318">line 1318</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1324">line 1324</a>
         </li>
       </ul>
     </dd>
@@ -142527,7 +142566,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1247">line 1247</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1253">line 1253</a>
         </li>
       </ul>
     </dd>
@@ -142731,7 +142770,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1860">line 1860</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1866">line 1866</a>
         </li>
       </ul>
     </dd>
@@ -143063,7 +143102,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2479">line 2479</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2485">line 2485</a>
         </li>
       </ul>
     </dd>
@@ -143377,7 +143416,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1164">line 1164</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1170">line 1170</a>
         </li>
       </ul>
     </dd>
@@ -143676,7 +143715,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2507">line 2507</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2513">line 2513</a>
         </li>
       </ul>
     </dd>
@@ -143883,7 +143922,7 @@ be a manager of the access group.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2295">line 2295</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2301">line 2301</a>
         </li>
       </ul>
     </dd>
@@ -144090,7 +144129,7 @@ be a manager of the access group.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2255">line 2255</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2261">line 2261</a>
         </li>
       </ul>
     </dd>
@@ -144113,7 +144152,7 @@ be a manager of the access group.</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="RemoveLibraryContentType">
-      <span class="type-signature">async </span>RemoveLibraryContentType<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">typeId<span class="signature-attributes">optional</span>,</div><div class="block-param">typeName<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">async </span>RemoveLibraryContentType<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">typeId<span class="signature-attributes">optional</span>,</div><div class="block-param">typeName<span class="signature-attributes">optional</span>,</div><div class="block-param">typeHash<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -144281,6 +144320,45 @@ be a manager of the access group.</p>
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>typeHash</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>Version hash of the content type</p>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -144363,7 +144441,7 @@ be a manager of the access group.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line592">line 592</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line596">line 596</a>
         </li>
       </ul>
     </dd>
@@ -144845,7 +144923,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2011">line 2011</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2017">line 2017</a>
         </li>
       </ul>
     </dd>
@@ -146850,7 +146928,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1271">line 1271</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1277">line 1277</a>
         </li>
       </ul>
     </dd>
@@ -147075,7 +147153,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2843">line 2843</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2849">line 2849</a>
         </li>
       </ul>
     </dd>
@@ -147280,7 +147358,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1717">line 1717</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1723">line 1723</a>
         </li>
       </ul>
     </dd>
@@ -149822,7 +149900,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2671">line 2671</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2677">line 2677</a>
         </li>
       </ul>
     </dd>
@@ -150420,7 +150498,7 @@ individually</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1347">line 1347</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1353">line 1353</a>
         </li>
       </ul>
     </dd>
@@ -150931,7 +151009,7 @@ individually</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1605">line 1605</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line1611">line 1611</a>
         </li>
       </ul>
     </dd>
@@ -151187,7 +151265,7 @@ individually</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2456">line 2456</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2462">line 2462</a>
         </li>
       </ul>
     </dd>
@@ -151382,7 +151460,7 @@ to through their user wallet</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2372">line 2372</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2378">line 2378</a>
         </li>
       </ul>
     </dd>
