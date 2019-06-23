@@ -1,3 +1,5 @@
+require("@babel/polyfill");
+
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
@@ -23,8 +25,6 @@ const WalletContract = require("./contracts/BaseAccessWallet");
 switch(Utils.Platform()) {
   case Utils.PLATFORM_REACT_NATIVE:
     // React native polyfills
-    // Polyfill for most things like typedarray
-    require("@babel/polyfill");
     // Polyfill for string.normalized
     require("unorm");
     break;
@@ -550,14 +550,17 @@ class ElvClient {
    * @methodGroup Content Libraries
    * @namedParams
    * @param {string} libraryId - ID of the library
-   * @param {string=} typeId - ID of the content type (required unless typeName is specified)
-   * @param {string=} typeName - Name of the content type (required unless typeId is specified)
+   * @param {string=} typeId - ID of the content type
+   * @param {string=} typeName - Name of the content type
+   * @param {string=} typeHash - Version hash of the content type
    * @param {string=} customContractAddress - Address of the custom contract to associate with
    * this content type for this library
    *
    * @returns {Promise<string>} - Hash of the addContentType transaction
    */
-  async AddLibraryContentType({libraryId, typeId, typeName, customContractAddress}) {
+  async AddLibraryContentType({libraryId, typeId, typeName, typeHash, customContractAddress}) {
+    if(typeHash) { typeId = this.utils.DecodeVersionHash(typeHash).objectId; }
+
     if(!typeId) {
       // Look up type by name
       const type = await this.ContentType({name: typeName});
@@ -586,10 +589,13 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string=} typeId - ID of the content type (required unless typeName is specified)
    * @param {string=} typeName - Name of the content type (required unless typeId is specified)
+   * @param {string=} typeHash - Version hash of the content type
    *
    * @returns {Promise<string>} - Hash of the removeContentType transaction
    */
-  async RemoveLibraryContentType({libraryId, typeId, typeName}) {
+  async RemoveLibraryContentType({libraryId, typeId, typeName, typeHash}) {
+    if(typeHash) { typeId = this.utils.DecodeVersionHash(typeHash).objectId; }
+
     if(!typeId) {
       // Look up type by name
       const type = await this.ContentType({name: typeName});
@@ -656,7 +662,7 @@ class ElvClient {
       const typeAddress = this.utils.HashToAddress(type.id).toLowerCase();
       // If type address is allowed, include it
       if(allowedTypeAddresses.includes(typeAddress)) {
-        allowedTypes[type.hash] = type;
+        allowedTypes[type.id] = type;
       }
     });
 

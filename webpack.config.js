@@ -44,7 +44,14 @@ module.exports = {
       {
         test: /\.(txt|bin|abi)$/i,
         loader: "raw-loader"
-      }
+      },
+      {
+        test: /\.js$/,
+        loader: "babel-loader",
+        options: {
+          presets: ["@babel/preset-env"],
+        }
+      },
     ]
-  }
+  },
 };
