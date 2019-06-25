@@ -495,12 +495,12 @@ function () {
   }, {
     key: "AllowedUserProfileMethods",
     value: function AllowedUserProfileMethods() {
-      return ["AccessLevel", "CollectedTags", "CreateAccountLibrary", "DeleteAccountLibrary", "DeletePrivateUserMetadata", "DeletePublicUserMetadata", "MergePrivateUserMetadata", "PrivateUserMetadata", "PublicUserMetadata", "RecordTags", "ReplacePrivateUserMetadata", "ReplacePublicUserMetadata", "SetAccessLevel", "SetUserProfileImage", "UserProfileImage"];
+      return ["AccessLevel", "CollectedTags", "DeleteUserMetadata", "MergeUserMetadata", "UserMetadata", "RecordTags", "ReplaceUserMetadata", "SetUserProfileImage", "UserProfileImage", "WalletAddress"];
     }
   }], [{
     key: "PromptedMethods",
     value: function PromptedMethods() {
-      return ["CollectedTags", "PublicUserMetadata", "PrivateUserMetadata"];
+      return ["CollectedTags", "DeleteUserMetadata", "MergeUserMetadata", "ReplaceUserMetadata", "UserMetadata"];
     }
   }]);
 

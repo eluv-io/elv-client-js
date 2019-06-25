@@ -212,8 +212,10 @@ class FrameClient {
   static PromptedMethods() {
     return [
       "CollectedTags",
-      "PublicUserMetadata",
-      "PrivateUserMetadata"
+      "DeleteUserMetadata",
+      "MergeUserMetadata",
+      "ReplaceUserMetadata",
+      "UserMetadata"
     ];
   }
 
@@ -320,19 +322,14 @@ class FrameClient {
     return [
       "AccessLevel",
       "CollectedTags",
-      "CreateAccountLibrary",
-      "DeleteAccountLibrary",
-      "DeletePrivateUserMetadata",
-      "DeletePublicUserMetadata",
-      "MergePrivateUserMetadata",
-      "PrivateUserMetadata",
-      "PublicUserMetadata",
+      "DeleteUserMetadata",
+      "MergeUserMetadata",
+      "UserMetadata",
       "RecordTags",
-      "ReplacePrivateUserMetadata",
-      "ReplacePublicUserMetadata",
-      "SetAccessLevel",
+      "ReplaceUserMetadata",
       "SetUserProfileImage",
-      "UserProfileImage"
+      "UserProfileImage",
+      "WalletAddress"
     ];
   }
 }

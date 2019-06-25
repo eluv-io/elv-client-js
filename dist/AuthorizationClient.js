@@ -90,8 +90,7 @@ function () {
             switch (_context.prev = _context.next) {
               case 0:
                 libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
-                update = true;
-                _context.next = 4;
+                _context.next = 3;
                 return this.AuthorizationToken({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -103,13 +102,13 @@ function () {
                   noAuth: noAuth
                 });
 
-              case 4:
+              case 3:
                 authorizationToken = _context.sent;
                 return _context.abrupt("return", {
                   Authorization: "Bearer " + authorizationToken
                 });
 
-              case 6:
+              case 5:
               case "end":
                 return _context.stop();
             }
@@ -558,7 +557,7 @@ function () {
       regeneratorRuntime.mark(function _callee10(_ref9) {
         var _this = this;
 
-        var libraryId, objectId, versionHash, _ref9$args, args, _ref9$update, update, _ref9$skipCache, skipCache, _ref9$noCache, noCache, cacheOnly, id, accessType, cacheCollection, abi, cache, checkAccessCharge, accessRequest, owner, isOwner;
+        var libraryId, objectId, versionHash, _ref9$args, args, _ref9$update, update, _ref9$skipCache, skipCache, _ref9$noCache, noCache, cacheOnly, id, accessType, cacheCollection, abi, cache, checkAccessCharge, cap, accessRequest, owner;
 
         return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
@@ -589,57 +588,67 @@ function () {
                 cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
                 checkAccessCharge = false;
                 _context10.t0 = accessType;
-                _context10.next = _context10.t0 === ACCESS_TYPES.SPACE ? 13 : _context10.t0 === ACCESS_TYPES.LIBRARY ? 16 : _context10.t0 === ACCESS_TYPES.TYPE ? 19 : _context10.t0 === ACCESS_TYPES.OBJECT ? 22 : 27;
+                _context10.next = _context10.t0 === ACCESS_TYPES.SPACE ? 13 : _context10.t0 === ACCESS_TYPES.LIBRARY ? 16 : _context10.t0 === ACCESS_TYPES.TYPE ? 19 : _context10.t0 === ACCESS_TYPES.OBJECT ? 22 : 34;
                 break;
 
               case 13:
                 abi = SpaceContract.abi;
                 cache = cacheCollection.spaces;
-                return _context10.abrupt("break", 29);
+                return _context10.abrupt("break", 36);
 
               case 16:
                 abi = LibraryContract.abi;
                 cache = cacheCollection.libraries;
-                return _context10.abrupt("break", 29);
+                return _context10.abrupt("break", 36);
 
               case 19:
                 abi = TypeContract.abi;
                 cache = cacheCollection.types;
-                return _context10.abrupt("break", 29);
+                return _context10.abrupt("break", 36);
 
               case 22:
                 abi = ContentContract.abi;
                 cache = cacheCollection.objects;
                 checkAccessCharge = true;
 
-                if (args && args.length > 0) {
-                  // Inject public key of requester
-                  args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
-                } else {
-                  //const cap = await this.ReencryptionKey(objectId);
-                  // Set default args
-                  args = [0, // Access level
-                  this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-                  "", //cap.public_key,
-                  [], // Custom values
-                  [] // Stakeholders
-                  ];
+                if (!(args && args.length > 0)) {
+                  _context10.next = 29;
+                  break;
                 }
 
-                return _context10.abrupt("break", 29);
+                // Inject public key of requester
+                args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
+                _context10.next = 33;
+                break;
 
-              case 27:
+              case 29:
+                _context10.next = 31;
+                return this.ReencryptionKey(objectId);
+
+              case 31:
+                cap = _context10.sent;
+                // Set default args
+                args = [0, // Access level
+                this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+                cap.public_key, [], // Custom values
+                [] // Stakeholders
+                ];
+
+              case 33:
+                return _context10.abrupt("break", 36);
+
+              case 34:
                 abi = update ? EditableContract.abi : AccessibleContract.abi;
                 cache = cacheCollection.other;
 
-              case 29:
+              case 36:
                 if (!(!noCache && !skipCache)) {
-                  _context10.next = 32;
+                  _context10.next = 39;
                   break;
                 }
 
                 if (!cache[id]) {
-                  _context10.next = 32;
+                  _context10.next = 39;
                   break;
                 }
 
@@ -647,33 +656,33 @@ function () {
                   transactionHash: cache[id]
                 });
 
-              case 32:
+              case 39:
                 if (!cacheOnly) {
-                  _context10.next = 34;
+                  _context10.next = 41;
                   break;
                 }
 
                 return _context10.abrupt("return");
 
-              case 34:
+              case 41:
                 if (!update) {
-                  _context10.next = 40;
+                  _context10.next = 47;
                   break;
                 }
 
-                _context10.next = 37;
+                _context10.next = 44;
                 return this.UpdateRequest({
                   id: id,
                   abi: abi
                 });
 
-              case 37:
+              case 44:
                 accessRequest = _context10.sent;
-                _context10.next = 43;
+                _context10.next = 50;
                 break;
 
-              case 40:
-                _context10.next = 42;
+              case 47:
+                _context10.next = 49;
                 return this.AccessRequest({
                   id: id,
                   abi: abi,
@@ -681,10 +690,10 @@ function () {
                   checkAccessCharge: checkAccessCharge
                 });
 
-              case 42:
+              case 49:
                 accessRequest = _context10.sent;
 
-              case 43:
+              case 50:
                 // Cache the transaction hash
                 if (!noCache) {
                   cache[id] = accessRequest.transactionHash; // Save request ID if present
@@ -695,34 +704,39 @@ function () {
                       return true;
                     }
                   });
+                } // After making an access request, record the tags in the user's profile, if appropriate
+
+
+                if (!(accessType === ACCESS_TYPES.OBJECT)) {
+                  _context10.next = 58;
+                  break;
                 }
 
-                _context10.next = 46;
+                _context10.next = 54;
                 return this.Owner({
                   id: id,
                   abi: abi
                 });
 
-              case 46:
+              case 54:
                 owner = _context10.sent;
-                isOwner = Utils.EqualAddress(owner, this.client.signer.address); // After making an access request, record the tags in the user's profile, if appropriate
 
-                if (!(accessType === ACCESS_TYPES.OBJECT && !isOwner)) {
-                  _context10.next = 51;
+                if (Utils.EqualAddress(owner, this.client.signer.address)) {
+                  _context10.next = 58;
                   break;
                 }
 
-                _context10.next = 51;
+                _context10.next = 58;
                 return this.client.userProfileClient.RecordTags({
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash
                 });
 
-              case 51:
+              case 58:
                 return _context10.abrupt("return", accessRequest);
 
-              case 52:
+              case 59:
               case "end":
                 return _context10.stop();
             }
@@ -927,26 +941,37 @@ function () {
       var _AccessRequest = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee14(_ref14) {
-        var id, abi, _ref14$args, args, _ref14$checkAccessCha, checkAccessCharge, owner, accessCharge, accessChargeArgs, event, accessRequestEvent;
+        var id, abi, _ref14$args, args, _ref14$checkAccessCha, checkAccessCharge, accessCharge, accessType, owner, accessChargeArgs, event, accessRequestEvent;
 
         return regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
             switch (_context14.prev = _context14.next) {
               case 0:
                 id = _ref14.id, abi = _ref14.abi, _ref14$args = _ref14.args, args = _ref14$args === void 0 ? [] : _ref14$args, _ref14$checkAccessCha = _ref14.checkAccessCharge, checkAccessCharge = _ref14$checkAccessCha === void 0 ? false : _ref14$checkAccessCha;
-                _context14.next = 3;
+                // Send some bux if access charge is required
+                accessCharge = 0;
+                _context14.next = 4;
+                return this.AccessType(id);
+
+              case 4:
+                accessType = _context14.sent;
+
+                if (!(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT)) {
+                  _context14.next = 16;
+                  break;
+                }
+
+                _context14.next = 8;
                 return this.Owner({
                   id: id,
                   abi: abi
                 });
 
-              case 3:
+              case 8:
                 owner = _context14.sent;
-                // Send some bux if access charge is required
-                accessCharge = 0;
 
-                if (!(checkAccessCharge && Utils.EqualAddress(owner, this.client.signer.address))) {
-                  _context14.next = 12;
+                if (Utils.EqualAddress(this.client.signer.address, owner)) {
+                  _context14.next = 16;
                   break;
                 }
 
@@ -954,18 +979,18 @@ function () {
                 accessChargeArgs = [args[0], args[3], args[4]]; // Access charge is in wei, but methods take ether - convert to charge to ether
 
                 _context14.t0 = Utils;
-                _context14.next = 10;
+                _context14.next = 14;
                 return this.GetAccessCharge({
                   objectId: id,
                   args: accessChargeArgs
                 });
 
-              case 10:
+              case 14:
                 _context14.t1 = _context14.sent;
                 accessCharge = _context14.t0.WeiToEther.call(_context14.t0, _context14.t1);
 
-              case 12:
-                _context14.next = 14;
+              case 16:
+                _context14.next = 18;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(id),
                   abi: abi,
@@ -974,7 +999,7 @@ function () {
                   value: accessCharge
                 });
 
-              case 14:
+              case 18:
                 event = _context14.sent;
                 accessRequestEvent = this.client.ExtractEventFromLogs({
                   abi: abi,
@@ -983,16 +1008,16 @@ function () {
                 });
 
                 if (!(event.logs.length === 0 || !accessRequestEvent)) {
-                  _context14.next = 18;
+                  _context14.next = 22;
                   break;
                 }
 
                 throw Error("Access denied");
 
-              case 18:
+              case 22:
                 return _context14.abrupt("return", event);
 
-              case 19:
+              case 23:
               case "end":
                 return _context14.stop();
             }
