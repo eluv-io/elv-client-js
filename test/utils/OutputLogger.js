@@ -74,7 +74,7 @@ const OutputLogger = (klass, instance, exclude=[]) => {
   const outputDir = Path.join(__dirname, "..", "..", "docs", "methods", klass.name);
 
   // eslint-disable-next-line no-empty
-  try { fs.mkdirSync(outputDir); } catch (e) {}
+  try { fs.mkdirSync(outputDir); } catch(e) {}
 
   let methodWritten = {};
 

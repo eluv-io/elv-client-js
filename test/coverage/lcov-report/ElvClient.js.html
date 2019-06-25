@@ -5998,7 +5998,7 @@ class ElvClient {
     this.HttpClient = new HttpClient(this.fabricURIs);
     this.ethClient = new EthClient(this.ethereumURIs);
 &nbsp;
-    this.userProfile = new UserProfileClient({client: this});
+    this.userProfileClient = new UserProfileClient({client: this});
 &nbsp;
     this.authClient = new AuthorizationClient({
       client: this,
@@ -8734,11 +8734,11 @@ class ElvClient {
 &nbsp;
       let methodResults;
 <span class="cstat-no" title="statement not covered" >      if(message.module === "userProfile") {</span>
-<span class="cstat-no" title="statement not covered" >        if (!this.userProfile.FrameAllowedMethods().includes(method)) {</span>
+<span class="cstat-no" title="statement not covered" >        if (!this.userProfileClient.FrameAllowedMethods().includes(method)) {</span>
 <span class="cstat-no" title="statement not covered" >          throw Error("Invalid user profile method: " + method);</span>
         }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        methodResults = await this.userProfile[method](message.args);</span>
+<span class="cstat-no" title="statement not covered" >        methodResults = await this.userProfileClient[method](message.args);</span>
       } else {
 <span class="cstat-no" title="statement not covered" >        if (!this.FrameAllowedMethods().includes(method)) {</span>
 <span class="cstat-no" title="statement not covered" >          throw Error("Invalid method: " + method);</span>

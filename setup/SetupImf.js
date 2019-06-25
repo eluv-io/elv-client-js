@@ -215,7 +215,7 @@ class ImfService {
       })
       );
 
-    } catch (error) {
+    } catch(error) {
       e = error;
       LOG && console.log("===============================================");
       LOG && console.log("call to avtest FAILED");

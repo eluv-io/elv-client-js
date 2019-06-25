@@ -57,7 +57,7 @@ describe("Test FrameClient", () => {
   });
 
   test("FrameClient methods match expected UserProfile methods", () => {
-    CompareMethods(frameClient.AllowedUserProfileMethods(), client.userProfile.FrameAllowedMethods());
+    CompareMethods(frameClient.AllowedUserProfileMethods(), client.userProfileClient.FrameAllowedMethods());
   });
 
   test("Call ElvClient Method", async () => {
@@ -73,7 +73,7 @@ describe("Test FrameClient", () => {
 
     try {
       await frameClient.ContentLibrary({libraryId: "ilibabcd"});
-    } catch (e) {
+    } catch(e) {
       expect(e).toMatchObject({
         name: "ElvHttpClientError",
         method: "GET",
@@ -121,11 +121,11 @@ describe("Test FrameClient", () => {
 
 
   test("User Profile Methods", async () => {
-    await expect(frameClient.userProfile.AccessLevel()).rejects.toThrow(
+    await expect(frameClient.userProfileClient.AccessLevel()).rejects.toThrow(
       new Error("'requestor' param required when calling user profile methods from FrameClient")
     );
 
-    const accessLevel = await frameClient.userProfile.AccessLevel({requestor: "Test"});
+    const accessLevel = await frameClient.userProfileClient.AccessLevel({requestor: "Test"});
     expect(accessLevel).toEqual("prompt");
   });
 

@@ -1,5 +1,3 @@
-require("@babel/polyfill");
-
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
@@ -145,11 +143,9 @@ class ElvClient {
     });
   }
 
-  InitializeClients() {
+  async InitializeClients() {
     this.HttpClient = new HttpClient(this.fabricURIs);
     this.ethClient = new EthClient(this.ethereumURIs);
-
-    this.userProfile = new UserProfileClient({client: this});
 
     this.authClient = new AuthorizationClient({
       client: this,
@@ -158,6 +154,13 @@ class ElvClient {
       noCache: this.noCache,
       noAuth: this.noAuth
     });
+
+    if(!this.viewOnly && this.signer) {
+      this.userProfileClient = new UserProfileClient({client: this});
+      await this.userProfileClient.Initialize();
+    } else {
+      this.userProfileClient = undefined;
+    }
   }
 
   /* Wallet and signers */
@@ -204,32 +207,7 @@ class ElvClient {
     signer.provider.pollingInterval = 250;
     this.signer = signer;
 
-    this.InitializeClients();
-
-    if(!this.viewOnly) {
-      this.walletAddress = await this.CallContractMethod({
-        abi: SpaceContract.abi,
-        contractAddress: this.utils.HashToAddress(this.contentSpaceId),
-        methodName: "userWallets",
-        methodArgs: [signer.address]
-      });
-
-      if(!this.walletAddress || this.walletAddress === this.utils.nullAddress) {
-        const walletCreationEvent = await this.CallContractMethodAndWait({
-          contractAddress: this.utils.HashToAddress(this.contentSpaceId),
-          abi: SpaceContract.abi,
-          methodName: "createAccessWallet",
-          methodArgs: []
-        });
-
-        this.walletAddress = this.ExtractValueFromEvent({
-          abi: SpaceContract.abi,
-          event: walletCreationEvent,
-          eventName: "CreateAccessWallet",
-          eventValue: "wallet"
-        });
-      }
-    }
+    await this.InitializeClients();
   }
 
   /**
@@ -247,7 +225,7 @@ class ElvClient {
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
-    this.InitializeClients();
+    await this.InitializeClients();
   }
 
   /**
@@ -393,26 +371,20 @@ class ElvClient {
     image,
     metadata={},
     kmsId,
-    isUserLibrary=false
   }) {
     if(!kmsId) {
       kmsId = `ikms${this.utils.AddressToHash(await this.DefaultKMSAddress())}`;
     }
 
-    let libraryId;
-    if(isUserLibrary) {
-      libraryId = this.utils.AddressToLibraryId(this.signer.address);
-    } else {
-      const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
+    const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
-      metadata = {
-        ...metadata,
-        name,
-        "eluv.description": description
-      };
+    metadata = {
+      ...metadata,
+      name,
+      "eluv.description": description
+    };
 
-      libraryId = this.utils.AddressToLibraryId(contractAddress);
-    }
+    const libraryId = this.utils.AddressToLibraryId(contractAddress);
 
     // Set library content object type and metadata on automatically created library object
     const objectId = libraryId.replace("ilib", "iq__");
@@ -708,6 +680,15 @@ class ElvClient {
   async ContentType({name, typeId, versionHash}) {
     if(versionHash) { typeId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
+    if(name) {
+      // Look up named type in content space metadata
+      typeId = await this.ContentObjectMetadata({
+        libraryId: this.contentSpaceLibraryId,
+        objectId: this.contentSpaceObjectId,
+        metadataSubtree: UrlJoin("contentTypes", name)
+      });
+    }
+
     if(!typeId) {
       const types = await this.ContentTypes();
 
@@ -736,7 +717,7 @@ class ElvClient {
         name: metadata.name,
         meta: metadata
       };
-    } catch (error) {
+    } catch(error) {
       throw new Error(`Content Type ${name || typeId} is invalid`);
     }
   }
@@ -761,7 +742,7 @@ class ElvClient {
         if(!this.contentTypes[typeId]) {
           try {
             this.contentTypes[typeId] = await this.ContentType({typeId});
-          } catch (error) {
+          } catch(error) {
             // eslint-disable-next-line no-console
             console.error(error);
           }
@@ -942,7 +923,7 @@ class ElvClient {
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
    *
-   * @returns {Promise<Object>} - Metadata of the content object
+   * @returns {Promise<Object | string>} - Metadata of the content object
    */
   async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=false}) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -959,7 +940,7 @@ class ElvClient {
       );
 
       return metadata || {};
-    } catch (error) {
+    } catch(error) {
       if(error.status !== 404) {
         throw error;
       }
@@ -1006,6 +987,7 @@ class ElvClient {
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
+   * @param {objectId=} objectId - ID of the object (if contract already exists)
    * @param {Object=} options -
    * type: Version hash of the content type to associate with the object
    *
@@ -1013,7 +995,7 @@ class ElvClient {
    *
    * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
    */
-  async CreateContentObject({libraryId, options={}}) {
+  async CreateContentObject({libraryId, objectId, options={}}) {
     // Look up content type, if specified
     let typeId;
     if(options.type) {
@@ -1030,16 +1012,19 @@ class ElvClient {
       options.type = type.hash;
     }
 
-    const { contractAddress } = await this.authClient.CreateContentObject({libraryId, typeId});
+    if(!objectId) {
+      const { contractAddress } = await this.authClient.CreateContentObject({libraryId, typeId});
 
-    await this.CallContractMethod({
-      abi: ContentContract.abi,
-      contractAddress,
-      methodName: "setVisibility",
-      methodArgs: [10]
-    });
+      await this.CallContractMethod({
+        abi: ContentContract.abi,
+        contractAddress,
+        methodName: "setVisibility",
+        methodArgs: [10]
+      });
 
-    const objectId = this.utils.AddressToObjectId(contractAddress);
+      objectId = this.utils.AddressToObjectId(contractAddress);
+    }
+
     const path = UrlJoin("qid", objectId);
 
     return await ResponseToJson(
@@ -2379,7 +2364,7 @@ class ElvClient {
     const {lengthMethod, itemMethod} = this.CollectionMethods(collectionType);
 
     return await this.ContractCollection({
-      contractAddress: this.walletAddress,
+      contractAddress: await this.userProfileClient.WalletAddress(),
       abi: WalletContract.abi,
       lengthMethod,
       itemMethod
@@ -2405,7 +2390,7 @@ class ElvClient {
     const {lengthMethod, itemMethod} = this.CollectionMethods(collectionType);
 
     const accessGroups = await this.ContractCollection({
-      contractAddress: this.walletAddress,
+      contractAddress: await this.userProfileClient.WalletAddress(),
       abi: WalletContract.abi,
       lengthMethod: "getAccessGroupsLength",
       itemMethod: "getAccessGroup"
@@ -2441,6 +2426,8 @@ class ElvClient {
    * @return {Promise<Array<string>>} - List of addresses of available items
    */
   async Collection({collectionType}) {
+    if(!this.userProfileClient) { return []; }
+
     return (await this.WalletCollection({collectionType}))
       .concat(await this.AccessGroupsCollection({collectionType}))
       .filter((v, i, s) => s.indexOf(v) === i);
@@ -2516,7 +2503,7 @@ class ElvClient {
     return ResponseToFormat(
       format,
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, partHash}),
         method: "GET",
         path: path
       })
@@ -2897,12 +2884,12 @@ class ElvClient {
       const method = message.calledMethod;
 
       let methodResults;
-      if(message.module === "userProfile") {
-        if(!this.userProfile.FrameAllowedMethods().includes(method)) {
+      if(message.module === "userProfileClient") {
+        if(!this.userProfileClient.FrameAllowedMethods().includes(method)) {
           throw Error("Invalid user profile method: " + method);
         }
 
-        methodResults = await this.userProfile[method](message.args);
+        methodResults = await this.userProfileClient[method](message.args);
       } else {
         if(!this.FrameAllowedMethods().includes(method)) {
           throw Error("Invalid method: " + method);
@@ -2916,7 +2903,7 @@ class ElvClient {
         requestId: message.requestId,
         response: methodResults
       }));
-    } catch (error) {
+    } catch(error) {
       // eslint-disable-next-line no-console
       console.error(error);
 
