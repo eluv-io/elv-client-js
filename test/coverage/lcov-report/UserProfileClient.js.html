@@ -1197,7 +1197,7 @@ class UserProfileClient {
    *
    * &lt;h4&gt;Usage&lt;/h4&gt;
    *
-   * Access the UserProfileClient from ElvClient or FrameClient via client.userProfile
+   * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
    *
    * @example
 let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
@@ -1209,10 +1209,10 @@ let signer = wallet.AddAccount({
 });
 client.SetSigner({signer});
 &nbsp;
-await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
+await client.userProfileClient.PublicUserMetadata({accountAddress: signer.address})
 &nbsp;
 let frameClient = new FrameClient();
-await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
+await client.userProfileClient.PublicUserMetadata({accountAddress: signer.address})
    *
    */
   constructor({client}) {

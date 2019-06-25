@@ -760,10 +760,10 @@ class FrameClient {
       };
     }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    this.userProfile = {};</span>
+<span class="cstat-no" title="statement not covered" >    this.userProfileClient = {};</span>
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
 <span class="cstat-no" title="statement not covered" >    for(const methodName of this.AllowedUserProfileMethods()) {</span>
-<span class="cstat-no" title="statement not covered" >      this.userProfile[methodName] = <span class="fstat-no" title="function not covered" >as</span>ync (args) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      this.userProfileClient[methodName] = <span class="fstat-no" title="function not covered" >as</span>ync (args) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        if(!args || !args.requestor) {</span>
 <span class="cstat-no" title="statement not covered" >          throw new Error("'requestor' param required when calling user profile methods from FrameClient");</span>
         }

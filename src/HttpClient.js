@@ -56,7 +56,7 @@ class HttpClient {
           uri.toString(),
           fetchParameters
         );
-    } catch (error) {
+    } catch(error) {
       response = {
         ok: false,
         status: 500,

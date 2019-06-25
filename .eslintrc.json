@@ -32,7 +32,8 @@
           "if": { "after": false },
           "for": { "after": false },
           "switch": { "after": false },
-          "while": { "after": false }
+          "while": { "after": false },
+          "catch": { "after": false }
         }
       }],
     "linebreak-style": [

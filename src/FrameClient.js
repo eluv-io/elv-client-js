@@ -54,10 +54,10 @@ class FrameClient {
       };
     }
 
-    this.userProfile = {};
+    this.userProfileClient = {};
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
     for(const methodName of this.AllowedUserProfileMethods()) {
-      this.userProfile[methodName] = async (args) => {
+      this.userProfileClient[methodName] = async (args) => {
         if(!args || !args.requestor) {
           throw new Error("'requestor' param required when calling user profile methods from FrameClient");
         }
@@ -67,7 +67,7 @@ class FrameClient {
 
         return await this.SendMessage({
           options: {
-            module: "userProfile",
+            module: "userProfileClient",
             calledMethod: methodName,
             args: this.utils.MakeClonable(args),
             prompted: FrameClient.PromptedMethods().includes(methodName),
@@ -100,7 +100,7 @@ class FrameClient {
       }
 
       response = await this.SendMessage({options: request, callback});
-    } catch (error) {
+    } catch(error) {
       response = JSON.parse(JSON.stringify(error));
     }
 
@@ -167,7 +167,7 @@ class FrameClient {
             }
 
             callback(message.response);
-          } catch (error) {
+          } catch(error) {
             // eslint-disable-next-line no-console
             console.error(error);
           }
@@ -193,7 +193,7 @@ class FrameClient {
 
           window.removeEventListener("message", methodListener);
           if(callbackListener) { window.removeEventListener("message", callbackListener); }
-        } catch (error){
+        } catch(error){
           reject(error);
 
           window.removeEventListener("message", methodListener);

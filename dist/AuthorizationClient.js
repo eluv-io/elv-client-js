@@ -58,7 +58,6 @@ function () {
     this.contentSpaceId = contentSpaceId;
     this.noCache = noCache;
     this.noAuth = noAuth;
-    this.userProfileTransaction = "";
     this.accessTransactions = {
       spaces: {},
       libraries: {},
@@ -84,20 +83,20 @@ function () {
       var _AuthorizationHeader = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee(_ref2) {
-        var libraryId, objectId, versionHash, transactionHash, _ref2$update, update, _ref2$channelAuth, channelAuth, _ref2$noCache, noCache, _ref2$noAuth, noAuth, authorizationToken;
+        var libraryId, objectId, versionHash, partHash, _ref2$update, update, _ref2$channelAuth, channelAuth, _ref2$noCache, noCache, _ref2$noAuth, noAuth, authorizationToken;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, transactionHash = _ref2.transactionHash, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
+                libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
                 update = true;
                 _context.next = 4;
                 return this.AuthorizationToken({
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash,
-                  transactionHash: transactionHash,
+                  partHash: partHash,
                   update: update,
                   channelAuth: channelAuth,
                   noCache: noCache,
@@ -131,13 +130,13 @@ function () {
       var _AuthorizationToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee2(_ref3) {
-        var libraryId, objectId, versionHash, transactionHash, _ref3$update, update, _ref3$channelAuth, channelAuth, _ref3$noCache, noCache, _ref3$noAuth, noAuth, initialNoCache, authorizationToken;
+        var libraryId, objectId, versionHash, partHash, _ref3$update, update, _ref3$channelAuth, channelAuth, _ref3$noCache, noCache, _ref3$noAuth, noAuth, initialNoCache, authorizationToken;
 
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                libraryId = _ref3.libraryId, objectId = _ref3.objectId, versionHash = _ref3.versionHash, transactionHash = _ref3.transactionHash, _ref3$update = _ref3.update, update = _ref3$update === void 0 ? false : _ref3$update, _ref3$channelAuth = _ref3.channelAuth, channelAuth = _ref3$channelAuth === void 0 ? false : _ref3$channelAuth, _ref3$noCache = _ref3.noCache, noCache = _ref3$noCache === void 0 ? false : _ref3$noCache, _ref3$noAuth = _ref3.noAuth, noAuth = _ref3$noAuth === void 0 ? false : _ref3$noAuth;
+                libraryId = _ref3.libraryId, objectId = _ref3.objectId, versionHash = _ref3.versionHash, partHash = _ref3.partHash, _ref3$update = _ref3.update, update = _ref3$update === void 0 ? false : _ref3$update, _ref3$channelAuth = _ref3.channelAuth, channelAuth = _ref3$channelAuth === void 0 ? false : _ref3$channelAuth, _ref3$noCache = _ref3.noCache, noCache = _ref3$noCache === void 0 ? false : _ref3$noCache, _ref3$noAuth = _ref3.noAuth, noAuth = _ref3$noAuth === void 0 ? false : _ref3$noAuth;
                 initialNoCache = this.noCache;
                 _context2.prev = 2;
 
@@ -167,7 +166,7 @@ function () {
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash,
-                  transactionHash: transactionHash,
+                  partHash: partHash,
                   update: update,
                   noAuth: noAuth
                 });
@@ -485,16 +484,16 @@ function () {
       var _GenerateAuthorizationToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee9(_ref8) {
-        var libraryId, objectId, versionHash, transactionHash, _ref8$update, update, _ref8$noAuth, noAuth, accessTransaction, token, signature, multiSig;
+        var libraryId, objectId, versionHash, partHash, _ref8$update, update, _ref8$noAuth, noAuth, transactionHash, accessTransaction, token, signature, multiSig;
 
         return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                libraryId = _ref8.libraryId, objectId = _ref8.objectId, versionHash = _ref8.versionHash, transactionHash = _ref8.transactionHash, _ref8$update = _ref8.update, update = _ref8$update === void 0 ? false : _ref8$update, _ref8$noAuth = _ref8.noAuth, noAuth = _ref8$noAuth === void 0 ? false : _ref8$noAuth;
+                libraryId = _ref8.libraryId, objectId = _ref8.objectId, versionHash = _ref8.versionHash, partHash = _ref8.partHash, _ref8$update = _ref8.update, update = _ref8$update === void 0 ? false : _ref8$update, _ref8$noAuth = _ref8.noAuth, noAuth = _ref8$noAuth === void 0 ? false : _ref8$noAuth;
 
-                if (!(!transactionHash && !this.noAuth && !noAuth)) {
-                  _context9.next = 8;
+                if (!(!this.noAuth && !noAuth)) {
+                  _context9.next = 6;
                   break;
                 }
 
@@ -503,7 +502,6 @@ function () {
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash,
-                  transactionHash: transactionHash,
                   update: update,
                   noCache: this.noCache,
                   noAuth: noAuth
@@ -512,16 +510,8 @@ function () {
               case 4:
                 accessTransaction = _context9.sent;
                 transactionHash = accessTransaction.transactionHash;
-                _context9.next = 9;
-                break;
 
-              case 8:
-                if (this.noAuth) {
-                  // If noAuth is specified, throw out transaction hash
-                  transactionHash = undefined;
-                }
-
-              case 9:
+              case 6:
                 token = {
                   qspace_id: this.contentSpaceId,
                   addr: (this.client.signer && this.client.signer.address || "").replace("0x", ""),
@@ -532,16 +522,20 @@ function () {
                   token.qlib_id = libraryId;
                 }
 
+                if (partHash) {
+                  token.qphash = partHash;
+                }
+
                 token = Utils.B64(JSON.stringify(token));
-                _context9.next = 14;
+                _context9.next = 12;
                 return this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token)));
 
-              case 14:
+              case 12:
                 signature = _context9.sent;
                 multiSig = Utils.FormatSignature(signature);
                 return _context9.abrupt("return", "".concat(token, ".").concat(Utils.B64(multiSig)));
 
-              case 17:
+              case 15:
               case "end":
                 return _context9.stop();
             }
@@ -564,7 +558,7 @@ function () {
       regeneratorRuntime.mark(function _callee10(_ref9) {
         var _this = this;
 
-        var libraryId, objectId, versionHash, _ref9$args, args, _ref9$update, update, _ref9$skipCache, skipCache, _ref9$noCache, noCache, cacheOnly, id, accessType, cacheCollection, abi, cache, checkAccessCharge, cap, accessRequest;
+        var libraryId, objectId, versionHash, _ref9$args, args, _ref9$update, update, _ref9$skipCache, skipCache, _ref9$noCache, noCache, cacheOnly, id, accessType, cacheCollection, abi, cache, checkAccessCharge, accessRequest, owner, isOwner;
 
         return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
@@ -595,68 +589,57 @@ function () {
                 cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
                 checkAccessCharge = false;
                 _context10.t0 = accessType;
-                _context10.next = _context10.t0 === ACCESS_TYPES.SPACE ? 13 : _context10.t0 === ACCESS_TYPES.LIBRARY ? 16 : _context10.t0 === ACCESS_TYPES.TYPE ? 19 : _context10.t0 === ACCESS_TYPES.OBJECT ? 22 : 34;
+                _context10.next = _context10.t0 === ACCESS_TYPES.SPACE ? 13 : _context10.t0 === ACCESS_TYPES.LIBRARY ? 16 : _context10.t0 === ACCESS_TYPES.TYPE ? 19 : _context10.t0 === ACCESS_TYPES.OBJECT ? 22 : 27;
                 break;
 
               case 13:
                 abi = SpaceContract.abi;
                 cache = cacheCollection.spaces;
-                return _context10.abrupt("break", 36);
+                return _context10.abrupt("break", 29);
 
               case 16:
                 abi = LibraryContract.abi;
                 cache = cacheCollection.libraries;
-                return _context10.abrupt("break", 36);
+                return _context10.abrupt("break", 29);
 
               case 19:
                 abi = TypeContract.abi;
                 cache = cacheCollection.types;
-                return _context10.abrupt("break", 36);
+                return _context10.abrupt("break", 29);
 
               case 22:
                 abi = ContentContract.abi;
                 cache = cacheCollection.objects;
                 checkAccessCharge = true;
 
-                if (!(args && args.length > 0)) {
-                  _context10.next = 29;
-                  break;
+                if (args && args.length > 0) {
+                  // Inject public key of requester
+                  args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
+                } else {
+                  //const cap = await this.ReencryptionKey(objectId);
+                  // Set default args
+                  args = [0, // Access level
+                  this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+                  "", //cap.public_key,
+                  [], // Custom values
+                  [] // Stakeholders
+                  ];
                 }
 
-                // Inject public key of requester
-                args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
-                _context10.next = 33;
-                break;
+                return _context10.abrupt("break", 29);
 
-              case 29:
-                _context10.next = 31;
-                return this.ReencryptionKey(objectId);
-
-              case 31:
-                cap = _context10.sent;
-                // Set default args
-                args = [0, // Access level
-                this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-                "", //cap.public_key,
-                [], // Custom values
-                [] // Stakeholders
-                ];
-
-              case 33:
-                return _context10.abrupt("break", 36);
-
-              case 34:
+              case 27:
                 abi = update ? EditableContract.abi : AccessibleContract.abi;
                 cache = cacheCollection.other;
 
-              case 36:
+              case 29:
                 if (!(!noCache && !skipCache)) {
-                  _context10.next = 39;
+                  _context10.next = 32;
                   break;
                 }
 
                 if (!cache[id]) {
-                  _context10.next = 39;
+                  _context10.next = 32;
                   break;
                 }
 
@@ -664,33 +647,33 @@ function () {
                   transactionHash: cache[id]
                 });
 
-              case 39:
+              case 32:
                 if (!cacheOnly) {
-                  _context10.next = 41;
+                  _context10.next = 34;
                   break;
                 }
 
                 return _context10.abrupt("return");
 
-              case 41:
+              case 34:
                 if (!update) {
-                  _context10.next = 47;
+                  _context10.next = 40;
                   break;
                 }
 
-                _context10.next = 44;
+                _context10.next = 37;
                 return this.UpdateRequest({
                   id: id,
                   abi: abi
                 });
 
-              case 44:
+              case 37:
                 accessRequest = _context10.sent;
-                _context10.next = 50;
+                _context10.next = 43;
                 break;
 
-              case 47:
-                _context10.next = 49;
+              case 40:
+                _context10.next = 42;
                 return this.AccessRequest({
                   id: id,
                   abi: abi,
@@ -698,10 +681,10 @@ function () {
                   checkAccessCharge: checkAccessCharge
                 });
 
-              case 49:
+              case 42:
                 accessRequest = _context10.sent;
 
-              case 50:
+              case 43:
                 // Cache the transaction hash
                 if (!noCache) {
                   cache[id] = accessRequest.transactionHash; // Save request ID if present
@@ -713,14 +696,30 @@ function () {
                     }
                   });
                 }
-                /*
-                // After making an access request, record the tags in the user's profile, if appropriate
-                if(accessType === ACCESS_TYPES.OBJECT && !update) {
-                  await this.client.userProfile.RecordTags({libraryId, objectId, versionHash});
+
+                _context10.next = 46;
+                return this.Owner({
+                  id: id,
+                  abi: abi
+                });
+
+              case 46:
+                owner = _context10.sent;
+                isOwner = Utils.EqualAddress(owner, this.client.signer.address); // After making an access request, record the tags in the user's profile, if appropriate
+
+                if (!(accessType === ACCESS_TYPES.OBJECT && !isOwner)) {
+                  _context10.next = 51;
+                  break;
                 }
-                */
 
+                _context10.next = 51;
+                return this.client.userProfileClient.RecordTags({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  versionHash: versionHash
+                });
 
+              case 51:
                 return _context10.abrupt("return", accessRequest);
 
               case 52:

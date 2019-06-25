@@ -149,7 +149,7 @@ const ContentObjectVerification = {
         valid: true,
         cbor: cbor
       };
-    } catch (error) {
+    } catch(error) {
       return {
         valid: false,
         error: error

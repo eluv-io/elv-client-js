@@ -24,6 +24,10 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
         contentSpace = content_space;
     }
 
+    function canConfirm() public view returns (bool) {
+        return canNodePublish(msg.sender);
+    }
+
     function accessRequestMsg(
         address content_address,
         uint8 level,

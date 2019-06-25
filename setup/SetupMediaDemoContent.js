@@ -88,7 +88,7 @@ const MakeIMF = async (emp, demo, asset) => {
     console.log("Creating IMF: " + asset.name + " payload: " + JSON.stringify(payload));
     const q = await imf.createImfTitle(payload);
     console.log("Content IMF: " + asset.name + " id: " + q.id + " hash: " + q.hash);
-  } catch (err){
+  } catch(err){
     console.log(err);
   }
 };

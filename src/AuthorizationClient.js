@@ -27,8 +27,6 @@ class AuthorizationClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
 
-    this.userProfileTransaction = "";
-
     this.accessTransactions = {
       spaces: {},
       libraries: {},
@@ -54,7 +52,7 @@ class AuthorizationClient {
     libraryId,
     objectId,
     versionHash,
-    transactionHash,
+    partHash,
     update=false,
     channelAuth=false,
     noCache=false,
@@ -65,7 +63,7 @@ class AuthorizationClient {
       libraryId,
       objectId,
       versionHash,
-      transactionHash,
+      partHash,
       update,
       channelAuth,
       noCache,
@@ -80,7 +78,7 @@ class AuthorizationClient {
     libraryId,
     objectId,
     versionHash,
-    transactionHash,
+    partHash,
     update=false,
     channelAuth=false,
     noCache=false,
@@ -102,7 +100,7 @@ class AuthorizationClient {
           libraryId,
           objectId,
           versionHash,
-          transactionHash,
+          partHash,
           update,
           noAuth
         });
@@ -111,7 +109,7 @@ class AuthorizationClient {
       this.noCache = initialNoCache;
 
       return authorizationToken;
-    } catch (error) {
+    } catch(error) {
       // Ensure nocache is properly reset
       this.noCache = initialNoCache;
       throw error;
@@ -214,21 +212,19 @@ class AuthorizationClient {
     return token;
   }
 
-  async GenerateAuthorizationToken({libraryId, objectId, versionHash, transactionHash, update=false, noAuth=false}) {
-    if(!transactionHash && !this.noAuth && !noAuth) {
+  async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, update=false, noAuth=false}) {
+    let transactionHash;
+    if(!this.noAuth && !noAuth) {
       const accessTransaction = await this.MakeAccessRequest({
         libraryId,
         objectId,
         versionHash,
-        transactionHash,
         update,
         noCache: this.noCache,
         noAuth
       });
+
       transactionHash = accessTransaction.transactionHash;
-    } else if(this.noAuth) {
-      // If noAuth is specified, throw out transaction hash
-      transactionHash = undefined;
     }
 
     let token = {
@@ -237,9 +233,8 @@ class AuthorizationClient {
       tx_id: (transactionHash || "").replace("0x", "")
     };
 
-    if(libraryId) {
-      token.qlib_id = libraryId;
-    }
+    if(libraryId) { token.qlib_id = libraryId; }
+    if(partHash) { token.qphash = partHash; }
 
     token = Utils.B64(JSON.stringify(token));
 
@@ -293,7 +288,7 @@ class AuthorizationClient {
           // Inject public key of requester
           args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
         } else {
-          const cap = await this.ReencryptionKey(objectId);
+          //const cap = await this.ReencryptionKey(objectId);
 
           // Set default args
           args = [
@@ -339,12 +334,12 @@ class AuthorizationClient {
       });
     }
 
-    /*
+    const owner = await this.Owner({id, abi});
+    const isOwner = Utils.EqualAddress(owner, this.client.signer.address);
     // After making an access request, record the tags in the user's profile, if appropriate
-    if(accessType === ACCESS_TYPES.OBJECT && !update) {
-      await this.client.userProfile.RecordTags({libraryId, objectId, versionHash});
+    if(accessType === ACCESS_TYPES.OBJECT && !isOwner) {
+      await this.client.userProfileClient.RecordTags({libraryId, objectId, versionHash});
     }
-    */
 
     return accessRequest;
   }
@@ -384,7 +379,7 @@ class AuthorizationClient {
       } else {
         return ACCESS_TYPES.OTHER;
       }
-    } catch (error) {
+    } catch(error) {
       return ACCESS_TYPES.OTHER;
     }
   }

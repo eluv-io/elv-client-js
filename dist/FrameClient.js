@@ -135,7 +135,7 @@ function () {
       }
     }
 
-    this.userProfile = {}; // Dynamically defined user profile methods defined in AllowedUserProfileMethods
+    this.userProfileClient = {}; // Dynamically defined user profile methods defined in AllowedUserProfileMethods
 
     var _iteratorNormalCompletion2 = true;
     var _didIteratorError2 = false;
@@ -145,7 +145,7 @@ function () {
       var _loop2 = function _loop2() {
         var methodName = _step2.value;
 
-        _this.userProfile[methodName] =
+        _this.userProfileClient[methodName] =
         /*#__PURE__*/
         function () {
           var _ref3 = _asyncToGenerator(
@@ -173,7 +173,7 @@ function () {
                     _context2.next = 6;
                     return _this.SendMessage({
                       options: {
-                        module: "userProfile",
+                        module: "userProfileClient",
                         calledMethod: methodName,
                         args: _this.utils.MakeClonable(args),
                         prompted: FrameClient.PromptedMethods().includes(methodName),

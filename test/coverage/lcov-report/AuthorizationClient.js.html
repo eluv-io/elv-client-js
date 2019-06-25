@@ -1110,7 +1110,7 @@ class AuthorizationClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
 &nbsp;
-    this.userProfileTransaction = "";
+    this.userProfileClientTransaction = "";
 &nbsp;
     this.accessTransactions = {
       spaces: {},
@@ -1344,7 +1344,7 @@ class AuthorizationClient {
     let isObjectAccess = false;
     <span class="missing-if-branch" title="if path not taken" >I</span>if(isUserLibrary) {
       // User profile library - library ID corresponds to signer's address
-<span class="cstat-no" title="statement not covered" >      if(!noCache &amp;&amp; !skipCache &amp;&amp; this.userProfileTransaction) { <span class="cstat-no" title="statement not covered" >return this.userProfileTransaction; </span>}</span>
+<span class="cstat-no" title="statement not covered" >      if(!noCache &amp;&amp; !skipCache &amp;&amp; this.userProfileClientTransaction) { <span class="cstat-no" title="statement not covered" >return this.userProfileClientTransaction; </span>}</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return {transactionHash: ""};</span>
       const userEvent = <span class="cstat-no" title="statement not covered" >await this.client.ethClient.EngageAccountLibrary({</span>
@@ -1353,7 +1353,7 @@ class AuthorizationClient {
       });
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if(!noCache) {</span>
-<span class="cstat-no" title="statement not covered" >        this.userProfileTransaction = userEvent.transactionHash;</span>
+<span class="cstat-no" title="statement not covered" >        this.userProfileClientTransaction = userEvent.transactionHash;</span>
       }
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return userEvent.transactionHash;</span>
@@ -1425,7 +1425,7 @@ class AuthorizationClient {
 &nbsp;
     // After making an access request, record the tags in the user's profile, if appropriate
     if(isObjectAccess &amp;&amp; !update) {
-      await this.client.userProfile.RecordTags({libraryId, objectId, versionHash});
+      await this.client.userProfileClient.RecordTags({libraryId, objectId, versionHash});
     }
 &nbsp;
     return accessRequest;
