@@ -1,9 +1,5 @@
 "use strict";
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
@@ -17,6 +13,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 var Utils = require("./Utils");
 
 var UrlJoin = require("url-join");
+
+var SpaceContract = require("./contracts/BaseContentSpace");
 
 var UserProfileClient =
 /*#__PURE__*/
@@ -46,7 +44,7 @@ function () {
    *
    * <h4>Usage</h4>
    *
-   * Access the UserProfileClient from ElvClient or FrameClient via client.userProfile
+   * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
    *
    * @example
   let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
@@ -56,9 +54,9 @@ function () {
   privateKey: "0xbf092a5c94988e2f7a1d00d0db309fc492fe38ddb57fc6d102d777373389c5e6"
   });
   client.SetSigner({signer});
-  await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
+  await client.userProfileClient.UserMetadata({accountAddress: signer.address})
   let frameClient = new FrameClient();
-  await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
+  await client.userProfileClient.UserMetadata({accountAddress: signer.address})
    *
    */
   function UserProfileClient(_ref) {
@@ -70,8 +68,150 @@ function () {
     this.libraryCreated = false;
     this.cachedPrivateMetadata = undefined;
   }
+  /**
+   * Get the contract address of the current user's BaseAccessWallet contract
+   *
+   * @return {Promise<string>} - The contract address of the current user's wallet contract
+   */
+
 
   _createClass(UserProfileClient, [{
+    key: "WalletAddress",
+    value: function () {
+      var _WalletAddress = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee() {
+        var walletCreationEvent;
+        return regeneratorRuntime.wrap(function _callee$(_context) {
+          while (1) {
+            switch (_context.prev = _context.next) {
+              case 0:
+                if (this.walletAddress) {
+                  _context.next = 9;
+                  break;
+                }
+
+                _context.next = 3;
+                return this.client.CallContractMethod({
+                  abi: SpaceContract.abi,
+                  contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+                  methodName: "userWallets",
+                  methodArgs: [this.client.signer.address]
+                });
+
+              case 3:
+                this.walletAddress = _context.sent;
+
+                if (!(!this.walletAddress || this.walletAddress === Utils.nullAddress)) {
+                  _context.next = 9;
+                  break;
+                }
+
+                _context.next = 7;
+                return this.client.CallContractMethodAndWait({
+                  contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+                  abi: SpaceContract.abi,
+                  methodName: "createAccessWallet",
+                  methodArgs: []
+                });
+
+              case 7:
+                walletCreationEvent = _context.sent;
+                this.walletAddress = this.client.ExtractValueFromEvent({
+                  abi: SpaceContract.abi,
+                  event: walletCreationEvent,
+                  eventName: "CreateAccessWallet",
+                  eventValue: "wallet"
+                });
+
+              case 9:
+                return _context.abrupt("return", this.walletAddress);
+
+              case 10:
+              case "end":
+                return _context.stop();
+            }
+          }
+        }, _callee, this);
+      }));
+
+      function WalletAddress() {
+        return _WalletAddress.apply(this, arguments);
+      }
+
+      return WalletAddress;
+    }()
+  }, {
+    key: "Initialize",
+    value: function () {
+      var _Initialize = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee2() {
+        var walletAddress, libraryId, objectId, createResponse;
+        return regeneratorRuntime.wrap(function _callee2$(_context2) {
+          while (1) {
+            switch (_context2.prev = _context2.next) {
+              case 0:
+                _context2.next = 2;
+                return this.WalletAddress();
+
+              case 2:
+                walletAddress = _context2.sent;
+                libraryId = this.client.contentSpaceLibraryId;
+                objectId = Utils.AddressToObjectId(walletAddress);
+                _context2.prev = 5;
+                _context2.next = 8;
+                return this.client.ContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId
+                });
+
+              case 8:
+                _context2.next = 18;
+                break;
+
+              case 10:
+                _context2.prev = 10;
+                _context2.t0 = _context2["catch"](5);
+
+                if (!(_context2.t0.status === 404)) {
+                  _context2.next = 18;
+                  break;
+                }
+
+                _context2.next = 15;
+                return this.client.CreateContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  options: {
+                    type: "library"
+                  }
+                });
+
+              case 15:
+                createResponse = _context2.sent;
+                _context2.next = 18;
+                return this.client.FinalizeContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: createResponse.write_token
+                });
+
+              case 18:
+              case "end":
+                return _context2.stop();
+            }
+          }
+        }, _callee2, this, [[5, 10]]);
+      }));
+
+      function Initialize() {
+        return _Initialize.apply(this, arguments);
+      }
+
+      return Initialize;
+    }()
+  }, {
     key: "__InvalidateCache",
     value: function __InvalidateCache() {
       this.cachedPrivateMetadata = undefined;
@@ -111,186 +251,87 @@ function () {
       }
     }
     /**
-     * Create an account library for the current user
+     * Access the current user's metadata
+     *
+     * Note: Subject to user's access level
+     *
+     * @see <a href="#PromptsAndAccessLevels">Prompts and access levels</a>
      *
      * @namedParams
-     * @param {object=} publicMetadata - Publicly accessible metadata
-     * @param {object=} privateMetadata - Metadata accessible only by this user
-     * @param {blob=} image - Profile image for this user
+     * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
+     * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
      *
-     * @return {Promise<string|*>} - The ID of the created library
+     * @return {Promise<Object>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
      */
 
   }, {
-    key: "CreateAccountLibrary",
+    key: "UserMetadata",
     value: function () {
-      var _CreateAccountLibrary = _asyncToGenerator(
+      var _UserMetadata = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee() {
+      regeneratorRuntime.mark(function _callee3() {
         var _ref2,
-            _ref2$publicMetadata,
-            publicMetadata,
-            _ref2$privateMetadata,
-            privateMetadata,
-            image,
+            _ref2$metadataSubtree,
+            metadataSubtree,
+            _ref2$noCache,
+            noCache,
             libraryId,
-            imageHash,
-            _args = arguments;
+            objectId,
+            metadata,
+            _args3 = arguments;
 
-        return regeneratorRuntime.wrap(function _callee$(_context) {
-          while (1) {
-            switch (_context.prev = _context.next) {
-              case 0:
-                _ref2 = _args.length > 0 && _args[0] !== undefined ? _args[0] : {}, _ref2$publicMetadata = _ref2.publicMetadata, publicMetadata = _ref2$publicMetadata === void 0 ? {} : _ref2$publicMetadata, _ref2$privateMetadata = _ref2.privateMetadata, privateMetadata = _ref2$privateMetadata === void 0 ? {} : _ref2$privateMetadata, image = _ref2.image;
-                _context.next = 3;
-                return this.__IsLibraryCreated({
-                  accountAddress: this.client.signer.address
-                });
-
-              case 3:
-                if (!_context.sent) {
-                  _context.next = 5;
-                  break;
-                }
-
-                return _context.abrupt("return", Utils.AddressToLibraryId(this.client.signer.address));
-
-              case 5:
-                publicMetadata = _objectSpread({}, publicMetadata, {
-                  "class": "elv-user-library"
-                }); // Initialize fields
-
-                privateMetadata = _objectSpread({}, privateMetadata, {
-                  access_level: "prompt",
-                  collected_data: {}
-                });
-                _context.next = 9;
-                return this.client.CreateContentLibrary({
-                  publicMetadata: publicMetadata,
-                  privateMetadata: privateMetadata,
-                  image: image,
-                  isUserLibrary: true
-                });
-
-              case 9:
-                libraryId = _context.sent;
-
-                if (!image) {
-                  _context.next = 16;
-                  break;
-                }
-
-                _context.next = 13;
-                return this.PrivateUserMetadata({
-                  metadataSubtree: "image"
-                });
-
-              case 13:
-                imageHash = _context.sent;
-                _context.next = 16;
-                return this.ReplacePublicUserMetadata({
-                  metadataSubtree: "image",
-                  metadata: imageHash
-                });
-
-              case 16:
-                return _context.abrupt("return", libraryId);
-
-              case 17:
-              case "end":
-                return _context.stop();
-            }
-          }
-        }, _callee, this);
-      }));
-
-      function CreateAccountLibrary() {
-        return _CreateAccountLibrary.apply(this, arguments);
-      }
-
-      return CreateAccountLibrary;
-    }() // Create the library if it doesn't yet exist
-
-  }, {
-    key: "__TouchLibrary",
-    value: function () {
-      var _TouchLibrary = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee2() {
-        return regeneratorRuntime.wrap(function _callee2$(_context2) {
-          while (1) {
-            switch (_context2.prev = _context2.next) {
-              case 0:
-                if (!this.client.signer) {
-                  _context2.next = 7;
-                  break;
-                }
-
-                _context2.next = 3;
-                return this.__IsLibraryCreated({
-                  accountAddress: this.client.signer.address
-                });
-
-              case 3:
-                if (_context2.sent) {
-                  _context2.next = 6;
-                  break;
-                }
-
-                _context2.next = 6;
-                return this.CreateAccountLibrary();
-
-              case 6:
-                this.libraryCreated = true;
-
-              case 7:
-              case "end":
-                return _context2.stop();
-            }
-          }
-        }, _callee2, this);
-      }));
-
-      function __TouchLibrary() {
-        return _TouchLibrary.apply(this, arguments);
-      }
-
-      return __TouchLibrary;
-    }() // Check if the account library exists
-    // TODO: Change logic when user libraries are properly implemented
-
-  }, {
-    key: "__IsLibraryCreated",
-    value: function () {
-      var _IsLibraryCreated = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee3(_ref3) {
-        var accountAddress, libraryId, libraryIds;
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                accountAddress = _ref3.accountAddress;
+                _ref2 = _args3.length > 0 && _args3[0] !== undefined ? _args3[0] : {}, _ref2$metadataSubtree = _ref2.metadataSubtree, metadataSubtree = _ref2$metadataSubtree === void 0 ? "/" : _ref2$metadataSubtree, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache;
 
-                if (!this.libraryCreated) {
+                if (!(!noCache && this.cachedPrivateMetadata)) {
                   _context3.next = 3;
                   break;
                 }
 
-                return _context3.abrupt("return", true);
+                return _context3.abrupt("return", this.__GetCachedMetadata(metadataSubtree));
 
               case 3:
-                libraryId = Utils.AddressToLibraryId(accountAddress);
-                _context3.next = 6;
-                return this.client.ContentLibraries();
+                libraryId = this.client.contentSpaceLibraryId;
+                _context3.t0 = Utils;
+                _context3.next = 7;
+                return this.WalletAddress();
 
-              case 6:
-                libraryIds = _context3.sent;
-                return _context3.abrupt("return", libraryIds.find(function (id) {
-                  return id === libraryId;
-                }));
+              case 7:
+                _context3.t1 = _context3.sent;
+                objectId = _context3.t0.AddressToObjectId.call(_context3.t0, _context3.t1);
 
-              case 8:
+                if (!noCache) {
+                  _context3.next = 13;
+                  break;
+                }
+
+                _context3.next = 12;
+                return this.client.ContentObjectMetadata({
+                  libraryId: objectId,
+                  metadataSubtree: metadataSubtree
+                });
+
+              case 12:
+                return _context3.abrupt("return", _context3.sent);
+
+              case 13:
+                _context3.next = 15;
+                return this.client.ContentObjectMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId
+                });
+
+              case 15:
+                metadata = _context3.sent;
+
+                this.__CacheMetadata(metadata);
+
+                return _context3.abrupt("return", this.__GetCachedMetadata(metadataSubtree));
+
+              case 18:
               case "end":
                 return _context3.stop();
             }
@@ -298,11 +339,222 @@ function () {
         }, _callee3, this);
       }));
 
-      function __IsLibraryCreated(_x) {
-        return _IsLibraryCreated.apply(this, arguments);
+      function UserMetadata() {
+        return _UserMetadata.apply(this, arguments);
       }
 
-      return __IsLibraryCreated;
+      return UserMetadata;
+    }()
+    /**
+     * Merge the current user's profile metadata
+     *
+     * @namedParams
+     * @param {Object} metadata - New metadata
+     * @param {string=} metadataSubtree - Subtree to merge into - modifies root metadata if not specified
+     */
+
+  }, {
+    key: "MergeUserMetadata",
+    value: function () {
+      var _MergeUserMetadata = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee4(_ref3) {
+        var _ref3$metadataSubtree, metadataSubtree, _ref3$metadata, metadata, libraryId, objectId, editRequest;
+
+        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+          while (1) {
+            switch (_context4.prev = _context4.next) {
+              case 0:
+                _ref3$metadataSubtree = _ref3.metadataSubtree, metadataSubtree = _ref3$metadataSubtree === void 0 ? "/" : _ref3$metadataSubtree, _ref3$metadata = _ref3.metadata, metadata = _ref3$metadata === void 0 ? {} : _ref3$metadata;
+                libraryId = this.client.contentSpaceLibraryId;
+                _context4.t0 = Utils;
+                _context4.next = 5;
+                return this.WalletAddress();
+
+              case 5:
+                _context4.t1 = _context4.sent;
+                objectId = _context4.t0.AddressToObjectId.call(_context4.t0, _context4.t1);
+                _context4.next = 9;
+                return this.client.EditContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId
+                });
+
+              case 9:
+                editRequest = _context4.sent;
+                _context4.next = 12;
+                return this.client.MergeMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token,
+                  metadataSubtree: metadataSubtree,
+                  metadata: metadata
+                });
+
+              case 12:
+                _context4.next = 14;
+                return this.client.FinalizeContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token
+                });
+
+              case 14:
+                this.__InvalidateCache();
+
+              case 15:
+              case "end":
+                return _context4.stop();
+            }
+          }
+        }, _callee4, this);
+      }));
+
+      function MergeUserMetadata(_x) {
+        return _MergeUserMetadata.apply(this, arguments);
+      }
+
+      return MergeUserMetadata;
+    }()
+    /**
+     * Replace the current user's profile metadata
+     *
+     * @namedParams
+     * @param {Object} metadata - New metadata
+     * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
+     */
+
+  }, {
+    key: "ReplaceUserMetadata",
+    value: function () {
+      var _ReplaceUserMetadata = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee5(_ref4) {
+        var _ref4$metadataSubtree, metadataSubtree, _ref4$metadata, metadata, libraryId, objectId, editRequest;
+
+        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+          while (1) {
+            switch (_context5.prev = _context5.next) {
+              case 0:
+                _ref4$metadataSubtree = _ref4.metadataSubtree, metadataSubtree = _ref4$metadataSubtree === void 0 ? "/" : _ref4$metadataSubtree, _ref4$metadata = _ref4.metadata, metadata = _ref4$metadata === void 0 ? {} : _ref4$metadata;
+                libraryId = this.client.contentSpaceLibraryId;
+                _context5.t0 = Utils;
+                _context5.next = 5;
+                return this.WalletAddress();
+
+              case 5:
+                _context5.t1 = _context5.sent;
+                objectId = _context5.t0.AddressToObjectId.call(_context5.t0, _context5.t1);
+                _context5.next = 9;
+                return this.client.EditContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId
+                });
+
+              case 9:
+                editRequest = _context5.sent;
+                _context5.next = 12;
+                return this.client.ReplaceMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token,
+                  metadataSubtree: metadataSubtree,
+                  metadata: metadata
+                });
+
+              case 12:
+                _context5.next = 14;
+                return this.client.FinalizeContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token
+                });
+
+              case 14:
+                this.__InvalidateCache();
+
+              case 15:
+              case "end":
+                return _context5.stop();
+            }
+          }
+        }, _callee5, this);
+      }));
+
+      function ReplaceUserMetadata(_x2) {
+        return _ReplaceUserMetadata.apply(this, arguments);
+      }
+
+      return ReplaceUserMetadata;
+    }()
+    /**
+     * Delete the specified subtree from the users profile metadata
+     *
+     * @namedParams
+     * @param {string=} metadataSubtree - Subtree to delete - deletes all metadata if not specified
+     */
+
+  }, {
+    key: "DeleteUserMetadata",
+    value: function () {
+      var _DeleteUserMetadata = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee6(_ref5) {
+        var _ref5$metadataSubtree, metadataSubtree, libraryId, objectId, editRequest;
+
+        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+          while (1) {
+            switch (_context6.prev = _context6.next) {
+              case 0:
+                _ref5$metadataSubtree = _ref5.metadataSubtree, metadataSubtree = _ref5$metadataSubtree === void 0 ? "/" : _ref5$metadataSubtree;
+                libraryId = this.client.contentSpaceLibraryId;
+                _context6.t0 = Utils;
+                _context6.next = 5;
+                return this.WalletAddress();
+
+              case 5:
+                _context6.t1 = _context6.sent;
+                objectId = _context6.t0.AddressToObjectId.call(_context6.t0, _context6.t1);
+                _context6.next = 9;
+                return this.client.EditContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId
+                });
+
+              case 9:
+                editRequest = _context6.sent;
+                _context6.next = 12;
+                return this.client.DeleteMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token,
+                  metadataSubtree: metadataSubtree
+                });
+
+              case 12:
+                _context6.next = 14;
+                return this.client.FinalizeContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token
+                });
+
+              case 14:
+                this.__InvalidateCache();
+
+              case 15:
+              case "end":
+                return _context6.stop();
+            }
+          }
+        }, _callee6, this);
+      }));
+
+      function DeleteUserMetadata(_x3) {
+        return _DeleteUserMetadata.apply(this, arguments);
+      }
+
+      return DeleteUserMetadata;
     }()
     /**
      * Return the permissions the current user allows for apps to access their profile.
@@ -319,35 +571,35 @@ function () {
     value: function () {
       var _AccessLevel = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee4() {
-        return regeneratorRuntime.wrap(function _callee4$(_context4) {
+      regeneratorRuntime.mark(function _callee7() {
+        return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
-            switch (_context4.prev = _context4.next) {
+            switch (_context7.prev = _context7.next) {
               case 0:
-                _context4.next = 2;
-                return this.PrivateUserMetadata({
+                _context7.next = 2;
+                return this.UserMetadata({
                   metadataSubtree: "access_level"
                 });
 
               case 2:
-                _context4.t0 = _context4.sent;
+                _context7.t0 = _context7.sent;
 
-                if (_context4.t0) {
-                  _context4.next = 5;
+                if (_context7.t0) {
+                  _context7.next = 5;
                   break;
                 }
 
-                _context4.t0 = "prompt";
+                _context7.t0 = "prompt";
 
               case 5:
-                return _context4.abrupt("return", _context4.t0);
+                return _context7.abrupt("return", _context7.t0);
 
               case 6:
               case "end":
-                return _context4.stop();
+                return _context7.stop();
             }
           }
-        }, _callee4, this);
+        }, _callee7, this);
       }));
 
       function AccessLevel() {
@@ -370,50 +622,49 @@ function () {
     value: function () {
       var _SetAccessLevel = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee5(_ref4) {
+      regeneratorRuntime.mark(function _callee8(_ref6) {
         var level;
-        return regeneratorRuntime.wrap(function _callee5$(_context5) {
+        return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
-            switch (_context5.prev = _context5.next) {
+            switch (_context8.prev = _context8.next) {
               case 0:
-                level = _ref4.level;
+                level = _ref6.level;
+                level = level.toLowerCase();
 
-                if (["private", "prompt", "public"].includes(level.toLowerCase())) {
-                  _context5.next = 3;
+                if (["private", "prompt", "public"].includes(level)) {
+                  _context8.next = 4;
                   break;
                 }
 
-                return _context5.abrupt("return");
+                throw new Error("Invalid access level: " + level);
 
-              case 3:
-                _context5.next = 5;
-                return this.ReplacePrivateUserMetadata({
+              case 4:
+                _context8.next = 6;
+                return this.ReplaceUserMetadata({
                   metadataSubtree: "access_level",
-                  metadata: level.toLowerCase()
+                  metadata: level
                 });
 
-              case 5:
+              case 6:
               case "end":
-                return _context5.stop();
+                return _context8.stop();
             }
           }
-        }, _callee5, this);
+        }, _callee8, this);
       }));
 
-      function SetAccessLevel(_x2) {
+      function SetAccessLevel(_x4) {
         return _SetAccessLevel.apply(this, arguments);
       }
 
       return SetAccessLevel;
     }()
     /**
-     * Get the URL of the specified user's profile image
+     * Get the URL of the current user's profile image
      *
-     * Note: Part hash of profile image will be appended to the URL as a query parameter in order to ensure browsers
-     * won't serve old cached versions when the image is updated
+     * Note: Part hash of profile image will be appended to the URL as a query parameter to invalidate
+     * browser caching when the image is updated
      *
-     * @namedParams
-     * @param {string} accountAddress - Address of the user account
      * @return {Promise<string | undefined>} - URL of the user's profile image. Will be undefined if no profile image is set.
      */
 
@@ -422,70 +673,58 @@ function () {
     value: function () {
       var _UserProfileImage = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee6(_ref5) {
-        var accountAddress, libraryId, objectId, imageHash;
-        return regeneratorRuntime.wrap(function _callee6$(_context6) {
+      regeneratorRuntime.mark(function _callee9() {
+        var imageHash, libraryId, objectId;
+        return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
-            switch (_context6.prev = _context6.next) {
+            switch (_context9.prev = _context9.next) {
               case 0:
-                accountAddress = _ref5.accountAddress;
-                libraryId = Utils.AddressToLibraryId(accountAddress);
-                objectId = Utils.AddressToObjectId(accountAddress); // Ensure library is created
-
-                _context6.next = 5;
-                return this.__IsLibraryCreated({
-                  accountAddress: accountAddress
-                });
-
-              case 5:
-                if (_context6.sent) {
-                  _context6.next = 7;
-                  break;
-                }
-
-                return _context6.abrupt("return");
-
-              case 7:
-                _context6.next = 9;
-                return this.PublicUserMetadata({
-                  accountAddress: accountAddress,
+                _context9.next = 2;
+                return this.UserMetadata({
                   metadataSubtree: "image"
                 });
 
-              case 9:
-                imageHash = _context6.sent;
+              case 2:
+                imageHash = _context9.sent;
 
                 if (imageHash) {
-                  _context6.next = 12;
+                  _context9.next = 5;
                   break;
                 }
 
-                return _context6.abrupt("return");
+                return _context9.abrupt("return");
 
-              case 12:
-                _context6.next = 14;
+              case 5:
+                libraryId = this.client.contentSpaceLibraryId;
+                _context9.t0 = Utils;
+                _context9.next = 9;
+                return this.WalletAddress();
+
+              case 9:
+                _context9.t1 = _context9.sent;
+                objectId = _context9.t0.AddressToObjectId.call(_context9.t0, _context9.t1);
+                _context9.next = 13;
                 return this.client.Rep({
                   libraryId: libraryId,
                   objectId: objectId,
                   rep: "image",
                   queryParams: {
                     hash: imageHash
-                  },
-                  noAuth: true
+                  }
                 });
 
-              case 14:
-                return _context6.abrupt("return", _context6.sent);
+              case 13:
+                return _context9.abrupt("return", _context9.sent);
 
-              case 15:
+              case 14:
               case "end":
-                return _context6.stop();
+                return _context9.stop();
             }
           }
-        }, _callee6, this);
+        }, _callee9, this);
       }));
 
-      function UserProfileImage(_x3) {
+      function UserProfileImage() {
         return _UserProfileImage.apply(this, arguments);
       }
 
@@ -503,197 +742,60 @@ function () {
     value: function () {
       var _SetUserProfileImage = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee7(_ref6) {
-        var image, libraryId, imageHash;
-        return regeneratorRuntime.wrap(function _callee7$(_context7) {
-          while (1) {
-            switch (_context7.prev = _context7.next) {
-              case 0:
-                image = _ref6.image;
-                libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                _context7.next = 4;
-                return this.__TouchLibrary();
-
-              case 4:
-                _context7.next = 6;
-                return this.client.SetContentLibraryImage({
-                  libraryId: libraryId,
-                  image: image
-                });
-
-              case 6:
-                _context7.next = 8;
-                return this.PrivateUserMetadata({
-                  metadataSubtree: "image"
-                });
-
-              case 8:
-                imageHash = _context7.sent;
-
-                //await this.client.ReplacePublicLibraryMetadata({libraryId, metadataSubtree: "image", metadata: imageHash});
-                this.__InvalidateCache();
-
-              case 10:
-              case "end":
-                return _context7.stop();
-            }
-          }
-        }, _callee7, this);
-      }));
-
-      function SetUserProfileImage(_x4) {
-        return _SetUserProfileImage.apply(this, arguments);
-      }
-
-      return SetUserProfileImage;
-    }()
-    /**
-     * Access the specified user account's public metadata
-     *
-     * @namedParams
-     * @param {string} accountAddress - Address of the user account
-     * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
-     *
-     * @return {Promise<Object>} - The user's public profile metadata - returns undefined if no metadata set or subtree doesn't exist
-     */
-
-  }, {
-    key: "PublicUserMetadata",
-    value: function () {
-      var _PublicUserMetadata = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee8(_ref7) {
-        var accountAddress, _ref7$metadataSubtree, metadataSubtree, libraryId;
-
-        return regeneratorRuntime.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                accountAddress = _ref7.accountAddress, _ref7$metadataSubtree = _ref7.metadataSubtree, metadataSubtree = _ref7$metadataSubtree === void 0 ? "/" : _ref7$metadataSubtree;
-
-                if (accountAddress) {
-                  _context8.next = 3;
-                  break;
-                }
-
-                return _context8.abrupt("return", undefined);
-
-              case 3:
-                libraryId = Utils.AddressToLibraryId(accountAddress);
-                _context8.prev = 4;
-                _context8.next = 11;
-                break;
-
-              case 7:
-                _context8.prev = 7;
-                _context8.t0 = _context8["catch"](4);
-
-                if (!(_context8.t0.status !== 404)) {
-                  _context8.next = 11;
-                  break;
-                }
-
-                throw _context8.t0;
-
-              case 11:
-              case "end":
-                return _context8.stop();
-            }
-          }
-        }, _callee8, null, [[4, 7]]);
-      }));
-
-      function PublicUserMetadata(_x5) {
-        return _PublicUserMetadata.apply(this, arguments);
-      }
-
-      return PublicUserMetadata;
-    }()
-    /**
-     * Replace the current user's public library metadata
-     *
-     * @namedParams
-     * @param {Object} metadata - New metadata
-     * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
-     */
-
-  }, {
-    key: "ReplacePublicUserMetadata",
-    value: function () {
-      var _ReplacePublicUserMetadata = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee9(_ref8) {
-        var _ref8$metadataSubtree, metadataSubtree, _ref8$metadata, metadata, libraryId;
-
-        return regeneratorRuntime.wrap(function _callee9$(_context9) {
-          while (1) {
-            switch (_context9.prev = _context9.next) {
-              case 0:
-                _ref8$metadataSubtree = _ref8.metadataSubtree, metadataSubtree = _ref8$metadataSubtree === void 0 ? "/" : _ref8$metadataSubtree, _ref8$metadata = _ref8.metadata, metadata = _ref8$metadata === void 0 ? {} : _ref8$metadata;
-                libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                _context9.next = 4;
-                return this.__TouchLibrary();
-
-              case 4:
-                _context9.next = 6;
-                return this.client.ReplacePublicLibraryMetadata({
-                  libraryId: libraryId,
-                  metadataSubtree: metadataSubtree,
-                  metadata: metadata
-                });
-
-              case 6:
-                return _context9.abrupt("return", _context9.sent);
-
-              case 7:
-              case "end":
-                return _context9.stop();
-            }
-          }
-        }, _callee9, this);
-      }));
-
-      function ReplacePublicUserMetadata(_x6) {
-        return _ReplacePublicUserMetadata.apply(this, arguments);
-      }
-
-      return ReplacePublicUserMetadata;
-    }()
-    /**
-     * Delete the specified subtree of the current user's public metadata
-     *
-     * @namedParams
-     * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
-     */
-
-  }, {
-    key: "DeletePublicUserMetadata",
-    value: function () {
-      var _DeletePublicUserMetadata = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee10(_ref9) {
-        var _ref9$metadataSubtree, metadataSubtree, libraryId;
-
+      regeneratorRuntime.mark(function _callee10(_ref7) {
+        var image, libraryId, objectId, editRequest, uploadResponse;
         return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
             switch (_context10.prev = _context10.next) {
               case 0:
-                _ref9$metadataSubtree = _ref9.metadataSubtree, metadataSubtree = _ref9$metadataSubtree === void 0 ? "/" : _ref9$metadataSubtree;
-                libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                _context10.next = 4;
-                return this.__TouchLibrary();
+                image = _ref7.image;
+                libraryId = this.client.contentSpaceLibraryId;
+                _context10.t0 = Utils;
+                _context10.next = 5;
+                return this.WalletAddress();
 
-              case 4:
-                _context10.next = 6;
-                return this.client.DeletePublicLibraryMetadata({
+              case 5:
+                _context10.t1 = _context10.sent;
+                objectId = _context10.t0.AddressToObjectId.call(_context10.t0, _context10.t1);
+                _context10.next = 9;
+                return this.client.EditContentObject({
                   libraryId: libraryId,
-                  metadataSubtree: metadataSubtree
+                  objectId: objectId
                 });
 
-              case 6:
-                return _context10.abrupt("return", _context10.sent);
+              case 9:
+                editRequest = _context10.sent;
+                _context10.next = 12;
+                return this.client.UploadPart({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token,
+                  data: image
+                });
 
-              case 7:
+              case 12:
+                uploadResponse = _context10.sent;
+                _context10.next = 15;
+                return this.client.ReplaceMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token,
+                  metadataSubtree: "image",
+                  metadata: uploadResponse.part.hash
+                });
+
+              case 15:
+                _context10.next = 17;
+                return this.client.FinalizeContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token
+                });
+
+              case 17:
+                this.__InvalidateCache();
+
+              case 18:
               case "end":
                 return _context10.stop();
             }
@@ -701,374 +803,11 @@ function () {
         }, _callee10, this);
       }));
 
-      function DeletePublicUserMetadata(_x7) {
-        return _DeletePublicUserMetadata.apply(this, arguments);
+      function SetUserProfileImage(_x5) {
+        return _SetUserProfileImage.apply(this, arguments);
       }
 
-      return DeletePublicUserMetadata;
-    }()
-    /**
-     * Access the current user's private metadata
-     *
-     * Note: Subject to user's access level
-     *
-     * @see <a href="#PromptsAndAccessLevels">Prompts and access levels</a>
-     *
-     * @namedParams
-     * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
-     * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
-     *
-     * @return {Promise<Object>} - The user's private profile metadata - returns undefined if no metadata set or subtree doesn't exist
-     */
-
-  }, {
-    key: "PrivateUserMetadata",
-    value: function () {
-      var _PrivateUserMetadata = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee11() {
-        var _ref10,
-            _ref10$metadataSubtre,
-            metadataSubtree,
-            _ref10$noCache,
-            noCache,
-            libraryId,
-            objectId,
-            metadata,
-            _args11 = arguments;
-
-        return regeneratorRuntime.wrap(function _callee11$(_context11) {
-          while (1) {
-            switch (_context11.prev = _context11.next) {
-              case 0:
-                _ref10 = _args11.length > 0 && _args11[0] !== undefined ? _args11[0] : {}, _ref10$metadataSubtre = _ref10.metadataSubtree, metadataSubtree = _ref10$metadataSubtre === void 0 ? "/" : _ref10$metadataSubtre, _ref10$noCache = _ref10.noCache, noCache = _ref10$noCache === void 0 ? false : _ref10$noCache;
-
-                if (!(!noCache && this.cachedPrivateMetadata)) {
-                  _context11.next = 3;
-                  break;
-                }
-
-                return _context11.abrupt("return", this.__GetCachedMetadata(metadataSubtree));
-
-              case 3:
-                libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                objectId = Utils.AddressToObjectId(this.client.signer.address);
-                _context11.next = 7;
-                return this.__TouchLibrary();
-
-              case 7:
-                if (!noCache) {
-                  _context11.next = 11;
-                  break;
-                }
-
-                _context11.next = 10;
-                return this.client.ContentObjectMetadata({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  metadataSubtree: metadataSubtree
-                });
-
-              case 10:
-                return _context11.abrupt("return", _context11.sent);
-
-              case 11:
-                _context11.next = 13;
-                return this.client.ContentObjectMetadata({
-                  libraryId: libraryId,
-                  objectId: objectId
-                });
-
-              case 13:
-                metadata = _context11.sent;
-
-                this.__CacheMetadata(metadata);
-
-                return _context11.abrupt("return", this.__GetCachedMetadata(metadataSubtree));
-
-              case 16:
-              case "end":
-                return _context11.stop();
-            }
-          }
-        }, _callee11, this);
-      }));
-
-      function PrivateUserMetadata() {
-        return _PrivateUserMetadata.apply(this, arguments);
-      }
-
-      return PrivateUserMetadata;
-    }()
-    /**
-     * Merge the current user's public library metadata
-     *
-     * @namedParams
-     * @param {Object} metadata - New metadata
-     * @param {string=} metadataSubtree - Subtree to merge into - modifies root metadata if not specified
-     */
-
-  }, {
-    key: "MergePrivateUserMetadata",
-    value: function () {
-      var _MergePrivateUserMetadata = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee12(_ref11) {
-        var _ref11$metadataSubtre, metadataSubtree, _ref11$metadata, metadata, libraryId, objectId, editRequest;
-
-        return regeneratorRuntime.wrap(function _callee12$(_context12) {
-          while (1) {
-            switch (_context12.prev = _context12.next) {
-              case 0:
-                _ref11$metadataSubtre = _ref11.metadataSubtree, metadataSubtree = _ref11$metadataSubtre === void 0 ? "/" : _ref11$metadataSubtre, _ref11$metadata = _ref11.metadata, metadata = _ref11$metadata === void 0 ? {} : _ref11$metadata;
-                libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                objectId = Utils.AddressToObjectId(this.client.signer.address);
-                _context12.next = 5;
-                return this.__TouchLibrary();
-
-              case 5:
-                _context12.next = 7;
-                return this.client.EditContentObject({
-                  libraryId: libraryId,
-                  objectId: objectId
-                });
-
-              case 7:
-                editRequest = _context12.sent;
-                _context12.next = 10;
-                return this.client.MergeMetadata({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  writeToken: editRequest.write_token,
-                  metadataSubtree: metadataSubtree,
-                  metadata: metadata
-                });
-
-              case 10:
-                _context12.next = 12;
-                return this.client.FinalizeContentObject({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  writeToken: editRequest.write_token
-                });
-
-              case 12:
-                this.__InvalidateCache();
-
-              case 13:
-              case "end":
-                return _context12.stop();
-            }
-          }
-        }, _callee12, this);
-      }));
-
-      function MergePrivateUserMetadata(_x8) {
-        return _MergePrivateUserMetadata.apply(this, arguments);
-      }
-
-      return MergePrivateUserMetadata;
-    }()
-    /**
-     * Replace the current user's public library metadata
-     *
-     * @namedParams
-     * @param {Object} metadata - New metadata
-     * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
-     */
-
-  }, {
-    key: "ReplacePrivateUserMetadata",
-    value: function () {
-      var _ReplacePrivateUserMetadata = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee13(_ref12) {
-        var _ref12$metadataSubtre, metadataSubtree, _ref12$metadata, metadata, libraryId, objectId, editRequest;
-
-        return regeneratorRuntime.wrap(function _callee13$(_context13) {
-          while (1) {
-            switch (_context13.prev = _context13.next) {
-              case 0:
-                _ref12$metadataSubtre = _ref12.metadataSubtree, metadataSubtree = _ref12$metadataSubtre === void 0 ? "/" : _ref12$metadataSubtre, _ref12$metadata = _ref12.metadata, metadata = _ref12$metadata === void 0 ? {} : _ref12$metadata;
-                libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                objectId = Utils.AddressToObjectId(this.client.signer.address);
-                _context13.next = 5;
-                return this.__TouchLibrary();
-
-              case 5:
-                _context13.next = 7;
-                return this.client.EditContentObject({
-                  libraryId: libraryId,
-                  objectId: objectId
-                });
-
-              case 7:
-                editRequest = _context13.sent;
-                _context13.next = 10;
-                return this.client.ReplaceMetadata({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  writeToken: editRequest.write_token,
-                  metadataSubtree: metadataSubtree,
-                  metadata: metadata
-                });
-
-              case 10:
-                _context13.next = 12;
-                return this.client.FinalizeContentObject({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  writeToken: editRequest.write_token
-                });
-
-              case 12:
-                this.__InvalidateCache();
-
-              case 13:
-              case "end":
-                return _context13.stop();
-            }
-          }
-        }, _callee13, this);
-      }));
-
-      function ReplacePrivateUserMetadata(_x9) {
-        return _ReplacePrivateUserMetadata.apply(this, arguments);
-      }
-
-      return ReplacePrivateUserMetadata;
-    }()
-    /**
-     * Delete the specified subtree from the users private metadata
-     *
-     * @namedParams
-     * @param {string=} metadataSubtree - Subtree to delete - deletes all metadata if not specified
-     */
-
-  }, {
-    key: "DeletePrivateUserMetadata",
-    value: function () {
-      var _DeletePrivateUserMetadata = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee14(_ref13) {
-        var _ref13$metadataSubtre, metadataSubtree, libraryId, objectId, editRequest;
-
-        return regeneratorRuntime.wrap(function _callee14$(_context14) {
-          while (1) {
-            switch (_context14.prev = _context14.next) {
-              case 0:
-                _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre;
-                libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                objectId = Utils.AddressToObjectId(this.client.signer.address);
-                _context14.next = 5;
-                return this.__TouchLibrary();
-
-              case 5:
-                _context14.next = 7;
-                return this.client.EditContentObject({
-                  libraryId: libraryId,
-                  objectId: objectId
-                });
-
-              case 7:
-                editRequest = _context14.sent;
-                _context14.next = 10;
-                return this.client.DeleteMetadata({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  writeToken: editRequest.write_token,
-                  metadataSubtree: metadataSubtree
-                });
-
-              case 10:
-                _context14.next = 12;
-                return this.client.FinalizeContentObject({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  writeToken: editRequest.write_token
-                });
-
-              case 12:
-                this.__InvalidateCache();
-
-              case 13:
-              case "end":
-                return _context14.stop();
-            }
-          }
-        }, _callee14, this);
-      }));
-
-      function DeletePrivateUserMetadata(_x10) {
-        return _DeletePrivateUserMetadata.apply(this, arguments);
-      }
-
-      return DeletePrivateUserMetadata;
-    }()
-    /**
-     * Delete the account library for the current user
-     */
-
-  }, {
-    key: "DeleteAccountLibrary",
-    value: function () {
-      var _DeleteAccountLibrary = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee15() {
-        var libraryId, path;
-        return regeneratorRuntime.wrap(function _callee15$(_context15) {
-          while (1) {
-            switch (_context15.prev = _context15.next) {
-              case 0:
-                _context15.next = 2;
-                return this.__IsLibraryCreated({
-                  accountAddress: this.client.signer.address
-                });
-
-              case 2:
-                if (_context15.sent) {
-                  _context15.next = 4;
-                  break;
-                }
-
-                return _context15.abrupt("return");
-
-              case 4:
-                libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                path = UrlJoin("qlibs", libraryId);
-                _context15.t0 = this.client.HttpClient;
-                _context15.next = 9;
-                return this.client.authClient.AuthorizationHeader({
-                  libraryId: libraryId
-                });
-
-              case 9:
-                _context15.t1 = _context15.sent;
-                _context15.t2 = path;
-                _context15.t3 = {
-                  headers: _context15.t1,
-                  method: "DELETE",
-                  path: _context15.t2
-                };
-                _context15.next = 14;
-                return _context15.t0.Request.call(_context15.t0, _context15.t3);
-
-              case 14:
-                this.libraryCreated = false;
-
-              case 15:
-              case "end":
-                return _context15.stop();
-            }
-          }
-        }, _callee15, this);
-      }));
-
-      function DeleteAccountLibrary() {
-        return _DeleteAccountLibrary.apply(this, arguments);
-      }
-
-      return DeleteAccountLibrary;
+      return SetUserProfileImage;
     }()
     /**
      * Get the accumulated tags for the current user
@@ -1085,35 +824,35 @@ function () {
     value: function () {
       var _CollectedTags = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee16() {
-        return regeneratorRuntime.wrap(function _callee16$(_context16) {
+      regeneratorRuntime.mark(function _callee11() {
+        return regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
-            switch (_context16.prev = _context16.next) {
+            switch (_context11.prev = _context11.next) {
               case 0:
-                _context16.next = 2;
-                return this.PrivateUserMetadata({
+                _context11.next = 2;
+                return this.UserMetadata({
                   metadataSubtree: "collected_data"
                 });
 
               case 2:
-                _context16.t0 = _context16.sent;
+                _context11.t0 = _context11.sent;
 
-                if (_context16.t0) {
-                  _context16.next = 5;
+                if (_context11.t0) {
+                  _context11.next = 5;
                   break;
                 }
 
-                _context16.t0 = {};
+                _context11.t0 = {};
 
               case 5:
-                return _context16.abrupt("return", _context16.t0);
+                return _context11.abrupt("return", _context11.t0);
 
               case 6:
               case "end":
-                return _context16.stop();
+                return _context11.stop();
             }
           }
-        }, _callee16, this);
+        }, _callee11, this);
       }));
 
       function CollectedTags() {
@@ -1128,37 +867,43 @@ function () {
     value: function () {
       var _RecordTags = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee17(_ref14) {
+      regeneratorRuntime.mark(function _callee12(_ref8) {
         var libraryId, objectId, versionHash;
-        return regeneratorRuntime.wrap(function _callee17$(_context17) {
+        return regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash;
-                return _context17.abrupt("return");
+                libraryId = _ref8.libraryId, objectId = _ref8.objectId, versionHash = _ref8.versionHash;
+                _context12.prev = 1;
+                _context12.next = 4;
+                return this.__RecordTags({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  versionHash: versionHash
+                });
 
-              case 5:
-                _context17.next = 10;
+              case 4:
+                _context12.next = 9;
                 break;
 
-              case 7:
-                _context17.prev = 7;
-                _context17.t0 = _context17["catch"](2);
+              case 6:
+                _context12.prev = 6;
+                _context12.t0 = _context12["catch"](1);
                 // eslint-disable-next-line no-console
-                console.error(_context17.t0);
+                console.error(_context12.t0);
 
-              case 10:
+              case 9:
                 this.__InvalidateCache();
 
-              case 11:
+              case 10:
               case "end":
-                return _context17.stop();
+                return _context12.stop();
             }
           }
-        }, _callee17, this, [[2, 7]]);
+        }, _callee12, this, [[1, 6]]);
       }));
 
-      function RecordTags(_x11) {
+      function RecordTags(_x6) {
         return _RecordTags.apply(this, arguments);
       }
 
@@ -1169,60 +914,62 @@ function () {
     value: function () {
       var _RecordTags2 = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee18(_ref15) {
+      regeneratorRuntime.mark(function _callee13(_ref9) {
         var libraryId, objectId, versionHash, seen, userLibraryId, userObjectId, editRequest, contentTags, userTags, formattedTags;
-        return regeneratorRuntime.wrap(function _callee18$(_context18) {
+        return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context18.prev = _context18.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
-                libraryId = _ref15.libraryId, objectId = _ref15.objectId, versionHash = _ref15.versionHash;
-                _context18.next = 3;
-                return this.__TouchLibrary();
+                libraryId = _ref9.libraryId, objectId = _ref9.objectId, versionHash = _ref9.versionHash;
 
-              case 3:
                 if (versionHash) {
-                  _context18.next = 7;
+                  _context13.next = 5;
                   break;
                 }
 
-                _context18.next = 6;
+                _context13.next = 4;
                 return this.client.ContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 6:
-                versionHash = _context18.sent.hash;
+              case 4:
+                versionHash = _context13.sent.hash;
 
-              case 7:
-                _context18.next = 9;
-                return this.PrivateUserMetadata({
+              case 5:
+                _context13.next = 7;
+                return this.UserMetadata({
                   metadataSubtree: UrlJoin("accessed_content", versionHash)
                 });
 
-              case 9:
-                seen = _context18.sent;
+              case 7:
+                seen = _context13.sent;
 
                 if (!seen) {
-                  _context18.next = 12;
+                  _context13.next = 10;
                   break;
                 }
 
-                return _context18.abrupt("return");
+                return _context13.abrupt("return");
 
-              case 12:
-                userLibraryId = Utils.AddressToLibraryId(this.client.signer.address);
-                userObjectId = Utils.AddressToObjectId(this.client.signer.address); // Mark content as seen
+              case 10:
+                userLibraryId = this.client.contentSpaceLibraryId;
+                _context13.t0 = Utils;
+                _context13.next = 14;
+                return this.WalletAddress();
 
-                _context18.next = 16;
+              case 14:
+                _context13.t1 = _context13.sent;
+                userObjectId = _context13.t0.AddressToObjectId.call(_context13.t0, _context13.t1);
+                _context13.next = 18;
                 return this.client.EditContentObject({
                   libraryId: userLibraryId,
                   objectId: userObjectId
                 });
 
-              case 16:
-                editRequest = _context18.sent;
-                _context18.next = 19;
+              case 18:
+                editRequest = _context13.sent;
+                _context13.next = 21;
                 return this.client.ReplaceMetadata({
                   libraryId: userLibraryId,
                   objectId: userObjectId,
@@ -1231,8 +978,8 @@ function () {
                   metadata: Date.now()
                 });
 
-              case 19:
-                _context18.next = 21;
+              case 21:
+                _context13.next = 23;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -1241,19 +988,19 @@ function () {
                   noAuth: true
                 });
 
-              case 21:
-                contentTags = _context18.sent;
+              case 23:
+                contentTags = _context13.sent;
 
                 if (!(contentTags && contentTags.length > 0)) {
-                  _context18.next = 30;
+                  _context13.next = 32;
                   break;
                 }
 
-                _context18.next = 25;
+                _context13.next = 27;
                 return this.CollectedTags();
 
-              case 25:
-                userTags = _context18.sent;
+              case 27:
+                userTags = _context13.sent;
                 formattedTags = this.__FormatVideoTags(contentTags);
                 Object.keys(formattedTags).forEach(function (tag) {
                   if (userTags[tag]) {
@@ -1269,7 +1016,7 @@ function () {
                   }
                 }); // Update user tags
 
-                _context18.next = 30;
+                _context13.next = 32;
                 return this.client.ReplaceMetadata({
                   libraryId: userLibraryId,
                   objectId: userObjectId,
@@ -1278,23 +1025,23 @@ function () {
                   metadata: userTags
                 });
 
-              case 30:
-                _context18.next = 32;
+              case 32:
+                _context13.next = 34;
                 return this.client.FinalizeContentObject({
                   libraryId: userLibraryId,
                   objectId: userObjectId,
                   writeToken: editRequest.write_token
                 });
 
-              case 32:
+              case 34:
               case "end":
-                return _context18.stop();
+                return _context13.stop();
             }
           }
-        }, _callee18, this);
+        }, _callee13, this);
       }));
 
-      function __RecordTags(_x12) {
+      function __RecordTags(_x7) {
         return _RecordTags2.apply(this, arguments);
       }
 
@@ -1354,13 +1101,13 @@ function () {
   }, {
     key: "PromptedMethods",
     value: function PromptedMethods() {
-      return ["CollectedTags", "PublicUserMetadata", "PrivateUserMetadata"];
+      return ["CollectedTags", "UserMetadata"];
     } // Whitelist of methods allowed to be called using the frame API
 
   }, {
     key: "FrameAllowedMethods",
     value: function FrameAllowedMethods() {
-      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "PromptedMethods", "__CacheMetadata", "__GetCachedMetadata", "__InvalidateCache", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
+      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "PromptedMethods", "SetAccessLevel", "__CacheMetadata", "__GetCachedMetadata", "__InvalidateCache", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return !forbiddenMethods.includes(method);
       });

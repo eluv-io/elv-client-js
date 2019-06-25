@@ -37,10 +37,9 @@ const CreateClient = async (bux="2") => {
       metadataSubtree: "contentSpaceGroupAddress"
     });
 
+    const mnemonic = wallet.GenerateMnemonic();
     // Create a new account and send some ether
-    const signer = wallet.AddAccountFromMnemonic({
-      mnemonic: wallet.GenerateMnemonic()
-    });
+    const signer = wallet.AddAccountFromMnemonic({mnemonic});
 
     // Each test file is run in parallel, so there may be collisions when initializing - retry until success
     for(let i = 0; i < 5; i++) {
@@ -51,7 +50,7 @@ const CreateClient = async (bux="2") => {
         });
 
         break;
-      } catch (e) {
+      } catch(e) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -68,7 +67,7 @@ const CreateClient = async (bux="2") => {
     });
 
     return client;
-  } catch (error) {
+  } catch(error) {
     console.error("ERROR INITIALIZING TEST CLIENT: ");
     console.error(error);
   }

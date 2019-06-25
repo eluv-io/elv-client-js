@@ -35,7 +35,7 @@ class EthClient {
   async MakeProviderCall({methodName, args=[], attempts=0}) {
     try {
       return await this.Provider()[methodName](...args);
-    } catch (error) {
+    } catch(error) {
       // eslint-disable-next-line no-console
       console.error(error);
 
@@ -168,7 +168,7 @@ class EthClient {
         try {
           result = await contract.functions[methodName](...methodArgs, overrides);
           success = true;
-        } catch (error) {
+        } catch(error) {
           if(error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
             const latestBlock = await this.MakeProviderCall({methodName: "getBlock", args: ["latest"]});
             overrides.gasLimit = latestBlock.gasLimit;

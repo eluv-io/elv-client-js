@@ -235,7 +235,7 @@ class VideoService {
         body: goPostBody
       })
       );
-    } catch (error) {
+    } catch(error) {
       e = error;
       e.message = e.message + " " + JSON.stringify(e.response.data);
       throw e;

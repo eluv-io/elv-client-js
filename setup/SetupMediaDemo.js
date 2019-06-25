@@ -420,7 +420,7 @@ const SetupMediaDemo = async () => {
     await MakeCommercialOffering(emp, "Ad Sponsored - Dedicated", "dedicated",
       demo.campaign_managers.dedicated, true); // Mandatory ads
 
-  } catch (e) {
+  } catch(e) {
     console.log(e);
     console.trace();
   }

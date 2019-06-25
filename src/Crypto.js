@@ -27,7 +27,7 @@ const Crypto = {
       }
 
       return Crypto.elvCrypto;
-    } catch (error) {
+    } catch(error) {
       // eslint-disable-next-line no-console
       console.error("Error initializing ElvCrypto:");
       // eslint-disable-next-line no-console

@@ -28,6 +28,20 @@ const KickReplacementFee = async (signer, gasPrice) => {
   }
 };
 
+const AddToSpaceGroup = async (client, address) => {
+  const groupAddress = await client.ContentObjectMetadata({
+    libraryId: client.contentSpaceLibraryId,
+    objectId: client.contentSpaceObjectId,
+    metadataSubtree: "contentSpaceGroupAddress"
+  });
+
+  // Add new account to content space group
+  await client.AddAccessGroupManager({
+    contractAddress: groupAddress,
+    memberAddress: address
+  });
+};
+
 const Create = async (client) => {
   const libraryId = await client.CreateContentLibrary({name: "Test"});
 
@@ -68,8 +82,9 @@ const Update = async (client, libraryId, objectId, todo) => {
 
 const Test = async () => {
   try {
-    /*
-    const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io"});
+
+/*
+    const client = await ElvClient.FromConfigurationUrl({configUrl: "https://main.net955304.contentfabric.io"});
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
@@ -80,40 +95,55 @@ const Test = async () => {
 
 
 
-    const versionHash = "hq__9RA3BAcDQ8qcf77r3dLLtJjgomSbqEFven6AfrDutWzABPQwJAJpLEULXCgjCSA2FRrnCq5LXe";
-    console.log(await client.ContentObject({
+    const versionHash = "hq__BKwnLS9nz71CMDo6gs3kedBv2VQC1kyRwnPtYpNxs7ADXLoG9Je9sTLrcAyhXC1VL7juXo5vji";
 
-      versionHash
-    }));
-
-    console.log(await client.BitmovinPlayoutOptions({
+    console.log(JSON.stringify(await client.BitmovinPlayoutOptions({
       versionHash,
       drms: ["widevine", "aes-128"]
-    }));
+    }), null, 2));
 
-*/
-
+    */
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
     });
+
 
     //const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
-      //privateKey: "0x09e180efeacdd2bdae9292bb5cb85cf9668217eed44447008604ecb7f26c1ab1"
+      //privateKey: "0x263a8e6a79fcc707eee7f7c508ab42dc32127b1a1680713988372d443e74de18"
     });
+
+
     await client.SetSigner({signer});
 
+    console.log(await client.ContentTypes());
+    return;
 
+    const libraryId = "ilib26ctLhD7P4Dg18FjUD3etxbCFPSA";
+    const objectId = "iq__46hH3ZhLUvYGzmd6xTdPAkh4QbgF";
+    const versionHash = "hq__3cXW2L32JxtcNt11xLMPvuK6r4mWKxJCBgtiaErpwtmbyxN5WgdYGn6YnepbA63kaH2KFv61uM";
+
+    console.log(client.utils.DecodeVersionHash(versionHash).partHash);
+    console.log(COV._Hash(client.utils.DecodeVersionHash(versionHash).partHash.replace("hqp_", "")));
+
+/*
+    console.log(await client.VerifyContentObject({
+      libraryId,
+      objectId,
+      versionHash
+    }));
+
+
+/*
     //http://localhost:8008/qlibs/ilib1mGTeSAJ8WzJDgyuxRKKUYTwA4K/q/iq__3N7wV3bFbwXrENqbE9Bk1gVLpBXC/data/hqp_DPzN7Vjct4kf3ydeU6HegaXXxgQbGYKX7dVkjh3DzhfLFXPEB?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMmFxZjV6cnN0bzcyS3RSYmd2WDkyV3NzY29YUCIsImFkZHIiOiI1MDY2Q0VhOWJiNDY0YTcwZDdEZDFENTI3OUNCMUQ4M2Q4Y2FlYTNFIiwidHhfaWQiOiI1YTI1MTg3YmE2NWFjMjRkYjdlZTJmNWMwYjA0ZTBlNTJmOGIzMmViZjJhOGY1ZWI3MGRkZTM1ZWE1NzEwODkxIiwicWxpYl9pZCI6ImlsaWIxbUdUZVNBSjhXekpEZ3l1eFJLS1VZVHdBNEsifQ%3D%3D.RVMyNTZLX0RFYm90alpydGlqQ3JqVUJBQW83UGJzdUJpbXp1UEZ3dGtZZlpKVVZGM2szcU5aYWRIY0FjVWU2WmZzS2lYd2toejZ3TGZ0NFpKYTFNNFpVd1pxYkd2TFRN
 
     const libraryId = "ilib1mGTeSAJ8WzJDgyuxRKKUYTwA4K";
     const objectId = "iq__1mGTeSAJ8WzJDgyuxRKKUYTwA4K";
     console.log(await client.FabricUrl({libraryId, objectId}));
 
-/*
     const libraryId = "ilib3LDeDsNEeSnLJF3Ky8nxZkFiBNHu";
     const objectId = "iq__2jp6AedVJULoLboZp6HVb7HmKUFE";
     const partHash = "hqpe63e1MckwkkotZs41WXzA2tmYC3PDktgMoPAtwEM2fxmF2Gq";
