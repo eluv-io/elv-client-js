@@ -119,15 +119,11 @@ const Test = async () => {
 
     await client.SetSigner({signer});
 
-    console.log(await client.ContentTypes());
-    return;
 
-    const libraryId = "ilib26ctLhD7P4Dg18FjUD3etxbCFPSA";
-    const objectId = "iq__46hH3ZhLUvYGzmd6xTdPAkh4QbgF";
-    const versionHash = "hq__3cXW2L32JxtcNt11xLMPvuK6r4mWKxJCBgtiaErpwtmbyxN5WgdYGn6YnepbA63kaH2KFv61uM";
-
-    console.log(client.utils.DecodeVersionHash(versionHash).partHash);
-    console.log(COV._Hash(client.utils.DecodeVersionHash(versionHash).partHash.replace("hqp_", "")));
+    console.log(await client.ContentObjectMetadata({
+      libraryId: "ilib2WvTEWBtrcPv8emX643nc3xFXBaN",
+      objectId: "iq__4DY57vQT3AAViCSxytgmybv7BmzX"
+    }));
 
 /*
     console.log(await client.VerifyContentObject({

@@ -14,6 +14,9 @@ var Utils = require("./Utils");
 
 var UrlJoin = require("url-join");
 
+var _require = require("./FrameClient"),
+    FrameClient = _require.FrameClient;
+
 var SpaceContract = require("./contracts/BaseContentSpace");
 
 var UserProfileClient =
@@ -65,8 +68,6 @@ function () {
     _classCallCheck(this, UserProfileClient);
 
     this.client = client;
-    this.libraryCreated = false;
-    this.cachedPrivateMetadata = undefined;
   }
   /**
    * Get the contract address of the current user's BaseAccessWallet contract
@@ -81,13 +82,13 @@ function () {
       var _WalletAddress = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee() {
-        var walletCreationEvent;
+        var balance, walletCreationEvent;
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
                 if (this.walletAddress) {
-                  _context.next = 9;
+                  _context.next = 14;
                   break;
                 }
 
@@ -103,11 +104,27 @@ function () {
                 this.walletAddress = _context.sent;
 
                 if (!(!this.walletAddress || this.walletAddress === Utils.nullAddress)) {
-                  _context.next = 9;
+                  _context.next = 14;
                   break;
                 }
 
                 _context.next = 7;
+                return this.client.GetBalance({
+                  address: this.client.signer.address
+                });
+
+              case 7:
+                balance = _context.sent;
+
+                if (!(balance < 0.1)) {
+                  _context.next = 10;
+                  break;
+                }
+
+                return _context.abrupt("return", undefined);
+
+              case 10:
+                _context.next = 12;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                   abi: SpaceContract.abi,
@@ -115,7 +132,7 @@ function () {
                   methodArgs: []
                 });
 
-              case 7:
+              case 12:
                 walletCreationEvent = _context.sent;
                 this.walletAddress = this.client.ExtractValueFromEvent({
                   abi: SpaceContract.abi,
@@ -124,10 +141,10 @@ function () {
                   eventValue: "wallet"
                 });
 
-              case 9:
+              case 14:
                 return _context.abrupt("return", this.walletAddress);
 
-              case 10:
+              case 15:
               case "end":
                 return _context.stop();
             }
@@ -157,29 +174,38 @@ function () {
 
               case 2:
                 walletAddress = _context2.sent;
+
+                if (walletAddress) {
+                  _context2.next = 5;
+                  break;
+                }
+
+                return _context2.abrupt("return");
+
+              case 5:
                 libraryId = this.client.contentSpaceLibraryId;
                 objectId = Utils.AddressToObjectId(walletAddress);
-                _context2.prev = 5;
-                _context2.next = 8;
+                _context2.prev = 7;
+                _context2.next = 10;
                 return this.client.ContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 8:
-                _context2.next = 18;
+              case 10:
+                _context2.next = 20;
                 break;
 
-              case 10:
-                _context2.prev = 10;
-                _context2.t0 = _context2["catch"](5);
+              case 12:
+                _context2.prev = 12;
+                _context2.t0 = _context2["catch"](7);
 
                 if (!(_context2.t0.status === 404)) {
-                  _context2.next = 18;
+                  _context2.next = 20;
                   break;
                 }
 
-                _context2.next = 15;
+                _context2.next = 17;
                 return this.client.CreateContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -188,21 +214,21 @@ function () {
                   }
                 });
 
-              case 15:
+              case 17:
                 createResponse = _context2.sent;
-                _context2.next = 18;
+                _context2.next = 20;
                 return this.client.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: createResponse.write_token
                 });
 
-              case 18:
+              case 20:
               case "end":
                 return _context2.stop();
             }
           }
-        }, _callee2, this, [[5, 10]]);
+        }, _callee2, this, [[7, 12]]);
       }));
 
       function Initialize() {
@@ -710,7 +736,8 @@ function () {
                   rep: "image",
                   queryParams: {
                     hash: imageHash
-                  }
+                  },
+                  noAuth: true
                 });
 
               case 13:
@@ -1101,13 +1128,13 @@ function () {
   }, {
     key: "PromptedMethods",
     value: function PromptedMethods() {
-      return ["CollectedTags", "UserMetadata"];
+      return FrameClient.PromptedMethods();
     } // Whitelist of methods allowed to be called using the frame API
 
   }, {
     key: "FrameAllowedMethods",
     value: function FrameAllowedMethods() {
-      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "PromptedMethods", "SetAccessLevel", "__CacheMetadata", "__GetCachedMetadata", "__InvalidateCache", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
+      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "PromptedMethods", "RecordTags", "SetAccessLevel", "SetUserProfileImage", "__CacheMetadata", "__GetCachedMetadata", "__InvalidateCache", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return !forbiddenMethods.includes(method);
       });

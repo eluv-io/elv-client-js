@@ -1,5 +1,6 @@
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
+const { FrameClient } = require("./FrameClient");
 
 const SpaceContract = require("./contracts/BaseContentSpace");
 
@@ -49,9 +50,6 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
    */
   constructor({client}) {
     this.client = client;
-
-    this.libraryCreated = false;
-    this.cachedPrivateMetadata = undefined;
   }
 
   /**
@@ -71,6 +69,13 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
 
       // No wallet contract for the current user - create one
       if(!this.walletAddress || this.walletAddress === Utils.nullAddress) {
+        const balance = await this.client.GetBalance({address: this.client.signer.address});
+
+        // Don't attempt to create a user wallet if user has no funds
+        if(balance < 0.1) {
+          return undefined;
+        }
+
         const walletCreationEvent = await this.client.CallContractMethodAndWait({
           contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
           abi: SpaceContract.abi,
@@ -92,6 +97,9 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
 
   async Initialize() {
     const walletAddress = await this.WalletAddress();
+
+    if(!walletAddress) { return; }
+
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(walletAddress);
 
@@ -283,7 +291,8 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
       libraryId,
       objectId,
       rep: "image",
-      queryParams: {hash: imageHash}
+      queryParams: {hash: imageHash},
+      noAuth: true
     });
   }
 
@@ -460,10 +469,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
 
   // List of methods that may require a prompt - these should have an unlimited timeout period
   PromptedMethods() {
-    return [
-      "CollectedTags",
-      "UserMetadata"
-    ];
+    return FrameClient.PromptedMethods();
   }
 
   // Whitelist of methods allowed to be called using the frame API
@@ -472,7 +478,9 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
       "constructor",
       "FrameAllowedMethods",
       "PromptedMethods",
+      "RecordTags",
       "SetAccessLevel",
+      "SetUserProfileImage",
       "__CacheMetadata",
       "__GetCachedMetadata",
       "__InvalidateCache",

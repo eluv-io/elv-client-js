@@ -39,10 +39,6 @@ describe("Test ElvClient", () => {
     client = OutputLogger(ElvClient, await CreateClient());
     accessClient = OutputLogger(ElvClient, await CreateClient("1"));
 
-    libraryId = "ilib2t71GCq5VNaAkg9ZAkmy1EJJss3";
-    objectId = "iq__4XyAFvdwaTWxa4rkKhvgDXvUhRzB";
-    versionHash = "hq__QmNjMeY9B9M6T7sHBcdnryMeyHC5BkztC3aATHkSnbfj79";
-
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
     testFile3 = fs.readFileSync("./test/images/test-image1.png");

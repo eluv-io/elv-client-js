@@ -58,7 +58,6 @@ class AuthorizationClient {
     noCache=false,
     noAuth=false
   }) {
-    update=true;
     const authorizationToken = await this.AuthorizationToken({
       libraryId,
       objectId,
@@ -288,13 +287,13 @@ class AuthorizationClient {
           // Inject public key of requester
           args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
         } else {
-          //const cap = await this.ReencryptionKey(objectId);
+          const cap = await this.ReencryptionKey(objectId);
 
           // Set default args
           args = [
             0, // Access level
             this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-            "", //cap.public_key,
+            cap.public_key,
             [], // Custom values
             [] // Stakeholders
           ];
@@ -334,11 +333,12 @@ class AuthorizationClient {
       });
     }
 
-    const owner = await this.Owner({id, abi});
-    const isOwner = Utils.EqualAddress(owner, this.client.signer.address);
     // After making an access request, record the tags in the user's profile, if appropriate
-    if(accessType === ACCESS_TYPES.OBJECT && !isOwner) {
-      await this.client.userProfileClient.RecordTags({libraryId, objectId, versionHash});
+    if(accessType === ACCESS_TYPES.OBJECT) {
+      const owner = await this.Owner({id, abi});
+      if(!Utils.EqualAddress(owner, this.client.signer.address)) {
+        await this.client.userProfileClient.RecordTags({libraryId, objectId, versionHash});
+      }
     }
 
     return accessRequest;
@@ -415,15 +415,18 @@ class AuthorizationClient {
   }
 
   async AccessRequest({id, abi, args=[], checkAccessCharge=false}) {
-    const owner = await this.Owner({id, abi});
-
     // Send some bux if access charge is required
     let accessCharge = 0;
-    if(checkAccessCharge && Utils.EqualAddress(owner, this.client.signer.address)) {
-      // Extract level, custom values and stakeholders from accessRequest arguments
-      const accessChargeArgs = [args[0], args[3], args[4]];
-      // Access charge is in wei, but methods take ether - convert to charge to ether
-      accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
+    const accessType = await this.AccessType(id);
+    if(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT) {
+      const owner = await this.Owner({id, abi});
+      // Owner doesn't have to pay
+      if(!Utils.EqualAddress(this.client.signer.address, owner)) {
+        // Extract level, custom values and stakeholders from accessRequest arguments
+        const accessChargeArgs = [args[0], args[3], args[4]];
+        // Access charge is in wei, but methods take ether - convert to charge to ether
+        accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
+      }
     }
 
     // If access request did not succeed, no event will be emitted
