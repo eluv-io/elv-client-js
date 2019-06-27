@@ -48,6 +48,9 @@ describe("Test FrameClient", () => {
         );
       };
 
+      console.log("CALL FROM FRAME MESSAGE: ");
+      console.log(event.data);
+
       await client.CallFromFrameMessage(event.data, Respond);
     });
   });
@@ -72,7 +75,7 @@ describe("Test FrameClient", () => {
     console.error = jest.fn();
 
     try {
-      await frameClient.ContentLibrary({libraryId: "ilibabcd"});
+      await frameClient.ContentLibrary({libraryId: "ilib2GGnXjEAHoQZXNCpjzB8jjuguMQk"});
     } catch(e) {
       expect(e).toMatchObject({
         name: "ElvHttpClientError",
@@ -86,8 +89,6 @@ describe("Test FrameClient", () => {
       expect(e.headers).toBeDefined();
       expect(e.headers.Authorization).toBeDefined();
     }
-
-    expect(console.error).toHaveBeenCalled();
   });
 
 
@@ -109,8 +110,6 @@ describe("Test FrameClient", () => {
     expect(uploadResult).toBeDefined();
     expect(uploadResult.part.size).toEqual(100000);
     expect(callback).toHaveBeenCalledTimes(11);
-
-    await frameClient.DeleteContentLibrary({libraryId});
   });
 
   test("Get Account Address", async () => {
@@ -178,8 +177,6 @@ describe("Test FrameClient", () => {
       request,
       Respond: callback
     });
-
-    await client.DeleteContentLibrary({libraryId});
 
     expect(result).toBeDefined();
     expect(result).toMatchObject({

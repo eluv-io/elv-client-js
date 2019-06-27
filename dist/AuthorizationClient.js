@@ -483,34 +483,26 @@ function () {
       var _GenerateAuthorizationToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee9(_ref8) {
-        var libraryId, objectId, versionHash, partHash, _ref8$update, update, _ref8$noAuth, noAuth, transactionHash, accessTransaction, token, signature, multiSig;
+        var libraryId, objectId, versionHash, partHash, _ref8$update, update, _ref8$noAuth, noAuth, _ref9, transactionHash, token, signature, multiSig;
 
         return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
                 libraryId = _ref8.libraryId, objectId = _ref8.objectId, versionHash = _ref8.versionHash, partHash = _ref8.partHash, _ref8$update = _ref8.update, update = _ref8$update === void 0 ? false : _ref8$update, _ref8$noAuth = _ref8.noAuth, noAuth = _ref8$noAuth === void 0 ? false : _ref8$noAuth;
-
-                if (!(!this.noAuth && !noAuth)) {
-                  _context9.next = 6;
-                  break;
-                }
-
-                _context9.next = 4;
+                _context9.next = 3;
                 return this.MakeAccessRequest({
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash,
                   update: update,
                   noCache: this.noCache,
-                  noAuth: noAuth
+                  noAuth: this.noAuth || noAuth
                 });
 
-              case 4:
-                accessTransaction = _context9.sent;
-                transactionHash = accessTransaction.transactionHash;
-
-              case 6:
+              case 3:
+                _ref9 = _context9.sent;
+                transactionHash = _ref9.transactionHash;
                 token = {
                   qspace_id: this.contentSpaceId,
                   addr: (this.client.signer && this.client.signer.address || "").replace("0x", ""),
@@ -526,15 +518,15 @@ function () {
                 }
 
                 token = Utils.B64(JSON.stringify(token));
-                _context9.next = 12;
+                _context9.next = 11;
                 return this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token)));
 
-              case 12:
+              case 11:
                 signature = _context9.sent;
                 multiSig = Utils.FormatSignature(signature);
                 return _context9.abrupt("return", "".concat(token, ".").concat(Utils.B64(multiSig)));
 
-              case 15:
+              case 14:
               case "end":
                 return _context9.stop();
             }
@@ -554,18 +546,18 @@ function () {
     value: function () {
       var _MakeAccessRequest = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee10(_ref9) {
+      regeneratorRuntime.mark(function _callee10(_ref10) {
         var _this = this;
 
-        var libraryId, objectId, versionHash, _ref9$args, args, _ref9$update, update, _ref9$skipCache, skipCache, _ref9$noCache, noCache, cacheOnly, id, accessType, cacheCollection, abi, cache, checkAccessCharge, cap, accessRequest, owner;
+        var libraryId, objectId, versionHash, _ref10$args, args, _ref10$update, update, _ref10$skipCache, skipCache, _ref10$noCache, noCache, _ref10$noAuth, noAuth, cacheOnly, id, accessType, cacheCollection, abi, cache, checkAccessCharge, cap, accessRequest;
 
         return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
             switch (_context10.prev = _context10.next) {
               case 0:
-                libraryId = _ref9.libraryId, objectId = _ref9.objectId, versionHash = _ref9.versionHash, _ref9$args = _ref9.args, args = _ref9$args === void 0 ? [] : _ref9$args, _ref9$update = _ref9.update, update = _ref9$update === void 0 ? false : _ref9$update, _ref9$skipCache = _ref9.skipCache, skipCache = _ref9$skipCache === void 0 ? false : _ref9$skipCache, _ref9$noCache = _ref9.noCache, noCache = _ref9$noCache === void 0 ? false : _ref9$noCache, cacheOnly = _ref9.cacheOnly;
+                libraryId = _ref10.libraryId, objectId = _ref10.objectId, versionHash = _ref10.versionHash, _ref10$args = _ref10.args, args = _ref10$args === void 0 ? [] : _ref10$args, _ref10$update = _ref10.update, update = _ref10$update === void 0 ? false : _ref10$update, _ref10$skipCache = _ref10.skipCache, skipCache = _ref10$skipCache === void 0 ? false : _ref10$skipCache, _ref10$noCache = _ref10.noCache, noCache = _ref10$noCache === void 0 ? false : _ref10$noCache, _ref10$noAuth = _ref10.noAuth, noAuth = _ref10$noAuth === void 0 ? false : _ref10$noAuth, cacheOnly = _ref10.cacheOnly;
 
-                if (this.client.signer) {
+                if (!(noAuth || !this.client.signer)) {
                   _context10.next = 3;
                   break;
                 }
@@ -665,24 +657,28 @@ function () {
                 return _context10.abrupt("return");
 
               case 41:
+                accessRequest = {
+                  transactionHash: ""
+                }; // Make the request
+
                 if (!update) {
-                  _context10.next = 47;
+                  _context10.next = 48;
                   break;
                 }
 
-                _context10.next = 44;
+                _context10.next = 45;
                 return this.UpdateRequest({
                   id: id,
                   abi: abi
                 });
 
-              case 44:
+              case 45:
                 accessRequest = _context10.sent;
-                _context10.next = 50;
+                _context10.next = 51;
                 break;
 
-              case 47:
-                _context10.next = 49;
+              case 48:
+                _context10.next = 50;
                 return this.AccessRequest({
                   id: id,
                   abi: abi,
@@ -690,10 +686,10 @@ function () {
                   checkAccessCharge: checkAccessCharge
                 });
 
-              case 49:
+              case 50:
                 accessRequest = _context10.sent;
 
-              case 50:
+              case 51:
                 // Cache the transaction hash
                 if (!noCache) {
                   cache[id] = accessRequest.transactionHash; // Save request ID if present
@@ -704,39 +700,20 @@ function () {
                       return true;
                     }
                   });
-                } // After making an access request, record the tags in the user's profile, if appropriate
-
-
-                if (!(accessType === ACCESS_TYPES.OBJECT)) {
-                  _context10.next = 58;
-                  break;
                 }
 
                 _context10.next = 54;
-                return this.Owner({
-                  id: id,
-                  abi: abi
-                });
-
-              case 54:
-                owner = _context10.sent;
-
-                if (Utils.EqualAddress(owner, this.client.signer.address)) {
-                  _context10.next = 58;
-                  break;
-                }
-
-                _context10.next = 58;
-                return this.client.userProfileClient.RecordTags({
+                return this.RecordTags({
+                  accessType: accessType,
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash
                 });
 
-              case 58:
+              case 54:
                 return _context10.abrupt("return", accessRequest);
 
-              case 59:
+              case 55:
               case "end":
                 return _context10.stop();
             }
@@ -751,17 +728,73 @@ function () {
       return MakeAccessRequest;
     }()
   }, {
+    key: "RecordTags",
+    value: function () {
+      var _RecordTags = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee11(_ref11) {
+        var accessType, libraryId, objectId, versionHash, owner;
+        return regeneratorRuntime.wrap(function _callee11$(_context11) {
+          while (1) {
+            switch (_context11.prev = _context11.next) {
+              case 0:
+                accessType = _ref11.accessType, libraryId = _ref11.libraryId, objectId = _ref11.objectId, versionHash = _ref11.versionHash;
+
+                if (!(accessType !== ACCESS_TYPES.OBJECT)) {
+                  _context11.next = 3;
+                  break;
+                }
+
+                return _context11.abrupt("return");
+
+              case 3:
+                _context11.next = 5;
+                return this.Owner({
+                  id: objectId,
+                  abi: ContentContract.abi
+                });
+
+              case 5:
+                owner = _context11.sent;
+
+                if (Utils.EqualAddress(owner, this.client.signer.address)) {
+                  _context11.next = 9;
+                  break;
+                }
+
+                _context11.next = 9;
+                return this.client.userProfileClient.RecordTags({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  versionHash: versionHash
+                });
+
+              case 9:
+              case "end":
+                return _context11.stop();
+            }
+          }
+        }, _callee11, this);
+      }));
+
+      function RecordTags(_x11) {
+        return _RecordTags.apply(this, arguments);
+      }
+
+      return RecordTags;
+    }()
+  }, {
     key: "CacheLibraryTransaction",
-    value: function CacheLibraryTransaction(_ref10) {
-      var libraryId = _ref10.libraryId,
-          transactionHash = _ref10.transactionHash;
+    value: function CacheLibraryTransaction(_ref12) {
+      var libraryId = _ref12.libraryId,
+          transactionHash = _ref12.transactionHash;
       this.modifyTransactions.libraries[libraryId] = transactionHash;
     }
   }, {
     key: "CacheObjectTransaction",
-    value: function CacheObjectTransaction(_ref11) {
-      var objectId = _ref11.objectId,
-          transactionHash = _ref11.transactionHash;
+    value: function CacheObjectTransaction(_ref13) {
+      var objectId = _ref13.objectId,
+          transactionHash = _ref13.transactionHash;
       this.modifyTransactions.objects[objectId] = transactionHash;
     }
     /* Access */
@@ -771,15 +804,15 @@ function () {
     value: function () {
       var _AccessType = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee11(id) {
+      regeneratorRuntime.mark(function _callee12(id) {
         var version;
-        return regeneratorRuntime.wrap(function _callee11$(_context11) {
+        return regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
-            switch (_context11.prev = _context11.next) {
+            switch (_context12.prev = _context12.next) {
               case 0:
-                _context11.prev = 0;
-                _context11.t0 = Ethers.utils;
-                _context11.next = 4;
+                _context12.prev = 0;
+                _context12.t0 = Ethers.utils;
+                _context12.next = 4;
                 return this.client.CallContractMethod({
                   contractAddress: Utils.HashToAddress(id),
                   abi: OwnableContract.abi,
@@ -787,61 +820,61 @@ function () {
                 });
 
               case 4:
-                _context11.t1 = _context11.sent;
-                version = _context11.t0.parseBytes32String.call(_context11.t0, _context11.t1);
+                _context12.t1 = _context12.sent;
+                version = _context12.t0.parseBytes32String.call(_context12.t0, _context12.t1);
 
                 if (!version.match(/BaseContentSpace\d+.*/)) {
-                  _context11.next = 10;
+                  _context12.next = 10;
                   break;
                 }
 
-                return _context11.abrupt("return", ACCESS_TYPES.SPACE);
+                return _context12.abrupt("return", ACCESS_TYPES.SPACE);
 
               case 10:
                 if (!version.match(/BaseLibrary\d+.*/)) {
-                  _context11.next = 14;
+                  _context12.next = 14;
                   break;
                 }
 
-                return _context11.abrupt("return", ACCESS_TYPES.LIBRARY);
+                return _context12.abrupt("return", ACCESS_TYPES.LIBRARY);
 
               case 14:
                 if (!version.match(/BaseContentType\d+.*/)) {
-                  _context11.next = 18;
+                  _context12.next = 18;
                   break;
                 }
 
-                return _context11.abrupt("return", ACCESS_TYPES.TYPE);
+                return _context12.abrupt("return", ACCESS_TYPES.TYPE);
 
               case 18:
                 if (!version.match(/BaseContent\d+.*/)) {
-                  _context11.next = 22;
+                  _context12.next = 22;
                   break;
                 }
 
-                return _context11.abrupt("return", ACCESS_TYPES.OBJECT);
+                return _context12.abrupt("return", ACCESS_TYPES.OBJECT);
 
               case 22:
-                return _context11.abrupt("return", ACCESS_TYPES.OTHER);
+                return _context12.abrupt("return", ACCESS_TYPES.OTHER);
 
               case 23:
-                _context11.next = 28;
+                _context12.next = 28;
                 break;
 
               case 25:
-                _context11.prev = 25;
-                _context11.t2 = _context11["catch"](0);
-                return _context11.abrupt("return", ACCESS_TYPES.OTHER);
+                _context12.prev = 25;
+                _context12.t2 = _context12["catch"](0);
+                return _context12.abrupt("return", ACCESS_TYPES.OTHER);
 
               case 28:
               case "end":
-                return _context11.stop();
+                return _context12.stop();
             }
           }
-        }, _callee11, this, [[0, 25]]);
+        }, _callee12, this, [[0, 25]]);
       }));
 
-      function AccessType(_x11) {
+      function AccessType(_x12) {
         return _AccessType.apply(this, arguments);
       }
 
@@ -852,14 +885,14 @@ function () {
     value: function () {
       var _GetAccessCharge = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee12(_ref12) {
+      regeneratorRuntime.mark(function _callee13(_ref14) {
         var objectId, args, info;
-        return regeneratorRuntime.wrap(function _callee12$(_context12) {
+        return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
-            switch (_context12.prev = _context12.next) {
+            switch (_context13.prev = _context13.next) {
               case 0:
-                objectId = _ref12.objectId, args = _ref12.args;
-                _context12.next = 3;
+                objectId = _ref14.objectId, args = _ref14.args;
+                _context13.next = 3;
                 return this.client.CallContractMethod({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -868,18 +901,18 @@ function () {
                 });
 
               case 3:
-                info = _context12.sent;
-                return _context12.abrupt("return", info[2]);
+                info = _context13.sent;
+                return _context13.abrupt("return", info[2]);
 
               case 5:
               case "end":
-                return _context12.stop();
+                return _context13.stop();
             }
           }
-        }, _callee12, this);
+        }, _callee13, this);
       }));
 
-      function GetAccessCharge(_x12) {
+      function GetAccessCharge(_x13) {
         return _GetAccessCharge.apply(this, arguments);
       }
 
@@ -890,24 +923,24 @@ function () {
     value: function () {
       var _AccessComplete = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee13(_ref13) {
+      regeneratorRuntime.mark(function _callee14(_ref15) {
         var id, abi, score, requestId, event;
-        return regeneratorRuntime.wrap(function _callee13$(_context13) {
+        return regeneratorRuntime.wrap(function _callee14$(_context14) {
           while (1) {
-            switch (_context13.prev = _context13.next) {
+            switch (_context14.prev = _context14.next) {
               case 0:
-                id = _ref13.id, abi = _ref13.abi, score = _ref13.score;
+                id = _ref15.id, abi = _ref15.abi, score = _ref15.score;
                 requestId = this.requestIds[id];
 
                 if (requestId) {
-                  _context13.next = 4;
+                  _context14.next = 4;
                   break;
                 }
 
                 throw Error("Unknown request ID for " + id);
 
               case 4:
-                _context13.next = 6;
+                _context14.next = 6;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(id),
                   abi: abi,
@@ -916,20 +949,20 @@ function () {
                 });
 
               case 6:
-                event = _context13.sent;
+                event = _context14.sent;
                 delete this.requestIds[id];
                 delete this.accessTransactions.objects[id];
-                return _context13.abrupt("return", event);
+                return _context14.abrupt("return", event);
 
               case 10:
               case "end":
-                return _context13.stop();
+                return _context14.stop();
             }
           }
-        }, _callee13, this);
+        }, _callee14, this);
       }));
 
-      function AccessComplete(_x13) {
+      function AccessComplete(_x14) {
         return _AccessComplete.apply(this, arguments);
       }
 
@@ -940,57 +973,57 @@ function () {
     value: function () {
       var _AccessRequest = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee14(_ref14) {
-        var id, abi, _ref14$args, args, _ref14$checkAccessCha, checkAccessCharge, accessCharge, accessType, owner, accessChargeArgs, event, accessRequestEvent;
+      regeneratorRuntime.mark(function _callee15(_ref16) {
+        var id, abi, _ref16$args, args, _ref16$checkAccessCha, checkAccessCharge, accessCharge, accessType, owner, accessChargeArgs, event, accessRequestEvent;
 
-        return regeneratorRuntime.wrap(function _callee14$(_context14) {
+        return regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
-            switch (_context14.prev = _context14.next) {
+            switch (_context15.prev = _context15.next) {
               case 0:
-                id = _ref14.id, abi = _ref14.abi, _ref14$args = _ref14.args, args = _ref14$args === void 0 ? [] : _ref14$args, _ref14$checkAccessCha = _ref14.checkAccessCharge, checkAccessCharge = _ref14$checkAccessCha === void 0 ? false : _ref14$checkAccessCha;
+                id = _ref16.id, abi = _ref16.abi, _ref16$args = _ref16.args, args = _ref16$args === void 0 ? [] : _ref16$args, _ref16$checkAccessCha = _ref16.checkAccessCharge, checkAccessCharge = _ref16$checkAccessCha === void 0 ? false : _ref16$checkAccessCha;
                 // Send some bux if access charge is required
                 accessCharge = 0;
-                _context14.next = 4;
+                _context15.next = 4;
                 return this.AccessType(id);
 
               case 4:
-                accessType = _context14.sent;
+                accessType = _context15.sent;
 
                 if (!(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT)) {
-                  _context14.next = 16;
+                  _context15.next = 16;
                   break;
                 }
 
-                _context14.next = 8;
+                _context15.next = 8;
                 return this.Owner({
                   id: id,
                   abi: abi
                 });
 
               case 8:
-                owner = _context14.sent;
+                owner = _context15.sent;
 
                 if (Utils.EqualAddress(this.client.signer.address, owner)) {
-                  _context14.next = 16;
+                  _context15.next = 16;
                   break;
                 }
 
                 // Extract level, custom values and stakeholders from accessRequest arguments
                 accessChargeArgs = [args[0], args[3], args[4]]; // Access charge is in wei, but methods take ether - convert to charge to ether
 
-                _context14.t0 = Utils;
-                _context14.next = 14;
+                _context15.t0 = Utils;
+                _context15.next = 14;
                 return this.GetAccessCharge({
                   objectId: id,
                   args: accessChargeArgs
                 });
 
               case 14:
-                _context14.t1 = _context14.sent;
-                accessCharge = _context14.t0.WeiToEther.call(_context14.t0, _context14.t1);
+                _context15.t1 = _context15.sent;
+                accessCharge = _context15.t0.WeiToEther.call(_context15.t0, _context15.t1);
 
               case 16:
-                _context14.next = 18;
+                _context15.next = 18;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(id),
                   abi: abi,
@@ -1000,7 +1033,7 @@ function () {
                 });
 
               case 18:
-                event = _context14.sent;
+                event = _context15.sent;
                 accessRequestEvent = this.client.ExtractEventFromLogs({
                   abi: abi,
                   event: event,
@@ -1008,24 +1041,24 @@ function () {
                 });
 
                 if (!(event.logs.length === 0 || !accessRequestEvent)) {
-                  _context14.next = 22;
+                  _context15.next = 22;
                   break;
                 }
 
                 throw Error("Access denied");
 
               case 22:
-                return _context14.abrupt("return", event);
+                return _context15.abrupt("return", event);
 
               case 23:
               case "end":
-                return _context14.stop();
+                return _context15.stop();
             }
           }
-        }, _callee14, this);
+        }, _callee15, this);
       }));
 
-      function AccessRequest(_x14) {
+      function AccessRequest(_x15) {
         return _AccessRequest.apply(this, arguments);
       }
 
@@ -1036,14 +1069,14 @@ function () {
     value: function () {
       var _UpdateRequest = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee15(_ref15) {
+      regeneratorRuntime.mark(function _callee16(_ref17) {
         var id, abi;
-        return regeneratorRuntime.wrap(function _callee15$(_context15) {
+        return regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context15.prev = _context15.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
-                id = _ref15.id, abi = _ref15.abi;
-                _context15.next = 3;
+                id = _ref17.id, abi = _ref17.abi;
+                _context16.next = 3;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(id),
                   abi: abi,
@@ -1052,17 +1085,17 @@ function () {
                 });
 
               case 3:
-                return _context15.abrupt("return", _context15.sent);
+                return _context16.abrupt("return", _context16.sent);
 
               case 4:
               case "end":
-                return _context15.stop();
+                return _context16.stop();
             }
           }
-        }, _callee15, this);
+        }, _callee16, this);
       }));
 
-      function UpdateRequest(_x15) {
+      function UpdateRequest(_x16) {
         return _UpdateRequest.apply(this, arguments);
       }
 
@@ -1075,64 +1108,23 @@ function () {
     value: function () {
       var _CreateAccessGroup = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee16() {
-        var _ref16, contractAddress, transactionHash;
-
-        return regeneratorRuntime.wrap(function _callee16$(_context16) {
-          while (1) {
-            switch (_context16.prev = _context16.next) {
-              case 0:
-                _context16.next = 2;
-                return this.client.ethClient.DeployAccessGroupContract({
-                  contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-                  signer: this.client.signer
-                });
-
-              case 2:
-                _ref16 = _context16.sent;
-                contractAddress = _ref16.contractAddress;
-                transactionHash = _ref16.transactionHash;
-                return _context16.abrupt("return", {
-                  contractAddress: contractAddress,
-                  transactionHash: transactionHash
-                });
-
-              case 6:
-              case "end":
-                return _context16.stop();
-            }
-          }
-        }, _callee16, this);
-      }));
-
-      function CreateAccessGroup() {
-        return _CreateAccessGroup.apply(this, arguments);
-      }
-
-      return CreateAccessGroup;
-    }()
-  }, {
-    key: "CreateContentType",
-    value: function () {
-      var _CreateContentType = _asyncToGenerator(
-      /*#__PURE__*/
       regeneratorRuntime.mark(function _callee17() {
-        var _ref17, contractAddress, transactionHash;
+        var _ref18, contractAddress, transactionHash;
 
         return regeneratorRuntime.wrap(function _callee17$(_context17) {
           while (1) {
             switch (_context17.prev = _context17.next) {
               case 0:
                 _context17.next = 2;
-                return this.client.ethClient.DeployTypeContract({
+                return this.client.ethClient.DeployAccessGroupContract({
                   contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                   signer: this.client.signer
                 });
 
               case 2:
-                _ref17 = _context17.sent;
-                contractAddress = _ref17.contractAddress;
-                transactionHash = _ref17.transactionHash;
+                _ref18 = _context17.sent;
+                contractAddress = _ref18.contractAddress;
+                transactionHash = _ref18.transactionHash;
                 return _context17.abrupt("return", {
                   contractAddress: contractAddress,
                   transactionHash: transactionHash
@@ -1146,6 +1138,47 @@ function () {
         }, _callee17, this);
       }));
 
+      function CreateAccessGroup() {
+        return _CreateAccessGroup.apply(this, arguments);
+      }
+
+      return CreateAccessGroup;
+    }()
+  }, {
+    key: "CreateContentType",
+    value: function () {
+      var _CreateContentType = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee18() {
+        var _ref19, contractAddress, transactionHash;
+
+        return regeneratorRuntime.wrap(function _callee18$(_context18) {
+          while (1) {
+            switch (_context18.prev = _context18.next) {
+              case 0:
+                _context18.next = 2;
+                return this.client.ethClient.DeployTypeContract({
+                  contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
+                  signer: this.client.signer
+                });
+
+              case 2:
+                _ref19 = _context18.sent;
+                contractAddress = _ref19.contractAddress;
+                transactionHash = _ref19.transactionHash;
+                return _context18.abrupt("return", {
+                  contractAddress: contractAddress,
+                  transactionHash: transactionHash
+                });
+
+              case 6:
+              case "end":
+                return _context18.stop();
+            }
+          }
+        }, _callee18, this);
+      }));
+
       function CreateContentType() {
         return _CreateContentType.apply(this, arguments);
       }
@@ -1157,61 +1190,18 @@ function () {
     value: function () {
       var _CreateContentLibrary = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee18(_ref18) {
-        var kmsId, _ref19, contractAddress, transactionHash;
-
-        return regeneratorRuntime.wrap(function _callee18$(_context18) {
-          while (1) {
-            switch (_context18.prev = _context18.next) {
-              case 0:
-                kmsId = _ref18.kmsId;
-                _context18.next = 3;
-                return this.client.ethClient.DeployLibraryContract({
-                  contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-                  kmsId: kmsId,
-                  signer: this.client.signer
-                });
-
-              case 3:
-                _ref19 = _context18.sent;
-                contractAddress = _ref19.contractAddress;
-                transactionHash = _ref19.transactionHash;
-                return _context18.abrupt("return", {
-                  contractAddress: contractAddress,
-                  transactionHash: transactionHash
-                });
-
-              case 7:
-              case "end":
-                return _context18.stop();
-            }
-          }
-        }, _callee18, this);
-      }));
-
-      function CreateContentLibrary(_x16) {
-        return _CreateContentLibrary.apply(this, arguments);
-      }
-
-      return CreateContentLibrary;
-    }()
-  }, {
-    key: "CreateContentObject",
-    value: function () {
-      var _CreateContentObject = _asyncToGenerator(
-      /*#__PURE__*/
       regeneratorRuntime.mark(function _callee19(_ref20) {
-        var libraryId, typeId, _ref21, contractAddress, transactionHash;
+        var kmsId, _ref21, contractAddress, transactionHash;
 
         return regeneratorRuntime.wrap(function _callee19$(_context19) {
           while (1) {
             switch (_context19.prev = _context19.next) {
               case 0:
-                libraryId = _ref20.libraryId, typeId = _ref20.typeId;
+                kmsId = _ref20.kmsId;
                 _context19.next = 3;
-                return this.client.ethClient.DeployContentContract({
-                  contentLibraryAddress: Utils.HashToAddress(libraryId),
-                  typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
+                return this.client.ethClient.DeployLibraryContract({
+                  contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
+                  kmsId: kmsId,
                   signer: this.client.signer
                 });
 
@@ -1232,7 +1222,50 @@ function () {
         }, _callee19, this);
       }));
 
-      function CreateContentObject(_x17) {
+      function CreateContentLibrary(_x17) {
+        return _CreateContentLibrary.apply(this, arguments);
+      }
+
+      return CreateContentLibrary;
+    }()
+  }, {
+    key: "CreateContentObject",
+    value: function () {
+      var _CreateContentObject = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee20(_ref22) {
+        var libraryId, typeId, _ref23, contractAddress, transactionHash;
+
+        return regeneratorRuntime.wrap(function _callee20$(_context20) {
+          while (1) {
+            switch (_context20.prev = _context20.next) {
+              case 0:
+                libraryId = _ref22.libraryId, typeId = _ref22.typeId;
+                _context20.next = 3;
+                return this.client.ethClient.DeployContentContract({
+                  contentLibraryAddress: Utils.HashToAddress(libraryId),
+                  typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
+                  signer: this.client.signer
+                });
+
+              case 3:
+                _ref23 = _context20.sent;
+                contractAddress = _ref23.contractAddress;
+                transactionHash = _ref23.transactionHash;
+                return _context20.abrupt("return", {
+                  contractAddress: contractAddress,
+                  transactionHash: transactionHash
+                });
+
+              case 7:
+              case "end":
+                return _context20.stop();
+            }
+          }
+        }, _callee20, this);
+      }));
+
+      function CreateContentObject(_x18) {
         return _CreateContentObject.apply(this, arguments);
       }
 

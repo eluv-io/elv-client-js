@@ -112,18 +112,16 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
-      //privateKey: "0x263a8e6a79fcc707eee7f7c508ab42dc32127b1a1680713988372d443e74de18"
+      //privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
+      privateKey: "0x263a8e6a79fcc707eee7f7c508ab42dc32127b1a1680713988372d443e74de18"
     });
 
 
     await client.SetSigner({signer});
 
 
-    console.log(await client.ContentObjectMetadata({
-      libraryId: "ilib2WvTEWBtrcPv8emX643nc3xFXBaN",
-      objectId: "iq__4DY57vQT3AAViCSxytgmybv7BmzX"
-    }));
+    console.log(await client.userProfileClient.UserWalletAddress({address: signer.address}));
+    console.log(await client.userProfileClient.UserWalletAddress({address: signer.address}));
 
 /*
     console.log(await client.VerifyContentObject({

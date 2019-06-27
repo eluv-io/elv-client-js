@@ -1,11 +1,5 @@
 [
   {
-    "signature": "async ClearCache({\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\"\n});"
-  },
-  {
-    "signature": "async ClearCache({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\"\n});"
-  },
-  {
-    "signature": "async ClearCache({});"
+    "signature": " ClearCache();"
   }
 ]

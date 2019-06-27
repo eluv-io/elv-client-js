@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"wing simple female menu verify jump deer bonus click cement paddle naive\"\n});",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"gallery harvest fatigue fat stem balcony category cabbage slice burst transfer nest\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]
