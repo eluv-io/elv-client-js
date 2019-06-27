@@ -227,26 +227,19 @@ function () {
                   noCache: this.noCache,
                   noAuth: this.noAuth
                 });
-
-                if (!(!this.viewOnly && this.signer)) {
-                  _context3.next = 9;
-                  break;
-                }
-
                 this.userProfileClient = new UserProfileClient({
                   client: this
                 });
+
+                if (!(!this.viewOnly && this.signer)) {
+                  _context3.next = 7;
+                  break;
+                }
+
                 _context3.next = 7;
                 return this.userProfileClient.Initialize();
 
               case 7:
-                _context3.next = 10;
-                break;
-
-              case 9:
-                this.userProfileClient = undefined;
-
-              case 10:
               case "end":
                 return _context3.stop();
             }

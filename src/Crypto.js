@@ -1,13 +1,3 @@
-if(typeof crypto === "undefined") {
-  const crypto = require("crypto");
-
-  Object.defineProperty(global.self, "crypto", {
-    value: {
-      getRandomValues: arr => crypto.randomBytes(arr.length),
-    },
-  });
-}
-
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const bs58 = require("bs58");
@@ -17,6 +7,16 @@ const Utils = require("./Utils");
 let ElvCrypto;
 switch(Utils.Platform()) {
   case Utils.PLATFORM_WEB:
+    if(typeof crypto === "undefined") {
+      const crypto = require("crypto");
+
+      Object.defineProperty(global.self, "crypto", {
+        value: {
+          getRandomValues: arr => crypto.randomBytes(arr.length),
+        },
+      });
+    }
+
     ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.js").default;
     break;
   default:
