@@ -1017,6 +1017,19 @@ var topics = {
     }],
     "contract": "BaseContentSpace"
   },
+  "0x1c917c3c2698bd5b98acb9772728da62f2ce3670e4578910a6465b955f63e157": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "walletAddress",
+        "type": "address"
+      }],
+      "name": "GetAccessWallet",
+      "type": "event"
+    }],
+    "contract": "BaseContentSpace"
+  },
   "0xae5645569f32b946f7a747113c64094a29a6b84c5ddf55816ef4381ce8a3a46d": {
     "abi": [{
       "anonymous": false,
@@ -1102,6 +1115,23 @@ var topics = {
         "type": "address"
       }],
       "name": "ContentObjectCreated",
+      "type": "event"
+    }],
+    "contract": "BaseLibrary"
+  },
+  "0x36500cee87b0da1746889a3483dccb525acfc40b8c0f2218e164c6cdf1482a3e": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "contentAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "spaceAddress",
+        "type": "address"
+      }],
+      "name": "ContentObjectDeleted",
       "type": "event"
     }],
     "contract": "BaseLibrary"
@@ -1218,6 +1248,19 @@ var topics = {
         "type": "string"
       }],
       "name": "ApproveContent",
+      "type": "event"
+    }],
+    "contract": "BaseLibrary"
+  },
+  "0x74538e2fbd034afddf32b42c5939d211ce86c7683f9768f1a4969746f81f8608": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "addressKms",
+        "type": "address"
+      }],
+      "name": "UpdateKmsAddress",
       "type": "event"
     }],
     "contract": "BaseLibrary"
