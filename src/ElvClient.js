@@ -157,11 +157,9 @@ class ElvClient {
       noAuth: this.noAuth
     });
 
+    this.userProfileClient = new UserProfileClient({client: this});
     if(!this.viewOnly && this.signer) {
-      this.userProfileClient = new UserProfileClient({client: this});
       await this.userProfileClient.Initialize();
-    } else {
-      this.userProfileClient = undefined;
     }
   }
 
