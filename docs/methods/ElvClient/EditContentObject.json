@@ -1,26 +1,18 @@
 [
   {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__XdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"options\": {\n    \"type\": \"hq__2tAbRNL48RRFS62HR2z2a7uNrxknPsshtCwpiyjhiPT3mcmrs8rLsGPFtHhwunQWLVoWL7ndmw\"\n  }\n});",
-    "result": "{\n  \"id\": \"iq__XdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"write_token\": \"tqw_9jurRyTePMMwZm9gY3AxyYbjTPJcMZ5qs\",\n  \"type\": \"hq__2tAbRNL48RRFS62HR2z2a7uNrxknPsshtCwpiyjhiPT3mcmrs8rLsGPFtHhwunQWLVoWL7ndmw\"\n}"
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilib4U8Qre2St4jGpuNnW5uBVE3MPvpE\",\n  \"objectId\": \"iq__2gnntBVh5EWRWkWxPcwAtcAQLHFc\"\n});",
+    "result": "{\n  \"id\": \"iq__2gnntBVh5EWRWkWxPcwAtcAQLHFc\",\n  \"write_token\": \"tqw_BaimERuMz8qZhBKaXJzh5jRSBNpS5nAh\",\n  \"type\": \"hq__F97bhzoXj4QDFc73kXeZ2f3G8V5QVDi8DRjYFshALTkXeqEbWTDEWxMqxBNuMSVZcgMu7GwyJ3\"\n}"
   },
   {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\"\n});",
-    "result": "{\n  \"id\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"write_token\": \"tqw_9Cjkocoz2Ko9n6uDiuWJ14AZuTrWCP2Zd\",\n  \"type\": \"hq__JVoHLDhjucRukADKKx6ipP8Rn8GR7Tek7aGVFDFmUY3KFu93xLiL48aM49Nw83sBZ5R79sncuq\"\n}"
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilib3nNAVZw54nzCGRDU5QgKyhkQEMDp\",\n  \"objectId\": \"iq__3Lyre1Q2mv7RSCnVHTf8FUcaM1Lj\"\n});",
+    "result": "{\n  \"id\": \"iq__3Lyre1Q2mv7RSCnVHTf8FUcaM1Lj\",\n  \"write_token\": \"tqw_4NtUMjFGbYkwFqA2iQj1bxXqnm312XQTa\",\n  \"type\": \"hq__7z32fYhuHjwd6gshCa3VDkuh8wx6Dqwvjm8hr3pBjT6CoNRmnKLBoS5obWkLhih2QWZG5FtjAk\"\n}"
   },
   {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\"\n});",
-    "result": "{\n  \"id\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"write_token\": \"tqw_MKjB1FvQBwgngbscetrL1zCW3RESazscL\",\n  \"type\": \"hq__JVoHLDhjucRukADKKx6ipP8Rn8GR7Tek7aGVFDFmUY3KFu93xLiL48aM49Nw83sBZ5R79sncuq\"\n}"
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilib3nNAVZw54nzCGRDU5QgKyhkQEMDp\",\n  \"objectId\": \"iq__3Lyre1Q2mv7RSCnVHTf8FUcaM1Lj\"\n});",
+    "result": "{\n  \"id\": \"iq__3Lyre1Q2mv7RSCnVHTf8FUcaM1Lj\",\n  \"write_token\": \"tqw_7gytouG4sXGDUAubeeVxSBUBYmtEPhRg5\",\n  \"type\": \"hq__7z32fYhuHjwd6gshCa3VDkuh8wx6Dqwvjm8hr3pBjT6CoNRmnKLBoS5obWkLhih2QWZG5FtjAk\"\n}"
   },
   {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\"\n});",
-    "result": "{\n  \"id\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"write_token\": \"tqw_KgpwZvUe51PQvrnzpZLh8nKh1bz1qBKY3\",\n  \"type\": \"hq__JVoHLDhjucRukADKKx6ipP8Rn8GR7Tek7aGVFDFmUY3KFu93xLiL48aM49Nw83sBZ5R79sncuq\"\n}"
-  },
-  {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\"\n});",
-    "result": "{\n  \"id\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"write_token\": \"tqw_KJfBb2qsaZbEPg8Luc7NdViCmYPdS8NCL\",\n  \"type\": \"hq__JVoHLDhjucRukADKKx6ipP8Rn8GR7Tek7aGVFDFmUY3KFu93xLiL48aM49Nw83sBZ5R79sncuq\"\n}"
-  },
-  {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\"\n});",
-    "result": "{\n  \"id\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"write_token\": \"tqw_Hmww36m46iCDqbrWQQMo8siENUdE6o1mc\",\n  \"type\": \"hq__JVoHLDhjucRukADKKx6ipP8Rn8GR7Tek7aGVFDFmUY3KFu93xLiL48aM49Nw83sBZ5R79sncuq\"\n}"
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilib3nNAVZw54nzCGRDU5QgKyhkQEMDp\",\n  \"objectId\": \"iq__3Lyre1Q2mv7RSCnVHTf8FUcaM1Lj\"\n});",
+    "result": "{\n  \"id\": \"iq__3Lyre1Q2mv7RSCnVHTf8FUcaM1Lj\",\n  \"write_token\": \"tqw_5Wsn2CqbDZYfFMqK1ox2MxoQBkCaZdXuy\",\n  \"type\": \"hq__7z32fYhuHjwd6gshCa3VDkuh8wx6Dqwvjm8hr3pBjT6CoNRmnKLBoS5obWkLhih2QWZG5FtjAk\"\n}"
   }
 ]

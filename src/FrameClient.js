@@ -280,7 +280,6 @@ class FrameClient {
       "DownloadFile",
       "DownloadPart",
       "EditContentObject",
-      "EncryptChunk",
       "EncryptionCap",
       "Events",
       "ExtractEventFromLogs",
@@ -323,12 +322,13 @@ class FrameClient {
       "AccessLevel",
       "CollectedTags",
       "DeleteUserMetadata",
+      "Initialize",
       "MergeUserMetadata",
-      "UserMetadata",
-      "RecordTags",
+      "PublicUserMetadata",
       "ReplaceUserMetadata",
-      "SetUserProfileImage",
+      "UserMetadata",
       "UserProfileImage",
+      "UserWalletAddress",
       "WalletAddress"
     ];
   }

@@ -1,3 +1,13 @@
+if(typeof crypto === "undefined") {
+  const crypto = require("crypto");
+
+  Object.defineProperty(global.self, "crypto", {
+    value: {
+      getRandomValues: arr => crypto.randomBytes(arr.length),
+    },
+  });
+}
+
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const bs58 = require("bs58");

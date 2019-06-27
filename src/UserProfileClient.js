@@ -50,6 +50,33 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
    */
   constructor({client}) {
     this.client = client;
+    this.userWalletAddresses = {};
+  }
+
+  /**
+   * Get the user wallet address for the specified user, if it exists
+   *
+   * @namedParams
+   * @param {string} address - The address of the user
+   *
+   * @return {Promise<string>} - The wallet address of the specified user, if it exists
+   */
+  async UserWalletAddress({address}) {
+    if(!this.userWalletAddresses[address]) {
+      const walletAddress =
+        await this.client.CallContractMethod({
+          abi: SpaceContract.abi,
+          contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+          methodName: "userWallets",
+          methodArgs: [address]
+        });
+
+      if(!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
+        this.userWalletAddresses[address] = walletAddress;
+      }
+    }
+
+    return this.userWalletAddresses[address];
   }
 
   /**
@@ -59,13 +86,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
    */
   async WalletAddress() {
     if(!this.walletAddress) {
-      // Get existing wallet contract address
-      this.walletAddress = await this.client.CallContractMethod({
-        abi: SpaceContract.abi,
-        contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-        methodName: "userWallets",
-        methodArgs: [this.client.signer.address]
-      });
+      this.walletAddress = await this.UserWalletAddress({address: this.client.signer.address});
 
       // No wallet contract for the current user - create one
       if(!this.walletAddress || this.walletAddress === Utils.nullAddress) {
@@ -148,6 +169,31 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
   }
 
   /**
+   * Access the specified user's public profile metadata
+   *
+   * @namedParams
+   * @param {string=} address - The address of the user
+   * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
+   *
+   * @return {Promise<Object|string>}
+   */
+  async PublicUserMetadata({address, metadataSubtree="/"}) {
+    const walletAddress = await this.UserWalletAddress({address});
+
+    if(!walletAddress) { return; }
+
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(walletAddress);
+
+    // If caching not enabled, make direct query to object
+    return await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree
+    });
+  }
+
+  /**
    * Access the current user's metadata
    *
    * Note: Subject to user's access level
@@ -158,7 +204,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
    * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
    * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
    *
-   * @return {Promise<Object>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
+   * @return {Promise<Object|string>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
    */
   async UserMetadata({metadataSubtree="/", noCache=false}={}) {
     if(!noCache && this.cachedPrivateMetadata) {
@@ -171,7 +217,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
     // If caching not enabled, make direct query to object
     if(noCache) {
       return await this.client.ContentObjectMetadata({
-        libraryId:
+        libraryId,
         objectId,
         metadataSubtree
       });
@@ -239,7 +285,6 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
     this.__InvalidateCache();
   }
 
-
   /**
    * Return the permissions the current user allows for apps to access their profile.
    *
@@ -277,15 +322,28 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
    * Note: Part hash of profile image will be appended to the URL as a query parameter to invalidate
    * browser caching when the image is updated
    *
+   * @namedParams
+   * @param {string=} address - The address of the user. If not specified, the address of the current user will be used.
+   *
    * @return {Promise<string | undefined>} - URL of the user's profile image. Will be undefined if no profile image is set.
    */
-  async UserProfileImage() {
-    const imageHash = await this.UserMetadata({metadataSubtree: "image"});
+  async UserProfileImage({address}={}) {
+    let walletAddress;
+    if(address) {
+      walletAddress = await this.UserWalletAddress({address});
+    } else {
+      address = this.client.signer.address;
+      walletAddress = this.walletAddress;
+    }
+
+    if(!walletAddress) { return; }
+
+    const imageHash = await this.PublicUserMetadata({address, metadataSubtree: "image"});
 
     if(!imageHash) { return; }
 
     const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+    const objectId = Utils.AddressToObjectId(walletAddress);
 
     return await this.client.Rep({
       libraryId,
@@ -380,8 +438,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
       libraryId,
       objectId,
       versionHash,
-      metadataSubtree: "video_tags",
-      noAuth: true
+      metadataSubtree: "video_tags"
     });
 
     if(contentTags && contentTags.length > 0) {

@@ -1,3 +1,5 @@
+require("@babel/polyfill");
+
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
@@ -884,7 +886,7 @@ class ElvClient {
 
     return await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
         method: "GET",
         path: path
       })
@@ -925,7 +927,7 @@ class ElvClient {
    *
    * @returns {Promise<Object | string>} - Metadata of the content object
    */
-  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=false}) {
+  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=true}) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path = UrlJoin("q", versionHash || objectId, "meta", metadataSubtree);
@@ -1990,6 +1992,7 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} channelAuth=true - If specified, state channel authorization will be performed instead of access request authorization
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
    * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -1999,8 +2002,8 @@ class ElvClient {
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, noAuth=false, noCache=false}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, channelAuth: true, noAuth, noCache});
+  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, channelAuth=true, noAuth=false, noCache=false}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, channelAuth, noAuth, noCache});
   }
 
   /**

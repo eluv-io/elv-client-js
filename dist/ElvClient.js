@@ -22,6 +22,8 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+require("@babel/polyfill");
+
 if (typeof Buffer === "undefined") {
   Buffer = require("buffer/").Buffer;
 }
@@ -1752,7 +1754,8 @@ function () {
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
-                  versionHash: versionHash
+                  versionHash: versionHash,
+                  noAuth: true
                 });
 
               case 7:
@@ -1860,7 +1863,7 @@ function () {
           while (1) {
             switch (_context27.prev = _context27.next) {
               case 0:
-                libraryId = _ref26.libraryId, objectId = _ref26.objectId, versionHash = _ref26.versionHash, _ref26$metadataSubtre = _ref26.metadataSubtree, metadataSubtree = _ref26$metadataSubtre === void 0 ? "/" : _ref26$metadataSubtre, _ref26$noAuth = _ref26.noAuth, noAuth = _ref26$noAuth === void 0 ? false : _ref26$noAuth;
+                libraryId = _ref26.libraryId, objectId = _ref26.objectId, versionHash = _ref26.versionHash, _ref26$metadataSubtre = _ref26.metadataSubtree, metadataSubtree = _ref26$metadataSubtre === void 0 ? "/" : _ref26$metadataSubtre, _ref26$noAuth = _ref26.noAuth, noAuth = _ref26$noAuth === void 0 ? true : _ref26$noAuth;
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -4467,6 +4470,7 @@ function () {
      * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
      * @param {string} rep - Representation to use
      * @param {Object=} queryParams - Query params to add to the URL
+     * @param {boolean=} channelAuth=true - If specified, state channel authorization will be performed instead of access request authorization
      * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
      * token. This is useful for accessing public assets.
      * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -4483,20 +4487,20 @@ function () {
       var _Rep = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee61(_ref61) {
-        var libraryId, objectId, versionHash, rep, _ref61$queryParams, queryParams, _ref61$noAuth, noAuth, _ref61$noCache, noCache;
+        var libraryId, objectId, versionHash, rep, _ref61$queryParams, queryParams, _ref61$channelAuth, channelAuth, _ref61$noAuth, noAuth, _ref61$noCache, noCache;
 
         return regeneratorRuntime.wrap(function _callee61$(_context61) {
           while (1) {
             switch (_context61.prev = _context61.next) {
               case 0:
-                libraryId = _ref61.libraryId, objectId = _ref61.objectId, versionHash = _ref61.versionHash, rep = _ref61.rep, _ref61$queryParams = _ref61.queryParams, queryParams = _ref61$queryParams === void 0 ? {} : _ref61$queryParams, _ref61$noAuth = _ref61.noAuth, noAuth = _ref61$noAuth === void 0 ? false : _ref61$noAuth, _ref61$noCache = _ref61.noCache, noCache = _ref61$noCache === void 0 ? false : _ref61$noCache;
+                libraryId = _ref61.libraryId, objectId = _ref61.objectId, versionHash = _ref61.versionHash, rep = _ref61.rep, _ref61$queryParams = _ref61.queryParams, queryParams = _ref61$queryParams === void 0 ? {} : _ref61$queryParams, _ref61$channelAuth = _ref61.channelAuth, channelAuth = _ref61$channelAuth === void 0 ? true : _ref61$channelAuth, _ref61$noAuth = _ref61.noAuth, noAuth = _ref61$noAuth === void 0 ? false : _ref61$noAuth, _ref61$noCache = _ref61.noCache, noCache = _ref61$noCache === void 0 ? false : _ref61$noCache;
                 return _context61.abrupt("return", this.FabricUrl({
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash,
                   rep: rep,
                   queryParams: queryParams,
-                  channelAuth: true,
+                  channelAuth: channelAuth,
                   noAuth: noAuth,
                   noCache: noCache
                 }));
