@@ -87,6 +87,20 @@ describe("Test UserProfileClient", () => {
       }
     });
     expect(updatedMetadata.toDelete).not.toBeDefined();
+
+    console.log("GETTING PUBLIC METADATA: ", client.signer.address);
+    const publicMetadata = await client.userProfileClient.PublicUserMetadata({address: client.signer.address});
+    expect(publicMetadata).toBeDefined();
+    expect(publicMetadata).toMatchObject({
+      toMerge: {
+        meta: "data",
+        new: "metadata"
+      },
+      toReplace: {
+        new: "metadata"
+      }
+    });
+    expect(publicMetadata.toDelete).not.toBeDefined();
   });
 
   test("User Profile Image", async () => {
@@ -105,7 +119,7 @@ describe("Test UserProfileClient", () => {
     expect(newImageHash).toBeDefined();
     expect(newImageHash).not.toEqual(oldImageHash);
 
-    const newImageUrl = await client.userProfileClient.UserProfileImage();
+    const newImageUrl = await client.userProfileClient.UserProfileImage({address: client.signer.address});
     expect(newImageUrl).toBeDefined();
   });
 
@@ -129,7 +143,7 @@ describe("Test UserProfileClient", () => {
     expect(unchangedAccessLevel.toLowerCase()).toEqual("public");
   });
 
-  test.only("Content Tagging", async () => {
+  test("Content Tagging", async () => {
     const testTags = [
       [
         { "score": 0.3, "tag": "cherry" },
@@ -154,7 +168,7 @@ describe("Test UserProfileClient", () => {
     // Create tagged objects with another user, then access them with this user
     for(let i = 0; i < testTags.length; i++) {
       const objectId = await CreateTaggedObject(tagLibraryId, testTags[i]);
-      await client.ContentObjectMetadata({libraryId: tagLibraryId, objectId});
+      await client.ContentObjectMetadata({libraryId: tagLibraryId, objectId, noAuth: false});
     }
 
     expect(recordTagsSpy).toHaveBeenCalledTimes(testTags.length);

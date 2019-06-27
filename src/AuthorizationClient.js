@@ -212,19 +212,14 @@ class AuthorizationClient {
   }
 
   async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, update=false, noAuth=false}) {
-    let transactionHash;
-    if(!this.noAuth && !noAuth) {
-      const accessTransaction = await this.MakeAccessRequest({
-        libraryId,
-        objectId,
-        versionHash,
-        update,
-        noCache: this.noCache,
-        noAuth
-      });
-
-      transactionHash = accessTransaction.transactionHash;
-    }
+    const { transactionHash } =  await this.MakeAccessRequest({
+      libraryId,
+      objectId,
+      versionHash,
+      update,
+      noCache: this.noCache,
+      noAuth: this.noAuth || noAuth
+    });
 
     let token = {
       qspace_id: this.contentSpaceId,
@@ -252,9 +247,12 @@ class AuthorizationClient {
     update=false,
     skipCache=false,
     noCache=false,
+    noAuth=false,
     cacheOnly
   }) {
-    if(!this.client.signer) { return {transactionHash: ""}; }
+    if(noAuth || !this.client.signer) {
+      return { transactionHash: "" };
+    }
 
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
@@ -312,8 +310,8 @@ class AuthorizationClient {
     // If only checking the cache, don't continue to make access request
     if(cacheOnly) { return; }
 
+    let accessRequest = { transactionHash: "" };
     // Make the request
-    let accessRequest;
     if(update) {
       accessRequest = await this.UpdateRequest({id, abi});
     } else {
@@ -333,15 +331,19 @@ class AuthorizationClient {
       });
     }
 
-    // After making an access request, record the tags in the user's profile, if appropriate
-    if(accessType === ACCESS_TYPES.OBJECT) {
-      const owner = await this.Owner({id, abi});
-      if(!Utils.EqualAddress(owner, this.client.signer.address)) {
-        await this.client.userProfileClient.RecordTags({libraryId, objectId, versionHash});
-      }
-    }
+    await this.RecordTags({accessType, libraryId, objectId, versionHash});
 
     return accessRequest;
+  }
+
+  async RecordTags({accessType, libraryId, objectId, versionHash}) {
+    if(accessType !== ACCESS_TYPES.OBJECT) { return; }
+
+    // After making an access request, record the tags in the user's profile, if appropriate
+    const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
+    if(!Utils.EqualAddress(owner, this.client.signer.address)) {
+      await this.client.userProfileClient.RecordTags({libraryId, objectId, versionHash});
+    }
   }
 
   CacheLibraryTransaction({libraryId, transactionHash}) {

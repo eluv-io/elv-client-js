@@ -1,18 +1,14 @@
 [
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x51E2C24910910ADA9Bf6e2f1DcA52c17C3c262F4\"\n});",
-    "result": "{\n  \"class\": \"elv-user-library\",\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"meta\": \"data\",\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x29528B3e41Fa88f2bAf1902a8E8511f6A55E6a5B\"\n});",
+    "result": "{\n  \"toMerge\": {\n    \"meta\": \"data\",\n    \"new\": \"metadata\"\n  },\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x51E2C24910910ADA9Bf6e2f1DcA52c17C3c262F4\",\n  \"metadataSubtree\": \"toReplace\"\n});",
-    "result": "{\n  \"meta\": \"data\"\n}"
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x29528B3e41Fa88f2bAf1902a8E8511f6A55E6a5B\",\n  \"metadataSubtree\": \"image\"\n});",
+    "result": "\"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\""
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x51E2C24910910ADA9Bf6e2f1DcA52c17C3c262F4\"\n});",
-    "result": "{\n  \"class\": \"elv-user-library\",\n  \"image\": \"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\",\n  \"meta\": \"data\",\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
-  },
-  {
-    "signature": "async PublicUserMetadata({\n  \"accountAddress\": \"0x51E2C24910910ADA9Bf6e2f1DcA52c17C3c262F4\",\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "\"hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\""
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x29528B3e41Fa88f2bAf1902a8E8511f6A55E6a5B\",\n  \"metadataSubtree\": \"image\"\n});",
+    "result": "\"hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM\""
   }
 ]

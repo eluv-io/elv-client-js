@@ -20,9 +20,9 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">10.1% </span>
+        <span class="strong">0% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>10/99</span>
+        <span class='fraction'>0/99</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">0% </span>
@@ -30,14 +30,14 @@
         <span class='fraction'>0/37</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">7.14% </span>
+        <span class="strong">0% </span>
         <span class="quiet">Functions</span>
-        <span class='fraction'>1/14</span>
+        <span class='fraction'>0/14</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">10.64% </span>
+        <span class="strong">0% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>10/94</span>
+        <span class='fraction'>0/94</span>
       </div>
     </div>
     <p class="quiet">
@@ -256,23 +256,23 @@
 <a name='L208'></a><a href='#L208'>208</a>
 <a name='L209'></a><a href='#L209'>209</a>
 <a name='L210'></a><a href='#L210'>210</a>
-<a name='L211'></a><a href='#L211'>211</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L211'></a><a href='#L211'>211</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -465,22 +465,22 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const CBOR = require("cbor");
-const SJCL = require("sjcl");
-const MultiHash = require("multihashes");
-const DeepEqual = require("deep-equal");
-const Utils = require("./Utils");
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">const CBOR = <span class="cstat-no" title="statement not covered" >require("cbor");</span>
+const SJCL = <span class="cstat-no" title="statement not covered" >require("sjcl");</span>
+const MultiHash = <span class="cstat-no" title="statement not covered" >require("multihashes");</span>
+const DeepEqual = <span class="cstat-no" title="statement not covered" >require("deep-equal");</span>
+const Utils = <span class="cstat-no" title="statement not covered" >require("./Utils");</span>
 &nbsp;
-const ContentObjectVerification = {
-  async VerifyContentObject({client, libraryId, objectId, versionHash}) {
-    let response = {
+const ContentObjectVerification = <span class="cstat-no" title="statement not covered" >{</span>
+<span class="fstat-no" title="function not covered" >  as</span>ync VerifyContentObject({client, libraryId, objectId, versionHash}) {
+    let response = <span class="cstat-no" title="statement not covered" >{</span>
       hash: versionHash
     };
 &nbsp;
-    const partHash = Utils.DecodeVersionHash(versionHash).partHash;
+    const partHash = <span class="cstat-no" title="statement not covered" >Utils.DecodeVersionHash(versionHash).partHash;</span>
 &nbsp;
-    const qpartsResponse = await client.QParts({libraryId, objectId, partHash, format: "arrayBuffer"})
+    const qpartsResponse = <span class="cstat-no" title="statement not covered" >await client.QParts({libraryId, objectId, partHash, format: "arrayBuffer"})</span>
       .then(<span class="fstat-no" title="function not covered" >re</span>sponse =&gt; <span class="cstat-no" title="statement not covered" >Buffer.from(response))</span>;
     const partVerification = <span class="cstat-no" title="statement not covered" >ContentObjectVerification._VerifyPart({partHash: partHash, qpartsResponse: qpartsResponse});</span>
 &nbsp;
@@ -567,8 +567,8 @@ const ContentObjectVerification = {
 <span class="fstat-no" title="function not covered" >  _H</span>ash(thing) {
     function <span class="fstat-no" title="function not covered" >fromBits(</span>arr) {
       var out = <span class="cstat-no" title="statement not covered" >[],</span> bl = <span class="cstat-no" title="statement not covered" >SJCL.bitArray.bitLength(arr),</span> i, tmp;
-<span class="cstat-no" title="statement not covered" >      for (i=0; i&lt;bl/8; i++) {</span>
-<span class="cstat-no" title="statement not covered" >        if ((i&amp;3) === 0) {</span>
+<span class="cstat-no" title="statement not covered" >      for(i=0; i&lt;bl/8; i++) {</span>
+<span class="cstat-no" title="statement not covered" >        if((i&amp;3) === 0) {</span>
 <span class="cstat-no" title="statement not covered" >          tmp = arr[i/4];</span>
         }
 <span class="cstat-no" title="statement not covered" >        out.push(tmp &gt;&gt;&gt; 24);</span>
@@ -579,14 +579,14 @@ const ContentObjectVerification = {
 &nbsp;
     function <span class="fstat-no" title="function not covered" >toBits(</span>bytes) {
       var out = <span class="cstat-no" title="statement not covered" >[],</span> i, tmp=<span class="cstat-no" title="statement not covered" >0;</span>
-<span class="cstat-no" title="statement not covered" >      for (i=0; i&lt;bytes.length; i++) {</span>
+<span class="cstat-no" title="statement not covered" >      for(i=0; i&lt;bytes.length; i++) {</span>
 <span class="cstat-no" title="statement not covered" >        tmp = tmp &lt;&lt; 8 | bytes[i];</span>
-<span class="cstat-no" title="statement not covered" >        if ((i&amp;3) === 3) {</span>
+<span class="cstat-no" title="statement not covered" >        if((i&amp;3) === 3) {</span>
 <span class="cstat-no" title="statement not covered" >          out.push(tmp);</span>
 <span class="cstat-no" title="statement not covered" >          tmp = 0;</span>
         }
       }
-<span class="cstat-no" title="statement not covered" >      if (i&amp;3) {</span>
+<span class="cstat-no" title="statement not covered" >      if(i&amp;3) {</span>
 <span class="cstat-no" title="statement not covered" >        out.push(SJCL.bitArray.partial(8*(i&amp;3), tmp));</span>
       }
 <span class="cstat-no" title="statement not covered" >      return out;</span>
@@ -617,7 +617,7 @@ const ContentObjectVerification = {
         valid: true,
         cbor: cbor
       };
-    } catch (error) {
+    } catch(error) {
 <span class="cstat-no" title="statement not covered" >      return {</span>
         valid: false,
         error: error
@@ -675,14 +675,14 @@ const ContentObjectVerification = {
   },
 };
 &nbsp;
-module.exports = ContentObjectVerification;
+<span class="cstat-no" title="statement not covered" >module.exports = ContentObjectVerification;</span>
 &nbsp;</pre></td></tr>
 </table></pre>
 <div class='push'></div><!-- for sticky footer -->
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Fri Jun 14 2019 19:08:01 GMT-0700 (Pacific Daylight Time)
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Thu Jun 27 2019 13:07:01 GMT-0700 (Pacific Daylight Time)
 </div>
 </div>
 <script src="prettify.js"></script>

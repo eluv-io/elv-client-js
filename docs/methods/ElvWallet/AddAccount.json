@@ -1,22 +1,22 @@
 [
   {
-    "signature": "async AddAccount({\n  \"accountName\": \"test\",\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"test\",\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": "async AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0x41fa42ba237c6b1c1a736d057d3aaf901d4adc35b5ae84c933ceaf61db6aeb63\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0xa4fbaa64068d99aa6c040018f6865379308ab4d9adc6faac8850d9d947fa9eda\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": "async AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": "async AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0xf1402b0aa53279c933a099639599c47a4a6ac8af3c09335e67ffae1109cec1dc\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0xf1402b0aa53279c933a099639599c47a4a6ac8af3c09335e67ffae1109cec1dc\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": "async AddAccount({\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
+    "signature": " AddAccount({\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

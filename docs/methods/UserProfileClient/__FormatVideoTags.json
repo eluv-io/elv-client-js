@@ -1,14 +1,14 @@
 [
   {
-    "signature": "async __FormatVideoTags({\n  \"0\": {\n    \"tags\": [\n      {\n        \"score\": 0.3,\n        \"tag\": \"cherry\"\n      },\n      {\n        \"score\": 0.8,\n        \"tag\": \"chocolate\"\n      },\n      {\n        \"score\": 0.6,\n        \"tag\": \"boat\"\n      }\n    ]\n  }\n});",
+    "signature": " __FormatVideoTags({\n  \"0\": {\n    \"tags\": [\n      {\n        \"score\": 0.3,\n        \"tag\": \"cherry\"\n      },\n      {\n        \"score\": 0.8,\n        \"tag\": \"chocolate\"\n      },\n      {\n        \"score\": 0.6,\n        \"tag\": \"boat\"\n      }\n    ]\n  }\n});",
     "result": "{\n  \"cherry\": 0.3,\n  \"chocolate\": 0.8,\n  \"boat\": 0.6\n}"
   },
   {
-    "signature": "async __FormatVideoTags({\n  \"0\": {\n    \"tags\": [\n      {\n        \"score\": 0.7,\n        \"tag\": \"cherry\"\n      },\n      {\n        \"score\": 0.5,\n        \"tag\": \"duck\"\n      },\n      {\n        \"score\": 0.6,\n        \"tag\": \"buoy\"\n      }\n    ]\n  }\n});",
+    "signature": " __FormatVideoTags({\n  \"0\": {\n    \"tags\": [\n      {\n        \"score\": 0.7,\n        \"tag\": \"cherry\"\n      },\n      {\n        \"score\": 0.5,\n        \"tag\": \"duck\"\n      },\n      {\n        \"score\": 0.6,\n        \"tag\": \"buoy\"\n      }\n    ]\n  }\n});",
     "result": "{\n  \"cherry\": 0.7,\n  \"duck\": 0.5,\n  \"buoy\": 0.6\n}"
   },
   {
-    "signature": "async __FormatVideoTags({\n  \"0\": {\n    \"tags\": [\n      {\n        \"score\": 0.5,\n        \"tag\": \"mayhem\"\n      },\n      {\n        \"score\": 0.8,\n        \"tag\": \"person\"\n      },\n      {\n        \"score\": 0.9,\n        \"tag\": \"boat\"\n      }\n    ]\n  }\n});",
-    "result": "{\n  \"mayhem\": 0.5,\n  \"person\": 0.8,\n  \"boat\": 0.9\n}"
+    "signature": " __FormatVideoTags({\n  \"0\": {\n    \"tags\": [\n      {\n        \"score\": 0.5,\n        \"tag\": \"mayhem\"\n      },\n      {\n        \"score\": 0.8,\n        \"tag\": \"shark\"\n      },\n      {\n        \"score\": 0.9,\n        \"tag\": \"boat\"\n      }\n    ]\n  }\n});",
+    "result": "{\n  \"mayhem\": 0.5,\n  \"shark\": 0.8,\n  \"boat\": 0.9\n}"
   }
 ]
