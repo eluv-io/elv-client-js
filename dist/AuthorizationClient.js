@@ -622,7 +622,8 @@ function () {
                 // Set default args
                 args = [0, // Access level
                 this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-                cap.public_key, [], // Custom values
+                "", //cap.public_key,
+                [], // Custom values
                 [] // Stakeholders
                 ];
 

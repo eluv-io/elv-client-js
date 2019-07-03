@@ -7,6 +7,7 @@ const ContentContract = require("../src/contracts/BaseContent");
 const LibraryContract = require("../src/contracts/BaseLibrary");
 const SpaceContract = require("../src/contracts/BaseContentSpace");
 const WalletContract = require("../src/contracts/BaseAccessWallet");
+const AccessGroupContract = require("../src/contracts/BaseAccessControlGroup");
 const cbor = require("cbor");
 const fs = require("fs");
 
@@ -112,16 +113,30 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      //privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000",
-      privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
+      privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000",
+      //privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
     });
 
 
     await client.SetSigner({signer});
 
+    console.log(await client.ContentTypes());
+    return;
 
-    console.log(await client.userProfileClient.UserWalletAddress({address: signer.address}));
-    console.log(await client.userProfileClient.UserWalletAddress({address: signer.address}));
+    const addr = await client.CreateAccessGroup();
+
+    await client.AddAccessGroupManager({
+      contractAddress: addr,
+      memberAddress: "0x5ed253fc57eba0fd5e215d3f70d3b8912570a723"
+    });
+
+
+    console.log(await client.CallContractMethod({
+      contractAddress: addr,
+      abi: AccessGroupContract.abi,
+      methodName: "hasManagerAccess",
+      methodArgs: [signer.address.replace("0x", "")]
+    }));
 
 /*
     console.log(await client.VerifyContentObject({
