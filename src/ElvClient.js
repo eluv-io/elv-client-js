@@ -19,7 +19,6 @@ const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
-const WalletContract = require("./contracts/BaseAccessWallet");
 
 // Platform specific polyfills
 switch(Utils.Platform()) {
@@ -1194,29 +1193,17 @@ class ElvClient {
   /**
    * Delete specified content object
    *
-   * @see DELETE /qlibs/:qlibid/qid/:objectid
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    */
   async DeleteContentObject({libraryId, objectId}) {
-    let path = UrlJoin("qid", objectId);
-
-    const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
-
     await this.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "kill",
-      methodArgs: []
-    });
-
-    await this.HttpClient.Request({
-      headers: authorizationHeader,
-      method: "DELETE",
-      path: path
+      contractAddress: Utils.HashToAddress(libraryId),
+      abi: LibraryContract.abi,
+      methodName: "deleteContent",
+      methodArgs: [this.utils.HashToAddress(objectId)]
     });
   }
 
@@ -1576,60 +1563,24 @@ class ElvClient {
   }
 
   /**
-   * Upload part to an object draft
-   *
-   * @see POST /qlibs/:qlibid/q/:write_token/data
+   * Create a part upload draft
    *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
-   * @param {(ArrayBuffer | Blob | Buffer)} data - Data to upload
-   * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
    * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
-   * @param {function=} callback - If specified, function will be called with upload progress after completion of each chunk
-   * - Method signatue: ({uploaded, total})
    *
-   * @returns {Promise<Object>} - Response containing information about the uploaded part
+   * @returns {Promise<string>} - The part write token for the part draft
    */
-  async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, encryption="none", callback}) {
+  async CreatePart({libraryId, objectId, writeToken, encryption}) {
     const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
     headers["X-Content-Fabric-Encryption-Scheme"] = encryption || "none";
 
-    const encrypt = encryption === "cgck";
-    const encryptionCap = encrypt ?
-      await this.EncryptionCap({libraryId, objectId, writeToken, blockSize: chunkSize}) : undefined;
-
-    const totalSize = data.size || data.length || data.byteLength;
-
-    if(callback) { callback({uploaded: 0, total: totalSize}); }
-
-    // If the file is smaller than the chunk size, just upload it in one pass
-    if(totalSize < chunkSize) {
-      if(encrypt) {
-        data = await Crypto.Encrypt(encryptionCap, data);
-      }
-
-      const uploadResult = await ResponseToJson(
-        this.HttpClient.Request({
-          headers,
-          method: "POST",
-          path: UrlJoin("q", writeToken, "data"),
-          body: data,
-          bodyType: "BINARY"
-        })
-      );
-
-      if(callback) { callback({uploaded: totalSize, total: totalSize}); }
-
-      return uploadResult;
-    }
-
     const path = UrlJoin("q", writeToken, "parts");
 
-    // Create the part for writing
-    let partWriteToken = (await ResponseToJson(
+    const openResponse = await ResponseToJson(
       this.HttpClient.Request({
         headers: headers,
         method: "POST",
@@ -1637,31 +1588,64 @@ class ElvClient {
         bodyType: "BINARY",
         body: ""
       })
-    )).part.write_token;
+    );
 
-    // Upload the part in chunks, calling progressCallback after each time
-    for(let uploaded = 0; uploaded < totalSize; uploaded += chunkSize) {
-      const to = Math.min(uploaded + chunkSize, totalSize);
+    return openResponse.part.write_token;
+  }
 
-      let chunk = data.slice(uploaded, to);
-      if(encrypt) {
-        chunk = await Crypto.Encrypt(encryptionCap, chunk);
-      }
+  /**
+   * Upload data to an open part draft
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {string} partWriteToken - Write token of the part
+   * @param {(ArrayBuffer | Buffer)} chunk - Data to upload
+   * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+   *
+   * @returns {Promise<string>} - The part write token for the part draft
+   */
+  async UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk, encryption}) {
+    const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
+    headers["X-Content-Fabric-Encryption-Scheme"] = encryption || "none";
 
-      await ResponseToJson(
-        this.HttpClient.Request({
-          headers: headers,
-          method: "POST",
-          path: UrlJoin(path, partWriteToken),
-          body: chunk,
-          bodyType: "BINARY",
-        })
-      );
-
-      if(callback) { callback({uploaded: to, total: totalSize}); }
+    if(encryption === "cgck") {
+      const encryptionCap = await this.EncryptionCap({libraryId, objectId, writeToken});
+      chunk = await Crypto.Encrypt(encryptionCap, chunk);
     }
 
-    // Finalize part
+    const path = UrlJoin("q", writeToken, "parts");
+    await ResponseToJson(
+      this.HttpClient.Request({
+        headers: headers,
+        method: "POST",
+        path: UrlJoin(path, partWriteToken),
+        body: chunk,
+        bodyType: "BINARY",
+      })
+    );
+  }
+
+  /**
+   * Finalize an open part draft
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {string} partWriteToken - Write token of the part
+   * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+   *
+   * @returns {Promise<object>} - The finalize response for the new part
+   */
+  async FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption}) {
+    const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
+    headers["X-Content-Fabric-Encryption-Scheme"] = encryption || "none";
+
+    const path = UrlJoin("q", writeToken, "parts");
     return await ResponseToJson(
       await this.HttpClient.Request({
         headers: headers,
@@ -1671,6 +1655,28 @@ class ElvClient {
         body: ""
       })
     );
+  }
+
+  /**
+   * Upload part to an object draft
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {(ArrayBuffer | Buffer)} data - Data to upload
+   * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
+   * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+   *
+   * @returns {Promise<Object>} - Response containing information about the uploaded part
+   */
+  async UploadPart({libraryId, objectId, writeToken, data, encryption="none"}) {
+    const partWriteToken = await this.CreatePart({libraryId, objectId, writeToken, encryption});
+
+    await this.UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk: data, encryption});
+
+    return await this.FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption});
   }
 
   /**
@@ -2293,123 +2299,7 @@ class ElvClient {
     });
   }
 
-  /* Collection / Access Indexor methods */
-
-  async ContractCollection({contractAddress, abi, lengthMethod, itemMethod}) {
-    const nCollection = (await this.CallContractMethod({
-      contractAddress,
-      abi,
-      methodName: lengthMethod
-    })).toNumber();
-
-    return await Promise.all(
-      [...Array(nCollection)].map(async (_, i) => {
-        const itemAddress = await this.CallContractMethod({
-          contractAddress,
-          abi,
-          methodName: itemMethod,
-          methodArgs: [i]
-        });
-
-        return itemAddress;
-      })
-    );
-  }
-
-  CollectionMethods(collectionType) {
-    let lengthMethod, itemMethod;
-    switch(collectionType) {
-      case "accessGroups":
-        lengthMethod = "getAccessGroupsLength";
-        itemMethod = "getAccessGroup";
-        break;
-      case "contentObjects":
-        lengthMethod = "getContentObjectsLength";
-        itemMethod = "getContentObject";
-        break;
-      case "contentTypes":
-        lengthMethod = "getContentTypesLength";
-        itemMethod = "getContentType";
-        break;
-      case "contracts":
-        lengthMethod = "getContractsLength";
-        itemMethod = "getContract";
-        break;
-      case "libraries":
-        lengthMethod = "getLibrariesLength";
-        itemMethod = "getLibrary";
-        break;
-      default:
-        throw Error("Invalid access group collection type: " + collectionType);
-    }
-
-    return {lengthMethod, itemMethod};
-  }
-
-  /**
-   * Get a list of addresses of all of the specified type the current user has access
-   * to through their user wallet
-   *
-   * @methodGroup Collections
-   * @namedParams
-   * @param {string} collectionType - Type of collection to retrieve
-   * - accessGroups
-   * - contentObjects
-   * - contentTypes
-   * - contracts
-   * - libraries
-   *
-   * @return {Promise<Array<string>>} - List of addresses of available items
-   */
-  async WalletCollection({collectionType}) {
-    const {lengthMethod, itemMethod} = this.CollectionMethods(collectionType);
-
-    return await this.ContractCollection({
-      contractAddress: await this.userProfileClient.WalletAddress(),
-      abi: WalletContract.abi,
-      lengthMethod,
-      itemMethod
-    });
-  }
-
-  /**
-   * Get a list of addresses of all of the specified type the current user has access
-   * to through access groups
-   *
-   * @methodGroup Collections
-   * @namedParams
-   * @param {string} collectionType - Type of collection to retrieve
-   * - accessGroups
-   * - contentObjects
-   * - contentTypes
-   * - contracts
-   * - libraries
-   *
-   * @return {Promise<Array<string>>} - List of addresses of available items
-   */
-  async AccessGroupsCollection({collectionType}) {
-    const {lengthMethod, itemMethod} = this.CollectionMethods(collectionType);
-
-    const accessGroups = await this.ContractCollection({
-      contractAddress: await this.userProfileClient.WalletAddress(),
-      abi: WalletContract.abi,
-      lengthMethod: "getAccessGroupsLength",
-      itemMethod: "getAccessGroup"
-    });
-
-    const collections = await Promise.all(
-      accessGroups.map(async accessGroupAddress => {
-        return await this.ContractCollection({
-          contractAddress: accessGroupAddress,
-          abi: AccessGroupContract.abi,
-          lengthMethod,
-          itemMethod
-        });
-      })
-    );
-
-    return collections.flat();
-  }
+  /* Collection */
 
   /**
    * Get a list of unique addresses of all of the specified type the current user has access
@@ -2427,11 +2317,34 @@ class ElvClient {
    * @return {Promise<Array<string>>} - List of addresses of available items
    */
   async Collection({collectionType}) {
-    if(!this.userProfileClient) { return []; }
+    const validCollectionTypes = [
+      "accessGroups",
+      "contentObjects",
+      "contentTypes",
+      "contracts",
+      "libraries"
+    ];
 
-    return (await this.WalletCollection({collectionType}))
-      .concat(await this.AccessGroupsCollection({collectionType}))
-      .filter((v, i, s) => s.indexOf(v) === i);
+    if(!validCollectionTypes.includes(collectionType)) {
+      throw new Error("Invalid collection type: " + collectionType);
+    }
+
+    const walletAddress = this.signer ? await this.userProfileClient.WalletAddress() : undefined;
+    if(!walletAddress) {
+      throw new Error("Unable to get collection: User wallet doesn't exist");
+    }
+
+    return await this.ethClient.MakeProviderCall({
+      methodName: "send",
+      args: [
+        "elv_getWalletCollection",
+        [
+          this.contentSpaceId,
+          `iusr${this.utils.AddressToHash(this.signer.address)}`,
+          collectionType
+        ]
+      ]
+    });
   }
 
   /* Verification */

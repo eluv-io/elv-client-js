@@ -266,6 +266,7 @@ class FrameClient {
       "CreateContentSpace",
       "CreateContentType",
       "CreateFileUploadJob",
+      "CreatePart",
       "CurrentAccountAddress",
       "CustomContractAddress",
       "DecryptPart",
@@ -287,6 +288,7 @@ class FrameClient {
       "FabricUrl",
       "FileUrl",
       "FinalizeContentObject",
+      "FinalizePart",
       "FinalizeUploadJobs",
       "FormatContractArguments",
       "GetBalance",
@@ -311,6 +313,7 @@ class FrameClient {
       "UploadFiles",
       "UploadJobStatus",
       "UploadPart",
+      "UploadPartChunk",
       "VerifyContentObject",
       "WalletCollection",
       "WithdrawContractFunds"
