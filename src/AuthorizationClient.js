@@ -291,7 +291,7 @@ class AuthorizationClient {
           args = [
             0, // Access level
             this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-            cap.public_key,
+            "", //cap.public_key,
             [], // Custom values
             [] // Stakeholders
           ];
