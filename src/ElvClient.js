@@ -4,7 +4,6 @@ if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
-
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
@@ -43,15 +42,17 @@ const ResponseToFormat = async (format, response) => {
 
   switch(format.toLowerCase()) {
     case "json":
-      return response.json();
+      return await response.json();
     case "text":
-      return response.text();
+      return await response.text();
     case "blob":
-      return response.blob();
+      return await response.blob();
     case "arraybuffer":
-      return response.arrayBuffer();
+      return await response.arrayBuffer();
     case "formdata":
-      return response.formData();
+      return await response.formData();
+    case "buffer":
+      return await response.buffer();
     default:
       return response;
   }
@@ -1441,8 +1442,6 @@ class ElvClient {
   /**
    * List content object parts
    *
-   * @see GET /qlibs/:qlibid/q/:qhit/parts
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string=} libraryId - ID of the library
@@ -1467,27 +1466,35 @@ class ElvClient {
     return response.parts;
   }
 
-  async DecryptPart({libraryId, objectId, partHash, data}) {
-    const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
+  /**
+   * Get information on a specific part
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string} partHash - Hash of the part to retrieve
+   *
+   * @returns {Promise<Object>} - Response containing information about the specified part
+   */
+  async ContentPart({libraryId, objectId, versionHash, partHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-    let cap;
-    if(this.utils.EqualAddress(owner, this.signer.address)) {
-      // Primary decryption
-      cap = await this.EncryptionCap({libraryId, objectId});
-    } else {
-      // Target decryption
-      cap = await this.authClient.ReencryptionKey(objectId);
-    }
+    let path = UrlJoin("q", versionHash || objectId, "parts", partHash);
 
-    if(!cap) {
-      throw Error("No encryption capsule for " + partHash);
-    }
-
-    return await Crypto.Decrypt(cap, data);
+    return await ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+        method: "GET",
+        path: path
+      })
+    );
   }
 
   /**
-   * Download a part from a content object
+   * Download a part from a content object. The fromByte and range parameters can be used to specify a
+   * specific section of the part to download.
    *
    * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash
    *
@@ -1497,36 +1504,125 @@ class ElvClient {
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} partHash - Hash of the part to download
-   * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
+   * @param {string=} format="arrayBuffer" - Format in which to return the data
+   * @param {boolean=} chunked=false - If specified, part will be downloaded and decrypted in chunks. The
+   * specified callback will be invoked on completion of each chunk. This is recommended for large files,
+   * especially if they are encrypted.
+   * @param {number=} chunkSize=1000000 - If doing chunked download, size of each chunk to fetch
+   * @param {function=} callback - Will be called on completion of each chunk
+   * - Signature: ({bytesFinished, bytesTotal, chunk}) => {}
+   *
+   * Note: If the part is encrypted, bytesFinished/bytesTotal will not exactly match the size of the data
+   * received. These values correspond to the size of the encrypted data - when decrypted, the part will be
+   * slightly smaller.
    *
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
-  async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
+  async DownloadPart({
+    libraryId,
+    objectId,
+    versionHash,
+    partHash,
+    format="arrayBuffer",
+    chunked=false,
+    chunkSize=10000000,
+    callback
+  }) {
+    if(chunked && !callback) { throw Error("No callback specified for chunked part download"); }
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     const encrypted = partHash.startsWith("hqpe");
+    const encryption = encrypted ? "cgck" : "none";
     const path = UrlJoin("q", versionHash || objectId, "data", partHash);
 
-    let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash});
-    if(encrypted) {
-      headers["X-Content-Fabric-Encryption-Scheme"] = "cgck";
+    let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
+
+    if(!chunked) {
+      // Download and decrypt entire part
+      const response = await this.HttpClient.Request({headers, method: "GET", path: path});
+
+      let data = await response.arrayBuffer();
+
+      if(encrypted) {
+        const encryptionCap = await this.EncryptionCap({libraryId, objectId});
+        data = await Crypto.Decrypt(encryptionCap, data);
+      }
+
+      return await ResponseToFormat(
+        format,
+        new Response(data)
+      );
     }
 
-    const response = await this.HttpClient.Request({headers, method: "GET", path: path});
+    // Download part in chunks
+    const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
+    let bytesFinished = 0;
 
-    let data = await response.arrayBuffer();
-
+    let stream;
     if(encrypted) {
-      data = await this.DecryptPart({libraryId, objectId, partHash, data});
+      // Set up decryption stream
+      const encryptionCap = await this.EncryptionCap({libraryId, objectId});
+      stream = await Crypto.OpenDecryptionStream(encryptionCap);
+
+      stream = stream.on("data", async chunk => {
+        // Turn buffer into desired format, if necessary
+        if(format !== "buffer") {
+          const arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
+
+          if(format === "arrayBuffer") {
+            chunk = arrayBuffer;
+          } else {
+            chunk = await ResponseToFormat(
+              format,
+              new Response(arrayBuffer)
+            );
+          }
+        }
+
+        callback({
+          bytesFinished,
+          bytesTotal,
+          chunk
+        });
+      });
     }
 
-    return await ResponseToFormat(
-      format,
-      new Response(data)
-    );
+    const totalChunks = Math.ceil(bytesTotal / chunkSize);
+    for(let i = 0; i < totalChunks; i++) {
+      headers["Range"] = `bytes=${bytesFinished}-${bytesFinished + chunkSize - 1}`;
+      const response = await this.HttpClient.Request({headers, method: "GET", path: path});
+
+      bytesFinished = Math.min(bytesFinished + chunkSize, bytesTotal);
+
+      if(encrypted) {
+        stream.write(new Uint8Array(await response.arrayBuffer()));
+      } else {
+        callback({bytesFinished, bytesTotal, data: ResponseToFormat(format, response)});
+      }
+    }
+
+    if(stream) {
+      // Wait for decryption to complete
+      stream.end();
+      await new Promise(resolve =>
+        stream.on("finish", () => {
+          resolve();
+        })
+      );
+    }
   }
 
   async EncryptionCap({libraryId, objectId, writeToken, blockSize=1000000}) {
+    const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
+
+    if(!this.utils.EqualAddress(owner, this.signer.address)) {
+      // Target decryption
+      return await this.authClient.ReencryptionKey(objectId);
+    }
+
+    // Primary encryption
+
     const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
     const existingCap = await this.ContentObjectMetadata({
       libraryId,
@@ -1575,14 +1671,11 @@ class ElvClient {
    * @returns {Promise<string>} - The part write token for the part draft
    */
   async CreatePart({libraryId, objectId, writeToken, encryption}) {
-    const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
-    headers["X-Content-Fabric-Encryption-Scheme"] = encryption || "none";
-
     const path = UrlJoin("q", writeToken, "parts");
 
     const openResponse = await ResponseToJson(
       this.HttpClient.Request({
-        headers: headers,
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
         method: "POST",
         path,
         bodyType: "BINARY",
@@ -1608,10 +1701,7 @@ class ElvClient {
    * @returns {Promise<string>} - The part write token for the part draft
    */
   async UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk, encryption}) {
-    const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
-    headers["X-Content-Fabric-Encryption-Scheme"] = encryption || "none";
-
-    if(encryption === "cgck") {
+    if(encryption) {
       const encryptionCap = await this.EncryptionCap({libraryId, objectId, writeToken});
       chunk = await Crypto.Encrypt(encryptionCap, chunk);
     }
@@ -1619,7 +1709,7 @@ class ElvClient {
     const path = UrlJoin("q", writeToken, "parts");
     await ResponseToJson(
       this.HttpClient.Request({
-        headers: headers,
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
         method: "POST",
         path: UrlJoin(path, partWriteToken),
         body: chunk,
@@ -1642,13 +1732,10 @@ class ElvClient {
    * @returns {Promise<object>} - The finalize response for the new part
    */
   async FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption}) {
-    const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
-    headers["X-Content-Fabric-Encryption-Scheme"] = encryption || "none";
-
     const path = UrlJoin("q", writeToken, "parts");
     return await ResponseToJson(
       await this.HttpClient.Request({
-        headers: headers,
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
         method: "POST",
         path: UrlJoin(path, partWriteToken),
         bodyType: "BINARY",
