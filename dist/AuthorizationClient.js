@@ -83,13 +83,13 @@ function () {
       var _AuthorizationHeader = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee(_ref2) {
-        var libraryId, objectId, versionHash, partHash, _ref2$update, update, _ref2$channelAuth, channelAuth, _ref2$noCache, noCache, _ref2$noAuth, noAuth, authorizationToken;
+        var libraryId, objectId, versionHash, partHash, encryption, _ref2$update, update, _ref2$channelAuth, channelAuth, _ref2$noCache, noCache, _ref2$noAuth, noAuth, authorizationToken, headers;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
+                libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, encryption = _ref2.encryption, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
                 _context.next = 3;
                 return this.AuthorizationToken({
                   libraryId: libraryId,
@@ -104,11 +104,17 @@ function () {
 
               case 3:
                 authorizationToken = _context.sent;
-                return _context.abrupt("return", {
+                headers = {
                   Authorization: "Bearer " + authorizationToken
-                });
+                };
 
-              case 5:
+                if (encryption && encryption !== "none") {
+                  headers["X-Content-Fabric-Encryption-Scheme"] = encryption;
+                }
+
+                return _context.abrupt("return", headers);
+
+              case 7:
               case "end":
                 return _context.stop();
             }

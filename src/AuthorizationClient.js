@@ -53,6 +53,7 @@ class AuthorizationClient {
     objectId,
     versionHash,
     partHash,
+    encryption,
     update=false,
     channelAuth=false,
     noCache=false,
@@ -69,7 +70,13 @@ class AuthorizationClient {
       noAuth
     });
 
-    return { Authorization: "Bearer " + authorizationToken };
+    const headers = { Authorization: "Bearer " + authorizationToken };
+
+    if(encryption && encryption !== "none") {
+      headers["X-Content-Fabric-Encryption-Scheme"] = encryption;
+    }
+
+    return headers;
   }
 
   // Wrapper for GenerateAuthorizationHeader to allow for per-call disabling of cache
