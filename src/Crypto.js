@@ -119,49 +119,7 @@ const Crypto = {
     };
   },
 
-  /**
-   * Encrypt data with headers
-   *
-   * @namedParams
-   * @param {ArrayBuffer | Buffer} data - Data to encrypt
-   * @param {Object} cap - Encryption "capsule" containing keys
-   *
-   * @returns {Promise<Buffer>} - Encrypted data
-   */
-  Encrypt: async (cap, data) => {
-    // Convert Blob to ArrayBuffer if necessary
-    if(!Buffer.isBuffer(data) && !(data instanceof ArrayBuffer)) {
-      data = Buffer.from(await new Response(data).arrayBuffer());
-    }
-
-    const elvCrypto = await Crypto.ElvCrypto();
-
-    const {symmetricKey, secretKey, publicKey} = Crypto.CapToKeys(cap);
-    const context = elvCrypto.newPrimaryContext(
-      publicKey,
-      secretKey,
-      symmetricKey
-    );
-
-    const dataArray = new Uint8Array(data);
-    const encryptedData = elvCrypto.encryptPrimaryH(context, dataArray);
-    const encryptedDataBuffer = Buffer.from(encryptedData);
-
-    context.free();
-
-    return encryptedDataBuffer;
-  },
-
-  /**
-   * Decrypt data with headers
-   *
-   * @namedParams
-   * @param {ArrayBuffer | Buffer} encryptedData - Data to encrypt
-   * @param {Object} cap - Encryption "capsule" containing keys
-   *
-   * @returns {Promise<Buffer>} - Decrypted data
-   */
-  Decrypt: async (cap, encryptedData) => {
+  async EncryptionContext(cap) {
     const elvCrypto = await Crypto.ElvCrypto();
 
     const {symmetricKey, secretKey, publicKey} = Crypto.CapToKeys(cap);
@@ -184,19 +142,58 @@ const Crypto = {
       );
     }
 
-    const input = new Stream.PassThrough();
-    const decipher = elvCrypto.createDecipher(type, context);
-    input.end(new Uint8Array(encryptedData));
+    return {context, type};
+  },
+
+  /**
+   * Encrypt data with headers
+   *
+   * @namedParams
+   * @param {ArrayBuffer | Buffer} data - Data to encrypt
+   * @param {Object} cap - Encryption "capsule" containing keys
+   *
+   * @returns {Promise<Buffer>} - Encrypted data
+   */
+  Encrypt: async (cap, data) => {
+    // Convert Blob to ArrayBuffer if necessary
+    if(!Buffer.isBuffer(data) && !(data instanceof ArrayBuffer)) {
+      data = Buffer.from(await new Response(data).arrayBuffer());
+    }
+
+    const elvCrypto = await Crypto.ElvCrypto();
+
+    const { context } = await Crypto.EncryptionContext(cap);
+
+    const dataArray = new Uint8Array(data);
+    const encryptedData = elvCrypto.encryptPrimaryH(context, dataArray);
+    const encryptedDataBuffer = Buffer.from(encryptedData);
+
+    context.free();
+
+    return encryptedDataBuffer;
+  },
+
+  /**
+   * Decrypt data with headers
+   *
+   * @namedParams
+   * @param {Object} cap - Encryption "capsule" containing keys
+   * @param {ArrayBuffer | Buffer} encryptedData - Data to encrypt
+   *
+   * @returns {Promise<Buffer>} - Decrypted data
+   */
+  Decrypt: async (cap, encryptedData) => {
+    const stream = await Crypto.OpenDecryptionStream(cap);
+
+    stream.end(new Uint8Array(encryptedData));
 
     let decryptedChunks = [];
     await new Promise((resolve, reject) => {
-      input
-        .pipe(decipher)
+      stream
         .on("data", chunk => {
           decryptedChunks.push(chunk);
         })
         .on("finish", () => {
-          context.free();
           resolve();
         })
         .on("error", (e) => {
@@ -206,6 +203,23 @@ const Crypto = {
 
     return Buffer.concat(decryptedChunks);
   },
+
+  OpenDecryptionStream: async (cap) => {
+    const elvCrypto = await Crypto.ElvCrypto();
+    const {context, type} = await Crypto.EncryptionContext(cap);
+
+    const stream = new Stream.PassThrough();
+    const decipher = elvCrypto.createDecipher(type, context);
+
+    return stream
+      .pipe(decipher)
+      .on("finish", () => {
+        context.free();
+      })
+      .on("error", (e) => {
+        throw Error(e);
+      });
+  }
 };
 
 module.exports = Crypto;
