@@ -113,14 +113,19 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
-      //privateKey: "0x263a8e6a79fcc707eee7f7c508ab42dc32127b1a1680713988372d443e74de18"
+      //privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
+      privateKey: "0x4a375c17bc0398c58839310cac6ddec4c14055205f9599c04adf67de5edc0863"
     });
 
 
     await client.SetSigner({signer});
 
-    console.log(await client.ContentTypes());
+    const libraryId = "ilibrCr3vtsdcxqnBtdtbz5ArnJVYjz";
+    const objectId = "iq__48ovSLGUU3ECSVAepJZbrkCpteyT";
+
+    const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+    console.log(await client.CreatePart({libraryId, objectId, writeToken}));
+    
     return;
 
     const addr = await client.CreateAccessGroup();

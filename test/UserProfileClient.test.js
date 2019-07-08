@@ -1,7 +1,14 @@
+const crypto = require("crypto");
+
+Object.defineProperty(global.self, "crypto", {
+  value: {
+    getRandomValues: arr => crypto.randomBytes(arr.length),
+  },
+});
+
 const fs = require("fs");
 const OutputLogger = require("./utils/OutputLogger");
 const {CreateClient, BufferToArrayBuffer} = require("./utils/Utils");
-
 const UserProfileClient = require("../src/UserProfileClient");
 
 let client, tagClient;

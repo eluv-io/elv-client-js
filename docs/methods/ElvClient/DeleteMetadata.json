@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib3nNAVZw54nzCGRDU5QgKyhkQEMDp\",\n  \"objectId\": \"iq__3Lyre1Q2mv7RSCnVHTf8FUcaM1Lj\",\n  \"writeToken\": \"tqw_BciWseUMzun5RyrDiyVoyPaJDe8HX9xok\",\n  \"metadataSubtree\": \"toDelete\"\n});"
+    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib3tinD3ymT88jAxkPa1LMefFCy71R\",\n  \"objectId\": \"iq__24VTi1AaW3zkV5nyHm4UvnuAShBz\",\n  \"writeToken\": \"tqw_PejjuHxTfM3iWfkbTexvoq8Rqd6L15Wp7\",\n  \"metadataSubtree\": \"toDelete\"\n});"
   }
 ]

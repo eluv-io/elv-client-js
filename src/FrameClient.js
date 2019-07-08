@@ -228,7 +228,6 @@ class FrameClient {
   AllowedMethods() {
     return [
       "AccessGroupOwner",
-      "AccessGroupsCollection",
       "AccessInfo",
       "AccessRequest",
       "AddAccessGroupManager",
@@ -242,7 +241,6 @@ class FrameClient {
       "CallContractMethodAndWait",
       "ClearCache",
       "Collection",
-      "CollectionMethods",
       "ContentLibraries",
       "ContentLibrary",
       "ContentLibraryOwner",
@@ -252,12 +250,12 @@ class FrameClient {
       "ContentObjectOwner",
       "ContentObjectVersions",
       "ContentObjects",
+      "ContentPart",
       "ContentParts",
       "ContentSpaceId",
       "ContentType",
       "ContentTypeOwner",
       "ContentTypes",
-      "ContractCollection",
       "ContractEvents",
       "CopyContentObject",
       "CreateAccessGroup",
@@ -269,7 +267,6 @@ class FrameClient {
       "CreatePart",
       "CurrentAccountAddress",
       "CustomContractAddress",
-      "DecryptPart",
       "DefaultKMSAddress",
       "DeleteAccessGroup",
       "DeleteContentLibrary",
@@ -315,7 +312,6 @@ class FrameClient {
       "UploadPart",
       "UploadPartChunk",
       "VerifyContentObject",
-      "WalletCollection",
       "WithdrawContractFunds"
     ];
   }

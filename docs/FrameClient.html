@@ -347,7 +347,6 @@ and generating a timeout error</p>
 
 [
   "AccessGroupOwner",
-  "AccessGroupsCollection",
   "AccessInfo",
   "AccessRequest",
   "AddAccessGroupManager",
@@ -361,7 +360,6 @@ and generating a timeout error</p>
   "CallContractMethodAndWait",
   "ClearCache",
   "Collection",
-  "CollectionMethods",
   "ContentLibraries",
   "ContentLibrary",
   "ContentLibraryOwner",
@@ -371,12 +369,12 @@ and generating a timeout error</p>
   "ContentObjectOwner",
   "ContentObjectVersions",
   "ContentObjects",
+  "ContentPart",
   "ContentParts",
   "ContentSpaceId",
   "ContentType",
   "ContentTypeOwner",
   "ContentTypes",
-  "ContractCollection",
   "ContractEvents",
   "CopyContentObject",
   "CreateAccessGroup",
@@ -385,9 +383,9 @@ and generating a timeout error</p>
   "CreateContentSpace",
   "CreateContentType",
   "CreateFileUploadJob",
+  "CreatePart",
   "CurrentAccountAddress",
   "CustomContractAddress",
-  "DecryptPart",
   "DefaultKMSAddress",
   "DeleteAccessGroup",
   "DeleteContentLibrary",
@@ -406,6 +404,7 @@ and generating a timeout error</p>
   "FabricUrl",
   "FileUrl",
   "FinalizeContentObject",
+  "FinalizePart",
   "FinalizeUploadJobs",
   "FormatContractArguments",
   "GetBalance",
@@ -430,8 +429,8 @@ and generating a timeout error</p>
   "UploadFiles",
   "UploadJobStatus",
   "UploadPart",
+  "UploadPartChunk",
   "VerifyContentObject",
-  "WalletCollection",
   "WithdrawContractFunds"
 ]</pre>
 
@@ -619,12 +618,11 @@ Useful when acting as an intermediate between a contained app and a parent app.<
   "type": "ElvFrameResponse",
   "requestId": 123,
   "response": [
-    "ilib9ya53F2ymwiSLNWkZ31iHWBUUq6",
-    "ilib2xVMXkRrn6T2a2goYhwm8GW2MzBC",
-    "ilib3aU2Z5hS9baWe4VjKaL5r9SuWM2K",
-    "ilib2GGnXjEAHoQZXNCpjzB8jjuguMQk",
-    "ilib2vffhEyDsUnK7fNzbhTSv89t5X4M",
-    "ilib2zz9nGbHf8oFvemb2ER4QX1oduCE"
+    "ilib2JC1WpURtkUF3jrMUNE7ZAeEw94L",
+    "ilib2rS9h4V9BwbBjAaSN2CB2KjTZAgw",
+    "ilib3HwaMZxS5BUPDnBLPiKYDrWnZcQy",
+    "ilib4AYppadWopTtfpWAEnDXn9UMY17J",
+    "ilib3kPe1xu2EMSTLZSgreQaLy4ATEV1"
   ]
 }</pre>
 
@@ -632,12 +630,12 @@ Useful when acting as an intermediate between a contained app and a parent app.<
   "request": {
     "type": "ElvFrameRequest",
     "requestId": 1234,
-    "calledMethod": "UploadPart",
+    "calledMethod": "DownloadPart",
     "args": {
-      "libraryId": "ilib3WFgBtjzeNxjNnDC8Ebovi5AcYYT",
-      "objectId": "iq__4SRGJ3pwUfZb8vS4btUmpSD9wppJ",
-      "writeToken": "tqw_51FXLLPqgvrCKGdiBzgWAUKGpe9aFuYmG",
-      "data": "&lt;ArrayBuffer 100000>",
+      "libraryId": "ilibUYhKFieQ5T7PY7sEfUM1hmpPqtB",
+      "objectId": "iq__3F3fPJHZto6zt7vEueG1w3XCw5Xv",
+      "partHash": "hqp_9ypbxTHKzc1yN41PR7AoZhvc6YvS3Nko8cEaxWnxhMEmALmT",
+      "chunked": true,
       "chunkSize": 10000
     },
     "callbackId": 321
@@ -647,18 +645,7 @@ Useful when acting as an intermediate between a contained app and a parent app.<
 
 {
   "type": "ElvFrameResponse",
-  "requestId": 1234,
-  "response": {
-    "content": {
-      "id": "iq__4SRGJ3pwUfZb8vS4btUmpSD9wppJ",
-      "write_token": "tqw_51FXLLPqgvrCKGdiBzgWAUKGpe9aFuYmG",
-      "type": ""
-    },
-    "part": {
-      "hash": "hqp_28wwottDvSHMG14aDEZNduvUsoGvdGwcfUNRRN8WTgsUzHAd",
-      "size": 100000
-    }
-  }
+  "requestId": 1234
 }</pre>
 
 

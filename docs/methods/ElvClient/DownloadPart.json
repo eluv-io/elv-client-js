@@ -1,10 +1,6 @@
 [
   {
-    "signature": "async DownloadPart({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"partHash\": \"hqp_GZm1rBc7WdJNPzvhr74LXgX762dmDQadMhxALuHrtAatxpdT\",\n  \"format\": \"arrayBuffer\"\n});",
-    "result": "<ArrayBuffer 100000>"
-  },
-  {
-    "signature": "async DownloadPart({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"partHash\": \"hqp_B7ggHBSXQmZo9ypeoDo41rgBc562RuqrD3gsEmkcsurgjNBo\",\n  \"format\": \"arrayBuffer\"\n});",
-    "result": "<ArrayBuffer 100000>"
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3tinD3ymT88jAxkPa1LMefFCy71R\",\n  \"objectId\": \"iq__24VTi1AaW3zkV5nyHm4UvnuAShBz\",\n  \"partHash\": \"hqpeAxjM19ep5WKoiYux5HBVdEy6daiX958rmeHbzWwqVefst2Wy\",\n  \"format\": \"arrayBuffer\"\n});",
+    "result": "<ArrayBuffer 0>"
   }
 ]

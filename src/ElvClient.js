@@ -1598,7 +1598,7 @@ class ElvClient {
       if(encrypted) {
         stream.write(new Uint8Array(await response.arrayBuffer()));
       } else {
-        callback({bytesFinished, bytesTotal, data: ResponseToFormat(format, response)});
+        callback({bytesFinished, bytesTotal, chunk: await ResponseToFormat(format, response)});
       }
     }
 
@@ -1701,7 +1701,7 @@ class ElvClient {
    * @returns {Promise<string>} - The part write token for the part draft
    */
   async UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk, encryption}) {
-    if(encryption) {
+    if(encryption && encryption !== "none") {
       const encryptionCap = await this.EncryptionCap({libraryId, objectId, writeToken});
       chunk = await Crypto.Encrypt(encryptionCap, chunk);
     }

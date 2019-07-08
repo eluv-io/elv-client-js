@@ -1,10 +1,10 @@
 [
   {
     "signature": "async PassRequest({\n  \"request\": {\n    \"calledMethod\": \"ContentLibraries\",\n    \"args\": {},\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 123\n  }\n});",
-    "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 123,\n  \"response\": [\n    \"ilib9ya53F2ymwiSLNWkZ31iHWBUUq6\",\n    \"ilib2xVMXkRrn6T2a2goYhwm8GW2MzBC\",\n    \"ilib3aU2Z5hS9baWe4VjKaL5r9SuWM2K\",\n    \"ilib2GGnXjEAHoQZXNCpjzB8jjuguMQk\",\n    \"ilib2vffhEyDsUnK7fNzbhTSv89t5X4M\",\n    \"ilib2zz9nGbHf8oFvemb2ER4QX1oduCE\"\n  ]\n}"
+    "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 123,\n  \"response\": [\n    \"ilib2JC1WpURtkUF3jrMUNE7ZAeEw94L\",\n    \"ilib2rS9h4V9BwbBjAaSN2CB2KjTZAgw\",\n    \"ilib3HwaMZxS5BUPDnBLPiKYDrWnZcQy\",\n    \"ilib4AYppadWopTtfpWAEnDXn9UMY17J\",\n    \"ilib3kPe1xu2EMSTLZSgreQaLy4ATEV1\"\n  ]\n}"
   },
   {
-    "signature": "async PassRequest({\n  \"request\": {\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 1234,\n    \"calledMethod\": \"UploadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib3WFgBtjzeNxjNnDC8Ebovi5AcYYT\",\n      \"objectId\": \"iq__4SRGJ3pwUfZb8vS4btUmpSD9wppJ\",\n      \"writeToken\": \"tqw_51FXLLPqgvrCKGdiBzgWAUKGpe9aFuYmG\",\n      \"data\": \"<ArrayBuffer 100000>\",\n      \"chunkSize\": 10000\n    },\n    \"callbackId\": 321\n  }\n});",
-    "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 1234,\n  \"response\": {\n    \"content\": {\n      \"id\": \"iq__4SRGJ3pwUfZb8vS4btUmpSD9wppJ\",\n      \"write_token\": \"tqw_51FXLLPqgvrCKGdiBzgWAUKGpe9aFuYmG\",\n      \"type\": \"\"\n    },\n    \"part\": {\n      \"hash\": \"hqp_28wwottDvSHMG14aDEZNduvUsoGvdGwcfUNRRN8WTgsUzHAd\",\n      \"size\": 100000\n    }\n  }\n}"
+    "signature": "async PassRequest({\n  \"request\": {\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 1234,\n    \"calledMethod\": \"DownloadPart\",\n    \"args\": {\n      \"libraryId\": \"ilibUYhKFieQ5T7PY7sEfUM1hmpPqtB\",\n      \"objectId\": \"iq__3F3fPJHZto6zt7vEueG1w3XCw5Xv\",\n      \"partHash\": \"hqp_9ypbxTHKzc1yN41PR7AoZhvc6YvS3Nko8cEaxWnxhMEmALmT\",\n      \"chunked\": true,\n      \"chunkSize\": 10000\n    },\n    \"callbackId\": 321\n  }\n});",
+    "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 1234\n}"
   }
 ]
