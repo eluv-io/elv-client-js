@@ -3578,7 +3578,7 @@ function () {
 
               case 41:
                 if (!(i < totalChunks)) {
-                  _context50.next = 61;
+                  _context50.next = 68;
                   break;
                 }
 
@@ -3610,37 +3610,46 @@ function () {
 
                 _context50.t0.write.call(_context50.t0, _context50.t3);
 
-                _context50.next = 58;
+                _context50.next = 65;
                 break;
 
               case 57:
-                callback({
-                  bytesFinished: bytesFinished,
-                  bytesTotal: bytesTotal,
-                  data: ResponseToFormat(format, _response)
-                });
+                _context50.t4 = callback;
+                _context50.t5 = bytesFinished;
+                _context50.t6 = bytesTotal;
+                _context50.next = 62;
+                return ResponseToFormat(format, _response);
 
-              case 58:
+              case 62:
+                _context50.t7 = _context50.sent;
+                _context50.t8 = {
+                  bytesFinished: _context50.t5,
+                  bytesTotal: _context50.t6,
+                  chunk: _context50.t7
+                };
+                (0, _context50.t4)(_context50.t8);
+
+              case 65:
                 i++;
                 _context50.next = 41;
                 break;
 
-              case 61:
+              case 68:
                 if (!stream) {
-                  _context50.next = 65;
+                  _context50.next = 72;
                   break;
                 }
 
                 // Wait for decryption to complete
                 stream.end();
-                _context50.next = 65;
+                _context50.next = 72;
                 return new Promise(function (resolve) {
                   return stream.on("finish", function () {
                     resolve();
                   });
                 });
 
-              case 65:
+              case 72:
               case "end":
                 return _context50.stop();
             }
@@ -3886,7 +3895,7 @@ function () {
               case 0:
                 libraryId = _ref53.libraryId, objectId = _ref53.objectId, writeToken = _ref53.writeToken, partWriteToken = _ref53.partWriteToken, chunk = _ref53.chunk, encryption = _ref53.encryption;
 
-                if (!encryption) {
+                if (!(encryption && encryption !== "none")) {
                   _context53.next = 8;
                   break;
                 }

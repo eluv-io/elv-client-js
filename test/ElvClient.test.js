@@ -41,7 +41,7 @@ describe("Test ElvClient", () => {
 
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
-    testFile3 = fs.readFileSync("./test/images/test-image1.png");
+    testFile3 = RandomBytes(testFileSize);
     testHash = RandomString(10);
   });
 
@@ -385,69 +385,166 @@ describe("Test ElvClient", () => {
   });
 
   describe("Parts", () => {
-    test("Upload Parts", async () => {
+    test("Upload Whole Part", async () => {
       const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
 
-      // Upload first part as a single chunk
-      const wholeCallback = jest.fn();
-      const wholeUploadResponse = await client.UploadPart({
+      const uploadResponse = await client.UploadPart({
         libraryId,
         objectId,
         writeToken,
-        data: testFile1,
-        chunkSize: testFileSize,
-        callback: wholeCallback
+        data: testFile1
       });
 
-      expect(wholeCallback).toBeCalledTimes(2);
-      expect(wholeUploadResponse).toBeDefined();
+      expect(uploadResponse).toBeDefined();
 
-      partInfo.whole = wholeUploadResponse.part.hash;
-
-      // Upload second file in 10 chunks
-      const chunkedCallback = jest.fn();
-      const chunkedUploadResponse = await client.UploadPart({
-        libraryId,
-        objectId,
-        writeToken,
-        data: testFile2,
-        chunkSize: testFileSize / 10,
-        callback: chunkedCallback
-      });
-      expect(chunkedCallback).toBeCalledTimes(11);
-      expect(chunkedUploadResponse).toBeDefined();
-
-      partInfo.chunked = chunkedUploadResponse.part.hash;
-
-      // Upload encrypted part
-      const encryptedCallback = jest.fn();
-      const encryptedUploadResponse = await client.UploadPart({
-        libraryId,
-        objectId,
-        writeToken,
-        data: testFile3,
-        encryption: "cgck",
-        chunkSize: testFile3.length,
-        callback: encryptedCallback
-      });
-      expect(encryptedCallback).toBeCalledTimes(2);
-      expect(encryptedUploadResponse).toBeDefined();
-
-      partInfo.encrypted = encryptedUploadResponse.part.hash;
+      partInfo.whole = uploadResponse.part.hash;
 
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
     });
 
-    test("Download Parts", async () => {
-      const wholePart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.whole, format: "arrayBuffer"});
-      expect(new Uint8Array(wholePart).toString()).toEqual(new Uint8Array(testFile1).toString());
+    test("Upload Whole Encrypted Part", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      const uploadResponse = await client.UploadPart({
+        libraryId,
+        objectId,
+        writeToken,
+        data: testFile3,
+        encryption: "cgck"
+      });
+
+      expect(uploadResponse).toBeDefined();
+
+      partInfo.encrypted = uploadResponse.part.hash;
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Upload Part In Chunks", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      const partWriteToken = await client.CreatePart({libraryId, objectId, writeToken});
+
+      const chunks = 10;
+      const chunkSize = testFileSize / chunks;
+      for(let i = 0; i < chunks; i++) {
+        const from = chunkSize * i;
+        const to = Math.min(from + chunkSize, testFileSize);
+
+        await client.UploadPartChunk({
+          libraryId,
+          objectId,
+          writeToken,
+          partWriteToken,
+          chunk: testFile2.slice(from, to)
+        });
+      }
+
+      let finalizeResponse = await client.FinalizePart({libraryId, objectId, writeToken, partWriteToken});
+      expect(finalizeResponse).toBeDefined();
+      expect(finalizeResponse.part).toBeDefined();
+      expect(finalizeResponse.part.size).toEqual(testFileSize);
+
+      partInfo.chunked = finalizeResponse.part.hash;
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Upload Encrypted Part In Chunks", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+      const encryption = "cgck";
+
+      const partWriteToken = await client.CreatePart({libraryId, objectId, writeToken, encryption});
+
+      const chunks = 10;
+      const chunkSize = testFileSize / chunks;
+      for(let i = 0; i < chunks; i++) {
+        const from = chunkSize * i;
+        const to = Math.min(from + chunkSize, testFileSize);
+
+        await client.UploadPartChunk({
+          libraryId,
+          objectId,
+          writeToken,
+          partWriteToken,
+          chunk: testFile3.slice(from, to),
+          encryption
+        });
+      }
+
+      let finalizeResponse = await client.FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption});
+      expect(finalizeResponse).toBeDefined();
+      expect(finalizeResponse.part).toBeDefined();
+      expect(finalizeResponse.part.size).toBeGreaterThan(testFileSize);
+
+      partInfo.encryptedChunked = finalizeResponse.part.hash;
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+
+    test("Download Whole Part", async () => {
+      let wholePart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.whole, format: "arrayBuffer"});
+      wholePart = new Uint8Array(wholePart);
+
+      expect(wholePart.byteLength).toEqual(testFileSize);
+      expect(wholePart.toString()).toEqual(new Uint8Array(testFile1).toString());
       expect(new Uint8Array(wholePart).toString()).not.toEqual(new Uint8Array(testFile2).toString());
+    });
 
-      const chunkedPart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.chunked, format: "arrayBuffer"});
+    test("Download Whole Encrypted Part", async () => {
+      let wholePart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.encrypted, format: "arrayBuffer"});
+      wholePart = new Uint8Array(wholePart);
+
+      expect(wholePart.byteLength).toEqual(testFileSize);
+      expect(wholePart.toString()).toEqual(new Uint8Array(testFile3).toString());
+      expect(new Uint8Array(wholePart).toString()).not.toEqual(new Uint8Array(testFile2).toString());
+    });
+
+    test("Download Part In Chunks", async () => {
+      let partChunks = [];
+      const mockCallback = jest.fn();
+      const callback = ({chunk}) => {
+        partChunks.push(Buffer.from(chunk));
+        mockCallback();
+      };
+
+      await client.DownloadPart({
+        libraryId,
+        objectId,
+        partHash: partInfo.chunked,
+        chunked: true,
+        chunkSize: testFileSize / 10,
+        callback
+      });
+
+      expect(mockCallback).toHaveBeenCalledTimes(10);
+
+      const chunkedPart = Buffer.concat(partChunks);
       expect(new Uint8Array(chunkedPart).toString()).toEqual(new Uint8Array(testFile2).toString());
+    });
 
-      const encryptedPart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.encrypted, format: "arrayBuffer"});
-      expect(new Uint8Array(encryptedPart).toString()).toEqual(new Uint8Array(testFile3).toString());
+    test("Download Encrypted Part In Chunks", async () => {
+      let partChunks = [];
+      const mockCallback = jest.fn();
+      const callback = ({chunk}) => {
+        partChunks.push(Buffer.from(chunk));
+        mockCallback();
+      };
+
+      await client.DownloadPart({
+        libraryId,
+        objectId,
+        partHash: partInfo.encryptedChunked,
+        chunked: true,
+        chunkSize: testFileSize / 10,
+        callback
+      });
+
+      expect(mockCallback).toHaveBeenCalledTimes(10);
+
+      const chunkedPart = Buffer.concat(partChunks);
+      expect(new Uint8Array(chunkedPart).toString()).toEqual(new Uint8Array(testFile3).toString());
     });
 
     test("Download Part With Proxy Re-encryption", async () => {
