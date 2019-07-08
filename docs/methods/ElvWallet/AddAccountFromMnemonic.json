@@ -1,6 +1,6 @@
 [
   {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"gallery harvest fatigue fat stem balcony category cabbage slice burst transfer nest\"\n});",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"guess embark claw novel index day cattle team anchor swear little absorb\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]
