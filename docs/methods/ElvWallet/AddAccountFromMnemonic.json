@@ -1,6 +1,6 @@
 [
   {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"guess embark claw novel index day cattle team anchor swear little absorb\"\n});",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"prepare horror screen answer stumble close gate net snow vapor small now\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

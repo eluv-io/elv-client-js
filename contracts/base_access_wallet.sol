@@ -13,12 +13,13 @@ BaseAccessWallet20190320114000ML: First versioned released
 BaseAccessWallet20190506154400ML: Adds instantiation via factory, adds access indexing
 BaseAccessWallet20190510151100ML: Supports modified getAccessInfo API
 BaseAccessWallet20190528124400ML: Change base to be Accessible and Editable (thru Container)
+BsAccessWallet20190611120000PO: State channel support 
 */
 
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
 contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable {
-    bytes32 public version = "BaseAccessWallet20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version = "BsAccessWallet20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space)  public payable {
         contentSpace = content_space;
@@ -180,7 +181,3 @@ contract BaseAccessWalletFactory is Ownable {
 
 
 }
-
-
-
-

@@ -1,10 +1,50 @@
 [
   {
-    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib3tinD3ymT88jAxkPa1LMefFCy71R\",\n  \"options\": {\n    \"type\": \"hq__MEDCRcT2kG8vU5jko3uwjha6ckdJdirUnGL5FptFTafH4aqxA8W6P7UxnvgUQ3MkhZuwJXUe3o\",\n    \"meta\": {\n      \"name\": \"Test Content Object\",\n      \"toMerge\": {\n        \"merge\": \"me\"\n      },\n      \"toReplace\": {\n        \"replace\": \"me\"\n      },\n      \"toDelete\": {\n        \"delete\": \"me\"\n      }\n    }\n  }\n});",
-    "result": "{\n  \"id\": \"iq__24VTi1AaW3zkV5nyHm4UvnuAShBz\",\n  \"write_token\": \"tqw_7UjrH88fY1f7Gq5erJjVtgixaxy1KiNaV\",\n  \"type\": \"hq__MEDCRcT2kG8vU5jko3uwjha6ckdJdirUnGL5FptFTafH4aqxA8W6P7UxnvgUQ3MkhZuwJXUe3o\"\n}"
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"options\": {\n    \"type\": \"hq__495vHNWReF1vGTVhJvQ3HQHucswMzK9cjK8oeCzHcDX5dUerfomH7niiKaWHi7Zk1zkELFysRg\",\n    \"meta\": {\n      \"name\": \"Test Content Object\",\n      \"toMerge\": {\n        \"merge\": \"me\"\n      },\n      \"toReplace\": {\n        \"replace\": \"me\"\n      },\n      \"toDelete\": {\n        \"delete\": \"me\"\n      }\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\",\n  \"write_token\": \"tqw_8X6HnzKBt4jDK5HwHUFSPnCb322S2twkq\",\n  \"type\": \"hq__495vHNWReF1vGTVhJvQ3HQHucswMzK9cjK8oeCzHcDX5dUerfomH7niiKaWHi7Zk1zkELFysRg\",\n  \"meta\": null\n}"
   },
   {
-    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib3tinD3ymT88jAxkPa1LMefFCy71R\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__B4oLAFGBU8oJREyuwp38jYtZRVt9pEV2TBpr3tGiap71zCZBjQ2ncVehpcvvNGQbBNsMGmjHJC\"\n  }\n});",
-    "result": "{\n  \"id\": \"iq__2P5NzZsS9ugALn8VDq2y3wA3TojS\",\n  \"write_token\": \"tqw_NZgK9Ywb26zTXgoGX1vqAU6gTK5i21zx6\",\n  \"type\": \"\"\n}"
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 5\",\n      \"otherKey\": 5\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__31zboFPyfqcTbDYuVmwxvQDir5Qg\",\n  \"write_token\": \"tqw_GaQxHAkGuZRxQz4tj1UfYe76gmR3TUJEC\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 3\",\n      \"otherKey\": 7\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__xr2h8CPjFByb5iaM2bZfzKiDXBS\",\n  \"write_token\": \"tqw_34SLS3DVMt58BJb4yJ1wr7qi7bp861MHd\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 8\",\n      \"otherKey\": 2\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__2JexHJTRDcNEbmHEHKXaYjnAvZK5\",\n  \"write_token\": \"tqw_4DP5QLdhoE2zvUD1faNwxoRt5pTLDLrcU\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 7\",\n      \"otherKey\": 3\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__4Jn7HGZz5xBZCXpayy4jhAAQSjyw\",\n  \"write_token\": \"tqw_MvfbCruSsbdYg7v93T7cnczqiaGpKwZkv\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 10\",\n      \"otherKey\": 0\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__34jxY9LPJGEDgKPQeGh1joCyg5JT\",\n  \"write_token\": \"tqw_CuCyP5AFDSeEyBX5ezF94QZpi2EPUq1ux\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 4\",\n      \"otherKey\": 6\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__2qW2fExd2aQw7Nhof2kribFfFkQX\",\n  \"write_token\": \"tqw_HJk1iUkz7EEeQNA7WPTwmYSdeC5yEoyYy\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 2\",\n      \"otherKey\": 8\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__f1Xxtrdp9ZvQwmcJyz1ez3UuTkF\",\n  \"write_token\": \"tqw_38jjrmjFaLRBk1XwuUkGvp1UsurTV4Zf3\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 9\",\n      \"otherKey\": 1\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__4A7VrbXAStja2WieRbWBAjZbyVwt\",\n  \"write_token\": \"tqw_AyoHfTpzdAeCdaxCLDjBKmKFtq5oFVJj1\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 1\",\n      \"otherKey\": 9\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__3QiBdDzgQYQ6oeRv2q39WZQM8zWt\",\n  \"write_token\": \"tqw_Gbav4TSQm8HVBqXV9PYyE1nVBBGUPB5sd\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilib2GG2SnxFXeYb9xzUbXAPrCAc3FS4\",\n  \"options\": {\n    \"meta\": {\n      \"name\": \"Test Object 6\",\n      \"otherKey\": 4\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__3LQowytgQds6uoBFJQXcGqqoBi9t\",\n  \"write_token\": \"tqw_H1zvQKEvZhn7shEWCRn9n1zBGy7sMbLDd\",\n  \"type\": \"\",\n  \"meta\": null\n}"
+  },
+  {
+    "signature": "async CreateContentObject({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__7tjuXnzXwfN9RPNwGPYKHowofVjdM6ko9foJEGNmSFnDnZn8Vd9jpbLE2ZaLj2puNDSa9ogLLC\"\n  }\n});",
+    "result": "{\n  \"id\": \"iq__22AVXfM6FhJqHquLKiWGMHgUBwdr\",\n  \"write_token\": \"tqw_hgoR485VuuGA1oMdbkbKf9dXfGEdGGR5\",\n  \"type\": \"\",\n  \"meta\": null\n}"
   }
 ]

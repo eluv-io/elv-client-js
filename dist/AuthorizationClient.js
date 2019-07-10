@@ -38,6 +38,8 @@ var ACCESS_TYPES = {
   LIBRARY: "library",
   TYPE: "type",
   OBJECT: "object",
+  WALLET: "wallet",
+  GROUP: "group",
   OTHER: "other"
 };
 
@@ -854,31 +856,47 @@ function () {
                 return _context12.abrupt("return", ACCESS_TYPES.TYPE);
 
               case 18:
-                if (!version.match(/BaseContent\d+.*/)) {
+                if (!version.match(/BsAccessWallet\d+.*/)) {
                   _context12.next = 22;
+                  break;
+                }
+
+                return _context12.abrupt("return", ACCESS_TYPES.WALLET);
+
+              case 22:
+                if (!version.match(/BsAccessCtrlGrp\d+.*/)) {
+                  _context12.next = 26;
+                  break;
+                }
+
+                return _context12.abrupt("return", ACCESS_TYPES.GROUP);
+
+              case 26:
+                if (!version.match(/BaseContent\d+.*/)) {
+                  _context12.next = 30;
                   break;
                 }
 
                 return _context12.abrupt("return", ACCESS_TYPES.OBJECT);
 
-              case 22:
+              case 30:
                 return _context12.abrupt("return", ACCESS_TYPES.OTHER);
 
-              case 23:
-                _context12.next = 28;
+              case 31:
+                _context12.next = 36;
                 break;
 
-              case 25:
-                _context12.prev = 25;
+              case 33:
+                _context12.prev = 33;
                 _context12.t2 = _context12["catch"](0);
                 return _context12.abrupt("return", ACCESS_TYPES.OTHER);
 
-              case 28:
+              case 36:
               case "end":
                 return _context12.stop();
             }
           }
-        }, _callee12, this, [[0, 25]]);
+        }, _callee12, this, [[0, 33]]);
       }));
 
       function AccessType(_x12) {

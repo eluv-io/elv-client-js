@@ -19,10 +19,11 @@ contract Editable is Ownable {
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
     event VersionConfirm(string objectHash);
+    event VersionDelete(string versionHash, int256 index);
 
     string public objectHash;
     string[] public versionHashes;
-    string pendingHash;
+    string public pendingHash;
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
@@ -64,4 +65,28 @@ contract Editable is Ownable {
         require(msg.sender == owner || canConfirm());
         emit UpdateRequest(objectHash);
     }
+
+    function deleteVersion(string _versionHash) public returns (int256) {
+        require(canCommit());
+
+        bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
+        int256 foundIdx = -1;
+        for (uint256 i = 0; i < versionHashes.length; i++) {
+            bytes32 checkHash = keccak256(abi.encodePacked(versionHashes[i]));
+            if (findHash == checkHash) {
+                delete versionHashes[i];
+                if (i != (versionHashes.length - 1)) {
+                    versionHashes[i] = versionHashes[versionHashes.length - 1];
+                }
+                versionHashes.length--;
+                foundIdx = int256(i);
+                break;
+            }
+        }
+        require(foundIdx != -1);
+
+        emit VersionDelete(_versionHash, foundIdx);
+        return foundIdx;
+    }
+
 }

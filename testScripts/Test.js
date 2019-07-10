@@ -13,6 +13,7 @@ const fs = require("fs");
 
 const Crypto = require("../src/Crypto");
 const Ethers = require("ethers");
+const UUID = require("uuid/v4");
 
 const KickReplacementFee = async (signer, gasPrice) => {
   try {
@@ -113,19 +114,33 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      //privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
-      privateKey: "0x4a375c17bc0398c58839310cac6ddec4c14055205f9599c04adf67de5edc0863"
+      privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
+      //privateKey: "0x4a375c17bc0398c58839310cac6ddec4c14055205f9599c04adf67de5edc0863"
     });
 
 
     await client.SetSigner({signer});
 
-    const libraryId = "ilibrCr3vtsdcxqnBtdtbz5ArnJVYjz";
-    const objectId = "iq__48ovSLGUU3ECSVAepJZbrkCpteyT";
 
-    const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
-    console.log(await client.CreatePart({libraryId, objectId, writeToken}));
-    
+    const libraryId = "ilib2VJ9qb7AZs3ZWyP9VPsSkKGPKoGK";
+
+
+    for(let i = 500; i < 1000; i += 5) {
+      await Promise.all(
+        Array(5).fill().map(async (_, k) => {
+          const num = (i + k).toString().padStart(4, "0");
+          console.log(num);
+          const {id, write_token} = await client.CreateContentObject({
+            libraryId,
+            options: {meta: {name: `Test ${num} - ${UUID()}`}}
+          });
+
+          await client.FinalizeContentObject({libraryId, objectId: id, writeToken: write_token});
+        })
+      );
+    }
+
+
     return;
 
     const addr = await client.CreateAccessGroup();

@@ -79,6 +79,11 @@ contract BaseContent is Editable {
     event ReturnCustomHook(address custom_contract, uint256 result);
     event InvokeCustomPostHook(address custom_contract);
 
+    modifier onlyFromLibrary() {
+        require(msg.sender == libraryAddress);
+        _;
+    }
+
     constructor(address content_space, address lib, address content_type) public payable {
         contentSpace = content_space;
         libraryAddress = lib;
@@ -261,7 +266,7 @@ contract BaseContent is Editable {
                     if (wallet.checkContentObjectRights(address(this), wallet.TYPE_SEE()) == true) {
                         visibilityCode = 0;
                     }
-                    return (visibilityCode, accessCode, accessCharge);
+                    // return (visibilityCode, accessCode, accessCharge);
                 }
                 if (visibilityCode == 0) { //if content is not visible, no point in checking if it is accessible
                     if (accessCode == 255) {
@@ -561,7 +566,7 @@ contract BaseContent is Editable {
         return success;
     }
 
-    function kill() public onlyOwner {
+    function kill() public onlyFromLibrary {
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
             require(c.runKill() == 0);
