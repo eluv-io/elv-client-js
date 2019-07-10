@@ -350,7 +350,8 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
       objectId,
       rep: "image",
       queryParams: {hash: imageHash},
-      noAuth: true
+      noAuth: true,
+      channelAuth: false
     });
   }
 

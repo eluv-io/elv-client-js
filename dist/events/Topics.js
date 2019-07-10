@@ -556,6 +556,23 @@ var topics = {
     }],
     "contract": "BaseLibrary"
   },
+  "0x165c03d1f6eb5280d41c4b5f467649bacdff0baf01ed576facebc59885dd7efa": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "versionHash",
+        "type": "string"
+      }, {
+        "indexed": false,
+        "name": "index",
+        "type": "int256"
+      }],
+      "name": "VersionDelete",
+      "type": "event"
+    }],
+    "contract": "BaseLibrary"
+  },
   "0xc3decc188980e855666b70498ca85e8fa284d97d30483d828fa126f7303d7d19": {
     "abi": [{
       "anonymous": false,

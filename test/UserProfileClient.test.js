@@ -95,7 +95,6 @@ describe("Test UserProfileClient", () => {
     });
     expect(updatedMetadata.toDelete).not.toBeDefined();
 
-    console.log("GETTING PUBLIC METADATA: ", client.signer.address);
     const publicMetadata = await client.userProfileClient.PublicUserMetadata({address: client.signer.address});
     expect(publicMetadata).toBeDefined();
     expect(publicMetadata).toMatchObject({

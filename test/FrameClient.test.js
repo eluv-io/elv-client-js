@@ -75,16 +75,19 @@ describe("Test FrameClient", () => {
     expect(frameResult).toMatchObject(result);
   });
 
-  test("Call ElvClient Method - Errors", async () => {
+  test.only("Call ElvClient Method - Errors", async () => {
     console.error = jest.fn();
 
     try {
-      await frameClient.ContentLibrary({libraryId: "ilib2GGnXjEAHoQZXNCpjzB8jjuguMQk"});
+      // Access a library with a bad transaction hash
+      const libraryId = await frameClient.CreateContentLibrary({name: "test library"});
+      client.authClient.accessTransactions.libraries[libraryId] = "0x46d637070718a3dad9367923afe3051889b7999e943d4a57ce719184b0b24164";
+      await frameClient.ContentLibrary({libraryId});
     } catch(e) {
       expect(e).toMatchObject({
         name: "ElvHttpClientError",
         method: "GET",
-        status: 404,
+        status: 401
       });
 
       expect(e.message).toBeDefined();

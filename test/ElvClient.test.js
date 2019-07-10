@@ -321,13 +321,96 @@ describe("Test ElvClient", () => {
     });
 
     test("List Content Objects", async () => {
-      const objects = await client.ContentObjects({libraryId});
+      const testLibraryId = await client.CreateContentLibrary({name: "Test Object Filtering"});
 
-      expect(objects).toBeDefined();
+      let objectNames = [];
+      // Create a bunch of objects
+      await Promise.all(
+        Array(10).fill().map(async (_, i) => {
+          const name = `Test Object ${10 - i}`;
+          objectNames.push(name);
+          const createResponse = await client.CreateContentObject({
+            libraryId: testLibraryId,
+            options: {
+              meta: {
+                name,
+                otherKey: i
+              }
+            }
+          });
 
-      const object = objects.find(object => object.id === objectId);
-      expect(object).toBeDefined();
-      expect(object.versions[0].hash).toEqual(versionHash);
+          await client.FinalizeContentObject({
+            libraryId: testLibraryId,
+            objectId: createResponse.id,
+            writeToken: createResponse.write_token
+          });
+        })
+      );
+
+      objectNames = objectNames.sort();
+
+      /* No filters */
+      const unfiltered = await client.ContentObjects({libraryId: testLibraryId});
+
+      expect(unfiltered).toBeDefined();
+      expect(unfiltered.contents).toBeDefined();
+      expect(unfiltered.contents.length).toEqual(10);
+      expect(unfiltered.paging).toBeDefined();
+
+      unfiltered.contents.forEach(object => {
+        expect(object.versions[0].meta.name).toBeDefined();
+        expect(object.versions[0].meta.otherKey).toBeDefined();
+      });
+
+      /* Sorting */
+      const sorted = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: { sort: "name" }
+      });
+
+      const sortedNames = sorted.contents.map(object => object.versions[0].meta.name);
+
+      expect(sortedNames).toEqual(objectNames);
+
+      const descSorted = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: { sort: "name", sortDesc: true }
+      });
+
+      const descSortedNames = descSorted.contents.map(object => object.versions[0].meta.name);
+
+      const descObjectNames = [...objectNames].reverse();
+      expect(descSortedNames).toEqual(descObjectNames);
+
+      /* Filtering */
+      const filtered = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: {
+          sort: ["name"],
+          filter: [
+            {key: "name", type: "gte", filter: objectNames[3]},
+            {key: "name", type: "lte", filter: objectNames[7]}
+          ]
+        }
+      });
+
+      expect(filtered.contents.length).toEqual(5);
+      const filteredNames = filtered.contents.map(object => object.versions[0].meta.name);
+      expect(filteredNames).toEqual(objectNames.slice(3, 8));
+
+      /* Selecting metadata fields */
+      const selected = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: {
+          sort: "name",
+          select: ["name"]
+        }
+      });
+
+      selected.contents.forEach(object => {
+        expect(object.versions[0].meta.name).toBeDefined();
+        expect(object.versions[0].meta.otherKey).not.toBeDefined();
+      });
     });
 
     test("Get Content Object", async () => {

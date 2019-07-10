@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib3tinD3ymT88jAxkPa1LMefFCy71R\"\n});",
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\"\n});",
     "result": "{}"
   },
   {
-    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilib3tinD3ymT88jAxkPa1LMefFCy71R\"\n});",
-    "result": "{\n  \"iq__28zyfcGSFGAeoMQkrSt9RPptqHw3\": {\n    \"id\": \"iq__28zyfcGSFGAeoMQkrSt9RPptqHw3\",\n    \"hash\": \"hq__MEDCRcT2kG8vU5jko3uwjha6ckdJdirUnGL5FptFTafH4aqxA8W6P7UxnvgUQ3MkhZuwJXUe3o\",\n    \"name\": \"Test Content Type 38b282f29b35d57caeb9\",\n    \"meta\": {\n      \"name\": \"Test Content Type 38b282f29b35d57caeb9\"\n    }\n  }\n}"
+    "signature": "async LibraryContentTypes({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\"\n});",
+    "result": "{\n  \"iq__2mZCPpZM6MMojBygZpLkVoXJpxir\": {\n    \"id\": \"iq__2mZCPpZM6MMojBygZpLkVoXJpxir\",\n    \"hash\": \"hq__495vHNWReF1vGTVhJvQ3HQHucswMzK9cjK8oeCzHcDX5dUerfomH7niiKaWHi7Zk1zkELFysRg\",\n    \"meta\": {\n      \"name\": \"Test Content Type 72bf19cfc0e36b16b42a\"\n    },\n    \"name\": \"Test Content Type 72bf19cfc0e36b16b42a\"\n  }\n}"
   }
 ]

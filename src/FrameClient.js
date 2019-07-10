@@ -230,6 +230,7 @@ class FrameClient {
       "AccessGroupOwner",
       "AccessInfo",
       "AccessRequest",
+      "AccessType",
       "AddAccessGroupManager",
       "AddAccessGroupMember",
       "AddLibraryContentType",
