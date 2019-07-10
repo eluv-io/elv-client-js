@@ -896,7 +896,8 @@ function () {
                   queryParams: {
                     hash: imageHash
                   },
-                  noAuth: true
+                  noAuth: true,
+                  channelAuth: false
                 });
 
               case 20:

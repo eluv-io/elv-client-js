@@ -169,8 +169,6 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return false;
     }
 
-
-
     function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
         for (uint i = 0; i < _groupList.length; i++) {
             if (_groupList[i] != 0x0) {
@@ -294,6 +292,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     // content can be deleted by content owner
     function deleteContent(address _contentAddr) public {
         BaseContent content = BaseContent(_contentAddr);
+        require(content.owner() == msg.sender);
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }

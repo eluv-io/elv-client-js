@@ -308,9 +308,9 @@ class ElvClient {
    * @returns {Promise<Object>}
    */
   async ContentLibrary({libraryId}) {
-    let path = UrlJoin("qlibs", libraryId);
+    const path = UrlJoin("qlibs", libraryId);
 
-    let library = await ResponseToJson(
+    const library = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
@@ -835,33 +835,97 @@ class ElvClient {
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param libraryId - ID of the library
+   * @param {string} libraryId - ID of the library
+   * @param {object=} filterOptions - Pagination, sorting and filtering options
+   * @param {boolean=} filterOptions.latestOnly=true - If specified, only latest version of objects will be included
+   * @param {number=} filterOptions.start - Start index for pagination
+   * @param {number=} filterOptions.limit - Max number of objects to return
+   * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
+   * @param {(Array<string> | string)=} filterOptions.sort - Sort by the specified key(s)
+   * * @param {boolean=} filterOptions.sortDesc=false - Sort in descending order
+   * @param {(Array<string> | string)=} filterOptions.select - Include only the specified metadata keys
+   * @param {(Array<object> | object)=} filterOptions.filter - Filter objects by metadata
+   * @param {string=} filterOptions.filter.key - Key to filter on
+   * @param {string=} filterOptions.filter.type - Type of filter to use for the specified key:
+   * - eq, neq, lt, lte, gt, gte, cnt (contains), ncnt (does not contain),
+   * @param {string=} filterOptions.filter.filter - Filter for the specified key
    *
    * @returns {Promise<Array<Object>>} - List of objects in library
    */
-  async ContentObjects({libraryId}) {
+  async ContentObjects({libraryId, filterOptions={}}) {
     let path = UrlJoin("qlibs", libraryId, "q");
 
-    let objects = (await ResponseToJson(
+    let queryParams = {
+      filter: []
+    };
+
+    // Cache ID
+    if(filterOptions.cacheId) {
+      queryParams.cache_id = filterOptions.cacheId;
+    }
+
+    // Start index
+    if(filterOptions.start) {
+      queryParams.start = filterOptions.start;
+    }
+
+    // Limit
+    if(filterOptions.limit) {
+      queryParams.limit = filterOptions.limit;
+    }
+
+    // Metadata select options
+    if(filterOptions.select) {
+      queryParams.select = filterOptions.select;
+    }
+
+    // Sorting options
+    if(filterOptions.sort) {
+      // Sort keys
+      queryParams.sort_by = filterOptions.sort;
+
+      // Sort order
+      if(filterOptions.sortDesc) {
+        queryParams.sort_descending = true;
+      }
+    }
+
+    if(filterOptions.latestOnly === false) {
+      queryParams.latest_version_only = false;
+    }
+
+    // Filters
+    const filterTypeMap = {
+      eq: ":eq:",
+      neq: ":ne:",
+      lt: ":lt:",
+      lte: ":le:",
+      gt: ":gt:",
+      gte: ":ge:",
+      cnt: ":co:",
+      ncnt: ":nc:"
+    };
+
+    const addFilter = ({key, type, filter}) => {
+      queryParams.filter.push(`${key}${filterTypeMap[type]}${filter}`);
+    };
+
+    if(filterOptions.filter) {
+      if(Array.isArray(filterOptions.filter)) {
+        filterOptions.filter.forEach(filter => addFilter(filter));
+      } else {
+        addFilter(filterOptions.filter);
+      }
+    }
+
+    return await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
-        path: path
+        path: path,
+        queryParams
       })
-    )).contents;
-
-    // Ensure "meta" is set for all versions
-    return objects.map(object => {
-      return {
-        ...object,
-        versions: object.versions.map(version => {
-          return {
-            ...version,
-            meta: version.meta || {}
-          };
-        })
-      };
-    });
+    );
   }
 
   /**
@@ -1809,6 +1873,26 @@ class ElvClient {
   }
 
   /**
+   * Return the type of contract backing the specified ID
+   *
+   * @methodGroup Access Requests
+   * @namedParams
+   * @param {string} id - ID of the item
+   *
+   * @return {Promise<string>} - Contract type of the item
+   * - space
+   * - library
+   * - type,
+   * - object
+   * - wallet
+   * - group
+   * - other
+   */
+  async AccessType({id}) {
+    return await this.authClient.AccessType(id);
+  }
+
+  /**
    * Retrieve info about the access charge and permissions for the specified object.
    *
    * Note: Access charge is specified in ether
@@ -2109,6 +2193,7 @@ class ElvClient {
    * @param {string=} rep - Rep parameter of the url
    * @param {string=} call - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} channelAuth=false - If specified, state channel authorization will be used instead of access request authorization
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
    * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of

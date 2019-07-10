@@ -17,6 +17,8 @@ const ACCESS_TYPES = {
   LIBRARY: "library",
   TYPE: "type",
   OBJECT: "object",
+  WALLET: "wallet",
+  GROUP: "group",
   OTHER: "other"
 };
 
@@ -382,6 +384,12 @@ class AuthorizationClient {
       } else if(version.match(/BaseContentType\d+.*/)) {
         // BaseContentType20190605150100ML
         return ACCESS_TYPES.TYPE;
+      } else if(version.match(/BsAccessWallet\d+.*/)) {
+        // BaseContent20190611120000PO
+        return ACCESS_TYPES.WALLET;
+      } else if(version.match(/BsAccessCtrlGrp\d+.*/)) {
+        // BaseContent20190611120000PO
+        return ACCESS_TYPES.GROUP;
       } else if(version.match(/BaseContent\d+.*/)) {
         // BaseContent20190611120000PO
         return ACCESS_TYPES.OBJECT;

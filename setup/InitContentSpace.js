@@ -133,6 +133,10 @@ const Init = async () => {
     console.log("\tNode ID: " + nodeId);
     */
 
+    console.log("\nClient balance:", await client.GetBalance({address: signer.address}));
+    console.log("Node balance:", await client.GetBalance({address: nodeAddress}));
+    console.log("KMS balance:", await client.GetBalance({address: kmsSigner.address}));
+
     ClientConfiguration.contentSpaceId = contentSpaceId;
     fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
 
