@@ -3775,7 +3775,8 @@ function () {
                 _context51.next = 11;
                 return this.ContentObjectMetadata({
                   libraryId: libraryId,
-                  objectId: objectId,
+                  // Cap may only exist in draft
+                  objectId: writeToken || objectId,
                   metadataSubtree: capKey
                 });
 
