@@ -1686,11 +1686,11 @@ class ElvClient {
     }
 
     // Primary encryption
-
     const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
     const existingCap = await this.ContentObjectMetadata({
       libraryId,
-      objectId,
+      // Cap may only exist in draft
+      objectId: writeToken || objectId,
       metadataSubtree: capKey
     });
 
