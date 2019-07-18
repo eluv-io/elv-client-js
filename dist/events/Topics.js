@@ -543,10 +543,14 @@ var topics = {
     }],
     "contract": "BaseLibrary"
   },
-  "0x5ae4ddb3009a8ccdedc04b2011fc66a472807bcdcff04af16286ddb27819ebe1": {
+  "0x482875da75e6d9f93f74a5c1a61f14cf08822057c01232f44cb92ae998e30d8e": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
+        "indexed": false,
+        "name": "spaceAddress",
+        "type": "address"
+      }, {
         "indexed": false,
         "name": "objectHash",
         "type": "string"
@@ -556,10 +560,14 @@ var topics = {
     }],
     "contract": "BaseLibrary"
   },
-  "0x165c03d1f6eb5280d41c4b5f467649bacdff0baf01ed576facebc59885dd7efa": {
+  "0x238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
+        "indexed": false,
+        "name": "spaceAddress",
+        "type": "address"
+      }, {
         "indexed": false,
         "name": "versionHash",
         "type": "string"

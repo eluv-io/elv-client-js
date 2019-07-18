@@ -1478,7 +1478,7 @@ function () {
                             typeId = _this3.utils.AddressToObjectId(typeAddress);
 
                             if (_this3.contentTypes[typeId]) {
-                              _context21.next = 11;
+                              _context21.next = 10;
                               break;
                             }
 
@@ -1490,16 +1490,14 @@ function () {
 
                           case 5:
                             _this3.contentTypes[typeId] = _context21.sent;
-                            _context21.next = 11;
+                            _context21.next = 10;
                             break;
 
                           case 8:
                             _context21.prev = 8;
                             _context21.t0 = _context21["catch"](2);
-                            // eslint-disable-next-line no-console
-                            console.error(_context21.t0);
 
-                          case 11:
+                          case 10:
                           case "end":
                             return _context21.stop();
                         }
@@ -2434,7 +2432,6 @@ function () {
                 finalizeResponse = _context32.sent;
                 _context32.next = 15;
                 return this.PublishContentVersion({
-                  libraryId: libraryId,
                   objectId: objectId,
                   versionHash: finalizeResponse.hash
                 });
@@ -2476,12 +2473,12 @@ function () {
       var _PublishContentVersion = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee33(_ref34) {
-        var libraryId, objectId, versionHash, path;
+        var objectId, versionHash;
         return regeneratorRuntime.wrap(function _callee33$(_context33) {
           while (1) {
             switch (_context33.prev = _context33.next) {
               case 0:
-                libraryId = _ref34.libraryId, objectId = _ref34.objectId, versionHash = _ref34.versionHash;
+                objectId = _ref34.objectId, versionHash = _ref34.versionHash;
                 _context33.next = 3;
                 return this.ethClient.CommitContent({
                   contentObjectAddress: this.utils.HashToAddress(objectId),
@@ -2490,33 +2487,12 @@ function () {
                 });
 
               case 3:
-                path = UrlJoin("qlibs", libraryId, "q", versionHash);
-                _context33.t0 = this.HttpClient;
-                _context33.next = 7;
-                return this.authClient.AuthorizationHeader({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  update: true
-                });
-
-              case 7:
-                _context33.t1 = _context33.sent;
-                _context33.t2 = path;
-                _context33.t3 = {
-                  headers: _context33.t1,
-                  method: "PUT",
-                  path: _context33.t2
-                };
-                _context33.next = 12;
-                return _context33.t0.Request.call(_context33.t0, _context33.t3);
-
-              case 12:
-                _context33.next = 14;
+                _context33.next = 5;
                 return new Promise(function (resolve) {
                   return setTimeout(resolve, 2000);
                 });
 
-              case 14:
+              case 5:
               case "end":
                 return _context33.stop();
             }
@@ -3742,13 +3718,13 @@ function () {
       var _EncryptionCap = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee51(_ref52) {
-        var libraryId, objectId, writeToken, _ref52$blockSize, blockSize, owner, capKey, existingCap, cap, _metadata, kmsAddress, kmsPublicKey, kmsCapKey;
+        var libraryId, objectId, writeToken, owner, capKey, existingCap, cap, _metadata, kmsAddress, kmsPublicKey, kmsCapKey;
 
         return regeneratorRuntime.wrap(function _callee51$(_context51) {
           while (1) {
             switch (_context51.prev = _context51.next) {
               case 0:
-                libraryId = _ref52.libraryId, objectId = _ref52.objectId, writeToken = _ref52.writeToken, _ref52$blockSize = _ref52.blockSize, blockSize = _ref52$blockSize === void 0 ? 1000000 : _ref52$blockSize;
+                libraryId = _ref52.libraryId, objectId = _ref52.objectId, writeToken = _ref52.writeToken;
                 _context51.next = 3;
                 return this.authClient.Owner({
                   id: objectId,
@@ -3764,7 +3740,10 @@ function () {
                 }
 
                 _context51.next = 7;
-                return this.authClient.ReencryptionKey(objectId);
+                return this.authClient.ReEncryptionCap({
+                  libraryId: libraryId,
+                  objectId: objectId
+                });
 
               case 7:
                 return _context51.abrupt("return", _context51.sent);
@@ -3796,7 +3775,7 @@ function () {
 
               case 16:
                 _context51.next = 18;
-                return Crypto.GeneratePrimaryCap(blockSize);
+                return Crypto.GeneratePrimaryCap();
 
               case 18:
                 cap = _context51.sent;
@@ -5288,43 +5267,36 @@ function () {
             switch (_context72.prev = _context72.next) {
               case 0:
                 contractAddress = _ref73.contractAddress, memberAddress = _ref73.memberAddress, methodName = _ref73.methodName, eventName = _ref73.eventName;
-
-                // Ensure address starts with 0x
-                if (!memberAddress.startsWith("0x")) {
-                  memberAddress = "0x" + memberAddress;
-                } // Ensure caller is a manager of the group
-
-
-                _context72.next = 4;
+                _context72.next = 3;
                 return this.CallContractMethod({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
                   methodName: "hasManagerAccess",
-                  methodArgs: [this.signer.address.toLowerCase()]
+                  methodArgs: [this.utils.FormatAddress(this.signer.address)]
                 });
 
-              case 4:
+              case 3:
                 isManager = _context72.sent;
 
                 if (isManager) {
-                  _context72.next = 7;
+                  _context72.next = 6;
                   break;
                 }
 
                 throw Error("Manager access required");
 
-              case 7:
-                _context72.next = 9;
+              case 6:
+                _context72.next = 8;
                 return this.CallContractMethodAndWait({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
                   methodName: methodName,
-                  methodArgs: [memberAddress.toLowerCase()],
+                  methodArgs: [this.utils.FormatAddress(memberAddress)],
                   eventName: eventName,
                   eventValue: "candidate"
                 });
 
-              case 9:
+              case 8:
                 event = _context72.sent;
                 candidate = this.ExtractValueFromEvent({
                   abi: AccessGroupContract.abi,
@@ -5334,7 +5306,7 @@ function () {
                 });
 
                 if (!(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress))) {
-                  _context72.next = 14;
+                  _context72.next = 13;
                   break;
                 }
 
@@ -5342,10 +5314,10 @@ function () {
                 console.error("Mismatch: " + candidate + " :: " + memberAddress);
                 throw Error("Access group method " + methodName + " failed");
 
-              case 14:
+              case 13:
                 return _context72.abrupt("return", event.transactionHash);
 
-              case 15:
+              case 14:
               case "end":
                 return _context72.stop();
             }

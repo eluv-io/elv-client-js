@@ -1194,7 +1194,6 @@ class ElvClient {
     );
 
     await this.PublishContentVersion({
-      libraryId,
       objectId,
       versionHash: finalizeResponse.hash
     });
@@ -1216,19 +1215,11 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} versionHash - The version hash of the content object to publish
    */
-  async PublishContentVersion({libraryId, objectId, versionHash}) {
+  async PublishContentVersion({objectId, versionHash}) {
     await this.ethClient.CommitContent({
       contentObjectAddress: this.utils.HashToAddress(objectId),
       versionHash,
       signer: this.signer
-    });
-
-    const path = UrlJoin("qlibs", libraryId, "q", versionHash);
-
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "PUT",
-      path
     });
 
     await new Promise(resolve => setTimeout(resolve, 2000));
