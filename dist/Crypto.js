@@ -173,34 +173,26 @@ var Crypto = {
     var _GeneratePrimaryCap = _asyncToGenerator(
     /*#__PURE__*/
     regeneratorRuntime.mark(function _callee4() {
-      var blockSize,
-          elvCrypto,
-          _elvCrypto$generatePr,
-          secretKey,
-          publicKey,
-          symmetricKey,
-          _args4 = arguments;
+      var elvCrypto, _elvCrypto$generatePr, secretKey, publicKey, symmetricKey;
 
       return regeneratorRuntime.wrap(function _callee4$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              blockSize = _args4.length > 0 && _args4[0] !== undefined ? _args4[0] : 1000000;
-              _context4.next = 3;
+              _context4.next = 2;
               return Crypto.ElvCrypto();
 
-            case 3:
+            case 2:
               elvCrypto = _context4.sent;
               _elvCrypto$generatePr = elvCrypto.generatePrimaryKeys(), secretKey = _elvCrypto$generatePr.secretKey, publicKey = _elvCrypto$generatePr.publicKey;
               symmetricKey = elvCrypto.generateSymmetricKey().key;
               return _context4.abrupt("return", {
                 symm_key: "kpsy".concat(bs58.encode(Buffer.from(symmetricKey))),
                 secret_key: "kpsk".concat(bs58.encode(Buffer.from(secretKey))),
-                public_key: "kppk".concat(bs58.encode(Buffer.from(publicKey))),
-                block_size: blockSize
+                public_key: "kppk".concat(bs58.encode(Buffer.from(publicKey)))
               });
 
-            case 7:
+            case 6:
             case "end":
               return _context4.stop();
           }
@@ -218,34 +210,24 @@ var Crypto = {
     var _GenerateTargetCap = _asyncToGenerator(
     /*#__PURE__*/
     regeneratorRuntime.mark(function _callee5() {
-      var blockSize,
-          elvCrypto,
-          _elvCrypto$generateTa,
-          secretKey,
-          publicKey,
-          symmetricKey,
-          _args5 = arguments;
+      var elvCrypto, _elvCrypto$generateTa, secretKey, publicKey;
 
       return regeneratorRuntime.wrap(function _callee5$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              blockSize = _args5.length > 0 && _args5[0] !== undefined ? _args5[0] : 1000000;
-              _context5.next = 3;
+              _context5.next = 2;
               return Crypto.ElvCrypto();
 
-            case 3:
+            case 2:
               elvCrypto = _context5.sent;
               _elvCrypto$generateTa = elvCrypto.generateTargetKeys(), secretKey = _elvCrypto$generateTa.secretKey, publicKey = _elvCrypto$generateTa.publicKey;
-              symmetricKey = elvCrypto.generateSymmetricKey().key;
               return _context5.abrupt("return", {
-                symm_key: "kpsy".concat(bs58.encode(Buffer.from(symmetricKey))),
                 secret_key: "kpsk".concat(bs58.encode(Buffer.from(secretKey))),
-                public_key: "ktpk".concat(bs58.encode(Buffer.from(publicKey))),
-                block_size: blockSize
+                public_key: "ktpk".concat(bs58.encode(Buffer.from(publicKey)))
               });
 
-            case 7:
+            case 5:
             case "end":
               return _context5.stop();
           }
@@ -267,8 +249,7 @@ var Crypto = {
     return {
       symmetricKey: keyToBytes(cap.symm_key),
       secretKey: keyToBytes(cap.secret_key),
-      publicKey: keyToBytes(cap.public_key),
-      blockSize: cap.block_size
+      publicKey: keyToBytes(cap.public_key)
     };
   },
   EncryptionContext: function () {
