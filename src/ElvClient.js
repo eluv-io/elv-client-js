@@ -744,7 +744,7 @@ class ElvClient {
             this.contentTypes[typeId] = await this.ContentType({typeId});
           } catch(error) {
             // eslint-disable-next-line no-console
-            console.error(error);
+            //console.error(error);
           }
         }
       })
@@ -1607,7 +1607,6 @@ class ElvClient {
       const response = await this.HttpClient.Request({headers, method: "GET", path: path});
 
       let data = await response.arrayBuffer();
-
       if(encrypted) {
         const encryptionCap = await this.EncryptionCap({libraryId, objectId});
         data = await Crypto.Decrypt(encryptionCap, data);
@@ -1677,12 +1676,12 @@ class ElvClient {
     }
   }
 
-  async EncryptionCap({libraryId, objectId, writeToken, blockSize=1000000}) {
+  async EncryptionCap({libraryId, objectId, writeToken}) {
     const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
 
     if(!this.utils.EqualAddress(owner, this.signer.address)) {
       // Target decryption
-      return await this.authClient.ReencryptionKey(objectId);
+      return await this.authClient.ReEncryptionCap({libraryId, objectId});
     }
 
     // Primary encryption
@@ -1696,7 +1695,7 @@ class ElvClient {
 
     if(existingCap) { return await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey); }
 
-    const cap = await Crypto.GeneratePrimaryCap(blockSize);
+    const cap = await Crypto.GeneratePrimaryCap();
 
     // If write token is specified, add it to the metadata
     if(writeToken) {
@@ -2351,15 +2350,12 @@ class ElvClient {
   }
 
   async AccessGroupMembershipMethod({contractAddress, memberAddress, methodName, eventName}) {
-    // Ensure address starts with 0x
-    if(!memberAddress.startsWith("0x")) { memberAddress = "0x" + memberAddress; }
-
     // Ensure caller is a manager of the group
     const isManager = await this.CallContractMethod({
       contractAddress,
       abi: AccessGroupContract.abi,
       methodName: "hasManagerAccess",
-      methodArgs: [ this.signer.address.toLowerCase() ]
+      methodArgs: [ this.utils.FormatAddress(this.signer.address) ]
     });
 
     if(!isManager) {
@@ -2370,7 +2366,7 @@ class ElvClient {
       contractAddress,
       abi: AccessGroupContract.abi,
       methodName,
-      methodArgs: [ memberAddress.toLowerCase() ],
+      methodArgs: [ this.utils.FormatAddress(memberAddress) ],
       eventName,
       eventValue: "candidate",
     });

@@ -48,6 +48,7 @@ class AuthorizationClient {
     this.channelContentTokens = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
+    this.accessTypes = {};
   }
 
   async AuthorizationHeader({
@@ -66,6 +67,7 @@ class AuthorizationClient {
       objectId,
       versionHash,
       partHash,
+      encryption,
       update,
       channelAuth,
       noCache,
@@ -87,6 +89,7 @@ class AuthorizationClient {
     objectId,
     versionHash,
     partHash,
+    encryption,
     update=false,
     channelAuth=false,
     noCache=false,
@@ -109,6 +112,7 @@ class AuthorizationClient {
           objectId,
           versionHash,
           partHash,
+          encryption,
           update,
           noAuth
         });
@@ -172,9 +176,27 @@ class AuthorizationClient {
     return KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
   }
 
-  async ReencryptionKey(objectId) {
+  async ReEncryptionCap({libraryId, objectId}) {
     if(!this.reencryptionKeys[objectId]) {
-      this.reencryptionKeys[objectId] = await Crypto.GenerateTargetCap();
+      const cap = await Crypto.GenerateTargetCap();
+
+      // Retrieve symmetric key
+      if(!libraryId) {
+        libraryId = Utils.AddressToLibraryId(
+          await this.client.CallContractMethod({
+            contractAddress: Utils.HashToAddress(objectId),
+            abi: ContentContract.abi,
+            methodName: "libraryAddress"
+          })
+        );
+      }
+
+      const args = [this.client.contentSpaceId, libraryId, objectId, ""];
+      const stateChannelUri = await this.KMSUrl({objectId});
+      const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
+      cap.symm_key = await stateChannelProvider.send("elv_getSymmetricKey", args);
+
+      this.reencryptionKeys[objectId] = cap;
     }
 
     return this.reencryptionKeys[objectId];
@@ -220,7 +242,9 @@ class AuthorizationClient {
     return token;
   }
 
-  async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, update=false, noAuth=false}) {
+  async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, encryption, update=false, noAuth=false}) {
+    if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
+
     const { transactionHash } =  await this.MakeAccessRequest({
       libraryId,
       objectId,
@@ -238,6 +262,14 @@ class AuthorizationClient {
 
     if(libraryId) { token.qlib_id = libraryId; }
     if(partHash) { token.qphash = partHash; }
+
+    if(objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT && encryption) {
+      const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
+      if(!Utils.EqualAddress(owner, this.client.signer.address)) {
+        const cap = await this.ReEncryptionCap({libraryId, objectId});
+        token.afgh_pk = cap.public_key;
+      }
+    }
 
     token = Utils.B64(JSON.stringify(token));
 
@@ -294,8 +326,6 @@ class AuthorizationClient {
           // Inject public key of requester
           args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
         } else {
-          const cap = await this.ReencryptionKey(objectId);
-
           // Set default args
           args = [
             0, // Access level
@@ -365,6 +395,10 @@ class AuthorizationClient {
 
   /* Access */
   async AccessType(id) {
+    if(this.accessTypes[id]) { return this.accessTypes[id]; }
+
+    let accessType;
+
     try {
       const version =
         Ethers.utils.parseBytes32String(
@@ -377,28 +411,32 @@ class AuthorizationClient {
 
       if(version.match(/BaseContentSpace\d+.*/)) {
         // BaseContentSpace20190612120000PO
-        return ACCESS_TYPES.SPACE;
+        accessType = ACCESS_TYPES.SPACE;
       } else if(version.match(/BaseLibrary\d+.*/)) {
         // BaseLibrary20190605150200ML
-        return ACCESS_TYPES.LIBRARY;
+        accessType = ACCESS_TYPES.LIBRARY;
       } else if(version.match(/BaseContentType\d+.*/)) {
         // BaseContentType20190605150100ML
-        return ACCESS_TYPES.TYPE;
+        accessType = ACCESS_TYPES.TYPE;
       } else if(version.match(/BsAccessWallet\d+.*/)) {
         // BaseContent20190611120000PO
-        return ACCESS_TYPES.WALLET;
+        accessType = ACCESS_TYPES.WALLET;
       } else if(version.match(/BsAccessCtrlGrp\d+.*/)) {
         // BaseContent20190611120000PO
-        return ACCESS_TYPES.GROUP;
+        accessType = ACCESS_TYPES.GROUP;
       } else if(version.match(/BaseContent\d+.*/)) {
         // BaseContent20190611120000PO
-        return ACCESS_TYPES.OBJECT;
+        accessType = ACCESS_TYPES.OBJECT;
       } else {
-        return ACCESS_TYPES.OTHER;
+        accessType = ACCESS_TYPES.OTHER;
       }
     } catch(error) {
-      return ACCESS_TYPES.OTHER;
+      accessType = ACCESS_TYPES.OTHER;
     }
+
+    this.accessTypes[id] = accessType;
+
+    return accessType;
   }
 
   async GetAccessCharge({objectId, args}) {

@@ -80,7 +80,7 @@ const Crypto = {
     return JSON.parse(Buffer.from(cap).toString());
   },
 
-  async GeneratePrimaryCap(blockSize=1000000) {
+  async GeneratePrimaryCap() {
     const elvCrypto = await Crypto.ElvCrypto();
 
     const {secretKey, publicKey} = elvCrypto.generatePrimaryKeys();
@@ -89,22 +89,18 @@ const Crypto = {
     return {
       symm_key: `kpsy${bs58.encode(Buffer.from(symmetricKey))}`,
       secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
-      public_key: `kppk${bs58.encode(Buffer.from(publicKey))}`,
-      block_size: blockSize
+      public_key: `kppk${bs58.encode(Buffer.from(publicKey))}`
     };
   },
 
-  async GenerateTargetCap(blockSize=1000000) {
+  async GenerateTargetCap() {
     const elvCrypto = await Crypto.ElvCrypto();
 
     const {secretKey, publicKey} = elvCrypto.generateTargetKeys();
-    const symmetricKey = (elvCrypto.generateSymmetricKey()).key;
 
     return {
-      symm_key: `kpsy${bs58.encode(Buffer.from(symmetricKey))}`,
       secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
-      public_key: `ktpk${bs58.encode(Buffer.from(publicKey))}`,
-      block_size: blockSize
+      public_key: `ktpk${bs58.encode(Buffer.from(publicKey))}`
     };
   },
 
@@ -114,8 +110,7 @@ const Crypto = {
     return {
       symmetricKey: keyToBytes(cap.symm_key),
       secretKey: keyToBytes(cap.secret_key),
-      publicKey: keyToBytes(cap.public_key),
-      blockSize: cap.block_size
+      publicKey: keyToBytes(cap.public_key)
     };
   },
 

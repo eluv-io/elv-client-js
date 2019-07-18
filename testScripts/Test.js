@@ -114,49 +114,24 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
-      //privateKey: "0x4a375c17bc0398c58839310cac6ddec4c14055205f9599c04adf67de5edc0863"
+      //privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
+      //privateKey: "0x89eb99fe9ce236af2b6e1db964320534ef6634127ecdeb816f6e4c72bc72bcec"
+      privateKey: "9d88bea6b9d1bca1124e783934bd6c740f42d0af2d1461f81490fa66171c112d"
     });
-
 
     await client.SetSigner({signer});
 
+    const libraryId = "ilib2iDL4jwmdGHZExezBoeuNLjFcv9q";
+    const objectId = "iq__2iDL4jwmdGHZExezBoeuNLjFcv9q";
 
-    const libraryId = "ilib2VJ9qb7AZs3ZWyP9VPsSkKGPKoGK";
-
-
-    for(let i = 500; i < 1000; i += 5) {
-      await Promise.all(
-        Array(5).fill().map(async (_, k) => {
-          const num = (i + k).toString().padStart(4, "0");
-          console.log(num);
-          const {id, write_token} = await client.CreateContentObject({
-            libraryId,
-            options: {meta: {name: `Test ${num} - ${UUID()}`}}
-          });
-
-          await client.FinalizeContentObject({libraryId, objectId: id, writeToken: write_token});
-        })
-      );
-    }
-
-
-    return;
-
-    const addr = await client.CreateAccessGroup();
-
-    await client.AddAccessGroupManager({
-      contractAddress: addr,
-      memberAddress: "0x5ed253fc57eba0fd5e215d3f70d3b8912570a723"
+    const {write_token} = await client.EditContentObject({
+      libraryId,
+      objectId
     });
 
+    await client.FinalizeContentObject({libraryId, objectId, writeToken: write_token});
 
-    console.log(await client.CallContractMethod({
-      contractAddress: addr,
-      abi: AccessGroupContract.abi,
-      methodName: "hasManagerAccess",
-      methodArgs: [signer.address.replace("0x", "")]
-    }));
+
 
 /*
     console.log(await client.VerifyContentObject({
