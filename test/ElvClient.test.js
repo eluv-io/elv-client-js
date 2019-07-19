@@ -8,7 +8,6 @@ Object.defineProperty(global.self, "crypto", {
 
 const UrlJoin = require("url-join");
 const URI = require("urijs");
-const fs = require("fs");
 const BaseLibraryContract = require("../src/contracts/BaseLibrary");
 const BaseContentContract = require("../src/contracts/BaseContent");
 const CustomContract = require("../src/contracts/SampleContentLicensing");
@@ -136,8 +135,6 @@ describe("Test ElvClient", () => {
 
   describe("Content Libraries", () => {
     test("Create Content Library", async () => {
-      //const image = BufferToArrayBuffer(fs.readFileSync("test/images/test-image1.png"));
-
       libraryId = await client.CreateContentLibrary({
         name: "Test Library " + testHash,
         description: "Test Library Description",

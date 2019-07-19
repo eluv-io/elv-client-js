@@ -2157,7 +2157,7 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
-   * @param {boolean=} channelAuth=true - If specified, state channel authorization will be performed instead of access request authorization
+   * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
    * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -2167,7 +2167,7 @@ class ElvClient {
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, channelAuth=true, noAuth=false, noCache=false}) {
+  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, channelAuth=false, noAuth=false, noCache=false}) {
     return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, channelAuth, noAuth, noCache});
   }
 

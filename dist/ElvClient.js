@@ -4862,7 +4862,7 @@ function () {
      * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
      * @param {string} rep - Representation to use
      * @param {Object=} queryParams - Query params to add to the URL
-     * @param {boolean=} channelAuth=true - If specified, state channel authorization will be performed instead of access request authorization
+     * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
      * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
      * token. This is useful for accessing public assets.
      * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -4885,7 +4885,7 @@ function () {
           while (1) {
             switch (_context66.prev = _context66.next) {
               case 0:
-                libraryId = _ref67.libraryId, objectId = _ref67.objectId, versionHash = _ref67.versionHash, rep = _ref67.rep, _ref67$queryParams = _ref67.queryParams, queryParams = _ref67$queryParams === void 0 ? {} : _ref67$queryParams, _ref67$channelAuth = _ref67.channelAuth, channelAuth = _ref67$channelAuth === void 0 ? true : _ref67$channelAuth, _ref67$noAuth = _ref67.noAuth, noAuth = _ref67$noAuth === void 0 ? false : _ref67$noAuth, _ref67$noCache = _ref67.noCache, noCache = _ref67$noCache === void 0 ? false : _ref67$noCache;
+                libraryId = _ref67.libraryId, objectId = _ref67.objectId, versionHash = _ref67.versionHash, rep = _ref67.rep, _ref67$queryParams = _ref67.queryParams, queryParams = _ref67$queryParams === void 0 ? {} : _ref67$queryParams, _ref67$channelAuth = _ref67.channelAuth, channelAuth = _ref67$channelAuth === void 0 ? false : _ref67$channelAuth, _ref67$noAuth = _ref67.noAuth, noAuth = _ref67$noAuth === void 0 ? false : _ref67$noAuth, _ref67$noCache = _ref67.noCache, noCache = _ref67$noCache === void 0 ? false : _ref67$noCache;
                 return _context66.abrupt("return", this.FabricUrl({
                   libraryId: libraryId,
                   objectId: objectId,

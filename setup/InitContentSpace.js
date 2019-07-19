@@ -1,9 +1,8 @@
 /* eslint-disable no-console */
 const { ElvClient } = require("../src/ElvClient");
 const ClientConfiguration = require("../TestConfiguration.json");
-const fs = require("fs");
-const CBOR = require("cbor");
-const multicodec = require("multicodec");
+//const CBOR = require("cbor");
+//const multicodec = require("multicodec");
 
 const SpaceContract = require("../src/contracts/BaseContentSpace");
 
@@ -85,7 +84,7 @@ const Init = async () => {
     console.log("\tKMS Public Key: " + kmsPublicKey);
 
     const nodeAddress = process.argv[5];
-    const nodeId = `inod${client.utils.AddressToHash(nodeAddress)}`;
+    //const nodeId = `inod${client.utils.AddressToHash(nodeAddress)}`;
 
     /*
     const nodeLocators = [
@@ -136,11 +135,6 @@ const Init = async () => {
     console.log("\nClient balance:", await client.GetBalance({address: signer.address}));
     console.log("Node balance:", await client.GetBalance({address: nodeAddress}));
     console.log("KMS balance:", await client.GetBalance({address: kmsSigner.address}));
-
-    ClientConfiguration.contentSpaceId = contentSpaceId;
-    fs.writeFileSync("./TestConfiguration.json", JSON.stringify(ClientConfiguration, null, 2));
-
-    console.log("\nUpdated TestConfiguration.json\n");
   } catch(error) {
     console.log("Error initializing fabric:");
     console.error(error);

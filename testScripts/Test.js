@@ -115,23 +115,22 @@ const Test = async () => {
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       //privateKey: "0x5a59693d04b5066d96bfe77a01ed0d719169c198d9243c4c0a4d9bc06329c1d8",
-      //privateKey: "0x89eb99fe9ce236af2b6e1db964320534ef6634127ecdeb816f6e4c72bc72bcec"
-      privateKey: "9d88bea6b9d1bca1124e783934bd6c740f42d0af2d1461f81490fa66171c112d"
+      privateKey: "0x89eb99fe9ce236af2b6e1db964320534ef6634127ecdeb816f6e4c72bc72bcec"
+      //privateKey: "9d88bea6b9d1bca1124e783934bd6c740f42d0af2d1461f81490fa66171c112d"
     });
 
     await client.SetSigner({signer});
 
-    const libraryId = "ilib2iDL4jwmdGHZExezBoeuNLjFcv9q";
-    const objectId = "iq__2iDL4jwmdGHZExezBoeuNLjFcv9q";
-
-    const {write_token} = await client.EditContentObject({
-      libraryId,
-      objectId
+    const accessGroupAddress = await client.ContentObjectMetadata({
+      libraryId: client.contentSpaceLibraryId,
+      objectId: client.contentSpaceObjectId,
+      metadataSubtree: "contentSpaceGroupAddress"
     });
 
-    await client.FinalizeContentObject({libraryId, objectId, writeToken: write_token});
-
-
+    await client.AddAccessGroupManager({
+      contractAddress: accessGroupAddress,
+      memberAddress: "0x060b075aa5bc937d989fde080d09ececc286dbe6"
+    });
 
 /*
     console.log(await client.VerifyContentObject({

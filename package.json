@@ -14,10 +14,11 @@
     "build-web-dev": "webpack --progress --target web --output-filename ElvClient-min-dev.js",
     "build-node": "webpack --progress --mode production --target node --output-filename ElvClient-node-min.js --devtool none",
     "build-node-dev": "webpack --progress --target node --output-filename ElvClient-node-min-dev.js",
-    "build-dist": "node ./node_modules/@babel/cli/bin/babel.js --presets=@babel/preset-env src --out-dir dist/",
+    "build-dist": "node ./node_modules/@babel/cli/bin/babel.js --presets=@babel/preset-env src --out-dir dist/src",
     "build-frame-client": "webpack -p --progress --entry ./src/FrameClient.js --output-filename ElvFrameClient-min.js --devtool none --optimize-minimize",
     "build-contracts": "node build/BuildContracts.js",
     "build-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme DEV_README.md",
+    "add-build": "git add dist && git add src/contracts && git add src/events && git add docs",
     "lint": "./node_modules/.bin/eslint \"src/**/*.js\" \"test/**/*.js\" \"setup/**/*.js\" --fix",
     "lint-docs": "./node_modules/.bin/eslint \"vendor/elv-jsdoc-template/tmpl/*.tmpl\" \"vendor/elv-jsdoc-template/**/*.js\" --fix",
     "publish": "npm publish --access public",
@@ -25,6 +26,13 @@
     "test-cov": "GENERATE_METHOD_LOGS=true jest --coverage --coverageDirectory 'test/coverage'",
     "test-update": "jest --updateSnapshot",
     "test:watch": "jest --watch"
+  },
+  "pre-commit": {
+    "run": [
+      "lint",
+      "build",
+      "add-build"
+    ]
   },
   "browser": {
     "fs": false
@@ -79,6 +87,7 @@
     "jsdoc": "^3.6.2",
     "lodash.isequal": "^4.5.0",
     "minami": "^1.2.3",
+    "pre-commit": "^1.2.2",
     "raw-loader": "^0.5.1",
     "solc": "0.4.24",
     "truffle": "^4.1.14",
