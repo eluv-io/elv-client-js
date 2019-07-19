@@ -263,7 +263,7 @@ class AuthorizationClient {
     if(libraryId) { token.qlib_id = libraryId; }
     if(partHash) { token.qphash = partHash; }
 
-    if(objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT && encryption) {
+    if(encryption && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
       if(!Utils.EqualAddress(owner, this.client.signer.address)) {
         const cap = await this.ReEncryptionCap({libraryId, objectId});

@@ -570,9 +570,9 @@ function () {
                   token.qphash = partHash;
                 }
 
-                _context9.t1 = objectId;
+                _context9.t0 = encryption && objectId;
 
-                if (!_context9.t1) {
+                if (!_context9.t0) {
                   _context9.next = 16;
                   break;
                 }
@@ -581,61 +581,51 @@ function () {
                 return this.AccessType(objectId);
 
               case 13:
-                _context9.t2 = _context9.sent;
-                _context9.t3 = ACCESS_TYPES.OBJECT;
-                _context9.t1 = _context9.t2 === _context9.t3;
+                _context9.t1 = _context9.sent;
+                _context9.t2 = ACCESS_TYPES.OBJECT;
+                _context9.t0 = _context9.t1 === _context9.t2;
 
               case 16:
-                _context9.t0 = _context9.t1;
-
                 if (!_context9.t0) {
-                  _context9.next = 19;
+                  _context9.next = 25;
                   break;
                 }
 
-                _context9.t0 = encryption;
-
-              case 19:
-                if (!_context9.t0) {
-                  _context9.next = 28;
-                  break;
-                }
-
-                _context9.next = 22;
+                _context9.next = 19;
                 return this.Owner({
                   id: objectId,
                   abi: ContentContract.abi
                 });
 
-              case 22:
+              case 19:
                 owner = _context9.sent;
 
                 if (Utils.EqualAddress(owner, this.client.signer.address)) {
-                  _context9.next = 28;
+                  _context9.next = 25;
                   break;
                 }
 
-                _context9.next = 26;
+                _context9.next = 23;
                 return this.ReEncryptionCap({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 26:
+              case 23:
                 cap = _context9.sent;
                 token.afgh_pk = cap.public_key;
 
-              case 28:
+              case 25:
                 token = Utils.B64(JSON.stringify(token));
-                _context9.next = 31;
+                _context9.next = 28;
                 return this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token)));
 
-              case 31:
+              case 28:
                 signature = _context9.sent;
                 multiSig = Utils.FormatSignature(signature);
                 return _context9.abrupt("return", "".concat(token, ".").concat(Utils.B64(multiSig)));
 
-              case 34:
+              case 31:
               case "end":
                 return _context9.stop();
             }
