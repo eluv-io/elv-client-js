@@ -115,23 +115,22 @@ const Test = async () => {
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       //privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000",
-      //privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
-      privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
+      privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
+      //privateKey: "0000000000000000000000000000000000000000000000000000000000000000"
     });
 
     await client.SetSigner({signer});
 
-    const libraryId = "ilib2iDL4jwmdGHZExezBoeuNLjFcv9q";
-    const objectId = "iq__2iDL4jwmdGHZExezBoeuNLjFcv9q";
-
-    const {write_token} = await client.EditContentObject({
-      libraryId,
-      objectId
+    const accessGroupAddress = await client.ContentObjectMetadata({
+      libraryId: client.contentSpaceLibraryId,
+      objectId: client.contentSpaceObjectId,
+      metadataSubtree: "contentSpaceGroupAddress"
     });
 
-    await client.FinalizeContentObject({libraryId, objectId, writeToken: write_token});
-
-
+    await client.AddAccessGroupManager({
+      contractAddress: accessGroupAddress,
+      memberAddress: "0x060b075aa5bc937d989fde080d09ececc286dbe6"
+    });
 
 /*
     console.log(await client.VerifyContentObject({
