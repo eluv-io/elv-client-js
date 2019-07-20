@@ -1896,6 +1896,7 @@ function () {
                   abi: ContentContract.abi,
                   methodName: "owner",
                   methodArgs: [],
+                  cacheContract: false,
                   signer: this.signer
                 });
 
@@ -5902,13 +5903,13 @@ function () {
       var _CallContractMethod = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee82(_ref84) {
-        var contractAddress, abi, methodName, _ref84$methodArgs, methodArgs, value, _ref84$overrides, overrides, _ref84$formatArgument, formatArguments;
+        var contractAddress, abi, methodName, _ref84$methodArgs, methodArgs, value, _ref84$overrides, overrides, _ref84$formatArgument, formatArguments, _ref84$cacheContract, cacheContract;
 
         return regeneratorRuntime.wrap(function _callee82$(_context82) {
           while (1) {
             switch (_context82.prev = _context82.next) {
               case 0:
-                contractAddress = _ref84.contractAddress, abi = _ref84.abi, methodName = _ref84.methodName, _ref84$methodArgs = _ref84.methodArgs, methodArgs = _ref84$methodArgs === void 0 ? [] : _ref84$methodArgs, value = _ref84.value, _ref84$overrides = _ref84.overrides, overrides = _ref84$overrides === void 0 ? {} : _ref84$overrides, _ref84$formatArgument = _ref84.formatArguments, formatArguments = _ref84$formatArgument === void 0 ? true : _ref84$formatArgument;
+                contractAddress = _ref84.contractAddress, abi = _ref84.abi, methodName = _ref84.methodName, _ref84$methodArgs = _ref84.methodArgs, methodArgs = _ref84$methodArgs === void 0 ? [] : _ref84$methodArgs, value = _ref84.value, _ref84$overrides = _ref84.overrides, overrides = _ref84$overrides === void 0 ? {} : _ref84$overrides, _ref84$formatArgument = _ref84.formatArguments, formatArguments = _ref84$formatArgument === void 0 ? true : _ref84$formatArgument, _ref84$cacheContract = _ref84.cacheContract, cacheContract = _ref84$cacheContract === void 0 ? true : _ref84$cacheContract;
                 _context82.next = 3;
                 return this.ethClient.CallContractMethod({
                   contractAddress: contractAddress,
@@ -5918,6 +5919,7 @@ function () {
                   value: value,
                   overrides: overrides,
                   formatArguments: formatArguments,
+                  cacheContract: cacheContract,
                   signer: this.signer
                 });
 

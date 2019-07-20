@@ -970,6 +970,7 @@ class ElvClient {
       abi: ContentContract.abi,
       methodName: "owner",
       methodArgs: [],
+      cacheContract: false,
       signer: this.signer
     });
   }
@@ -2634,7 +2635,7 @@ class ElvClient {
    *
    * @returns {Promise<*>} - Response containing information about the transaction
    */
-  async CallContractMethod({contractAddress, abi, methodName, methodArgs=[], value, overrides={}, formatArguments=true}) {
+  async CallContractMethod({contractAddress, abi, methodName, methodArgs=[], value, overrides={}, formatArguments=true, cacheContract=true}) {
     return await this.ethClient.CallContractMethod({
       contractAddress,
       abi,
@@ -2643,6 +2644,7 @@ class ElvClient {
       value,
       overrides,
       formatArguments,
+      cacheContract,
       signer: this.signer
     });
   }
