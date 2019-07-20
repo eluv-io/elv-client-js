@@ -22,6 +22,8 @@ class EthClient {
     this.ethereumURIs = ethereumURIs;
     this.ethereumURIIndex = 0;
     this.locked = false;
+
+    this.cachedContracts = {};
   }
 
   Provider() {
@@ -30,6 +32,21 @@ class EthClient {
     }
 
     return this.provider;
+  }
+
+  Contract({contractAddress, abi, signer, cacheContract}) {
+    let contract = this.cachedContracts[contractAddress];
+
+    if(!contract) {
+      contract = new Ethers.Contract(contractAddress, abi, this.Provider());
+      contract = contract.connect(signer);
+
+      if(cacheContract) {
+        this.cachedContracts[contractAddress] = contract;
+      }
+    }
+
+    return contract;
   }
 
   async MakeProviderCall({methodName, args=[], attempts=0}) {
@@ -128,6 +145,7 @@ class EthClient {
     value,
     overrides={},
     formatArguments=true,
+    cacheContract=true,
     signer
   }) {
     while(this.locked) {
@@ -137,6 +155,10 @@ class EthClient {
     this.locked = true;
 
     try {
+      contract = contract || this.Contract({contractAddress, abi, signer, cacheContract});
+
+      abi = contract.interface.abi;
+
       // Automatically format contract arguments
       if(formatArguments) {
         methodArgs = this.FormatContractArguments({
@@ -152,11 +174,6 @@ class EthClient {
       }
 
       this.ValidateSigner(signer);
-
-      if(!contract) {
-        contract = new Ethers.Contract(contractAddress, abi, this.Provider());
-        contract = contract.connect(signer);
-      }
 
       if(!contract.functions[methodName]) {
         throw Error("Unknown method: " + methodName);
@@ -195,8 +212,7 @@ class EthClient {
     formatArguments=true,
     signer
   }) {
-    let contract = new Ethers.Contract(contractAddress, abi, this.Provider());
-    contract = contract.connect(signer);
+    const contract = this.Contract({contractAddress, abi, signer});
 
     // Make method call
     const createMethodCall = await this.CallContractMethod({

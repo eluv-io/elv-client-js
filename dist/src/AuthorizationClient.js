@@ -912,7 +912,8 @@ function () {
                 return this.client.CallContractMethod({
                   contractAddress: Utils.HashToAddress(id),
                   abi: OwnableContract.abi,
-                  methodName: "version"
+                  methodName: "version",
+                  cacheContract: false
                 });
 
               case 6:

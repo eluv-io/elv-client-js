@@ -400,12 +400,15 @@ class AuthorizationClient {
     let accessType;
 
     try {
+      // Call using general "ownable" abi
+      // Ensure contract is not cached with this abi
       const version =
         Ethers.utils.parseBytes32String(
           await this.client.CallContractMethod({
             contractAddress: Utils.HashToAddress(id),
             abi: OwnableContract.abi,
-            methodName: "version"
+            methodName: "version",
+            cacheContract: false
           })
         );
 

@@ -64,6 +64,7 @@ function () {
     this.ethereumURIs = ethereumURIs;
     this.ethereumURIIndex = 0;
     this.locked = false;
+    this.cachedContracts = {};
   }
 
   _createClass(EthClient, [{
@@ -76,18 +77,38 @@ function () {
       return this.provider;
     }
   }, {
+    key: "Contract",
+    value: function Contract(_ref) {
+      var contractAddress = _ref.contractAddress,
+          abi = _ref.abi,
+          signer = _ref.signer,
+          cacheContract = _ref.cacheContract;
+      var contract = this.cachedContracts[contractAddress];
+
+      if (!contract) {
+        contract = new Ethers.Contract(contractAddress, abi, this.Provider());
+        contract = contract.connect(signer);
+
+        if (cacheContract) {
+          this.cachedContracts[contractAddress] = contract;
+        }
+      }
+
+      return contract;
+    }
+  }, {
     key: "MakeProviderCall",
     value: function () {
       var _MakeProviderCall = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee(_ref) {
-        var methodName, _ref$args, args, _ref$attempts, attempts, _this$Provider;
+      regeneratorRuntime.mark(function _callee(_ref2) {
+        var methodName, _ref2$args, args, _ref2$attempts, attempts, _this$Provider;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                methodName = _ref.methodName, _ref$args = _ref.args, args = _ref$args === void 0 ? [] : _ref$args, _ref$attempts = _ref.attempts, attempts = _ref$attempts === void 0 ? 0 : _ref$attempts;
+                methodName = _ref2.methodName, _ref2$args = _ref2.args, args = _ref2$args === void 0 ? [] : _ref2$args, _ref2$attempts = _ref2.attempts, attempts = _ref2$attempts === void 0 ? 0 : _ref2$attempts;
                 _context.prev = 1;
                 _context.next = 4;
                 return (_this$Provider = this.Provider())[methodName].apply(_this$Provider, _toConsumableArray(args));
@@ -132,11 +153,11 @@ function () {
 
   }, {
     key: "FormatContractArgument",
-    value: function FormatContractArgument(_ref2) {
+    value: function FormatContractArgument(_ref3) {
       var _this = this;
 
-      var type = _ref2.type,
-          value = _ref2.value;
+      var type = _ref3.type,
+          value = _ref3.value;
 
       // For array types, parse into array if necessary, then format each value.
       if (type.endsWith("[]")) {
@@ -173,12 +194,12 @@ function () {
 
   }, {
     key: "FormatContractArguments",
-    value: function FormatContractArguments(_ref3) {
+    value: function FormatContractArguments(_ref4) {
       var _this2 = this;
 
-      var abi = _ref3.abi,
-          methodName = _ref3.methodName,
-          args = _ref3.args;
+      var abi = _ref4.abi,
+          methodName = _ref4.methodName,
+          args = _ref4.args;
       var method = abi.find(function (func) {
         // Constructor has type=constructor but no name
         return func.name === methodName || func.type === methodName;
@@ -215,14 +236,14 @@ function () {
     value: function () {
       var _DeployContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee2(_ref4) {
-        var abi, bytecode, _ref4$constructorArgs, constructorArgs, _ref4$overrides, overrides, signer, contractFactory, contract;
+      regeneratorRuntime.mark(function _callee2(_ref5) {
+        var abi, bytecode, _ref5$constructorArgs, constructorArgs, _ref5$overrides, overrides, signer, contractFactory, contract;
 
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                abi = _ref4.abi, bytecode = _ref4.bytecode, _ref4$constructorArgs = _ref4.constructorArgs, constructorArgs = _ref4$constructorArgs === void 0 ? [] : _ref4$constructorArgs, _ref4$overrides = _ref4.overrides, overrides = _ref4$overrides === void 0 ? {} : _ref4$overrides, signer = _ref4.signer;
+                abi = _ref5.abi, bytecode = _ref5.bytecode, _ref5$constructorArgs = _ref5.constructorArgs, constructorArgs = _ref5$constructorArgs === void 0 ? [] : _ref5$constructorArgs, _ref5$overrides = _ref5.overrides, overrides = _ref5$overrides === void 0 ? {} : _ref5$overrides, signer = _ref5.signer;
                 signer = signer.connect(this.Provider());
                 this.ValidateSigner(signer);
                 contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
@@ -260,14 +281,14 @@ function () {
     value: function () {
       var _CallContractMethod = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee3(_ref5) {
-        var contract, contractAddress, abi, methodName, _ref5$methodArgs, methodArgs, value, _ref5$overrides, overrides, _ref5$formatArguments, formatArguments, signer, result, success, _contract$functions, latestBlock;
+      regeneratorRuntime.mark(function _callee3(_ref6) {
+        var contract, contractAddress, abi, methodName, _ref6$methodArgs, methodArgs, value, _ref6$overrides, overrides, _ref6$formatArguments, formatArguments, _ref6$cacheContract, cacheContract, signer, result, success, _contract$functions, latestBlock;
 
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                contract = _ref5.contract, contractAddress = _ref5.contractAddress, abi = _ref5.abi, methodName = _ref5.methodName, _ref5$methodArgs = _ref5.methodArgs, methodArgs = _ref5$methodArgs === void 0 ? [] : _ref5$methodArgs, value = _ref5.value, _ref5$overrides = _ref5.overrides, overrides = _ref5$overrides === void 0 ? {} : _ref5$overrides, _ref5$formatArguments = _ref5.formatArguments, formatArguments = _ref5$formatArguments === void 0 ? true : _ref5$formatArguments, signer = _ref5.signer;
+                contract = _ref6.contract, contractAddress = _ref6.contractAddress, abi = _ref6.abi, methodName = _ref6.methodName, _ref6$methodArgs = _ref6.methodArgs, methodArgs = _ref6$methodArgs === void 0 ? [] : _ref6$methodArgs, value = _ref6.value, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides, _ref6$formatArguments = _ref6.formatArguments, formatArguments = _ref6$formatArguments === void 0 ? true : _ref6$formatArguments, _ref6$cacheContract = _ref6.cacheContract, cacheContract = _ref6$cacheContract === void 0 ? true : _ref6$cacheContract, signer = _ref6.signer;
 
               case 1:
                 if (!this.locked) {
@@ -287,8 +308,14 @@ function () {
               case 6:
                 this.locked = true;
                 _context3.prev = 7;
+                contract = contract || this.Contract({
+                  contractAddress: contractAddress,
+                  abi: abi,
+                  signer: signer,
+                  cacheContract: cacheContract
+                });
+                abi = contract["interface"].abi; // Automatically format contract arguments
 
-                // Automatically format contract arguments
                 if (formatArguments) {
                   methodArgs = this.FormatContractArguments({
                     abi: abi,
@@ -304,80 +331,75 @@ function () {
 
                 this.ValidateSigner(signer);
 
-                if (!contract) {
-                  contract = new Ethers.Contract(contractAddress, abi, this.Provider());
-                  contract = contract.connect(signer);
-                }
-
                 if (contract.functions[methodName]) {
-                  _context3.next = 14;
+                  _context3.next = 15;
                   break;
                 }
 
                 throw Error("Unknown method: " + methodName);
 
-              case 14:
+              case 15:
                 success = false;
 
-              case 15:
+              case 16:
                 if (success) {
-                  _context3.next = 36;
+                  _context3.next = 37;
                   break;
                 }
 
-                _context3.prev = 16;
-                _context3.next = 19;
+                _context3.prev = 17;
+                _context3.next = 20;
                 return (_contract$functions = contract.functions)[methodName].apply(_contract$functions, _toConsumableArray(methodArgs).concat([overrides]));
 
-              case 19:
+              case 20:
                 result = _context3.sent;
                 success = true;
-                _context3.next = 34;
+                _context3.next = 35;
                 break;
 
-              case 23:
-                _context3.prev = 23;
-                _context3.t0 = _context3["catch"](16);
+              case 24:
+                _context3.prev = 24;
+                _context3.t0 = _context3["catch"](17);
 
                 if (!(_context3.t0.code === -32000 || _context3.t0.code === "REPLACEMENT_UNDERPRICED")) {
-                  _context3.next = 33;
+                  _context3.next = 34;
                   break;
                 }
 
-                _context3.next = 28;
+                _context3.next = 29;
                 return this.MakeProviderCall({
                   methodName: "getBlock",
                   args: ["latest"]
                 });
 
-              case 28:
+              case 29:
                 latestBlock = _context3.sent;
                 overrides.gasLimit = latestBlock.gasLimit;
                 overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-                _context3.next = 34;
+                _context3.next = 35;
                 break;
-
-              case 33:
-                throw _context3.t0;
 
               case 34:
-                _context3.next = 15;
+                throw _context3.t0;
+
+              case 35:
+                _context3.next = 16;
                 break;
 
-              case 36:
+              case 37:
                 return _context3.abrupt("return", result);
 
-              case 37:
-                _context3.prev = 37;
+              case 38:
+                _context3.prev = 38;
                 this.locked = false;
-                return _context3.finish(37);
+                return _context3.finish(38);
 
-              case 40:
+              case 41:
               case "end":
                 return _context3.stop();
             }
           }
-        }, _callee3, this, [[7,, 37, 40], [16, 23]]);
+        }, _callee3, this, [[7,, 38, 41], [17, 24]]);
       }));
 
       function CallContractMethod(_x3) {
@@ -391,18 +413,21 @@ function () {
     value: function () {
       var _CallContractMethodAndWait = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee4(_ref6) {
-        var contractAddress, abi, methodName, methodArgs, value, _ref6$timeout, timeout, _ref6$formatArguments, formatArguments, signer, contract, createMethodCall, interval, elapsed, methodEvent;
+      regeneratorRuntime.mark(function _callee4(_ref7) {
+        var contractAddress, abi, methodName, methodArgs, value, _ref7$timeout, timeout, _ref7$formatArguments, formatArguments, signer, contract, createMethodCall, interval, elapsed, methodEvent;
 
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
             switch (_context4.prev = _context4.next) {
               case 0:
-                contractAddress = _ref6.contractAddress, abi = _ref6.abi, methodName = _ref6.methodName, methodArgs = _ref6.methodArgs, value = _ref6.value, _ref6$timeout = _ref6.timeout, timeout = _ref6$timeout === void 0 ? 10000 : _ref6$timeout, _ref6$formatArguments = _ref6.formatArguments, formatArguments = _ref6$formatArguments === void 0 ? true : _ref6$formatArguments, signer = _ref6.signer;
-                contract = new Ethers.Contract(contractAddress, abi, this.Provider());
-                contract = contract.connect(signer); // Make method call
+                contractAddress = _ref7.contractAddress, abi = _ref7.abi, methodName = _ref7.methodName, methodArgs = _ref7.methodArgs, value = _ref7.value, _ref7$timeout = _ref7.timeout, timeout = _ref7$timeout === void 0 ? 10000 : _ref7$timeout, _ref7$formatArguments = _ref7.formatArguments, formatArguments = _ref7$formatArguments === void 0 ? true : _ref7$formatArguments, signer = _ref7.signer;
+                contract = this.Contract({
+                  contractAddress: contractAddress,
+                  abi: abi,
+                  signer: signer
+                }); // Make method call
 
-                _context4.next = 5;
+                _context4.next = 4;
                 return this.CallContractMethod({
                   contract: contract,
                   abi: abi,
@@ -413,60 +438,60 @@ function () {
                   signer: signer
                 });
 
-              case 5:
+              case 4:
                 createMethodCall = _context4.sent;
                 // Poll for transaction completion
                 interval = 250;
                 elapsed = 0;
 
-              case 8:
+              case 7:
                 if (!(elapsed < timeout)) {
-                  _context4.next = 20;
+                  _context4.next = 19;
                   break;
                 }
 
-                _context4.next = 11;
+                _context4.next = 10;
                 return this.MakeProviderCall({
                   methodName: "getTransactionReceipt",
                   args: [createMethodCall.hash]
                 });
 
-              case 11:
+              case 10:
                 methodEvent = _context4.sent;
 
                 if (!methodEvent) {
-                  _context4.next = 15;
+                  _context4.next = 14;
                   break;
                 }
 
                 methodEvent.logs = methodEvent.logs.map(function (log) {
                   return _objectSpread({}, log, contract["interface"].parseLog(log));
                 });
-                return _context4.abrupt("break", 20);
+                return _context4.abrupt("break", 19);
 
-              case 15:
+              case 14:
                 elapsed += interval;
-                _context4.next = 18;
+                _context4.next = 17;
                 return new Promise(function (resolve) {
                   return setTimeout(resolve, interval);
                 });
 
-              case 18:
-                _context4.next = 8;
+              case 17:
+                _context4.next = 7;
                 break;
 
-              case 20:
+              case 19:
                 if (methodEvent) {
-                  _context4.next = 22;
+                  _context4.next = 21;
                   break;
                 }
 
                 throw Error("Timed out waiting for completion of ".concat(methodName, ". TXID: ").concat(transactionHash));
 
-              case 22:
+              case 21:
                 return _context4.abrupt("return", methodEvent);
 
-              case 23:
+              case 22:
               case "end":
                 return _context4.stop();
             }
@@ -482,10 +507,10 @@ function () {
     }()
   }, {
     key: "ExtractEventFromLogs",
-    value: function ExtractEventFromLogs(_ref7) {
-      var abi = _ref7.abi,
-          event = _ref7.event,
-          eventName = _ref7.eventName;
+    value: function ExtractEventFromLogs(_ref8) {
+      var abi = _ref8.abi,
+          event = _ref8.event,
+          eventName = _ref8.eventName;
       var contractInterface = new Ethers.utils.Interface(abi); // Loop through logs to find the desired log
 
       var _iteratorNormalCompletion = true;
@@ -523,14 +548,14 @@ function () {
     value: function () {
       var _DeployDependentContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee5(_ref8) {
-        var contractAddress, abi, methodName, _ref8$args, args, eventName, eventValue, signer, event, eventLog, newContractAddress;
+      regeneratorRuntime.mark(function _callee5(_ref9) {
+        var contractAddress, abi, methodName, _ref9$args, args, eventName, eventValue, signer, event, eventLog, newContractAddress;
 
         return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
               case 0:
-                contractAddress = _ref8.contractAddress, abi = _ref8.abi, methodName = _ref8.methodName, _ref8$args = _ref8.args, args = _ref8$args === void 0 ? [] : _ref8$args, eventName = _ref8.eventName, eventValue = _ref8.eventValue, signer = _ref8.signer;
+                contractAddress = _ref9.contractAddress, abi = _ref9.abi, methodName = _ref9.methodName, _ref9$args = _ref9.args, args = _ref9$args === void 0 ? [] : _ref9$args, eventName = _ref9.eventName, eventValue = _ref9.eventValue, signer = _ref9.signer;
                 _context5.next = 3;
                 return this.CallContractMethodAndWait({
                   contractAddress: contractAddress,
@@ -575,14 +600,14 @@ function () {
     value: function () {
       var _DeployContentSpaceContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee6(_ref9) {
+      regeneratorRuntime.mark(function _callee6(_ref10) {
         var name, signer, deploySpaceEvent, factoryContracts, i, _factoryContracts$i, contract, setMethod, factoryAddress;
 
         return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
               case 0:
-                name = _ref9.name, signer = _ref9.signer;
+                name = _ref10.name, signer = _ref10.signer;
                 _context6.next = 3;
                 return this.DeployContract({
                   abi: ContentSpaceContract.abi,
@@ -649,13 +674,13 @@ function () {
     value: function () {
       var _DeployAccessGroupContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee7(_ref10) {
+      regeneratorRuntime.mark(function _callee7(_ref11) {
         var contentSpaceAddress, signer;
         return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
             switch (_context7.prev = _context7.next) {
               case 0:
-                contentSpaceAddress = _ref10.contentSpaceAddress, signer = _ref10.signer;
+                contentSpaceAddress = _ref11.contentSpaceAddress, signer = _ref11.signer;
                 return _context7.abrupt("return", this.DeployDependentContract({
                   contractAddress: contentSpaceAddress,
                   abi: ContentSpaceContract.abi,
@@ -685,13 +710,13 @@ function () {
     value: function () {
       var _DeployTypeContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee8(_ref11) {
+      regeneratorRuntime.mark(function _callee8(_ref12) {
         var contentSpaceAddress, signer;
         return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
-                contentSpaceAddress = _ref11.contentSpaceAddress, signer = _ref11.signer;
+                contentSpaceAddress = _ref12.contentSpaceAddress, signer = _ref12.signer;
                 return _context8.abrupt("return", this.DeployDependentContract({
                   contractAddress: contentSpaceAddress,
                   abi: ContentSpaceContract.abi,
@@ -721,13 +746,13 @@ function () {
     value: function () {
       var _DeployLibraryContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee9(_ref12) {
+      regeneratorRuntime.mark(function _callee9(_ref13) {
         var contentSpaceAddress, kmsId, signer, kmsAddress;
         return regeneratorRuntime.wrap(function _callee9$(_context9) {
           while (1) {
             switch (_context9.prev = _context9.next) {
               case 0:
-                contentSpaceAddress = _ref12.contentSpaceAddress, kmsId = _ref12.kmsId, signer = _ref12.signer;
+                contentSpaceAddress = _ref13.contentSpaceAddress, kmsId = _ref13.kmsId, signer = _ref13.signer;
                 kmsAddress = Utils.HashToAddress(kmsId);
                 return _context9.abrupt("return", this.DeployDependentContract({
                   contractAddress: contentSpaceAddress,
@@ -758,13 +783,13 @@ function () {
     value: function () {
       var _DeployContentContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee10(_ref13) {
+      regeneratorRuntime.mark(function _callee10(_ref14) {
         var contentLibraryAddress, typeAddress, signer;
         return regeneratorRuntime.wrap(function _callee10$(_context10) {
           while (1) {
             switch (_context10.prev = _context10.next) {
               case 0:
-                contentLibraryAddress = _ref13.contentLibraryAddress, typeAddress = _ref13.typeAddress, signer = _ref13.signer;
+                contentLibraryAddress = _ref14.contentLibraryAddress, typeAddress = _ref14.typeAddress, signer = _ref14.signer;
                 // If type is not specified, use null address
                 typeAddress = typeAddress || Utils.nullAddress;
                 return _context10.abrupt("return", this.DeployDependentContract({
@@ -796,13 +821,13 @@ function () {
     value: function () {
       var _CommitContent = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee11(_ref14) {
+      regeneratorRuntime.mark(function _callee11(_ref15) {
         var contentObjectAddress, versionHash, signer, event;
         return regeneratorRuntime.wrap(function _callee11$(_context11) {
           while (1) {
             switch (_context11.prev = _context11.next) {
               case 0:
-                contentObjectAddress = _ref14.contentObjectAddress, versionHash = _ref14.versionHash, signer = _ref14.signer;
+                contentObjectAddress = _ref15.contentObjectAddress, versionHash = _ref15.versionHash, signer = _ref15.signer;
                 _context11.next = 3;
                 return this.CallContractMethodAndWait({
                   contractAddress: contentObjectAddress,
@@ -837,13 +862,13 @@ function () {
     value: function () {
       var _EngageAccountLibrary = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee12(_ref15) {
+      regeneratorRuntime.mark(function _callee12(_ref16) {
         var contentSpaceAddress, signer;
         return regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
             switch (_context12.prev = _context12.next) {
               case 0:
-                contentSpaceAddress = _ref15.contentSpaceAddress, signer = _ref15.signer;
+                contentSpaceAddress = _ref16.contentSpaceAddress, signer = _ref16.signer;
                 return _context12.abrupt("return", this.CallContractMethodAndWait({
                   contractAddress: contentSpaceAddress,
                   abi: ContentSpaceContract.abi,
@@ -871,14 +896,14 @@ function () {
     value: function () {
       var _SetCustomContentContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee13(_ref16) {
-        var contentContractAddress, customContractAddress, _ref16$overrides, overrides, signer;
+      regeneratorRuntime.mark(function _callee13(_ref17) {
+        var contentContractAddress, customContractAddress, _ref17$overrides, overrides, signer;
 
         return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
             switch (_context13.prev = _context13.next) {
               case 0:
-                contentContractAddress = _ref16.contentContractAddress, customContractAddress = _ref16.customContractAddress, _ref16$overrides = _ref16.overrides, overrides = _ref16$overrides === void 0 ? {} : _ref16$overrides, signer = _ref16.signer;
+                contentContractAddress = _ref17.contentContractAddress, customContractAddress = _ref17.customContractAddress, _ref17$overrides = _ref17.overrides, overrides = _ref17$overrides === void 0 ? {} : _ref17$overrides, signer = _ref17.signer;
                 _context13.next = 3;
                 return this.CallContractMethodAndWait({
                   contractAddress: contentContractAddress,
@@ -912,16 +937,16 @@ function () {
     value: function () {
       var _ContractEvents = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee15(_ref17) {
+      regeneratorRuntime.mark(function _callee15(_ref18) {
         var _this3 = this;
 
-        var contractAddress, abi, _ref17$fromBlock, fromBlock, toBlock, _ref17$includeTransac, includeTransaction, contractLogs, blocks;
+        var contractAddress, abi, _ref18$fromBlock, fromBlock, toBlock, _ref18$includeTransac, includeTransaction, contractLogs, blocks;
 
         return regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
             switch (_context15.prev = _context15.next) {
               case 0:
-                contractAddress = _ref17.contractAddress, abi = _ref17.abi, _ref17$fromBlock = _ref17.fromBlock, fromBlock = _ref17$fromBlock === void 0 ? 0 : _ref17$fromBlock, toBlock = _ref17.toBlock, _ref17$includeTransac = _ref17.includeTransaction, includeTransaction = _ref17$includeTransac === void 0 ? false : _ref17$includeTransac;
+                contractAddress = _ref18.contractAddress, abi = _ref18.abi, _ref18$fromBlock = _ref18.fromBlock, fromBlock = _ref18$fromBlock === void 0 ? 0 : _ref18$fromBlock, toBlock = _ref18.toBlock, _ref18$includeTransac = _ref18.includeTransaction, includeTransaction = _ref18$includeTransac === void 0 ? false : _ref18$includeTransac;
                 _context15.next = 3;
                 return this.MakeProviderCall({
                   methodName: "getLogs",
@@ -939,7 +964,7 @@ function () {
                 return Promise.all(contractLogs.map(
                 /*#__PURE__*/
                 function () {
-                  var _ref18 = _asyncToGenerator(
+                  var _ref19 = _asyncToGenerator(
                   /*#__PURE__*/
                   regeneratorRuntime.mark(function _callee14(log) {
                     var eventInterface, parsedLog;
@@ -980,7 +1005,7 @@ function () {
                   }));
 
                   return function (_x15) {
-                    return _ref18.apply(this, arguments);
+                    return _ref19.apply(this, arguments);
                   };
                 }()));
 
@@ -1006,8 +1031,8 @@ function () {
 
   }, {
     key: "ParseUnknownLog",
-    value: function ParseUnknownLog(_ref19) {
-      var log = _ref19.log;
+    value: function ParseUnknownLog(_ref20) {
+      var log = _ref20.log;
 
       if (log.topics && log.topics.length > 0) {
         var topicHash = log.topics[0];
@@ -1033,16 +1058,16 @@ function () {
     value: function () {
       var _Events = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee17(_ref20) {
+      regeneratorRuntime.mark(function _callee17(_ref21) {
         var _this4 = this;
 
-        var toBlock, fromBlock, _ref20$includeTransac, includeTransaction, logs, blocks, output, _loop, blockNumber;
+        var toBlock, fromBlock, _ref21$includeTransac, includeTransaction, logs, blocks, output, _loop, blockNumber;
 
         return regeneratorRuntime.wrap(function _callee17$(_context18) {
           while (1) {
             switch (_context18.prev = _context18.next) {
               case 0:
-                toBlock = _ref20.toBlock, fromBlock = _ref20.fromBlock, _ref20$includeTransac = _ref20.includeTransaction, includeTransaction = _ref20$includeTransac === void 0 ? false : _ref20$includeTransac;
+                toBlock = _ref21.toBlock, fromBlock = _ref21.fromBlock, _ref21$includeTransac = _ref21.includeTransaction, includeTransaction = _ref21$includeTransac === void 0 ? false : _ref21$includeTransac;
                 _context18.next = 3;
                 return this.MakeProviderCall({
                   methodName: "getLogs",
@@ -1107,7 +1132,7 @@ function () {
                           return Promise.all(blockInfo.map(
                           /*#__PURE__*/
                           function () {
-                            var _ref21 = _asyncToGenerator(
+                            var _ref22 = _asyncToGenerator(
                             /*#__PURE__*/
                             regeneratorRuntime.mark(function _callee16(block) {
                               return regeneratorRuntime.wrap(function _callee16$(_context16) {
@@ -1151,7 +1176,7 @@ function () {
                             }));
 
                             return function (_x17) {
-                              return _ref21.apply(this, arguments);
+                              return _ref22.apply(this, arguments);
                             };
                           }()));
 
