@@ -41,6 +41,9 @@ class EthClient {
       contract = new Ethers.Contract(contractAddress, abi, this.Provider());
       contract = contract.connect(signer);
 
+      // Redefine deployed to avoid making call to getCode
+      contract._deployedPromise = new Promise(resolve => resolve(this));
+
       if(cacheContract) {
         this.cachedContracts[contractAddress] = contract;
       }
