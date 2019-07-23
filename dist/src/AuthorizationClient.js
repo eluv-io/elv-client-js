@@ -292,7 +292,7 @@ function () {
       var _KMSInfo = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee5(_ref5) {
-        var objectId, versionHash, KMSInfo;
+        var objectId, versionHash, KMSInfo, publicKey;
         return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
             switch (_context5.prev = _context5.next) {
@@ -314,12 +314,14 @@ function () {
 
               case 4:
                 KMSInfo = _context5.sent;
+                // Public key is compressed and hashed
+                publicKey = Ethers.utils.computePublicKey(client.utils.HashToAddress(KMSInfo[1]), false);
                 return _context5.abrupt("return", {
                   urls: KMSInfo[0],
-                  publicKey: KMSInfo[1]
+                  publicKey: publicKey
                 });
 
-              case 6:
+              case 7:
               case "end":
                 return _context5.stop();
             }
