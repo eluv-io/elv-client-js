@@ -2305,11 +2305,37 @@ class ElvClient {
    * A new access group contract is deployed from the content space
    *
    * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} name - Name of the access group
+   * @param {object=} meta - Metadata for the access group
    *
    * @returns {Promise<string>} - Contract address of created access group
    */
-  async CreateAccessGroup() {
+  async CreateAccessGroup({name, metadata={}}) {
     const { contractAddress } = await this.authClient.CreateAccessGroup();
+
+    const objectId = this.utils.AddressToObjectId(contractAddress);
+
+    const editResponse = await this.EditContentObject({
+      libraryId: this.contentSpaceLibraryId,
+      objectId: objectId
+    });
+
+    await this.ReplaceMetadata({
+      libraryId: this.contentSpaceLibraryId,
+      objectId,
+      writeToken: editResponse.write_token,
+      metadata: {
+        name,
+        ...metadata
+      }
+    });
+
+    await this.FinalizeContentObject({
+      libraryId: this.contentSpaceLibraryId,
+      objectId,
+      writeToken: editResponse.write_token
+    });
 
     return contractAddress;
   }
