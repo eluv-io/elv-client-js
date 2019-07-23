@@ -295,6 +295,7 @@ class FrameClient {
       "MergeMetadata",
       "PlayoutOptions",
       "Proofs",
+      "PublicRep",
       "PublishContentVersion",
       "QParts",
       "RemoveAccessGroupManager",

@@ -2173,6 +2173,26 @@ class ElvClient {
   }
 
   /**
+   * Generate a URL to the specified /public endpoint of a content object. URL includes authorization token.
+   *
+   * Alias for the FabricUrl method with the "rep" parameter
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string} rep - Representation to use
+   * @param {Object=} queryParams - Query params to add to the URL
+   * @see FabricUrl for creating arbitrary fabric URLs
+   *
+   * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
+   */
+  async PublicRep({libraryId, objectId, versionHash, rep, queryParams={}}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, publicRep: rep, queryParams, noAuth: true});
+  }
+
+  /**
    * Generate a URL to the specified item in the content fabric with appropriate authorization token.
    *
    * @methodGroup URL Generation
@@ -2182,6 +2202,7 @@ class ElvClient {
    * @param {string=} versionHash - Hash of an object version
    * @param {string=} partHash - Hash of a part - Requires object ID
    * @param {string=} rep - Rep parameter of the url
+   * @param {string=} publicRep - Public rep parameter of the url
    * @param {string=} call - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
    * @param {boolean=} channelAuth=false - If specified, state channel authorization will be used instead of access request authorization
@@ -2198,6 +2219,7 @@ class ElvClient {
     versionHash,
     partHash,
     rep,
+    publicRep,
     call,
     queryParams={},
     channelAuth=false,
@@ -2209,39 +2231,27 @@ class ElvClient {
     // Clone queryParams to avoid modification of the original
     queryParams = {...queryParams};
 
+    queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, channelAuth, noAuth, noCache});
+
     let path = "";
     if(libraryId) {
       path = UrlJoin(path, "qlibs", libraryId);
 
       if(objectId || versionHash) {
         path = UrlJoin(path, "q", versionHash || objectId);
-
-        if(partHash){
-          path = UrlJoin(path, "data", partHash);
-        } else if(rep) {
-          path = UrlJoin(path, "rep", rep);
-        } else if(call) {
-          path = UrlJoin(path, "call", call);
-        }
-      }
-
-      if(!noAuth) {
-        queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, channelAuth, noCache});
       }
     } else if(versionHash) {
       path = UrlJoin("q", versionHash);
+    }
 
-      if(!noAuth) {
-        queryParams.authorization = await this.authClient.AuthorizationToken({objectId, versionHash, channelAuth, noCache});
-      }
-
-      if(partHash){
-        path = UrlJoin(path, "data", partHash);
-      } else if(rep) {
-        path = UrlJoin(path, "rep", rep);
-      } else if(call) {
-        path = UrlJoin(path, "call", call);
-      }
+    if(partHash){
+      path = UrlJoin(path, "data", partHash);
+    } else if(rep) {
+      path = UrlJoin(path, "rep", rep);
+    } else if(publicRep) {
+      path = UrlJoin(path, "public", publicRep);
+    } else if(call) {
+      path = UrlJoin(path, "call", call);
     }
 
     return this.HttpClient.URL({
