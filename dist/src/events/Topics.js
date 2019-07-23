@@ -462,53 +462,6 @@ var topics = {
     }],
     "contract": "BaseLibrary"
   },
-  "0x583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "guarantor",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "code",
-        "type": "int256"
-      }],
-      "name": "ExecStatus",
-      "type": "event"
-    }],
-    "contract": "BaseAccessWallet"
-  },
-  "0x280016f7418306a55542432120fd1a239ef9fcc1a92694d8d44ca76be0249ea7": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "contentType",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "contentContract",
-        "type": "address"
-      }],
-      "name": "ContentTypeAdded",
-      "type": "event"
-    }],
-    "contract": "BaseLibrary"
-  },
-  "0xd41375b9d347dfe722f90a780731abd23b7855f9cf14ea7063c4cab5f9ae58e2": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "contentType",
-        "type": "address"
-      }],
-      "name": "ContentTypeRemoved",
-      "type": "event"
-    }],
-    "contract": "BaseLibrary"
-  },
   "0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75": {
     "abi": [{
       "anonymous": false,
@@ -577,6 +530,53 @@ var topics = {
         "type": "int256"
       }],
       "name": "VersionDelete",
+      "type": "event"
+    }],
+    "contract": "BaseLibrary"
+  },
+  "0x583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "guarantor",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "code",
+        "type": "int256"
+      }],
+      "name": "ExecStatus",
+      "type": "event"
+    }],
+    "contract": "BaseAccessWallet"
+  },
+  "0x280016f7418306a55542432120fd1a239ef9fcc1a92694d8d44ca76be0249ea7": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "contentType",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "contentContract",
+        "type": "address"
+      }],
+      "name": "ContentTypeAdded",
+      "type": "event"
+    }],
+    "contract": "BaseLibrary"
+  },
+  "0xd41375b9d347dfe722f90a780731abd23b7855f9cf14ea7063c4cab5f9ae58e2": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "contentType",
+        "type": "address"
+      }],
+      "name": "ContentTypeRemoved",
       "type": "event"
     }],
     "contract": "BaseLibrary"

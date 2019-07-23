@@ -4,7 +4,8 @@ pragma solidity 0.4.24;
 import {BaseFactory} from "./base_content_space.sol";
 import {BaseContentSpace} from "./base_content_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
-
+import {Editable} from "./editable.sol";
+import {Container} from "./container.sol";
 
 
 /* -- Revision history --
@@ -12,12 +13,13 @@ BsAccessCtrlGrp20190222140700ML: First versioned released
 BsAccessCtrlGrp20190315172900ML: Migrated to 0.4.24
 BsAccessCtrlGrp20190506153800ML: Adds access indexing
 BsAccessCtrlGrp20190510150700ML: Fixes bug (wrong index was used for group rights)
+BsAccessCtrlGrp20190722161600ML: Made editable
 */
 
 
-contract BaseAccessControlGroup is AccessIndexor {
+contract BaseAccessControlGroup is AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20190510150700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20190722161600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     mapping (address => bool) public members;
     mapping (address => bool) public managers;
@@ -85,4 +87,10 @@ contract BaseAccessControlGroup is AccessIndexor {
     function hasAccess(address candidate) public view returns (bool) {
         return (members[candidate] == true);
     }
+
+    function canConfirm() public view returns (bool) {
+        BaseContentSpace bcs = BaseContentSpace(contentSpace);
+        return bcs.canNodePublish(msg.sender);
+    }
+
 }

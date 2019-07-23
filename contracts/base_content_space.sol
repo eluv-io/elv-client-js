@@ -333,11 +333,12 @@ BaseFactory20190227170400ML: First versioned released
 BaseFactory20190301105700ML: No changes version bump to test
 BaseFactory20190319195000ML: with  0.4.24 migration
 BaseFactory20190506153000ML: Split createLibrary out, adds access indexing
+BaseFactory20190722161600ML: No changes, updated to provide generation for BsAccessCtrlGrp20190722161600ML
 */
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20190506153000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseFactory20190722161600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContentType() public returns (address) {
         address newType = (new BaseContentType(msg.sender));
