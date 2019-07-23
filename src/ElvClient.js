@@ -1223,7 +1223,7 @@ class ElvClient {
       signer: this.signer
     });
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
   }
 
   /**
@@ -1699,14 +1699,23 @@ class ElvClient {
 
       const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
       const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+
+      let metadata = {};
+
+      metadata[capKey] = await Crypto.EncryptCap(cap, this.signer.signingKey.publicKey);
+
+      try {
+        metadata[kmsCapKey] = await Crypto.EncryptCap(cap, kmsPublicKey);
+      } catch(error) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
+      }
+
       await this.MergeMetadata({
         libraryId,
         objectId,
         writeToken,
-        metadata: {
-          [capKey]: await Crypto.EncryptCap(cap, this.signer.signingKey.publicKey),
-          [kmsCapKey]: await Crypto.EncryptCap(cap, kmsPublicKey)
-        }
+        metadata
       });
     }
 
@@ -2375,6 +2384,66 @@ class ElvClient {
       methodName: "kill",
       methodArgs: []
     });
+  }
+
+  /**
+   * Get a list of addresses of members of the specified group
+   *
+   * @methodGroup AccessGroups
+   * @namedParams
+   * @param contractAddress - The address of the access group contract
+   *
+   * @return {Promise<Array<string>>} - List of member addresses
+   */
+  async AccessGroupMembers({contractAddress}) {
+    const length = (await this.CallContractMethod({
+      contractAddress,
+      abi: AccessGroupContract.abi,
+      methodName: "membersNum"
+    })).toNumber();
+
+    return await Promise.all(
+      [...Array(length)].map(async (_, i) =>
+        this.utils.FormatAddress(
+          await this.CallContractMethod({
+            contractAddress,
+            abi: AccessGroupContract.abi,
+            methodName: "membersList",
+            methodArgs: [i]
+          })
+        )
+      )
+    );
+  }
+
+  /**
+   * Get a list of addresses of managers of the specified group
+   *
+   * @methodGroup AccessGroups
+   * @namedParams
+   * @param contractAddress - The address of the access group contract
+   *
+   * @return {Promise<Array<string>>} - List of manager addresses
+   */
+  async AccessGroupManagers({contractAddress}) {
+    const length = (await this.CallContractMethod({
+      contractAddress,
+      abi: AccessGroupContract.abi,
+      methodName: "managersNum"
+    })).toNumber();
+
+    return await Promise.all(
+      [...Array(length)].map(async (_, i) =>
+        this.utils.FormatAddress(
+          await this.CallContractMethod({
+            contractAddress,
+            abi: AccessGroupContract.abi,
+            methodName: "managersList",
+            methodArgs: [i]
+          })
+        )
+      )
+    );
   }
 
   async AccessGroupMembershipMethod({contractAddress, memberAddress, methodName, eventName}) {

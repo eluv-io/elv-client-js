@@ -160,9 +160,12 @@ class AuthorizationClient {
       methodArgs: [[]]
     });
 
+    // Public key is compressed and hashed
+    const publicKey = Ethers.utils.computePublicKey(client.utils.HashToAddress(KMSInfo[1]), false);
+
     return {
       urls: KMSInfo[0],
-      publicKey: KMSInfo[1]
+      publicKey
     };
   }
 

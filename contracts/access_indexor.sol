@@ -8,12 +8,13 @@ AccessIndexor20190423111800ML: First versioned release
 AccessIndexor20190510150600ML: Removes debug events
 AccessIndexor20190528194200ML: Removes contentSpace is field as it is now inherited from Ownable
 AccessIndexor20190605162000ML: Adds cleanUp functions to remove references to dead objects
+AccessIndexor20190722214200ML: Fix false positive for group-based rights when object owner match group owner
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20190528194200ML";
+    bytes32 public version = "AccessIndexor20190722214200ML";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
     //event dbUint8(string label, uint8 value);
@@ -178,10 +179,7 @@ contract AccessIndexor is Ownable {
     }
 
     function checkDirectRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
-        Ownable instance = Ownable(obj);
-        if (instance.owner() == owner){
-            return true;
-        }
+
         if (index_type == CATEGORY_CONTENT_OBJECT) {
             return checkRawRights(contentObjects, obj, access_type);
         }
@@ -205,6 +203,10 @@ contract AccessIndexor is Ownable {
     }
 
     function checkRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
+        Ownable instance = Ownable(obj);
+        if (instance.owner() == owner){
+            return true;
+        }
         bool directRights = checkDirectRights(index_type, obj, access_type);
         if (directRights == true) {
             return true;
@@ -221,8 +223,7 @@ contract AccessIndexor is Ownable {
                 }
             }
         }
-        Ownable instance = Ownable(obj);
-        return (owner == instance.owner());
+        return false;
     }
 
     //event dbAddress(string label, address addr);

@@ -151,26 +151,28 @@ function () {
           var _ref3 = _asyncToGenerator(
           /*#__PURE__*/
           regeneratorRuntime.mark(function _callee2(args) {
-            var callback;
+            var isPrompted, callback;
             return regeneratorRuntime.wrap(function _callee2$(_context2) {
               while (1) {
                 switch (_context2.prev = _context2.next) {
                   case 0:
-                    if (!(!args || !args.requestor)) {
-                      _context2.next = 2;
+                    isPrompted = FrameClient.PromptedMethods().includes(methodName);
+
+                    if (!(isPrompted && (!args || !args.requestor))) {
+                      _context2.next = 3;
                       break;
                     }
 
                     throw new Error("'requestor' param required when calling user profile methods from FrameClient");
 
-                  case 2:
+                  case 3:
                     callback = args && args.callback;
 
                     if (callback) {
                       delete args.callback;
                     }
 
-                    _context2.next = 6;
+                    _context2.next = 7;
                     return _this.SendMessage({
                       options: {
                         module: "userProfileClient",
@@ -182,10 +184,10 @@ function () {
                       callback: callback
                     });
 
-                  case 6:
+                  case 7:
                     return _context2.abrupt("return", _context2.sent);
 
-                  case 7:
+                  case 8:
                   case "end":
                     return _context2.stop();
                 }
@@ -490,7 +492,7 @@ function () {
      * @returns {Array<string>} - List of ElvClient methods available to a FrameClient
      */
     value: function AllowedMethods() {
-      return ["AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddLibraryContentType", "BitcodeMethodUrl", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "ContentLibraries", "ContentLibrary", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "CopyContentObject", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentSpace", "CreateContentType", "CreateFileUploadJob", "CreatePart", "CurrentAccountAddress", "CustomContractAddress", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteMetadata", "DeletePart", "DeployContract", "DownloadFile", "DownloadPart", "EditContentObject", "EncryptionCap", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeContentObject", "FinalizePart", "FinalizeUploadJobs", "FormatContractArguments", "GetBalance", "LibraryContentTypes", "ListFiles", "MergeMetadata", "PlayoutOptions", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "SendFunds", "SetAccessCharge", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "UploadFileData", "UploadFiles", "UploadJobStatus", "UploadPart", "UploadPartChunk", "VerifyContentObject", "WithdrawContractFunds"];
+      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddLibraryContentType", "BitcodeMethodUrl", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "ContentLibraries", "ContentLibrary", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "CopyContentObject", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentSpace", "CreateContentType", "CreateFileUploadJob", "CreatePart", "CurrentAccountAddress", "CustomContractAddress", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteMetadata", "DeletePart", "DeployContract", "DownloadFile", "DownloadPart", "EditContentObject", "EncryptionCap", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeContentObject", "FinalizePart", "FinalizeUploadJobs", "FormatContractArguments", "GetBalance", "LibraryContentTypes", "ListFiles", "MergeMetadata", "PlayoutOptions", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "SendFunds", "SetAccessCharge", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "UploadFileData", "UploadFiles", "UploadJobStatus", "UploadPart", "UploadPartChunk", "VerifyContentObject", "WithdrawContractFunds"];
     }
   }, {
     key: "AllowedUserProfileMethods",

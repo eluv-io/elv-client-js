@@ -58,7 +58,9 @@ class FrameClient {
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
     for(const methodName of this.AllowedUserProfileMethods()) {
       this.userProfileClient[methodName] = async (args) => {
-        if(!args || !args.requestor) {
+        const isPrompted = FrameClient.PromptedMethods().includes(methodName);
+
+        if(isPrompted && (!args || !args.requestor)) {
           throw new Error("'requestor' param required when calling user profile methods from FrameClient");
         }
 
@@ -227,6 +229,8 @@ class FrameClient {
    */
   AllowedMethods() {
     return [
+      "AccessGroupManagers",
+      "AccessGroupMembers",
       "AccessGroupOwner",
       "AccessInfo",
       "AccessRequest",
