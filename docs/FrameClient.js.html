@@ -54,7 +54,8 @@
 
 <a class="button" href="FrameClient.html">Back</a>
 <div class="source-container">
-  <pre class="prettyprint source linenums"><code>const Id = require("./Id");
+  <pre class="prettyprint source linenums"><code>require("@babel/polyfill");
+const Id = require("./Id");
 const Utils = require("./Utils");
 
 class FrameClient {

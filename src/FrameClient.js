@@ -1,3 +1,4 @@
+require("@babel/polyfill");
 const Id = require("./Id");
 const Utils = require("./Utils");
 

@@ -61,7 +61,7 @@ const CreateClient = async (bux="2") => {
     await client.SetSigner({signer});
 
     // Add new account to content space group
-    await fundedClient.AddAccessGroupManager({
+    await fundedClient.AddAccessGroupMember({
       contractAddress: groupAddress,
       memberAddress: signer.address
     });
