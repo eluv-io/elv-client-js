@@ -1691,12 +1691,7 @@ class ElvClient {
 
     // If write token is specified, add it to the metadata
     if(writeToken) {
-      const kmsAddress = await this.CallContractMethod({
-        contractAddress: this.utils.HashToAddress(objectId),
-        abi: ContentContract.abi,
-        methodName: "addressKMS"
-      });
-
+      const kmsAddress = this.authClient.KMSAddress({objectId});
       const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
       const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
 

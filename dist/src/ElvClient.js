@@ -3789,50 +3789,44 @@ function () {
                 cap = _context51.sent;
 
                 if (!writeToken) {
-                  _context51.next = 42;
+                  _context51.next = 40;
                   break;
                 }
 
-                _context51.next = 22;
-                return this.CallContractMethod({
-                  contractAddress: this.utils.HashToAddress(objectId),
-                  abi: ContentContract.abi,
-                  methodName: "addressKMS"
+                kmsAddress = this.authClient.KMSAddress({
+                  objectId: objectId
                 });
-
-              case 22:
-                kmsAddress = _context51.sent;
-                _context51.next = 25;
+                _context51.next = 23;
                 return this.authClient.KMSInfo({
                   objectId: objectId
                 });
 
-              case 25:
+              case 23:
                 kmsPublicKey = _context51.sent.publicKey;
                 kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
                 metadata = {};
-                _context51.next = 30;
+                _context51.next = 28;
                 return Crypto.EncryptCap(cap, this.signer.signingKey.publicKey);
 
-              case 30:
+              case 28:
                 metadata[capKey] = _context51.sent;
-                _context51.prev = 31;
-                _context51.next = 34;
+                _context51.prev = 29;
+                _context51.next = 32;
                 return Crypto.EncryptCap(cap, kmsPublicKey);
 
-              case 34:
+              case 32:
                 metadata[kmsCapKey] = _context51.sent;
-                _context51.next = 40;
+                _context51.next = 38;
                 break;
 
-              case 37:
-                _context51.prev = 37;
-                _context51.t0 = _context51["catch"](31);
+              case 35:
+                _context51.prev = 35;
+                _context51.t0 = _context51["catch"](29);
                 // eslint-disable-next-line no-console
                 console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
 
-              case 40:
-                _context51.next = 42;
+              case 38:
+                _context51.next = 40;
                 return this.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -3840,15 +3834,15 @@ function () {
                   metadata: metadata
                 });
 
-              case 42:
+              case 40:
                 return _context51.abrupt("return", cap);
 
-              case 43:
+              case 41:
               case "end":
                 return _context51.stop();
             }
           }
-        }, _callee51, this, [[31, 37]]);
+        }, _callee51, this, [[29, 35]]);
       }));
 
       function EncryptionCap(_x49) {

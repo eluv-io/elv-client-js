@@ -33,6 +33,7 @@ class AuthorizationClient {
       spaces: {},
       libraries: {},
       objects: {},
+      encryptedObjects: {},
       types: {},
       other: {}
     };
@@ -41,6 +42,7 @@ class AuthorizationClient {
       spaces: {},
       libraries: {},
       objects: {},
+      encryptedObjects: {},
       types: {},
       other: {}
     };
@@ -51,33 +53,14 @@ class AuthorizationClient {
     this.accessTypes = {};
   }
 
-  async AuthorizationHeader({
-    libraryId,
-    objectId,
-    versionHash,
-    partHash,
-    encryption,
-    update=false,
-    channelAuth=false,
-    noCache=false,
-    noAuth=false
-  }) {
-    const authorizationToken = await this.AuthorizationToken({
-      libraryId,
-      objectId,
-      versionHash,
-      partHash,
-      encryption,
-      update,
-      channelAuth,
-      noCache,
-      noAuth
-    });
+  // Return authorization token in appropriate headers
+  async AuthorizationHeader(params) {
+    const authorizationToken = await this.AuthorizationToken(params);
 
     const headers = { Authorization: "Bearer " + authorizationToken };
 
-    if(encryption && encryption !== "none") {
-      headers["X-Content-Fabric-Encryption-Scheme"] = encryption;
+    if(params.encryption && params.encryption !== "none") {
+      headers["X-Content-Fabric-Encryption-Scheme"] = params.encryption;
     }
 
     return headers;
@@ -118,91 +101,12 @@ class AuthorizationClient {
         });
       }
 
-      this.noCache = initialNoCache;
-
       return authorizationToken;
     } catch(error) {
-      // Ensure nocache is properly reset
-      this.noCache = initialNoCache;
       throw error;
+    } finally {
+      this.noCache = initialNoCache;
     }
-  }
-
-  async Owner({id, abi}) {
-    if(!this.client.signer) { return false; }
-
-    const ownerAddress = await this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(id),
-      abi,
-      methodName: "owner",
-      methodArgs: []
-    });
-
-    return Utils.FormatAddress(ownerAddress);
-  }
-
-  async Sign(message) {
-    return await Promise.resolve(
-      Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message))
-    );
-  }
-
-  async KMSInfo({objectId, versionHash}) {
-    if(versionHash) {
-      objectId = Utils.DecodeVersionHash(versionHash).objectId;
-    }
-
-    // Get KMS info for the object
-    const KMSInfo = await this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "getKMSInfo",
-      methodArgs: [[]]
-    });
-
-    // Public key is compressed and hashed
-    const publicKey = Ethers.utils.computePublicKey(client.utils.HashToAddress(KMSInfo[1]), false);
-
-    return {
-      urls: KMSInfo[0],
-      publicKey
-    };
-  }
-
-  async KMSUrl({objectId, versionHash}) {
-    let KMSUrls = (await this.KMSInfo({objectId, versionHash})).urls;
-
-    // Randomize order of URLs so the same one isn't chosen every time
-    KMSUrls = KMSUrls.split(",").sort(() => 0.5 - Math.random());
-
-    // Prefer HTTPS urls
-    return KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
-  }
-
-  async ReEncryptionCap({libraryId, objectId}) {
-    if(!this.reencryptionKeys[objectId]) {
-      const cap = await Crypto.GenerateTargetCap();
-
-      // Retrieve symmetric key
-      if(!libraryId) {
-        libraryId = Utils.AddressToLibraryId(
-          await this.client.CallContractMethod({
-            contractAddress: Utils.HashToAddress(objectId),
-            abi: ContentContract.abi,
-            methodName: "libraryAddress"
-          })
-        );
-      }
-
-      const args = [this.client.contentSpaceId, libraryId, objectId, ""];
-      const stateChannelUri = await this.KMSUrl({objectId});
-      const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-      cap.symm_key = await stateChannelProvider.send("elv_getSymmetricKey", args);
-
-      this.reencryptionKeys[objectId] = cap;
-    }
-
-    return this.reencryptionKeys[objectId];
   }
 
   async GenerateChannelContentToken({objectId, value=0}) {
@@ -248,30 +152,45 @@ class AuthorizationClient {
   async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, encryption, update=false, noAuth=false}) {
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
-    const { transactionHash } =  await this.MakeAccessRequest({
-      libraryId,
-      objectId,
-      versionHash,
-      update,
-      noCache: this.noCache,
-      noAuth: this.noAuth || noAuth
-    });
-
-    let token = {
-      qspace_id: this.contentSpaceId,
-      addr: ((this.client.signer && this.client.signer.address) || "").replace("0x", ""),
-      tx_id: (transactionHash || "").replace("0x", "")
-    };
-
-    if(libraryId) { token.qlib_id = libraryId; }
-    if(partHash) { token.qphash = partHash; }
-
+    // Generate AFGH public key if encryption is specified
+    let publicKey;
     if(encryption && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
       if(!Utils.EqualAddress(owner, this.client.signer.address)) {
         const cap = await this.ReEncryptionCap({libraryId, objectId});
-        token.afgh_pk = cap.public_key;
+        publicKey = cap.public_key;
       }
+    }
+
+    let token = {
+      qspace_id: this.contentSpaceId,
+      addr: ((this.client.signer && this.client.signer.address) || "").replace("0x", "")
+    };
+
+    if(!noAuth) {
+      const { transactionHash } =  await this.MakeAccessRequest({
+        libraryId,
+        objectId,
+        versionHash,
+        update,
+        publicKey,
+        noCache: this.noCache,
+        noAuth: this.noAuth || noAuth
+      });
+
+      token.tx_id = transactionHash;
+    }
+
+    if(libraryId) {
+      token.qlib_id = libraryId;
+    }
+
+    if(partHash) {
+      token.qphash = partHash;
+    }
+
+    if(publicKey) {
+      token.afgh_pk = publicKey;
     }
 
     token = Utils.B64(JSON.stringify(token));
@@ -282,19 +201,18 @@ class AuthorizationClient {
     return `${token}.${Utils.B64(multiSig)}`;
   }
 
-  // Generate proper authorization header based on the information provided
   async MakeAccessRequest({
     libraryId,
     objectId,
     versionHash,
     args=[],
+    publicKey="",
     update=false,
     skipCache=false,
     noCache=false,
-    noAuth=false,
     cacheOnly
   }) {
-    if(noAuth || !this.client.signer) {
+    if(!this.client.signer) {
       return { transactionHash: "" };
     }
 
@@ -322,7 +240,7 @@ class AuthorizationClient {
         break;
       case ACCESS_TYPES.OBJECT:
         abi = ContentContract.abi;
-        cache = cacheCollection.objects;
+        cache = publicKey ? cacheCollection.encryptedObjects : cacheCollection.objects;
         checkAccessCharge = true;
 
         if(args && args.length > 0) {
@@ -333,7 +251,7 @@ class AuthorizationClient {
           args = [
             0, // Access level
             this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-            "", //cap.public_key,
+            publicKey, //cap.public_key,
             [], // Custom values
             [] // Stakeholders
           ];
@@ -378,25 +296,53 @@ class AuthorizationClient {
     return accessRequest;
   }
 
-  async RecordTags({accessType, libraryId, objectId, versionHash}) {
-    if(accessType !== ACCESS_TYPES.OBJECT) { return; }
-
-    // After making an access request, record the tags in the user's profile, if appropriate
-    const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
-    if(!Utils.EqualAddress(owner, this.client.signer.address)) {
-      await this.client.userProfileClient.RecordTags({libraryId, objectId, versionHash});
+  async AccessRequest({id, abi, args=[], checkAccessCharge=false}) {
+    // Send some bux if access charge is required
+    let accessCharge = 0;
+    const accessType = await this.AccessType(id);
+    if(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT) {
+      const owner = await this.Owner({id, abi});
+      // Owner doesn't have to pay
+      if(!Utils.EqualAddress(this.client.signer.address, owner)) {
+        // Extract level, custom values and stakeholders from accessRequest arguments
+        const accessChargeArgs = [args[0], args[3], args[4]];
+        // Access charge is in wei, but methods take ether - convert to charge to ether
+        accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
+      }
     }
+
+    // If access request did not succeed, no event will be emitted
+    const event = await this.client.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress(id),
+      abi,
+      methodName: "accessRequest",
+      methodArgs: args,
+      value: accessCharge,
+    });
+
+    const accessRequestEvent = this.client.ExtractEventFromLogs({
+      abi,
+      event,
+      eventName: "AccessRequest"
+    });
+
+    if(event.logs.length === 0 || !accessRequestEvent) {
+      throw Error("Access denied");
+    }
+
+    return event;
   }
 
-  CacheLibraryTransaction({libraryId, transactionHash}) {
-    this.modifyTransactions.libraries[libraryId] = transactionHash;
+  async UpdateRequest({id, abi}) {
+    return await this.client.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress(id),
+      abi,
+      methodName: "updateRequest",
+      methodArgs: [],
+    });
   }
 
-  CacheObjectTransaction({objectId, transactionHash}) {
-    this.modifyTransactions.objects[objectId] = transactionHash;
-  }
-
-  /* Access */
+  // Determine type of ID based on contract version string
   async AccessType(id) {
     if(this.accessTypes[id]) { return this.accessTypes[id]; }
 
@@ -445,17 +391,6 @@ class AuthorizationClient {
     return accessType;
   }
 
-  async GetAccessCharge({objectId, args}) {
-    const info = await this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "getAccessInfo",
-      methodArgs: args
-    });
-
-    return info[2];
-  }
-
   async AccessComplete({id, abi, score}) {
     const requestId = this.requestIds[id];
 
@@ -475,50 +410,132 @@ class AuthorizationClient {
     return event;
   }
 
-  async AccessRequest({id, abi, args=[], checkAccessCharge=false}) {
-    // Send some bux if access charge is required
-    let accessCharge = 0;
-    const accessType = await this.AccessType(id);
-    if(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT) {
-      const owner = await this.Owner({id, abi});
-      // Owner doesn't have to pay
-      if(!Utils.EqualAddress(this.client.signer.address, owner)) {
-        // Extract level, custom values and stakeholders from accessRequest arguments
-        const accessChargeArgs = [args[0], args[3], args[4]];
-        // Access charge is in wei, but methods take ether - convert to charge to ether
-        accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
-      }
-    }
+  /* Utility methods */
 
-    // If access request did not succeed, no event will be emitted
-    const event = await this.client.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress(id),
-      abi,
-      methodName: "accessRequest",
-      methodArgs: args,
-      value: accessCharge,
+  async GetAccessCharge({objectId, args}) {
+    const info = await this.client.CallContractMethod({
+      contractAddress: Utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "getAccessInfo",
+      methodArgs: args
     });
 
-    const accessRequestEvent = this.client.ExtractEventFromLogs({
-      abi,
-      event,
-      eventName: "AccessRequest"
-    });
-
-    if(event.logs.length === 0 || !accessRequestEvent) {
-      throw Error("Access denied");
-    }
-
-    return event;
+    return info[2];
   }
 
-  async UpdateRequest({id, abi}) {
-    return await this.client.CallContractMethodAndWait({
+  async Owner({id, abi}) {
+    if(!this.client.signer) { return false; }
+
+    const ownerAddress = await this.client.CallContractMethod({
       contractAddress: Utils.HashToAddress(id),
       abi,
-      methodName: "updateRequest",
-      methodArgs: [],
+      methodName: "owner",
+      methodArgs: []
     });
+
+    return Utils.FormatAddress(ownerAddress);
+  }
+
+  async Sign(message) {
+    return await Promise.resolve(
+      Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message))
+    );
+  }
+
+  async KMSAddress({objectId, versionHash}) {
+    if(versionHash) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    return await this.client.CallContractMethod({
+      contractAddress: Utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "addressKMS"
+    });
+  }
+
+  async KMSInfo({objectId, versionHash}) {
+    if(versionHash) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    // Get KMS info for the object
+    const KMSInfo = await this.client.CallContractMethod({
+      contractAddress: Utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "getKMSInfo",
+      methodArgs: [[]]
+    });
+
+    // Public key is compressed and hashed
+    const publicKey = Ethers.utils.computePublicKey(Utils.HashToAddress(KMSInfo[1]), false);
+
+    return {
+      urls: KMSInfo[0],
+      publicKey
+    };
+  }
+
+  async KMSUrl({objectId, versionHash}) {
+    let KMSUrls = (await this.KMSInfo({objectId, versionHash})).urls;
+
+    // Randomize order of URLs so the same one isn't chosen every time
+    KMSUrls = KMSUrls.split(",").sort(() => 0.5 - Math.random());
+
+    // Prefer HTTPS urls
+    return KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
+  }
+
+  // Retrieve symmetric key for object
+  async KMSSymmetricKey({libraryId, objectId}) {
+    if(!libraryId) {
+      libraryId = Utils.AddressToLibraryId(
+        await this.client.CallContractMethod({
+          contractAddress: Utils.HashToAddress(objectId),
+          abi: ContentContract.abi,
+          methodName: "libraryAddress"
+        })
+      );
+    }
+
+    const kmsAddress = await this.KMSAddress({objectId});
+    const kmsCapId = `eluv.caps.ikms${Utils.AddressToHash(kmsAddress)}`;
+    const kmsCap = await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: kmsCapId
+    });
+
+    const args = [this.client.contentSpaceId, libraryId, objectId, kmsCap];
+    const stateChannelUri = await this.KMSUrl({objectId});
+    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
+
+    return await stateChannelProvider.send("elv_getSymmetricKey", args);
+  }
+
+  async ReEncryptionCap({libraryId, objectId, versionHash}) {
+    if(versionHash) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    if(!this.reencryptionKeys[objectId]) {
+      let cap = await Crypto.GenerateTargetCap();
+      cap.symm_key = await this.KMSSymmetricKey({libraryId, objectId});
+
+      this.reencryptionKeys[objectId] = cap;
+    }
+
+    return this.reencryptionKeys[objectId];
+  }
+
+  async RecordTags({accessType, libraryId, objectId, versionHash}) {
+    if(accessType !== ACCESS_TYPES.OBJECT) { return; }
+
+    // After making an access request, record the tags in the user's profile, if appropriate
+    const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
+    if(!Utils.EqualAddress(owner, this.client.signer.address)) {
+      await this.client.userProfileClient.RecordTags({libraryId, objectId, versionHash});
+    }
   }
 
   /* Creation methods */
@@ -584,6 +601,7 @@ class AuthorizationClient {
       libraries: {},
       types: {},
       objects: {},
+      encryptedObjects: {},
       other: {}
     };
 
@@ -592,6 +610,7 @@ class AuthorizationClient {
       libraries: {},
       types: {},
       objects: {},
+      encryptedObjects: {},
       other: {}
     };
 
