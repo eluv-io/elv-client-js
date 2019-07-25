@@ -862,7 +862,7 @@ function () {
       var _SetContentObjectImage = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee13(_ref12) {
-        var libraryId, objectId, image, editResponse, uploadResponse, metadata;
+        var libraryId, objectId, image, editResponse, uploadResponse;
         return regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
             switch (_context13.prev = _context13.next) {
@@ -888,32 +888,36 @@ function () {
               case 6:
                 uploadResponse = _context13.sent;
                 _context13.next = 9;
-                return this.ContentObjectMetadata({
-                  libraryId: libraryId,
-                  objectId: objectId
-                });
-
-              case 9:
-                metadata = _context13.sent;
-                _context13.next = 12;
-                return this.ReplaceMetadata({
+                return this.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editResponse.write_token,
-                  metadata: _objectSpread({}, metadata, {
+                  metadata: {
                     "image": uploadResponse.part.hash
-                  })
+                  }
                 });
 
-              case 12:
-                _context13.next = 14;
+              case 9:
+                _context13.next = 11;
+                return this.MergeMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editResponse.write_token,
+                  metadataSubtree: "public",
+                  metadata: {
+                    "image": uploadResponse.part.hash
+                  }
+                });
+
+              case 11:
+                _context13.next = 13;
                 return this.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editResponse.write_token
                 });
 
-              case 14:
+              case 13:
               case "end":
                 return _context13.stop();
             }
