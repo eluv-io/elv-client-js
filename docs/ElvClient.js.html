@@ -520,18 +520,22 @@ class ElvClient {
       encrypted: false
     });
 
-    let metadata = await this.ContentObjectMetadata({
-      libraryId,
-      objectId
-    });
-
-    await this.ReplaceMetadata({
+    await this.MergeMetadata({
       libraryId,
       objectId,
       writeToken: editResponse.write_token,
       metadata: {
-        ...metadata,
-        "image": uploadResponse.part.hash
+        "image": uploadResponse.part.hash,
+      }
+    });
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token,
+      metadataSubtree: "public",
+      metadata: {
+        "image": uploadResponse.part.hash,
       }
     });
 

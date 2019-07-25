@@ -374,12 +374,23 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
       data: image
     });
 
-    await this.client.ReplaceMetadata({
+    await this.client.MergeMetadata({
       libraryId,
       objectId,
       writeToken: editRequest.write_token,
-      metadataSubtree: "image",
-      metadata: uploadResponse.part.hash
+      metadata: {
+        image: uploadResponse.part.hash
+      }
+    });
+
+    await this.client.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      metadataSubtree: "public",
+      metadata: {
+        image: uploadResponse.part.hash
+      }
     });
 
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});

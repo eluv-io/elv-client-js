@@ -963,26 +963,39 @@ function () {
               case 12:
                 uploadResponse = _context12.sent;
                 _context12.next = 15;
-                return this.client.ReplaceMetadata({
+                return this.client.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editRequest.write_token,
-                  metadataSubtree: "image",
-                  metadata: uploadResponse.part.hash
+                  metadata: {
+                    image: uploadResponse.part.hash
+                  }
                 });
 
               case 15:
                 _context12.next = 17;
+                return this.client.MergeMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  writeToken: editRequest.write_token,
+                  metadataSubtree: "public",
+                  metadata: {
+                    image: uploadResponse.part.hash
+                  }
+                });
+
+              case 17:
+                _context12.next = 19;
                 return this.client.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editRequest.write_token
                 });
 
-              case 17:
+              case 19:
                 this.__InvalidateCache();
 
-              case 18:
+              case 20:
               case "end":
                 return _context12.stop();
             }
