@@ -1420,7 +1420,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: fileInfo
@@ -1439,7 +1439,7 @@ class ElvClient {
         bodyType: "BINARY",
         headers: {
           "Content-type": "application/octet-stream",
-          ...(await this.authClient.AuthorizationHeader({libraryId, objectId}))
+          ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
         }
       })
     );
@@ -1461,7 +1461,7 @@ class ElvClient {
     let path = UrlJoin("q", writeToken, "files");
 
     await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "POST",
       path: path
     });

@@ -3051,7 +3051,8 @@ function () {
                 _context42.next = 6;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
-                  objectId: objectId
+                  objectId: objectId,
+                  update: true
                 });
 
               case 6:
@@ -3105,7 +3106,8 @@ function () {
                 _context43.next = 10;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
-                  objectId: objectId
+                  objectId: objectId,
+                  update: true
                 });
 
               case 10:
@@ -3198,7 +3200,8 @@ function () {
                 _context45.next = 5;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
-                  objectId: objectId
+                  objectId: objectId,
+                  update: true
                 });
 
               case 5:
