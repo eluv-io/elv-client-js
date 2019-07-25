@@ -1084,7 +1084,7 @@ class ElvClient {
         abi: ContentContract.abi,
         contractAddress,
         methodName: "setVisibility",
-        methodArgs: [10]
+        methodArgs: [100]
       });
 
       objectId = this.utils.AddressToObjectId(contractAddress);
