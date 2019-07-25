@@ -2164,7 +2164,7 @@ function () {
                   abi: ContentContract.abi,
                   contractAddress: contractAddress,
                   methodName: "setVisibility",
-                  methodArgs: [10]
+                  methodArgs: [100]
                 });
 
               case 20:
