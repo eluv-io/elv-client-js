@@ -291,7 +291,7 @@ class AuthorizationClient {
       });
     }
 
-    await this.RecordTags({accessType, libraryId, objectId, versionHash});
+    this.RecordTags({accessType, libraryId, objectId, versionHash});
 
     return accessRequest;
   }
