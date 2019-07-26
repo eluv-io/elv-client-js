@@ -551,18 +551,15 @@ function () {
                   });
                 }
 
-                _context5.next = 47;
-                return this.RecordTags({
+                this.RecordTags({
                   accessType: accessType,
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash
                 });
-
-              case 47:
                 return _context5.abrupt("return", accessRequest);
 
-              case 48:
+              case 47:
               case "end":
                 return _context5.stop();
             }
