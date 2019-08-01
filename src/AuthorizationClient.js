@@ -488,15 +488,7 @@ class AuthorizationClient {
 
   // Retrieve symmetric key for object
   async KMSSymmetricKey({libraryId, objectId}) {
-    if(!libraryId) {
-      libraryId = Utils.AddressToLibraryId(
-        await this.client.CallContractMethod({
-          contractAddress: Utils.HashToAddress(objectId),
-          abi: ContentContract.abi,
-          methodName: "libraryAddress"
-        })
-      );
-    }
+    if(!libraryId) { libraryId = this.client.ContentObjectLibraryId({objectId}); }
 
     const kmsAddress = await this.KMSAddress({objectId});
     const kmsCapId = `eluv.caps.ikms${Utils.AddressToHash(kmsAddress)}`;

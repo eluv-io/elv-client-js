@@ -980,6 +980,29 @@ class ElvClient {
   }
 
   /**
+   * Retrieve the library ID for the specified content object
+   *
+   * @methodGroup Content Objects
+   *
+   * @namedParams
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   *
+   * @returns {Promise<string>} - Library ID of the object
+   */
+  async ContentObjectLibraryId({objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    return Utils.AddressToLibraryId(
+      await this.CallContractMethod({
+        contractAddress: Utils.HashToAddress(objectId),
+        abi: ContentContract.abi,
+        methodName: "libraryAddress"
+      })
+    );
+  }
+
+  /**
    * Get the metadata of a content object
    *
    * @see /qlibs/:qlibid/q/:qhit/meta
