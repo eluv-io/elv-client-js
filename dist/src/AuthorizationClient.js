@@ -1104,57 +1104,45 @@ function () {
               case 0:
                 libraryId = _ref15.libraryId, objectId = _ref15.objectId;
 
-                if (libraryId) {
-                  _context16.next = 7;
-                  break;
+                if (!libraryId) {
+                  libraryId = this.client.ContentObjectLibraryId({
+                    objectId: objectId
+                  });
                 }
 
-                _context16.t0 = Utils;
-                _context16.next = 5;
-                return this.client.CallContractMethod({
-                  contractAddress: Utils.HashToAddress(objectId),
-                  abi: ContentContract.abi,
-                  methodName: "libraryAddress"
-                });
-
-              case 5:
-                _context16.t1 = _context16.sent;
-                libraryId = _context16.t0.AddressToLibraryId.call(_context16.t0, _context16.t1);
-
-              case 7:
-                _context16.next = 9;
+                _context16.next = 4;
                 return this.KMSAddress({
                   objectId: objectId
                 });
 
-              case 9:
+              case 4:
                 kmsAddress = _context16.sent;
                 kmsCapId = "eluv.caps.ikms".concat(Utils.AddressToHash(kmsAddress));
-                _context16.next = 13;
+                _context16.next = 8;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
                   metadataSubtree: kmsCapId
                 });
 
-              case 13:
+              case 8:
                 kmsCap = _context16.sent;
                 args = [this.client.contentSpaceId, libraryId, objectId, kmsCap];
-                _context16.next = 17;
+                _context16.next = 12;
                 return this.KMSUrl({
                   objectId: objectId
                 });
 
-              case 17:
+              case 12:
                 stateChannelUri = _context16.sent;
                 stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-                _context16.next = 21;
+                _context16.next = 16;
                 return stateChannelProvider.send("elv_getSymmetricKey", args);
 
-              case 21:
+              case 16:
                 return _context16.abrupt("return", _context16.sent);
 
-              case 22:
+              case 17:
               case "end":
                 return _context16.stop();
             }
