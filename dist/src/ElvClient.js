@@ -2006,7 +2006,7 @@ function () {
       var _ContentObjectMetadata = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee28(_ref28) {
-        var libraryId, objectId, versionHash, _ref28$metadataSubtre, metadataSubtree, _ref28$noAuth, noAuth, path, metadata;
+        var libraryId, objectId, versionHash, _ref28$metadataSubtre, metadataSubtree, _ref28$noAuth, noAuth, path;
 
         return regeneratorRuntime.wrap(function _callee28$(_context28) {
           while (1) {
@@ -2043,29 +2043,28 @@ function () {
                 return (0, _context28.t0)(_context28.t5);
 
               case 14:
-                metadata = _context28.sent;
-                return _context28.abrupt("return", metadata || {});
+                return _context28.abrupt("return", _context28.sent);
 
-              case 18:
-                _context28.prev = 18;
+              case 17:
+                _context28.prev = 17;
                 _context28.t6 = _context28["catch"](3);
 
                 if (!(_context28.t6.status !== 404)) {
-                  _context28.next = 22;
+                  _context28.next = 21;
                   break;
                 }
 
                 throw _context28.t6;
 
-              case 22:
+              case 21:
                 return _context28.abrupt("return", metadataSubtree === "/" ? {} : undefined);
 
-              case 23:
+              case 22:
               case "end":
                 return _context28.stop();
             }
           }
-        }, _callee28, this, [[3, 18]]);
+        }, _callee28, this, [[3, 17]]);
       }));
 
       function ContentObjectMetadata(_x26) {

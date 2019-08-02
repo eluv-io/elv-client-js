@@ -1023,15 +1023,13 @@ class ElvClient {
     let path = UrlJoin("q", versionHash || objectId, "meta", metadataSubtree);
 
     try {
-      const metadata = await ResponseToJson(
+      return await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
           method: "GET",
           path: path
         })
       );
-
-      return metadata || {};
     } catch(error) {
       if(error.status !== 404) {
         throw error;
