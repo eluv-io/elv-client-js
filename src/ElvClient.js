@@ -2081,7 +2081,8 @@ class ElvClient {
         playoutMap[protocol] = {
           playoutUrl: await this.Rep({
             versionHash,
-            rep: UrlJoin("playout", "default", option.uri)
+            rep: UrlJoin("playout", "default", option.uri),
+            channelAuth: true
           }),
         };
       }
