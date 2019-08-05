@@ -4720,7 +4720,8 @@ function () {
                 _context64.next = 32;
                 return this.Rep({
                   versionHash: versionHash,
-                  rep: UrlJoin("playout", "default", option.uri)
+                  rep: UrlJoin("playout", "default", option.uri),
+                  channelAuth: true
                 });
 
               case 32:
