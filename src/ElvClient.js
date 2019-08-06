@@ -2017,6 +2017,28 @@ class ElvClient {
   }
 
   /**
+   * Generate a state channel token
+   *
+   * @methodGroup Access Requests
+   * @namedParams
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   * @param {boolean=} noCache=false - If specified, a new state channel token will be generated
+   * regardless whether or not one has been previously cached
+   *
+   * @return {Promise<string>} - The state channel token
+   */
+  async GenerateStateChannelToken({objectId, versionHash, noCache=false}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    return await this.authClient.AuthorizationToken({
+      objectId,
+      channelAuth: true,
+      noCache
+    });
+  }
+
+  /**
    * Call accessComplete on the specified content object contract using a previously cached requestID.
    * Caching must be enabled and an access request must have been previously made on the specified
    * object by this client instance.
