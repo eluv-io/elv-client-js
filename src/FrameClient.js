@@ -295,6 +295,7 @@ class FrameClient {
       "FinalizePart",
       "FinalizeUploadJobs",
       "FormatContractArguments",
+      "GenerateStateChannelToken",
       "GetBalance",
       "LibraryContentTypes",
       "ListFiles",
