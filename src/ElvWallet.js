@@ -10,8 +10,8 @@ class ElvWallet {
    *
    * @param {string} providerUrl - URL of blockchain provider
    */
-  constructor(providerUrl) {
-    this.provider = new Ethers.providers.JsonRpcProvider(providerUrl);
+  constructor(provider) {
+    this.provider = provider;
     this.signers = {};
   }
 

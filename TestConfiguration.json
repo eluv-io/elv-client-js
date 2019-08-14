@@ -1,13 +1,3 @@
 {
-  "fabric": {
-    "contentSpaceId": "ispc3b1Wd3x6PAS5eeGPHccqAycwPWFN",
-    "hostname": "localhost",
-    "port": 8008,
-    "use_https": false
-  },
-  "ethereum": {
-    "hostname": "localhost",
-    "port": 8545,
-    "use_https": false
-  }
+  "config-url": "https://main.net955210.contentfabric.io/config"
 }

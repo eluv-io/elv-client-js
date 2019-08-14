@@ -1,6 +1,6 @@
 const webpack = require("webpack");
 const path = require("path");
-const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
 let cmdOpts = {};
 
@@ -24,9 +24,9 @@ if(cmdOpts["target"] !== "node") {
 
 
 module.exports = {
-  entry: "./src/ElvClient.js",
+  entry: "./dist/ElvClient.js",
   output: {
-    path: path.resolve(__dirname),
+    path: path.resolve(__dirname, "dist"),
     filename: "ElvClient-min-dev.js",
     libraryTarget: "umd"
   },
@@ -44,7 +44,14 @@ module.exports = {
       {
         test: /\.(txt|bin|abi)$/i,
         loader: "raw-loader"
-      }
+      },
+      {
+        test: /\.js$/,
+        loader: "babel-loader",
+        options: {
+          presets: ["@babel/preset-env"],
+        }
+      },
     ]
-  }
+  },
 };

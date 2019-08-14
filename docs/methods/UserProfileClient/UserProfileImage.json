@@ -1,6 +1,10 @@
 [
   {
-    "signature": "async UserProfileImage({\n  \"accountAddress\": \"0x51E2C24910910ADA9Bf6e2f1DcA52c17C3c262F4\"\n});",
-    "result": "\"http://localhost:8008/qlibs/ilib29Ag3GLKjGiYvK2SjQSqNveucbt7/q/iq__29Ag3GLKjGiYvK2SjQSqNveucbt7/rep/image?hash=hqp_QmTp4gdjq4xi9gDn4Xe1W2JzVSybS4fYVjy4ecGeGDMpPB\""
+    "signature": "async UserProfileImage();",
+    "result": "\"http://localhost:8008/qlibs/ilibpEvxZTda3FP5wzFNLEvMAv7oTzV/q/iq__36NdC4EWtWg4CuwyNaSTaGzPv7mr/rep/image?hash=hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\""
+  },
+  {
+    "signature": "async UserProfileImage({\n  \"address\": \"0x3B1ac5Bb37560c27726a1b497be32eDd75df4FeA\"\n});",
+    "result": "\"http://localhost:8008/qlibs/ilibpEvxZTda3FP5wzFNLEvMAv7oTzV/q/iq__36NdC4EWtWg4CuwyNaSTaGzPv7mr/rep/image?hash=hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM\""
   }
 ]

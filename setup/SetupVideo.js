@@ -19,7 +19,7 @@ const LANGUAGE_NAMES = {
 const HandleErrors = async (response) => {
   response = await response;
 
-  if (!response.ok) {
+  if(!response.ok) {
     let errorInfo = {
       status: response.status,
       statusText: response.statusText,
@@ -39,7 +39,7 @@ const ResponseToJson = async (response) => {
 const ResponseToFormat = async (format, response) => {
   response = await HandleErrors(response);
 
-  switch (format.toLowerCase()) {
+  switch(format.toLowerCase()) {
     case "json":
       return response.json();
     case "text":
@@ -96,7 +96,7 @@ class VideoService {
     // the in-browser code expects
 
     files = [];
-    for (i = 0, len = payload.files.length; i < len; i++) {
+    for(i = 0, len = payload.files.length; i < len; i++) {
       singleFilePath = payload.files[i];
       LOG && console.log("Reading file: " + singleFilePath + "...");
       fileContents = fs.readFileSync(singleFilePath);
@@ -174,14 +174,14 @@ class VideoService {
       };
     };
 
-    for (i = j = 0, len = files.length; j < len; i = ++j) {
+    for(i = j = 0, len = files.length; j < len; i = ++j) {
       f = files[i];
-      switch (false) {
+      switch(false) {
         case f.filename !== "ladder.json":
           ladderText = (await readUploadedFileAsText(f.file));
           ladderJson = JSON.parse(ladderText);
           video_reps = [];
-          for (l = 0, len1 = ladderJson.length; l < len1; l++) {
+          for(l = 0, len1 = ladderJson.length; l < len1; l++) {
             entry = ladderJson[l];
             video_reps.push({
               BitRate: entry.bitrate,
@@ -204,7 +204,7 @@ class VideoService {
           console.log("upload part finished");
           console.log(uploadPartResult);
           phash = uploadPartResult.part.hash;
-          if (f.fileExtension === "jpg" || f.fileExtension === "png") {
+          if(f.fileExtension === "jpg" || f.fileExtension === "png") {
             objectMeta.image = phash;
           } else {
             mediaFilePhash = phash;
@@ -235,7 +235,7 @@ class VideoService {
         body: goPostBody
       })
       );
-    } catch (error) {
+    } catch(error) {
       e = error;
       e.message = e.message + " " + JSON.stringify(e.response.data);
       throw e;
@@ -246,7 +246,7 @@ class VideoService {
     // add choice key
     objectMeta.choices = [];
     // set languages
-    for (k in videoJsonExtract) {
+    for(k in videoJsonExtract) {
       v = videoJsonExtract[k];
       languageCode = k.split(".").pop();
       objectMeta.languages.push(languageCode);

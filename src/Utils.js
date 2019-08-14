@@ -1,5 +1,9 @@
+if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+
 const bs58 = require("bs58");
 const BigNumber = require("bignumber.js");
+const MultiHash = require("multihashes");
+const VarInt = require("varint");
 
 /**
  * @namespace
@@ -63,14 +67,74 @@ const Utils = {
    * @returns {string} - Formatted address
    */
   FormatAddress: (address) => {
-    if (!address || typeof address !== "string") {
+    if(!address || typeof address !== "string") {
       return "";
     }
 
-    if (!address.startsWith("0x")) {
+    if(!address.startsWith("0x")) {
       address = "0x" + address;
     }
     return address.toLowerCase();
+  },
+
+  /**
+   * Formats a signature into multi-sig
+   *
+   * @param {string} sig - Hex representation of signature
+   *
+   * @returns {string} - Multi-sig string representation of signature
+   */
+  FormatSignature: (sig) => {
+    sig = sig.replace("0x", "");
+    return "ES256K_" + bs58.encode(Buffer.from(sig, "hex"));
+  },
+
+  /**
+   * Decode the specified version hash into its component parts
+   *
+   * @param versionHash
+   *
+   * @returns {Object} - Components of the version hash.
+   */
+  DecodeVersionHash: (versionHash) => {
+    if(!versionHash.startsWith("hq__")) {
+      throw new Error(`Invalid version hash: "${versionHash}"`);
+    }
+
+    versionHash = versionHash.replace("hq__", "");
+
+    // Decode base58 payload
+    let bytes = MultiHash.fromB58String(versionHash);
+
+    // Remove 32 byte SHA256 digest
+    const digestBytes = bytes.slice(0, 32);
+    const digest = digestBytes.toString("hex");
+    bytes = bytes.slice(32);
+
+    // Determine size of varint content size
+    let sizeLength = 0;
+    while(bytes[sizeLength] >= 128) {
+      sizeLength++;
+    }
+    sizeLength++;
+
+    // Remove size
+    const sizeBytes = bytes.slice(0, sizeLength);
+    const size = VarInt.decode(sizeBytes);
+    bytes = bytes.slice(sizeLength);
+
+    // Remaining bytes is object ID
+    const objectId = "iq__" + MultiHash.toB58String(bytes);
+
+    // Part hash is B58 encoded version hash without the ID
+    const partHash = "hqp_" + MultiHash.toB58String(Buffer.concat([digestBytes, sizeBytes]));
+
+    return {
+      digest,
+      size,
+      objectId,
+      partHash
+    };
   },
 
   /**
@@ -131,6 +195,22 @@ const Utils = {
   },
 
   /**
+   * Compare two addresses to determine if they are the same, regardless of format/capitalization
+   *
+   * @param firstAddress
+   * @param secondAddress
+   *
+   * @returns {boolean} - Whether or not the addresses match
+   */
+  EqualAddress(firstAddress, secondAddress) {
+    if(!firstAddress || !secondAddress) {
+      return false;
+    }
+
+    return (Utils.FormatAddress(firstAddress) === Utils.FormatAddress(secondAddress));
+  },
+
+  /**
    * Compare two IDs to determine if the hashes are the same
    * by comparing the contract address they resolve to
    *
@@ -140,11 +220,11 @@ const Utils = {
    * @returns {boolean} - Whether or not the hashes of the IDs match
    */
   EqualHash(firstHash, secondHash) {
-    if (!firstHash || !secondHash) {
+    if(!firstHash || !secondHash) {
       return false;
     }
 
-    if (firstHash.length <= 4 || secondHash.length <= 4) {
+    if(firstHash.length <= 4 || secondHash.length <= 4) {
       return false;
     }
 
@@ -166,14 +246,12 @@ const Utils = {
     return "0x" + bytes32.slice(0, 64).padEnd(64, "0");
   },
 
-  HashToBytes32: (hash) => {
-    // Parse hash as address and remove 0x and first 4 digits
-    let address = Utils.HashToAddress(hash);
-    return "0x" + address.replace("0x", "").slice(4);
-  },
-
   BufferToArrayBuffer: (buffer) => {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  },
+
+  B64: (str) => {
+    return Buffer.from(str).toString("base64");
   },
 
   /**
@@ -183,12 +261,12 @@ const Utils = {
    * @returns {boolean} - Whether or not the value is cloneable
    */
   IsCloneable: (value) => {
-    if (Object(value) !== value) {
+    if(Object(value) !== value) {
       // Primitive value
       return true;
     }
 
-    switch ({}.toString.call(value).slice(8, -1)) { // Class
+    switch({}.toString.call(value).slice(8, -1)) { // Class
       case "Boolean":
       case "Number":
       case "String":
@@ -232,7 +310,7 @@ const Utils = {
       return Utils.BufferToArrayBuffer(value);
     }
 
-    switch ({}.toString.call(value).slice(8, -1)) { // Class
+    switch({}.toString.call(value).slice(8, -1)) { // Class
       case "Response":
       case "Function":
         return undefined;
@@ -256,7 +334,7 @@ const Utils = {
         Array.from(value.keys()).forEach(key => {
           const cloneable = Utils.MakeClonable(value.get(key));
 
-          if (cloneable) {
+          if(cloneable) {
             cloneableMap.set(key, cloneable);
           }
         });
@@ -268,7 +346,7 @@ const Utils = {
         Object.keys(value).map(key => {
           const cloneable = Utils.MakeClonable(value[key]);
 
-          if (cloneable) {
+          if(cloneable) {
             cloneableObject[key] = cloneable;
           }
         });
@@ -276,7 +354,21 @@ const Utils = {
       default:
         return JSON.parse(JSON.stringify(value));
     }
-  }
+  },
+
+  PLATFORM_NODE: "node",
+  PLATFORM_WEB: "web",
+  PLATFORM_REACT_NATIVE: "react-native",
+
+  Platform: () => {
+    if(typeof navigator !== "undefined" && navigator.product === "ReactNative") {
+      return Utils.PLATFORM_REACT_NATIVE;
+    } else if((typeof process !== "undefined") && (typeof process.versions.node !== "undefined")) {
+      return Utils.PLATFORM_NODE;
+    } else {
+      return Utils.PLATFORM_WEB;
+    }
+  },
 };
 
 module.exports = Utils;

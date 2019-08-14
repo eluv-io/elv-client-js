@@ -1,6 +1,13 @@
+const crypto = require("crypto");
+
+Object.defineProperty(global.self, "crypto", {
+  value: {
+    getRandomValues: arr => crypto.randomBytes(arr.length),
+  },
+});
+
 const UrlJoin = require("url-join");
 const URI = require("urijs");
-const fs = require("fs");
 const BaseLibraryContract = require("../src/contracts/BaseLibrary");
 const BaseContentContract = require("../src/contracts/BaseContent");
 const CustomContract = require("../src/contracts/SampleContentLicensing");
@@ -11,16 +18,15 @@ const OutputLogger = require("./utils/OutputLogger");
 const {
   RandomBytes,
   RandomString,
-  BufferToArrayBuffer,
   CreateClient
 } = require("./utils/Utils");
 
 const testFileSize = 100000;
 
 let client, accessClient;
-let contentSpaceLibraryId, libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
+let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 
-let testFile1, testFile2, testHash;
+let testFile1, testFile2, testFile3, testHash;
 let fileInfo = [];
 let partInfo = {};
 
@@ -32,18 +38,22 @@ describe("Test ElvClient", () => {
     client = OutputLogger(ElvClient, await CreateClient());
     accessClient = OutputLogger(ElvClient, await CreateClient("1"));
 
-    contentSpaceLibraryId = client.utils.AddressToLibraryId(client.utils.HashToAddress(client.contentSpaceId));
-
-    libraryId = "ilib2t71GCq5VNaAkg9ZAkmy1EJJss3";
-    objectId = "iq__4XyAFvdwaTWxa4rkKhvgDXvUhRzB";
-    versionHash = "hq__QmNjMeY9B9M6T7sHBcdnryMeyHC5BkztC3aATHkSnbfj79";
-    //libraryId = "ilib4Vk9CAYiGWNo5znQ5WYbEtYnmx6i";
-    //objectId = "iq__3fkAJTxyzVo8eYkcZTWKvaoYWYhr";
-    //versionHash = "hq__QmZ293SLCn2ERxYJQFxFFs4AF5Jc4D2DxSciGZEk1poE9w";
-
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
+    testFile3 = RandomBytes(testFileSize);
     testHash = RandomString(10);
+  });
+
+  describe("Initialize From Configuration Url", () => {
+    test("Initialization", async () => {
+      const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
+
+      expect(bootstrapClient).toBeDefined();
+      expect(bootstrapClient.fabricURIs).toBeDefined();
+      expect(bootstrapClient.fabricURIs.length).toBeGreaterThan(0);
+      expect(bootstrapClient.ethereumURIs).toBeDefined();
+      expect(bootstrapClient.ethereumURIs.length).toBeGreaterThan(0);
+    });
   });
 
   describe("Access Groups", () => {
@@ -86,11 +96,7 @@ describe("Test ElvClient", () => {
       // Ensure unique name for later lookup
       typeName = "Test Content Type " + testHash;
 
-      typeId = await client.CreateContentType({
-        metadata: {
-          name: typeName
-        }
-      });
+      typeId = await client.CreateContentType({name: typeName});
     });
 
     test("List Content Types", async () => {
@@ -101,20 +107,22 @@ describe("Test ElvClient", () => {
     });
 
     test("Get Content Type", async () => {
+      const typeById = await client.ContentType({typeId});
+      expect(typeById).toBeDefined();
+      expect(typeById.id).toEqual(typeId);
+
+      typeHash = typeById.hash;
+
       const typeByName = await client.ContentType({name: typeName});
       expect(typeByName).toBeDefined();
       expect(typeByName.id).toEqual(typeId);
 
-      const typeByHash = await client.ContentType({versionHash: typeId});
+      const typeByHash = await client.ContentType({versionHash: typeHash});
       expect(typeByHash).toBeDefined();
       expect(typeByHash.id).toEqual(typeId);
 
-      expect(typeByName.hash).toEqual(typeByHash.hash);
-
-      typeHash = typeByName.hash;
-
-      await expect(client.ContentType({name: "Invalid Type Name"}))
-        .rejects.toEqual(new Error("Unknown content type: Invalid Type Name"));
+      const invalidType = await client.ContentType({name: "Invalid Type Name"});
+      expect(invalidType).not.toBeDefined();
     });
 
     test("Get Content Type Owner", async () => {
@@ -127,33 +135,16 @@ describe("Test ElvClient", () => {
 
   describe("Content Libraries", () => {
     test("Create Content Library", async () => {
-      const image = BufferToArrayBuffer(fs.readFileSync("test/images/test-image1.png"));
-
-      const testPublicMetadata = {
-        toReplace: {
-          meta: "data"
-        },
-        toDelete: {
-          meta: "data"
-        }
-      };
-
       libraryId = await client.CreateContentLibrary({
         name: "Test Library " + testHash,
         description: "Test Library Description",
-        image,
-        publicMetadata: {
-          public: testPublicMetadata
-        },
-        privateMetadata: {
+        //image,
+        metadata: {
           private: {
             meta: "data"
           }
         }
       });
-
-      const publicMetadata = await client.PublicLibraryMetadata({libraryId, metadataSubtree: "public"});
-      expect(publicMetadata).toEqual(testPublicMetadata);
 
       const libraryObjectId = client.utils.AddressToObjectId(client.utils.HashToAddress(libraryId));
       const privateMetadata = await client.ContentObjectMetadata({
@@ -163,31 +154,6 @@ describe("Test ElvClient", () => {
       });
 
       expect(privateMetadata).toEqual({meta: "data"});
-    });
-
-    test("Update Public Content Library Metadata", async () => {
-      await client.ReplacePublicLibraryMetadata({
-        libraryId,
-        metadataSubtree: UrlJoin("public", "toReplace"),
-        metadata: {new: "metadata"}
-      });
-
-      const publicMetadata = await client.PublicLibraryMetadata({libraryId, metadataSubtree: "public"});
-
-      expect(publicMetadata.toReplace).toEqual({
-        new: "metadata"
-      });
-    });
-
-    test("Delete Public Content Library Metadata", async () => {
-      await client.DeletePublicLibraryMetadata({
-        libraryId,
-        metadataSubtree: UrlJoin("public", "toDelete"),
-      });
-
-      const publicMetadata = await client.PublicLibraryMetadata({libraryId, metadataSubtree: "public"});
-
-      expect(publicMetadata.toDelete).not.toBeDefined();
     });
 
     test("List Content Libraries", async () => {
@@ -220,7 +186,7 @@ describe("Test ElvClient", () => {
       await client.AddLibraryContentType({libraryId, typeName});
 
       libraryTypes = await client.LibraryContentTypes({libraryId});
-      expect(libraryTypes[typeHash]).toBeDefined();
+      expect(libraryTypes[typeId]).toBeDefined();
 
       await client.RemoveLibraryContentType({libraryId, typeName});
 
@@ -231,7 +197,7 @@ describe("Test ElvClient", () => {
       await client.AddLibraryContentType({libraryId, typeId});
 
       libraryTypes = await client.LibraryContentTypes({libraryId});
-      expect(libraryTypes[typeHash]).toBeDefined();
+      expect(libraryTypes[typeId]).toBeDefined();
 
       await client.RemoveLibraryContentType({libraryId, typeId});
 
@@ -243,6 +209,7 @@ describe("Test ElvClient", () => {
   describe("Content Objects", () => {
     test("Create Content Object", async () => {
       const testMetadata = {
+        name: "Test Content Object",
         toMerge: {
           merge: "me"
         },
@@ -281,6 +248,7 @@ describe("Test ElvClient", () => {
     test("Content Object Metadata", async () => {
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
       expect(metadata).toEqual({
+        name: "Test Content Object",
         toMerge: {
           merge: "me"
         },
@@ -336,6 +304,7 @@ describe("Test ElvClient", () => {
 
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
       expect(metadata).toEqual({
+        name: "Test Content Object",
         toMerge: {
           new: "metadata",
           merge: "me"
@@ -349,13 +318,96 @@ describe("Test ElvClient", () => {
     });
 
     test("List Content Objects", async () => {
-      const objects = await client.ContentObjects({libraryId});
+      const testLibraryId = await client.CreateContentLibrary({name: "Test Object Filtering"});
 
-      expect(objects).toBeDefined();
+      let objectNames = [];
+      // Create a bunch of objects
+      await Promise.all(
+        Array(10).fill().map(async (_, i) => {
+          const name = `Test Object ${10 - i}`;
+          objectNames.push(name);
+          const createResponse = await client.CreateContentObject({
+            libraryId: testLibraryId,
+            options: {
+              meta: {
+                name,
+                otherKey: i
+              }
+            }
+          });
 
-      const object = objects.find(object => object.id === objectId);
-      expect(object).toBeDefined();
-      expect(object.versions[0].hash).toEqual(versionHash);
+          await client.FinalizeContentObject({
+            libraryId: testLibraryId,
+            objectId: createResponse.id,
+            writeToken: createResponse.write_token
+          });
+        })
+      );
+
+      objectNames = objectNames.sort();
+
+      /* No filters */
+      const unfiltered = await client.ContentObjects({libraryId: testLibraryId});
+
+      expect(unfiltered).toBeDefined();
+      expect(unfiltered.contents).toBeDefined();
+      expect(unfiltered.contents.length).toEqual(10);
+      expect(unfiltered.paging).toBeDefined();
+
+      unfiltered.contents.forEach(object => {
+        expect(object.versions[0].meta.name).toBeDefined();
+        expect(object.versions[0].meta.otherKey).toBeDefined();
+      });
+
+      /* Sorting */
+      const sorted = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: { sort: "name" }
+      });
+
+      const sortedNames = sorted.contents.map(object => object.versions[0].meta.name);
+
+      expect(sortedNames).toEqual(objectNames);
+
+      const descSorted = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: { sort: "name", sortDesc: true }
+      });
+
+      const descSortedNames = descSorted.contents.map(object => object.versions[0].meta.name);
+
+      const descObjectNames = [...objectNames].reverse();
+      expect(descSortedNames).toEqual(descObjectNames);
+
+      /* Filtering */
+      const filtered = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: {
+          sort: ["name"],
+          filter: [
+            {key: "name", type: "gte", filter: objectNames[3]},
+            {key: "name", type: "lte", filter: objectNames[7]}
+          ]
+        }
+      });
+
+      expect(filtered.contents.length).toEqual(5);
+      const filteredNames = filtered.contents.map(object => object.versions[0].meta.name);
+      expect(filteredNames).toEqual(objectNames.slice(3, 8));
+
+      /* Selecting metadata fields */
+      const selected = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: {
+          sort: "name",
+          select: ["name"]
+        }
+      });
+
+      selected.contents.forEach(object => {
+        expect(object.versions[0].meta.name).toBeDefined();
+        expect(object.versions[0].meta.otherKey).not.toBeDefined();
+      });
     });
 
     test("Get Content Object", async () => {
@@ -371,12 +423,12 @@ describe("Test ElvClient", () => {
     });
 
     test("Get Content Object By Version Hash", async () => {
-      const object = await client.ContentObject({libraryId, objectId});
-      const objectByHash = await client.ContentObjectByHash({versionHash});
+      const object = await client.ContentObject({versionHash});
 
       expect(object).toBeDefined();
-      expect(objectByHash).toBeDefined();
-      expect(objectByHash).toMatchObject(object);
+      expect(object.id).toEqual(objectId);
+      expect(object.hash).toEqual(versionHash);
+      expect(object.type).toEqual(typeHash);
     });
 
     test("Get Content Object Owner", async () => {
@@ -413,50 +465,171 @@ describe("Test ElvClient", () => {
   });
 
   describe("Parts", () => {
-    test("Upload Part", async () => {
+    test("Upload Whole Part", async () => {
       const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
 
-      // Upload first part as a single chunk
-      const wholeCallback = jest.fn();
-      const wholeUploadResponse = await client.UploadPart({
+      const uploadResponse = await client.UploadPart({
         libraryId,
         objectId,
         writeToken,
-        data: testFile1,
-        chunkSize: testFileSize,
-        callback: wholeCallback
+        data: testFile1
       });
 
-      expect(wholeCallback).toBeCalledTimes(2);
-      expect(wholeUploadResponse).toBeDefined();
+      expect(uploadResponse).toBeDefined();
 
-      partInfo.whole = wholeUploadResponse.part.hash;
-
-      // Upload second file in 10 chunks
-      const chunkedCallback = jest.fn();
-      const chunkedUploadResponse = await client.UploadPart({
-        libraryId,
-        objectId,
-        writeToken,
-        data: testFile2,
-        chunkSize: testFileSize / 10,
-        callback: chunkedCallback
-      });
-      expect(chunkedCallback).toBeCalledTimes(11);
-      expect(chunkedUploadResponse).toBeDefined();
-
-      partInfo.chunked = chunkedUploadResponse.part.hash;
+      partInfo.whole = uploadResponse.part.hash;
 
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
     });
 
-    test("Download Parts", async () => {
-      const wholePart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.whole, format: "arrayBuffer"});
-      expect(new Uint8Array(wholePart).toString()).toEqual(new Uint8Array(testFile1).toString());
-      expect(new Uint8Array(wholePart).toString()).not.toEqual(new Uint8Array(testFile2).toString());
+    test("Upload Whole Encrypted Part", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
 
-      const chunkedPart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.chunked, format: "arrayBuffer"});
+      const uploadResponse = await client.UploadPart({
+        libraryId,
+        objectId,
+        writeToken,
+        data: testFile3,
+        encryption: "cgck"
+      });
+
+      expect(uploadResponse).toBeDefined();
+
+      partInfo.encrypted = uploadResponse.part.hash;
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Upload Part In Chunks", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      const partWriteToken = await client.CreatePart({libraryId, objectId, writeToken});
+
+      const chunks = 10;
+      const chunkSize = testFileSize / chunks;
+      for(let i = 0; i < chunks; i++) {
+        const from = chunkSize * i;
+        const to = Math.min(from + chunkSize, testFileSize);
+
+        await client.UploadPartChunk({
+          libraryId,
+          objectId,
+          writeToken,
+          partWriteToken,
+          chunk: testFile2.slice(from, to)
+        });
+      }
+
+      let finalizeResponse = await client.FinalizePart({libraryId, objectId, writeToken, partWriteToken});
+      expect(finalizeResponse).toBeDefined();
+      expect(finalizeResponse.part).toBeDefined();
+      expect(finalizeResponse.part.size).toEqual(testFileSize);
+
+      partInfo.chunked = finalizeResponse.part.hash;
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Upload Encrypted Part In Chunks", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+      const encryption = "cgck";
+
+      const partWriteToken = await client.CreatePart({libraryId, objectId, writeToken, encryption});
+
+      const chunks = 10;
+      const chunkSize = testFileSize / chunks;
+      for(let i = 0; i < chunks; i++) {
+        const from = chunkSize * i;
+        const to = Math.min(from + chunkSize, testFileSize);
+
+        await client.UploadPartChunk({
+          libraryId,
+          objectId,
+          writeToken,
+          partWriteToken,
+          chunk: testFile3.slice(from, to),
+          encryption
+        });
+      }
+
+      let finalizeResponse = await client.FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption});
+      expect(finalizeResponse).toBeDefined();
+      expect(finalizeResponse.part).toBeDefined();
+      expect(finalizeResponse.part.size).toBeGreaterThan(testFileSize);
+
+      partInfo.encryptedChunked = finalizeResponse.part.hash;
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+
+    test("Download Whole Part", async () => {
+      let wholePart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.whole, format: "arrayBuffer"});
+      wholePart = new Uint8Array(wholePart);
+
+      expect(wholePart.byteLength).toEqual(testFileSize);
+      expect(wholePart.toString()).toEqual(new Uint8Array(testFile1).toString());
+      expect(new Uint8Array(wholePart).toString()).not.toEqual(new Uint8Array(testFile2).toString());
+    });
+
+    test("Download Whole Encrypted Part", async () => {
+      let wholePart = await client.DownloadPart({libraryId, objectId, partHash: partInfo.encrypted, format: "arrayBuffer"});
+      wholePart = new Uint8Array(wholePart);
+
+      expect(wholePart.byteLength).toEqual(testFileSize);
+      expect(wholePart.toString()).toEqual(new Uint8Array(testFile3).toString());
+      expect(new Uint8Array(wholePart).toString()).not.toEqual(new Uint8Array(testFile2).toString());
+    });
+
+    test("Download Part In Chunks", async () => {
+      let partChunks = [];
+      const mockCallback = jest.fn();
+      const callback = ({chunk}) => {
+        partChunks.push(Buffer.from(chunk));
+        mockCallback();
+      };
+
+      await client.DownloadPart({
+        libraryId,
+        objectId,
+        partHash: partInfo.chunked,
+        chunked: true,
+        chunkSize: testFileSize / 10,
+        callback
+      });
+
+      expect(mockCallback).toHaveBeenCalledTimes(10);
+
+      const chunkedPart = Buffer.concat(partChunks);
       expect(new Uint8Array(chunkedPart).toString()).toEqual(new Uint8Array(testFile2).toString());
+    });
+
+    test("Download Encrypted Part In Chunks", async () => {
+      let partChunks = [];
+      const mockCallback = jest.fn();
+      const callback = ({chunk}) => {
+        partChunks.push(Buffer.from(chunk));
+        mockCallback();
+      };
+
+      await client.DownloadPart({
+        libraryId,
+        objectId,
+        partHash: partInfo.encryptedChunked,
+        chunked: true,
+        chunkSize: testFileSize / 10,
+        callback
+      });
+
+      expect(mockCallback).toHaveBeenCalledTimes(10);
+
+      const chunkedPart = Buffer.concat(partChunks);
+      expect(new Uint8Array(chunkedPart).toString()).toEqual(new Uint8Array(testFile3).toString());
+    });
+
+    test("Download Part With Proxy Re-encryption", async () => {
+      const encryptedPart = await accessClient.DownloadPart({libraryId, objectId, partHash: partInfo.encrypted, format: "arrayBuffer"});
+      expect(new Uint8Array(encryptedPart).toString()).toEqual(new Uint8Array(encryptedPart).toString());
     });
 
     test("List Parts", async () => {
@@ -464,6 +637,7 @@ describe("Test ElvClient", () => {
 
       expect(parts.find(part => part.hash === partInfo.whole)).toBeDefined();
       expect(parts.find(part => part.hash === partInfo.chunked)).toBeDefined();
+      expect(parts.find(part => part.hash === partInfo.encrypted)).toBeDefined();
     });
 
     test("Proofs", async () => {
@@ -524,28 +698,37 @@ describe("Test ElvClient", () => {
 
   describe("Access Requests", () => {
     test("Cached Access Transactions", async () => {
-      const transactionHash = await client.CachedAccessTransaction({libraryId, objectId});
+      const transactionHash = await client.CachedAccessTransaction({versionHash});
       expect(transactionHash).toBeDefined();
 
-      client.ClearCache({objectId});
-      const noTransaction = await client.CachedAccessTransaction({libraryId, objectId});
+      client.ClearCache();
+      const noTransaction = await client.CachedAccessTransaction({versionHash});
       expect(noTransaction).not.toBeDefined();
 
-      client.ClearCache({libraryId});
-      client.ClearCache({});
       expect(client.authClient.accessTransactions).toEqual({
         spaces: {},
         libraries: {},
-        objects: {}
+        types: {},
+        objects: {},
+        other: {}
       });
       expect(client.authClient.modifyTransactions).toEqual({
         spaces: {},
         libraries: {},
-        objects: {}
+        types: {},
+        objects: {},
+        other: {}
       });
     });
 
     test("Access Charge and Info", async () => {
+      await client.CallContractMethod({
+        abi: BaseContentContract.abi,
+        contractAddress: client.utils.HashToAddress(objectId),
+        methodName: "setVisibility",
+        methodArgs: [10]
+      });
+
       await client.SetAccessCharge({objectId, accessCharge: "0.5"});
 
       const {accessible, accessCode, accessCharge} = await accessClient.AccessInfo({
@@ -565,8 +748,7 @@ describe("Test ElvClient", () => {
 
     test("Make Manual Access Request", async () => {
       const accessRequest = await client.AccessRequest({
-        libraryId,
-        objectId,
+        versionHash,
         args: [
           0, // Access level
           undefined, // Public key - will be injected automatically
@@ -749,13 +931,13 @@ describe("Test ElvClient", () => {
       validateUrl(partUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "data", partInfo.whole));
 
       const versionOnlyPartUrl = await client.FabricUrl({versionHash, partHash: partInfo.whole});
-      validateUrl(versionOnlyPartUrl, UrlJoin("/q", versionHash, "data", partInfo.whole), {}, false);
+      validateUrl(versionOnlyPartUrl, UrlJoin("/q", versionHash, "data", partInfo.whole), {});
 
       const versionOnlyCallUrl = await client.FabricUrl({versionHash, call: "method"});
-      validateUrl(versionOnlyCallUrl, UrlJoin("/q", versionHash, "call", "method"), {}, false);
+      validateUrl(versionOnlyCallUrl, UrlJoin("/q", versionHash, "call", "method"), {});
 
       const versionOnlyRepUrl = await client.FabricUrl({versionHash, rep: "image"});
-      validateUrl(versionOnlyRepUrl, UrlJoin("/q", versionHash, "rep", "image"), {}, false);
+      validateUrl(versionOnlyRepUrl, UrlJoin("/q", versionHash, "rep", "image"), {});
 
       const versionOnlyAuthUrl = await client.FabricUrl({versionHash, objectId, partHash: partInfo.whole});
       validateUrl(versionOnlyAuthUrl, UrlJoin("/q", versionHash, "data", partInfo.whole));
@@ -824,6 +1006,8 @@ describe("Test ElvClient", () => {
       expect(parts.find(part => part.hash === partInfo.whole)).not.toBeDefined();
     });
 
+    /*
+
     test("Delete Content Version", async () => {
       await client.DeleteContentVersion({libraryId, objectId, versionHash});
 
@@ -867,6 +1051,7 @@ describe("Test ElvClient", () => {
         expect(error.status).toEqual(404);
       }
     });
+    */
 
     test("Delete Access Group", async () => {
       await client.DeleteAccessGroup({contractAddress: accessGroupAddress});

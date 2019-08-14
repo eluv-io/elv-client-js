@@ -8,7 +8,7 @@ const fs = require("fs");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
-if (process.argv.length < 5) {
+if(process.argv.length < 5) {
   console.log("Usage: <private-key> <emp> <media-archive-lib-id>");
   process.exit(1);
 }
@@ -43,7 +43,7 @@ const ReadDir = (path) => {
     console.log("- path: " + itemPath);
     if(item.isFile()) {
       pathlist.push(itemPath);
-    } else if (item.isDirectory()) {
+    } else if(item.isDirectory()) {
       dirpath = ReadDir(itemPath);
       console.log("Subdir dirpath: " + JSON.stringify(dirpath));
       pathlist = pathlist.concat(dirpath);
@@ -65,7 +65,7 @@ const MakeIMFs = async (assets) => {
 };
 
 const MakeIMF = async (emp, demo, asset) => {
-  try{
+  try {
     let imf = new ImfService(client);
 
     const dir = Path.join(assetsDir, asset.path);
@@ -88,7 +88,7 @@ const MakeIMF = async (emp, demo, asset) => {
     console.log("Creating IMF: " + asset.name + " payload: " + JSON.stringify(payload));
     const q = await imf.createImfTitle(payload);
     console.log("Content IMF: " + asset.name + " id: " + q.id + " hash: " + q.hash);
-  }catch(err){
+  } catch(err){
     console.log(err);
   }
 };

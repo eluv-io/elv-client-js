@@ -9,15 +9,16 @@ pragma solidity 0.4.24;
 /* -- Revision history --
 Ownable20190221100500ML: First versioned released
 Ownable20190315141500ML: Migrated to 0.4.24
+Ownable20190528193800ML: Added contentSpace as all descendant objects need it anyway
 */
 
 
 contract Ownable {
 
-    bytes32 public version ="Ownable20190315141500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Ownable20190528193800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
     address public creator;
     address public owner;
-
+    address public contentSpace;
 
     constructor() public payable {
         creator = tx.origin;

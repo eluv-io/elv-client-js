@@ -13,11 +13,11 @@ const Replacer = (name, value) => {
   if(!objectName || objectName === "Object") { return value; }
 
   switch(objectName) {
-    case("ArrayBuffer"):
+    case ("ArrayBuffer"):
       return `<ArrayBuffer ${value.byteLength}>`;
-    case("Response"):
+    case ("Response"):
       return `<Response ${value.size}>`;
-    case("Object"):
+    case ("Object"):
       return value;
     default:
       return `<${objectName}>`;
@@ -125,7 +125,7 @@ const OutputLogger = (klass, instance, exclude=[]) => {
     } else {
       instance[methodName] = (...args) => {
         const result = originalMethod(...args);
-        writeOutput(args, result, true);
+        writeOutput(args, result, false);
         return result;
       };
     }

@@ -1,17 +1,24 @@
+const crypto = require("crypto");
+
+Object.defineProperty(global.self, "crypto", {
+  value: {
+    getRandomValues: arr => crypto.randomBytes(arr.length),
+  },
+});
+
 const {FrameClient} = require("../src/FrameClient");
 const OutputLogger = require("./utils/OutputLogger");
 const {RandomBytes, CreateClient} = require("./utils/Utils");
 
-let frameClient;
-let client;
+let frameClient, client, libraryId, objectId, partHash;
 
 const CompareMethods = (frameClientMethods, elvClientMethods) => {
   const differentKeys = frameClientMethods
     .filter(x => !elvClientMethods.includes(x))
     .concat(elvClientMethods.filter(x => !frameClientMethods.includes(x)));
 
-  if (differentKeys.length > 0) {
-    console.log("DIFFERING KEYS: ");
+  if(differentKeys.length > 0) {
+    console.error("DIFFERING KEYS: ");
     console.error(differentKeys);
 
     console.error("EXPECTED");
@@ -57,27 +64,30 @@ describe("Test FrameClient", () => {
   });
 
   test("FrameClient methods match expected UserProfile methods", () => {
-    CompareMethods(frameClient.AllowedUserProfileMethods(), client.userProfile.FrameAllowedMethods());
+    CompareMethods(frameClient.AllowedUserProfileMethods(), client.userProfileClient.FrameAllowedMethods());
   });
 
   test("Call ElvClient Method", async () => {
-    const result = await client.ContentLibraries();
-    const frameResult = await frameClient.ContentLibraries();
+    const result = (await client.ContentLibraries()).sort();
+    const frameResult = (await frameClient.ContentLibraries()).sort();
 
     expect(frameResult).toBeDefined();
-    expect(frameResult).toEqual(result);
+    expect(frameResult).toMatchObject(result);
   });
 
-  test("Call ElvClient Method - Errors", async () => {
+  test.only("Call ElvClient Method - Errors", async () => {
     console.error = jest.fn();
 
     try {
-      await frameClient.ContentLibrary({libraryId: "ilibabcd"});
+      // Access a library with a bad transaction hash
+      const libraryId = await frameClient.CreateContentLibrary({name: "test library"});
+      client.authClient.accessTransactions.libraries[libraryId] = "0x46d637070718a3dad9367923afe3051889b7999e943d4a57ce719184b0b24164";
+      await frameClient.ContentLibrary({libraryId});
     } catch(e) {
       expect(e).toMatchObject({
         name: "ElvHttpClientError",
         method: "GET",
-        status: 404,
+        status: 401
       });
 
       expect(e.message).toBeDefined();
@@ -86,31 +96,6 @@ describe("Test FrameClient", () => {
       expect(e.headers).toBeDefined();
       expect(e.headers.Authorization).toBeDefined();
     }
-
-    expect(console.error).toHaveBeenCalled();
-  });
-
-
-  test("Call ElvClient Method With Callback", async () => {
-    const libraryId = await frameClient.CreateContentLibrary({name: "test frame client"});
-    const createResponse = await frameClient.CreateContentObject({libraryId});
-
-    const callback = jest.fn();
-
-    const uploadResult = await frameClient.UploadPart({
-      libraryId,
-      objectId: createResponse.id,
-      writeToken: createResponse.write_token,
-      data: RandomBytes(100000),
-      chunkSize: 10000,
-      callback
-    });
-
-    expect(uploadResult).toBeDefined();
-    expect(uploadResult.part.size).toEqual(100000);
-    expect(callback).toHaveBeenCalledTimes(11);
-
-    await frameClient.DeleteContentLibrary({libraryId});
   });
 
   test("Get Account Address", async () => {
@@ -119,13 +104,12 @@ describe("Test FrameClient", () => {
     expect(frameClient.utils.FormatAddress(address)).toEqual(frameClient.utils.FormatAddress(client.signer.address));
   });
 
-
   test("User Profile Methods", async () => {
-    await expect(frameClient.userProfile.AccessLevel()).rejects.toThrow(
+    await expect(frameClient.userProfileClient.AccessLevel()).rejects.toThrow(
       new Error("'requestor' param required when calling user profile methods from FrameClient")
     );
 
-    const accessLevel = await frameClient.userProfile.AccessLevel({requestor: "Test"});
+    const accessLevel = await frameClient.userProfileClient.AccessLevel({requestor: "Test"});
     expect(accessLevel).toEqual("prompt");
   });
 
@@ -140,13 +124,16 @@ describe("Test FrameClient", () => {
       callbackId: undefined
     };
 
-    const expectedResult = await client.ContentLibraries();
+    const expectedResult = (await client.ContentLibraries()).sort();
     const result = await frameClient.PassRequest({
       request,
       Respond
     });
 
     expect(result).toBeDefined();
+
+    result.response.sort();
+
     expect(result).toMatchObject({
       type: "ElvFrameResponse",
       requestId: 123,
@@ -154,22 +141,52 @@ describe("Test FrameClient", () => {
     });
   });
 
-  test("Pass FrameClient Request With Callback", async () => {
-    const libraryId = await client.CreateContentLibrary({name: "test frame client"});
-    const createResponse = await client.CreateContentObject({libraryId});
+  test("Call ElvClient Method With Callback", async () => {
+    libraryId = await frameClient.CreateContentLibrary({name: "test frame client"});
+    const createResponse = await frameClient.CreateContentObject({libraryId});
+    objectId = createResponse.id;
 
+    const uploadResult = await frameClient.UploadPart({
+      libraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      data: RandomBytes(100000),
+      chunkSize: 10000,
+    });
+
+    expect(uploadResult).toBeDefined();
+
+    await frameClient.FinalizeContentObject({libraryId, objectId, writeToken: createResponse.write_token});
+
+    partHash = uploadResult.part.hash;
+
+    const callback = jest.fn();
+    await frameClient.DownloadPart({
+      libraryId,
+      objectId,
+      partHash,
+      chunked: true,
+      chunkSize: 10000,
+      callback
+    });
+
+    expect(callback).toHaveBeenCalledTimes(10);
+  });
+
+  test("Pass FrameClient Request With Callback", async () => {
     const callback = jest.fn();
 
     const request = {
       type: "ElvFrameRequest",
       requestId: 1234,
-      calledMethod: "UploadPart",
+      calledMethod: "DownloadPart",
       args: {
         libraryId,
-        objectId: createResponse.id,
-        writeToken: createResponse.write_token,
-        data: RandomBytes(100000),
+        objectId,
+        partHash,
+        chunked: true,
         chunkSize: 10000,
+        callback
       },
       callbackId: 321
     };
@@ -179,29 +196,11 @@ describe("Test FrameClient", () => {
       Respond: callback
     });
 
-    await client.DeleteContentLibrary({libraryId});
-
     expect(result).toBeDefined();
     expect(result).toMatchObject({
       type: "ElvFrameResponse",
       requestId: 1234
     });
-    expect(callback).toHaveBeenCalledTimes(11);
-    expect(callback).toHaveBeenCalledWith({
-      type: "ElvFrameResponse",
-      requestId: 321,
-      response: {
-        uploaded: 0,
-        total: 100000
-      }
-    });
-    expect(callback).toHaveBeenLastCalledWith({
-      type: "ElvFrameResponse",
-      requestId: 321,
-      response: {
-        uploaded: 100000,
-        total: 100000
-      }
-    });
+    expect(callback).toHaveBeenCalledTimes(10);
   });
 });

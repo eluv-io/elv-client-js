@@ -1,34 +1,28 @@
+if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+
+const bs58 = require("bs58");
+const Stream = require("stream");
+const Utils = require("./Utils");
+
 let ElvCrypto;
-if(typeof window === "undefined") {
-  // Running in node
-  ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;
-} else {
-  // Running in browser
-  ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.js").default;
+switch(Utils.Platform()) {
+  case Utils.PLATFORM_WEB:
+    if(typeof crypto === "undefined") {
+      const crypto = require("crypto");
+
+      Object.defineProperty(global.self, "crypto", {
+        value: {
+          getRandomValues: arr => crypto.randomBytes(arr.length),
+        },
+      });
+    }
+
+    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.js").default;
+    break;
+  default:
+    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;
+    break;
 }
-
-const HexToUInt8Array = hexString =>
-  new Uint8Array(hexString.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-
-const UInt8ArrayToHex = bytes =>
-  bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, "0"),"");
-
-const keys = {
-  target: {
-    privateKey: HexToUInt8Array("0000000000000000000000000000000018d1a9fb51d47e6e73e9cba3f4156132f3c8e9f7bf291ae3e1d294fe0af05655"),
-    publicKey: HexToUInt8Array("0409bb41a10fe8d8a639cb95b423077fa84f41cefa94f2bbc1503b0c28ee6d9e2c9ca33ded0a99ffce1fe8e1bb6705ec720b98122a203746187b6701f2302ce343a2674381c1ade579e0b37b53a6bf725e47687e5809596f0b5a16a39b07a1ca5d173ccc3b6d432d620d3452644703a758fb5f44a35b3aee4966bae345a7e88cc03ede169922d3150ea8f3ed91fadbacff182ccf4bf487a7bc24fd37f2997c17b27fcd45cb9e2629a103db2bcd4374b7e17db0f58e9a5541110f229d814682d5f7")
-  },
-  primary: {
-    privateKey: HexToUInt8Array("000000000000000000000000000000000b9a85e10e7b6f7ba0995c082d3bb8cf962ad5d3eb44ffc7ef037798325c0e7b"),
-    publicKey: HexToUInt8Array("04168f6e4e3369a9ff68226990c8e08f8af3c2fd2c325ae1f002456864b394d89b541fea9f8d773ea454f8e72653447c86163256e3928acdc579b85d6195df2e7b23097bb28b8069a652f4390cb0bda74a0aa7d057a05d8abb524ade09a8db83f7")
-  },
-  symmetric: {
-    iv: HexToUInt8Array("4af2743bb2d81403fc8c42f4"),
-    key: HexToUInt8Array("37d79b30b2a8e801864b023e330c4b02")
-  },
-  reEnc: HexToUInt8Array("04103e15d19c5280b783afd21b3668cfe0e7e587a8710b4deaa337f258d970f05ecbc5dd562f106f8a6bb1a475de2f16a41884d3b69900829e7eb0c7487e8b0865d26ed55028c54a1086019a2636ffed2c958fe2b418264bac438c191611a5bfa208020d0c6dab7abb823c8a1f0e1d0523e97ba9b7f8adaa1f0b7591f05300f0028d533900ebf244e72f8a41ad45dd636207b89663afd240ad7330e3e00ce02719aa2bff5c31d31bab77d89317a217e567723c92c370808bda6a9889e8cb0ec2bc")
-};
-
 
 /**
  * @namespace
@@ -36,26 +30,137 @@ const keys = {
  * data with automatic handling of keys
  */
 const Crypto = {
+  ElvCrypto: async () => {
+    try {
+      if(!Crypto.elvCrypto) {
+        Crypto.elvCrypto = await new ElvCrypto().init();
+      }
+
+      return Crypto.elvCrypto;
+    } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error("Error initializing ElvCrypto:");
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  },
+
+  async EncryptCap(cap, publicKey) {
+    const elvCrypto = await Crypto.ElvCrypto();
+    publicKey = new Uint8Array(Buffer.from(publicKey.replace("0x", ""), "hex"));
+    cap = new Uint8Array(Buffer.from(JSON.stringify(cap)));
+
+    const {data, ephemeralKey, tag} = await elvCrypto.encryptECIES(cap, publicKey);
+
+    const encryptedCap = Buffer.concat([
+      Buffer.from(ephemeralKey),
+      Buffer.from(tag),
+      Buffer.from(data)
+    ]);
+
+    return Utils.B64(encryptedCap);
+  },
+
+  async DecryptCap(encryptedCap, privateKey) {
+    const elvCrypto = await Crypto.ElvCrypto();
+    privateKey = new Uint8Array(Buffer.from(privateKey.replace("0x", ""), "hex"));
+
+    encryptedCap = Buffer.from(encryptedCap, "base64");
+    const ephemeralKey = encryptedCap.slice(0, 65);
+    const tag = encryptedCap.slice(65, 81);
+    const data = encryptedCap.slice(81);
+
+    const cap = elvCrypto.decryptECIES(
+      new Uint8Array(data),
+      privateKey,
+      new Uint8Array(ephemeralKey),
+      new Uint8Array(tag)
+    );
+
+    return JSON.parse(Buffer.from(cap).toString());
+  },
+
+  async GeneratePrimaryCap() {
+    const elvCrypto = await Crypto.ElvCrypto();
+
+    const {secretKey, publicKey} = elvCrypto.generatePrimaryKeys();
+    const symmetricKey = (elvCrypto.generateSymmetricKey()).key;
+
+    return {
+      symm_key: `kpsy${bs58.encode(Buffer.from(symmetricKey))}`,
+      secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
+      public_key: `kppk${bs58.encode(Buffer.from(publicKey))}`
+    };
+  },
+
+  async GenerateTargetCap() {
+    const elvCrypto = await Crypto.ElvCrypto();
+
+    const {secretKey, publicKey} = elvCrypto.generateTargetKeys();
+
+    return {
+      secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
+      public_key: `ktpk${bs58.encode(Buffer.from(publicKey))}`
+    };
+  },
+
+  CapToKeys(cap) {
+    const keyToBytes = (key) => new Uint8Array(bs58.decode(key.slice(4)));
+
+    return {
+      symmetricKey: keyToBytes(cap.symm_key),
+      secretKey: keyToBytes(cap.secret_key),
+      publicKey: keyToBytes(cap.public_key)
+    };
+  },
+
+  async EncryptionContext(cap) {
+    const elvCrypto = await Crypto.ElvCrypto();
+
+    const {symmetricKey, secretKey, publicKey} = Crypto.CapToKeys(cap);
+
+    let context, type;
+    if(publicKey.length === elvCrypto.PRIMARY_PK_KEY_SIZE) {
+      // Primary context
+      type = elvCrypto.CRYPTO_TYPE_PRIMARY;
+      context = elvCrypto.newPrimaryContext(
+        publicKey,
+        secretKey,
+        symmetricKey
+      );
+    } else {
+      // Target context
+      type = elvCrypto.CRYPTO_TYPE_TARGET;
+      context = elvCrypto.newTargetDecryptionContext(
+        secretKey,
+        symmetricKey
+      );
+    }
+
+    return {context, type};
+  },
+
   /**
    * Encrypt data with headers
    *
    * @namedParams
-   * @param {ArrayBuffer} data - Data to encrypt
+   * @param {ArrayBuffer | Buffer} data - Data to encrypt
+   * @param {Object} cap - Encryption "capsule" containing keys
    *
    * @returns {Promise<Buffer>} - Encrypted data
    */
-  Encrypt: async ({data}) => {
-    const crypto = await new ElvCrypto().init();
+  Encrypt: async (cap, data) => {
+    // Convert Blob to ArrayBuffer if necessary
+    if(!Buffer.isBuffer(data) && !(data instanceof ArrayBuffer)) {
+      data = Buffer.from(await new Response(data).arrayBuffer());
+    }
 
-    const context = crypto.newPrimaryContext(
-      keys.primary.publicKey,
-      keys.primary.privateKey,
-      keys.symmetric.key
-    );
+    const elvCrypto = await Crypto.ElvCrypto();
+
+    const { context } = await Crypto.EncryptionContext(cap);
 
     const dataArray = new Uint8Array(data);
-
-    const encryptedData = crypto.encryptPrimaryH(context, dataArray);
+    const encryptedData = elvCrypto.encryptPrimaryH(context, dataArray);
     const encryptedDataBuffer = Buffer.from(encryptedData);
 
     context.free();
@@ -67,31 +172,48 @@ const Crypto = {
    * Decrypt data with headers
    *
    * @namedParams
-   * @param {ArrayBuffer} encryptedData - Data to decrypt
+   * @param {Object} cap - Encryption "capsule" containing keys
+   * @param {ArrayBuffer | Buffer} encryptedData - Data to encrypt
    *
    * @returns {Promise<Buffer>} - Decrypted data
    */
-  Decrypt: async ({encryptedData}) => {
-    const crypto = await new ElvCrypto().init();
+  Decrypt: async (cap, encryptedData) => {
+    const stream = await Crypto.OpenDecryptionStream(cap);
 
-    const context = crypto.newPrimaryContext(
-      keys.primary.publicKey,
-      keys.primary.privateKey,
-      keys.symmetric.key
-    );
+    stream.end(new Uint8Array(encryptedData));
 
-    const encryptedDataArray = new Uint8Array(encryptedData);
-    const decryptedData = crypto.decryptH(
-      crypto.CRYPTO_TYPE_PRIMARY,
-      context,
-      encryptedDataArray
-    );
+    let decryptedChunks = [];
+    await new Promise((resolve, reject) => {
+      stream
+        .on("data", chunk => {
+          decryptedChunks.push(chunk);
+        })
+        .on("finish", () => {
+          resolve();
+        })
+        .on("error", (e) => {
+          reject(e);
+        });
+    });
 
-    const dataBuffer = Buffer.from(decryptedData);
+    return Buffer.concat(decryptedChunks);
+  },
 
-    context.free();
+  OpenDecryptionStream: async (cap) => {
+    const elvCrypto = await Crypto.ElvCrypto();
+    const {context, type} = await Crypto.EncryptionContext(cap);
 
-    return dataBuffer;
+    const stream = new Stream.PassThrough();
+    const decipher = elvCrypto.createDecipher(type, context);
+
+    return stream
+      .pipe(decipher)
+      .on("finish", () => {
+        context.free();
+      })
+      .on("error", (e) => {
+        throw Error(e);
+      });
   }
 };
 

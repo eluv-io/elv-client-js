@@ -1,16 +1,23 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
+import {BaseContent} from "./base_content.sol";
 
 /* -- Revision history --
 Content20190221101700ML: First versioned released
 Content20190301121800ML: Adds stub for runAccessInfo
 Content20190315171500ML: Migrated to 0.4.24
+Content20190506155000ML: Makes the default for runAccess match content object behavior that does not have custom contract
+Content20190510151600ML: Modified API for runAccessInfo to add Access information
 */
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20190315171500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20190510151600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
+    uint8 public constant DEFAULT_SEE  = 1;
+    uint8 public constant DEFAULT_ACCESS  = 2;
+    uint8 public constant DEFAULT_CHARGE  = 4;
 
     event Log(string label);
     event LogBool(string label, bool b);
@@ -53,9 +60,9 @@ contract Content is Ownable {
         bytes32[], /*customValues*/
         address[] /*stakeholders*/
     )
-    public view returns (int8, uint256)
+    public view returns (uint8, uint8, uint8, uint256) //Mask, visibilityCode, accessCode, accessCharge
     {
-        return (-1, 0);
+        return (7, 0, 0, 0); //7 is DEFAULT_SEE + DEFAULT_ACCESS + DEFAULT_CHARGE, hence the 3 tailing values are ignored
     }
 
     /* DEPRECATED - runAccessInfo is used instead
@@ -83,7 +90,7 @@ contract Content is Ownable {
     )
         public payable returns(uint)
     {
-        return 0;
+            return 0;
     }
 
     //0 indicates that access grant can proceed.

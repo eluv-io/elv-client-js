@@ -1,5 +1,8 @@
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
+const { FrameClient } = require("./FrameClient");
+
+const SpaceContract = require("./contracts/BaseContentSpace");
 
 class UserProfileClient {
   /**
@@ -27,7 +30,7 @@ class UserProfileClient {
    *
    * <h4>Usage</h4>
    *
-   * Access the UserProfileClient from ElvClient or FrameClient via client.userProfile
+   * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
    *
    * @example
 let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
@@ -39,17 +42,97 @@ let signer = wallet.AddAccount({
 });
 client.SetSigner({signer});
 
-await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
+await client.userProfileClient.UserMetadata({accountAddress: signer.address})
 
 let frameClient = new FrameClient();
-await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
+await client.userProfileClient.UserMetadata({accountAddress: signer.address})
    *
    */
   constructor({client}) {
     this.client = client;
+    this.userWalletAddresses = {};
+  }
 
-    this.libraryCreated = false;
-    this.cachedPrivateMetadata = undefined;
+  /**
+   * Get the user wallet address for the specified user, if it exists
+   *
+   * @namedParams
+   * @param {string} address - The address of the user
+   *
+   * @return {Promise<string>} - The wallet address of the specified user, if it exists
+   */
+  async UserWalletAddress({address}) {
+    if(!this.userWalletAddresses[address]) {
+      const walletAddress =
+        await this.client.CallContractMethod({
+          abi: SpaceContract.abi,
+          contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+          methodName: "userWallets",
+          methodArgs: [address]
+        });
+
+      if(!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
+        this.userWalletAddresses[address] = walletAddress;
+      }
+    }
+
+    return this.userWalletAddresses[address];
+  }
+
+  /**
+   * Get the contract address of the current user's BaseAccessWallet contract
+   *
+   * @return {Promise<string>} - The contract address of the current user's wallet contract
+   */
+  async WalletAddress() {
+    if(!this.walletAddress) {
+      this.walletAddress = await this.UserWalletAddress({address: this.client.signer.address});
+
+      // No wallet contract for the current user - create one
+      if(!this.walletAddress || this.walletAddress === Utils.nullAddress) {
+        const balance = await this.client.GetBalance({address: this.client.signer.address});
+
+        // Don't attempt to create a user wallet if user has no funds
+        if(balance < 0.1) {
+          return undefined;
+        }
+
+        const walletCreationEvent = await this.client.CallContractMethodAndWait({
+          contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+          abi: SpaceContract.abi,
+          methodName: "createAccessWallet",
+          methodArgs: []
+        });
+
+        this.walletAddress = this.client.ExtractValueFromEvent({
+          abi: SpaceContract.abi,
+          event: walletCreationEvent,
+          eventName: "CreateAccessWallet",
+          eventValue: "wallet"
+        });
+      }
+    }
+
+    return this.walletAddress;
+  }
+
+  async Initialize() {
+    const walletAddress = await this.WalletAddress();
+
+    if(!walletAddress) { return; }
+
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(walletAddress);
+
+    try {
+      // Ensure wallet object is created
+      await this.client.ContentObject({libraryId, objectId});
+    } catch(error) {
+      if(error.status === 404) {
+        const createResponse = await this.client.CreateContentObject({libraryId, objectId, options: {type: "library"}});
+        await this.client.FinalizeContentObject({libraryId, objectId, writeToken: createResponse.write_token});
+      }
+    }
   }
 
   __InvalidateCache() {
@@ -86,67 +169,120 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   }
 
   /**
-   * Create an account library for the current user
+   * Access the specified user's public profile metadata
    *
    * @namedParams
-   * @param {object=} publicMetadata - Publicly accessible metadata
-   * @param {object=} privateMetadata - Metadata accessible only by this user
-   * @param {blob=} image - Profile image for this user
+   * @param {string=} address - The address of the user
+   * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
    *
-   * @return {Promise<string|*>} - The ID of the created library
+   * @return {Promise<Object|string>}
    */
-  async CreateAccountLibrary({publicMetadata={}, privateMetadata={}, image}={}) {
-    if(await this.__IsLibraryCreated({accountAddress: this.client.signer.address})) {
-      return Utils.AddressToLibraryId(this.client.signer.address);
-    }
+  async PublicUserMetadata({address, metadataSubtree="/"}) {
+    const walletAddress = await this.UserWalletAddress({address});
 
-    publicMetadata = {
-      ...publicMetadata,
-      class: "elv-user-library"
-    };
+    if(!walletAddress) { return; }
 
-    // Initialize fields
-    privateMetadata = {
-      ...privateMetadata,
-      access_level: "prompt",
-      collected_data: {}
-    };
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(walletAddress);
 
-    const libraryId = await this.client.CreateContentLibrary({
-      publicMetadata,
-      privateMetadata,
-      image,
-      isUserLibrary: true
+    // If caching not enabled, make direct query to object
+    return await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree
     });
-
-    if(image) {
-      const imageHash = await this.PrivateUserMetadata({metadataSubtree: "image"});
-      await this.ReplacePublicUserMetadata({metadataSubtree: "image", metadata: imageHash});
-    }
-
-    return libraryId;
   }
 
-  // Create the library if it doesn't yet exist
-  async __TouchLibrary() {
-    if(this.client.signer) {
-      if (!(await this.__IsLibraryCreated({accountAddress: this.client.signer.address}))) {
-        await this.CreateAccountLibrary();
-      }
-
-      this.libraryCreated = true;
+  /**
+   * Access the current user's metadata
+   *
+   * Note: Subject to user's access level
+   *
+   * @see <a href="#PromptsAndAccessLevels">Prompts and access levels</a>
+   *
+   * @namedParams
+   * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
+   * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
+   *
+   * @return {Promise<Object|string>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
+   */
+  async UserMetadata({metadataSubtree="/", noCache=false}={}) {
+    if(!noCache && this.cachedPrivateMetadata) {
+      return this.__GetCachedMetadata(metadataSubtree);
     }
+
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+
+    // If caching not enabled, make direct query to object
+    if(noCache) {
+      return await this.client.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree
+      });
+    }
+
+    // If caching is enabled, just get all the metadata and store it.
+    const metadata = await this.client.ContentObjectMetadata({libraryId, objectId});
+    this.__CacheMetadata(metadata);
+    return this.__GetCachedMetadata(metadataSubtree);
   }
 
-  // Check if the account library exists
-  // TODO: Change logic when user libraries are properly implemented
-  async __IsLibraryCreated({accountAddress}) {
-    if(this.libraryCreated) { return true; }
+  /**
+   * Merge the current user's profile metadata
+   *
+   * @namedParams
+   * @param {Object} metadata - New metadata
+   * @param {string=} metadataSubtree - Subtree to merge into - modifies root metadata if not specified
+   */
+  async MergeUserMetadata({metadataSubtree="/", metadata={}}) {
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
 
-    const libraryId = Utils.AddressToLibraryId(accountAddress);
+    const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
-    const libraryIds = await this.client.ContentLibraries();
-    return libraryIds.find(id => id === libraryId);
+    await this.client.MergeMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+
+    this.__InvalidateCache();
+  }
+
+  /**
+   * Replace the current user's profile metadata
+   *
+   * @namedParams
+   * @param {Object} metadata - New metadata
+   * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
+   */
+  async ReplaceUserMetadata({metadataSubtree="/", metadata={}}) {
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+
+    const editRequest = await this.client.EditContentObject({libraryId, objectId});
+
+    await this.client.ReplaceMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+
+    this.__InvalidateCache();
+  }
+
+  /**
+   * Delete the specified subtree from the users profile metadata
+   *
+   * @namedParams
+   * @param {string=} metadataSubtree - Subtree to delete - deletes all metadata if not specified
+   */
+  async DeleteUserMetadata({metadataSubtree="/"}) {
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+
+    const editRequest = await this.client.EditContentObject({libraryId, objectId});
+
+    await this.client.DeleteMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+
+    this.__InvalidateCache();
   }
 
   /**
@@ -159,7 +295,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    * @return {Promise<string>} - Access setting
    */
   async AccessLevel() {
-    return (await this.PrivateUserMetadata({metadataSubtree: "access_level"})) || "prompt";
+    return (await this.UserMetadata({metadataSubtree: "access_level"})) || "prompt";
   }
 
   /**
@@ -171,33 +307,52 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    * @param level
    */
   async SetAccessLevel({level}) {
-    if(!["private", "prompt", "public"].includes(level.toLowerCase())) { return; }
+    level = level.toLowerCase();
 
-    await this.ReplacePrivateUserMetadata({metadataSubtree: "access_level", metadata: level.toLowerCase()});
+    if(!["private", "prompt", "public"].includes(level)) {
+      throw new Error("Invalid access level: " + level);
+    }
+
+    await this.ReplaceUserMetadata({metadataSubtree: "access_level", metadata: level});
   }
 
   /**
-   * Get the URL of the specified user's profile image
+   * Get the URL of the current user's profile image
    *
-   * Note: Part hash of profile image will be appended to the URL as a query parameter in order to ensure browsers
-   * won't serve old cached versions when the image is updated
+   * Note: Part hash of profile image will be appended to the URL as a query parameter to invalidate
+   * browser caching when the image is updated
    *
    * @namedParams
-   * @param {string} accountAddress - Address of the user account
+   * @param {string=} address - The address of the user. If not specified, the address of the current user will be used.
+   *
    * @return {Promise<string | undefined>} - URL of the user's profile image. Will be undefined if no profile image is set.
    */
-  async UserProfileImage({accountAddress}) {
-    const libraryId = Utils.AddressToLibraryId(accountAddress);
-    const objectId = Utils.AddressToObjectId(accountAddress);
+  async UserProfileImage({address}={}) {
+    let walletAddress;
+    if(address) {
+      walletAddress = await this.UserWalletAddress({address});
+    } else {
+      address = this.client.signer.address;
+      walletAddress = this.walletAddress;
+    }
 
-    // Ensure library is created
-    if(!(await this.__IsLibraryCreated({accountAddress}))) { return; }
+    if(!walletAddress) { return; }
 
-    // Ensure image is set
-    const imageHash = await this.PublicUserMetadata({accountAddress, metadataSubtree: "image"});
+    const imageHash = await this.PublicUserMetadata({address, metadataSubtree: "image"});
+
     if(!imageHash) { return; }
 
-    return await this.client.Rep({libraryId, objectId, rep: "image", queryParams: {hash: imageHash}, noAuth: true});
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(walletAddress);
+
+    return await this.client.Rep({
+      libraryId,
+      objectId,
+      rep: "image",
+      queryParams: {hash: imageHash},
+      noAuth: true,
+      channelAuth: false
+    });
   }
 
   /**
@@ -207,186 +362,42 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    * @param {blob} image - The new profile image for the current user
    */
   async SetUserProfileImage({image}) {
-    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-
-    await this.__TouchLibrary();
-
-    await this.client.SetContentLibraryImage({libraryId, image});
-
-    // Set image hash in public metadata so it is publicly accessible
-    const imageHash = await this.PrivateUserMetadata({metadataSubtree: "image"});
-    await this.client.ReplacePublicLibraryMetadata({libraryId, metadataSubtree: "image", metadata: imageHash});
-
-    this.__InvalidateCache();
-  }
-
-  /**
-   * Access the specified user account's public metadata
-   *
-   * @namedParams
-   * @param {string} accountAddress - Address of the user account
-   * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
-   *
-   * @return {Promise<Object>} - The user's public profile metadata - returns undefined if no metadata set or subtree doesn't exist
-   */
-  async PublicUserMetadata({accountAddress, metadataSubtree="/"}) {
-    if(!accountAddress) { return undefined; }
-
-    const libraryId = Utils.AddressToLibraryId(accountAddress);
-
-    try {
-      return await this.client.PublicLibraryMetadata({libraryId, metadataSubtree});
-    } catch(error) {
-      if(error.status !== 404) {
-        throw error;
-      }
-    }
-  }
-
-  /**
-   * Replace the current user's public library metadata
-   *
-   * @namedParams
-   * @param {Object} metadata - New metadata
-   * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
-   */
-  async ReplacePublicUserMetadata({metadataSubtree="/", metadata={}}) {
-    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-
-    await this.__TouchLibrary();
-
-    return await this.client.ReplacePublicLibraryMetadata({libraryId, metadataSubtree, metadata});
-  }
-
-  /**
-   * Delete the specified subtree of the current user's public metadata
-   *
-   * @namedParams
-   * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
-   */
-  async DeletePublicUserMetadata({metadataSubtree="/"}) {
-    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-
-    await this.__TouchLibrary();
-
-    return await this.client.DeletePublicLibraryMetadata({libraryId, metadataSubtree});
-  }
-
-
-  /**
-   * Access the current user's private metadata
-   *
-   * Note: Subject to user's access level
-   *
-   * @see <a href="#PromptsAndAccessLevels">Prompts and access levels</a>
-   *
-   * @namedParams
-   * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
-   * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
-   *
-   * @return {Promise<Object>} - The user's private profile metadata - returns undefined if no metadata set or subtree doesn't exist
-   */
-  async PrivateUserMetadata({metadataSubtree="/", noCache=false}={}) {
-    if(!noCache && this.cachedPrivateMetadata) {
-      return this.__GetCachedMetadata(metadataSubtree);
-    }
-
-    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-    const objectId = Utils.AddressToObjectId(this.client.signer.address);
-
-    await this.__TouchLibrary();
-
-    if(noCache) {
-      return await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree});
-    }
-
-    // If caching is enabled, just get all the metadata and store it.
-    const metadata = await this.client.ContentObjectMetadata({libraryId, objectId});
-    this.__CacheMetadata(metadata);
-    return this.__GetCachedMetadata(metadataSubtree);
-  }
-
-  /**
-   * Merge the current user's public library metadata
-   *
-   * @namedParams
-   * @param {Object} metadata - New metadata
-   * @param {string=} metadataSubtree - Subtree to merge into - modifies root metadata if not specified
-   */
-  async MergePrivateUserMetadata({metadataSubtree="/", metadata={}}) {
-    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-    const objectId = Utils.AddressToObjectId(this.client.signer.address);
-
-    await this.__TouchLibrary();
+    const libraryId = this.client.contentSpaceLibraryId;
+    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
-    await this.client.MergeMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
-
-    this.__InvalidateCache();
-  }
-
-  /**
-   * Replace the current user's public library metadata
-   *
-   * @namedParams
-   * @param {Object} metadata - New metadata
-   * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
-   */
-  async ReplacePrivateUserMetadata({metadataSubtree="/", metadata={}}) {
-    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-    const objectId = Utils.AddressToObjectId(this.client.signer.address);
-
-    await this.__TouchLibrary();
-
-    const editRequest = await this.client.EditContentObject({libraryId, objectId});
-
-    await this.client.ReplaceMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
-
-    this.__InvalidateCache();
-  }
-
-  /**
-   * Delete the specified subtree from the users private metadata
-   *
-   * @namedParams
-   * @param {string=} metadataSubtree - Subtree to delete - deletes all metadata if not specified
-   */
-  async DeletePrivateUserMetadata({metadataSubtree="/"}) {
-    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-    const objectId = Utils.AddressToObjectId(this.client.signer.address);
-
-    await this.__TouchLibrary();
-
-    const editRequest = await this.client.EditContentObject({libraryId, objectId});
-
-    await this.client.DeleteMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
-
-    this.__InvalidateCache();
-  }
-
-  /**
-   * Delete the account library for the current user
-   */
-  async DeleteAccountLibrary() {
-    if(!(await this.__IsLibraryCreated({accountAddress: this.client.signer.address}))) {
-      return;
-    }
-
-    const libraryId = Utils.AddressToLibraryId(this.client.signer.address);
-    const path = UrlJoin("qlibs", libraryId);
-
-    await this.client.HttpClient.Request({
-      headers: await this.client.authClient.AuthorizationHeader({libraryId}),
-      method: "DELETE",
-      path: path
+    const uploadResponse = await this.client.UploadPart({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      data: image
     });
 
-    this.libraryCreated = false;
+    await this.client.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      metadata: {
+        image: uploadResponse.part.hash
+      }
+    });
+
+    await this.client.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editRequest.write_token,
+      metadataSubtree: "public",
+      metadata: {
+        image: uploadResponse.part.hash
+      }
+    });
+
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+
+    this.__InvalidateCache();
   }
+
 
   /**
    * Get the accumulated tags for the current user
@@ -398,7 +409,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
    * @return {Promise<Object>} - User tags
    */
   async CollectedTags() {
-    return await this.PrivateUserMetadata({metadataSubtree: "collected_data"}) || {};
+    return await this.UserMetadata({metadataSubtree: "collected_data"}) || {};
   }
 
   // Ensure recording tags never causes action to fail
@@ -414,18 +425,16 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
   }
 
   async __RecordTags({libraryId, objectId, versionHash}) {
-    await this.__TouchLibrary();
-
     if(!versionHash) {
       versionHash = (await this.client.ContentObject({libraryId, objectId})).hash;
     }
 
     // If this object has already been seen, don't re-record tags
-    const seen = await this.PrivateUserMetadata({metadataSubtree: UrlJoin("accessed_content", versionHash)});
+    const seen = await this.UserMetadata({metadataSubtree: UrlJoin("accessed_content", versionHash)});
     if(seen) { return; }
 
-    const userLibraryId = Utils.AddressToLibraryId(this.client.signer.address);
-    const userObjectId = Utils.AddressToObjectId(this.client.signer.address);
+    const userLibraryId = this.client.contentSpaceLibraryId;
+    const userObjectId = Utils.AddressToObjectId(await this.WalletAddress());
 
     // Mark content as seen
     const editRequest = await this.client.EditContentObject({libraryId: userLibraryId, objectId: userObjectId});
@@ -441,8 +450,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       libraryId,
       objectId,
       versionHash,
-      metadataSubtree: "video_tags",
-      noAuth: true
+      metadataSubtree: "video_tags"
     });
 
     if(contentTags && contentTags.length > 0) {
@@ -450,7 +458,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       const formattedTags = this.__FormatVideoTags(contentTags);
 
       Object.keys(formattedTags).forEach(tag => {
-        if (userTags[tag]) {
+        if(userTags[tag]) {
           // User has seen this tag before
           userTags[tag].occurrences += 1;
           userTags[tag].aggregate += formattedTags[tag];
@@ -530,11 +538,7 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
 
   // List of methods that may require a prompt - these should have an unlimited timeout period
   PromptedMethods() {
-    return [
-      "CollectedTags",
-      "PublicUserMetadata",
-      "PrivateUserMetadata"
-    ];
+    return FrameClient.PromptedMethods();
   }
 
   // Whitelist of methods allowed to be called using the frame API
@@ -543,6 +547,9 @@ await client.userProfile.PublicUserMetadata({accountAddress: signer.address})
       "constructor",
       "FrameAllowedMethods",
       "PromptedMethods",
+      "RecordTags",
+      "SetAccessLevel",
+      "SetUserProfileImage",
       "__CacheMetadata",
       "__GetCachedMetadata",
       "__InvalidateCache",

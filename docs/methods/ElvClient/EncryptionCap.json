@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async EncryptionCap({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"objectId\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\"\n});",
+    "result": "{\n  \"symm_key\": \"kpsyMwfZiaDqiouvjMRoiY64tp\",\n  \"secret_key\": \"kpsk11111111111111116FSkkZCJp9SnJSmuMikGdC9nQogcpVjbepyTR2JHGEV2\",\n  \"public_key\": \"ktpkATCb5CJ6BaS355J9RyPzAPGLFU2tkLGPKxXJEyv43eJ1nsBTN4kRbBzkfwSkDq3XFMDQCAmiTnj5rxShGQYzp6qZLfmBuPrgEqfSKDXBQSPRVMsQCB1DbnqyyrXxHrGkpz3yDfUsVYhfA9jHPcC7F2z71ctbWcTYJC2EK93qfhGQx5Da3Bd4pJGcHiuKCZxHCRr5YBaFVutstJCiWHAe3qD87G7FNwr37vS2rjDXzj9GpC4Scu2oDEJTJ6iMME9SfQgrPp9\",\n  \"block_size\": 1000000\n}"
+  }
+]

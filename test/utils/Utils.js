@@ -22,35 +22,55 @@ const RandomString = (size) => {
 };
 
 const CreateClient = async (bux="2") => {
-  const client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
-  const wallet = client.GenerateWallet();
-  const fundedSigner = wallet.AddAccount({privateKey});
+  try {
+    const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
+    const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
 
-  // Create a new account and send some ether
-  const signer = wallet.AddAccountFromMnemonic({
-    mnemonic: wallet.GenerateMnemonic()
-  });
+    const wallet = client.GenerateWallet();
+    const fundedSigner = wallet.AddAccount({privateKey});
 
-  // Each test file is run in parallel, so there may be collisions when initializing - retry until success
-  for(let i = 0; i < 5; i++) {
-    try {
-      await fundedSigner.sendTransaction({
-        to: signer.address,
-        value: Ethers.utils.parseEther(bux)
-      });
+    await fundedClient.SetSigner({signer: fundedSigner});
 
-      break;
-    } catch (e) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    const groupAddress = await fundedClient.ContentObjectMetadata({
+      libraryId: fundedClient.contentSpaceLibraryId,
+      objectId: fundedClient.contentSpaceObjectId,
+      metadataSubtree: "contentSpaceGroupAddress"
+    });
+
+    const mnemonic = wallet.GenerateMnemonic();
+    // Create a new account and send some ether
+    const signer = wallet.AddAccountFromMnemonic({mnemonic});
+
+    // Each test file is run in parallel, so there may be collisions when initializing - retry until success
+    for(let i = 0; i < 5; i++) {
+      try {
+        await fundedSigner.sendTransaction({
+          to: signer.address,
+          value: Ethers.utils.parseEther(bux)
+        });
+
+        break;
+      } catch(e) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
+
+    // Ensure transaction has time to resolve fully before continuing
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    await client.SetSigner({signer});
+
+    // Add new account to content space group
+    await fundedClient.AddAccessGroupMember({
+      contractAddress: groupAddress,
+      memberAddress: signer.address
+    });
+
+    return client;
+  } catch(error) {
+    console.error("ERROR INITIALIZING TEST CLIENT: ");
+    console.error(error);
   }
-
-  // Ensure transaction has time to resolve fully before continuing
-  await new Promise(resolve => setTimeout(resolve, 1000));
-
-  client.SetSigner({signer});
-
-  return client;
 };
 
 module.exports = {

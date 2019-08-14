@@ -14,11 +14,12 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 /* -- Revision history --
 AdmgrCommOfferng20190228164900ML: First versioned released
 AdmgrCommOfferng20190301124200ML: Adds stub for runAccessInfo to replace runAccessCharge
+AdmgrCommOfferng20190510152300ML: updated for new runAccessInfo API
 */
 
 contract AdmgrCommercialOffering is Content {
 
-    bytes32 public version ="AdmgrCommOfferng20190301124200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrCommOfferng20190510152300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public commercialOfferingManagerAddress;
     address public campaignManager;
@@ -79,8 +80,8 @@ contract AdmgrCommercialOffering is Content {
         require(isAvailable(msg.sender, tx.origin) == 0);
     }
 
-    function isAvailable(address content, address accessor) public view returns (int8) {
-        int8 available = 0;
+    function isAvailable(address content, address accessor) public view returns (uint8) {
+        uint8 available = 0;
         AvailabilityData storage avail = availability[content];
         address r = region;
         if (region == 0x0) {
@@ -110,19 +111,19 @@ contract AdmgrCommercialOffering is Content {
         bytes32[], /*customValues*/
         address[] /*stakeholders*/
     )
-    public view returns (int8, uint256)
+    public view returns (uint8, uint8, uint8, uint256)
     {
         if (level == 0){
-            return (0, 0);
+            return (0, 0, 0, 0);
         }
-        int8 availCode = isAvailable(msg.sender, tx.origin);
+        uint8 availCode = isAvailable(msg.sender, tx.origin);
         if (availCode != 0) {
-            return (availCode, 0);
+            return (DEFAULT_ACCESS, availCode, 0, 0);
         }
         if (mandatoryPresetAccessCharge == true) {
-            return (availCode, presetAccessCharge);
+            return (DEFAULT_ACCESS, availCode, 0, presetAccessCharge);
         }
-        return (-1, 0);
+        return (DEFAULT_SEE + DEFAULT_ACCESS + DEFAULT_CHARGE, 0, 0, 0);
     }
 
     /*

@@ -11,11 +11,10 @@ const {RandomBytes, RandomString} = require("./utils/Utils");
 describe("Test Utils", () => {
   test("ElvClient Utils", () => {
     const client = new ElvClient({
-      contentSpaceId: "ispc31pVYrPoMFqYZqPHdcgAFnwA3un",
-      hostname: "localhost",
-      port: 8008,
-      ethHostname: "localhost",
-      ethPort: 8545
+      contentSpaceId: "ispc2tNqMTr51szPGsttFQJSq6gRdKaZ",
+      fabricURIs: ["http://localhost:8008"],
+      ethereumURIs: ["http://localhost:8545"],
+      stateChannelURIs: ["http://localhost:8545"]
     });
 
     expect(client.utils).toBeDefined();
@@ -60,6 +59,16 @@ describe("Test Utils", () => {
     expect(Utils.EqualHash(objectId, libraryId)).toBeTruthy();
 
     expect(Utils.EqualHash(objectId, "iq__3WDneTPchE1qG7w4rpTQWzCZnBTR")).toBeFalsy();
+  });
+
+  test("Decode Version Hash", () => {
+    const versionHash = "hq__7cTGD2eMTZMrvLT7SqCtsoJx9cWzy5QBLqcBqSdPtGaXuoYJPaEA22CX3LGZPpMXURCdpzFwS1";
+
+    const {digest, size, objectId} = Utils.DecodeVersionHash(versionHash);
+
+    expect(digest).toEqual("51ffc779deeaab3224c5cc9abc3279effe0768864f8eb1d9356ad608eda12b3e");
+    expect(size).toEqual(136);
+    expect(objectId).toEqual("iq__2tNqMTr51szPGsttFQJSq6gRdKaZ");
   });
 
   test("Bytes32 Conversion", () => {

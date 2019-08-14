@@ -1,3 +1,4 @@
+require("@babel/polyfill");
 const Id = require("./Id");
 const Utils = require("./Utils");
 
@@ -54,11 +55,13 @@ class FrameClient {
       };
     }
 
-    this.userProfile = {};
+    this.userProfileClient = {};
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
     for(const methodName of this.AllowedUserProfileMethods()) {
-      this.userProfile[methodName] = async (args) => {
-        if(!args || !args.requestor) {
+      this.userProfileClient[methodName] = async (args) => {
+        const isPrompted = FrameClient.PromptedMethods().includes(methodName);
+
+        if(isPrompted && (!args || !args.requestor)) {
           throw new Error("'requestor' param required when calling user profile methods from FrameClient");
         }
 
@@ -67,7 +70,7 @@ class FrameClient {
 
         return await this.SendMessage({
           options: {
-            module: "userProfile",
+            module: "userProfileClient",
             calledMethod: methodName,
             args: this.utils.MakeClonable(args),
             prompted: FrameClient.PromptedMethods().includes(methodName),
@@ -162,7 +165,7 @@ class FrameClient {
 
             const message = event.data;
 
-            if (message.type !== "ElvFrameResponse" || message.requestId !== callbackId) {
+            if(message.type !== "ElvFrameResponse" || message.requestId !== callbackId) {
               return;
             }
 
@@ -181,11 +184,11 @@ class FrameClient {
         try {
           const message = event.data;
 
-          if (message.type !== "ElvFrameResponse" || message.requestId !== requestId) {
+          if(message.type !== "ElvFrameResponse" || message.requestId !== requestId) {
             return;
           }
 
-          if (message.error) {
+          if(message.error) {
             reject(message.error);
           } else {
             resolve(message.response);
@@ -212,8 +215,10 @@ class FrameClient {
   static PromptedMethods() {
     return [
       "CollectedTags",
-      "PublicUserMetadata",
-      "PrivateUserMetadata"
+      "DeleteUserMetadata",
+      "MergeUserMetadata",
+      "ReplaceUserMetadata",
+      "UserMetadata"
     ];
   }
 
@@ -225,29 +230,36 @@ class FrameClient {
    */
   AllowedMethods() {
     return [
+      "AccessGroupManagers",
+      "AccessGroupMembers",
       "AccessGroupOwner",
       "AccessInfo",
       "AccessRequest",
+      "AccessType",
       "AddAccessGroupManager",
       "AddAccessGroupMember",
       "AddLibraryContentType",
       "BitcodeMethodUrl",
+      "BitmovinPlayoutOptions",
       "BlockNumber",
       "CachedAccessTransaction",
       "CallContractMethod",
       "CallContractMethodAndWait",
       "ClearCache",
+      "Collection",
       "ContentLibraries",
       "ContentLibrary",
       "ContentLibraryOwner",
       "ContentObject",
       "ContentObjectAccessComplete",
-      "ContentObjectByHash",
+      "ContentObjectLibraryId",
       "ContentObjectMetadata",
       "ContentObjectOwner",
       "ContentObjectVersions",
       "ContentObjects",
+      "ContentPart",
       "ContentParts",
+      "ContentSpaceId",
       "ContentType",
       "ContentTypeOwner",
       "ContentTypes",
@@ -259,33 +271,38 @@ class FrameClient {
       "CreateContentSpace",
       "CreateContentType",
       "CreateFileUploadJob",
+      "CreatePart",
       "CurrentAccountAddress",
       "CustomContractAddress",
+      "DefaultKMSAddress",
       "DeleteAccessGroup",
       "DeleteContentLibrary",
       "DeleteContentObject",
       "DeleteContentVersion",
       "DeleteMetadata",
       "DeletePart",
-      "DeletePublicLibraryMetadata",
       "DeployContract",
       "DownloadFile",
       "DownloadPart",
       "EditContentObject",
+      "EncryptionCap",
       "Events",
       "ExtractEventFromLogs",
       "ExtractValueFromEvent",
       "FabricUrl",
       "FileUrl",
       "FinalizeContentObject",
+      "FinalizePart",
       "FinalizeUploadJobs",
       "FormatContractArguments",
+      "GenerateStateChannelToken",
       "GetBalance",
       "LibraryContentTypes",
       "ListFiles",
       "MergeMetadata",
+      "PlayoutOptions",
       "Proofs",
-      "PublicLibraryMetadata",
+      "PublicRep",
       "PublishContentVersion",
       "QParts",
       "RemoveAccessGroupManager",
@@ -293,7 +310,6 @@ class FrameClient {
       "RemoveLibraryContentType",
       "Rep",
       "ReplaceMetadata",
-      "ReplacePublicLibraryMetadata",
       "SendFunds",
       "SetAccessCharge",
       "SetContentLibraryImage",
@@ -303,6 +319,7 @@ class FrameClient {
       "UploadFiles",
       "UploadJobStatus",
       "UploadPart",
+      "UploadPartChunk",
       "VerifyContentObject",
       "WithdrawContractFunds"
     ];
@@ -312,19 +329,15 @@ class FrameClient {
     return [
       "AccessLevel",
       "CollectedTags",
-      "CreateAccountLibrary",
-      "DeleteAccountLibrary",
-      "DeletePrivateUserMetadata",
-      "DeletePublicUserMetadata",
-      "MergePrivateUserMetadata",
-      "PrivateUserMetadata",
+      "DeleteUserMetadata",
+      "Initialize",
+      "MergeUserMetadata",
       "PublicUserMetadata",
-      "RecordTags",
-      "ReplacePrivateUserMetadata",
-      "ReplacePublicUserMetadata",
-      "SetAccessLevel",
-      "SetUserProfileImage",
-      "UserProfileImage"
+      "ReplaceUserMetadata",
+      "UserMetadata",
+      "UserProfileImage",
+      "UserWalletAddress",
+      "WalletAddress"
     ];
   }
 }

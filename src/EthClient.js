@@ -4,6 +4,11 @@ const Ethers = require("ethers");
 const URI = require("urijs");
 
 // -- Contract javascript files built using build/BuildContracts.js
+const FactoryContract = require("./contracts/BaseFactory");
+const WalletFactoryContract = require("./contracts/BaseAccessWalletFactory");
+const LibraryFactoryContract = require("./contracts/BaseLibraryFactory");
+const ContentFactoryContract = require("./contracts/BaseContentFactory");
+
 const ContentSpaceContract = require("./contracts/BaseContentSpace");
 const ContentLibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
@@ -13,9 +18,53 @@ const Utils = require("./Utils");
 const Topics = require("./events/Topics");
 
 class EthClient {
-  constructor(ethereumURI) {
-    this.ethereumURI = ethereumURI;
+  constructor(ethereumURIs) {
+    this.ethereumURIs = ethereumURIs;
+    this.ethereumURIIndex = 0;
     this.locked = false;
+
+    this.cachedContracts = {};
+  }
+
+  Provider() {
+    if(!this.provider) {
+      this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]);
+    }
+
+    return this.provider;
+  }
+
+  Contract({contractAddress, abi, signer, cacheContract}) {
+    let contract = this.cachedContracts[contractAddress];
+
+    if(!contract) {
+      contract = new Ethers.Contract(contractAddress, abi, this.Provider());
+      contract = contract.connect(signer);
+
+      // Redefine deployed to avoid making call to getCode
+      contract._deployedPromise = new Promise(resolve => resolve(this));
+
+      if(cacheContract) {
+        this.cachedContracts[contractAddress] = contract;
+      }
+    }
+
+    return contract;
+  }
+
+  async MakeProviderCall({methodName, args=[], attempts=0}) {
+    try {
+      return await this.Provider()[methodName](...args);
+    } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error(error);
+
+      if(attempts < this.ethereumURIs.length) {
+        this.provider = undefined;
+        this.ethereumURIIndex = (this.ethereumURIIndex + 1) % this.ethereumURIs.length;
+        return this.MakeProviderCall({methodName, args, attempts: attempts + 1});
+      }
+    }
   }
 
   /* General contract management */
@@ -36,6 +85,8 @@ class EthClient {
     switch(type.toLowerCase()) {
       case "bytes32":
         return Ethers.utils.formatBytes32String(value);
+      case "bytes":
+        return Ethers.utils.toUtf8Bytes(value);
       default:
         return value;
     }
@@ -60,9 +111,9 @@ class EthClient {
       throw Error("Signer not set");
     }
 
-    if(!URI(signer.provider.connection.url).equals(this.ethereumURI)) {
+    if(!this.ethereumURIs.find(ethereumURI => URI(signer.provider.connection.url).equals(ethereumURI))) {
       throw Error("Signer provider '" + signer.provider.connection.url +
-        "' does not match client provider '" + this.ethereumURI + "'");
+        "' does not match client provider");
     }
   }
 
@@ -73,6 +124,7 @@ class EthClient {
     overrides={},
     signer
   }) {
+    signer = signer.connect(this.Provider());
     this.ValidateSigner(signer);
 
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
@@ -95,6 +147,8 @@ class EthClient {
     methodArgs=[],
     value,
     overrides={},
+    formatArguments=true,
+    cacheContract=true,
     signer
   }) {
     while(this.locked) {
@@ -104,31 +158,39 @@ class EthClient {
     this.locked = true;
 
     try {
-      if (value) {
+      contract = contract || this.Contract({contractAddress, abi, signer, cacheContract});
+
+      abi = contract.interface.abi;
+
+      // Automatically format contract arguments
+      if(formatArguments) {
+        methodArgs = this.FormatContractArguments({
+          abi,
+          methodName,
+          args: methodArgs
+        });
+      }
+
+      if(value) {
         // Convert Ether to Wei
         overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
       }
 
       this.ValidateSigner(signer);
 
-      if (!contract) {
-        contract = new Ethers.Contract(contractAddress, abi, signer.provider);
-        contract = contract.connect(signer);
-      }
-
-      if (!contract.functions[methodName]) {
+      if(!contract.functions[methodName]) {
         throw Error("Unknown method: " + methodName);
       }
 
       let result;
       let success = false;
-      while (!success) {
+      while(!success) {
         try {
           result = await contract.functions[methodName](...methodArgs, overrides);
           success = true;
-        } catch (error) {
-          if (error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
-            const latestBlock = await signer.provider.getBlock("latest");
+        } catch(error) {
+          if(error.code === -32000 || error.code === "REPLACEMENT_UNDERPRICED") {
+            const latestBlock = await this.MakeProviderCall({methodName: "getBlock", args: ["latest"]});
             overrides.gasLimit = latestBlock.gasLimit;
             overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
           } else {
@@ -150,10 +212,10 @@ class EthClient {
     methodArgs,
     value,
     timeout=10000,
+    formatArguments=true,
     signer
   }) {
-    let contract = new Ethers.Contract(contractAddress, abi, signer.provider);
-    contract = contract.connect(signer);
+    const contract = this.Contract({contractAddress, abi, signer});
 
     // Make method call
     const createMethodCall = await this.CallContractMethod({
@@ -162,30 +224,36 @@ class EthClient {
       methodName,
       methodArgs,
       value,
+      formatArguments,
       signer
     });
 
-    // Await completion of call and get event
-    let methodEvent = await new Promise((resolve, reject) => {
-      const handleTimeout = setTimeout(() => {
-        signer.provider.removeAllListeners(createMethodCall.hash);
-        reject(`Timed out waiting for completion of ${methodName}`);
-      }, timeout);
+    // Poll for transaction completion
+    const interval = 250;
+    let elapsed = 0;
+    let methodEvent;
 
-      signer.provider.on(createMethodCall.hash, event => {
-        signer.provider.removeAllListeners(createMethodCall.hash);
-        clearTimeout(handleTimeout);
-        resolve(event);
-      });
-    });
+    while(elapsed < timeout) {
+      methodEvent = await this.MakeProviderCall({methodName: "getTransactionReceipt", args: [createMethodCall.hash]});
 
-    // Parse logs
-    methodEvent.logs = methodEvent.logs.map(log => {
-      return {
-        ...log,
-        ...(contract.interface.parseLog(log))
-      };
-    });
+      if(methodEvent) {
+        methodEvent.logs = methodEvent.logs.map(log => {
+          return {
+            ...log,
+            ...(contract.interface.parseLog(log))
+          };
+        });
+
+        break;
+      }
+
+      elapsed += interval;
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    if(!methodEvent) {
+      throw Error(`Timed out waiting for completion of ${methodName}. TXID: ${transactionHash}`);
+    }
 
     return methodEvent;
   }
@@ -212,8 +280,7 @@ class EthClient {
     eventValue,
     signer
   }) {
-    const methodArgs = this.FormatContractArguments({abi, methodName, args});
-    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, signer});
+    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs: args, signer});
 
     const eventLog = this.ExtractEventFromLogs({abi, event, eventName, eventValue});
     const newContractAddress = eventLog.values[eventValue];
@@ -227,12 +294,42 @@ class EthClient {
   /* Specific contract management */
 
   async DeployContentSpaceContract({name, signer}) {
-    return this.DeployContract({
+    const deploySpaceEvent = await this.DeployContract({
       abi: ContentSpaceContract.abi,
       bytecode: ContentSpaceContract.bytecode,
       constructorArgs: [name],
       signer
     });
+
+    const factoryContracts = [
+      [FactoryContract, "setFactory"],
+      [WalletFactoryContract, "setWalletFactory"],
+      [LibraryFactoryContract, "setLibraryFactory"],
+      [ContentFactoryContract, "setContentFactory"]
+    ];
+
+    for(let i = 0; i < factoryContracts.length; i++) {
+      const [contract, setMethod] = factoryContracts[i];
+
+      const factoryAddress = (
+        await this.DeployContract({
+          abi: contract.abi,
+          bytecode: contract.bytecode,
+          constructorArgs: [],
+          signer
+        })
+      ).contractAddress;
+
+      await this.CallContractMethodAndWait({
+        contractAddress: deploySpaceEvent.contractAddress,
+        abi: ContentSpaceContract.abi,
+        methodName: setMethod,
+        methodArgs: [factoryAddress],
+        signer
+      });
+    }
+
+    return deploySpaceEvent;
   }
 
   async DeployAccessGroupContract({contentSpaceAddress, signer}) {
@@ -259,12 +356,14 @@ class EthClient {
     });
   }
 
-  async DeployLibraryContract({contentSpaceAddress, signer}) {
+  async DeployLibraryContract({contentSpaceAddress, kmsId, signer}) {
+    const kmsAddress = Utils.HashToAddress(kmsId);
+
     return this.DeployDependentContract({
       contractAddress: contentSpaceAddress,
       abi: ContentSpaceContract.abi,
       methodName: "createLibrary",
-      args: [Utils.nullAddress],
+      args: [kmsAddress],
       eventName: "CreateLibrary",
       eventValue: "libraryAddress",
       signer
@@ -286,6 +385,20 @@ class EthClient {
     });
   }
 
+  async CommitContent({contentObjectAddress, versionHash, signer}) {
+    const event = await this.CallContractMethodAndWait({
+      contractAddress: contentObjectAddress,
+      abi: ContentContract.abi,
+      methodName: "commit",
+      methodArgs: [versionHash],
+      eventName: "Publish",
+      eventValue: "submitStatus",
+      signer
+    });
+
+    return event;
+  }
+
   async EngageAccountLibrary({contentSpaceAddress, signer}) {
     return this.CallContractMethodAndWait({
       contractAddress: contentSpaceAddress,
@@ -297,30 +410,25 @@ class EthClient {
   }
 
   async SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}, signer}) {
-    const methodArgs = this.FormatContractArguments({
-      abi: ContentContract.abi,
-      methodName: "setContentContractAddress",
-      args: [
-        customContractAddress
-      ]
-    });
-
     return await this.CallContractMethodAndWait({
       contractAddress: contentContractAddress,
       abi: ContentContract.abi,
       methodName: "setContentContractAddress",
-      methodArgs,
+      methodArgs: [customContractAddress],
       overrides,
       signer
     });
   }
 
   // Get all logs for the specified contract in the specified range
-  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false, signer}) {
-    const contractLogs = await signer.provider.getLogs({
-      address: contractAddress,
-      fromBlock,
-      toBlock
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false}) {
+    const contractLogs = await this.MakeProviderCall({
+      methodName: "getLogs",
+      args: [{
+        address: contractAddress,
+        fromBlock,
+        toBlock
+      }]
     });
 
     let blocks = {};
@@ -335,7 +443,7 @@ class EthClient {
         if(includeTransaction) {
           parsedLog = {
             ...parsedLog,
-            ...(await signer.provider.getTransaction(log.transactionHash))
+            ...(await this.MakeProviderCall({methodName: "getTransaction", args: [log.transactionHash]}))
           };
         }
 
@@ -368,8 +476,8 @@ class EthClient {
 
   // Get logs for all blocks in the specified range
   // Returns a list, sorted in descending block order, with each entry containing all logs or transactions in that block
-  async Events({toBlock, fromBlock, includeTransaction=false, signer}) {
-    const logs = await signer.provider.getLogs({fromBlock, toBlock});
+  async Events({toBlock, fromBlock, includeTransaction=false}) {
+    const logs = await this.MakeProviderCall({methodName: "getLogs", args: [{fromBlock, toBlock}]});
 
     // Group logs by blocknumber
     let blocks = {};
@@ -383,7 +491,7 @@ class EthClient {
       let blockInfo = blocks[blockNumber];
 
       if(!blockInfo) {
-        blockInfo = await signer.provider.getBlock(blockNumber);
+        blockInfo = await this.MakeProviderCall({methodName: "getBlock", args: [blockNumber]});
         blockInfo = blockInfo.transactions.map(transactionHash => {
           return {
             blockNumber: blockInfo.number,
@@ -403,8 +511,8 @@ class EthClient {
           blockInfo.map(async block => {
             if(!transactionInfo[block.transactionHash]) {
               transactionInfo[block.transactionHash] = {
-                ...(await signer.provider.getTransaction(block.transactionHash)),
-                ...(await signer.provider.getTransactionReceipt(block.transactionHash))
+                ...(await this.MakeProviderCall({methodName: "getTransaction", args: [block.transactionHash]})),
+                ...(await this.MakeProviderCall({methodName: "getTransactionReceipt", args: [block.transactionHash]})),
               };
             }
             return {

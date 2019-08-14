@@ -1,9 +1,9 @@
 [
   {
-    "signature": "async CachedAccessTransaction({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\"\n});",
-    "result": "\"0x50e0c37c85b9702a14b7345803ee117c9b2a22a10b8111805dbc3581e6bd468e\""
+    "signature": "async CachedAccessTransaction({\n  \"versionHash\": \"hq__7tjuXnzXwfN9RPNwGPYKHowofVjdM6ko9foJEGNmSFnDnZn8Vd9jpbLE2ZaLj2puNDSa9ogLLC\"\n});",
+    "result": "\"0xa8c543b92e27aca333aa35b651ae53efc087ef38069243d4357f3d3947bf85b0\""
   },
   {
-    "signature": "async CachedAccessTransaction({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"objectId\": \"iq__3SJTyndAy3kCDpbfe2R19qMDHrQg\"\n});"
+    "signature": "async CachedAccessTransaction({\n  \"versionHash\": \"hq__7tjuXnzXwfN9RPNwGPYKHowofVjdM6ko9foJEGNmSFnDnZn8Vd9jpbLE2ZaLj2puNDSa9ogLLC\"\n});"
   }
 ]

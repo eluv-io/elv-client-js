@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async RemoveLibraryContentType({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"typeName\": \"Test Content Type 1c7ee26669f3504de62f\"\n});",
-    "result": "\"0xcaee0813b839939e5d97a5b119298a513a9066d92ff29b13c51e44d127ebae9b\""
+    "signature": "async RemoveLibraryContentType({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"typeName\": \"Test Content Type 72bf19cfc0e36b16b42a\"\n});",
+    "result": "\"0xda0ca662770d471d2de3bf97f09dd9102f937c52d06486f4099915ff9c904e0f\""
   },
   {
-    "signature": "async RemoveLibraryContentType({\n  \"libraryId\": \"ilibSJ8iYvzKwShsfVhU3pH8CJDwuMX\",\n  \"typeId\": \"iq__2Ej2xRnNoqT3Pgu1katS7nPzaAPh\"\n});",
-    "result": "\"0x3e3066df66d2b5f27fe16690b59ea357414399774766bd36e86325f71ee98d46\""
+    "signature": "async RemoveLibraryContentType({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"typeId\": \"iq__2mZCPpZM6MMojBygZpLkVoXJpxir\"\n});",
+    "result": "\"0xa432f9fa4b5b51f679096c1ba8dba3cc6fba15245cbb87c67f97ecb1bc29d575\""
   }
 ]

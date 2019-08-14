@@ -16,7 +16,7 @@ const LOG = true;
 const HandleErrors = async (response) => {
   response = await response;
 
-  if (!response.ok) {
+  if(!response.ok) {
     errorInfo = {
       status: response.status,
       statusText: response.statusText,
@@ -36,7 +36,7 @@ const ResponseToJson = async (response) => {
 const ResponseToFormat = async (format, response) => {
   response = await HandleErrors(response);
 
-  switch (format.toLowerCase()) {
+  switch(format.toLowerCase()) {
     case "json":
       return response.json();
     case "text":
@@ -84,7 +84,7 @@ class ImfService {
     // the in-browser code expects
 
     files = [];
-    for (i = 0, len = payload.files.length; i < len; i++) {
+    for(i = 0, len = payload.files.length; i < len; i++) {
       singleFilePath = payload.files[i];
       LOG && console.log("Reading file: " + singleFilePath + "...");
       fileContents = fs.readFileSync(singleFilePath);
@@ -152,20 +152,20 @@ class ImfService {
     ];
 
     // process file list
-    for (i = 0, len = files.length; i < len; i++) {
+    for(i = 0, len = files.length; i < len; i++) {
       f = files[i];
       // LOG && console.log("file " + f.filename);
       // LOG && console.log("ext " + f.fileExtension);
       // LOG && console.log("f.fileExtension === 'xml'");
       // LOG && console.log(f.fileExtension === 'xml');
-      if (f.fileExtension === "xml") {
+      if(f.fileExtension === "xml") {
         // LOG && console.log("adding xml string to xmlTexts for " + f.filename);
         xmlTexts[f.filename] = f.file.toString();
-      } else if (f.filename === "ladder.json") {
+      } else if(f.filename === "ladder.json") {
         ladderText = f.file.toString();
         ladderJson = JSON.parse(ladderText);
         video_reps = [];
-        for (j = 0, len1 = ladderJson.length; j < len1; j++) {
+        for(j = 0, len1 = ladderJson.length; j < len1; j++) {
           entry = ladderJson[j];
           video_reps.push({
             BitRate: entry.bitrate,
@@ -184,7 +184,7 @@ class ImfService {
         uploadPartResult = (await this.elvclient.UploadPart(args));
         phash = uploadPartResult.part.hash;
         objectMeta.pkg[f.filename] = phash;
-        if (f.fileExtension === "jpg") {
+        if(f.fileExtension === "jpg") {
           objectMeta.image = phash;
         }
       }
@@ -215,7 +215,7 @@ class ImfService {
       })
       );
 
-    } catch (error) {
+    } catch(error) {
       e = error;
       LOG && console.log("===============================================");
       LOG && console.log("call to avtest FAILED");

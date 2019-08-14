@@ -1,7 +1,14 @@
+const crypto = require("crypto");
+
+Object.defineProperty(global.self, "crypto", {
+  value: {
+    getRandomValues: arr => crypto.randomBytes(arr.length),
+  },
+});
+
 const fs = require("fs");
 const OutputLogger = require("./utils/OutputLogger");
 const {CreateClient, BufferToArrayBuffer} = require("./utils/Utils");
-
 const UserProfileClient = require("../src/UserProfileClient");
 
 let client, tagClient;
@@ -24,23 +31,20 @@ describe("Test UserProfileClient", () => {
     client = await CreateClient();
     tagClient = await CreateClient();
 
-    client.userProfile = OutputLogger(UserProfileClient, client.userProfile);
+    client.userProfileClient = OutputLogger(UserProfileClient, client.userProfileClient);
   });
 
-  test("Create User Profile", async () => {
-    const image = BufferToArrayBuffer(fs.readFileSync("test/images/test-image1.png"));
+  test("User Profile Automatically Created", async () => {
+    const walletAddress = await client.userProfileClient.WalletAddress();
 
-    const publicMetadata = {
-      meta: "data",
-      toReplace: {
-        meta: "data"
-      },
-      toDelete: {
-        meta: "data"
-      }
-    };
+    expect(walletAddress).toBeDefined();
+    const libraryId = client.contentSpaceLibraryId;
+    const objectId = client.utils.AddressToObjectId(walletAddress);
 
-    const privateMetadata = {
+    const walletObject = await client.ContentObject({libraryId, objectId});
+    expect(walletObject).toBeDefined();
+
+    const metadata = {
       toMerge: {
         meta: "data"
       },
@@ -52,53 +56,13 @@ describe("Test UserProfileClient", () => {
       }
     };
 
-    const accountLibraryId = await client.userProfile.CreateAccountLibrary({
-      publicMetadata,
-      privateMetadata,
-      image
-    });
-
-    expect(accountLibraryId).toBeDefined();
-    expect(accountLibraryId).toEqual(client.utils.AddressToLibraryId(client.signer.address));
+    await client.userProfileClient.ReplaceUserMetadata({metadata});
   });
 
-  test("Public Metadata", async () => {
-    const publicMetadata = await client.userProfile.PublicUserMetadata({accountAddress: client.signer.address});
-    expect(publicMetadata).toBeDefined();
-    expect(publicMetadata.image).toBeDefined();
-    expect(publicMetadata).toMatchObject({
-      meta: "data",
-      toReplace: {
-        meta: "data"
-      },
-      toDelete: {
-        meta: "data"
-      }
-    });
-
-    const subPublicMetadata = await client.userProfile.PublicUserMetadata({accountAddress: client.signer.address, metadataSubtree: "toReplace"});
-    expect(subPublicMetadata).toBeDefined();
-    expect(subPublicMetadata).toEqual({meta: "data"});
-
-    await client.userProfile.ReplacePublicUserMetadata({metadataSubtree: "toReplace", metadata: {new: "metadata"}});
-    await client.userProfile.DeletePublicUserMetadata({metadataSubtree: "toDelete"});
-
-    const updatedMetadata = await client.userProfile.PublicUserMetadata({accountAddress: client.signer.address});
-    expect(updatedMetadata).toBeDefined();
-    expect(updatedMetadata).toMatchObject({
-      meta: "data",
-      toReplace: {
-        new: "metadata"
-      }
-    });
-    expect(updatedMetadata.toDelete).not.toBeDefined();
-  });
-
-  test("Private Metadata", async () => {
-    const privateMetadata = await client.userProfile.PrivateUserMetadata({});
-    expect(privateMetadata).toBeDefined();
-    expect(privateMetadata.image).toBeDefined();
-    expect(privateMetadata).toMatchObject({
+  test("Metadata", async () => {
+    const metadata = await client.userProfileClient.UserMetadata();
+    expect(metadata).toBeDefined();
+    expect(metadata).toMatchObject({
       toMerge: {
         meta: "data"
       },
@@ -110,15 +74,15 @@ describe("Test UserProfileClient", () => {
       }
     });
 
-    const subPrivateMetadata = await client.userProfile.PrivateUserMetadata({metadataSubtree: "toMerge"});
-    expect(subPrivateMetadata).toBeDefined();
-    expect(subPrivateMetadata).toEqual({meta: "data"});
+    const subMetadata = await client.userProfileClient.UserMetadata({metadataSubtree: "toMerge"});
+    expect(subMetadata).toBeDefined();
+    expect(subMetadata).toEqual({meta: "data"});
 
-    await client.userProfile.MergePrivateUserMetadata({metadataSubtree: "toMerge", metadata: {new: "metadata"}});
-    await client.userProfile.ReplacePrivateUserMetadata({metadataSubtree: "toReplace", metadata: {new: "metadata"}});
-    await client.userProfile.DeletePrivateUserMetadata({metadataSubtree: "toDelete"});
+    await client.userProfileClient.MergeUserMetadata({metadataSubtree: "toMerge", metadata: {new: "metadata"}});
+    await client.userProfileClient.ReplaceUserMetadata({metadataSubtree: "toReplace", metadata: {new: "metadata"}});
+    await client.userProfileClient.DeleteUserMetadata({metadataSubtree: "toDelete"});
 
-    const updatedMetadata = await client.userProfile.PrivateUserMetadata();
+    const updatedMetadata = await client.userProfileClient.UserMetadata();
     expect(updatedMetadata).toBeDefined();
     expect(updatedMetadata).toMatchObject({
       toMerge: {
@@ -130,40 +94,57 @@ describe("Test UserProfileClient", () => {
       }
     });
     expect(updatedMetadata.toDelete).not.toBeDefined();
+
+    const publicMetadata = await client.userProfileClient.PublicUserMetadata({address: client.signer.address});
+    expect(publicMetadata).toBeDefined();
+    expect(publicMetadata).toMatchObject({
+      toMerge: {
+        meta: "data",
+        new: "metadata"
+      },
+      toReplace: {
+        new: "metadata"
+      }
+    });
+    expect(publicMetadata.toDelete).not.toBeDefined();
   });
 
   test("User Profile Image", async () => {
-    const oldImageHash = await client.userProfile.PrivateUserMetadata({metadataSubtree: "image"});
+    const image = BufferToArrayBuffer(fs.readFileSync("test/images/test-image1.png"));
+    await client.userProfileClient.SetUserProfileImage({image});
+    const oldImageHash = await client.userProfileClient.UserMetadata({metadataSubtree: "image"});
     expect(oldImageHash).toBeDefined();
 
-    const oldImageUrl = await client.userProfile.UserProfileImage({accountAddress: client.signer.address});
+    const oldImageUrl = await client.userProfileClient.UserProfileImage();
     expect(oldImageUrl).toBeDefined();
 
     const newImage = BufferToArrayBuffer(fs.readFileSync("test/images/test-image2.png"));
-    await client.userProfile.SetUserProfileImage({image: newImage});
+    await client.userProfileClient.SetUserProfileImage({image: newImage});
 
-    const newImageHash = await client.userProfile.PrivateUserMetadata({metadataSubtree: "image"});
+    const newImageHash = await client.userProfileClient.UserMetadata({metadataSubtree: "image"});
     expect(newImageHash).toBeDefined();
     expect(newImageHash).not.toEqual(oldImageHash);
 
-    const newImageUrl = await client.userProfile.UserProfileImage({accountAddress: client.signer.address});
+    const newImageUrl = await client.userProfileClient.UserProfileImage({address: client.signer.address});
     expect(newImageUrl).toBeDefined();
   });
 
   test("Access Level", async () => {
-    const accessLevel = await client.userProfile.AccessLevel();
+    const accessLevel = await client.userProfileClient.AccessLevel();
     expect(accessLevel).toBeDefined();
     expect(accessLevel.toLowerCase()).toEqual("prompt");
 
-    await client.userProfile.SetAccessLevel({level: "public"});
+    await client.userProfileClient.SetAccessLevel({level: "public"});
 
-    const newAccessLevel = await client.userProfile.AccessLevel();
+    const newAccessLevel = await client.userProfileClient.AccessLevel();
     expect(newAccessLevel).toBeDefined();
     expect(newAccessLevel.toLowerCase()).toEqual("public");
 
-    await client.userProfile.SetAccessLevel({level: "invalid"});
+    await expect(client.userProfileClient.SetAccessLevel({level: "invalid"})).rejects.toThrow(
+      new Error("Invalid access level: invalid")
+    );
 
-    const unchangedAccessLevel = await client.userProfile.AccessLevel();
+    const unchangedAccessLevel = await client.userProfileClient.AccessLevel();
     expect(unchangedAccessLevel).toBeDefined();
     expect(unchangedAccessLevel.toLowerCase()).toEqual("public");
   });
@@ -182,23 +163,23 @@ describe("Test UserProfileClient", () => {
       ],
       [
         { "score": 0.5, "tag": "mayhem" },
-        { "score": 0.8, "tag": "person" },
+        { "score": 0.8, "tag": "shark" },
         { "score": 0.9, "tag": "boat" }
       ],
     ];
 
-    const recordTagsSpy = jest.spyOn(client.userProfile, "RecordTags");
+    const recordTagsSpy = jest.spyOn(client.userProfileClient, "RecordTags");
 
     const tagLibraryId = await tagClient.CreateContentLibrary({name: "Test Tagging"});
     // Create tagged objects with another user, then access them with this user
     for(let i = 0; i < testTags.length; i++) {
       const objectId = await CreateTaggedObject(tagLibraryId, testTags[i]);
-      await client.ContentObjectMetadata({libraryId: tagLibraryId, objectId});
+      await client.ContentObjectMetadata({libraryId: tagLibraryId, objectId, noAuth: false});
     }
 
     expect(recordTagsSpy).toHaveBeenCalledTimes(testTags.length);
 
-    const collectedTags = await client.userProfile.CollectedTags();
+    const collectedTags = await client.userProfileClient.CollectedTags();
     expect(collectedTags).toBeDefined();
     expect(collectedTags).toEqual({
       boat: { aggregate: 1.5, occurrences: 2 },
@@ -207,16 +188,7 @@ describe("Test UserProfileClient", () => {
       chocolate: { aggregate: 0.8, occurrences: 1 },
       duck: { aggregate: 0.5, occurrences: 1 },
       mayhem: { aggregate: 0.5, occurrences: 1 },
-      person: { aggregate: 0.8, occurrences: 1 }
+      shark: { aggregate: 0.8, occurrences: 1 }
     });
-
-    await tagClient.DeleteContentLibrary({libraryId: tagLibraryId});
-  });
-
-  test("Delete User Profile", async () => {
-    await client.userProfile.DeleteAccountLibrary();
-
-    const libraryExists = await client.userProfile.__IsLibraryCreated({accountAddress: client.signer.address});
-    expect(libraryExists).not.toBeTruthy();
   });
 });

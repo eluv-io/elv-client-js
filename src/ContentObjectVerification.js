@@ -2,6 +2,7 @@ const CBOR = require("cbor");
 const SJCL = require("sjcl");
 const MultiHash = require("multihashes");
 const DeepEqual = require("deep-equal");
+const Utils = require("./Utils");
 
 const ContentObjectVerification = {
   async VerifyContentObject({client, libraryId, objectId, versionHash}) {
@@ -9,7 +10,7 @@ const ContentObjectVerification = {
       hash: versionHash
     };
 
-    const partHash = versionHash.replace("hq__", "hqp_");
+    const partHash = Utils.DecodeVersionHash(versionHash).partHash;
 
     const qpartsResponse = await client.QParts({libraryId, objectId, partHash, format: "arrayBuffer"})
       .then(response => Buffer.from(response));
@@ -98,8 +99,8 @@ const ContentObjectVerification = {
   _Hash(thing) {
     function fromBits(arr) {
       var out = [], bl = SJCL.bitArray.bitLength(arr), i, tmp;
-      for (i=0; i<bl/8; i++) {
-        if ((i&3) === 0) {
+      for(i=0; i<bl/8; i++) {
+        if((i&3) === 0) {
           tmp = arr[i/4];
         }
         out.push(tmp >>> 24);
@@ -110,14 +111,14 @@ const ContentObjectVerification = {
 
     function toBits(bytes) {
       var out = [], i, tmp=0;
-      for (i=0; i<bytes.length; i++) {
+      for(i=0; i<bytes.length; i++) {
         tmp = tmp << 8 | bytes[i];
-        if ((i&3) === 3) {
+        if((i&3) === 3) {
           out.push(tmp);
           tmp = 0;
         }
       }
-      if (i&3) {
+      if(i&3) {
         out.push(SJCL.bitArray.partial(8*(i&3), tmp));
       }
       return out;
@@ -148,7 +149,7 @@ const ContentObjectVerification = {
         valid: true,
         cbor: cbor
       };
-    } catch (error) {
+    } catch(error) {
       return {
         valid: false,
         error: error

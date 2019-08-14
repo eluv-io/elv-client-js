@@ -1,24 +1,36 @@
-const URI = require("urijs");
+require("@babel/polyfill");
+
+if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
-
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
 const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
-const ContentObjectVerification = require("./ContentObjectVerification");
+// const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 
+const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
 
-if(typeof Response === "undefined") {
-  // eslint-disable-next-line no-global-assign
-  Response = (require("node-fetch")).Response;
+// Platform specific polyfills
+switch(Utils.Platform()) {
+  case Utils.PLATFORM_REACT_NATIVE:
+    // React native polyfills
+    // Polyfill for string.normalized
+    require("unorm");
+    break;
+  case Utils.PLATFORM_NODE:
+    // Define Response in node
+    // eslint-disable-next-line no-global-assign
+    global.Response = (require("node-fetch")).Response;
+    break;
 }
 
 const ResponseToJson = async (response) => {
@@ -30,15 +42,17 @@ const ResponseToFormat = async (format, response) => {
 
   switch(format.toLowerCase()) {
     case "json":
-      return response.json();
+      return await response.json();
     case "text":
-      return response.text();
+      return await response.text();
     case "blob":
-      return response.blob();
+      return await response.blob();
     case "arraybuffer":
-      return response.arrayBuffer();
+      return await response.arrayBuffer();
     case "formdata":
-      return response.formData();
+      return await response.formData();
+    case "buffer":
+      return await response.buffer();
     default:
       return response;
   }
@@ -52,46 +66,88 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
-   * @param {string} hostname - Hostname of the content fabric API
-   * @param {(string|number)} port - Port of the content fabric API
-   * @param {boolean=} useHTTPS=true - Use HTTPS when communicating with the fabric
-   * @param {string} ethHostname - Hostname of the blockchain RPC endpoint
-   * @param {(string|number)} ethPort - Port of the blockchain RPC endpoint
-   * @param {boolean=} ethUseHTTPS=true - Use HTTPS when communicating with the blockchain
+   * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
+   * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+   * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   *
    * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
    */
-  constructor({contentSpaceId, hostname, port, useHTTPS=true, ethHostname, ethPort, ethUseHTTPS=true, noCache=false, noAuth=false}) {
+  constructor({
+    contentSpaceId,
+    fabricURIs,
+    ethereumURIs,
+    viewOnly=false,
+    noCache=false,
+    noAuth=false
+  }) {
+    this.utils = Utils;
+
     this.contentSpaceId = contentSpaceId;
+    this.contentSpaceAddress = this.utils.HashToAddress(contentSpaceId);
+    this.contentSpaceLibraryId = this.utils.AddressToLibraryId(this.contentSpaceAddress);
+    this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
 
-    this.fabricURI = new URI()
-      .protocol(useHTTPS ? "https" : "http")
-      .host(hostname)
-      .port(port);
+    this.fabricURIs = fabricURIs;
+    this.ethereumURIs = ethereumURIs;
 
-    this.HttpClient = new HttpClient(this.fabricURI);
-
-    this.ethereumURI = new URI()
-      .protocol(ethUseHTTPS ? "https" : "http")
-      .host(ethHostname)
-      .port(ethPort)
-      .path("")
-      .hash("")
-      .toString();
-
+    this.viewOnly = viewOnly;
     this.noCache = noCache;
     this.noAuth = noAuth;
 
-    this.utils = Utils;
+    this.contentTypes = {};
 
     this.InitializeClients();
   }
 
-  InitializeClients() {
-    this.ethClient = new EthClient(this.ethereumURI);
+  /**
+   * Create a new ElvClient from the specified configuration URL
+   *
+   * @methodGroup Constructor
+   * @namedParams
+   * @param {string} configUrl - Full URL to the config endpoint
+   * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
+   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   *
+   * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
+   */
+  static async FromConfigurationUrl({
+    configUrl,
+    viewOnly=false,
+    noCache=false,
+    noAuth=false
+  }) {
+    const httpClient = new HttpClient([configUrl]);
+    const fabricInfo = await ResponseToJson(httpClient.Request({method: "GET", path: "/config"}));
 
-    this.userProfile = new UserProfileClient({client: this});
+    // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
+    const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
+
+    let fabricURIs = fabricInfo.network.seed_nodes.fabric_api;
+    if(fabricURIs.find(filterHTTPS)) {
+      fabricURIs = fabricURIs.filter(filterHTTPS);
+    }
+
+    let ethereumURIs = fabricInfo.network.seed_nodes.ethereum_api;
+    if(ethereumURIs.find(filterHTTPS)) {
+      ethereumURIs = ethereumURIs.filter(filterHTTPS);
+    }
+
+    return new ElvClient({
+      contentSpaceId: fabricInfo.qspace.id,
+      fabricURIs,
+      ethereumURIs,
+      viewOnly,
+      noCache,
+      noAuth
+    });
+  }
+
+  async InitializeClients() {
+    this.HttpClient = new HttpClient(this.fabricURIs);
+    this.ethClient = new EthClient(this.ethereumURIs);
 
     this.authClient = new AuthorizationClient({
       client: this,
@@ -100,47 +156,11 @@ class ElvClient {
       noCache: this.noCache,
       noAuth: this.noAuth
     });
-  }
 
-  /**
-   * Create a new ElvClient from a formatted configuration
-   * @see TestConfiguration.json for format of configuration
-   *
-   * @methodGroup Constructor
-   * @namedParams
-   * @param {Object} configuration - Configuration containing information on connecting
-   * to the content fabric and blockchain
-   *
-   * @example
-const client = ElvClient.FromConfiguration({
-  configuration: {
-    "fabric": {
-      "contentSpaceId": "ispc458u7vxkS2o9XyE3HoqEKZuZ9h8w",
-      "hostname": "localhost",
-      "port": 8008,
-      "use_https": false
-    },
-    "ethereum": {
-      "hostname": "localhost",
-      "port": 8545,
-      "use_https": false
+    this.userProfileClient = new UserProfileClient({client: this});
+    if(!this.viewOnly && this.signer) {
+      await this.userProfileClient.Initialize();
     }
-  }
-});
-   * @returns {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
-   */
-  static FromConfiguration({configuration}) {
-    return new ElvClient({
-      contentSpaceId: configuration.fabric.contentSpaceId,
-      hostname: configuration.fabric.hostname,
-      port: configuration.fabric.port,
-      useHTTPS: configuration.fabric.use_https,
-      ethHostname: configuration.ethereum.hostname,
-      ethPort: configuration.ethereum.port,
-      ethUseHTTPS: configuration.ethereum.use_https,
-      noCache: configuration.noCache,
-      noAuth: configuration.noAuth,
-    });
   }
 
   /* Wallet and signers */
@@ -152,7 +172,7 @@ const client = ElvClient.FromConfiguration({
    * @returns {ElvWallet} - ElvWallet instance with this client's provider
    */
   GenerateWallet() {
-    return new ElvWallet(this.ethereumURI);
+    return new ElvWallet(this.ethClient.Provider());
   }
 
   /**
@@ -167,16 +187,12 @@ const client = ElvClient.FromConfiguration({
   }
 
   /**
-   * Clear saved access requests
+   * Clear saved access and state channel tokens
    *
    * @methodGroup Access Requests
-   * @namedParams
-   * @param {string=} libraryId - If present, cached access and modification transactions for the specified library will be cleared
-   * - Note: This will not clear any transactions for any objects within the library
-   * @param {string=} objectId - If present, cached access and modification transactions for the specified object will be cleared
    */
-  ClearCache({libraryId, objectId}) {
-    this.authClient.ClearCache({libraryId, objectId});
+  ClearCache() {
+    this.authClient.ClearCache();
   }
 
   /**
@@ -186,12 +202,12 @@ const client = ElvClient.FromConfiguration({
    * @namedParams
    * @param {object} signer - The ethers.js signer object
    */
-  SetSigner({signer}) {
-    signer.connect(new Ethers.providers.JsonRpcProvider(this.ethereumURI));
+  async SetSigner({signer}) {
+    signer.connect(this.ethClient.Provider());
     signer.provider.pollingInterval = 250;
     this.signer = signer;
 
-    this.InitializeClients();
+    await this.InitializeClients();
   }
 
   /**
@@ -209,7 +225,7 @@ const client = ElvClient.FromConfiguration({
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
-    this.InitializeClients();
+    await this.InitializeClients();
   }
 
   /**
@@ -225,13 +241,39 @@ const client = ElvClient.FromConfiguration({
   /* Content Spaces */
 
   /**
+   * Get the address of the default KMS of the content space
+   *
+   * @methodGroup Content Space
+   *
+   * @returns {Promise<string>} - Address of the KMS
+   */
+  async DefaultKMSAddress() {
+    return await this.CallContractMethod({
+      contractAddress: this.contentSpaceAddress,
+      abi: SpaceContract.abi,
+      methodName: "addressKMS",
+    });
+  }
+
+  /**
+   * Get the ID of the current content space
+   *
+   * @methodGroup Content Space
+   *
+   * @return {string} contentSpaceId - The ID of the current content space
+   */
+  ContentSpaceId() {
+    return this.contentSpaceId;
+  }
+
+  /**
    * Deploy a new content space contract
    *
-   * @methodGroup Content Spaces
+   * @methodGroup Content Space
    * @namedParams
    * @param {String} name - Name of the content space
    *
-   * @returns {Promise<contentSpaceId>} - Content space ID of the created content space
+   * @returns {Promise<string>} - Content space ID of the created content space
    */
   async CreateContentSpace({name}) {
     const contentSpaceAddress = await this.ethClient.DeployContentSpaceContract({name, signer: this.signer});
@@ -242,23 +284,16 @@ const client = ElvClient.FromConfiguration({
   /* Libraries */
 
   /**
-   * List content libraries - returns a list of content library IDs
+   * List content libraries - returns a list of content library IDs available to the current user
    *
    * @methodGroup Content Libraries
-   * @see GET /qlibs
    *
    * @returns {Promise<Array<string>>}
    */
   async ContentLibraries() {
-    let path = UrlJoin("qlibs");
+    const libraryAddresses = await this.Collection({collectionType: "libraries"});
 
-    return ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "GET",
-        path: path
-      })
-    );
+    return libraryAddresses.map(address => this.utils.AddressToLibraryId(address));
   }
 
   /**
@@ -270,12 +305,12 @@ const client = ElvClient.FromConfiguration({
    * @namedParams
    * @param {string} libraryId
    *
-   * @returns {Promise<*>}
+   * @returns {Promise<Object>}
    */
   async ContentLibrary({libraryId}) {
-    let path = UrlJoin("qlibs", libraryId);
+    const path = UrlJoin("qlibs", libraryId);
 
-    let library = await ResponseToJson(
+    const library = await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
@@ -324,8 +359,9 @@ const client = ElvClient.FromConfiguration({
    * @param {string} name - Library name
    * @param {string=} description - Library description
    * @param {blob=} image - Image associated with the library
-   * @param {Object=} publicMetadata - Public library metadata
-   * @param {Object=} privateMetadata - Private library metadata (metadata of library object)
+   * @param {Object=} metadata - Metadata of library object
+   * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
+   * the default KMS will be used.
    *
    * @returns {Promise<string>} - Library ID of created library
    */
@@ -333,40 +369,24 @@ const client = ElvClient.FromConfiguration({
     name,
     description,
     image,
-    publicMetadata={},
-    privateMetadata={},
-    isUserLibrary
+    metadata={},
+    kmsId,
   }) {
-    let libraryId, transactionHash;
-    if(isUserLibrary) {
-      libraryId = this.utils.AddressToLibraryId(this.signer.address);
-    } else {
-      const createRequest = await this.authClient.CreateContentLibrary();
-
-      publicMetadata = {
-        ...publicMetadata,
-        name,
-        "eluv.description": description
-      };
-
-      transactionHash = createRequest.transactionHash;
-      libraryId = this.utils.AddressToLibraryId(createRequest.contractAddress);
+    if(!kmsId) {
+      kmsId = `ikms${this.utils.AddressToHash(await this.DefaultKMSAddress())}`;
     }
 
-    const path = UrlJoin("qlibs", libraryId);
+    const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
-    // Create library in fabric
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
-      method: "PUT",
-      path: path,
-      body: {
-        meta: publicMetadata,
-        private_meta: privateMetadata
-      }
-    });
+    metadata = {
+      ...metadata,
+      name,
+      "eluv.description": description
+    };
 
-    // Set library content object type on automatically created library object
+    const libraryId = this.utils.AddressToLibraryId(contractAddress);
+
+    // Set library content object type and metadata on automatically created library object
     const objectId = libraryId.replace("ilib", "iq__");
 
     const editResponse = await this.EditContentObject({
@@ -375,6 +395,13 @@ const client = ElvClient.FromConfiguration({
       options: {
         type: "library"
       }
+    });
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      metadata,
+      writeToken: editResponse.write_token
     });
 
     await this.FinalizeContentObject({
@@ -437,18 +464,22 @@ const client = ElvClient.FromConfiguration({
       encrypted: false
     });
 
-    let metadata = await this.ContentObjectMetadata({
-      libraryId,
-      objectId
-    });
-
-    await this.ReplaceMetadata({
+    await this.MergeMetadata({
       libraryId,
       objectId,
       writeToken: editResponse.write_token,
       metadata: {
-        ...metadata,
-        "image": uploadResponse.part.hash
+        "image": uploadResponse.part.hash,
+      }
+    });
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId,
+      writeToken: editResponse.write_token,
+      metadataSubtree: "public",
+      metadata: {
+        "image": uploadResponse.part.hash,
       }
     });
 
@@ -487,111 +518,6 @@ const client = ElvClient.FromConfiguration({
     });
   }
 
-  /* Library metadata */
-
-  /**
-   * Get the public metadata of the specified library
-   *
-   * @methodGroup Content Libraries
-   * @see GET /qlibs/:qlibid/meta
-   *
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string=} metadataSubtree - Subtree of the library metadata to retrieve
-   * @returns {Promise<Object>} - Public metadata of the library
-   */
-  async PublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
-    let path = UrlJoin("qlibs", libraryId, "meta", metadataSubtree);
-
-    try {
-      const metadata = await ResponseToJson(
-        this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({libraryId, noAuth: true}),
-          method: "GET",
-          path: path
-        })
-      );
-
-      return metadata || {};
-    } catch(error) {
-      if(error.status !== 404) {
-        throw error;
-      }
-    }
-  }
-
-  /**
-   * Replace the specified library's public metadata
-   *
-   * @methodGroup Content Libraries
-   * @see PUT /qlibs/:qlibid/meta
-   *
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {Object} metadata - New metadata
-   * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
-   */
-  async ReplacePublicLibraryMetadata({libraryId, metadataSubtree="/", metadata={}}) {
-    let path = UrlJoin("qlibs", libraryId, "meta", metadataSubtree);
-
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
-      method: "PUT",
-      path: path,
-      body: metadata
-    });
-  }
-
-  /**
-   * Delete the specified library's public metadata
-   *
-   * @methodGroup Content Libraries
-   * @see DELETE /qlibs/:qlibid/meta
-   *
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string=} metadataSubtree - Subtree to delete - modifies root metadata if not specified
-   */
-  async DeletePublicLibraryMetadata({libraryId, metadataSubtree="/"}) {
-    // Note: There is currently no delete method for public metadata
-    // Instead, delete metadata manually and call replace
-    let metadata = await this.PublicLibraryMetadata({libraryId});
-
-    metadataSubtree = UrlJoin(metadataSubtree || "/");
-
-    if(metadataSubtree === "/") {
-      metadata = {};
-    } else {
-      let pointer = metadata;
-      const keys = UrlJoin(metadataSubtree || "/").replace(/^\/+/g, "").split("/");
-      for(let i = 0; i < keys.length - 1; i++) {
-        pointer = pointer[keys[i]];
-
-        if(!pointer) {
-          break;
-        }
-      }
-
-      if(!pointer || !pointer[keys[keys.length - 1]]) {
-        throw Error({
-          status: 404,
-          statusText: "Not found: " + metadataSubtree
-        });
-      }
-
-      delete pointer[keys[keys.length - 1]];
-    }
-
-    let path = UrlJoin("qlibs", libraryId, "meta");
-
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, update: true}),
-      method: "PUT",
-      path: path,
-      body: metadata
-    });
-  }
-
   /* Library Content Type Management */
 
   /**
@@ -600,14 +526,17 @@ const client = ElvClient.FromConfiguration({
    * @methodGroup Content Libraries
    * @namedParams
    * @param {string} libraryId - ID of the library
-   * @param {string=} typeId - ID of the content type (required unless typeName is specified)
-   * @param {string=} typeName - Name of the content type (required unless typeId is specified)
+   * @param {string=} typeId - ID of the content type
+   * @param {string=} typeName - Name of the content type
+   * @param {string=} typeHash - Version hash of the content type
    * @param {string=} customContractAddress - Address of the custom contract to associate with
    * this content type for this library
    *
-   * @returns {string} - Hash of the addContentType transaction
+   * @returns {Promise<string>} - Hash of the addContentType transaction
    */
-  async AddLibraryContentType({libraryId, typeId, typeName, customContractAddress}) {
+  async AddLibraryContentType({libraryId, typeId, typeName, typeHash, customContractAddress}) {
+    if(typeHash) { typeId = this.utils.DecodeVersionHash(typeHash).objectId; }
+
     if(!typeId) {
       // Look up type by name
       const type = await this.ContentType({name: typeName});
@@ -636,10 +565,13 @@ const client = ElvClient.FromConfiguration({
    * @param {string} libraryId - ID of the library
    * @param {string=} typeId - ID of the content type (required unless typeName is specified)
    * @param {string=} typeName - Name of the content type (required unless typeId is specified)
+   * @param {string=} typeHash - Version hash of the content type
    *
-   * @returns {string} - Hash of the removeContentType transaction
+   * @returns {Promise<string>} - Hash of the removeContentType transaction
    */
-  async RemoveLibraryContentType({libraryId, typeId, typeName}) {
+  async RemoveLibraryContentType({libraryId, typeId, typeName, typeHash}) {
+    if(typeHash) { typeId = this.utils.DecodeVersionHash(typeHash).objectId; }
+
     if(!typeId) {
       // Look up type by name
       const type = await this.ContentType({name: typeName});
@@ -670,7 +602,7 @@ const client = ElvClient.FromConfiguration({
    * @namedParams
    * @param {string} libraryId - ID of the library
    *
-   * @returns {Array<object>} - List of accepted content types - return format is equivalent to ContentTypes method
+   * @returns {Promise<Array<object>>} - List of accepted content types - return format is equivalent to ContentTypes method
    */
   async LibraryContentTypes({libraryId}) {
     const typesLength = (await this.ethClient.CallContractMethod({
@@ -699,14 +631,14 @@ const client = ElvClient.FromConfiguration({
       })
     );
 
-    const contentTypes = await this.ContentTypes({});
+    const contentTypes = await this.ContentTypes();
 
     let allowedTypes = {};
     Object.values(contentTypes).map(type => {
       const typeAddress = this.utils.HashToAddress(type.id).toLowerCase();
       // If type address is allowed, include it
       if(allowedTypeAddresses.includes(typeAddress)) {
-        allowedTypes[type.hash] = type;
+        allowedTypes[type.id] = type;
       }
     });
 
@@ -716,125 +648,18 @@ const client = ElvClient.FromConfiguration({
   /* Content Types */
 
   /**
-   * List the content types available in this content space
-   *
-   * @methodGroup Content Types
-   * @namedParams
-   * @param {boolean=} latestOnly=true - If specified, only the most recent version of the content type will be included.
-   *
-   * Because content types are specified by their immutable version hash, setting this option to false is useful for
-   * looking up information about existing content object types which may have been updated since the object was created.
-   *
-   * @returns {Promise<Object>} - A mapping of content type version hash to information about that content type version
-   */
-  async ContentTypes({latestOnly=true} = {}) {
-    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
-    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
-
-    let path = UrlJoin("qlibs", typeLibraryId, "q");
-
-    // Does the same as ContentObjects(), but authorization cannot be performed
-    // against the content type library because it does not have a library contract
-    const typeObjects = (await ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({}),
-        method: "GET",
-        path: path
-      }))).contents;
-
-    let contentTypes = {};
-    typeObjects.map(typeObject => {
-      // Skip content library object
-      if(Utils.EqualHash(typeObject.id, typeLibraryId)) { return; }
-
-      // If latestOnly specified, only include most recent versions
-      if(latestOnly) {
-        let type = typeObject.versions[0];
-        contentTypes[type.hash] = {
-          ...type,
-          meta: type.meta || {}
-        };
-      } else {
-        // Otherwise, include all versions
-        typeObject.versions.map(type => {
-          contentTypes[type.hash] = {
-            ...type,
-            meta: type.meta || {}
-          };
-        });
-      }
-    });
-
-    return contentTypes;
-  }
-
-  /**
-   * Look up content type record by name or by version hash
-   *
-   * @methodGroup Content Types
-   * @namedParams
-   * @param {string=} name - Name of the content type to find
-   * @param {string=} versionHash - Version hash of the content type to find
-   *
-   * NOTE: If looking up by name, only the latest version of content types will be searched.
-   * If a specific version is required, use the version hash.
-   *
-   * @returns {Promise<Object>}
-   */
-  async ContentType({name, versionHash}) {
-    if(versionHash) {
-      const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
-      const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
-
-      // Look through all versions of types when searching by version hash
-      // Does the same as ContentObjects(), but authorization cannot be performed
-      // against the content type library because it does not have a library contract
-      const contentType = await ResponseToJson(
-        this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId}),
-          method: "GET",
-          path: UrlJoin("q", versionHash)
-        }));
-      const contentTypeMetadata = await ResponseToJson(
-        this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId}),
-          method: "GET",
-          path: UrlJoin("q", versionHash, "meta")
-        }));
-
-      return {
-        ...contentType,
-        meta: contentTypeMetadata || {}
-      };
-    }
-
-    // Only look at latest versions of types when searching by name
-    const contentTypes = await this.ContentTypes({latestOnly: true});
-    const contentType = Object.values(contentTypes)
-      .find(type => {
-        const typeName = type.meta && (type.meta.name || type.hash || "");
-        return typeName.toLowerCase() === name.toLowerCase();
-      });
-
-    if(!contentType) {
-      throw Error("Unknown content type: " + name);
-    }
-
-    return contentType;
-  }
-
-  /**
    * Returns the address of the owner of the specified content type
    *
    * @methodGroup Content Types
    * @namedParams
    * @param {string=} name - Name of the content type to find
+   * @param {string=} typeId - ID of the content type to find
    * @param {string=} versionHash - Version hash of the content type to find
    *
    * @returns {Promise<string>} - The account address of the owner
    */
-  async ContentTypeOwner({name, versionHash}) {
-    const contentType = await this.ContentType({name, versionHash});
+  async ContentTypeOwner({name, typeId, versionHash}) {
+    const contentType = await this.ContentType({name, typeId, versionHash});
 
     return await this.ethClient.CallContractMethod({
       contractAddress: Utils.HashToAddress(contentType.id),
@@ -843,6 +668,93 @@ const client = ElvClient.FromConfiguration({
       methodArgs: [],
       signer: this.signer
     });
+  }
+
+  /**
+   * Find the content type accessible to the current user by name, ID, or version hash
+   *
+   * @methodGroup Content Types
+   * @namedParams
+   * @param {string=} name - Name of the content type to find
+   * @param {string=} typeId - ID of the content type to find
+   * @param {string=} versionHash - Version hash of the content type to find
+   *
+   * @return {Promise<Object>} - The content type, if found
+   */
+  async ContentType({name, typeId, versionHash}) {
+    if(versionHash) { typeId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    if(name) {
+      // Look up named type in content space metadata
+      typeId = await this.ContentObjectMetadata({
+        libraryId: this.contentSpaceLibraryId,
+        objectId: this.contentSpaceObjectId,
+        metadataSubtree: UrlJoin("contentTypes", name)
+      });
+    }
+
+    if(!typeId) {
+      const types = await this.ContentTypes();
+
+      if(name) {
+        return Object.values(types).find(type => (type.name || "").toLowerCase() === name.toLowerCase());
+      } else {
+        return Object.values(types).find(type => type.hash === versionHash);
+      }
+    }
+
+    try {
+      const typeInfo = await this.ContentObject({
+        libraryId: this.contentSpaceLibraryId,
+        objectId: typeId
+      });
+
+      delete typeInfo.type;
+
+      const metadata = (await this.ContentObjectMetadata({
+        libraryId: this.contentSpaceLibraryId,
+        objectId: typeId
+      })) || {};
+
+      return {
+        ...typeInfo,
+        name: metadata.name,
+        meta: metadata
+      };
+    } catch(error) {
+      throw new Error(`Content Type ${name || typeId} is invalid`);
+    }
+  }
+
+  /**
+   * List all content types accessible to this user.
+   *
+   * @methodGroup Content Types
+   * @namedParams
+   *
+   * @return {Promise<Array<Object>>} - A list of content types
+   */
+  async ContentTypes() {
+    this.contentTypes = this.contentTypes || {};
+
+    const typeAddresses = await this.Collection({collectionType: "contentTypes"});
+
+    await Promise.all(
+      typeAddresses.map(async typeAddress => {
+        const typeId = this.utils.AddressToObjectId(typeAddress);
+
+        if(!this.contentTypes[typeId]) {
+          try {
+            this.contentTypes[typeId] = await this.ContentType({typeId});
+          } catch(error) {
+            // eslint-disable-next-line no-console
+            //console.error(error);
+          }
+        }
+      })
+    );
+
+    return this.contentTypes;
   }
 
   /**
@@ -855,37 +767,45 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Types
    * @namedParams
+   * @param libraryId {string=} - ID of the library in which to create the content type. If not specified,
+   * it will be created in the content space library
+   * @param {string} name - Name of the content type
    * @param {object} metadata - Metadata for the new content type
    * @param {(Blob | Buffer)=} bitcode - Bitcode to be used for the content type
    *
    * @returns {Promise<string>} - Object ID of created content type
    */
-  async CreateContentType({metadata={}, bitcode}) {
-    const { contractAddress, transactionHash } = await this.authClient.CreateContentType();
+  async CreateContentType({name, metadata={}, bitcode}) {
+    metadata.name = name;
 
-    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
-    const typeLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
+    const { contractAddress } = await this.authClient.CreateContentType();
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = UrlJoin("qlibs", typeLibraryId, "q", objectId);
+    const path = UrlJoin("qlibs", this.contentSpaceLibraryId, "qid", objectId);
 
     /* Create object, upload bitcode and finalize */
-
     const createResponse = await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId: typeLibraryId, transactionHash}),
-        method: "PUT",
-        path: path,
-        body: {
-          type: "",
-          meta: metadata
-        }
+        headers: await this.authClient.AuthorizationHeader({
+          libraryId: this.contentSpaceLibraryId,
+          objectId,
+          update: true
+        }),
+        method: "POST",
+        path: path
       })
     );
 
+    await this.ReplaceMetadata({
+      libraryId: this.contentSpaceLibraryId,
+      objectId,
+      writeToken: createResponse.write_token,
+      metadata
+    });
+
     if(bitcode) {
       const uploadResponse = await this.UploadPart({
-        libraryId: typeLibraryId,
+        libraryId: this.contentSpaceLibraryId,
         objectId,
         writeToken: createResponse.write_token,
         data: bitcode,
@@ -893,7 +813,7 @@ const client = ElvClient.FromConfiguration({
       });
 
       await this.ReplaceMetadata({
-        libraryId: typeLibraryId,
+        libraryId: this.contentSpaceLibraryId,
         objectId,
         writeToken: createResponse.write_token,
         metadataSubtree: "bitcode_part",
@@ -902,7 +822,7 @@ const client = ElvClient.FromConfiguration({
     }
 
     await this.FinalizeContentObject({
-      libraryId: typeLibraryId,
+      libraryId: this.contentSpaceLibraryId,
       objectId,
       writeToken: createResponse.write_token
     });
@@ -919,33 +839,97 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param libraryId - ID of the library
+   * @param {string} libraryId - ID of the library
+   * @param {object=} filterOptions - Pagination, sorting and filtering options
+   * @param {boolean=} filterOptions.latestOnly=true - If specified, only latest version of objects will be included
+   * @param {number=} filterOptions.start - Start index for pagination
+   * @param {number=} filterOptions.limit - Max number of objects to return
+   * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
+   * @param {(Array<string> | string)=} filterOptions.sort - Sort by the specified key(s)
+   * * @param {boolean=} filterOptions.sortDesc=false - Sort in descending order
+   * @param {(Array<string> | string)=} filterOptions.select - Include only the specified metadata keys
+   * @param {(Array<object> | object)=} filterOptions.filter - Filter objects by metadata
+   * @param {string=} filterOptions.filter.key - Key to filter on
+   * @param {string=} filterOptions.filter.type - Type of filter to use for the specified key:
+   * - eq, neq, lt, lte, gt, gte, cnt (contains), ncnt (does not contain),
+   * @param {string=} filterOptions.filter.filter - Filter for the specified key
    *
    * @returns {Promise<Array<Object>>} - List of objects in library
    */
-  async ContentObjects({libraryId}) {
+  async ContentObjects({libraryId, filterOptions={}}) {
     let path = UrlJoin("qlibs", libraryId, "q");
 
-    let objects = (await ResponseToJson(
+    let queryParams = {
+      filter: []
+    };
+
+    // Cache ID
+    if(filterOptions.cacheId) {
+      queryParams.cache_id = filterOptions.cacheId;
+    }
+
+    // Start index
+    if(filterOptions.start) {
+      queryParams.start = filterOptions.start;
+    }
+
+    // Limit
+    if(filterOptions.limit) {
+      queryParams.limit = filterOptions.limit;
+    }
+
+    // Metadata select options
+    if(filterOptions.select) {
+      queryParams.select = filterOptions.select;
+    }
+
+    // Sorting options
+    if(filterOptions.sort) {
+      // Sort keys
+      queryParams.sort_by = filterOptions.sort;
+
+      // Sort order
+      if(filterOptions.sortDesc) {
+        queryParams.sort_descending = true;
+      }
+    }
+
+    if(filterOptions.latestOnly === false) {
+      queryParams.latest_version_only = false;
+    }
+
+    // Filters
+    const filterTypeMap = {
+      eq: ":eq:",
+      neq: ":ne:",
+      lt: ":lt:",
+      lte: ":le:",
+      gt: ":gt:",
+      gte: ":ge:",
+      cnt: ":co:",
+      ncnt: ":nc:"
+    };
+
+    const addFilter = ({key, type, filter}) => {
+      queryParams.filter.push(`${key}${filterTypeMap[type]}${filter}`);
+    };
+
+    if(filterOptions.filter) {
+      if(Array.isArray(filterOptions.filter)) {
+        filterOptions.filter.forEach(filter => addFilter(filter));
+      } else {
+        addFilter(filterOptions.filter);
+      }
+    }
+
+    return await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId}),
         method: "GET",
-        path: path
+        path: path,
+        queryParams
       })
-    )).contents;
-
-    // Ensure "meta" is set for all versions
-    return objects.map(object => {
-      return {
-        ...object,
-        versions: object.versions.map(version => {
-          return {
-            ...version,
-            meta: version.meta || {}
-          };
-        })
-      };
-    });
+    );
   }
 
   /**
@@ -955,42 +939,20 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
    *
    * @returns {Promise<Object>} - Description of created object
    */
   async ContentObject({libraryId, objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId);
 
     return await ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
-        method: "GET",
-        path: path
-      })
-    );
-  }
-
-  /**
-   * Get a specific content object in the library by version hash
-   *
-   * Note: This endpoint does not require authorization
-   *
-   * @see /q/:qhit
-   *
-   * @methodGroup Content Objects
-   * @namedParams
-   * @param {string=} versionHash - Version hash of the object
-   *
-   * @returns {Promise<Object>} - Description of created object
-   */
-  async ContentObjectByHash({versionHash}) {
-    let path = UrlJoin("q", versionHash);
-
-    return await ResponseToJson(
-      this.HttpClient.Request({
         method: "GET",
         path: path
       })
@@ -1012,8 +974,32 @@ const client = ElvClient.FromConfiguration({
       abi: ContentContract.abi,
       methodName: "owner",
       methodArgs: [],
+      cacheContract: false,
       signer: this.signer
     });
+  }
+
+  /**
+   * Retrieve the library ID for the specified content object
+   *
+   * @methodGroup Content Objects
+   *
+   * @namedParams
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   *
+   * @returns {Promise<string>} - Library ID of the object
+   */
+  async ContentObjectLibraryId({objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    return Utils.AddressToLibraryId(
+      await this.CallContractMethod({
+        contractAddress: Utils.HashToAddress(objectId),
+        abi: ContentContract.abi,
+        methodName: "libraryAddress"
+      })
+    );
   }
 
   /**
@@ -1023,31 +1009,33 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
    *
-   * @returns {Promise<Object>} - Metadata of the content object
+   * @returns {Promise<Object | string>} - Metadata of the content object
    */
-  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=false}) {
+  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=true}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "meta", metadataSubtree);
 
     try {
-      const metadata = await ResponseToJson(
+      return await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
           method: "GET",
           path: path
         })
       );
-
-      return metadata || {};
     } catch(error) {
       if(error.status !== 404) {
         throw error;
       }
+
+      return metadataSubtree === "/" ? {} : undefined;
     }
   }
 
@@ -1089,6 +1077,7 @@ const client = ElvClient.FromConfiguration({
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
+   * @param {objectId=} objectId - ID of the object (if contract already exists)
    * @param {Object=} options -
    * type: Version hash of the content type to associate with the object
    *
@@ -1096,7 +1085,7 @@ const client = ElvClient.FromConfiguration({
    *
    * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
    */
-  async CreateContentObject({libraryId, options={}}) {
+  async CreateContentObject({libraryId, objectId, options={}}) {
     // Look up content type, if specified
     let typeId;
     if(options.type) {
@@ -1113,15 +1102,25 @@ const client = ElvClient.FromConfiguration({
       options.type = type.hash;
     }
 
-    const { contractAddress, transactionHash } = await this.authClient.CreateContentObject({libraryId, typeId});
+    if(!objectId) {
+      const { contractAddress } = await this.authClient.CreateContentObject({libraryId, typeId});
 
-    const objectId = this.utils.AddressToObjectId(contractAddress);
-    const path = UrlJoin("q", objectId);
+      await this.CallContractMethod({
+        abi: ContentContract.abi,
+        contractAddress,
+        methodName: "setVisibility",
+        methodArgs: [100]
+      });
+
+      objectId = this.utils.AddressToObjectId(contractAddress);
+    }
+
+    const path = UrlJoin("qid", objectId);
 
     return await ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, transactionHash}),
-        method: "PUT",
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+        method: "POST",
         path: path,
         body: options
       })
@@ -1173,12 +1172,15 @@ const client = ElvClient.FromConfiguration({
     } else {
       // Unless modifying the content library object
       if(options.type) {
-        if(!options.type.startsWith("hq__")) {
-          // Type name specified
-          options.type = (await this.ContentType({name: options.type})).hash;
-        } else {
+        if(options.type.startsWith("hq__")) {
           // Type hash specified
           options.type = (await this.ContentType({versionHash: options.type})).hash;
+        } else if(options.type.startsWith("iq__")) {
+          // Type ID specified
+          options.type = (await this.ContentType({typeId: options.type})).hash;
+        } else {
+          // Type name specified
+          options.type = (await this.ContentType({name: options.type})).hash;
         }
       }
     }
@@ -1218,10 +1220,12 @@ const client = ElvClient.FromConfiguration({
     );
 
     await this.PublishContentVersion({
-      libraryId,
       objectId,
       versionHash: finalizeResponse.hash
     });
+
+    // Invalidate cached content type, if this is one.
+    delete this.contentTypes[objectId];
 
     return finalizeResponse;
   }
@@ -1229,9 +1233,7 @@ const client = ElvClient.FromConfiguration({
   /**
    * Publish a content object version
    *
-   * NOTE: Not yet intended for use - publishing is done in FinalizeContentObject
-   *
-   * @see POST /qlibs/:qlibid/q/:write_token
+   * @see PUT /qlibs/:qlibid/q/:versionHash
    *
    * @methodGroup Content Objects
    * @namedParams
@@ -1239,26 +1241,14 @@ const client = ElvClient.FromConfiguration({
    * @param {string} objectId - ID of the object
    * @param {string} versionHash - The version hash of the content object to publish
    */
-  async PublishContentVersion({libraryId, objectId, versionHash}) {
-    let path = UrlJoin("q", versionHash);
-
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "PUT",
-      path: path
+  async PublishContentVersion({objectId, versionHash}) {
+    await this.ethClient.CommitContent({
+      contentObjectAddress: this.utils.HashToAddress(objectId),
+      versionHash,
+      signer: this.signer
     });
 
-    // Temporary - wait for publish to go through and for version to be accessible
-    for(let i = 0; i < 3; i++) {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      try {
-        return await this.ContentObject({libraryId, objectId, versionHash});
-      // eslint-disable-next-line no-empty
-      } catch(error) {}
-    }
-
-    throw Error("Version not published");
+    await new Promise(resolve => setTimeout(resolve, 5000));
   }
 
   /**
@@ -1285,29 +1275,17 @@ const client = ElvClient.FromConfiguration({
   /**
    * Delete specified content object
    *
-   * @see DELETE /qlibs/:qlibid/qid/:objectid
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    */
   async DeleteContentObject({libraryId, objectId}) {
-    let path = UrlJoin("qid", objectId);
-
-    const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
-
     await this.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "kill",
-      methodArgs: []
-    });
-
-    await this.HttpClient.Request({
-      headers: authorizationHeader,
-      method: "DELETE",
-      path: path
+      contractAddress: Utils.HashToAddress(libraryId),
+      abi: LibraryContract.abi,
+      methodName: "deleteContent",
+      methodArgs: [this.utils.HashToAddress(objectId)]
     });
   }
 
@@ -1393,11 +1371,13 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
-   * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be used
    */
   async ListFiles({libraryId, objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "meta", "files");
 
     return ResponseToJson(
@@ -1461,7 +1441,7 @@ const client = ElvClient.FromConfiguration({
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
         body: fileInfo
@@ -1480,7 +1460,7 @@ const client = ElvClient.FromConfiguration({
         bodyType: "BINARY",
         headers: {
           "Content-type": "application/octet-stream",
-          ...(await this.authClient.AuthorizationHeader({libraryId, objectId}))
+          ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
         }
       })
     );
@@ -1502,7 +1482,7 @@ const client = ElvClient.FromConfiguration({
     let path = UrlJoin("q", writeToken, "files");
 
     await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "POST",
       path: path
     });
@@ -1515,8 +1495,8 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} filePath - Path to the file to download
    * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
@@ -1524,6 +1504,8 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
   async DownloadFile({libraryId, objectId, versionHash, filePath, format="blob"}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "files", filePath);
 
     return ResponseToFormat(
@@ -1541,17 +1523,17 @@ const client = ElvClient.FromConfiguration({
   /**
    * List content object parts
    *
-   * @see GET /qlibs/:qlibid/q/:qhit/parts
-   *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    *
    * @returns {Promise<Object>} - Response containing list of parts of the object
    */
   async ContentParts({libraryId, objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "parts");
 
     const response = await ResponseToJson(
@@ -1566,119 +1548,306 @@ const client = ElvClient.FromConfiguration({
   }
 
   /**
-   * Download a part from a content object
+   * Get information on a specific part
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string} partHash - Hash of the part to retrieve
+   *
+   * @returns {Promise<Object>} - Response containing information about the specified part
+   */
+  async ContentPart({libraryId, objectId, versionHash, partHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    let path = UrlJoin("q", versionHash || objectId, "parts", partHash);
+
+    return await ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+        method: "GET",
+        path: path
+      })
+    );
+  }
+
+  /**
+   * Download a part from a content object. The fromByte and range parameters can be used to specify a
+   * specific section of the part to download.
    *
    * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} partHash - Hash of the part to download
-   * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
+   * @param {string=} format="arrayBuffer" - Format in which to return the data
+   * @param {boolean=} chunked=false - If specified, part will be downloaded and decrypted in chunks. The
+   * specified callback will be invoked on completion of each chunk. This is recommended for large files,
+   * especially if they are encrypted.
+   * @param {number=} chunkSize=1000000 - If doing chunked download, size of each chunk to fetch
+   * @param {function=} callback - Will be called on completion of each chunk
+   * - Signature: ({bytesFinished, bytesTotal, chunk}) => {}
+   *
+   * Note: If the part is encrypted, bytesFinished/bytesTotal will not exactly match the size of the data
+   * received. These values correspond to the size of the encrypted data - when decrypted, the part will be
+   * slightly smaller.
    *
    * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
    */
-  async DownloadPart({libraryId, objectId, versionHash, partHash, format="blob"}) {
+  async DownloadPart({
+    libraryId,
+    objectId,
+    versionHash,
+    partHash,
+    format="arrayBuffer",
+    chunked=false,
+    chunkSize=10000000,
+    callback
+  }) {
+    if(chunked && !callback) { throw Error("No callback specified for chunked part download"); }
+
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    const encrypted = partHash.startsWith("hqpe");
+    const encryption = encrypted ? "cgck" : "none";
     const path = UrlJoin("q", versionHash || objectId, "data", partHash);
 
-    const response =
-      await this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-        method: "GET",
-        path: path
+    let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
+
+    if(!chunked) {
+      // Download and decrypt entire part
+      const response = await this.HttpClient.Request({headers, method: "GET", path: path});
+
+      let data = await response.arrayBuffer();
+      if(encrypted) {
+        const encryptionCap = await this.EncryptionCap({libraryId, objectId});
+        data = await Crypto.Decrypt(encryptionCap, data);
+      }
+
+      return await ResponseToFormat(
+        format,
+        new Response(data)
+      );
+    }
+
+    // Download part in chunks
+    const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
+    let bytesFinished = 0;
+
+    let stream;
+    if(encrypted) {
+      // Set up decryption stream
+      const encryptionCap = await this.EncryptionCap({libraryId, objectId});
+      stream = await Crypto.OpenDecryptionStream(encryptionCap);
+
+      stream = stream.on("data", async chunk => {
+        // Turn buffer into desired format, if necessary
+        if(format !== "buffer") {
+          const arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
+
+          if(format === "arrayBuffer") {
+            chunk = arrayBuffer;
+          } else {
+            chunk = await ResponseToFormat(
+              format,
+              new Response(arrayBuffer)
+            );
+          }
+        }
+
+        callback({
+          bytesFinished,
+          bytesTotal,
+          chunk
+        });
       });
+    }
 
-    let data = await response.arrayBuffer();
+    const totalChunks = Math.ceil(bytesTotal / chunkSize);
+    for(let i = 0; i < totalChunks; i++) {
+      headers["Range"] = `bytes=${bytesFinished}-${bytesFinished + chunkSize - 1}`;
+      const response = await this.HttpClient.Request({headers, method: "GET", path: path});
 
+      bytesFinished = Math.min(bytesFinished + chunkSize, bytesTotal);
 
-    return await ResponseToFormat(
-      format,
-      new Response(data)
-    );
+      if(encrypted) {
+        stream.write(new Uint8Array(await response.arrayBuffer()));
+      } else {
+        callback({bytesFinished, bytesTotal, chunk: await ResponseToFormat(format, response)});
+      }
+    }
+
+    if(stream) {
+      // Wait for decryption to complete
+      stream.end();
+      await new Promise(resolve =>
+        stream.on("finish", () => {
+          resolve();
+        })
+      );
+    }
+  }
+
+  async EncryptionCap({libraryId, objectId, writeToken}) {
+    const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
+
+    if(!this.utils.EqualAddress(owner, this.signer.address)) {
+      // Target decryption
+      return await this.authClient.ReEncryptionCap({libraryId, objectId});
+    }
+
+    // Primary encryption
+    const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+    const existingCap = await this.ContentObjectMetadata({
+      libraryId,
+      // Cap may only exist in draft
+      objectId: writeToken || objectId,
+      metadataSubtree: capKey
+    });
+
+    if(existingCap) { return await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey); }
+
+    const cap = await Crypto.GeneratePrimaryCap();
+
+    // If write token is specified, add it to the metadata
+    if(writeToken) {
+      const kmsAddress = this.authClient.KMSAddress({objectId});
+      const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
+      const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+
+      let metadata = {};
+
+      metadata[capKey] = await Crypto.EncryptCap(cap, this.signer.signingKey.publicKey);
+
+      try {
+        metadata[kmsCapKey] = await Crypto.EncryptCap(cap, kmsPublicKey);
+      } catch(error) {
+        // eslint-disable-next-line no-console
+        console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
+      }
+
+      await this.MergeMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadata
+      });
+    }
+
+    return cap;
   }
 
   /**
-   * Upload part to an object draft
-   *
-   * @see POST /qlibs/:qlibid/q/:write_token/data
+   * Create a part upload draft
    *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
-   * @param {(ArrayBuffer | Blob | Buffer)} data - Data to upload
-   * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
-   * @param {function=} callback - If specified, function will be called with upload progress after completion of each chunk
-   * - Method signatue: ({uploaded, total})
+   * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
    *
-   * @returns {Promise<Object>} - Response containing information about the uploaded part
+   * @returns {Promise<string>} - The part write token for the part draft
    */
-  async UploadPart({libraryId, objectId, writeToken, data, chunkSize=1000000, callback}) {
-    const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, objectId, update: true});
-    const totalSize = data.size || data.length || data.byteLength;
-
-    if(callback) { callback({uploaded: 0, total: totalSize}); }
-
-    // If the file is smaller than the chunk size, just upload it in one pass
-    if(totalSize < chunkSize) {
-      const uploadResult = await ResponseToJson(
-        this.HttpClient.Request({
-          headers: authorizationHeader,
-          method: "POST",
-          path: UrlJoin("q", writeToken, "data"),
-          body: data,
-          bodyType: "BINARY"
-        })
-      );
-
-      if(callback) { callback({uploaded: totalSize, total: totalSize}); }
-
-      return uploadResult;
-    }
-
+  async CreatePart({libraryId, objectId, writeToken, encryption}) {
     const path = UrlJoin("q", writeToken, "parts");
 
-    // Create the part for writing
-    let partWriteToken = (await ResponseToJson(
+    const openResponse = await ResponseToJson(
       this.HttpClient.Request({
-        headers: authorizationHeader,
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
         method: "POST",
         path,
         bodyType: "BINARY",
         body: ""
       })
-    )).part.write_token;
+    );
 
-    // Upload the part in chunks, calling progressCallback after each time
-    for(let uploaded = 0; uploaded < totalSize; uploaded += chunkSize) {
-      const to = Math.min(uploaded + chunkSize, totalSize);
+    return openResponse.part.write_token;
+  }
 
-      await ResponseToJson(
-        this.HttpClient.Request({
-          headers: authorizationHeader,
-          method: "POST",
-          path: UrlJoin(path, partWriteToken),
-          body: data.slice(uploaded, to),
-          bodyType: "BINARY",
-        })
-      );
-
-      if(callback) { callback({uploaded: to, total: totalSize}); }
+  /**
+   * Upload data to an open part draft
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {string} partWriteToken - Write token of the part
+   * @param {(ArrayBuffer | Buffer)} chunk - Data to upload
+   * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+   *
+   * @returns {Promise<string>} - The part write token for the part draft
+   */
+  async UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk, encryption}) {
+    if(encryption && encryption !== "none") {
+      const encryptionCap = await this.EncryptionCap({libraryId, objectId, writeToken});
+      chunk = await Crypto.Encrypt(encryptionCap, chunk);
     }
 
-    // Finalize part
+    const path = UrlJoin("q", writeToken, "parts");
+    await ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
+        method: "POST",
+        path: UrlJoin(path, partWriteToken),
+        body: chunk,
+        bodyType: "BINARY",
+      })
+    );
+  }
+
+  /**
+   * Finalize an open part draft
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {string} partWriteToken - Write token of the part
+   * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+   *
+   * @returns {Promise<object>} - The finalize response for the new part
+   */
+  async FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption}) {
+    const path = UrlJoin("q", writeToken, "parts");
     return await ResponseToJson(
       await this.HttpClient.Request({
-        headers: authorizationHeader,
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
         method: "POST",
         path: UrlJoin(path, partWriteToken),
         bodyType: "BINARY",
         body: ""
       })
     );
+  }
+
+  /**
+   * Upload part to an object draft
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {(ArrayBuffer | Buffer)} data - Data to upload
+   * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
+   * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+   *
+   * @returns {Promise<Object>} - Response containing information about the uploaded part
+   */
+  async UploadPart({libraryId, objectId, writeToken, data, encryption="none"}) {
+    const partWriteToken = await this.CreatePart({libraryId, objectId, writeToken, encryption});
+
+    await this.UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk: data, encryption});
+
+    return await this.FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption});
   }
 
   /**
@@ -1724,6 +1893,26 @@ const client = ElvClient.FromConfiguration({
   }
 
   /**
+   * Return the type of contract backing the specified ID
+   *
+   * @methodGroup Access Requests
+   * @namedParams
+   * @param {string} id - ID of the item
+   *
+   * @return {Promise<string>} - Contract type of the item
+   * - space
+   * - library
+   * - type,
+   * - object
+   * - wallet
+   * - group
+   * - other
+   */
+  async AccessType({id}) {
+    return await this.authClient.AccessType(id);
+  }
+
+  /**
    * Retrieve info about the access charge and permissions for the specified object.
    *
    * Note: Access charge is specified in ether
@@ -1733,8 +1922,7 @@ const client = ElvClient.FromConfiguration({
    * @param {string} objectId - ID of the object
    * @param {object=} args - Arguments to the getAccessInfo method - See the base content contract
    *
-   * @return {object} - Info about the access charge and whether or not the object is accessible to the current user
-   */
+   * @return {Promise<Object>} - Info about the access charge and whether or not the object is accessible to the current user   */
   async AccessInfo({objectId, args}) {
     if(!args) {
       args = [
@@ -1753,9 +1941,13 @@ const client = ElvClient.FromConfiguration({
     });
 
     return {
-      accessible: info[0] === 0,
-      accessCode: info[0],
-      accessCharge: Utils.WeiToEther(info[1]).toString()
+      visibilityCode: info[0],
+      visible: info[0] >= 1,
+      accessible: info[0] >= 10,
+      editable: info[0] >= 100,
+      hasAccess: info[1] === 0,
+      accessCode: info[1],
+      accessCharge: Utils.WeiToEther(info[2]).toString()
     };
   }
 
@@ -1782,16 +1974,17 @@ const client = ElvClient.FromConfiguration({
    * @param {boolean=} update=false - If true, will call updateRequest instead of accessRequest
    * @param {boolean=} noCache=false - If true, the resultant transaction hash will not be cached for future use
    *
-   * @return {object} - Resultant AccessRequest or UpdateRequest event
+   * @return {Promise<Object>} - Resultant AccessRequest or UpdateRequest event
    */
   async AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     return await this.authClient.MakeAccessRequest({
       libraryId,
       objectId,
       versionHash,
       args,
       update,
-      checkAccessCharge: true,
       skipCache: true,
       noCache
     });
@@ -1806,9 +1999,11 @@ const client = ElvClient.FromConfiguration({
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Version hash of the object
    *
-   * @return {string} - The cached transaction hash if present, otherwise undefined
+   * @return {Promise<string>} - The cached transaction hash if present, otherwise undefined
    */
   async CachedAccessTransaction({libraryId, objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     const cacheResult = await this.authClient.MakeAccessRequest({
       libraryId,
       objectId,
@@ -1819,6 +2014,28 @@ const client = ElvClient.FromConfiguration({
     if(cacheResult) {
       return cacheResult.transactionHash;
     }
+  }
+
+  /**
+   * Generate a state channel token
+   *
+   * @methodGroup Access Requests
+   * @namedParams
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   * @param {boolean=} noCache=false - If specified, a new state channel token will be generated
+   * regardless whether or not one has been previously cached
+   *
+   * @return {Promise<string>} - The state channel token
+   */
+  async GenerateStateChannelToken({objectId, versionHash, noCache=false}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    return await this.authClient.AuthorizationToken({
+      objectId,
+      channelAuth: true,
+      noCache
+    });
   }
 
   /**
@@ -1842,6 +2059,121 @@ const client = ElvClient.FromConfiguration({
   /* URL Methods */
 
   /**
+   * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string} versionHash - Version hash of the content
+   * @param {Array<string>} protocols - Acceptable playout protocols
+   * @param {Array<string>} drms - Acceptable DRM formats
+   */
+  async PlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
+    protocols = protocols.map(p => p.toLowerCase());
+    drms = drms.map(d => d.toLowerCase());
+
+    const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+
+    let path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+
+    const playoutOptions = Object.values(
+      await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({objectId, channelAuth: true, noAuth: true}),
+          method: "GET",
+          path: path
+        })
+      )
+    );
+
+    let playoutMap = {};
+    for(let i = 0; i < playoutOptions.length; i++) {
+      const option = playoutOptions[i];
+      const protocol = option.properties.protocol;
+      const drm = option.properties.drm;
+      const licenseServers = option.properties.license_servers;
+
+      // Exclude any options that do not satisfy the specified protocols and/or DRMs
+      const protocolMatch = protocols.includes(protocol);
+      const drmMatch = drms.includes(drm) || (drms.length === 0 && !drm);
+      if(!protocolMatch || !drmMatch) {
+        continue;
+      }
+
+      if(!playoutMap[protocol]) {
+        playoutMap[protocol] = {
+          playoutUrl: await this.Rep({
+            versionHash,
+            rep: UrlJoin("playout", "default", option.uri),
+            channelAuth: true
+          }),
+        };
+      }
+
+      if(drm) {
+        playoutMap[protocol].drms = {
+          ...(playoutMap[protocol].drms || {}),
+          [drm]: {
+            licenseServers
+          }
+        };
+      }
+    }
+
+    return playoutMap;
+  }
+
+  /**
+   * Retrieve playout options in BitMovin player format for the specified content that satisfy
+   * the given protocol and DRM requirements
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string} versionHash - Version hash of the content
+   * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
+   * @param {Array<string>=} drms=[] - Acceptable DRM formats
+   */
+  async BitmovinPlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
+    const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    const playoutOptions = await this.PlayoutOptions({versionHash, protocols, drms});
+    let config = {
+      drm: {}
+    };
+
+    Object.keys(playoutOptions).forEach(protocol => {
+      const option = playoutOptions[protocol];
+      config[protocol] = option.playoutUrl;
+
+      if(option.drms) {
+        Object.keys(option.drms).forEach(drm => {
+          // No license URL specified
+          if(!option.drms[drm].licenseServers || option.drms[drm].licenseServers.length === 0) { return; }
+
+          // Opt for https urls
+          const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
+          let licenseUrls = option.drms[drm].licenseServers;
+          if(licenseUrls.find(filterHTTPS)) {
+            licenseUrls = licenseUrls.filter(filterHTTPS);
+          }
+
+          // Choose a random license server from the available list
+          const licenseUrl = licenseUrls.sort(() => 0.5 - Math.random())[0];
+
+          if(!config.drm[drm]) {
+            config.drm[drm] = {
+              LA_URL: licenseUrl,
+              headers: {
+                Authorization: `Bearer ${this.authClient.channelContentTokens[objectId]}`
+              }
+            };
+          }
+        });
+      }
+    });
+
+    return config;
+  }
+
+  /**
    * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
    * URL includes authorization token.
    *
@@ -1849,8 +2181,8 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup URL Generation
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
@@ -1873,11 +2205,12 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup URL Generation
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
    * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -1887,8 +2220,28 @@ const client = ElvClient.FromConfiguration({
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
-  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, noAuth=false, noCache=false}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, noAuth, noCache});
+  async Rep({libraryId, objectId, versionHash, rep, queryParams={}, channelAuth=false, noAuth=false, noCache=false}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, channelAuth, noAuth, noCache});
+  }
+
+  /**
+   * Generate a URL to the specified /public endpoint of a content object. URL includes authorization token.
+   *
+   * Alias for the FabricUrl method with the "rep" parameter
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string} rep - Representation to use
+   * @param {Object=} queryParams - Query params to add to the URL
+   * @see FabricUrl for creating arbitrary fabric URLs
+   *
+   * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
+   */
+  async PublicRep({libraryId, objectId, versionHash, rep, queryParams={}}) {
+    return this.FabricUrl({libraryId, objectId, versionHash, publicRep: rep, queryParams, noAuth: true});
   }
 
   /**
@@ -1901,8 +2254,10 @@ const client = ElvClient.FromConfiguration({
    * @param {string=} versionHash - Hash of an object version
    * @param {string=} partHash - Hash of a part - Requires object ID
    * @param {string=} rep - Rep parameter of the url
+   * @param {string=} publicRep - Public rep parameter of the url
    * @param {string=} call - Bitcode method to call
    * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} channelAuth=false - If specified, state channel authorization will be used instead of access request authorization
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
    * token. This is useful for accessing public assets.
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -1910,47 +2265,49 @@ const client = ElvClient.FromConfiguration({
    *
    * @returns {Promise<string>} - URL to the specified endpoint with authorization token
    */
-  async FabricUrl({libraryId, objectId, versionHash, partHash, rep, call, queryParams={}, noAuth=false, noCache=false}) {
-    let path = "";
+  async FabricUrl({
+    libraryId,
+    objectId,
+    versionHash,
+    partHash,
+    rep,
+    publicRep,
+    call,
+    queryParams={},
+    channelAuth=false,
+    noAuth=false,
+    noCache=false
+  }) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     // Clone queryParams to avoid modification of the original
     queryParams = {...queryParams};
 
+    queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, channelAuth, noAuth, noCache});
+
+    let path = "";
     if(libraryId) {
       path = UrlJoin(path, "qlibs", libraryId);
 
       if(objectId || versionHash) {
         path = UrlJoin(path, "q", versionHash || objectId);
-
-        if(partHash){
-          path = UrlJoin(path, "data", partHash);
-        } else if(rep) {
-          path = UrlJoin(path, "rep", rep);
-        } else if(call) {
-          path = UrlJoin(path, "call", call);
-        }
-      }
-
-      if(!noAuth) {
-        queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noCache});
       }
     } else if(versionHash) {
       path = UrlJoin("q", versionHash);
+    }
 
-      if(!noAuth && objectId) {
-        queryParams.authorization = await this.authClient.AuthorizationToken({objectId, versionHash, noCache});
-      }
-
-      if(partHash){
-        path = UrlJoin(path, "data", partHash);
-      } else if(rep) {
-        path = UrlJoin(path, "rep", rep);
-      } else if(call) {
-        path = UrlJoin(path, "call", call);
-      }
+    if(partHash){
+      path = UrlJoin(path, "data", partHash);
+    } else if(rep) {
+      path = UrlJoin(path, "rep", rep);
+    } else if(publicRep) {
+      path = UrlJoin(path, "public", publicRep);
+    } else if(call) {
+      path = UrlJoin(path, "call", call);
     }
 
     return this.HttpClient.URL({
-      path: path,
+      path,
       queryParams
     });
   }
@@ -1961,7 +2318,7 @@ const client = ElvClient.FromConfiguration({
    * @methodGroup URL Generation
    * @namedParams
    * @param {string=} libraryId - ID of an library - Required if versionHash not specified
-   * @param {string} objectId - ID of an object
+   * @param {string=} objectId - ID of an object
    * @param {string=} versionHash - Hash of an object version - Required if libraryId is not specified
    * @param {string} filePath - Path to the content object file
    * @param {Object=} queryParams - Query params to add to the URL
@@ -1971,6 +2328,8 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<string>} - URL to the specified file with authorization token
    */
   async FileUrl({libraryId, objectId, versionHash, filePath, queryParams={}, noCache=false}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path;
 
     if(libraryId) {
@@ -1998,11 +2357,37 @@ const client = ElvClient.FromConfiguration({
    * A new access group contract is deployed from the content space
    *
    * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} name - Name of the access group
+   * @param {object=} meta - Metadata for the access group
    *
    * @returns {Promise<string>} - Contract address of created access group
    */
-  async CreateAccessGroup() {
-    const { contractAddress, transactionHash } = await this.authClient.CreateAccessGroup();
+  async CreateAccessGroup({name, metadata={}}) {
+    const { contractAddress } = await this.authClient.CreateAccessGroup();
+
+    const objectId = this.utils.AddressToObjectId(contractAddress);
+
+    const editResponse = await this.EditContentObject({
+      libraryId: this.contentSpaceLibraryId,
+      objectId: objectId
+    });
+
+    await this.ReplaceMetadata({
+      libraryId: this.contentSpaceLibraryId,
+      objectId,
+      writeToken: editResponse.write_token,
+      metadata: {
+        name,
+        ...metadata
+      }
+    });
+
+    await this.FinalizeContentObject({
+      libraryId: this.contentSpaceLibraryId,
+      objectId,
+      writeToken: editResponse.write_token
+    });
 
     return contractAddress;
   }
@@ -2044,16 +2429,73 @@ const client = ElvClient.FromConfiguration({
     });
   }
 
-  async CallAccessGroupMethod({contractAddress, memberAddress, methodName, eventName}) {
-    // Ensure address starts with 0x
-    if(!memberAddress.startsWith("0x")) { memberAddress = "0x" + memberAddress; }
+  /**
+   * Get a list of addresses of members of the specified group
+   *
+   * @methodGroup AccessGroups
+   * @namedParams
+   * @param contractAddress - The address of the access group contract
+   *
+   * @return {Promise<Array<string>>} - List of member addresses
+   */
+  async AccessGroupMembers({contractAddress}) {
+    const length = (await this.CallContractMethod({
+      contractAddress,
+      abi: AccessGroupContract.abi,
+      methodName: "membersNum"
+    })).toNumber();
 
+    return await Promise.all(
+      [...Array(length)].map(async (_, i) =>
+        this.utils.FormatAddress(
+          await this.CallContractMethod({
+            contractAddress,
+            abi: AccessGroupContract.abi,
+            methodName: "membersList",
+            methodArgs: [i]
+          })
+        )
+      )
+    );
+  }
+
+  /**
+   * Get a list of addresses of managers of the specified group
+   *
+   * @methodGroup AccessGroups
+   * @namedParams
+   * @param contractAddress - The address of the access group contract
+   *
+   * @return {Promise<Array<string>>} - List of manager addresses
+   */
+  async AccessGroupManagers({contractAddress}) {
+    const length = (await this.CallContractMethod({
+      contractAddress,
+      abi: AccessGroupContract.abi,
+      methodName: "managersNum"
+    })).toNumber();
+
+    return await Promise.all(
+      [...Array(length)].map(async (_, i) =>
+        this.utils.FormatAddress(
+          await this.CallContractMethod({
+            contractAddress,
+            abi: AccessGroupContract.abi,
+            methodName: "managersList",
+            methodArgs: [i]
+          })
+        )
+      )
+    );
+  }
+
+  async AccessGroupMembershipMethod({contractAddress, memberAddress, methodName, eventName}) {
     // Ensure caller is a manager of the group
     const isManager = await this.CallContractMethod({
       contractAddress,
       abi: AccessGroupContract.abi,
       methodName: "hasManagerAccess",
-      methodArgs: [ this.signer.address.toLowerCase() ]
+      methodArgs: [ this.utils.FormatAddress(this.signer.address) ]
     });
 
     if(!isManager) {
@@ -2064,7 +2506,7 @@ const client = ElvClient.FromConfiguration({
       contractAddress,
       abi: AccessGroupContract.abi,
       methodName,
-      methodArgs: [ memberAddress.toLowerCase() ],
+      methodArgs: [ this.utils.FormatAddress(memberAddress) ],
       eventName,
       eventValue: "candidate",
     });
@@ -2094,10 +2536,10 @@ const client = ElvClient.FromConfiguration({
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the member to add
    *
-   * @returns {Promise<transactionHash>} - The transaction hash of the call to the grantAccess method
+   * @returns {Promise<string>} - The transaction hash of the call to the grantAccess method
    */
   async AddAccessGroupMember({contractAddress, memberAddress}) {
-    return await this.CallAccessGroupMethod({
+    return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "grantAccess",
@@ -2114,10 +2556,10 @@ const client = ElvClient.FromConfiguration({
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the member to remove
    *
-   * @returns {Promise<transactionHash>} - The transaction hash of the call to the revokeAccess method
+   * @returns {Promise<string>} - The transaction hash of the call to the revokeAccess method
    */
   async RemoveAccessGroupMember({contractAddress, memberAddress}) {
-    return await this.CallAccessGroupMethod({
+    return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "revokeAccess",
@@ -2134,10 +2576,10 @@ const client = ElvClient.FromConfiguration({
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the manager to add
    *
-   * @returns {Promise<transactionHash>} - The transaction hash of the call to the grantManagerAccess method
+   * @returns {Promise<string>} - The transaction hash of the call to the grantManagerAccess method
    */
   async AddAccessGroupManager({contractAddress, memberAddress}) {
-    return await this.CallAccessGroupMethod({
+    return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "grantManagerAccess",
@@ -2154,14 +2596,62 @@ const client = ElvClient.FromConfiguration({
    * @param {string} contractAddress - Address of the access group contract
    * @param {string} memberAddress - Address of the manager to remove
    *
-   * @returns {Promise<transactionHash>} - The transaction hash of the call to the revokeManagerAccess method
+   * @returns {Promise<string>} - The transaction hash of the call to the revokeManagerAccess method
    */
   async RemoveAccessGroupManager({contractAddress, memberAddress}) {
-    return await this.CallAccessGroupMethod({
+    return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
       methodName: "revokeManagerAccess",
       eventName: "ManagerAccessRevoked"
+    });
+  }
+
+  /* Collection */
+
+  /**
+   * Get a list of unique addresses of all of the specified type the current user has access
+   * to through both their user wallet and through access groups
+   *
+   * @methodGroup Collections
+   * @namedParams
+   * @param {string} collectionType - Type of collection to retrieve
+   * - accessGroups
+   * - contentObjects
+   * - contentTypes
+   * - contracts
+   * - libraries
+   *
+   * @return {Promise<Array<string>>} - List of addresses of available items
+   */
+  async Collection({collectionType}) {
+    const validCollectionTypes = [
+      "accessGroups",
+      "contentObjects",
+      "contentTypes",
+      "contracts",
+      "libraries"
+    ];
+
+    if(!validCollectionTypes.includes(collectionType)) {
+      throw new Error("Invalid collection type: " + collectionType);
+    }
+
+    const walletAddress = this.signer ? await this.userProfileClient.WalletAddress() : undefined;
+    if(!walletAddress) {
+      throw new Error("Unable to get collection: User wallet doesn't exist");
+    }
+
+    return await this.ethClient.MakeProviderCall({
+      methodName: "send",
+      args: [
+        "elv_getWalletCollection",
+        [
+          this.contentSpaceId,
+          `iusr${this.utils.AddressToHash(this.signer.address)}`,
+          collectionType
+        ]
+      ]
     });
   }
 
@@ -2194,14 +2684,16 @@ const client = ElvClient.FromConfiguration({
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
    * @param {string} partHash - Hash of the part
    *
    * @returns {Promise<Object>} - Response containing proof information
    */
   async Proofs({libraryId, objectId, versionHash, partHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     let path = UrlJoin("q", versionHash || objectId, "data", partHash, "proofs");
 
     return ResponseToJson(
@@ -2233,7 +2725,7 @@ const client = ElvClient.FromConfiguration({
     return ResponseToFormat(
       format,
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, partHash}),
         method: "GET",
         path: path
       })
@@ -2265,7 +2757,6 @@ const client = ElvClient.FromConfiguration({
    * @param {Object} abi - ABI of contract
    * @param {string} bytecode - Bytecode of the contract
    * @param {Array<string>} constructorArgs - List of arguments to the contract constructor
-   * - it is recommended to format these arguments using the FormatContractArguments method
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
    * @returns {Promise<Object>} - Response containing the deployed contract address and the transaction hash of the deployment
@@ -2285,15 +2776,25 @@ const client = ElvClient.FromConfiguration({
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
    * @param {string} methodName - Method to call on the contract
-   * @param {Array<string>} methodArgs - List of arguments to the contract constructor
-   * - it is recommended to format these arguments using the FormatContractArguments method
+   * @param {Array=} methodArgs - List of arguments to the contract constructor
    * @param {(number | BigNumber)=} value - Amount of ether to include in the transaction
+   * @param {boolean=} formatArguments=true - If specified, the arguments will automatically be formatted to the ABI specification
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
    *
-   * @returns {Promise<Object>} - Response containing information about the transaction
+   * @returns {Promise<*>} - Response containing information about the transaction
    */
-  async CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
-    return await this.ethClient.CallContractMethod({contractAddress, abi, methodName, methodArgs, value, overrides, signer: this.signer});
+  async CallContractMethod({contractAddress, abi, methodName, methodArgs=[], value, overrides={}, formatArguments=true, cacheContract=true}) {
+    return await this.ethClient.CallContractMethod({
+      contractAddress,
+      abi,
+      methodName,
+      methodArgs,
+      value,
+      overrides,
+      formatArguments,
+      cacheContract,
+      signer: this.signer
+    });
   }
 
   /**
@@ -2305,16 +2806,16 @@ const client = ElvClient.FromConfiguration({
    * @param {string} contractAddress - Address of the contract to call the specified method on
    * @param {Object} abi - ABI of contract
    * @param {string} methodName - Method to call on the contract
-   * @param {Array<string>} methodArgs - List of arguments to the contract constructor
-   * - it is recommended to format these arguments using the FormatContractArguments method
-   * @param {number | BigNumber} value - Amount of ether to include in the transaction
+   * @param {Array<string>=} methodArgs=[] - List of arguments to the contract constructor
+   * @param {(number | BigNumber)=} value - Amount of ether to include in the transaction
    * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
+   * @param {boolean=} formatArguments=true - If specified, the arguments will automatically be formatted to the ABI specification
    *
    * @see Utils.WeiToEther
    *
-   * @returns {Promise<Object>} - The event object of this transaction
+   * @returns {Promise<*>} - The event object of this transaction
    */
-  async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}}) {
+  async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}, formatArguments=true}) {
     return await this.ethClient.CallContractMethodAndWait({
       contractAddress,
       abi,
@@ -2322,6 +2823,7 @@ const client = ElvClient.FromConfiguration({
       methodArgs,
       value,
       overrides,
+      formatArguments,
       signer: this.signer
     });
   }
@@ -2339,7 +2841,7 @@ const client = ElvClient.FromConfiguration({
    *
    * @see Utils.WeiToEther
    *
-   * @returns {Promise<*>} - The parsed event log from the event
+   * @returns {Promise<Object>} - The parsed event log from the event
    */
   ExtractEventFromLogs({abi, event, eventName}) {
     return this.ethClient.ExtractEventFromLogs({abi, event, eventName});
@@ -2357,7 +2859,7 @@ const client = ElvClient.FromConfiguration({
    * @param {string} eventName - Name of the event to parse
    * @param {string} eventValue - Name of the value to extract from the event
    *
-   * @returns The value extracted from the event
+   * @returns {Promise<string>} The value extracted from the event
    */
   ExtractValueFromEvent({abi, event, eventName, eventValue}) {
     const eventLog = this.ethClient.ExtractEventFromLogs({abi, event, eventName, eventValue});
@@ -2424,10 +2926,7 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<string> | undefined} - If the object has a custom contract, this will return the address of the custom contract
    */
   async CustomContractAddress({libraryId, objectId}) {
-    const contentSpaceAddress = this.utils.HashToAddress(this.contentSpaceId);
-    const contentSpaceLibraryId = this.utils.AddressToLibraryId(contentSpaceAddress);
-
-    if(libraryId === contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId)) {
+    if(libraryId === this.contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId)) {
       // Content type or content library object - no custom contract
       return;
     }
@@ -2456,7 +2955,7 @@ const client = ElvClient.FromConfiguration({
    * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
    * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
    * Note: This requires one extra network call per block, so it should not be used for very large ranges
-   * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+   * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
   async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false}) {
     return await this.ethClient.ContractEvents({
@@ -2464,8 +2963,7 @@ const client = ElvClient.FromConfiguration({
       abi,
       fromBlock,
       toBlock,
-      includeTransaction,
-      signer: this.signer
+      includeTransaction
     });
   }
 
@@ -2494,10 +2992,10 @@ const client = ElvClient.FromConfiguration({
    * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are unspecified)
    * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
    * Note: This requires two extra network calls per transaction, so it should not be used for very large ranges
-   * @returns {Array.<Array.<Object>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+   * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
-  async Events({toBlock, fromBlock, count=10, includeTransaction=false}) {
-    const latestBlock = await this.signer.provider.getBlockNumber();
+  async Events({toBlock, fromBlock, count=10, includeTransaction=false}={}) {
+    const latestBlock = await this.BlockNumber();
 
     if(!toBlock) {
       if(!fromBlock) {
@@ -2526,13 +3024,12 @@ const client = ElvClient.FromConfiguration({
     return await this.ethClient.Events({
       toBlock,
       fromBlock,
-      includeTransaction,
-      signer: this.signer
+      includeTransaction
     });
   }
 
   async BlockNumber() {
-    return await this.signer.provider.getBlockNumber();
+    return await this.ethClient.MakeProviderCall({methodName: "getBlockNumber"});
   }
 
   /**
@@ -2545,8 +3042,8 @@ const client = ElvClient.FromConfiguration({
    * @returns {Promise<number>} - Balance of the account, in ether
    */
   async GetBalance({address}) {
-    const provider = new Ethers.providers.JsonRpcProvider(this.ethereumURI);
-    return await Ethers.utils.formatEther(await provider.getBalance(address));
+    const balance = await this.ethClient.MakeProviderCall({methodName: "getBalance", args: [address]});
+    return await Ethers.utils.formatEther(balance);
   }
 
   /**
@@ -2557,7 +3054,7 @@ const client = ElvClient.FromConfiguration({
    * @param {string} recipient - Address of the recipient
    * @param {number} ether - Amount of ether to send
    *
-   * @returns {Promise<TransactionReceipt>}
+   * @returns {Promise<Object>} - The transaction receipt
    */
   async SendFunds({recipient, ether}) {
     const transaction = await this.signer.sendTransaction({
@@ -2574,14 +3071,15 @@ const client = ElvClient.FromConfiguration({
   FrameAllowedMethods() {
     const forbiddenMethods = [
       "constructor",
-      "InitializeClients",
-      "CallAccessGroupMethod",
+      "AccessGroupMembershipMethod",
       "CallFromFrameMessage",
+      "ClearSigner",
       "FrameAllowedMethods",
+      "FromConfigurationUrl",
       "GenerateWallet",
+      "InitializeClients",
       "SetSigner",
       "SetSignerFromWeb3Provider",
-      "ClearSigner"
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
@@ -2609,14 +3107,14 @@ const client = ElvClient.FromConfiguration({
       const method = message.calledMethod;
 
       let methodResults;
-      if(message.module === "userProfile") {
-        if (!this.userProfile.FrameAllowedMethods().includes(method)) {
+      if(message.module === "userProfileClient") {
+        if(!this.userProfileClient.FrameAllowedMethods().includes(method)) {
           throw Error("Invalid user profile method: " + method);
         }
 
-        methodResults = await this.userProfile[method](message.args);
+        methodResults = await this.userProfileClient[method](message.args);
       } else {
-        if (!this.FrameAllowedMethods().includes(method)) {
+        if(!this.FrameAllowedMethods().includes(method)) {
           throw Error("Invalid method: " + method);
         }
 
