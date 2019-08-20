@@ -24,7 +24,7 @@ if(cmdOpts["target"] !== "node") {
 
 
 module.exports = {
-  entry: "./dist/ElvClient.js",
+  entry: "./dist/src/ElvClient.js",
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "ElvClient-min-dev.js",
