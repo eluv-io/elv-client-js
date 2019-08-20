@@ -409,7 +409,7 @@ function () {
       regeneratorRuntime.mark(function _callee5(_ref6) {
         var _this = this;
 
-        var libraryId, objectId, versionHash, _ref6$args, args, _ref6$publicKey, publicKey, _ref6$update, update, _ref6$skipCache, skipCache, _ref6$noCache, noCache, cacheOnly, id, accessType, cacheCollection, abi, cache, checkAccessCharge, accessRequest;
+        var libraryId, objectId, versionHash, _ref6$args, args, _ref6$publicKey, publicKey, _ref6$update, update, _ref6$skipCache, skipCache, _ref6$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, accessType, cacheCollection, abi, cache, checkAccessCharge, accessRequest;
 
         return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
@@ -427,38 +427,65 @@ function () {
                 });
 
               case 3:
+                _context5.next = 5;
+                return this.client.userProfileClient.UserWalletAddress({
+                  address: this.client.signer.address
+                });
+
+              case 5:
+                walletContractAddress = _context5.sent;
+
+                if (walletContractAddress) {
+                  _context5.next = 12;
+                  break;
+                }
+
+                _context5.next = 9;
+                return this.client.userProfileClient.WalletAddress();
+
+              case 9:
+                walletCreated = _context5.sent;
+
+                if (walletCreated) {
+                  _context5.next = 12;
+                  break;
+                }
+
+                throw Error("User wallet contract is required to make access requests");
+
+              case 12:
                 if (versionHash) {
                   objectId = Utils.DecodeVersionHash(versionHash).objectId;
                 }
 
                 id = objectId || libraryId || this.contentSpaceId;
-                _context5.next = 7;
+                _context5.next = 16;
                 return this.AccessType(id);
 
-              case 7:
+              case 16:
                 accessType = _context5.sent;
                 cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
                 checkAccessCharge = false;
                 _context5.t0 = accessType;
-                _context5.next = _context5.t0 === ACCESS_TYPES.SPACE ? 13 : _context5.t0 === ACCESS_TYPES.LIBRARY ? 16 : _context5.t0 === ACCESS_TYPES.TYPE ? 19 : _context5.t0 === ACCESS_TYPES.OBJECT ? 22 : 27;
+                _context5.next = _context5.t0 === ACCESS_TYPES.SPACE ? 22 : _context5.t0 === ACCESS_TYPES.LIBRARY ? 25 : _context5.t0 === ACCESS_TYPES.TYPE ? 28 : _context5.t0 === ACCESS_TYPES.OBJECT ? 31 : 36;
                 break;
 
-              case 13:
+              case 22:
                 abi = SpaceContract.abi;
                 cache = cacheCollection.spaces;
-                return _context5.abrupt("break", 29);
+                return _context5.abrupt("break", 38);
 
-              case 16:
+              case 25:
                 abi = LibraryContract.abi;
                 cache = cacheCollection.libraries;
-                return _context5.abrupt("break", 29);
+                return _context5.abrupt("break", 38);
 
-              case 19:
+              case 28:
                 abi = TypeContract.abi;
                 cache = cacheCollection.types;
-                return _context5.abrupt("break", 29);
+                return _context5.abrupt("break", 38);
 
-              case 22:
+              case 31:
                 abi = ContentContract.abi;
                 cache = publicKey ? cacheCollection.encryptedObjects : cacheCollection.objects;
                 checkAccessCharge = true;
@@ -476,20 +503,20 @@ function () {
                   ];
                 }
 
-                return _context5.abrupt("break", 29);
+                return _context5.abrupt("break", 38);
 
-              case 27:
+              case 36:
                 abi = update ? EditableContract.abi : AccessibleContract.abi;
                 cache = cacheCollection.other;
 
-              case 29:
+              case 38:
                 if (!(!noCache && !skipCache)) {
-                  _context5.next = 32;
+                  _context5.next = 41;
                   break;
                 }
 
                 if (!cache[id]) {
-                  _context5.next = 32;
+                  _context5.next = 41;
                   break;
                 }
 
@@ -497,37 +524,37 @@ function () {
                   transactionHash: cache[id]
                 });
 
-              case 32:
+              case 41:
                 if (!cacheOnly) {
-                  _context5.next = 34;
+                  _context5.next = 43;
                   break;
                 }
 
                 return _context5.abrupt("return");
 
-              case 34:
+              case 43:
                 accessRequest = {
                   transactionHash: ""
                 }; // Make the request
 
                 if (!update) {
-                  _context5.next = 41;
+                  _context5.next = 50;
                   break;
                 }
 
-                _context5.next = 38;
+                _context5.next = 47;
                 return this.UpdateRequest({
                   id: id,
                   abi: abi
                 });
 
-              case 38:
+              case 47:
                 accessRequest = _context5.sent;
-                _context5.next = 44;
+                _context5.next = 53;
                 break;
 
-              case 41:
-                _context5.next = 43;
+              case 50:
+                _context5.next = 52;
                 return this.AccessRequest({
                   id: id,
                   abi: abi,
@@ -535,10 +562,10 @@ function () {
                   checkAccessCharge: checkAccessCharge
                 });
 
-              case 43:
+              case 52:
                 accessRequest = _context5.sent;
 
-              case 44:
+              case 53:
                 // Cache the transaction hash
                 if (!noCache) {
                   cache[id] = accessRequest.transactionHash; // Save request ID if present
@@ -559,7 +586,7 @@ function () {
                 });
                 return _context5.abrupt("return", accessRequest);
 
-              case 47:
+              case 56:
               case "end":
                 return _context5.stop();
             }

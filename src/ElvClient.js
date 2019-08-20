@@ -68,7 +68,6 @@ class ElvClient {
    * @param {string} contentSpaceId - ID of the content space
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
@@ -78,7 +77,6 @@ class ElvClient {
     contentSpaceId,
     fabricURIs,
     ethereumURIs,
-    viewOnly=false,
     noCache=false,
     noAuth=false
   }) {
@@ -92,7 +90,6 @@ class ElvClient {
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
 
-    this.viewOnly = viewOnly;
     this.noCache = noCache;
     this.noAuth = noAuth;
 
@@ -107,7 +104,6 @@ class ElvClient {
    * @methodGroup Constructor
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
-   * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
@@ -115,7 +111,6 @@ class ElvClient {
    */
   static async FromConfigurationUrl({
     configUrl,
-    viewOnly=false,
     noCache=false,
     noAuth=false
   }) {
@@ -139,7 +134,6 @@ class ElvClient {
       contentSpaceId: fabricInfo.qspace.id,
       fabricURIs,
       ethereumURIs,
-      viewOnly,
       noCache,
       noAuth
     });
@@ -158,8 +152,9 @@ class ElvClient {
     });
 
     this.userProfileClient = new UserProfileClient({client: this});
-    if(!this.viewOnly && this.signer) {
-      await this.userProfileClient.Initialize();
+
+    if(this.signer) {
+      await this.userProfileClient.WalletAddress();
     }
   }
 
@@ -748,7 +743,7 @@ class ElvClient {
             this.contentTypes[typeId] = await this.ContentType({typeId});
           } catch(error) {
             // eslint-disable-next-line no-console
-            //console.error(error);
+            // console.error(error);
           }
         }
       })

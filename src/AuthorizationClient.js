@@ -216,6 +216,20 @@ class AuthorizationClient {
       return { transactionHash: "" };
     }
 
+    // Ensure the user's wallet contract has been deployed before performing the access request
+    const walletContractAddress = await this.client.userProfileClient.UserWalletAddress({
+      address: this.client.signer.address
+    });
+
+    if(!walletContractAddress) {
+      // Attempt to create the wallet - will return undefined if the account has insufficient funds
+      const walletCreated = await this.client.userProfileClient.WalletAddress();
+
+      if(!walletCreated) {
+        throw Error("User wallet contract is required to make access requests");
+      }
+    }
+
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
     const id = objectId || libraryId || this.contentSpaceId;

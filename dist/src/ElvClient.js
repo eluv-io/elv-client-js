@@ -187,7 +187,6 @@ function () {
    * @param {string} contentSpaceId - ID of the content space
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
@@ -197,8 +196,6 @@ function () {
     var contentSpaceId = _ref3.contentSpaceId,
         fabricURIs = _ref3.fabricURIs,
         ethereumURIs = _ref3.ethereumURIs,
-        _ref3$viewOnly = _ref3.viewOnly,
-        viewOnly = _ref3$viewOnly === void 0 ? false : _ref3$viewOnly,
         _ref3$noCache = _ref3.noCache,
         noCache = _ref3$noCache === void 0 ? false : _ref3$noCache,
         _ref3$noAuth = _ref3.noAuth,
@@ -213,7 +210,6 @@ function () {
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
-    this.viewOnly = viewOnly;
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.contentTypes = {};
@@ -225,7 +221,6 @@ function () {
    * @methodGroup Constructor
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
-   * @param {boolean=} viewOnly - If specified, the client will not attempt to create a wallet contract for the user
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
@@ -256,13 +251,13 @@ function () {
                   client: this
                 });
 
-                if (!(!this.viewOnly && this.signer)) {
+                if (!this.signer) {
                   _context3.next = 7;
                   break;
                 }
 
                 _context3.next = 7;
-                return this.userProfileClient.Initialize();
+                return this.userProfileClient.WalletAddress();
 
               case 7:
               case "end":
@@ -6997,13 +6992,13 @@ function () {
       var _FromConfigurationUrl = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee100(_ref103) {
-        var configUrl, _ref103$viewOnly, viewOnly, _ref103$noCache, noCache, _ref103$noAuth, noAuth, httpClient, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
+        var configUrl, _ref103$noCache, noCache, _ref103$noAuth, noAuth, httpClient, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
 
         return regeneratorRuntime.wrap(function _callee100$(_context100) {
           while (1) {
             switch (_context100.prev = _context100.next) {
               case 0:
-                configUrl = _ref103.configUrl, _ref103$viewOnly = _ref103.viewOnly, viewOnly = _ref103$viewOnly === void 0 ? false : _ref103$viewOnly, _ref103$noCache = _ref103.noCache, noCache = _ref103$noCache === void 0 ? false : _ref103$noCache, _ref103$noAuth = _ref103.noAuth, noAuth = _ref103$noAuth === void 0 ? false : _ref103$noAuth;
+                configUrl = _ref103.configUrl, _ref103$noCache = _ref103.noCache, noCache = _ref103$noCache === void 0 ? false : _ref103$noCache, _ref103$noAuth = _ref103.noAuth, noAuth = _ref103$noAuth === void 0 ? false : _ref103$noAuth;
                 httpClient = new HttpClient([configUrl]);
                 _context100.next = 4;
                 return ResponseToJson(httpClient.Request({
@@ -7035,7 +7030,6 @@ function () {
                   contentSpaceId: fabricInfo.qspace.id,
                   fabricURIs: fabricURIs,
                   ethereumURIs: ethereumURIs,
-                  viewOnly: viewOnly,
                   noCache: noCache,
                   noAuth: noAuth
                 }));
