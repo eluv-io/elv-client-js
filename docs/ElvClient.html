@@ -92294,6 +92294,49 @@ regardless whether or not one has been previously cached</p>
 
 
 
+  <div class="example">
+    <h5 id="PlayoutOptions-examples">Example</h5>
+    <button class="example-toggle-button">Show Examples</button>
+    <div class="example-container">
+      <a class="link-icon" href="#PlayoutOptions-examples">
+        <svg height="20" width="20" style="fill: black;">
+          <use xlink:href="#linkIcon"></use>
+        </svg>
+      </a>
+      
+
+
+  <pre>async client.PlayoutOptions({
+  "versionHash": "hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV",
+  "protocols": ["dash", "hls"],
+  "drms": ["aes-128", "widevine"]
+});
+
+
+{
+  "dash": {
+    "playoutUrl": "https://host-66-220-3-82.contentfabric.io/q/hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV/rep/playout/default/dash-widevine/dash.mpd?authorization=eyJxc3BhY2VfaWQiOiJpc3BjQXBvV1BRUnJUa1JRVjFLcFlqdnFQeVNBbXhhIiwicWxpYl9pZCI6ImlsaWJxTUdXTVNodUZjcTlLdU1pTHJaa1FNakFLanUiLCJhZGRyIjoiMHg5NmEwMTA0QkE0MzRCMzA2NTFBOTE2NTY4NTg5MDBCZGRDNTcwMzY0IiwicWlkIjoiaXFfXzJ2RGJteFRkYWl2UG5tRG44UktMYnhTSFVNZmoiLCJncmFudCI6InJlYWQiLCJ0eF9yZXF1aXJlZCI6ZmFsc2UsImlhdCI6MTU2NjQxNzMwMywiZXhwIjoxNTY2NTAzNzAzLCJhdXRoX3NpZyI6IkVTMjU2S19BRjNYMmRRQTFCb3JYUGRpbW5UcDhYdkQxSlJDUmdMZnU2Q2s1MTlMY05abllVYXRVallLS1BMRjc2TUsyRXliczZVWWtXaVFKanU4RVZBYVlYWURMcWhWUiIsImFmZ2hfcGsiOiIifQ%3D%3D.RVMyNTZLXzI2dDVvUkpIRlpaZjN3QWJndHk3bzVFR3lzV1A0cHk1ZWpHaXdkOURyOWNxNVJITmNSZEZwd1o1a2NlWjhaS2l4dVJhQW9meEdIU3VFeEFuUnJpU1h6b0J5",
+    "drms": {
+      "widevine": {
+        "licenseServers": [
+          "https://host-66-220-3-82.contentfabric.io/wv/?qhash=hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV",
+          "http://66.220.3.82:8545/wv/?qhash=hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV"
+        ]
+      }
+    }
+  },
+  "hls": {
+    "playoutUrl": "https://host-66-220-3-82.contentfabric.io/q/hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV/rep/playout/default/hls-aes/playlist.m3u8?authorization=eyJxc3BhY2VfaWQiOiJpc3BjQXBvV1BRUnJUa1JRVjFLcFlqdnFQeVNBbXhhIiwicWxpYl9pZCI6ImlsaWJxTUdXTVNodUZjcTlLdU1pTHJaa1FNakFLanUiLCJhZGRyIjoiMHg5NmEwMTA0QkE0MzRCMzA2NTFBOTE2NTY4NTg5MDBCZGRDNTcwMzY0IiwicWlkIjoiaXFfXzJ2RGJteFRkYWl2UG5tRG44UktMYnhTSFVNZmoiLCJncmFudCI6InJlYWQiLCJ0eF9yZXF1aXJlZCI6ZmFsc2UsImlhdCI6MTU2NjQxNzMwMywiZXhwIjoxNTY2NTAzNzAzLCJhdXRoX3NpZyI6IkVTMjU2S19BRjNYMmRRQTFCb3JYUGRpbW5UcDhYdkQxSlJDUmdMZnU2Q2s1MTlMY05abllVYXRVallLS1BMRjc2TUsyRXliczZVWWtXaVFKanU4RVZBYVlYWURMcWhWUiIsImFmZ2hfcGsiOiIifQ%3D%3D.RVMyNTZLXzI2dDVvUkpIRlpaZjN3QWJndHk3bzVFR3lzV1A0cHk1ZWpHaXdkOURyOWNxNVJITmNSZEZwd1o1a2NlWjhaS2l4dVJhQW9meEdIU3VFeEFuUnJpU1h6b0J5",
+    "drms": {
+      "aes-128": {}
+    }
+  }
+}</pre>
+
+
+    </div>
+  </div>
+
 
 
 
@@ -99775,7 +99818,7 @@ whether such a request exists in the client cache. This request will not be cach
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="SetSigner">
-      <span class="type-signature">async </span>SetSigner<span class="signature">({<span class="inline-param">signer</span>})</span><span class="type-signature"></span>
+      <span class="type-signature"></span>SetSigner<span class="signature">({<span class="inline-param">signer</span>})</span><span class="type-signature"></span>
     </h4>
   </span>
 

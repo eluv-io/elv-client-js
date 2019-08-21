@@ -139,7 +139,7 @@ class ElvClient {
     });
   }
 
-  async InitializeClients() {
+  InitializeClients() {
     this.HttpClient = new HttpClient(this.fabricURIs);
     this.ethClient = new EthClient(this.ethereumURIs);
 
@@ -154,7 +154,7 @@ class ElvClient {
     this.userProfileClient = new UserProfileClient({client: this});
 
     if(this.signer) {
-      await this.userProfileClient.WalletAddress();
+      this.userProfileClient.WalletAddress();
     }
   }
 
@@ -197,12 +197,12 @@ class ElvClient {
    * @namedParams
    * @param {object} signer - The ethers.js signer object
    */
-  async SetSigner({signer}) {
+  SetSigner({signer}) {
     signer.connect(this.ethClient.Provider());
     signer.provider.pollingInterval = 250;
     this.signer = signer;
 
-    await this.InitializeClients();
+    this.InitializeClients();
   }
 
   /**

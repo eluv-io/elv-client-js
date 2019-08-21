@@ -1,3 +1,4 @@
+//const { ElvClient } = require("../src/ElvClient");
 const { ElvClient } = require("../src/ElvClient");
 const { FrameClient } = require("../src/FrameClient");
 
@@ -98,16 +99,49 @@ const Test = async () => {
 
     await client.SetSigner({signer});
 
-    const accessGroupAddress = await client.ContentObjectMetadata({
-      libraryId: client.contentSpaceLibraryId,
-      objectId: client.contentSpaceObjectId,
-      metadataSubtree: "contentSpaceGroupAddress"
-    });
+    const Replacer = (name, value) => {
+      if(!value || typeof value !== "object" || Array.isArray(value)) { return value; }
 
-    await client.AddAccessGroupManager({
-      contractAddress: accessGroupAddress,
-      memberAddress: "0x060b075aa5bc937d989fde080d09ececc286dbe6"
-    });
+      if(Buffer.isBuffer(value) || (value.type === "Buffer" && value.data)) {
+        return `<Buffer ${value.size || value.data.length}>`;
+      }
+
+      const objectName = (value.toString().match(/\[object\s+(.*)\]/) || [])[1];
+      if(!objectName || objectName === "Object") { return value; }
+
+      switch(objectName) {
+        case ("ArrayBuffer"):
+          return `<ArrayBuffer ${value.byteLength}>`;
+        case ("Response"):
+          return `<Response ${value.size}>`;
+        case ("Object"):
+          return value;
+        default:
+          return `<${objectName}>`;
+      }
+    };
+
+    const opts = {
+      "dash": {
+        "playoutUrl": "https://host-66-220-3-82.contentfabric.io/q/hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV/rep/playout/default/dash-widevine/dash.mpd?authorization=eyJxc3BhY2VfaWQiOiJpc3BjQXBvV1BRUnJUa1JRVjFLcFlqdnFQeVNBbXhhIiwicWxpYl9pZCI6ImlsaWJxTUdXTVNodUZjcTlLdU1pTHJaa1FNakFLanUiLCJhZGRyIjoiMHg5NmEwMTA0QkE0MzRCMzA2NTFBOTE2NTY4NTg5MDBCZGRDNTcwMzY0IiwicWlkIjoiaXFfXzJ2RGJteFRkYWl2UG5tRG44UktMYnhTSFVNZmoiLCJncmFudCI6InJlYWQiLCJ0eF9yZXF1aXJlZCI6ZmFsc2UsImlhdCI6MTU2NjQxNzMwMywiZXhwIjoxNTY2NTAzNzAzLCJhdXRoX3NpZyI6IkVTMjU2S19BRjNYMmRRQTFCb3JYUGRpbW5UcDhYdkQxSlJDUmdMZnU2Q2s1MTlMY05abllVYXRVallLS1BMRjc2TUsyRXliczZVWWtXaVFKanU4RVZBYVlYWURMcWhWUiIsImFmZ2hfcGsiOiIifQ%3D%3D.RVMyNTZLXzI2dDVvUkpIRlpaZjN3QWJndHk3bzVFR3lzV1A0cHk1ZWpHaXdkOURyOWNxNVJITmNSZEZwd1o1a2NlWjhaS2l4dVJhQW9meEdIU3VFeEFuUnJpU1h6b0J5",
+        "drms": {
+          "widevine": {
+            "licenseServers": [
+              "https://host-66-220-3-82.contentfabric.io/wv/?qhash=hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV",
+              "http://66.220.3.82:8545/wv/?qhash=hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV"
+            ]
+          }
+        }
+      },
+      "hls": {
+        "playoutUrl": "https://host-66-220-3-82.contentfabric.io/q/hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV/rep/playout/default/hls-aes/playlist.m3u8?authorization=eyJxc3BhY2VfaWQiOiJpc3BjQXBvV1BRUnJUa1JRVjFLcFlqdnFQeVNBbXhhIiwicWxpYl9pZCI6ImlsaWJxTUdXTVNodUZjcTlLdU1pTHJaa1FNakFLanUiLCJhZGRyIjoiMHg5NmEwMTA0QkE0MzRCMzA2NTFBOTE2NTY4NTg5MDBCZGRDNTcwMzY0IiwicWlkIjoiaXFfXzJ2RGJteFRkYWl2UG5tRG44UktMYnhTSFVNZmoiLCJncmFudCI6InJlYWQiLCJ0eF9yZXF1aXJlZCI6ZmFsc2UsImlhdCI6MTU2NjQxNzMwMywiZXhwIjoxNTY2NTAzNzAzLCJhdXRoX3NpZyI6IkVTMjU2S19BRjNYMmRRQTFCb3JYUGRpbW5UcDhYdkQxSlJDUmdMZnU2Q2s1MTlMY05abllVYXRVallLS1BMRjc2TUsyRXliczZVWWtXaVFKanU4RVZBYVlYWURMcWhWUiIsImFmZ2hfcGsiOiIifQ%3D%3D.RVMyNTZLXzI2dDVvUkpIRlpaZjN3QWJndHk3bzVFR3lzV1A0cHk1ZWpHaXdkOURyOWNxNVJITmNSZEZwd1o1a2NlWjhaS2l4dVJhQW9meEdIU3VFeEFuUnJpU1h6b0J5",
+        "drms": {
+          "aes-128": {}
+        }
+      }
+    }
+
+    fs.writeFileSync("out.txt", JSON.stringify({result: `${JSON.stringify(opts, Replacer, 2)}`}));
   } catch(error) {
     console.error(error);
   }

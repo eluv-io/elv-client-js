@@ -55,538 +55,132 @@
 
   <section class="readme">
     <article>
-      <h1>Eluvio JS Client</h1>
-<h3>Installation</h3>
-<h4>Install using NPM:</h4>
-<p><code>npm install --save https://github.com/qluvio/elv-client-js</code></p>
-<h5>Browser:</h5>
-<p><code>const { ElvClient } = require(&quot;elv-client-js&quot;);</code></p>
-<h5>Node:</h5>
-<p><code>const { ElvClient } = require(&quot;elv-client-js/ElvClient-node-min.js&quot;);</code></p>
-<h4>Install manually:</h4>
-<h5>Browser:</h5>
-<p>include <code>./ElvClient-min.js</code></p>
-<h5>Node:</h5>
-<p>include <code>./ElvClient-node-min.js</code></p>
-<p>See:</p>
-<ul>
-<li><code>./test/TestMethods.js</code> for example usage of most functionality</li>
-<li><code>./test/ExampleOutput.txt</code> for example output from these examples</li>
-<li><code>./test/Test.html</code> for example usage in browser</li>
-<li><code>./test/Test.js</code> for example usage in node</li>
-</ul>
-<h3>API Client</h3>
-<p>See <code>./src/ElvClient.js</code> for all available endpoints.</p>
-<h4>Initializing the client</h4>
-<pre class="prettyprint source lang-javascript"><code>let client = new ElvClient({
-  contentSpaceId: &quot;ispc6NxBDhWiRuKyDNMWVmpTuCaQssS2iuDfq8hFkivVoeJw&quot;,
-  hostname: &quot;localhost&quot;,
-  port: 8008,
-  useHTTPS: false,
-  ethHostname: &quot;localhost&quot;,
-  port: 8545,
-  useHTTPS: false
+      <h2>Eluvio Javascript Client</h2>
+<h3><a href="https://eluv-io.github.io/elv-client-js/ElvClient.html">API Documentation</a></h3>
+<p>The Eluvio Javascript Client is designed to make interacting with the Eluvio Content Fabric simple by encapsulating all of the necessary HTTP requests, authorization, and blockchain interaction.</p>
+<h3>Getting Started</h3>
+<h4>Install from NPM:</h4>
+<pre class="prettyprint source"><code>npm install --save @eluvio/elv-client-js
+</code></pre>
+<h4>Usage</h4>
+<pre class="prettyprint source"><code>// From source
+import { ElvClient } from &quot;elv-client-js&quot;;
+const { ElvClient } = require(&quot;elv-client-js&quot;);
+
+// From babel-compiled source
+import { ElvClient } from &quot;elv-client-js/dist/src/ElvClient.js&quot;;
+const { ElvClient } = require(&quot;elv-client-js/dist/src/ElvClient.js&quot;);
+
+// Minified (browser)
+import { ElvClient } from &quot;elv-client-js/dist/ElvClient-min.js&quot;;
+const { ElvClient } = require(&quot;elv-client-js/dist/ElvClient-min.js&quot;);
+
+// Minified (node)
+import { ElvClient } from &quot;elv-client-js/dist/ElvClient-node-min.js&quot;;
+const { ElvClient } = require(&quot;elv-client-js/dist/ElvClient-node-min.js&quot;);
+
+// HTML
+&lt;script src=&quot;.../elv-client-js/dist/ElvClient-min.js&quot;>&lt;/script>
+</code></pre>
+<h3>Initializing the Client</h3>
+<p>Initializing the client is as simple as pointing it at the appropriate Eluvio configuration URL. This URL will automatically return information about the best Fabric, blockchain and KMS nodes, as well as the Fabric's content space - all the information the client needs to know to communicate with the Fabric.</p>
+<pre class="prettyprint source lang-javascript"><code>const client = ElvClient.FromConfigurationUrl({
+  configurationUrl: &quot;https://main.net955304.contentfabric.io/config&quot;
 });
 </code></pre>
-<p>From a configuration file:</p>
-<pre class="prettyprint source lang-json"><code>// TestConfiguration.json:
-{
-  &quot;fabric&quot;: {
-    &quot;contentSpaceId&quot;: &quot;ispc33dJvdsPi3Njj6D6VkDJus2HG9JD&quot;,
-    &quot;hostname&quot;: &quot;localhost&quot;,
-    &quot;port&quot;: 8008,
-    &quot;use_https&quot;: false
-  },
-  &quot;ethereum&quot;: {
-    &quot;hostname&quot;: &quot;localhost&quot;,
-    &quot;port&quot;: 8545,
-    &quot;use_https&quot;: false
-  }
-}
-</code></pre>
-<pre class="prettyprint source lang-javascript"><code>const ClientConfiguration = require(&quot;TestConfiguration.json&quot;);
-let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
-</code></pre>
-<p>All method arguments are <strong>named hashes</strong> for clarity.</p>
-<p>For example:</p>
-<pre class="prettyprint source lang-javascript"><code>client.DownloadPart({
-  libraryId: &quot;ilibWL9CAVcQYZPHB58SDRMkwQ&quot;, 
-  contentHash: &quot;hq__QmdSKNUk4pabuUTAXo4F2dAkzkioeagy4r1fuAcBHL2k7X&quot;, 
-  partHash: &quot;hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN&quot;,
-  format: &quot;blob&quot;
-})
-</code></pre>
-<h4>Using the client:</h4>
-<p>The API client will query the fabric endpoint and return the parsed JSON for JSON based endpoints.</p>
-<p>For non-JSON endpoints, such as downloading a file, the format can be specified. By default, it will be parsed as a blob. See <code>ElvClient#ResponseToFormat</code> for available formats. If the specified format is explicitly undefined or otherwise does not match any formats, the raw <a href="https://developer.mozilla.org/en-US/docs/Web/API/Response">Response</a> will be returned.</p>
-<p>All query methods are async methods that will return <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise">Promises</a>.</p>
-<p>Examples:</p>
-<pre class="prettyprint source lang-javascript"><code>// Using .then
-let query = client.ContentLibraries();
-query.then(contentLibraries => console.log(contentLibraries));
-
-
-// Using async/await
-let response = await client.ContentLibraries();
-console.log(json);
-
-
-/* Result:
-
-[ 'ilib181m5UqiibeHCkvydb5zvs',
-  'ilib2nhndXbwNsZpSW4vGKZtUL',
-  'ilib6M65FWP5VURJAgg5UgH49F',
-  'ilib7HDyiWuH2qecS8aAciv7n4',
-  'ilibBSZ8isuvUfsejLwfHAqY5',
-  'ilibCAB6N2uAokYSCsDdx4D1ho',
-  'ilibEWFJtGT2J2qJ2U8one7rqL',
-  'ilibGHb9b8yxAeG1ZgGF9GZNj8',
-  'ilibGuftC7MRHF4HWwe7SpN9U3',
-  'ilibHR9n78xEztxzZuCrr6zcAg',
-  'ilibMKsosn5FoZNsY42S6JkbFm',
-  'ilibMjtps7qHeaLtyZ5RL9msU2',
-  'ilibQWUSXUaZdj4gUG3PU96F9U',
-  'ilibS3AiQca535GpdN8wR1guTR',
-  'ilibUJqT5tEgi8NtdFedaUxcQL',
-  'ilibUZNhCvvaFF9c2m2o2pjfqN',
-  'ilibWL9CAVcQYZPHB58SDRMkwQ' ]
- */
-</code></pre>
-<p>Non-JSON data like files and parts will be returned as a blob by default, but other formats can be specified (as well as returning the raw <a href="https://developer.mozilla.org/en-US/docs/Web/API/Response">Response</a>)</p>
-<pre class="prettyprint source lang-javascript"><code>// Using .then
-let query = client.QParts({
-  partHash: &quot;hqp_QmWuCKNpTeVp2mUP1sQwaJLVVTWvepxCqWks3Mrt2UZCRQ&quot;,
-  format: &quot;arraybuffer&quot;
-});
-
-query.then(arrayBuffer => console.log(Buffer.from(arrayBuffer)));
-
-
-// Using async/await
-let response = await client.QParts({
-  partHash: &quot;hqp_QmWuCKNpTeVp2mUP1sQwaJLVVTWvepxCqWks3Mrt2UZCRQ&quot;,
-  format: &quot;arrayBuffer&quot;
-});
-console.log(buffer);
-
-
-// Result
-// &lt;Buffer 06 2f 63 62 6f 72 0a a2 67 51 6d 64 48 61 73 68 58 23 02 12 20 7f ee 10 b7 b4 9c 71 38 59 81 83 cc ed 06 d7 09 60 07 a7 0d ed 2d 55 56 0e 9c 7b 79 ca ... >
-</code></pre>
-<h3>Blockchain Interaction</h3>
-<h3>Authorization</h3>
-<p>Being a decentralized, trustless ecosystem, the content fabric relies on smart contracts and blockchain transactions to verify that a user is allowed to perform an action. Each type of content (content spaces, libraries, objects, types) have associated smart contracts deployed to the blockchain that mediate access.</p>
-<p>For example, to access a content object, the requestor must call the accessRequest method on that content object's smart contract, then pass the transaction hash in the authorization token when querying the content fabric API. The content fabric will then verify the transaction before performing the requested action. If the transaction is invalid, access will be denied.</p>
-<p>The ElvClient handles all of this automatically. When a method is called, it will create the appropriate transaction and send the correct authorization token with the request.</p>
-<p>The contract address of content can be determined by its ID, because the IDs of content in the fabric are multiformat hashes. This means that no additional information is needed to locate the appropriate contract when accessing content.</p>
-<p>For example, the library with ID <code>ilibVdci1v3nUgXdMxMznXny5NfaPRN</code> has its contract located at the blockchain address <code>0x236ee22acab8810f75b726079a0b3d3afd505645</code>.</p>
-<h4>Wallets and signers</h4>
-<p>To perform the necessary blockchain interactions, the client requires a <em>signer</em>. This is an instance of an <a href="https://github.com/ethers-io/ethers.js/">ethers.js</a> wallet. ElvClient has a utility class <code>ElvWallet</code> to make handling this easier.</p>
+<h4>Wallets and Signers</h4>
+<p>Built on blockchain technology, interaction with the Fabric requires the use of an ethereum private key - representing a user account - in order to verify and authenticate requests, perform encryption, transfer funds, interact with smart contracts, and generally serve as an identity for the user.</p>
+<p>To perform the necessary blockchain interactions, the client requires a <em>signer</em> containing the user's private key. This is an instance of an <a href="https://github.com/ethers-io/ethers.js/">ethers.js</a> wallet. ElvClient has a utility class <code>ElvWallet</code> to make handling this easier.</p>
 <p>After creating the ElvClient instance, you can generate an <code>ElvWallet</code> for the client using <code>client.GenerateWallet()</code>. This class provides simple methods to generate signers from various information, as well as storing and retrieving signers by name.</p>
-<p>Note: you do not need to use the account management functionality of the wallet, you can simply use the wallet to generate signer objects as needed. Omitting the name parameter when calling any of the AddAccount is valid - the signer will only be returned and not stored.</p>
-<h4>Generating the wallet and adding accounts:</h4>
+<p>After creating a signer using one of the AddAccount methods, you can set the signer for ElvClient using <code>client.SetSigner</code>.</p>
 <pre class="prettyprint source lang-javascript"><code>const wallet = client.GenerateWallet();
-
-// With decrypted private key (synchronous): 
-const signer = wallet.AddAccount({
-  accountName: &quot;Alice&quot;,
-  privateKey: &quot;0x0000000000000000000000000000000000000000000000000000000000000000&quot;
-});
-
-// With encrypted private key (asynchronous):
-const signer = await wallet.AddAccountFromEncryptedPK({
-  accountName: &quot;Bob&quot;,
-  encryptedPrivateKey: {&quot;address&quot;:&quot;71b011b67dc8f5c323a34cd14b952721d5750c93&quot;,&quot;crypto&quot;:{&quot;cipher&quot;:&quot;aes-128-ctr&quot;,&quot;ciphertext&quot;:&quot;768c0b26476793e52c7e292b6b221fa4d7f82a7d20a7ccc042ce43c072f97f38&quot;,&quot;cipherparams&quot;:{&quot;iv&quot;:&quot;049e2bed69573f62da6576c21769b520&quot;},&quot;kdf&quot;:&quot;scrypt&quot;,&quot;kdfparams&quot;:{&quot;dklen&quot;:32,&quot;n&quot;:262144,&quot;p&quot;:1,&quot;r&quot;:8,&quot;salt&quot;:&quot;332b0f7730c580aa86b3ec8e79d228e9f76426bb328c468cb57e99e39132c29f&quot;},&quot;mac&quot;:&quot;36079b7f32edf1c3d8d1697313f8088c78be07627ffb6421f655409373fded79&quot;},&quot;id&quot;:&quot;8181d812-ab5e-4e5b-b023-e9049c2aec48&quot;,&quot;version&quot;:3},
-  password: &quot;test&quot;
-});
-
-// Using mnemonics (synchronous)
-const mnemonic = wallet.GenerateMnemonic();
-// -> coin valve van maximum manual glow nurse puppy wish put sound session
-
-const signer = wallet.AddAccountFromMnemonic({
-  accountName: &quot;Carol&quot;,
-  mnemonic: mnemonic
-});
-
-// It is valid to omit the accountName parameter
 const signer = wallet.AddAccount({
   privateKey: &quot;0x0000000000000000000000000000000000000000000000000000000000000000&quot;
 });
-</code></pre>
-<h4>Setting the client's signer</h4>
-<p>After obtaining the signer through whatever means, you must set the signer for the client to use.</p>
-<p>All blockchain transactions performed by ElvClient will use the signer set by the <code>SetSigner</code> method. An exception will be thrown if the signer is not set.</p>
-<pre class="prettyprint source lang-javascript"><code>const signer = wallet.GetAccount({accountName: &quot;Alice&quot;});
+
 client.SetSigner({signer});
-
-client.CreateContentLibrary({
-  libraryName: &quot;New Library&quot;
-})
 </code></pre>
-<h4>Account utilities</h4>
-<h5>Getting account balance</h5>
-<pre class="prettyprint source lang-javascript"><code>const balance = wallet.GetAccountBalance({accountName: &quot;Alice&quot;});
-
-89.787462796
+<p>You do not need to use the account management functionality of the wallet, you can simply use the wallet to generate signer objects as needed. Omitting the name parameter when calling any of the AddAccount is valid - the signer will only be returned and not stored.</p>
+<p>Note that most operations on the Fabric require funds. If the account does not have any funds, most operations will fail. You can send funds from one account to another using <a href="https://eluv-io.github.io/elv-client-js/ElvClient.html#SendFunds">ElvClient#SendFunds</a>.</p>
+<p>State channel authentication (as used in <a href="https://eluv-io.github.io/elv-client-js/ElvClient.html#PlayoutOptions">ElvClient#PlayoutOptions</a>) does not require funds.</p>
+<p><strong>Note: Always treat private keys (and mnemonics) as private, sensitive user data. Always store and transfer them encrypted (the client has a method for encrypting private keys with a password - see <a href="https://eluv-io.github.io/elv-client-js/ElvWallet.html#GenerateEncryptedPrivateKey">ElvWallet#GenerateEncryptedPrivateKey</a>). A plaintext private key or mnemonic should <em>never</em> leave the user's browser - all use of the private key is done on the client.</strong></p>
+<h3>Authorization</h3>
+<p>As a decentralized, trustless ecosystem, the content Fabric relies on smart contracts and blockchain transactions to verify that a user is allowed to perform an action. Each type of content (content spaces, libraries, objects, types, etc.) have associated smart contracts deployed to the blockchain that mediate access.</p>
+<p>For example, to access a content object, the requester must call the accessRequest method on that content object's smart contract, then pass the transaction hash in the authorization token when querying the content Fabric API. The content Fabric will then verify the transaction before performing the requested action. If the transaction is missing or invalid, access will be denied.</p>
+<p>The ElvClient handles all of this automatically. When a method is called, it will perform the appropriate transaction and send the correct authorization token with the request.</p>
+<h3>Content, Contracts and Multi-format Hashes</h3>
+<p>As mentioned previously, every entity on the Fabric is backed by a smart contract. This contract is used for authorization and other functionality, but it is also used as the identity of the entity.</p>
+<p>Every smart contract has a blockchain address. For example:</p>
+<pre class="prettyprint source"><code>0x0472ec0185ebb8202f3d4ddb0226998889663cf2
 </code></pre>
-<h5>Generating signer's encrypted private key (keystore format)</h5>
-<pre class="prettyprint source lang-javascript"><code>const encryptedPrivateKey = await wallet.GenerateEncryptedPrivateKey({accountName: &quot;Alice&quot;, password: &quot;test&quot;});
-
-&quot;{\&quot;address\&quot;:\&quot;93cc134901c40f6164ab357f4f18bbf4aa058477\&quot;,\&quot;id\&quot;:\&quot;dc5b06ca-f284-4a47-875a-176d857f6d9d\&quot;,\&quot;version\&quot;:3,\&quot;ElvCrypto\&quot;:{\&quot;cipher\&quot;:\&quot;aes-128-ctr\&quot;,\&quot;cipherparams\&quot;:{\&quot;iv\&quot;:\&quot;ca349dad2df26ed5786b987fd54e195d\&quot;},\&quot;ciphertext\&quot;:\&quot;c4e1d0e1bf21cb8e2c4c732040245ea65f22cd4af0666dc79da1b3fbe23c6a27\&quot;,\&quot;kdf\&quot;:\&quot;scrypt\&quot;,\&quot;kdfparams\&quot;:{\&quot;salt\&quot;:\&quot;27695860062f440d91d1863c37349a28518ed98799d0d96b8f9a39c9e23b953a\&quot;,\&quot;n\&quot;:131072,\&quot;dklen\&quot;:32,\&quot;p\&quot;:1,\&quot;r\&quot;:8},\&quot;mac\&quot;:\&quot;2b0fe21ba893c40ab193694ef2f86c7982138fc17b19148b25f65bfccdbb4fbd\&quot;}}&quot;
+<p>This address is used when interacting with the contract directly, to call methods and perform transactions.</p>
+<p>However, this address can be transformed into an ID to address the content on the Fabric.</p>
+<p>By encoding the address in Base58, we get:</p>
+<pre class="prettyprint source"><code>4bWCz6SZZiJ51VUkAb4xGLTgKGm
 </code></pre>
-<p>Note: This method is equivalent to <code>signer.encrypt(password)</code> - if you already have the signer object, calling encrypt directly may be easier.</p>
-<h3>Deploying custom contracts</h3>
-<h4>Compilation and contract code handling</h4>
-<p>In order to deploy custom contracts, the ABI and bytecode of the compiled contract are required. For further contract interaction, such as calling contract methods, only the ABI is necessary.</p>
-<p>Contract compilation is outside the scope of this library, but there are many ways to get contracts compiled and the ABI and bytecode available to your javascript code. The following advice assumes the contracts are written in Solidity.</p>
-<h5>Compilers:</h5>
+<p>Each different type of entity on the Fabric has a prefix. For a library, it is <code>ilib</code>. If this contract is a content library contract, we can refer to the corresponding library on the Fabric using the library ID</p>
+<pre class="prettyprint source"><code>ilib4bWCz6SZZiJ51VUkAb4xGLTgKGm
+</code></pre>
+<p>We can then use this ID as the <code>libraryId</code> argument in the client.</p>
+<p>Additionally, we can go the opposite direction - convert a Fabric ID to its corresponding contract address. This is critically useful - when we want to access content, we need to make a call to the contract of that content. With this scheme, we just easily determine the contract address from a Fabric ID.</p>
+<p>In short, every Fabric ID contains</p>
 <ul>
-<li>Using the <a href="https://github.com/ethereum/solidity">Solidity compiler</a></li>
-<li>Using <a href="https://github.com/trufflesuite/truffle">Truffle</a></li>
-<li>Using <a href="https://www.npmjs.com/package/solc">solc-js</a> (node only)</li>
-<li>Using <a href="https://github.com/ericxtang/browser-solc">browser-solc</a> (browser only)</li>
+<li>the type of the entity (library, object, type, user wallet, etc.) as a 4 byte prefix</li>
+<li>the address of its contract</li>
 </ul>
-<h5>Managing compiled contracts</h5>
-<p>Once your contract has been compiled, there are several ways you can get the ABI and bytecode into your javascript environment.</p>
-<p>From a usage perspective, the easiest way is to get this data into valid javascript. If you do not expect your contract code to change much, you can add the ABI and bytecode strings directly to your code.</p>
-<p>This client relies on several of Eluvio's contracts. In order to easily pull these contracts in to the code and to allow us to minify this library into a single file with no dependencies, we compile these contracts and format them into easily importable javascript using a build script.</p>
-<p><code>./build/BuildContracts.js</code> is the script that compiles the contracts and generates the javascript files, and <code>./src/contracts</code> is where those javascript files are written. These scripts are then used in <code>./src/EthClient.js</code>.</p>
-<p>Compiling to a JSON format would also be easily usable in a javascript environment. For example:</p>
-<pre class="prettyprint source lang-json"><code>// Contract.json:
-{
-  &quot;abi&quot;: &lt;abi>,
-  &quot;bytecode&quot;: &lt;bytecode>
-}
+<p>This conversion should not be something that must be done often, as the client encapsulates a lot of the common interactions between Fabric and blockchain, but it is useful when you want to call methods on the content's contract.</p>
+<p>The client contains utility methods to make this conversion simple.</p>
+<pre class="prettyprint source lang-javascript"><code>const address = &quot;0x0472ec0185ebb8202f3d4ddb0226998889663cf2&quot;;
+
+// Convert to multihash
+const id = client.utils.AddressToHash(address);
+
+// Convenience methods for automatically adding prefixes
+const libraryId = client.utils.AddressToLibraryId(address);
+const objectId = client.utils.AddressToObjectId(address);
+
+// Convert back to address (requires prefix)
+client.utils.HashToAddress(libraryId);
 </code></pre>
-<pre class="prettyprint source lang-javascript"><code>// UseContract.js
-const contractData = require(&quot;Contract.json&quot;);
-
-client.DeployContract({
-  abi: contractData.abi,
-  bytecode: contractData.bytecode,
-  constructorArgs: []
-})
+<h5>Version Hashes</h5>
+<p>Content on the Fabric has immutable versions. Whenever content is modified, a new version is created, while older versions remain unchanged.</p>
+<p>When referring to an object, an object ID (<code>iq__2vDbmxTdaivPnmDn8RKLbxSHUMfj</code>) refers to the object as a whole. Referring to content with an object ID will refer to the latest version.</p>
+<p>However, you can also refer to a specific version of the object using a version hash. One such version of this object is <code>hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV</code>.</p>
+<p>As an analogy, referring to an object with an object ID compared to referring it using version hash is like referring to a Git repo versus referring to a repo at a specific commit. The former refers to the entity as a whole and updates as changes are made, while the latter refers to the entity at a specific point in time and does not change.</p>
+<p>This version hash is a Base58 encoded string with the following format:</p>
+<pre class="prettyprint source"><code>hq__&lt;Base58(&lt;SHA256 digest>&lt;size>&lt;object ID>)>
 </code></pre>
-<p>Other methods may be more difficult and prone to error due to the difficulty of importing non-javascript files into javascript.</p>
-<ul>
-<li>If you are using webpack, you can use the <a href="https://github.com/webpack-contrib/raw-loader">raw-loader</a> to import your compiled contract data.</li>
-<li>On node.js, you can use fs to read files</li>
-<li>In a browser, you can do an XHR or fetch request to access the file</li>
-</ul>
-<h5>Deploying contracts</h5>
-<p>The ElvClient can be used to deploy custom contracts, provided the ABI and bytecode of the contract.</p>
-<p>The arguments to both the contract constructor and contract methods are provided as an ordered array. Some arguments have special required formats - Bytes32 strings, for example. The FormatContractArguments helper can perform this formatting automatically by referencing the ABI.</p>
-<p>For example, the second argument to this contract constructor is a bytes32 string:</p>
-<pre class="prettyprint source lang-javascript"><code>const constructorArgs = client.FormatContractArguments({
-  abi,
-  methodName: &quot;constructor&quot;,
-  args: [
-    &quot;First Argument&quot;,
-    &quot;Content Space&quot;,
-    &quot;0x0000000000000000000000000000000000000000&quot;
-  ]
-});
-
-/* Result
-
-[ 'New library',
-  '0x436f6e74656e7420537061636500000000000000000000000000000000000000',
-  '0x0000000000000000000000000000000000000000' ]
-*/
-</code></pre>
-<p>It is recommended to always run your arguments array through the FormatContractArguments method before deploying a contract or calling a contract method unless you explicitly handle argument formatting yourself.</p>
-<p>To deploy a contract, simply pass the ABI, bytecode, and formatted constructor arguments.</p>
-<pre class="prettyprint source lang-javascript"><code>return await client.DeployContract({
-  abi,
-  bytecode,
-  constructorArgs
-});
-</code></pre>
-<p>Calling a method on a deployed contract is similarly simple:</p>
-<pre class="prettyprint source lang-javascript"><code>return await client.CallContractMethod({
-  contractAddress,
-  abi,
-  methodName: &quot;myMethod&quot;,
-  methodArgs
-});
-</code></pre>
-<h3>Other blockchain interaction</h3>
-<p>The signer object, as described above, is an instance of an <a href="https://github.com/ethers-io/ethers.js/">ethers.js</a> wallet that is connected to the client's specified blockchain (provider). It can be used independently of the ElvClient to do anything outlined in the <a href="https://docs.ethers.io/ethers.js/html/api-wallet.html">documentation</a>.</p>
-<p>This signer can be used in conjunction with the ethers.js library, or even another ethereum library like web3 (by extracting the private key), to deploy contracts, sign transactions and perform other functions not explicitly supported in the ElvClient.</p>
-<p>Refer to src/EthClient.js to see how ElvClient uses ethers.js to interact with the blockchain.</p>
-<h3>Error handling</h3>
-<p>Error checking is performed by the client for all queries. If an error occurs or if the response is <code>!.ok</code> (response code not in 200 range), an error of the following format will be thrown:</p>
-<pre class="prettyprint source lang-json"><code>{ 
-  &quot;status&quot;: 500,
-  &quot;statusText&quot;: &quot;request to http://localhost:8008/qlibs failed, reason: connect ECONNREFUSED 127.0.0.1:8008&quot;,
-  &quot;url&quot;: &quot;http://localhost:8008/qlibs&quot; 
-} 
-</code></pre>
-<p>These should be caught and handled using .catch or try/catch blocks</p>
-<pre class="prettyprint source lang-javascript"><code>// Using .catch
- client.ContentLibraries()
-   .then(libraryIds => console.log(libraryIds))
-   .catch(error => console.log(error.statusText));
-
-// Using async/await
-try {
-  let libraryIds = await client.ContentLibraries();
-  console.log(libraryIds);
-} catch(error) {
-  console.log(error.statusText);
-}
-</code></pre>
-<p>See <code>./test/TestMethods.js</code> for full working examples.</p>
-<h3>Content Object Verification</h3>
-<pre class="prettyprint source lang-javascript"><code>// Using promise:
-client.VerifyContentObject({
-  partHash: &quot;hq__QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb&quot;,
-  libraryId: &quot;ilibWL9CAVcQYZPHB58SDRMkwQ&quot;
-}).then(result => { console.log(result); });
-
-
-// Using async / await
-let result = await client.VerifyContentObject({
-  partHash: &quot;hq__QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb&quot;,
-  libraryId: &quot;ilibWL9CAVcQYZPHB58SDRMkwQ&quot;
-});
-console.log(result);
-
-/* Result:
-
-{
-  &quot;hash&quot;: &quot;hq__QmchT4PFtSdbLnQjMNeyoMB42jncU6QwiZe4wS1ymvgVK1&quot;,
-  &quot;qref&quot;: {
-    &quot;valid&quot;: true,
-    &quot;hash&quot;: &quot;hqp_QmchT4PFtSdbLnQjMNeyoMB42jncU6QwiZe4wS1ymvgVK1&quot;
-  },
-  &quot;qmd&quot;: {
-    &quot;valid&quot;: true,
-    &quot;hash&quot;: &quot;hqp_QmQ4V6Zi4Z4oGkAiZEYFoYaK5gs55r458dbJXer5hcS4ZB&quot;,
-    &quot;check&quot;: {
-      &quot;valid&quot;: true,
-      &quot;invalidValues&quot;: []
-    }
-  },
-  &quot;qstruct&quot;: {
-    &quot;valid&quot;: true,
-    &quot;hash&quot;: &quot;hqp_QmNweqiWD85twj1f3HmhmSANoSpdra7cJzraZYetrkxh4c&quot;,
-    &quot;parts&quot;: [
-      {
-        &quot;hash&quot;: &quot;hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB&quot;,
-        &quot;size&quot;: 17
-      }
-    ]
-  },
-  &quot;valid&quot;: true
-}
-*/
-
-// Library ID is optional
-// If provided, up to 5 metadata fields will be checked against the /meta endpoint
-// If not provided, additional metadata check will not be performed
-let result = await client.VerifyContentObject({
-  partHash: &quot;hq__QmWapFBE3sZ8z7cipsrHtE97VjtJ6rfiCVvWkC7mgYfLVb&quot;
-})
-console.log(result);
+<p>In short, the version hash refers to a specific of content on the Fabric, and it also contains the object ID, which means we can determine its contract address.</p>
+<p>The client contains a utility method for parsing version hashes:</p>
+<pre class="prettyprint source lang-javascript"><code>client.utils.DecodeVersionHash(&quot;hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV&quot;)
 
 /*
-Result:
-
 {
-  &quot;hash&quot;: &quot;hq__QmchT4PFtSdbLnQjMNeyoMB42jncU6QwiZe4wS1ymvgVK1&quot;,
-  &quot;qref&quot;: {
-    &quot;valid&quot;: true,
-    &quot;hash&quot;: &quot;hqp_QmchT4PFtSdbLnQjMNeyoMB42jncU6QwiZe4wS1ymvgVK1&quot;
-  },
-  &quot;qmd&quot;: {
-    &quot;valid&quot;: true,
-    &quot;hash&quot;: &quot;hqp_QmQ4V6Zi4Z4oGkAiZEYFoYaK5gs55r458dbJXer5hcS4ZB&quot;
-  },
-  &quot;qstruct&quot;: {
-    &quot;valid&quot;: true,
-    &quot;hash&quot;: &quot;hqp_QmNweqiWD85twj1f3HmhmSANoSpdra7cJzraZYetrkxh4c&quot;,
-    &quot;parts&quot;: [
-      {
-        &quot;hash&quot;: &quot;hqp_QmSYmLooWwynAzeJ54Gn1dMBnXnQTj6FMSSs3tLusCQFFB&quot;,
-        &quot;size&quot;: 17
-      }
-    ]
-  },
-  &quot;valid&quot;: true
-}
-*/
-
-
-// Both &quot;hqp_&quot; and &quot;hq__&quot; format are acceptable
-let result = await client.VerifyContentObject({
-  partHash: &quot;hq__QmWuCKNpTeVp2mUP1sQwaJLVVTWvepxCqWks3Mrt2UZCRQ&quot;
-})
-console.log(result);
-
-
-// Example error result:
-/*
-{
-  &quot;valid&quot;: false,
-  &quot;part&quot;: {
-    &quot;valid&quot;: true
-  },
-  &quot;metadata&quot;: {
-    &quot;valid&quot;: true,
-    &quot;check&quot;: {
-      &quot;valid&quot;: false,
-      &quot;invalidValues&quot;: [
-        {
-          &quot;key&quot;: &quot;eluv.version&quot;,
-          &quot;cborValue&quot;: &quot;2asd&quot;,
-          &quot;metadataValue&quot;: &quot;2&quot;
-        },
-        {
-          &quot;key&quot;: &quot;eluv.contract_address&quot;,
-          &quot;cborValue&quot;: &quot;0xc6629e8fad87eb91f6faedcbd7802fc71f5be99dasd&quot;,
-          &quot;metadataValue&quot;: &quot;0xc6629e8fad87eb91f6faedcbd7802fc71f5be99d&quot;
-        },
-        {
-          &quot;key&quot;: &quot;eluv.access.type&quot;,
-          &quot;cborValue&quot;: &quot;freeasd&quot;,
-          &quot;metadataValue&quot;: &quot;free&quot;
-        },
-        {
-          &quot;key&quot;: &quot;name&quot;,
-          &quot;cborValue&quot;: &quot;best contentasd&quot;,
-          &quot;metadataValue&quot;: &quot;best content&quot;
-        },
-        {
-          &quot;key&quot;: &quot;image&quot;,
-          &quot;cborValue&quot;: &quot;hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WNasd&quot;,
-          &quot;metadataValue&quot;: &quot;hqp_QmU3QKSgShnQQSnKdmEMDgo4AimNHg3JHy4SY7DymVy5WN&quot;
-        }
-      ]
-    }
-  },
-  &quot;struct&quot;: {
-    &quot;valid&quot;: false,
-    &quot;error&quot;: &quot;Invalid typed array length: 8445309507702284000&quot;
-  }
+  &quot;digest&quot;: &quot;7e98af41257c1446a4c5fcab9306e5d4f783145391cfa996bf9eca0197dd9388&quot;,
+  &quot;size&quot;: 139,
+  &quot;objectId&quot;: &quot;iq__2vDbmxTdaivPnmDn8RKLbxSHUMfj&quot;,
+  &quot;partHash&quot;: &quot;hqp_3rzPdsErVFeqjdG9o31rhr62fpEGhg5qv7QJjL6esVLV47i&quot;
 }
 */
 </code></pre>
-<h3>IFrame Client</h3>
-<p>The API client can be used transparently by an restricted IFrame using the FrameClient (./ElvFrameClient-min.js).</p>
-<p>See ./test/frames/Parent.html and ./test/frames/Child.html for example usage</p>
-<p>NOTE: Raw response objects cannot be passed in message. When using non-json endpoints (e.g. DownloadPart), you must specify a valid type in the format field or accept the default blob format. The available formats correspond to Response methods (.json(), .blob(), .text(), etc.)</p>
-<h3>Content Type Schema</h3>
-<h4>Type Schema Grammar:</h4>
+<p>Note that version hashes can not be generated from contract addresses like object IDs. They are specific to the Fabric and must be retrieved using the object ID.</p>
+<p>See <a href="https://eluv-io.github.io/elv-client-js/ElvClient.html#ContentObjectVersions">ElvClient#ContentObjectVersions</a></p>
+<h4>Playing Video</h4>
+<p>See the <a href="https://github.com/eluv-io/elv-stream-sample">Stream Sample App</a> for a detailed explanation on playing video from the Fabric using the Eluvio JavaScript client.</p>
+<h4>Frame Client</h4>
+<p>To protect access to users private keys and unify account management functionality, applications are run within an IFrame by <a href="https://github.com/eluv-io/elv-fabric-browser">Eluvio Core</a>. The FrameClient can be used equivalently in place of ElvClient within this restricted IFrame without having access to any user keys.</p>
+<p>The frame client contains dynamically defined methods corresponding to those in ElvClient, and works by passing a message to the Eluvio Core frame with the method name and arguments. Core then takes that message, calls the method in its own client (which has the key for the current user) with the provided arguments, and passes the results back in another message. The frame client then hands the results back to the caller.</p>
+<p>With few exceptions, using FrameClient within Core works identically to the full client.</p>
+<p>Note that functions can not be passed between frames - any functions, including those contained in objects, will be automatically stripped out of the sent message by the browser.</p>
+<p>Both the <a href="https://github.com/eluv-io/elv-fabric-browser">Eluvio Fabric Browser</a> and the <a href="https://github.com/eluv-io/elv-video-editor">Eluvio Video Editor</a> use the FrameClient exclusively.</p>
+<h4>Other Resources</h4>
+<p>Our Core, Fabric Browser and Video Editor apps are all completely open source, and make extensive use of this client:</p>
 <ul>
-<li><strong>Schema</strong>: [ <strong>Entry</strong> ]</li>
-<li><strong>Entry</strong>: { <strong>Key</strong>, <strong>Type</strong>, { <strong>Options</strong> } }</li>
-<li><strong>Key</strong>: string</li>
-<li><strong>Type</strong>:
-&quot;label&quot; |
-&quot;string&quot; |
-&quot;text&quot; |
-&quot;integer&quot; |
-&quot;number&quot; |
-&quot;json&quot; |
-&quot;boolean&quot; |
-&quot;choice&quot; |
-&quot;list&quot; |
-&quot;object&quot; |
-&quot;file&quot; |
-&quot;attachedFile&quot;</li>
-<li><strong>Options</strong> - Each type may have additional options that can modify contents, display properties, or validation of the field
-<ul>
-<li>*
-<ul>
-<li>label: string
-<ul>
-<li>The label for this field. If not set, the key will be used as the label</li>
+<li><a href="https://github.com/eluv-io/elv-fabric-browser">Eluvio Core</a></li>
+<li><a href="https://github.com/eluv-io/elv-fabric-browser">Eluvio Fabric Browser</a></li>
+<li><a href="https://github.com/eluv-io/elv-fabric-browser">Eluvio Video Editor</a></li>
 </ul>
-</li>
-<li>required: boolean
-<ul>
-<li>Whether or not this field is required. Validation will be performed on the form
-using the html5 &quot;required&quot; attribute</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>&quot;label&quot;:
-<ul>
-<li>text: string
-<ul>
-<li>The text to be displayed in the label</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>&quot;object&quot;:
-<ul>
-<li>fields: <strong>Schema</strong>
-<ul>
-<li>The fields of an object are described as a schema</li>
-</ul>
-</li>
-<li>flattenDisplay: boolean
-<ul>
-<li>If true, the fields will not be wrapped in a subsection in the form with the object label -- the fields will appear as if they were not contained in an object.</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>&quot;choice&quot;:
-<ul>
-<li>options: [ [label, value], ...]
-<ul>
-<li>List of options to choose from. Each entry is a pair consisting of the label of the entry and its value</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>&quot;file&quot;:
-<ul>
-<li>multiple: boolean
-<ul>
-<li>If specified, will allow uploading of multiple files. Otherwise, only a single file will
-be allowed</li>
-</ul>
-</li>
-<li>accept: mime-type-string | [ mime-type-string ]
-<ul>
-<li>Limits the allowed filetypes to be upload to the specified mime-types</li>
-</ul>
-</li>
-<li>preview: boolean
-<ul>
-<li>If specified, a preview of the selected image will be shown above the selection when an image is chosen</li>
-<li>&quot;accept&quot; should be an image type. If multiple inputs are allowed, only the first selection will be shown</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>&quot;attachedFile&quot;:
-<ul>
-<li>hash: string
-<ul>
-<li>The hash of the content type part corresponding to the attached file</li>
-</ul>
-</li>
-<li>filename: string
-<ul>
-<li>The filename to use when the file is downloaded. If not provided, the label or the key will be used.</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<h5>Notes</h5>
-<p><em>attachedFile</em> is a special field that corresponds to a file uploaded to the content type. This file will be available in the form via a download link. This type may be useful for terms and conditions, instructions, or other information the contributor may need.</p>
-<p>Schema are specified in the &quot;eluv.schema&quot; tag in the content type metadata.</p>
-<p>Custom metadata manipulation can be allowed by setting &quot;eluv.allowCustomMetadata&quot; to true in the content type metadata.</p>
+<p>You can also look at the source and test code for this client. It contains many examples of how to interact with the Fabric, blockchain, and contract code.</p>
     </article>
   </section>
 

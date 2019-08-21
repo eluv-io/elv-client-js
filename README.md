@@ -1,10 +1,53 @@
-### Eluvio Javascript Client
+## Eluvio Javascript Client
 
-#### [Read the docs](https://eluv-io.github.io/elv-client-js/ElvClient.html)
+### [API Documentation](https://eluv-io.github.io/elv-client-js/ElvClient.html)
 
-The Eluvio Javascript Client is designed to make interacting with the Eluvio Content Fabric simple by encapsulating all of the HTTP requests, authorization, and blockchain interaction involved.
+The Eluvio Javascript Client is designed to make interacting with the Eluvio Content Fabric simple by encapsulating all of the necessary HTTP requests, authorization, and blockchain interaction.
 
-##### Wallets and signers
+### Getting Started
+
+#### Install from NPM: 
+
+```
+npm install --save @eluvio/elv-client-js
+```
+
+#### Usage
+
+```
+// From source
+import { ElvClient } from "elv-client-js";
+const { ElvClient } = require("elv-client-js");
+
+// From babel-compiled source
+import { ElvClient } from "elv-client-js/dist/src/ElvClient.js";
+const { ElvClient } = require("elv-client-js/dist/src/ElvClient.js");
+
+// Minified (browser)
+import { ElvClient } from "elv-client-js/dist/ElvClient-min.js";
+const { ElvClient } = require("elv-client-js/dist/ElvClient-min.js");
+
+// Minified (node)
+import { ElvClient } from "elv-client-js/dist/ElvClient-node-min.js";
+const { ElvClient } = require("elv-client-js/dist/ElvClient-node-min.js");
+
+// HTML
+<script src=".../elv-client-js/dist/ElvClient-min.js"></script>
+```
+
+### Initializing the Client
+
+Initializing the client is as simple as pointing it at the appropriate Eluvio configuration URL. This URL will automatically return information about the best Fabric, blockchain and KMS nodes, as well as the Fabric's content space - all the information the client needs to know to communicate with the Fabric.
+
+```javascript
+const client = ElvClient.FromConfigurationUrl({
+  configurationUrl: "https://main.net955304.contentfabric.io/config"
+});
+```
+
+#### Wallets and Signers
+
+Built on blockchain technology, interaction with the Fabric requires the use of an ethereum private key - representing a user account - in order to verify and authenticate requests, perform encryption, transfer funds, interact with smart contracts, and generally serve as an identity for the user. 
 
 To perform the necessary blockchain interactions, the client requires a *signer* containing the user's private key. This is an instance of an [ethers.js](https://github.com/ethers-io/ethers.js/) wallet. ElvClient has a utility class ```ElvWallet``` to make handling this easier.
 
@@ -13,8 +56,6 @@ After creating the ElvClient instance, you can generate an ```ElvWallet``` for t
 After creating a signer using one of the AddAccount methods, you can set the signer for ElvClient using ``client.SetSigner``.
 
 ```javascript
-const client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
-
 const wallet = client.GenerateWallet();
 const signer = wallet.AddAccount({
   privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -23,30 +64,135 @@ const signer = wallet.AddAccount({
 client.SetSigner({signer});
 ```
 
-Note: you do not need to use the account management functionality of the wallet, you can simply use the wallet to generate signer objects as needed. Omitting the name parameter when calling any of the AddAccount is valid - the signer will only be returned and not stored.
+You do not need to use the account management functionality of the wallet, you can simply use the wallet to generate signer objects as needed. Omitting the name parameter when calling any of the AddAccount is valid - the signer will only be returned and not stored.
 
+Note that most operations on the Fabric require funds. If the account does not have any funds, most operations will fail. You can send funds from one account to another using [ElvClient#SendFunds](https://eluv-io.github.io/elv-client-js/ElvClient.html#SendFunds). 
 
+State channel authentication (as used in [ElvClient#PlayoutOptions](https://eluv-io.github.io/elv-client-js/ElvClient.html#PlayoutOptions)) does not require funds.
 
-#### Authorization
+**Note: Always treat private keys (and mnemonics) as private, sensitive user data. Always store and transfer them encrypted (the client has a method for encrypting private keys with a password - see [ElvWallet#GenerateEncryptedPrivateKey](https://eluv-io.github.io/elv-client-js/ElvWallet.html#GenerateEncryptedPrivateKey)). A plaintext private key or mnemonic should *never* leave the user's browser - all use of the private key is done on the client.**
 
-Being a decentralized, trustless ecosystem, the content fabric relies on smart contracts and blockchain transactions to verify that a user is allowed to perform an action. Each type of content (content spaces, libraries, objects, types) have associated smart contracts deployed to the blockchain that mediate access.
+### Authorization
 
-For example, to access a content object, the requestor must call the accessRequest method on that content object's smart contract, then pass the transaction hash in the authorization token when querying the content fabric API. The content fabric will then verify the transaction before performing the requested action. If the transaction is invalid, access will be denied.
+As a decentralized, trustless ecosystem, the content Fabric relies on smart contracts and blockchain transactions to verify that a user is allowed to perform an action. Each type of content (content spaces, libraries, objects, types, etc.) have associated smart contracts deployed to the blockchain that mediate access.
 
-The ElvClient handles all of this automatically. When a method is called, it will create the appropriate transaction and send the correct authorization token with the request.
+For example, to access a content object, the requester must call the accessRequest method on that content object's smart contract, then pass the transaction hash in the authorization token when querying the content Fabric API. The content Fabric will then verify the transaction before performing the requested action. If the transaction is missing or invalid, access will be denied.
 
-The contract address of content can be determined by its ID, because the IDs of content in the fabric are multiformat hashes. This means that no additional information is needed to locate the appropriate contract when accessing content.
+The ElvClient handles all of this automatically. When a method is called, it will perform the appropriate transaction and send the correct authorization token with the request.
 
-For example, the library with ID ```ilibVdci1v3nUgXdMxMznXny5NfaPRN``` has its contract located at the blockchain address ```0x236ee22acab8810f75b726079a0b3d3afd505645```. 
+### Content, Contracts and Multi-format Hashes
+
+As mentioned previously, every entity on the Fabric is backed by a smart contract. This contract is used for authorization and other functionality, but it is also used as the identity of the entity.
+
+Every smart contract has a blockchain address. For example:
+
+```
+0x0472ec0185ebb8202f3d4ddb0226998889663cf2
+```
+
+This address is used when interacting with the contract directly, to call methods and perform transactions.
+
+However, this address can be transformed into an ID to address the content on the Fabric.
+
+By encoding the address in Base58, we get:
+
+```
+4bWCz6SZZiJ51VUkAb4xGLTgKGm
+```
+
+Each different type of entity on the Fabric has a prefix. For a library, it is `ilib`. If this contract is a content library contract, we can refer to the corresponding library on the Fabric using the library ID 
+
+```
+ilib4bWCz6SZZiJ51VUkAb4xGLTgKGm
+```
+
+We can then use this ID as the `libraryId` argument in the client.
+
+Additionally, we can go the opposite direction - convert a Fabric ID to its corresponding contract address. This is critically useful - when we want to access content, we need to make a call to the contract of that content. With this scheme, we just easily determine the contract address from a Fabric ID. 
+
+In short, every Fabric ID contains
+
+- the type of the entity (library, object, type, user wallet, etc.) as a 4 byte prefix
+- the address of its contract
+
+This conversion should not be something that must be done often, as the client encapsulates a lot of the common interactions between Fabric and blockchain, but it is useful when you want to call methods on the content's contract. 
+
+The client contains utility methods to make this conversion simple.
+
+```javascript
+const address = "0x0472ec0185ebb8202f3d4ddb0226998889663cf2";
+
+// Convert to multihash
+const id = client.utils.AddressToHash(address);
+
+// Convenience methods for automatically adding prefixes
+const libraryId = client.utils.AddressToLibraryId(address);
+const objectId = client.utils.AddressToObjectId(address);
+
+// Convert back to address (requires prefix)
+client.utils.HashToAddress(libraryId);
+```
+
+##### Version Hashes
+
+Content on the Fabric has immutable versions. Whenever content is modified, a new version is created, while older versions remain unchanged.
+
+When referring to an object, an object ID (`iq__2vDbmxTdaivPnmDn8RKLbxSHUMfj`) refers to the object as a whole. Referring to content with an object ID will refer to the latest version.
+
+However, you can also refer to a specific version of the object using a version hash. One such version of this object is `hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV`.
+
+As an analogy, referring to an object with an object ID compared to referring it using version hash is like referring to a Git repo versus referring to a repo at a specific commit. The former refers to the entity as a whole and updates as changes are made, while the latter refers to the entity at a specific point in time and does not change.
+
+This version hash is a Base58 encoded string with the following format:
+
+```
+hq__<Base58(<SHA256 digest><size><object ID>)>
+```
+
+In short, the version hash refers to a specific of content on the Fabric, and it also contains the object ID, which means we can determine its contract address.
+
+The client contains a utility method for parsing version hashes:
+
+```javascript
+client.utils.DecodeVersionHash("hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7YDhLPDoZGnoU32iZvDYiQW8vVi6X7rV")
+
+/*
+{
+  "digest": "7e98af41257c1446a4c5fcab9306e5d4f783145391cfa996bf9eca0197dd9388",
+  "size": 139,
+  "objectId": "iq__2vDbmxTdaivPnmDn8RKLbxSHUMfj",
+  "partHash": "hqp_3rzPdsErVFeqjdG9o31rhr62fpEGhg5qv7QJjL6esVLV47i"
+}
+*/
+``` 
+
+Note that version hashes can not be generated from contract addresses like object IDs. They are specific to the Fabric and must be retrieved using the object ID. 
+
+See [ElvClient#ContentObjectVersions](https://eluv-io.github.io/elv-client-js/ElvClient.html#ContentObjectVersions)
+
+#### Playing Video
+
+See the [Stream Sample App](https://github.com/eluv-io/elv-stream-sample) for a detailed explanation on playing video from the Fabric using the Eluvio JavaScript client.
 
 #### Frame Client
 
-To protect access to users private keys and unify account management functionality, applications are run within an IFrame by elv-core-js. The FrameClient can be used transparently in place of ElvClient within this restricted IFrame without having access to any user keys.
+To protect access to users private keys and unify account management functionality, applications are run within an IFrame by [Eluvio Core](https://github.com/eluv-io/elv-fabric-browser). The FrameClient can be used equivalently in place of ElvClient within this restricted IFrame without having access to any user keys.
 
-The frame client contains dynamically defined methods corresponding to those in ElvClient, and works by passing a message to the elv-core-js frame with the method name and arguments. Core then takes that message, calls the method in its own client (which has the key for the current user) with the provided arguments, and passes the results back in another message. FrameClient then hands the results back to the caller.
+The frame client contains dynamically defined methods corresponding to those in ElvClient, and works by passing a message to the Eluvio Core frame with the method name and arguments. Core then takes that message, calls the method in its own client (which has the key for the current user) with the provided arguments, and passes the results back in another message. The frame client then hands the results back to the caller.
 
-With few exceptions, using FrameClient within elv-core-js works identically to the full ElvClient.
+With few exceptions, using FrameClient within Core works identically to the full client.
 
-See ./test/frames/Parent.html and ./test/frames/Child.html for example usage. elv-fabric-browser also uses FrameClient exclusively.
+Note that functions can not be passed between frames - any functions, including those contained in objects, will be automatically stripped out of the sent message by the browser.
 
-NOTE: Raw response objects cannot be passed in message. When using non-json endpoints (e.g. DownloadPart), you must specify a valid type in the format field or accept the default blob format. The available formats correspond to Response methods (.json(), .blob(), .text(), etc.)
+Both the [Eluvio Fabric Browser](https://github.com/eluv-io/elv-fabric-browser) and the [Eluvio Video Editor](https://github.com/eluv-io/elv-video-editor) use the FrameClient exclusively.
+
+
+#### Other Resources
+
+Our Core, Fabric Browser and Video Editor apps are all completely open source, and make extensive use of this client:
+
+* [Eluvio Core](https://github.com/eluv-io/elv-fabric-browser)
+* [Eluvio Fabric Browser](https://github.com/eluv-io/elv-fabric-browser)
+* [Eluvio Video Editor](https://github.com/eluv-io/elv-fabric-browser)
+
+You can also look at the source and test code for this client. It contains many examples of how to interact with the Fabric, blockchain, and contract code.

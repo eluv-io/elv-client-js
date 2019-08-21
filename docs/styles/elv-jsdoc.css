@@ -439,7 +439,7 @@ td table.params, td table.props {
 
 /* Source code */
 
-.source-container,
+pre.prettyprint,
 .example-container pre {
   padding: 15px 30px 15px 45px;
   font-size: 14px;
@@ -458,4 +458,35 @@ td table.params, td table.props {
 
 pre.source {
   margin: 0 20px;
+}
+
+
+/* Readme */
+
+.readme {
+  padding: 0 5vw 30px;
+}
+
+.readme h1,
+.readme h2,
+.readme h3,
+.readme h4,
+.readme h5,
+.readme p code,
+.readme p + p,
+.readme ul,
+.readme pre.prettyprint {
+  margin: 20px 0;
+}
+
+.readme pre.prettyprint {
+  padding: 15px;
+}
+
+.readme li {
+  margin-left: 20px;
+}
+
+.readme li * {
+  margin: 5px 0;
 }
