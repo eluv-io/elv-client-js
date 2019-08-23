@@ -4855,51 +4855,71 @@ function () {
       return BitmovinPlayoutOptions;
     }()
     /**
-     * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
-     * URL includes authorization token.
-     *
-     * Alias for the FabricUrl method with the "call" parameter
+     * Call the specified bitcode method on the specified object
      *
      * @methodGroup URL Generation
      * @namedParams
      * @param {string=} libraryId - ID of the library
      * @param {string=} objectId - ID of the object
      * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+     * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
      * @param {string} method - Bitcode method to call
-     * @param {Object=} queryParams - Query params to add to the URL
-     * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
-     * token. This is useful for accessing public assets.
-     * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of whether such a request exists in the client cache. This request will not be cached.
+     * @param {Object=} queryParams - Query parameters to include in the request
+     * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
+     * Otherwise, a POST with an UpdateRequest will be performed
+     * @param {string=} format=json - The format of the response
      *
-     * @see FabricUrl for creating arbitrary fabric URLs
-     *
-     * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
+     * @returns {Promise<format>} - The response from the call in the specified format
      */
 
   }, {
-    key: "BitcodeMethodUrl",
+    key: "CallBitcodeMethod",
     value: function () {
-      var _BitcodeMethodUrl = _asyncToGenerator(
+      var _CallBitcodeMethod = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee65(_ref68) {
-        var libraryId, objectId, versionHash, method, _ref68$queryParams, queryParams, _ref68$noAuth, noAuth, _ref68$noCache, noCache;
+        var libraryId, objectId, versionHash, writeToken, method, _ref68$queryParams, queryParams, _ref68$constant, constant, _ref68$format, format, path;
 
         return regeneratorRuntime.wrap(function _callee65$(_context65) {
           while (1) {
             switch (_context65.prev = _context65.next) {
               case 0:
-                libraryId = _ref68.libraryId, objectId = _ref68.objectId, versionHash = _ref68.versionHash, method = _ref68.method, _ref68$queryParams = _ref68.queryParams, queryParams = _ref68$queryParams === void 0 ? {} : _ref68$queryParams, _ref68$noAuth = _ref68.noAuth, noAuth = _ref68$noAuth === void 0 ? false : _ref68$noAuth, _ref68$noCache = _ref68.noCache, noCache = _ref68$noCache === void 0 ? false : _ref68$noCache;
-                return _context65.abrupt("return", this.FabricUrl({
+                libraryId = _ref68.libraryId, objectId = _ref68.objectId, versionHash = _ref68.versionHash, writeToken = _ref68.writeToken, method = _ref68.method, _ref68$queryParams = _ref68.queryParams, queryParams = _ref68$queryParams === void 0 ? {} : _ref68$queryParams, _ref68$constant = _ref68.constant, constant = _ref68$constant === void 0 ? true : _ref68$constant, _ref68$format = _ref68.format, format = _ref68$format === void 0 ? "json" : _ref68$format;
+
+                if (versionHash) {
+                  objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+                }
+
+                path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
+                _context65.t0 = ResponseToFormat;
+                _context65.t1 = format;
+                _context65.t2 = this.HttpClient;
+                _context65.next = 8;
+                return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
-                  versionHash: versionHash,
-                  call: method,
-                  queryParams: queryParams,
-                  noAuth: noAuth,
-                  noCache: noCache
-                }));
+                  update: !constant
+                });
 
-              case 2:
+              case 8:
+                _context65.t3 = _context65.sent;
+                _context65.t4 = constant ? "GET" : "POST";
+                _context65.t5 = path;
+                _context65.t6 = queryParams;
+                _context65.t7 = {
+                  headers: _context65.t3,
+                  method: _context65.t4,
+                  path: _context65.t5,
+                  queryParams: _context65.t6
+                };
+                _context65.next = 15;
+                return _context65.t2.Request.call(_context65.t2, _context65.t7);
+
+              case 15:
+                _context65.t8 = _context65.sent;
+                return _context65.abrupt("return", (0, _context65.t0)(_context65.t1, _context65.t8));
+
+              case 17:
               case "end":
                 return _context65.stop();
             }
@@ -4907,11 +4927,11 @@ function () {
         }, _callee65, this);
       }));
 
-      function BitcodeMethodUrl(_x64) {
-        return _BitcodeMethodUrl.apply(this, arguments);
+      function CallBitcodeMethod(_x64) {
+        return _CallBitcodeMethod.apply(this, arguments);
       }
 
-      return BitcodeMethodUrl;
+      return CallBitcodeMethod;
     }()
     /**
      * Generate a URL to the specified /rep endpoint of a content object. URL includes authorization token.

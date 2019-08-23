@@ -2169,28 +2169,36 @@ class ElvClient {
   }
 
   /**
-   * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
-   * URL includes authorization token.
-   *
-   * Alias for the FabricUrl method with the "call" parameter
+   * Call the specified bitcode method on the specified object
    *
    * @methodGroup URL Generation
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
    * @param {string} method - Bitcode method to call
-   * @param {Object=} queryParams - Query params to add to the URL
-   * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
-   * token. This is useful for accessing public assets.
-   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of whether such a request exists in the client cache. This request will not be cached.
+   * @param {Object=} queryParams - Query parameters to include in the request
+   * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
+   * Otherwise, a POST with an UpdateRequest will be performed
+   * @param {string=} format=json - The format of the response
    *
-   * @see FabricUrl for creating arbitrary fabric URLs
-   *
-   * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
+   * @returns {Promise<format>} - The response from the call in the specified format
    */
-  async BitcodeMethodUrl({libraryId, objectId, versionHash, method, queryParams={}, noAuth=false, noCache=false}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams, noAuth, noCache});
+  async CallBitcodeMethod({libraryId, objectId, versionHash, writeToken, method, queryParams={}, constant=true, format="json"}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    const path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
+
+    return ResponseToFormat(
+      format,
+      await this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: !constant}),
+        method: constant ? "GET" : "POST",
+        path,
+        queryParams
+      })
+    );
   }
 
   /**
