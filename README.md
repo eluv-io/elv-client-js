@@ -1,10 +1,18 @@
 ## Eluvio Javascript Client
 
-### [API Documentation](https://eluv-io.github.io/elv-client-js/ElvClient.html)
-
 The Eluvio Javascript Client is designed to make interacting with the Eluvio Content Fabric simple by encapsulating all of the necessary HTTP requests, authorization, and blockchain interaction.
 
-### Getting Started
+## [API Documentation](https://eluv-io.github.io/elv-client-js/ElvClient.html)
+
+- [ Installation ](#installation)
+- [ Getting Started ](#initialization)
+- [ Authorization ](#authorization)
+- [ Identifying Content ](#id-format)
+- [ Playing Video ](#video)
+- [ Other Resources](#resources)
+
+<a name="installation"></a>
+## Installation
 
 #### Install from NPM: 
 
@@ -35,7 +43,8 @@ const { ElvClient } = require("elv-client-js/dist/ElvClient-node-min.js");
 <script src=".../elv-client-js/dist/ElvClient-min.js"></script>
 ```
 
-### Initializing the Client
+<a name="initialization"></a>
+## Initializing the Client
 
 Initializing the client is as simple as pointing it at the appropriate Eluvio configuration URL. This URL will automatically return information about the best Fabric, blockchain and KMS nodes, as well as the Fabric's content space - all the information the client needs to know to communicate with the Fabric.
 
@@ -45,7 +54,10 @@ const client = ElvClient.FromConfigurationUrl({
 });
 ```
 
-#### Wallets and Signers
+<a name="authorization"></a>
+## Authorization
+
+### Wallets and Signers
 
 Built on blockchain technology, interaction with the Fabric requires the use of an ethereum private key - representing a user account - in order to verify and authenticate requests, perform encryption, transfer funds, interact with smart contracts, and generally serve as an identity for the user. 
 
@@ -72,15 +84,15 @@ State channel authentication (as used in [ElvClient#PlayoutOptions](https://eluv
 
 **Note: Always treat private keys (and mnemonics) as private, sensitive user data. Always store and transfer them encrypted (the client has a method for encrypting private keys with a password - see [ElvWallet#GenerateEncryptedPrivateKey](https://eluv-io.github.io/elv-client-js/ElvWallet.html#GenerateEncryptedPrivateKey)). A plaintext private key or mnemonic should *never* leave the user's browser - all use of the private key is done on the client.**
 
-### Authorization
-
+### Accessing Content
 As a decentralized, trustless ecosystem, the content Fabric relies on smart contracts and blockchain transactions to verify that a user is allowed to perform an action. Each type of content (content spaces, libraries, objects, types, etc.) have associated smart contracts deployed to the blockchain that mediate access.
 
 For example, to access a content object, the requester must call the accessRequest method on that content object's smart contract, then pass the transaction hash in the authorization token when querying the content Fabric API. The content Fabric will then verify the transaction before performing the requested action. If the transaction is missing or invalid, access will be denied.
 
 The ElvClient handles all of this automatically. When a method is called, it will perform the appropriate transaction and send the correct authorization token with the request.
 
-### Content, Contracts and Multi-format Hashes
+<a name="id-format"></a>
+## Content, Contracts and Multi-format Hashes
 
 As mentioned previously, every entity on the Fabric is backed by a smart contract. This contract is used for authorization and other functionality, but it is also used as the identity of the entity.
 
@@ -133,7 +145,7 @@ const objectId = client.utils.AddressToObjectId(address);
 client.utils.HashToAddress(libraryId);
 ```
 
-##### Version Hashes
+### Version Hashes
 
 Content on the Fabric has immutable versions. Whenever content is modified, a new version is created, while older versions remain unchanged.
 
@@ -170,11 +182,8 @@ Note that version hashes can not be generated from contract addresses like objec
 
 See [ElvClient#ContentObjectVersions](https://eluv-io.github.io/elv-client-js/ElvClient.html#ContentObjectVersions)
 
-#### Playing Video
-
-See the [Stream Sample App](https://github.com/eluv-io/elv-stream-sample) for a detailed explanation on playing video from the Fabric using the Eluvio JavaScript client.
-
-#### Frame Client
+<a name="frame-client"></a>
+## Frame Client
 
 To protect access to users private keys and unify account management functionality, applications are run within an IFrame by [Eluvio Core](https://github.com/eluv-io/elv-fabric-browser). The FrameClient can be used equivalently in place of ElvClient within this restricted IFrame without having access to any user keys.
 
@@ -186,8 +195,13 @@ Note that functions can not be passed between frames - any functions, including 
 
 Both the [Eluvio Fabric Browser](https://github.com/eluv-io/elv-fabric-browser) and the [Eluvio Video Editor](https://github.com/eluv-io/elv-video-editor) use the FrameClient exclusively.
 
+<a name="video"></a>
+## Playing Video from the Fabric
 
-#### Other Resources
+See the [Stream Sample App](https://github.com/eluv-io/elv-stream-sample) for a detailed explanation on playing video from the Fabric using the Eluvio JavaScript client.
+
+<a name="resources"></a>
+## Other Resources
 
 Our Core, Fabric Browser and Video Editor apps are all completely open source, and make extensive use of this client:
 
