@@ -1202,8 +1202,9 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the draft
+   * @param {boolean=} publish=true - If specified, the object will also be published
    */
-  async FinalizeContentObject({libraryId, objectId, writeToken}) {
+  async FinalizeContentObject({libraryId, objectId, writeToken, publish=true}) {
     let path = UrlJoin("q", writeToken);
 
     const finalizeResponse = await ResponseToJson(
@@ -1214,10 +1215,12 @@ class ElvClient {
       })
     );
 
-    await this.PublishContentVersion({
-      objectId,
-      versionHash: finalizeResponse.hash
-    });
+    if(publish) {
+      await this.PublishContentVersion({
+        objectId,
+        versionHash: finalizeResponse.hash
+      });
+    }
 
     // Invalidate cached content type, if this is one.
     delete this.contentTypes[objectId];
@@ -1226,7 +1229,7 @@ class ElvClient {
   }
 
   /**
-   * Publish a content object version
+   * Publish a previously finalized content object version
    *
    * @see PUT /qlibs/:qlibid/q/:versionHash
    *

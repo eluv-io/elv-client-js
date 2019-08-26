@@ -2406,6 +2406,7 @@ function () {
      * @param {string} libraryId - ID of the library
      * @param {string} objectId - ID of the object
      * @param {string} writeToken - Write token of the draft
+     * @param {boolean=} publish=true - If specified, the object will also be published
      */
 
   }, {
@@ -2414,12 +2415,13 @@ function () {
       var _FinalizeContentObject = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee31(_ref34) {
-        var libraryId, objectId, writeToken, path, finalizeResponse;
+        var libraryId, objectId, writeToken, _ref34$publish, publish, path, finalizeResponse;
+
         return regeneratorRuntime.wrap(function _callee31$(_context31) {
           while (1) {
             switch (_context31.prev = _context31.next) {
               case 0:
-                libraryId = _ref34.libraryId, objectId = _ref34.objectId, writeToken = _ref34.writeToken;
+                libraryId = _ref34.libraryId, objectId = _ref34.objectId, writeToken = _ref34.writeToken, _ref34$publish = _ref34.publish, publish = _ref34$publish === void 0 ? true : _ref34$publish;
                 path = UrlJoin("q", writeToken);
                 _context31.t0 = ResponseToJson;
                 _context31.t1 = this.HttpClient;
@@ -2444,18 +2446,24 @@ function () {
 
               case 12:
                 finalizeResponse = _context31.sent;
-                _context31.next = 15;
+
+                if (!publish) {
+                  _context31.next = 16;
+                  break;
+                }
+
+                _context31.next = 16;
                 return this.PublishContentVersion({
                   objectId: objectId,
                   versionHash: finalizeResponse.hash
                 });
 
-              case 15:
+              case 16:
                 // Invalidate cached content type, if this is one.
                 delete this.contentTypes[objectId];
                 return _context31.abrupt("return", finalizeResponse);
 
-              case 17:
+              case 18:
               case "end":
                 return _context31.stop();
             }
@@ -2470,7 +2478,7 @@ function () {
       return FinalizeContentObject;
     }()
     /**
-     * Publish a content object version
+     * Publish a previously finalized content object version
      *
      * @see PUT /qlibs/:qlibid/q/:versionHash
      *
