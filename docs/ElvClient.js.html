@@ -2552,16 +2552,18 @@ class ElvClient {
   }
 
   async AccessGroupMembershipMethod({contractAddress, memberAddress, methodName, eventName}) {
-    // Ensure caller is a manager of the group
-    const isManager = await this.CallContractMethod({
-      contractAddress,
-      abi: AccessGroupContract.abi,
-      methodName: "hasManagerAccess",
-      methodArgs: [ this.utils.FormatAddress(this.signer.address) ]
-    });
+    // Ensure caller is the member being acted upon or a manager/owner of the group
+    if(!this.utils.EqualAddress(this.signer.address, memberAddress)) {
+      const isManager = await this.CallContractMethod({
+        contractAddress,
+        abi: AccessGroupContract.abi,
+        methodName: "hasManagerAccess",
+        methodArgs: [this.utils.FormatAddress(this.signer.address)]
+      });
 
-    if(!isManager) {
-      throw Error("Manager access required");
+      if(!isManager) {
+        throw Error("Manager access required");
+      }
     }
 
     const event = await this.CallContractMethodAndWait({

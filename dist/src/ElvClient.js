@@ -5580,7 +5580,13 @@ function () {
             switch (_context77.prev = _context77.next) {
               case 0:
                 contractAddress = _ref81.contractAddress, memberAddress = _ref81.memberAddress, methodName = _ref81.methodName, eventName = _ref81.eventName;
-                _context77.next = 3;
+
+                if (this.utils.EqualAddress(this.signer.address, memberAddress)) {
+                  _context77.next = 7;
+                  break;
+                }
+
+                _context77.next = 4;
                 return this.CallContractMethod({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
@@ -5588,18 +5594,18 @@ function () {
                   methodArgs: [this.utils.FormatAddress(this.signer.address)]
                 });
 
-              case 3:
+              case 4:
                 isManager = _context77.sent;
 
                 if (isManager) {
-                  _context77.next = 6;
+                  _context77.next = 7;
                   break;
                 }
 
                 throw Error("Manager access required");
 
-              case 6:
-                _context77.next = 8;
+              case 7:
+                _context77.next = 9;
                 return this.CallContractMethodAndWait({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
@@ -5609,7 +5615,7 @@ function () {
                   eventValue: "candidate"
                 });
 
-              case 8:
+              case 9:
                 event = _context77.sent;
                 candidate = this.ExtractValueFromEvent({
                   abi: AccessGroupContract.abi,
@@ -5619,7 +5625,7 @@ function () {
                 });
 
                 if (!(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress))) {
-                  _context77.next = 13;
+                  _context77.next = 14;
                   break;
                 }
 
@@ -5627,10 +5633,10 @@ function () {
                 console.error("Mismatch: " + candidate + " :: " + memberAddress);
                 throw Error("Access group method " + methodName + " failed");
 
-              case 13:
+              case 14:
                 return _context77.abrupt("return", event.transactionHash);
 
-              case 14:
+              case 15:
               case "end":
                 return _context77.stop();
             }
