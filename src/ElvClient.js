@@ -1714,7 +1714,7 @@ class ElvClient {
 
     // If write token is specified, add it to the metadata
     if(writeToken) {
-      const kmsAddress = this.authClient.KMSAddress({objectId});
+      const kmsAddress = await this.authClient.KMSAddress({objectId});
       const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
       const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
 
@@ -3045,7 +3045,7 @@ class ElvClient {
    * @namedParams
    * @param {string} address - Address to query
    *
-   * @returns {Promise<number>} - Balance of the account, in ether
+   * @returns {Promise<string>} - Balance of the account, in ether (as string)
    */
   async GetBalance({address}) {
     const balance = await this.ethClient.MakeProviderCall({methodName: "getBalance", args: [address]});

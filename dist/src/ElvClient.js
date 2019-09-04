@@ -3805,44 +3805,48 @@ function () {
                 cap = _context50.sent;
 
                 if (!writeToken) {
-                  _context50.next = 40;
+                  _context50.next = 42;
                   break;
                 }
 
-                kmsAddress = this.authClient.KMSAddress({
+                _context50.next = 22;
+                return this.authClient.KMSAddress({
                   objectId: objectId
                 });
-                _context50.next = 23;
+
+              case 22:
+                kmsAddress = _context50.sent;
+                _context50.next = 25;
                 return this.authClient.KMSInfo({
                   objectId: objectId
                 });
 
-              case 23:
+              case 25:
                 kmsPublicKey = _context50.sent.publicKey;
                 kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
                 metadata = {};
-                _context50.next = 28;
+                _context50.next = 30;
                 return Crypto.EncryptCap(cap, this.signer.signingKey.publicKey);
 
-              case 28:
+              case 30:
                 metadata[capKey] = _context50.sent;
-                _context50.prev = 29;
-                _context50.next = 32;
+                _context50.prev = 31;
+                _context50.next = 34;
                 return Crypto.EncryptCap(cap, kmsPublicKey);
 
-              case 32:
+              case 34:
                 metadata[kmsCapKey] = _context50.sent;
-                _context50.next = 38;
+                _context50.next = 40;
                 break;
 
-              case 35:
-                _context50.prev = 35;
-                _context50.t0 = _context50["catch"](29);
+              case 37:
+                _context50.prev = 37;
+                _context50.t0 = _context50["catch"](31);
                 // eslint-disable-next-line no-console
                 console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
 
-              case 38:
-                _context50.next = 40;
+              case 40:
+                _context50.next = 42;
                 return this.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -3850,15 +3854,15 @@ function () {
                   metadata: metadata
                 });
 
-              case 40:
+              case 42:
                 return _context50.abrupt("return", cap);
 
-              case 41:
+              case 43:
               case "end":
                 return _context50.stop();
             }
           }
-        }, _callee50, this, [[29, 35]]);
+        }, _callee50, this, [[31, 37]]);
       }));
 
       function EncryptionCap(_x49) {
@@ -6753,7 +6757,7 @@ function () {
      * @namedParams
      * @param {string} address - Address to query
      *
-     * @returns {Promise<number>} - Balance of the account, in ether
+     * @returns {Promise<string>} - Balance of the account, in ether (as string)
      */
 
   }, {

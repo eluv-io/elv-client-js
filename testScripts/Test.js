@@ -87,9 +87,6 @@ const Test = async () => {
       configUrl: ClientConfiguration["config-url"]
     });
 
-
-    //const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
-
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       privateKey: process.env.PRIVATE_KEY
