@@ -2531,12 +2531,8 @@ function () {
     /**
      * Delete specified version of the content object
      *
-     * @see DELETE /qlibs/:qlibid/q/:qhit
-     *
      * @methodGroup Content Objects
      * @namedParams
-     * @param {string} libraryId - ID of the library
-     * @param {string} objectId - ID of the object
      * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
      */
 
@@ -2546,33 +2542,23 @@ function () {
       var _DeleteContentVersion = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee33(_ref36) {
-        var libraryId, objectId, versionHash, path;
+        var versionHash, _this$utils$DecodeVer, objectId;
+
         return regeneratorRuntime.wrap(function _callee33$(_context33) {
           while (1) {
             switch (_context33.prev = _context33.next) {
               case 0:
-                libraryId = _ref36.libraryId, objectId = _ref36.objectId, versionHash = _ref36.versionHash;
-                path = UrlJoin("q", versionHash || objectId);
-                _context33.t0 = this.HttpClient;
-                _context33.next = 5;
-                return this.authClient.AuthorizationHeader({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  update: true
+                versionHash = _ref36.versionHash;
+                _this$utils$DecodeVer = this.utils.DecodeVersionHash(versionHash), objectId = _this$utils$DecodeVer.objectId;
+                _context33.next = 4;
+                return this.CallContractMethodAndWait({
+                  contractAddress: this.utils.HashToAddress(objectId),
+                  abi: ContentContract.abi,
+                  methodName: "deleteVersion",
+                  methodArgs: [versionHash]
                 });
 
-              case 5:
-                _context33.t1 = _context33.sent;
-                _context33.t2 = path;
-                _context33.t3 = {
-                  headers: _context33.t1,
-                  method: "DELETE",
-                  path: _context33.t2
-                };
-                _context33.next = 10;
-                return _context33.t0.Request.call(_context33.t0, _context33.t3);
-
-              case 10:
+              case 4:
               case "end":
                 return _context33.stop();
             }

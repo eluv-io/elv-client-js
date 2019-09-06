@@ -1252,21 +1252,18 @@ class ElvClient {
   /**
    * Delete specified version of the content object
    *
-   * @see DELETE /qlibs/:qlibid/q/:qhit
-   *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
    */
-  async DeleteContentVersion({libraryId, objectId, versionHash}) {
-    let path = UrlJoin("q", versionHash || objectId);
+  async DeleteContentVersion({versionHash}) {
+    const { objectId } = this.utils.DecodeVersionHash(versionHash);
 
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "DELETE",
-      path: path
+    await this.CallContractMethodAndWait({
+      contractAddress: this.utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "deleteVersion",
+      methodArgs: [versionHash]
     });
   }
 
