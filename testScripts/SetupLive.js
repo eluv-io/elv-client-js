@@ -115,7 +115,7 @@ const Test = async () => {
       objectId: objectId,
       writeToken: writeToken
     });
-    await sleep(1000)
+    await sleep(2000)
 
     response = await client.EditContentObject({
       libraryId: conf.libraryId,
@@ -156,37 +156,53 @@ const Test = async () => {
     const objectHash = response.hash
     console.log("Object hash:", objectHash);
 
-    console.log("\nInspect metadata:\ncurl -s " +
-      fabURI + "/q/" + objectHash + "/meta | jq")
+    response = await client.authClient.AuthorizationToken({
+      libraryId: conf.libraryId,
+      objectId: objectId,
+      versionHash: "",
+      channelAuth: false,
+      noCache: true
+    });
 
-    console.log("\nStart recording (returns HANDLE):\ncurl -s " +
-      fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
+    curlCmd = "curl -s -H \"$AUTH_HEADER\" "
+
+    console.log("\nSet Authorization header:\nexport AUTH_HEADER=\"" +
+      "Authorization: Bearer " + response + "\"");
+
+    console.log("\nInspect metadata:\n" +
+      curlCmd + fabURI + "/q/" + objectHash + "/meta | jq")
+
+    console.log("\nStart recording (returns HANDLE):\n" +
+      curlCmd + fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
       "/call/live/start | jq")
 
-    console.log("\nStop recording (use HANDLE from start):\ncurl -s " +
-      fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
+    console.log("\nStop recording (use HANDLE from start):\n" +
+      curlCmd + fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
       "/call/live/stop/HANDLE")
 
-    console.log("\nLive offering metadata:\ncurl -s " +
-      fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
+    console.log("\nLive offering metadata:\n" +
+      curlCmd + fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
       "/meta/live_offering | jq")
 
-    console.log("\nPlayout options:\ncurl -s " +
-      fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
-      "/rep/live/default/options.json | jq\ncurl -s " +
-      fabURI + "/q/" + objectHash + "/rep/live/default/options.json | jq")
+    console.log("\nPlayout options:\n" +
+      curlCmd + fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
+      "/rep/live/default/options.json | jq\n" +
+      curlCmd + fabURI + "/q/" + objectHash +
+      "/rep/live/default/options.json | jq")
 
     console.log("\nHLS playlist:\n" +
       fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
       "/rep/live/default/hls-clear/playlist.m3u8\n" +
-      fabURI + "/q/" + objectHash + "/rep/live/default/hls-clear/playlist.m3u8")
+      fabURI + "/q/" + objectHash +
+      "/rep/live/default/hls-clear/playlist.m3u8")
 
-    console.log("\nFinalize recording (changes object HASH):\ncurl -s " +
+    console.log("\nFinalize recording (changes object HASH):\n" +
+      curlCmd + "-H \"Content-Type: application/json\" " +
       fabURI + "/qlibs/" + conf.libraryId + "/q/" + edgeToken +
-      " -X POST -H 'Content-Type: application/json' | jq")
+      " -X POST | jq")
 
-    console.log("\nFinalized options and playlist (use HASH from finalize):" +
-      "\ncurl -s " + fabURI + "/q/HASH/rep/live/default/options.json | jq\n" +
+    console.log("\nFinalized options and playlist (use HASH from finalize):\n" +
+      curlCmd + fabURI + "/q/HASH/rep/live/default/options.json | jq\n" +
       fabURI + "/q/HASH/rep/live/default/hls-clear/playlist.m3u8\n")
   } catch (error) {
     console.error(error);
