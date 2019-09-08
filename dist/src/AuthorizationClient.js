@@ -1046,7 +1046,8 @@ function () {
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
                   methodName: "getKMSInfo",
-                  methodArgs: [[]]
+                  methodArgs: [[]],
+                  formatArguments: false
                 });
 
               case 4:
