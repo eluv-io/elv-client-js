@@ -294,9 +294,12 @@ function () {
                 ethereumURIs = _ref5.ethereumURIs;
                 this.fabricURIs = fabricURIs;
                 this.ethereumURIs = ethereumURIs;
-                this.InitializeClients();
+                this.HttpClient.uris = fabricURIs;
+                this.HttpClient.uriIndex = 0;
+                this.ethClient.ethereumURIs = ethereumURIs;
+                this.ethClient.ethereumURIIndex = 0;
 
-              case 11:
+              case 14:
               case "end":
                 return _context3.stop();
             }
