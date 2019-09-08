@@ -264,7 +264,6 @@ class ElvClient {
    * Update fabric URLs to prefer the specified region.
    *
    * Note: Client must have been initialized with FromConfiguration
-   * Note: This action will clear all cached access requests
    *
    * @methodGroup Constructor
    * @namedParams
@@ -284,14 +283,17 @@ class ElvClient {
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
 
-    this.InitializeClients();
+    this.HttpClient.uris = fabricURIs;
+    this.HttpClient.uriIndex = 0;
+
+    this.ethClient.ethereumURIs = ethereumURIs;
+    this.ethClient.ethereumURIIndex = 0;
   }
 
   /**
    * Reset fabric URLs to prefer the best region auto-detected by the fabric.
    *
    * Note: Client must have been initialized with FromConfiguration
-   * Note: This action will clear all cached access requests
    *
    * @methodGroup Constructor
    */
