@@ -963,14 +963,6 @@ describe("Test ElvClient", () => {
       validateUrl(noAuthUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "rep", "image"), {}, false);
     });
 
-    test("Bitcode Method URL", async () => {
-      const callUrl = await client.BitcodeMethodUrl({libraryId, objectId, method: "image"});
-      validateUrl(callUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "call", "image"));
-
-      const noAuthUrl = await client.BitcodeMethodUrl({libraryId, objectId, method: "image", noAuth: true});
-      validateUrl(noAuthUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "call", "image"), {}, false);
-    });
-
     test("File URL", async () => {
       const topLevelFile = await client.FileUrl({libraryId, objectId, filePath: "file"});
       validateUrl(topLevelFile, UrlJoin("/qlibs", libraryId, "q", objectId, "files", "file"));
