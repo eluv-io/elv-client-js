@@ -2054,6 +2054,43 @@ class ElvClient {
   /* URL Methods */
 
   /**
+   * Determine available DRM types available in this browser environment.
+   *
+   * @methodGroup URL Generation
+   * @return {Promise<Array<string>>}
+   */
+  async AvailableDRMs() {
+    const availableDRMs = ["aes-128"];
+
+    if(!window) {
+      return availableDRMs;
+    }
+
+    if(typeof window.navigator.requestMediaKeySystemAccess !== "function") {
+      return availableDRMs;
+    }
+
+    try {
+      const config = [{
+        initDataTypes: ["cenc"],
+        audioCapabilities: [{
+          contentType: "audio/mp4;codecs=\"mp4a.40.2\""
+        }],
+        videoCapabilities: [{
+          contentType: "video/mp4;codecs=\"avc1.42E01E\""
+        }]
+      }];
+
+      await navigator.requestMediaKeySystemAccess("com.widevine.alpha", config);
+
+      availableDRMs.push("widevine");
+    // eslint-disable-next-line no-empty
+    } catch(e) {}
+
+    return availableDRMs;
+  }
+
+  /**
    * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
    *
    * @methodGroup URL Generation
@@ -2062,7 +2099,7 @@ class ElvClient {
    * @param {Array<string>} protocols - Acceptable playout protocols
    * @param {Array<string>} drms - Acceptable DRM formats
    */
-  async PlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
+  async PlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
     protocols = protocols.map(p => p.toLowerCase());
     drms = drms.map(d => d.toLowerCase());
 
@@ -2099,7 +2136,8 @@ class ElvClient {
           playoutUrl: await this.Rep({
             versionHash,
             rep: UrlJoin("playout", "default", option.uri),
-            channelAuth: true
+            channelAuth: true,
+            queryParams: hlsjsProfile && protocol === "hls" ? { player_profile: "hls-js" } : {}
           }),
         };
       }
@@ -2129,7 +2167,7 @@ class ElvClient {
    */
   async BitmovinPlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
     const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-    const playoutOptions = await this.PlayoutOptions({versionHash, protocols, drms});
+    const playoutOptions = await this.PlayoutOptions({versionHash, protocols, drms, hlsjsProfile: false});
     let config = {
       drm: {}
     };
