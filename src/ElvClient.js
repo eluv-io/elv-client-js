@@ -209,10 +209,12 @@ class ElvClient {
    *
    * Note: Client must have been initialized with FromConfiguration
    *
-   * @methodGroup Constructor
+   * @methodGroup Nodes
    * @namedParams
    * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: na-west-north na-west-south na-east eu-west
+   *
+   * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
    */
   async UseRegion({region}) {
     if(!this.configUrl) {
@@ -232,6 +234,11 @@ class ElvClient {
 
     this.ethClient.ethereumURIs = ethereumURIs;
     this.ethClient.ethereumURIIndex = 0;
+
+    return {
+      fabricURIs,
+      ethereumURIs
+    };
   }
 
   /**
@@ -239,14 +246,55 @@ class ElvClient {
    *
    * Note: Client must have been initialized with FromConfiguration
    *
-   * @methodGroup Constructor
+   * @methodGroup Nodes
+   *
+   * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
    */
   async ResetRegion() {
     if(!this.configUrl) {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    await this.UseRegion({region: ""});
+    return await this.UseRegion({region: ""});
+  }
+
+  /**
+   * Retrieve the fabric and ethereum nodes currently used by the client, in preference order
+   *
+   * @methodGroup Nodes
+   *
+   * @return {Promise<Object>} - An object containing the lists of fabric and ethereum urls in use by the client
+   */
+  Nodes() {
+    return {
+      fabricURIs: this.fabricURIs,
+      ethereumURIs: this.ethereumURIs
+    };
+  }
+
+  /**
+   * Set the client to use the specified fabric and ethereum nodes, in preference order
+   *
+   * @namedParams
+   * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
+   * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
+   *
+   * @methodGroup Nodes
+   */
+  SetNodes({fabricURIs, ethereumURIs}) {
+    if(fabricURIs) {
+      this.fabricURIs = fabricURIs;
+
+      this.HttpClient.uris = fabricURIs;
+      this.HttpClient.uriIndex = 0;
+    }
+
+    if(ethereumURIs) {
+      this.ethereumURIs = ethereumURIs;
+
+      this.ethClient.ethereumURIs = ethereumURIs;
+      this.ethClient.ethereumURIIndex = 0;
+    }
   }
 
   /* Wallet and signers */
