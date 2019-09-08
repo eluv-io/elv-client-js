@@ -94,7 +94,16 @@ const Test = async () => {
 
     await client.SetSigner({signer});
 
-    console.log(await client.CallBitcodeMethod({libraryId: "ilib4CNaYcMsgtw7pYsA9G89kmLvXed8", objectId: "iq__36pXM8UBRA7vbujDpQTxFtmNzAw4", method: "image"}));
+    await client.UseRegion({region: "eu-west"});
+    const { fabricURIs, ethereumURIs } = client.Nodes();
+    const specificNode = fabricURIs[0];
+
+    client.SetNodes({fabricURIs: [specificNode]});
+
+    //<do stuff>
+
+    client.ResetRegion();
+
   } catch(error) {
     console.error(error);
   }
