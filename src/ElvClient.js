@@ -99,23 +99,28 @@ class ElvClient {
   }
 
   /**
-   * Create a new ElvClient from the specified configuration URL
+   * Retrieve content space info and preferred fabric and blockchain URLs from the fabric
    *
    * @methodGroup Constructor
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
-   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
-   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
+   * - Available regions: na-west-north na-west-south na-east eu-west
    *
-   * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
+   * @return {Promise<Object>} - Object containing content space ID and fabric and ethereum URLs
    */
-  static async FromConfigurationUrl({
+  static async Configuration({
     configUrl,
-    noCache=false,
-    noAuth=false
+    region
   }) {
     const httpClient = new HttpClient([configUrl]);
-    const fabricInfo = await ResponseToJson(httpClient.Request({method: "GET", path: "/config"}));
+    const fabricInfo = await ResponseToJson(
+      httpClient.Request({
+        method: "GET",
+        path: "/config",
+        queryParams: region ? {elvgeo: region} : ""
+      })
+    );
 
     // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
     const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
@@ -130,13 +135,54 @@ class ElvClient {
       ethereumURIs = ethereumURIs.filter(filterHTTPS);
     }
 
-    return new ElvClient({
+    return {
       contentSpaceId: fabricInfo.qspace.id,
+      fabricURIs,
+      ethereumURIs
+    };
+  }
+
+  /**
+   * Create a new ElvClient from the specified configuration URL
+   *
+   * @methodGroup Constructor
+   * @namedParams
+   * @param {string} configUrl - Full URL to the config endpoint
+   * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
+   * - Available regions: na-west-north na-west-south na-east eu-west
+   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   *
+   * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
+   */
+  static async FromConfigurationUrl({
+    configUrl,
+    region,
+    noCache=false,
+    noAuth=false
+  }) {
+    const {
+      contentSpaceId,
+      fabricURIs,
+      ethereumURIs
+    } = await ElvClient.Configuration({
+      configUrl,
+      region
+    });
+
+    this.configUrl = configUrl;
+
+    const client = new ElvClient({
+      contentSpaceId,
       fabricURIs,
       ethereumURIs,
       noCache,
       noAuth
     });
+
+    client.configUrl = configUrl;
+
+    return client;
   }
 
   InitializeClients() {
@@ -156,6 +202,49 @@ class ElvClient {
     if(this.signer) {
       this.userProfileClient.WalletAddress();
     }
+  }
+
+  /**
+   * Update fabric URLs to prefer the specified region.
+   *
+   * Note: Client must have been initialized with FromConfiguration
+   * Note: This action will clear all cached access requests
+   *
+   * @methodGroup Constructor
+   * @namedParams
+   * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
+   * - Available regions: na-west-north na-west-south na-east eu-west
+   */
+  async UseRegion({region}) {
+    if(!this.configUrl) {
+      throw Error("Unable to change region: Configuration URL not set");
+    }
+
+    const { fabricURIs, ethereumURIs } = await ElvClient.Configuration({
+      configUrl: this.configUrl,
+      region
+    });
+
+    this.fabricURIs = fabricURIs;
+    this.ethereumURIs = ethereumURIs;
+
+    this.InitializeClients();
+  }
+
+  /**
+   * Reset fabric URLs to prefer the best region auto-detected by the fabric.
+   *
+   * Note: Client must have been initialized with FromConfiguration
+   * Note: This action will clear all cached access requests
+   *
+   * @methodGroup Constructor
+   */
+  async ResetRegion() {
+    if(!this.configUrl) {
+      throw Error("Unable to change region: Configuration URL not set");
+    }
+
+    await this.UseRegion({region: ""});
   }
 
   /* Wallet and signers */

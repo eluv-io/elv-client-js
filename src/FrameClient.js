@@ -248,6 +248,7 @@ class FrameClient {
       "CallContractMethodAndWait",
       "ClearCache",
       "Collection",
+      "Configuration",
       "ContentLibraries",
       "ContentLibrary",
       "ContentLibraryOwner",
@@ -311,6 +312,7 @@ class FrameClient {
       "RemoveLibraryContentType",
       "Rep",
       "ReplaceMetadata",
+      "ResetRegion",
       "SendFunds",
       "SetAccessCharge",
       "SetContentLibraryImage",
@@ -321,6 +323,7 @@ class FrameClient {
       "UploadJobStatus",
       "UploadPart",
       "UploadPartChunk",
+      "UseRegion",
       "VerifyContentObject",
       "WithdrawContractFunds"
     ];
