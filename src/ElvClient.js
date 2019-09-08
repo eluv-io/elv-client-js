@@ -99,23 +99,28 @@ class ElvClient {
   }
 
   /**
-   * Create a new ElvClient from the specified configuration URL
+   * Retrieve content space info and preferred fabric and blockchain URLs from the fabric
    *
    * @methodGroup Constructor
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
-   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
-   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
+   * - Available regions: na-west-north na-west-south na-east eu-west
    *
-   * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
+   * @return {Promise<Object>} - Object containing content space ID and fabric and ethereum URLs
    */
-  static async FromConfigurationUrl({
+  static async Configuration({
     configUrl,
-    noCache=false,
-    noAuth=false
+    region
   }) {
     const httpClient = new HttpClient([configUrl]);
-    const fabricInfo = await ResponseToJson(httpClient.Request({method: "GET", path: "/config"}));
+    const fabricInfo = await ResponseToJson(
+      httpClient.Request({
+        method: "GET",
+        path: "/config",
+        queryParams: region ? {elvgeo: region} : ""
+      })
+    );
 
     // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
     const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
@@ -130,13 +135,54 @@ class ElvClient {
       ethereumURIs = ethereumURIs.filter(filterHTTPS);
     }
 
-    return new ElvClient({
+    return {
       contentSpaceId: fabricInfo.qspace.id,
+      fabricURIs,
+      ethereumURIs
+    };
+  }
+
+  /**
+   * Create a new ElvClient from the specified configuration URL
+   *
+   * @methodGroup Constructor
+   * @namedParams
+   * @param {string} configUrl - Full URL to the config endpoint
+   * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
+   * - Available regions: na-west-north na-west-south na-east eu-west
+   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   *
+   * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
+   */
+  static async FromConfigurationUrl({
+    configUrl,
+    region,
+    noCache=false,
+    noAuth=false
+  }) {
+    const {
+      contentSpaceId,
+      fabricURIs,
+      ethereumURIs
+    } = await ElvClient.Configuration({
+      configUrl,
+      region
+    });
+
+    this.configUrl = configUrl;
+
+    const client = new ElvClient({
+      contentSpaceId,
       fabricURIs,
       ethereumURIs,
       noCache,
       noAuth
     });
+
+    client.configUrl = configUrl;
+
+    return client;
   }
 
   InitializeClients() {
@@ -156,6 +202,49 @@ class ElvClient {
     if(this.signer) {
       this.userProfileClient.WalletAddress();
     }
+  }
+
+  /**
+   * Update fabric URLs to prefer the specified region.
+   *
+   * Note: Client must have been initialized with FromConfiguration
+   * Note: This action will clear all cached access requests
+   *
+   * @methodGroup Constructor
+   * @namedParams
+   * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
+   * - Available regions: na-west-north na-west-south na-east eu-west
+   */
+  async UseRegion({region}) {
+    if(!this.configUrl) {
+      throw Error("Unable to change region: Configuration URL not set");
+    }
+
+    const { fabricURIs, ethereumURIs } = await ElvClient.Configuration({
+      configUrl: this.configUrl,
+      region
+    });
+
+    this.fabricURIs = fabricURIs;
+    this.ethereumURIs = ethereumURIs;
+
+    this.InitializeClients();
+  }
+
+  /**
+   * Reset fabric URLs to prefer the best region auto-detected by the fabric.
+   *
+   * Note: Client must have been initialized with FromConfiguration
+   * Note: This action will clear all cached access requests
+   *
+   * @methodGroup Constructor
+   */
+  async ResetRegion() {
+    if(!this.configUrl) {
+      throw Error("Unable to change region: Configuration URL not set");
+    }
+
+    await this.UseRegion({region: ""});
   }
 
   /* Wallet and signers */
@@ -1202,8 +1291,9 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the draft
+   * @param {boolean=} publish=true - If specified, the object will also be published
    */
-  async FinalizeContentObject({libraryId, objectId, writeToken}) {
+  async FinalizeContentObject({libraryId, objectId, writeToken, publish=true}) {
     let path = UrlJoin("q", writeToken);
 
     const finalizeResponse = await ResponseToJson(
@@ -1214,10 +1304,12 @@ class ElvClient {
       })
     );
 
-    await this.PublishContentVersion({
-      objectId,
-      versionHash: finalizeResponse.hash
-    });
+    if(publish) {
+      await this.PublishContentVersion({
+        objectId,
+        versionHash: finalizeResponse.hash
+      });
+    }
 
     // Invalidate cached content type, if this is one.
     delete this.contentTypes[objectId];
@@ -1226,7 +1318,7 @@ class ElvClient {
   }
 
   /**
-   * Publish a content object version
+   * Publish a previously finalized content object version
    *
    * @see PUT /qlibs/:qlibid/q/:versionHash
    *
@@ -1249,21 +1341,18 @@ class ElvClient {
   /**
    * Delete specified version of the content object
    *
-   * @see DELETE /qlibs/:qlibid/q/:qhit
-   *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
    */
-  async DeleteContentVersion({libraryId, objectId, versionHash}) {
-    let path = UrlJoin("q", versionHash || objectId);
+  async DeleteContentVersion({versionHash}) {
+    const { objectId } = this.utils.DecodeVersionHash(versionHash);
 
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "DELETE",
-      path: path
+    await this.CallContractMethodAndWait({
+      contractAddress: this.utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "deleteVersion",
+      methodArgs: [versionHash]
     });
   }
 
@@ -1711,7 +1800,7 @@ class ElvClient {
 
     // If write token is specified, add it to the metadata
     if(writeToken) {
-      const kmsAddress = this.authClient.KMSAddress({objectId});
+      const kmsAddress = await this.authClient.KMSAddress({objectId});
       const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
       const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
 
@@ -2054,6 +2143,43 @@ class ElvClient {
   /* URL Methods */
 
   /**
+   * Determine available DRM types available in this browser environment.
+   *
+   * @methodGroup URL Generation
+   * @return {Promise<Array<string>>}
+   */
+  async AvailableDRMs() {
+    const availableDRMs = ["aes-128"];
+
+    if(!window) {
+      return availableDRMs;
+    }
+
+    if(typeof window.navigator.requestMediaKeySystemAccess !== "function") {
+      return availableDRMs;
+    }
+
+    try {
+      const config = [{
+        initDataTypes: ["cenc"],
+        audioCapabilities: [{
+          contentType: "audio/mp4;codecs=\"mp4a.40.2\""
+        }],
+        videoCapabilities: [{
+          contentType: "video/mp4;codecs=\"avc1.42E01E\""
+        }]
+      }];
+
+      await navigator.requestMediaKeySystemAccess("com.widevine.alpha", config);
+
+      availableDRMs.push("widevine");
+    // eslint-disable-next-line no-empty
+    } catch(e) {}
+
+    return availableDRMs;
+  }
+
+  /**
    * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
    *
    * @methodGroup URL Generation
@@ -2062,7 +2188,7 @@ class ElvClient {
    * @param {Array<string>} protocols - Acceptable playout protocols
    * @param {Array<string>} drms - Acceptable DRM formats
    */
-  async PlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
+  async PlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
     protocols = protocols.map(p => p.toLowerCase());
     drms = drms.map(d => d.toLowerCase());
 
@@ -2099,7 +2225,8 @@ class ElvClient {
           playoutUrl: await this.Rep({
             versionHash,
             rep: UrlJoin("playout", "default", option.uri),
-            channelAuth: true
+            channelAuth: true,
+            queryParams: hlsjsProfile && protocol === "hls" ? { player_profile: "hls-js" } : {}
           }),
         };
       }
@@ -2129,7 +2256,7 @@ class ElvClient {
    */
   async BitmovinPlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
     const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-    const playoutOptions = await this.PlayoutOptions({versionHash, protocols, drms});
+    const playoutOptions = await this.PlayoutOptions({versionHash, protocols, drms, hlsjsProfile: false});
     let config = {
       drm: {}
     };
@@ -2169,28 +2296,36 @@ class ElvClient {
   }
 
   /**
-   * Generate a URL to the specified /call endpoint of a content object to call a bitcode method.
-   * URL includes authorization token.
-   *
-   * Alias for the FabricUrl method with the "call" parameter
+   * Call the specified bitcode method on the specified object
    *
    * @methodGroup URL Generation
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
    * @param {string} method - Bitcode method to call
-   * @param {Object=} queryParams - Query params to add to the URL
-   * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
-   * token. This is useful for accessing public assets.
-   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of whether such a request exists in the client cache. This request will not be cached.
+   * @param {Object=} queryParams - Query parameters to include in the request
+   * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
+   * Otherwise, a POST with an UpdateRequest will be performed
+   * @param {string=} format=json - The format of the response
    *
-   * @see FabricUrl for creating arbitrary fabric URLs
-   *
-   * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
+   * @returns {Promise<format>} - The response from the call in the specified format
    */
-  async BitcodeMethodUrl({libraryId, objectId, versionHash, method, queryParams={}, noAuth=false, noCache=false}) {
-    return this.FabricUrl({libraryId, objectId, versionHash, call: method, queryParams, noAuth, noCache});
+  async CallBitcodeMethod({libraryId, objectId, versionHash, writeToken, method, queryParams={}, constant=true, format="json"}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    const path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
+
+    return ResponseToFormat(
+      format,
+      await this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: !constant}),
+        method: constant ? "GET" : "POST",
+        path,
+        queryParams
+      })
+    );
   }
 
   /**
@@ -2485,16 +2620,18 @@ class ElvClient {
   }
 
   async AccessGroupMembershipMethod({contractAddress, memberAddress, methodName, eventName}) {
-    // Ensure caller is a manager of the group
-    const isManager = await this.CallContractMethod({
-      contractAddress,
-      abi: AccessGroupContract.abi,
-      methodName: "hasManagerAccess",
-      methodArgs: [ this.utils.FormatAddress(this.signer.address) ]
-    });
+    // Ensure caller is the member being acted upon or a manager/owner of the group
+    if(!this.utils.EqualAddress(this.signer.address, memberAddress)) {
+      const isManager = await this.CallContractMethod({
+        contractAddress,
+        abi: AccessGroupContract.abi,
+        methodName: "hasManagerAccess",
+        methodArgs: [this.utils.FormatAddress(this.signer.address)]
+      });
 
-    if(!isManager) {
-      throw Error("Manager access required");
+      if(!isManager) {
+        throw Error("Manager access required");
+      }
     }
 
     const event = await this.CallContractMethodAndWait({
@@ -3034,7 +3171,7 @@ class ElvClient {
    * @namedParams
    * @param {string} address - Address to query
    *
-   * @returns {Promise<number>} - Balance of the account, in ether
+   * @returns {Promise<string>} - Balance of the account, in ether (as string)
    */
   async GetBalance({address}) {
     const balance = await this.ethClient.MakeProviderCall({methodName: "getBalance", args: [address]});

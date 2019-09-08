@@ -211,7 +211,7 @@ function () {
         return func.name === methodName || func.type === methodName;
       });
 
-      if (!method) {
+      if (method === undefined) {
         throw Error("Unknown method: " + methodName);
       } // Format each argument
 
@@ -337,7 +337,7 @@ function () {
 
                 this.ValidateSigner(signer);
 
-                if (contract.functions[methodName]) {
+                if (!(contract.functions[methodName] === undefined)) {
                   _context3.next = 15;
                   break;
                 }

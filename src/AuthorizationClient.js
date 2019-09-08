@@ -478,7 +478,8 @@ class AuthorizationClient {
       contractAddress: Utils.HashToAddress(objectId),
       abi: ContentContract.abi,
       methodName: "getKMSInfo",
-      methodArgs: [[]]
+      methodArgs: [[]],
+      formatArguments: false
     });
 
     // Public key is compressed and hashed

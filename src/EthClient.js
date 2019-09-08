@@ -99,7 +99,7 @@ class EthClient {
       return func.name === methodName || func.type === methodName;
     });
 
-    if(!method) { throw Error("Unknown method: " + methodName); }
+    if(method === undefined) { throw Error("Unknown method: " + methodName); }
 
     // Format each argument
     return args.map((arg, i) => this.FormatContractArgument({type: method.inputs[i].type, value: arg}));
@@ -178,7 +178,7 @@ class EthClient {
 
       this.ValidateSigner(signer);
 
-      if(!contract.functions[methodName]) {
+      if(contract.functions[methodName] === undefined) {
         throw Error("Unknown method: " + methodName);
       }
 

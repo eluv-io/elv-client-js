@@ -51,7 +51,7 @@ describe("Test ElvWallet", () => {
   });
 
   test("Private Key", async () => {
-    const privateKey = "0x0000000000000000000000000000000000000000000000000000000000000000";
+    const privateKey = "0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd";
 
     const signer = wallet.AddAccount({accountName: "private key", privateKey});
     expect(signer).toBeDefined();
@@ -110,7 +110,7 @@ describe("Test ElvWallet", () => {
   });
 
   test("Encrypt/Decrypt Private Key", async () => {
-    const privateKey = "0x0000000000000000000000000000000000000000000000000000000000000000";
+    const privateKey = "0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd";
     const options = {
       scrypt: {N: 16384}
     };
