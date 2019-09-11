@@ -1,7 +1,6 @@
 // NOTE: Querying Ethereum requires CORS enabled
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
 const Ethers = require("ethers");
-const URI = require("urijs");
 
 // -- Contract javascript files built using build/BuildContracts.js
 const FactoryContract = require("./contracts/BaseFactory");
@@ -105,16 +104,9 @@ class EthClient {
     return args.map((arg, i) => this.FormatContractArgument({type: method.inputs[i].type, value: arg}));
   }
 
-  // Validate signer is set and provider is correct
+  // Validate signer is set
   ValidateSigner(signer) {
-    if(!signer) {
-      throw Error("Signer not set");
-    }
-
-    if(!this.ethereumURIs.find(ethereumURI => URI(signer.provider.connection.url).equals(ethereumURI))) {
-      throw Error("Signer provider '" + signer.provider.connection.url +
-        "' does not match client provider");
-    }
+    if(!signer) { throw Error("Signer not set"); }
   }
 
   async DeployContract({
