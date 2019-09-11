@@ -130,13 +130,13 @@ function () {
       var _AuthorizationToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee2(_ref2) {
-        var libraryId, objectId, versionHash, partHash, encryption, _ref2$update, update, _ref2$channelAuth, channelAuth, _ref2$noCache, noCache, _ref2$noAuth, noAuth, initialNoCache, authorizationToken;
+        var libraryId, objectId, versionHash, partHash, encryption, audienceData, _ref2$update, update, _ref2$channelAuth, channelAuth, _ref2$noCache, noCache, _ref2$noAuth, noAuth, initialNoCache, authorizationToken;
 
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
               case 0:
-                libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, encryption = _ref2.encryption, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
+                libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, encryption = _ref2.encryption, audienceData = _ref2.audienceData, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
                 initialNoCache = this.noCache;
                 _context2.prev = 2;
 
@@ -152,7 +152,8 @@ function () {
 
                 _context2.next = 7;
                 return this.GenerateChannelContentToken({
-                  objectId: objectId
+                  objectId: objectId,
+                  audienceData: audienceData
                 });
 
               case 7:
@@ -208,13 +209,13 @@ function () {
       var _GenerateChannelContentToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee3(_ref3) {
-        var objectId, _ref3$value, value, nonce, paramTypes, params, packedHash, stateChannelUri, stateChannelProvider, payload, signature, multiSig, token;
+        var objectId, audienceData, _ref3$value, value, nonce, paramTypes, params, packedHash, stateChannelUri, stateChannelProvider, payload, signature, multiSig, token;
 
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
             switch (_context3.prev = _context3.next) {
               case 0:
-                objectId = _ref3.objectId, _ref3$value = _ref3.value, value = _ref3$value === void 0 ? 0 : _ref3$value;
+                objectId = _ref3.objectId, audienceData = _ref3.audienceData, _ref3$value = _ref3.value, value = _ref3$value === void 0 ? 0 : _ref3$value;
 
                 if (!(!this.noCache && this.channelContentTokens[objectId])) {
                   _context3.next = 3;
@@ -233,23 +234,28 @@ function () {
 
               case 9:
                 params[4] = _context3.sent;
-                _context3.next = 12;
+
+                if (audienceData) {
+                  params[5] = JSON.stringify(audienceData);
+                }
+
+                _context3.next = 13;
                 return this.KMSUrl({
                   objectId: objectId
                 });
 
-              case 12:
+              case 13:
                 stateChannelUri = _context3.sent;
                 stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-                _context3.next = 16;
-                return stateChannelProvider.send("elv_channelContentRequest", params);
+                _context3.next = 17;
+                return stateChannelProvider.send("elv_channelContentRequestContext", params);
 
-              case 16:
+              case 17:
                 payload = _context3.sent;
-                _context3.next = 19;
+                _context3.next = 20;
                 return this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
 
-              case 19:
+              case 20:
                 signature = _context3.sent;
                 multiSig = Utils.FormatSignature(signature);
                 token = "".concat(payload, ".").concat(Utils.B64(multiSig));
@@ -260,7 +266,7 @@ function () {
 
                 return _context3.abrupt("return", token);
 
-              case 24:
+              case 25:
               case "end":
                 return _context3.stop();
             }

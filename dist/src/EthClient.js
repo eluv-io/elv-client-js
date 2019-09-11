@@ -32,9 +32,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 // NOTE: Querying Ethereum requires CORS enabled
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
-var Ethers = require("ethers");
-
-var URI = require("urijs"); // -- Contract javascript files built using build/BuildContracts.js
+var Ethers = require("ethers"); // -- Contract javascript files built using build/BuildContracts.js
 
 
 var FactoryContract = require("./contracts/BaseFactory");
@@ -222,19 +220,13 @@ function () {
           value: arg
         });
       });
-    } // Validate signer is set and provider is correct
+    } // Validate signer is set
 
   }, {
     key: "ValidateSigner",
     value: function ValidateSigner(signer) {
       if (!signer) {
         throw Error("Signer not set");
-      }
-
-      if (!this.ethereumURIs.find(function (ethereumURI) {
-        return URI(signer.provider.connection.url).equals(ethereumURI);
-      })) {
-        throw Error("Signer provider '" + signer.provider.connection.url + "' does not match client provider");
       }
     }
   }, {

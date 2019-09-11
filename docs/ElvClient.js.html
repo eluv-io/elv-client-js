@@ -2285,6 +2285,24 @@ class ElvClient {
     return availableDRMs;
   }
 
+  AudienceData({versionHash, protocols=[], drms=[]}) {
+    let data = {
+      user_address: this.utils.FormatAddress(this.signer.address),
+      content_hash: versionHash,
+      hostname: this.HttpClient.BaseURI().hostname(),
+      access_time: Math.round(new Date().getTime()).toString(),
+      format: protocols.join(","),
+      drm: drms.join(",")
+    };
+
+    if(typeof window !== "undefined" &amp;&amp; window.navigator) {
+      data.user_string = window.navigator.userAgent;
+      data.language = window.navigator.language;
+    }
+
+    return data;
+  }
+
   /**
    * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
    *
@@ -2299,13 +2317,20 @@ class ElvClient {
     drms = drms.map(d => d.toLowerCase());
 
     const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    const libraryId = await this.ContentObjectLibraryId({objectId});
 
     let path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+
+    const audienceData = this.AudienceData({versionHash, protocols, drms});
 
     const playoutOptions = Object.values(
       await ResponseToJson(
         this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({objectId, channelAuth: true, noAuth: true}),
+          headers: await this.authClient.AuthorizationHeader({
+            objectId,
+            channelAuth: true,
+            audienceData
+          }),
           method: "GET",
           path: path
         })
@@ -2329,6 +2354,7 @@ class ElvClient {
       if(!playoutMap[protocol]) {
         playoutMap[protocol] = {
           playoutUrl: await this.Rep({
+            libraryId,
             versionHash,
             rep: UrlJoin("playout", "default", option.uri),
             channelAuth: true,
