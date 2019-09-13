@@ -134,13 +134,15 @@ class AuthorizationClient {
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
     params[4] = await this.Sign(packedHash);
 
+    let stateChannelApi = "elv_channelContentRequest";
     if(audienceData) {
+      stateChannelApi = "elv_channelContentRequestContext";
       params[5] = JSON.stringify(audienceData);
     }
 
     const stateChannelUri = await this.KMSUrl({objectId});
     const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-    const payload = await stateChannelProvider.send("elv_channelContentRequestContext", params);
+    const payload = await stateChannelProvider.send(stateChannelApi, params);
 
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
     const multiSig = Utils.FormatSignature(signature);

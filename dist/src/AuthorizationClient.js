@@ -209,7 +209,7 @@ function () {
       var _GenerateChannelContentToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee3(_ref3) {
-        var objectId, audienceData, _ref3$value, value, nonce, paramTypes, params, packedHash, stateChannelUri, stateChannelProvider, payload, signature, multiSig, token;
+        var objectId, audienceData, _ref3$value, value, nonce, paramTypes, params, packedHash, stateChannelApi, stateChannelUri, stateChannelProvider, payload, signature, multiSig, token;
 
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
@@ -234,28 +234,30 @@ function () {
 
               case 9:
                 params[4] = _context3.sent;
+                stateChannelApi = "elv_channelContentRequest";
 
                 if (audienceData) {
+                  stateChannelApi = "elv_channelContentRequestContext";
                   params[5] = JSON.stringify(audienceData);
                 }
 
-                _context3.next = 13;
+                _context3.next = 14;
                 return this.KMSUrl({
                   objectId: objectId
                 });
 
-              case 13:
+              case 14:
                 stateChannelUri = _context3.sent;
                 stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-                _context3.next = 17;
-                return stateChannelProvider.send("elv_channelContentRequestContext", params);
+                _context3.next = 18;
+                return stateChannelProvider.send(stateChannelApi, params);
 
-              case 17:
+              case 18:
                 payload = _context3.sent;
-                _context3.next = 20;
+                _context3.next = 21;
                 return this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
 
-              case 20:
+              case 21:
                 signature = _context3.sent;
                 multiSig = Utils.FormatSignature(signature);
                 token = "".concat(payload, ".").concat(Utils.B64(multiSig));
@@ -266,7 +268,7 @@ function () {
 
                 return _context3.abrupt("return", token);
 
-              case 25:
+              case 26:
               case "end":
                 return _context3.stop();
             }

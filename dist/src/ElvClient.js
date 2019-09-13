@@ -4698,7 +4698,7 @@ function () {
       var _GenerateStateChannelToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee63(_ref67) {
-        var objectId, versionHash, _ref67$noCache, noCache;
+        var objectId, versionHash, _ref67$noCache, noCache, audienceData;
 
         return regeneratorRuntime.wrap(function _callee63$(_context63) {
           while (1) {
@@ -4710,17 +4710,21 @@ function () {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
                 }
 
-                _context63.next = 4;
+                audienceData = this.AudienceData({
+                  versionHash: versionHash
+                });
+                _context63.next = 5;
                 return this.authClient.AuthorizationToken({
                   objectId: objectId,
                   channelAuth: true,
+                  audienceData: audienceData,
                   noCache: noCache
                 });
 
-              case 4:
+              case 5:
                 return _context63.abrupt("return", _context63.sent);
 
-              case 5:
+              case 6:
               case "end":
                 return _context63.stop();
             }
