@@ -2165,9 +2165,12 @@ class ElvClient {
   async GenerateStateChannelToken({objectId, versionHash, noCache=false}) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
+    const audienceData = this.AudienceData({versionHash});
+
     return await this.authClient.AuthorizationToken({
       objectId,
       channelAuth: true,
+      audienceData,
       noCache
     });
   }
