@@ -1342,8 +1342,10 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the draft
    * @param {boolean=} publish=true - If specified, the object will also be published
+   * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
+   * Irrelevant if not publishing.
    */
-  async FinalizeContentObject({libraryId, objectId, writeToken, publish=true}) {
+  async FinalizeContentObject({libraryId, objectId, writeToken, publish=true, awaitCommitConfirmation=true}) {
     let path = UrlJoin("q", writeToken);
 
     const finalizeResponse = await ResponseToJson(
@@ -1357,7 +1359,8 @@ class ElvClient {
     if(publish) {
       await this.PublishContentVersion({
         objectId,
-        versionHash: finalizeResponse.hash
+        versionHash: finalizeResponse.hash,
+        awaitCommitConfirmation
       });
     }
 
@@ -1375,39 +1378,25 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} versionHash - The version hash of the content object to publish
+   * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
    */
-  async PublishContentVersion({objectId, versionHash}) {
+  async PublishContentVersion({objectId, versionHash, awaitCommitConfirmation=true}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
     await this.ethClient.CommitContent({
       contentObjectAddress: this.utils.HashToAddress(objectId),
       versionHash,
       signer: this.signer
     });
-  }
 
-  /**
-   * Wait for committed content to be confirmed. Can be called after FinalizeContentObject or
-   * PublishContentObject to ensure that the committed content has been confirmed before continuing.
-   *
-   * @methodGroup Content Objects
-   * @namedParams
-   * @param {string} objectId - ID of the object
-   * @param {string} versionHash - The version hash of the content object to publish
-   */
-  async AwaitCommitConfirmation({objectId, versionHash}) {
-    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
-
-    let pendingHash = "";
-    do {
-      pendingHash = await this.CallContractMethod({
+    if(awaitCommitConfirmation) {
+      await this.ethClient.AwaitEvent({
         contractAddress: this.utils.HashToAddress(objectId),
         abi: ContentContract.abi,
-        methodName: "pendingHash"
+        eventName: "VersionConfirm",
+        signer: this.signer
       });
-
-      if(pendingHash) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-    } while(pendingHash);
+    }
   }
 
   /**

@@ -59,12 +59,6 @@ class FrameClient {
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
     for(const methodName of this.AllowedUserProfileMethods()) {
       this.userProfileClient[methodName] = async (args) => {
-        const isPrompted = FrameClient.PromptedMethods().includes(methodName);
-
-        if(isPrompted && (!args || !args.requestor)) {
-          throw new Error("'requestor' param required when calling user profile methods from FrameClient");
-        }
-
         let callback = args && args.callback;
         if(callback) { delete args.callback; }
 
@@ -73,8 +67,7 @@ class FrameClient {
             module: "userProfileClient",
             calledMethod: methodName,
             args: this.utils.MakeClonable(args),
-            prompted: FrameClient.PromptedMethods().includes(methodName),
-            requestor: args.requestor,
+            prompted: FrameClient.PromptedMethods().includes(methodName)
           },
           callback
         });
@@ -222,6 +215,15 @@ class FrameClient {
     ];
   }
 
+  static MetadataMethods() {
+    return [
+      "DeleteUserMetadata",
+      "MergeUserMetadata",
+      "ReplaceUserMetadata",
+      "UserMetadata"
+    ];
+  }
+
   // List of allowed methods available to frames
   // This should match ElvClient.FrameAvailableMethods()
   // ElvClient will also reject any disallowed methods
@@ -240,7 +242,6 @@ class FrameClient {
       "AddAccessGroupMember",
       "AddLibraryContentType",
       "AvailableDRMs",
-      "AwaitCommitConfirmation",
       "BitmovinPlayoutOptions",
       "BlockNumber",
       "CachedAccessTransaction",
