@@ -403,7 +403,6 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
     this.__InvalidateCache();
   }
 
-
   /**
    * Get the accumulated tags for the current user
    *

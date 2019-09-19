@@ -1370,8 +1370,6 @@ class ElvClient {
   /**
    * Publish a previously finalized content object version
    *
-   * @see PUT /qlibs/:qlibid/q/:versionHash
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1384,8 +1382,32 @@ class ElvClient {
       versionHash,
       signer: this.signer
     });
+  }
 
-    await new Promise(resolve => setTimeout(resolve, 5000));
+  /**
+   * Wait for committed content to be confirmed. Can be called after FinalizeContentObject or
+   * PublishContentObject to ensure that the committed content has been confirmed before continuing.
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string} objectId - ID of the object
+   * @param {string} versionHash - The version hash of the content object to publish
+   */
+  async AwaitCommitConfirmation({objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    let pendingHash = "";
+    do {
+      pendingHash = await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(objectId),
+        abi: ContentContract.abi,
+        methodName: "pendingHash"
+      });
+
+      if(pendingHash) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    } while(pendingHash);
   }
 
   /**
