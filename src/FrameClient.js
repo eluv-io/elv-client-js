@@ -240,6 +240,7 @@ class FrameClient {
       "AddAccessGroupMember",
       "AddLibraryContentType",
       "AvailableDRMs",
+      "AwaitCommitConfirmation",
       "BitmovinPlayoutOptions",
       "BlockNumber",
       "CachedAccessTransaction",
