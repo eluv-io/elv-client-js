@@ -26,8 +26,6 @@ class UserProfileClient {
    * If the user refuses to give permission, an error will be thrown. Otherwise, the request will proceed
    * as normal.
    *
-   * For all prompted methods, an extra argument "requestor" is required.
-   *
    * <h4>Usage</h4>
    *
    * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
@@ -543,6 +541,11 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
   // List of methods that may require a prompt - these should have an unlimited timeout period
   PromptedMethods() {
     return FrameClient.PromptedMethods();
+  }
+
+  // List of methods for accessing user metadata - these should be namespaced when used by an app
+  MetadataMethods() {
+    return FrameClient.MetadataMethods();
   }
 
   // Whitelist of methods allowed to be called using the frame API

@@ -250,6 +250,17 @@ class EthClient {
     return methodEvent;
   }
 
+  async AwaitEvent({contractAddress, abi, eventName, signer}) {
+    const contract = this.Contract({contractAddress, abi, signer});
+
+    return await new Promise(resolve => {
+      contract.on(eventName, (_, __, event) => {
+        contract.removeAllListeners(eventName);
+        resolve(event);
+      });
+    });
+  }
+
   ExtractEventFromLogs({abi, event, eventName}) {
     const contractInterface = new Ethers.utils.Interface(abi);
     // Loop through logs to find the desired log

@@ -153,43 +153,32 @@ function () {
           var _ref3 = _asyncToGenerator(
           /*#__PURE__*/
           regeneratorRuntime.mark(function _callee2(args) {
-            var isPrompted, callback;
+            var callback;
             return regeneratorRuntime.wrap(function _callee2$(_context2) {
               while (1) {
                 switch (_context2.prev = _context2.next) {
                   case 0:
-                    isPrompted = FrameClient.PromptedMethods().includes(methodName);
-
-                    if (!(isPrompted && (!args || !args.requestor))) {
-                      _context2.next = 3;
-                      break;
-                    }
-
-                    throw new Error("'requestor' param required when calling user profile methods from FrameClient");
-
-                  case 3:
                     callback = args && args.callback;
 
                     if (callback) {
                       delete args.callback;
                     }
 
-                    _context2.next = 7;
+                    _context2.next = 4;
                     return _this.SendMessage({
                       options: {
                         module: "userProfileClient",
                         calledMethod: methodName,
                         args: _this.utils.MakeClonable(args),
-                        prompted: FrameClient.PromptedMethods().includes(methodName),
-                        requestor: args.requestor
+                        prompted: FrameClient.PromptedMethods().includes(methodName)
                       },
                       callback: callback
                     });
 
-                  case 7:
+                  case 4:
                     return _context2.abrupt("return", _context2.sent);
 
-                  case 8:
+                  case 5:
                   case "end":
                     return _context2.stop();
                 }
@@ -494,7 +483,7 @@ function () {
      * @returns {Array<string>} - List of ElvClient methods available to a FrameClient
      */
     value: function AllowedMethods() {
-      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddLibraryContentType", "AvailableDRMs", "AwaitCommitConfirmation", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "Configuration", "ContentLibraries", "ContentLibrary", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "CopyContentObject", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentSpace", "CreateContentType", "CreateFileUploadJob", "CreatePart", "CurrentAccountAddress", "CustomContractAddress", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteMetadata", "DeletePart", "DeployContract", "DownloadFile", "DownloadPart", "EditContentObject", "EncryptionCap", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeContentObject", "FinalizePart", "FinalizeUploadJobs", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LibraryContentTypes", "ListFiles", "MergeMetadata", "Nodes", "PlayoutOptions", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "ResetRegion", "SendFunds", "SetAccessCharge", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "UploadFileData", "UploadFiles", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UseRegion", "VerifyContentObject", "WithdrawContractFunds"];
+      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddLibraryContentType", "AvailableDRMs", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "Configuration", "ContentLibraries", "ContentLibrary", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "CopyContentObject", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentSpace", "CreateContentType", "CreateFileUploadJob", "CreatePart", "CurrentAccountAddress", "CustomContractAddress", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteMetadata", "DeletePart", "DeployContract", "DownloadFile", "DownloadPart", "EditContentObject", "EncryptionCap", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeContentObject", "FinalizePart", "FinalizeUploadJobs", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LibraryContentTypes", "ListFiles", "MergeMetadata", "Nodes", "PlayoutOptions", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "ResetRegion", "SendFunds", "SetAccessCharge", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "UploadFileData", "UploadFiles", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UseRegion", "VerifyContentObject", "WithdrawContractFunds"];
     }
   }, {
     key: "AllowedUserProfileMethods",
@@ -505,6 +494,11 @@ function () {
     key: "PromptedMethods",
     value: function PromptedMethods() {
       return ["CollectedTags", "DeleteUserMetadata", "MergeUserMetadata", "ReplaceUserMetadata", "UserMetadata"];
+    }
+  }, {
+    key: "MetadataMethods",
+    value: function MetadataMethods() {
+      return ["DeleteUserMetadata", "MergeUserMetadata", "ReplaceUserMetadata", "UserMetadata"];
     }
   }]);
 
