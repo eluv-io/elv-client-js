@@ -204,6 +204,11 @@ class ElvClient {
     }
   }
 
+  SetAuth(auth) {
+    this.noAuth = !auth;
+    this.authClient.noAuth = !auth;
+  }
+
   /**
    * Update fabric URLs to prefer the specified region.
    *
@@ -1241,7 +1246,6 @@ class ElvClient {
 
       objectId = this.utils.AddressToObjectId(contractAddress);
     }
-
     const path = UrlJoin("qid", objectId);
 
     return await ResponseToJson(
