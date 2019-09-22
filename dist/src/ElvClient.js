@@ -2315,7 +2315,7 @@ function () {
 
               case 13:
                 if (objectId) {
-                  _context30.next = 21;
+                  _context30.next = 19;
                   break;
                 }
 
@@ -2328,29 +2328,20 @@ function () {
               case 16:
                 _ref34 = _context30.sent;
                 contractAddress = _ref34.contractAddress;
-                _context30.next = 20;
-                return this.CallContractMethod({
-                  abi: ContentContract.abi,
-                  contractAddress: contractAddress,
-                  methodName: "setVisibility",
-                  methodArgs: [100]
-                });
-
-              case 20:
                 objectId = this.utils.AddressToObjectId(contractAddress);
 
-              case 21:
+              case 19:
                 path = UrlJoin("qid", objectId);
                 _context30.t0 = ResponseToJson;
                 _context30.t1 = this.HttpClient;
-                _context30.next = 26;
+                _context30.next = 24;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 26:
+              case 24:
                 _context30.t2 = _context30.sent;
                 _context30.t3 = path;
                 _context30.t4 = options;
@@ -2361,13 +2352,13 @@ function () {
                   body: _context30.t4
                 };
                 _context30.t6 = _context30.t1.Request.call(_context30.t1, _context30.t5);
-                _context30.next = 33;
+                _context30.next = 31;
                 return (0, _context30.t0)(_context30.t6);
 
-              case 33:
+              case 31:
                 return _context30.abrupt("return", _context30.sent);
 
-              case 34:
+              case 32:
               case "end":
                 return _context30.stop();
             }
