@@ -1239,13 +1239,6 @@ class ElvClient {
     if(!objectId) {
       const { contractAddress } = await this.authClient.CreateContentObject({libraryId, typeId});
 
-      await this.CallContractMethod({
-        abi: ContentContract.abi,
-        contractAddress,
-        methodName: "setVisibility",
-        methodArgs: [100]
-      });
-
       objectId = this.utils.AddressToObjectId(contractAddress);
     }
 
