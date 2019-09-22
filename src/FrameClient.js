@@ -318,6 +318,7 @@ class FrameClient {
       "ResetRegion",
       "SendFunds",
       "SetAccessCharge",
+      "SetAuth",
       "SetContentLibraryImage",
       "SetContentObjectImage",
       "SetCustomContentContract",

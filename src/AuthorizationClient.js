@@ -174,7 +174,7 @@ class AuthorizationClient {
       addr: ((this.client.signer && this.client.signer.address) || "").replace("0x", "")
     };
 
-    if(!noAuth) {
+    if(!(this.noAuth || noAuth)) {
       const { transactionHash } =  await this.MakeAccessRequest({
         libraryId,
         objectId,

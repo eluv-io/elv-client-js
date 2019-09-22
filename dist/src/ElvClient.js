@@ -248,6 +248,12 @@ function () {
         this.userProfileClient.WalletAddress();
       }
     }
+  }, {
+    key: "SetAuth",
+    value: function SetAuth(auth) {
+      this.noAuth = !auth;
+      this.authClient.noAuth = !auth;
+    }
     /**
      * Update fabric URLs to prefer the specified region.
      *
