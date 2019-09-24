@@ -186,6 +186,9 @@ class ElvClient {
   }
 
   InitializeClients() {
+    // Clear cached content types
+    this.contentTypes = {};
+
     this.HttpClient = new HttpClient(this.fabricURIs);
     this.ethClient = new EthClient(this.ethereumURIs);
 

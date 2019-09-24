@@ -343,20 +343,21 @@ function () {
                 return _context3.abrupt("return");
 
               case 6:
+                metadataSubtree = UrlJoin("public", metadataSubtree || "/");
                 libraryId = this.client.contentSpaceLibraryId;
                 objectId = Utils.AddressToObjectId(walletAddress); // If caching not enabled, make direct query to object
 
-                _context3.next = 10;
+                _context3.next = 11;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
                   metadataSubtree: metadataSubtree
                 });
 
-              case 10:
+              case 11:
                 return _context3.abrupt("return", _context3.sent);
 
-              case 11:
+              case 12:
               case "end":
                 return _context3.stop();
             }

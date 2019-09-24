@@ -231,6 +231,8 @@ function () {
   _createClass(ElvClient, [{
     key: "InitializeClients",
     value: function InitializeClients() {
+      // Clear cached content types
+      this.contentTypes = {};
       this.HttpClient = new HttpClient(this.fabricURIs);
       this.ethClient = new EthClient(this.ethereumURIs);
       this.authClient = new AuthorizationClient({
