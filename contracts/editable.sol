@@ -9,12 +9,14 @@ Editable20190315141800ML: Migrated to 0.4.24
 Editable20190515103600ML: Modified rights restriction on update to match the one on commit
 Editable20190522154000SS: Changed hash bytes32 to string
 Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the case of the content-objects
+Editable20190715105600PO
+Editable20190801135500ML: Made explicit the definition of parentAddress method
 */
 
 
 contract Editable is Ownable {
 
-    bytes32 public version ="Editable20190715105600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20190801135500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -42,7 +44,7 @@ contract Editable is Ownable {
     }
 
     // overridden in BaseContent to return library
-    function parentAddress() returns (address) {
+    function parentAddress() public view returns (address) {
         return contentSpace;
     }
 

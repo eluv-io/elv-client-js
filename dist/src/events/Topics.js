@@ -874,6 +874,44 @@ var topics = {
     }],
     "contract": "BaseContent"
   },
+  "0xfdcd1c148f180968772efab9ef7e26a2ec7a58d82572587ad224c36c91236175": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "charged",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "received",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "converted",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "enough",
+        "type": "bool"
+      }],
+      "name": "DbgAccess",
+      "type": "event"
+    }],
+    "contract": "BaseContent"
+  },
+  "0x14c078593b5fe597db0b1293557c1a5315f2b7e708477ea38b41929534d96bdd": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "code",
+        "type": "uint8"
+      }],
+      "name": "DbgAccessCode",
+      "type": "event"
+    }],
+    "contract": "BaseContent"
+  },
   "0x9e69777f30c55126be256664fa7beff4b796ac32ebceab94df5071b0148017f8": {
     "abi": [{
       "anonymous": false,
@@ -1289,6 +1327,156 @@ var topics = {
       "type": "event"
     }],
     "contract": "BaseLibrary"
+  },
+  "0xe7f8e24d42ea8b87bac0d5fed794e840346a2473644783f7e209404b34ccaaa4": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "stream",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "accessor",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "decision",
+        "type": "bool"
+      }],
+      "name": "AuthorizeRecording",
+      "type": "event"
+    }],
+    "contract": "LvProvider"
+  },
+  "0x4c49660aa366f5dbbcb1dbd1ec3af09f0a347b35d038e0cadcaa66a649ba71a1": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "stream",
+        "type": "address"
+      }],
+      "name": "EnableRecording",
+      "type": "event"
+    }],
+    "contract": "LvProvider"
+  },
+  "0x6317042190d28c86a2c94288b6415af2216320653d1b7fca2145f320833e46ec": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "stream",
+        "type": "address"
+      }],
+      "name": "DisableRecording",
+      "type": "event"
+    }],
+    "contract": "LvProvider"
+  },
+  "0x88d83a7de442802022aa288b908ff05118e7afe867b54bb84ad9a218a24530ff": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "recObj",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "recContract",
+        "type": "address"
+      }],
+      "name": "CreateRecording",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0xcf1ab023fd92a162f9a12f24f382865d826229cdc805aba8fc2d0b29d861d017": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "recObj",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "recStartTime",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "recEndTime",
+        "type": "uint256"
+      }],
+      "name": "SetRecordingTimes",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0xf5f1b9ac9ffc50cdf153723b101ce0018c29b510ca349492db7af003633a43c5": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "recObj",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "recStatus",
+        "type": "string"
+      }],
+      "name": "SetRecordingStatus",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0xb7265c44543d51dcc479cfb7a0466c404a0dbd72d73e710adbb95e96306f8ad9": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [],
+      "name": "StartStream",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0xe8db87f5171e056cf93f2e0556c9ddb41f8064a02eeef3896fdb168adaf9afa5": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [],
+      "name": "StopStream",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0x2eae0d0a99cbf5ab05babf7ee1f4bdf6e9bb99ffdca04682fa54f6682d5d80fe": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "startTime",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "endTime",
+        "type": "uint256"
+      }],
+      "name": "SetTimes",
+      "type": "event"
+    }],
+    "contract": "LvRecording"
+  },
+  "0x490ac9eb5b1f79da1eb0ef95d420e2f06562a7530e4db9c52693b06b26567328": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "status",
+        "type": "uint8"
+      }],
+      "name": "UpdateRecordingStatus",
+      "type": "event"
+    }],
+    "contract": "LvRecording"
   },
   "0x66887b54b3a468d1f49f169043427354bba12c2a112aea5390bb426a96bf916c": {
     "abi": [{
