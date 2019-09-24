@@ -241,6 +241,8 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
 
     if(!walletAddress) { return; }
 
+    metadataSubtree = UrlJoin("public", metadataSubtree || "/");
+
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(walletAddress);
 

@@ -349,7 +349,7 @@ function () {
               case 18:
                 token = {
                   qspace_id: this.contentSpaceId,
-                  addr: (this.client.signer && this.client.signer.address || "").replace("0x", "")
+                  addr: Utils.FormatAddress(this.client.signer && this.client.signer.address || "")
                 };
 
                 if (this.noAuth || noAuth) {
