@@ -15,12 +15,13 @@ BaseContentType20190515104000ML: Overloads canPublish to take into account EDIT 
 BaseContentType20190528194000ML: Removes contentSpace is field as it is now inherited from Ownable
 BaseContentType20190604112500ML: Fixes setGroupRights to use the right index.
 BaseContentType20190605150100ML: Splits out canConfirm from canPublish
+BaseContentType20190813105000ML: Modifies canCommit to ensure it is a view
 */
 
 
 contract BaseContentType is Accessible, Editable {
 
-    bytes32 public version ="BaseContentType20190605150100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentType20190813105000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space) public payable {
         contentSpace = content_space;
@@ -28,9 +29,13 @@ contract BaseContentType is Accessible, Editable {
 
     function canCommit() public view returns (bool) {
         BaseContentSpace spc = BaseContentSpace(contentSpace);
-        address walletAddress = spc.getAccessWallet();
-        AccessIndexor wallet = AccessIndexor(walletAddress);
-        return wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT());
+        address walletAddress = spc.userWallets(tx.origin);
+        if (walletAddress != 0x0) {
+            AccessIndexor wallet = AccessIndexor(walletAddress);
+            return wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT());
+        } else {
+            return false;
+        }
 
     }
 

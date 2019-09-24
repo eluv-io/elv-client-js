@@ -14,13 +14,15 @@ BaseContent20190321122100ML: accessRequest returns requestID, removed ml_hash fr
 BaseContent20190510151500ML: creation via ContentSpace factory, modified getAccessInfo API
 BaseContent20190522154000SS: Changed hash bytes32 to string
 BaseContent20190528193400ML: Modified to support non-library containers
-BaseContent20190605203200ML: Split publish and confirm logic
+BaseContent20190605203200ML: Splits publish and confirm logic
+BaseContent20190724203300ML: Enforces access rights in access request
+BaseContent20190801141600ML: Fixes the access rights grant for paid content
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190611120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20190801141600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -89,6 +91,8 @@ contract BaseContent is Editable {
         libraryAddress = lib;
         statusCode = -1;
         contentType = content_type;
+        visibility = CAN_ACCESS; //default could be made a function of the library.
+
         //get custom contract address associated with content_type from hash
         /*
         BaseLibrary lib = BaseLibrary(libraryAddress);
@@ -199,6 +203,7 @@ contract BaseContent is Editable {
     // Access codes
     //      0   -> paid for
     //      10  -> content not published
+    //      100 -> content available if paid for
     //      255 -> unset
 
     function getWIPAccessInfo() private view returns (uint8, uint8, uint256) {
@@ -219,7 +224,7 @@ contract BaseContent is Editable {
         return (10, 10, accessCharge);
     }
 
-    function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) private view returns (uint8, uint8, uint256) {
+    function getCustomInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
         uint256 levelAccessCharge = accessCharge;
         uint8 visibilityCode = (visibility >= CAN_SEE) ? 0 : 255;
         uint8 accessCode = (visibility >= CAN_ACCESS) ? 0 :255;
@@ -272,6 +277,8 @@ contract BaseContent is Editable {
                     if (accessCode == 255) {
                         if (wallet.checkContentObjectRights(address(this), wallet.TYPE_ACCESS()) == true) {
                             accessCode = 0;
+                        } else {
+                            accessCode = 100; //content accessible if paid for
                         }
                     }
                 }
@@ -280,85 +287,15 @@ contract BaseContent is Editable {
         return (visibilityCode, accessCode, levelAccessCharge);
     }
 
-/* Full before split
-    function getAccessInfo(uint8 level, bytes32[] custom_values, address[] stakeholders) public view returns (uint8, uint8, uint256) {
-        uint256 levelAccessCharge = accessCharge;
-        uint8 visibilityCode = (visibility >= CAN_SEE) ? 0 : 255;
-        uint8 accessCode = (visibility >= CAN_ACCESS) ? 0 :255;
-        BaseLibrary lib;
-        BaseContentSpace contentSpaceObj;
-        AccessIndexor wallet;
-        if (statusCode != 0) {
-            if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
-                return (0, 0, accessCharge);
-            }
-            lib = BaseLibrary(libraryAddress);
-            contentSpaceObj = BaseContentSpace(lib.contentSpace());
-            wallet = AccessIndexor(contentSpaceObj.getAccessWallet());
-            if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {
-                return (0, 0, accessCharge);
-            }
-            if (lib.canReview(tx.origin) == true) { //special case of pre-publish review
-                return (0, 0, accessCharge);
-            }
-            return (10, 10, accessCharge);
-        }
-        if (contentContractAddress != 0x0) {
-            uint8 customMask;
-            uint8 customVisibility;
-            uint8 customAccess;
-            uint256 customCharge;
-            Content c = Content(contentContractAddress);
-            (customMask, customVisibility, customAccess, customCharge) = c.runAccessInfo(level, custom_values, stakeholders);
-            if (customCharge > accessCharge) {
-                visibilityCode = 100;
-            } else {
-                if ((customMask & c.DEFAULT_SEE()) == 0) {
-                    visibilityCode = customVisibility;
-                }
-                if ((customMask & c.DEFAULT_ACCESS()) == 0) {
-                    accessCode = customAccess;
-                }
-                if ((customMask & c.DEFAULT_CHARGE()) == 0) {
-                    levelAccessCharge = customCharge;
-                }
-            }
-        }
-        if ((visibilityCode == 255) || (accessCode == 255) ) {
-            lib = BaseLibrary(libraryAddress);
-            contentSpaceObj = BaseContentSpace(lib.contentSpace());
-            wallet = AccessIndexor(contentSpaceObj.getAccessWallet());
-            if (visibilityCode == 255) { //No custom calculations
-                if (wallet.checkContentObjectRights(address(this), wallet.TYPE_SEE()) == true) {
-                    visibilityCode = 0;
-                }
-                return (visibilityCode, accessCode, accessCharge);
-            }
-            if (visibilityCode == 0) { //if content is not visible, no point in checking if it is accessible
-                if (accessCode == 255) {
-                    if (wallet.checkContentObjectRights(address(this), wallet.TYPE_ACCESS()) == true) {
-                        accessCode = 0;
-                    }
-                }
-            }
-        }
-        return (visibilityCode, accessCode, levelAccessCharge);
-    }
-
-    */
-
-
-
     function setAccessCharge(uint256 charge) public onlyOwner returns (uint256) {
         accessCharge = charge;
         emit SetAccessCharge(accessCharge);
         return accessCharge;
     }
 
-
     function canEdit() public view returns (bool) {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.getAccessWallet();
+        address walletAddress = contentSpaceObj.userWallets(tx.origin);
         AccessIndexor wallet = AccessIndexor(walletAddress);
         return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
     }
@@ -377,7 +314,7 @@ contract BaseContent is Editable {
     }
 
     // override from Editable
-    function parentAddress() returns (address) {
+    function parentAddress() public view returns (address) {
         return libraryAddress;
     }
 
@@ -424,6 +361,13 @@ contract BaseContent is Editable {
         }
     }
 
+    event DbgAccess(
+        uint256 charged,
+        uint received,
+        uint converted,
+        bool enough
+    );
+    event DbgAccessCode(uint8 code);
 
     //  level - the security group for which the access request is for
     //  pkeRequestor - ethereum public key of the requestor (ECIES)
@@ -445,16 +389,18 @@ contract BaseContent is Editable {
         uint8 accessCode;
 
         (visibilityCode, accessCode, requiredFund) = getAccessInfo(level, custom_values, stakeholders);
-        if (accessCode < 0) { //Check if request is funded, except if user is owner or has paid already
-            require(msg.value >= uint(requiredFund));
-            setAccessRights();
+        emit DbgAccessCode(accessCode);
+
+        if (accessCode == 100) { //Check if request is funded, except if user is owner or has paid already
+            //require(msg.value >= uint(requiredFund));
+            emit DbgAccess(requiredFund, msg.value, uint(requiredFund), (msg.value >= uint(requiredFund)));
+            setPaidRights();
+            accessCode = 0;
         }
-        /*
-        if (tx.origin != owner) { //Check if request is funded, except if user is owner
-            uint256 requiredFund = getAccessCharge(level, custom_values, stakeholders);
-            require(msg.value >= uint(requiredFund));
-        }
-        */
+        emit DbgAccessCode(accessCode);
+        require(accessCode == 0);
+
+
         RequestData memory r = RequestData(msg.sender, msg.value, 0, 0);
         // status of 0 indicates the payment received is in escrow in the content contract
         requestMap[requestID] = r;
@@ -574,11 +520,11 @@ contract BaseContent is Editable {
         super.kill();
     }
 
-    function setAccessRights() public {
+    function setPaidRights() private {
         BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
         address walletAddress = contentSpaceObj.getAccessWallet();
         AccessIndexor indexor = AccessIndexor(walletAddress);
-        indexor.setContentObjectRights(address(this), indexor.TYPE_ACCESS(), indexor.ACCESS_CONFIRMED());
+        indexor.setAccessRights();
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {

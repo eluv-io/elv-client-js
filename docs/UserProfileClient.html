@@ -92,6 +92,8 @@ method.</p>
 Eluvio Core will intercept the request and prompt the user for permission before proceeding. In
 these cases, the normal FrameClient timeout period will be ignored, and the response will come
 only after the user accepts or rejects the request.</p>
+<p>Access and modification of user metadata is namespaced to the requesting application when using the
+FrameClient. Public user metadata can be accessed using the PublicUserMetadata method.</p>
 <p>If the user refuses to give permission, an error will be thrown. Otherwise, the request will proceed
 as normal.</p>
 <h4>Usage</h4>
@@ -141,10 +143,10 @@ let signer = wallet.AddAccount({
 });
 client.SetSigner({signer});
 
-await client.userProfileClient.UserMetadata({accountAddress: signer.address})
+await client.userProfileClient.UserMetadata()
 
 let frameClient = new FrameClient();
-await client.userProfileClient.UserMetadata({accountAddress: signer.address})</pre>
+await client.userProfileClient.UserMetadata()</pre>
 
 
     </div>
@@ -184,7 +186,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line49">line 49</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line52">line 52</a>
         </li>
       </ul>
     </dd>
@@ -329,7 +331,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line302">line 302</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line305">line 305</a>
         </li>
       </ul>
     </dd>
@@ -540,7 +542,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line415">line 415</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line418">line 418</a>
         </li>
       </ul>
     </dd>
@@ -721,7 +723,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line281">line 281</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line284">line 284</a>
         </li>
       </ul>
     </dd>
@@ -942,7 +944,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line244">line 244</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line247">line 247</a>
         </li>
       </ul>
     </dd>
@@ -1186,7 +1188,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line183">line 183</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line186">line 186</a>
         </li>
       </ul>
     </dd>
@@ -1432,7 +1434,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line263">line 263</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line266">line 266</a>
         </li>
       </ul>
     </dd>
@@ -1593,7 +1595,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line314">line 314</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line317">line 317</a>
         </li>
       </ul>
     </dd>
@@ -1769,7 +1771,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line369">line 369</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line372">line 372</a>
         </li>
       </ul>
     </dd>
@@ -2192,7 +2194,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line214">line 214</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line217">line 217</a>
         </li>
       </ul>
     </dd>
@@ -2387,7 +2389,7 @@ browser caching when the image is updated</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line335">line 335</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line338">line 338</a>
         </li>
       </ul>
     </dd>
@@ -2563,7 +2565,7 @@ browser caching when the image is updated</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line62">line 62</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line65">line 65</a>
         </li>
       </ul>
     </dd>
@@ -2682,7 +2684,7 @@ browser caching when the image is updated</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line85">line 85</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line88">line 88</a>
         </li>
       </ul>
     </dd>

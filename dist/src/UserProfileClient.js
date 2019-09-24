@@ -39,6 +39,9 @@ function () {
    * Eluvio Core will intercept the request and prompt the user for permission before proceeding. In
    * these cases, the normal FrameClient timeout period will be ignored, and the response will come
    * only after the user accepts or rejects the request.
+   * 
+   * Access and modification of user metadata is namespaced to the requesting application when using the
+   * FrameClient. Public user metadata can be accessed using the PublicUserMetadata method.
    *
    * If the user refuses to give permission, an error will be thrown. Otherwise, the request will proceed
    * as normal.
@@ -55,9 +58,9 @@ function () {
   privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
   });
   client.SetSigner({signer});
-  await client.userProfileClient.UserMetadata({accountAddress: signer.address})
+  await client.userProfileClient.UserMetadata()
   let frameClient = new FrameClient();
-  await client.userProfileClient.UserMetadata({accountAddress: signer.address})
+  await client.userProfileClient.UserMetadata()
    *
    */
   function UserProfileClient(_ref) {

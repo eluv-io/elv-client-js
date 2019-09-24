@@ -26,16 +26,18 @@ BaseContentSpace20190506153400ML: Moves dependant creation to factories, require
 BaseContentSpace20190510150900ML: Moves content creation from library to a dedicated content space factory
 BaseContentSpace20190528193500ML: Moves node management to a parent class (NodeSpace)
 BaseContentSpace20190605144600ML: Implements canConfirm to overloads default from Editable
+BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 */
 
 
 contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
 
-    bytes32 public version ="BaseContentSpace20190703120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20190801140400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
     address public factory;
+    address public groupFactory;
     address public walletFactory;
     address public libraryFactory;
     address public contentFactory;
@@ -71,6 +73,10 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     function setFactory(address new_factory) public onlyOwner {
         factory = new_factory;
+    }
+
+    function setGroupFactory(address new_factory) public onlyOwner {
+        groupFactory = new_factory;
     }
 
     function setWalletFactory(address new_factory) public onlyOwner {
@@ -137,7 +143,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
 
     function createGroup() public returns (address) {
-        address groupAddress = BaseFactory(factory).createGroup();
+        address groupAddress = BaseGroupFactory(groupFactory).createGroup();
         emit CreateGroup(groupAddress);
         return groupAddress;
     }
@@ -334,11 +340,12 @@ BaseFactory20190301105700ML: No changes version bump to test
 BaseFactory20190319195000ML: with  0.4.24 migration
 BaseFactory20190506153000ML: Split createLibrary out, adds access indexing
 BaseFactory20190722161600ML: No changes, updated to provide generation for BsAccessCtrlGrp20190722161600ML
+BaseFactory20190801140700ML: Removed access group creation to its own factory
 */
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20190722161600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseFactory20190801140700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContentType() public returns (address) {
         address newType = (new BaseContentType(msg.sender));
@@ -350,6 +357,21 @@ contract BaseFactory is Ownable {
         return newType;
     }
 
+    function createNode(address _owner) public returns (address) {
+        Node n = new Node(); // this sets owner to tx.origin?
+        require(n.owner() == _owner);
+        return address(n);
+    }
+}
+
+/* -- Revision history --
+BaseGroupFactory20190729115200ML: First versioned released
+*/
+
+contract BaseGroupFactory is Ownable {
+
+    bytes32 public version ="BaseGroupFactory20190729115200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
     function createGroup() public returns (address) {
         address newGroup = (new BaseAccessControlGroup(msg.sender));
         // register library in user wallet
@@ -359,15 +381,7 @@ contract BaseFactory is Ownable {
         userWallet.setAccessGroupRights(newGroup, userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
         return newGroup;
     }
-
-    function createNode(address _owner) public returns (address) {
-        Node n = new Node(); // this sets owner to tx.origin?
-        require(n.owner() == _owner);
-        return address(n);
-    }
 }
-
-
 /* -- Revision history --
 BaseFactory20190506153100ML: Split out of BaseFactory, adds access indexing
 */
