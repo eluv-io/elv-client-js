@@ -744,7 +744,7 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    *
-   * @returns {Promise<Array<object>>} - List of accepted content types - return format is equivalent to ContentTypes method
+   * @returns {Promise<Object>} - List of accepted content types - return format is equivalent to ContentTypes method
    */
   async LibraryContentTypes({libraryId}) {
     const typesLength = (await this.ethClient.CallContractMethod({
@@ -759,7 +759,8 @@ class ElvClient {
     if(typesLength === 0) { return {}; }
 
     // Get the list of allowed content type addresses
-    const allowedTypeAddresses = await Promise.all(
+    let allowedTypes = {};
+    await Promise.all(
       Array.from(new Array(typesLength), async (_, i) => {
         const typeAddress = await this.ethClient.CallContractMethod({
           contractAddress: Utils.HashToAddress(libraryId),
@@ -769,20 +770,10 @@ class ElvClient {
           signer: this.signer
         });
 
-        return typeAddress.toString().toLowerCase();
+        const typeId = this.utils.AddressToObjectId(typeAddress);
+        allowedTypes[typeId] = await this.ContentType({typeId});
       })
     );
-
-    const contentTypes = await this.ContentTypes();
-
-    let allowedTypes = {};
-    Object.values(contentTypes).map(type => {
-      const typeAddress = this.utils.HashToAddress(type.id).toLowerCase();
-      // If type address is allowed, include it
-      if(allowedTypeAddresses.includes(typeAddress)) {
-        allowedTypes[type.id] = type;
-      }
-    });
 
     return allowedTypes;
   }
@@ -874,7 +865,7 @@ class ElvClient {
    * @methodGroup Content Types
    * @namedParams
    *
-   * @return {Promise<Array<Object>>} - A list of content types
+   * @return {Promise<Object>} - Available content types
    */
   async ContentTypes() {
     this.contentTypes = this.contentTypes || {};
