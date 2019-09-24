@@ -1273,7 +1273,7 @@ function () {
      * @namedParams
      * @param {string} libraryId - ID of the library
      *
-     * @returns {Promise<Array<object>>} - List of accepted content types - return format is equivalent to ContentTypes method
+     * @returns {Promise<Object>} - List of accepted content types - return format is equivalent to ContentTypes method
      */
 
   }, {
@@ -1284,7 +1284,7 @@ function () {
       regeneratorRuntime.mark(function _callee18(_ref19) {
         var _this2 = this;
 
-        var libraryId, typesLength, allowedTypeAddresses, contentTypes, allowedTypes;
+        var libraryId, typesLength, allowedTypes;
         return regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
             switch (_context18.prev = _context18.next) {
@@ -1310,14 +1310,16 @@ function () {
                 return _context18.abrupt("return", {});
 
               case 6:
-                _context18.next = 8;
+                // Get the list of allowed content type addresses
+                allowedTypes = {};
+                _context18.next = 9;
                 return Promise.all(Array.from(new Array(typesLength),
                 /*#__PURE__*/
                 function () {
                   var _ref20 = _asyncToGenerator(
                   /*#__PURE__*/
                   regeneratorRuntime.mark(function _callee17(_, i) {
-                    var typeAddress;
+                    var typeAddress, typeId;
                     return regeneratorRuntime.wrap(function _callee17$(_context17) {
                       while (1) {
                         switch (_context17.prev = _context17.next) {
@@ -1333,9 +1335,16 @@ function () {
 
                           case 2:
                             typeAddress = _context17.sent;
-                            return _context17.abrupt("return", typeAddress.toString().toLowerCase());
+                            typeId = _this2.utils.AddressToObjectId(typeAddress);
+                            _context17.next = 6;
+                            return _this2.ContentType({
+                              typeId: typeId
+                            });
 
-                          case 4:
+                          case 6:
+                            allowedTypes[typeId] = _context17.sent;
+
+                          case 7:
                           case "end":
                             return _context17.stop();
                         }
@@ -1348,25 +1357,10 @@ function () {
                   };
                 }()));
 
-              case 8:
-                allowedTypeAddresses = _context18.sent;
-                _context18.next = 11;
-                return this.ContentTypes();
-
-              case 11:
-                contentTypes = _context18.sent;
-                allowedTypes = {};
-                Object.values(contentTypes).map(function (type) {
-                  var typeAddress = _this2.utils.HashToAddress(type.id).toLowerCase(); // If type address is allowed, include it
-
-
-                  if (allowedTypeAddresses.includes(typeAddress)) {
-                    allowedTypes[type.id] = type;
-                  }
-                });
+              case 9:
                 return _context18.abrupt("return", allowedTypes);
 
-              case 15:
+              case 10:
               case "end":
                 return _context18.stop();
             }
@@ -1570,7 +1564,7 @@ function () {
      * @methodGroup Content Types
      * @namedParams
      *
-     * @return {Promise<Array<Object>>} - A list of content types
+     * @return {Promise<Object>} - Available content types
      */
 
   }, {
