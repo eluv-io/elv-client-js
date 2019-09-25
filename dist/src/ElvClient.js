@@ -275,7 +275,7 @@ function () {
       var _UseRegion = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee3(_ref4) {
-        var region, _ref5, fabricURIs, ethereumURIs;
+        var region, _ref5, nodeId, fabricURIs, ethereumURIs;
 
         return regeneratorRuntime.wrap(function _callee3$(_context3) {
           while (1) {
@@ -299,8 +299,10 @@ function () {
 
               case 5:
                 _ref5 = _context3.sent;
+                nodeId = _ref5.nodeId;
                 fabricURIs = _ref5.fabricURIs;
                 ethereumURIs = _ref5.ethereumURIs;
+                this.nodeId = nodeId;
                 this.fabricURIs = fabricURIs;
                 this.ethereumURIs = ethereumURIs;
                 this.HttpClient.uris = fabricURIs;
@@ -312,7 +314,7 @@ function () {
                   ethereumURIs: ethereumURIs
                 });
 
-              case 15:
+              case 17:
               case "end":
                 return _context3.stop();
             }
@@ -376,6 +378,21 @@ function () {
 
       return ResetRegion;
     }()
+    /**
+     * Retrieve the node ID reported by the fabric when the configuration was loaded.
+     *
+     * Note: Client must have been initialized with FromConfiguration
+     *
+     * @methodGroup Nodes
+     *
+     * @return {Promise<string>} - The node ID reported by the fabric
+     */
+
+  }, {
+    key: "NodeId",
+    value: function NodeId() {
+      return this.nodeId;
+    }
     /**
      * Retrieve the fabric and ethereum nodes currently used by the client, in preference order
      *
@@ -7299,6 +7316,7 @@ function () {
                 }
 
                 return _context101.abrupt("return", {
+                  nodeId: fabricInfo.node_id,
                   contentSpaceId: fabricInfo.qspace.id,
                   fabricURIs: fabricURIs,
                   ethereumURIs: ethereumURIs
@@ -7338,7 +7356,7 @@ function () {
       var _FromConfigurationUrl = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee102(_ref108) {
-        var configUrl, region, _ref108$noCache, noCache, _ref108$noAuth, noAuth, _ref109, contentSpaceId, fabricURIs, ethereumURIs, client;
+        var configUrl, region, _ref108$noCache, noCache, _ref108$noAuth, noAuth, _ref109, nodeId, contentSpaceId, fabricURIs, ethereumURIs, client;
 
         return regeneratorRuntime.wrap(function _callee102$(_context102) {
           while (1) {
@@ -7353,10 +7371,10 @@ function () {
 
               case 3:
                 _ref109 = _context102.sent;
+                nodeId = _ref109.nodeId;
                 contentSpaceId = _ref109.contentSpaceId;
                 fabricURIs = _ref109.fabricURIs;
                 ethereumURIs = _ref109.ethereumURIs;
-                this.configUrl = configUrl;
                 client = new ElvClient({
                   contentSpaceId: contentSpaceId,
                   fabricURIs: fabricURIs,
@@ -7364,15 +7382,16 @@ function () {
                   noCache: noCache,
                   noAuth: noAuth
                 });
+                client.nodeId = nodeId;
                 client.configUrl = configUrl;
                 return _context102.abrupt("return", client);
 
-              case 11:
+              case 12:
               case "end":
                 return _context102.stop();
             }
           }
-        }, _callee102, this);
+        }, _callee102);
       }));
 
       function FromConfigurationUrl(_x100) {

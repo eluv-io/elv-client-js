@@ -136,6 +136,7 @@ class ElvClient {
     }
 
     return {
+      nodeId: fabricInfo.node_id,
       contentSpaceId: fabricInfo.qspace.id,
       fabricURIs,
       ethereumURIs
@@ -162,6 +163,7 @@ class ElvClient {
     noAuth=false
   }) {
     const {
+      nodeId,
       contentSpaceId,
       fabricURIs,
       ethereumURIs
@@ -169,8 +171,6 @@ class ElvClient {
       configUrl,
       region
     });
-
-    this.configUrl = configUrl;
 
     const client = new ElvClient({
       contentSpaceId,
@@ -180,6 +180,7 @@ class ElvClient {
       noAuth
     });
 
+    client.nodeId = nodeId;
     client.configUrl = configUrl;
 
     return client;
@@ -229,10 +230,12 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const { fabricURIs, ethereumURIs } = await ElvClient.Configuration({
+    const { nodeId, fabricURIs, ethereumURIs } = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
+
+    this.nodeId = nodeId;
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
@@ -264,6 +267,19 @@ class ElvClient {
     }
 
     return await this.UseRegion({region: ""});
+  }
+
+  /**
+   * Retrieve the node ID reported by the fabric when the configuration was loaded.
+   *
+   * Note: Client must have been initialized with FromConfiguration
+   *
+   * @methodGroup Nodes
+   *
+   * @return {Promise<string>} - The node ID reported by the fabric
+   */
+  NodeId() {
+    return this.nodeId;
   }
 
   /**

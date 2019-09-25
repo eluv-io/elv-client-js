@@ -4,33 +4,6 @@ const { FrameClient } = require("../src/FrameClient");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
-const ContentContract = require("../src/contracts/BaseContent");
-const LibraryContract = require("../src/contracts/BaseLibrary");
-const SpaceContract = require("../src/contracts/BaseContentSpace");
-const WalletContract = require("../src/contracts/BaseAccessWallet");
-const AccessGroupContract = require("../src/contracts/BaseAccessControlGroup");
-const cbor = require("cbor");
-const fs = require("fs");
-
-const Crypto = require("../src/Crypto");
-const Ethers = require("ethers");
-const UUID = require("uuid/v4");
-
-const KickReplacementFee = async (signer, gasPrice) => {
-  try {
-    const transaction = await signer.sendTransaction({
-      to: signer.address,
-      value: 0,
-      gasPrice: gasPrice || await signer.provider.getGasPrice()
-    });
-
-    return await transaction.wait();
-  } catch(error) {
-    console.log(error);
-    await KickReplacementFee(signer, error.transaction.gasPrice.mul(10));
-  }
-};
-
 const AddToSpaceGroup = async (client, address) => {
   const groupAddress = await client.ContentObjectMetadata({
     libraryId: client.contentSpaceLibraryId,
@@ -93,17 +66,6 @@ const Test = async () => {
     });
 
     await client.SetSigner({signer});
-
-    await client.UseRegion({region: "eu-west"});
-    const { fabricURIs, ethereumURIs } = client.Nodes();
-    const specificNode = fabricURIs[0];
-
-    client.SetNodes({fabricURIs: [specificNode]});
-
-    //<do stuff>
-
-    client.ResetRegion();
-
   } catch(error) {
     console.error(error);
   }
