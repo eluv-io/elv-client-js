@@ -1240,6 +1240,7 @@ class ElvClient {
 
       objectId = this.utils.AddressToObjectId(contractAddress);
     }
+
     const path = UrlJoin("qid", objectId);
 
     return await ResponseToJson(

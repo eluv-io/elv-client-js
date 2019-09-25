@@ -241,7 +241,6 @@ class AuthorizationClient {
 
     const id = objectId || libraryId || this.contentSpaceId;
     const accessType = await this.AccessType(id);
-    const cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
 
     let abi, cache;
     let checkAccessCharge = false;
@@ -249,19 +248,39 @@ class AuthorizationClient {
     switch(accessType) {
       case ACCESS_TYPES.SPACE:
         abi = SpaceContract.abi;
-        cache = cacheCollection.spaces;
+        cache = {
+          access: this.accessTransactions.spaces,
+          modify: this.modifyTransactions.spaces,
+        };
         break;
+
       case ACCESS_TYPES.LIBRARY:
         abi = LibraryContract.abi;
-        cache = cacheCollection.libraries;
+        cache = {
+          access: this.accessTransactions.libraries,
+          modify: this.modifyTransactions.libraries,
+        };
         break;
+
       case ACCESS_TYPES.TYPE:
         abi = TypeContract.abi;
-        cache = cacheCollection.types;
+        cache = {
+          access: this.accessTransactions.types,
+          modify: this.modifyTransactions.types
+        };
         break;
+
       case ACCESS_TYPES.OBJECT:
         abi = ContentContract.abi;
-        cache = publicKey ? cacheCollection.encryptedObjects : cacheCollection.objects;
+        cache = publicKey ?
+          {
+            access: this.accessTransactions.encryptedObjects,
+            modify: this.modifyTransactions.encryptedObjects
+          } :
+          {
+            access: this.accessTransactions.objects,
+            modify: this.modifyTransactions.objects
+          };
         checkAccessCharge = true;
 
         if(args && args.length > 0) {
@@ -280,12 +299,17 @@ class AuthorizationClient {
         break;
       default:
         abi = update ? EditableContract.abi : AccessibleContract.abi;
-        cache = cacheCollection.other;
+        cache = {
+          access: this.accessTransactions.other,
+          modify: this.modifyTransactions.other
+        };
     }
 
     // Check cache for existing transaction
     if(!noCache && !skipCache) {
-      if(cache[id]) { return { transactionHash: cache[id] }; }
+      let cacheHit = update ? cache.modify[id] : cache.access[id];
+
+      if(cacheHit) { return { transactionHash: cacheHit }; }
     }
 
     // If only checking the cache, don't continue to make access request
@@ -301,7 +325,9 @@ class AuthorizationClient {
 
     // Cache the transaction hash
     if(!noCache) {
-      cache[id] = accessRequest.transactionHash;
+      update ?
+        cache.modify[id] = accessRequest.transactionHash :
+        cache.access[id] = accessRequest.transactionHash;
 
       // Save request ID if present
       accessRequest.logs.some(log => {
@@ -601,6 +627,12 @@ class AuthorizationClient {
       typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
       signer: this.client.signer
     });
+
+    // Cache object creation transaction for use in future updates
+    const objectId = Utils.AddressToObjectId(contractAddress);
+    if(!this.noCache) {
+      this.modifyTransactions.objects[objectId] = transactionHash;
+    }
 
     return {
       contractAddress,

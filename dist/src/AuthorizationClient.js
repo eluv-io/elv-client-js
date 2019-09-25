@@ -417,7 +417,7 @@ function () {
       regeneratorRuntime.mark(function _callee5(_ref6) {
         var _this = this;
 
-        var libraryId, objectId, versionHash, _ref6$args, args, _ref6$publicKey, publicKey, _ref6$update, update, _ref6$skipCache, skipCache, _ref6$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, accessType, cacheCollection, abi, cache, checkAccessCharge, accessRequest;
+        var libraryId, objectId, versionHash, _ref6$args, args, _ref6$publicKey, publicKey, _ref6$update, update, _ref6$skipCache, skipCache, _ref6$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, accessType, abi, cache, checkAccessCharge, cacheHit, accessRequest;
 
         return regeneratorRuntime.wrap(function _callee5$(_context5) {
           while (1) {
@@ -472,30 +472,44 @@ function () {
 
               case 16:
                 accessType = _context5.sent;
-                cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
                 checkAccessCharge = false;
                 _context5.t0 = accessType;
-                _context5.next = _context5.t0 === ACCESS_TYPES.SPACE ? 22 : _context5.t0 === ACCESS_TYPES.LIBRARY ? 25 : _context5.t0 === ACCESS_TYPES.TYPE ? 28 : _context5.t0 === ACCESS_TYPES.OBJECT ? 31 : 36;
+                _context5.next = _context5.t0 === ACCESS_TYPES.SPACE ? 21 : _context5.t0 === ACCESS_TYPES.LIBRARY ? 24 : _context5.t0 === ACCESS_TYPES.TYPE ? 27 : _context5.t0 === ACCESS_TYPES.OBJECT ? 30 : 35;
                 break;
 
-              case 22:
+              case 21:
                 abi = SpaceContract.abi;
-                cache = cacheCollection.spaces;
-                return _context5.abrupt("break", 38);
+                cache = {
+                  access: this.accessTransactions.spaces,
+                  modify: this.modifyTransactions.spaces
+                };
+                return _context5.abrupt("break", 37);
 
-              case 25:
+              case 24:
                 abi = LibraryContract.abi;
-                cache = cacheCollection.libraries;
-                return _context5.abrupt("break", 38);
+                cache = {
+                  access: this.accessTransactions.libraries,
+                  modify: this.modifyTransactions.libraries
+                };
+                return _context5.abrupt("break", 37);
 
-              case 28:
+              case 27:
                 abi = TypeContract.abi;
-                cache = cacheCollection.types;
-                return _context5.abrupt("break", 38);
+                cache = {
+                  access: this.accessTransactions.types,
+                  modify: this.modifyTransactions.types
+                };
+                return _context5.abrupt("break", 37);
 
-              case 31:
+              case 30:
                 abi = ContentContract.abi;
-                cache = publicKey ? cacheCollection.encryptedObjects : cacheCollection.objects;
+                cache = publicKey ? {
+                  access: this.accessTransactions.encryptedObjects,
+                  modify: this.modifyTransactions.encryptedObjects
+                } : {
+                  access: this.accessTransactions.objects,
+                  modify: this.modifyTransactions.objects
+                };
                 checkAccessCharge = true;
 
                 if (args && args.length > 0) {
@@ -511,25 +525,30 @@ function () {
                   ];
                 }
 
-                return _context5.abrupt("break", 38);
+                return _context5.abrupt("break", 37);
 
-              case 36:
+              case 35:
                 abi = update ? EditableContract.abi : AccessibleContract.abi;
-                cache = cacheCollection.other;
+                cache = {
+                  access: this.accessTransactions.other,
+                  modify: this.modifyTransactions.other
+                };
 
-              case 38:
+              case 37:
                 if (!(!noCache && !skipCache)) {
                   _context5.next = 41;
                   break;
                 }
 
-                if (!cache[id]) {
+                cacheHit = update ? cache.modify[id] : cache.access[id];
+
+                if (!cacheHit) {
                   _context5.next = 41;
                   break;
                 }
 
                 return _context5.abrupt("return", {
-                  transactionHash: cache[id]
+                  transactionHash: cacheHit
                 });
 
               case 41:
@@ -576,7 +595,7 @@ function () {
               case 53:
                 // Cache the transaction hash
                 if (!noCache) {
-                  cache[id] = accessRequest.transactionHash; // Save request ID if present
+                  update ? cache.modify[id] = accessRequest.transactionHash : cache.access[id] = accessRequest.transactionHash; // Save request ID if present
 
                   accessRequest.logs.some(function (log) {
                     if (log.values && log.values.requestID) {
@@ -1435,7 +1454,7 @@ function () {
       var _CreateContentObject = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee22(_ref22) {
-        var libraryId, typeId, _ref23, contractAddress, transactionHash;
+        var libraryId, typeId, _ref23, contractAddress, transactionHash, objectId;
 
         return regeneratorRuntime.wrap(function _callee22$(_context22) {
           while (1) {
@@ -1453,12 +1472,19 @@ function () {
                 _ref23 = _context22.sent;
                 contractAddress = _ref23.contractAddress;
                 transactionHash = _ref23.transactionHash;
+                // Cache object creation transaction for use in future updates
+                objectId = Utils.AddressToObjectId(contractAddress);
+
+                if (!this.noCache) {
+                  this.modifyTransactions.objects[objectId] = transactionHash;
+                }
+
                 return _context22.abrupt("return", {
                   contractAddress: contractAddress,
                   transactionHash: transactionHash
                 });
 
-              case 7:
+              case 9:
               case "end":
                 return _context22.stop();
             }
