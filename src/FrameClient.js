@@ -304,6 +304,7 @@ class FrameClient {
       "LibraryContentTypes",
       "ListFiles",
       "MergeMetadata",
+      "NodeId",
       "Nodes",
       "PlayoutOptions",
       "Proofs",
