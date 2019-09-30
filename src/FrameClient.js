@@ -283,6 +283,7 @@ class FrameClient {
       "DeleteContentLibrary",
       "DeleteContentObject",
       "DeleteContentVersion",
+      "DeleteFiles",
       "DeleteMetadata",
       "DeletePart",
       "DeployContract",
