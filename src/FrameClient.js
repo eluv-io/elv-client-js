@@ -290,7 +290,7 @@ class FrameClient {
       "DownloadFile",
       "DownloadPart",
       "EditContentObject",
-      "EncryptionCap",
+      "Encrypt",
       "Events",
       "ExtractEventFromLogs",
       "ExtractValueFromEvent",

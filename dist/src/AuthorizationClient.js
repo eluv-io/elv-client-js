@@ -337,7 +337,7 @@ function () {
                 }
 
                 _context4.next = 16;
-                return this.ReEncryptionCap({
+                return this.ReEncryptionConk({
                   libraryId: libraryId,
                   objectId: objectId
                 });
@@ -1212,9 +1212,9 @@ function () {
       return KMSSymmetricKey;
     }()
   }, {
-    key: "ReEncryptionCap",
+    key: "ReEncryptionConk",
     value: function () {
-      var _ReEncryptionCap = _asyncToGenerator(
+      var _ReEncryptionConk = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee17(_ref16) {
         var libraryId, objectId, versionHash, cap;
@@ -1234,7 +1234,7 @@ function () {
                 }
 
                 _context17.next = 5;
-                return Crypto.GenerateTargetCap();
+                return Crypto.GenerateTargetConk();
 
               case 5:
                 cap = _context17.sent;
@@ -1259,11 +1259,11 @@ function () {
         }, _callee17, this);
       }));
 
-      function ReEncryptionCap(_x17) {
-        return _ReEncryptionCap.apply(this, arguments);
+      function ReEncryptionConk(_x17) {
+        return _ReEncryptionConk.apply(this, arguments);
       }
 
-      return ReEncryptionCap;
+      return ReEncryptionConk;
     }()
   }, {
     key: "RecordTags",

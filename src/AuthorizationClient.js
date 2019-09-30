@@ -164,7 +164,7 @@ class AuthorizationClient {
     if(encryption && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
       if(!Utils.EqualAddress(owner, this.client.signer.address)) {
-        const cap = await this.ReEncryptionCap({libraryId, objectId});
+        const cap = await this.ReEncryptionConk({libraryId, objectId});
         publicKey = cap.public_key;
       }
     }
@@ -553,13 +553,13 @@ class AuthorizationClient {
     return await stateChannelProvider.send("elv_getSymmetricKey", args);
   }
 
-  async ReEncryptionCap({libraryId, objectId, versionHash}) {
+  async ReEncryptionConk({libraryId, objectId, versionHash}) {
     if(versionHash) {
       objectId = Utils.DecodeVersionHash(versionHash).objectId;
     }
 
     if(!this.reencryptionKeys[objectId]) {
-      let cap = await Crypto.GenerateTargetCap();
+      let cap = await Crypto.GenerateTargetConk();
       cap.symm_key = await this.KMSSymmetricKey({libraryId, objectId});
 
       this.reencryptionKeys[objectId] = cap;
