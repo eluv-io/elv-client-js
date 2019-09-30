@@ -93,8 +93,6 @@ class ElvClient {
     this.noCache = noCache;
     this.noAuth = noAuth;
 
-    this.contentTypes = {};
-
     this.InitializeClients();
   }
 
@@ -185,8 +183,8 @@ class ElvClient {
   }
 
   InitializeClients() {
-    // Clear cached content types
     this.contentTypes = {};
+    this.encryptionCaps = {};
 
     this.HttpClient = new HttpClient(this.fabricURIs);
     this.ethClient = new EthClient(this.ethereumURIs);
@@ -1548,11 +1546,18 @@ class ElvClient {
 
   /**
    * Upload files to a content object.
-   * This method encapsulates the complexity of creating upload jobs and uploading data to them.
-   * It is highly recommended to use this method over using CreateFileUploadJob, UploadFileData and FinalizeUploadJobs
-   * individually
    *
-   * @see GET /qlibs/:qlibid/q/:qhit/meta/files
+   * Expected format of fileInfo:
+   *
+    [
+      {
+        path: string,
+        mime_type: string,
+        size: number,
+        data: ArrayBuffer || Buffer
+      }
+    ]
+   *
    *
    * @methodGroup Content Objects
    * @namedParams
@@ -1565,84 +1570,83 @@ class ElvClient {
     // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
     let fileDataMap = {};
     fileInfo = fileInfo.map(entry => {
+      entry.path = entry.path.replace(/^\/+/, "");
+
       fileDataMap[entry.path] = entry.data;
 
-      return {
-        ...entry,
-        data: undefined
-      };
+      delete entry.data;
+      entry.type = "file";
+
+      return entry;
     });
 
-    const uploadJobs = (await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo})).upload_jobs;
+    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo});
 
-    await Promise.all(
-      uploadJobs.map(async jobInfo => {
-        for(const fileInfo of jobInfo.files) {
-          const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
-          await this.UploadFileData({
-            libraryId,
-            objectId,
-            writeToken,
-            jobId: jobInfo.id,
-            fileData
-          });
-        }
-      })
-    );
+    for(let j = 0; j < jobs.length; j++) {
+      const jobId = jobs[j];
 
-    await this.FinalizeUploadJobs({libraryId, objectId, writeToken});
+      // Retrieve item list for this job
+      const files = (
+        await this.UploadJobStatus({
+          libraryId,
+          objectId,
+          writeToken,
+          fileJobId: id,
+          jobId
+        })
+      ).files;
+
+      // Upload each item
+      for(let i = 0; i < files.length; i++) {
+        const fileInfo = files[i];
+        const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+
+        const path = UrlJoin("q", writeToken, "file_jobs", id, jobId);
+        await ResponseToJson(
+          this.HttpClient.Request({
+            method: "POST",
+            path: path,
+            body: fileData,
+            bodyType: "BINARY",
+            headers: {
+              "Content-type": "application/octet-stream",
+              ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
+            }
+          })
+        );
+      }
+    }
   }
 
   async CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo}) {
-    let path = UrlJoin("q", writeToken, "upload_jobs");
+    let path = UrlJoin("q", writeToken, "file_jobs");
+
+    const body = {
+      seq: 0,
+      seq_complete: true,
+      ops: fileInfo
+    };
 
     return ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
-        body: fileInfo
+        body
       })
     );
   }
 
-  async UploadFileData({libraryId, objectId, writeToken, jobId, fileData}) {
-    let path = UrlJoin("q", writeToken, "upload_jobs", jobId);
+  async UploadJobStatus({libraryId, objectId, writeToken, fileJobId, jobId}) {
+    let path = UrlJoin("q", writeToken, "file_jobs", fileJobId, "uploads", jobId);
 
     return ResponseToJson(
       this.HttpClient.Request({
-        method: "POST",
-        path: path,
-        body: fileData,
-        bodyType: "BINARY",
-        headers: {
-          "Content-type": "application/octet-stream",
-          ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
-        }
-      })
-    );
-  }
-
-  async UploadJobStatus({libraryId, objectId, writeToken, jobId}) {
-    let path = UrlJoin("q", writeToken, "upload_jobs", jobId);
-
-    return ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "GET",
         path: path
       })
     );
-  }
-
-  async FinalizeUploadJobs({libraryId, objectId, writeToken}) {
-    let path = UrlJoin("q", writeToken, "files");
-
-    await this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
-      method: "POST",
-      path: path
-    });
   }
 
   /**
@@ -1860,14 +1864,21 @@ class ElvClient {
 
     // Primary encryption
     const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
-    const existingCap = await this.ContentObjectMetadata({
-      libraryId,
-      // Cap may only exist in draft
-      objectId: writeToken || objectId,
-      metadataSubtree: capKey
-    });
 
-    if(existingCap) { return await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey); }
+    const existingCap =
+      this.encryptionCaps[capKey] ||
+      await this.ContentObjectMetadata({
+        libraryId,
+        // Cap may only exist in draft
+        objectId: writeToken || objectId,
+        metadataSubtree: capKey
+      });
+
+    if(existingCap) {
+      this.encryptionCaps[capKey] = existingCap;
+
+      return await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey);
+    }
 
     const cap = await Crypto.GeneratePrimaryCap();
 
@@ -1895,6 +1906,8 @@ class ElvClient {
         metadata
       });
     }
+
+    this.encryptionCaps[capKey] = cap;
 
     return cap;
   }
