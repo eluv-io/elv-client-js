@@ -184,7 +184,8 @@ class ElvClient {
 
   InitializeClients() {
     this.contentTypes = {};
-    this.encryptionCaps = {};
+    this.encryptionConks = {};
+    this.reencryptionConks = {};
 
     this.HttpClient = new HttpClient(this.fabricURIs);
     this.ethClient = new EthClient(this.ethereumURIs);
@@ -1792,14 +1793,18 @@ class ElvClient {
 
     let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
 
+    let conk;
+    if(encrypted) {
+      conk = await this.EncryptionConk({libraryId, objectId});
+    }
+
     if(!chunked) {
       // Download and decrypt entire part
       const response = await this.HttpClient.Request({headers, method: "GET", path: path});
 
       let data = await response.arrayBuffer();
       if(encrypted) {
-        const encryptionCap = await this.EncryptionCap({libraryId, objectId});
-        data = await Crypto.Decrypt(encryptionCap, data);
+        data = await Crypto.Decrypt(conk, data);
       }
 
       return await ResponseToFormat(
@@ -1815,8 +1820,7 @@ class ElvClient {
     let stream;
     if(encrypted) {
       // Set up decryption stream
-      const encryptionCap = await this.EncryptionCap({libraryId, objectId});
-      stream = await Crypto.OpenDecryptionStream(encryptionCap);
+      stream = await Crypto.OpenDecryptionStream(conk);
 
       stream = stream.on("data", async chunk => {
         // Turn buffer into desired format, if necessary
@@ -1866,62 +1870,98 @@ class ElvClient {
     }
   }
 
-  async EncryptionCap({libraryId, objectId, writeToken}) {
+  /**
+   * Retrieve the encryption conk for the specified object. If one has not yet been created
+   * and a writeToken has been specified, this method will create a new conk and
+   * save it to the draft metadata
+   *
+   * @methodGroup Encryption
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   *
+   * @return Promise<Object> - The encryption conk for the object
+   */
+  async EncryptionConk({libraryId, objectId, writeToken}) {
     const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
 
     if(!this.utils.EqualAddress(owner, this.signer.address)) {
       // Target decryption
-      return await this.authClient.ReEncryptionCap({libraryId, objectId});
+      if(!this.reencryptionConks[objectId]) {
+        this.reencryptionConks[objectId] = await this.authClient.ReEncryptionConk({libraryId, objectId});
+      }
+
+      return this.reencryptionConks[objectId];
     }
 
     // Primary encryption
-    const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+    if(!this.encryptionConks[objectId]) {
+      const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
-    const existingCap =
-      this.encryptionCaps[capKey] ||
-      await this.ContentObjectMetadata({
-        libraryId,
-        // Cap may only exist in draft
-        objectId: writeToken || objectId,
-        metadataSubtree: capKey
-      });
+      const existingCap =
+        await this.ContentObjectMetadata({
+          libraryId,
+          // Cap may only exist in draft
+          objectId: writeToken || objectId,
+          metadataSubtree: capKey
+        });
 
-    if(existingCap) {
-      this.encryptionCaps[capKey] = existingCap;
+      if(existingCap) {
+        this.encryptionConks[objectId] = await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey);
+      } else {
+        this.encryptionConks[objectId] = await Crypto.GeneratePrimaryConk();
 
-      return await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey);
-    }
+        // If write token is specified, add it to the metadata
+        if(writeToken) {
+          const kmsAddress = await this.authClient.KMSAddress({objectId});
+          const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
+          const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
 
-    const cap = await Crypto.GeneratePrimaryCap();
+          let metadata = {};
 
-    // If write token is specified, add it to the metadata
-    if(writeToken) {
-      const kmsAddress = await this.authClient.KMSAddress({objectId});
-      const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
-      const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+          metadata[capKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
 
-      let metadata = {};
+          try {
+            metadata[kmsCapKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
+          }
 
-      metadata[capKey] = await Crypto.EncryptCap(cap, this.signer.signingKey.publicKey);
-
-      try {
-        metadata[kmsCapKey] = await Crypto.EncryptCap(cap, kmsPublicKey);
-      } catch(error) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
+          await this.MergeMetadata({
+            libraryId,
+            objectId,
+            writeToken,
+            metadata
+          });
+        }
       }
-
-      await this.MergeMetadata({
-        libraryId,
-        objectId,
-        writeToken,
-        metadata
-      });
     }
 
-    this.encryptionCaps[capKey] = cap;
+    return this.encryptionConks[objectId];
+  }
 
-    return cap;
+  /**
+   * Encrypt the specified chunk for the specified object or draft
+   *
+   * @methodGroup Encryption
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {(ArrayBuffer || Buffer)} chunk - The data to encrypt
+   *
+   * @return {Promise<ArrayBuffer>}
+   */
+  async Encrypt({libraryId, objectId, writeToken, chunk}) {
+    const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+    const data = await Crypto.Encrypt(conk, chunk);
+
+    // Convert to ArrayBuffer
+    return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
   }
 
   /**
@@ -1968,8 +2008,8 @@ class ElvClient {
    */
   async UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk, encryption}) {
     if(encryption && encryption !== "none") {
-      const encryptionCap = await this.EncryptionCap({libraryId, objectId, writeToken});
-      chunk = await Crypto.Encrypt(encryptionCap, chunk);
+      const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+      chunk = await Crypto.Encrypt(conk, chunk);
     }
 
     const path = UrlJoin("q", writeToken, "parts");

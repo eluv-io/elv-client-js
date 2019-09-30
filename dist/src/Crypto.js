@@ -91,11 +91,11 @@ var Crypto = {
 
     return ElvCrypto;
   }(),
-  EncryptCap: function () {
-    var _EncryptCap = _asyncToGenerator(
+  EncryptConk: function () {
+    var _EncryptConk = _asyncToGenerator(
     /*#__PURE__*/
-    regeneratorRuntime.mark(function _callee2(cap, publicKey) {
-      var elvCrypto, _ref, data, ephemeralKey, tag, encryptedCap;
+    regeneratorRuntime.mark(function _callee2(conk, publicKey) {
+      var elvCrypto, _ref, data, ephemeralKey, tag, cap;
 
       return regeneratorRuntime.wrap(function _callee2$(_context2) {
         while (1) {
@@ -107,17 +107,17 @@ var Crypto = {
             case 2:
               elvCrypto = _context2.sent;
               publicKey = new Uint8Array(Buffer.from(publicKey.replace("0x", ""), "hex"));
-              cap = new Uint8Array(Buffer.from(JSON.stringify(cap)));
+              conk = new Uint8Array(Buffer.from(JSON.stringify(conk)));
               _context2.next = 7;
-              return elvCrypto.encryptECIES(cap, publicKey);
+              return elvCrypto.encryptECIES(conk, publicKey);
 
             case 7:
               _ref = _context2.sent;
               data = _ref.data;
               ephemeralKey = _ref.ephemeralKey;
               tag = _ref.tag;
-              encryptedCap = Buffer.concat([Buffer.from(ephemeralKey), Buffer.from(tag), Buffer.from(data)]);
-              return _context2.abrupt("return", Utils.B64(encryptedCap));
+              cap = Buffer.concat([Buffer.from(ephemeralKey), Buffer.from(tag), Buffer.from(data)]);
+              return _context2.abrupt("return", Utils.B64(cap));
 
             case 13:
             case "end":
@@ -127,11 +127,11 @@ var Crypto = {
       }, _callee2);
     }));
 
-    function EncryptCap(_x, _x2) {
-      return _EncryptCap.apply(this, arguments);
+    function EncryptConk(_x, _x2) {
+      return _EncryptConk.apply(this, arguments);
     }
 
-    return EncryptCap;
+    return EncryptConk;
   }(),
   DecryptCap: function () {
     var _DecryptCap = _asyncToGenerator(
@@ -169,8 +169,8 @@ var Crypto = {
 
     return DecryptCap;
   }(),
-  GeneratePrimaryCap: function () {
-    var _GeneratePrimaryCap = _asyncToGenerator(
+  GeneratePrimaryConk: function () {
+    var _GeneratePrimaryConk = _asyncToGenerator(
     /*#__PURE__*/
     regeneratorRuntime.mark(function _callee4() {
       var elvCrypto, _elvCrypto$generatePr, secretKey, publicKey, symmetricKey;
@@ -200,14 +200,14 @@ var Crypto = {
       }, _callee4);
     }));
 
-    function GeneratePrimaryCap() {
-      return _GeneratePrimaryCap.apply(this, arguments);
+    function GeneratePrimaryConk() {
+      return _GeneratePrimaryConk.apply(this, arguments);
     }
 
-    return GeneratePrimaryCap;
+    return GeneratePrimaryConk;
   }(),
-  GenerateTargetCap: function () {
-    var _GenerateTargetCap = _asyncToGenerator(
+  GenerateTargetConk: function () {
+    var _GenerateTargetConk = _asyncToGenerator(
     /*#__PURE__*/
     regeneratorRuntime.mark(function _callee5() {
       var elvCrypto, _elvCrypto$generateTa, secretKey, publicKey;
@@ -235,13 +235,13 @@ var Crypto = {
       }, _callee5);
     }));
 
-    function GenerateTargetCap() {
-      return _GenerateTargetCap.apply(this, arguments);
+    function GenerateTargetConk() {
+      return _GenerateTargetConk.apply(this, arguments);
     }
 
-    return GenerateTargetCap;
+    return GenerateTargetConk;
   }(),
-  CapToKeys: function CapToKeys(cap) {
+  CapToConk: function CapToConk(cap) {
     var keyToBytes = function keyToBytes(key) {
       return new Uint8Array(bs58.decode(key.slice(4)));
     };
@@ -256,7 +256,7 @@ var Crypto = {
     var _EncryptionContext = _asyncToGenerator(
     /*#__PURE__*/
     regeneratorRuntime.mark(function _callee6(cap) {
-      var elvCrypto, _Crypto$CapToKeys, symmetricKey, secretKey, publicKey, context, type;
+      var elvCrypto, _Crypto$CapToConk, symmetricKey, secretKey, publicKey, context, type;
 
       return regeneratorRuntime.wrap(function _callee6$(_context6) {
         while (1) {
@@ -267,7 +267,7 @@ var Crypto = {
 
             case 2:
               elvCrypto = _context6.sent;
-              _Crypto$CapToKeys = Crypto.CapToKeys(cap), symmetricKey = _Crypto$CapToKeys.symmetricKey, secretKey = _Crypto$CapToKeys.secretKey, publicKey = _Crypto$CapToKeys.publicKey;
+              _Crypto$CapToConk = Crypto.CapToConk(cap), symmetricKey = _Crypto$CapToConk.symmetricKey, secretKey = _Crypto$CapToConk.secretKey, publicKey = _Crypto$CapToConk.publicKey;
 
               if (publicKey.length === elvCrypto.PRIMARY_PK_KEY_SIZE) {
                 // Primary context
