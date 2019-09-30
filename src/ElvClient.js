@@ -1522,9 +1522,7 @@ class ElvClient {
   /**
    * List the file information about this object
    *
-   * @see GET /qlibs/:qlibid/q/:qhit/meta/files
-   *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -1559,7 +1557,7 @@ class ElvClient {
     ]
    *
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1650,11 +1648,27 @@ class ElvClient {
   }
 
   /**
+   * Delete the specified list of files/directories
+   *
+   * @methodGroup Parts and Files
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Array<string>} filePaths - List of file paths to delete
+   */
+  async DeleteFiles({libraryId, objectId, writeToken, filePaths}) {
+    const ops = filePaths.map(path => ({op: "del", path}));
+
+    await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo: ops});
+  }
+
+  /**
    * Download a file from a content object
    *
    * @see GET /qlibs/:qlibid/q/:qhit/files/:filePath
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -1662,9 +1676,9 @@ class ElvClient {
    * @param {string} filePath - Path to the file to download
    * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
    *
-   * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
+   * @returns {Promise<ArrayBuffer>} - File data in the requested format
    */
-  async DownloadFile({libraryId, objectId, versionHash, filePath, format="blob"}) {
+  async DownloadFile({libraryId, objectId, versionHash, filePath, format="arrayBuffer"}) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path = UrlJoin("q", versionHash || objectId, "files", filePath);
@@ -1684,7 +1698,7 @@ class ElvClient {
   /**
    * List content object parts
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -1711,7 +1725,7 @@ class ElvClient {
   /**
    * Get information on a specific part
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -1738,9 +1752,7 @@ class ElvClient {
    * Download a part from a content object. The fromByte and range parameters can be used to specify a
    * specific section of the part to download.
    *
-   * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash
-   *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -1758,7 +1770,7 @@ class ElvClient {
    * received. These values correspond to the size of the encrypted data - when decrypted, the part will be
    * slightly smaller.
    *
-   * @returns {Promise<(Blob | ArrayBuffer)>} - Part data as a blob
+   * @returns {Promise<ArrayBuffer>} - Part data in the specified format
    */
   async DownloadPart({
     libraryId,
@@ -1915,7 +1927,7 @@ class ElvClient {
   /**
    * Create a part upload draft
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1943,7 +1955,7 @@ class ElvClient {
   /**
    * Upload data to an open part draft
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1975,7 +1987,7 @@ class ElvClient {
   /**
    * Finalize an open part draft
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -2001,7 +2013,7 @@ class ElvClient {
   /**
    * Upload part to an object draft
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -2025,7 +2037,7 @@ class ElvClient {
    *
    * @see DELETE /qlibs/:qlibid/q/:write_token/parts/:qparthash
    *
-   * @methodGroup Content Objects
+   * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
