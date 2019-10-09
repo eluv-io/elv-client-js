@@ -55,6 +55,8 @@
 <a class="button" href="FrameClient.html">Back</a>
 <div class="source-container">
   <pre class="prettyprint source linenums"><code>require("@babel/polyfill");
+require("elv-components-js/src/utils/LimitedMap");
+
 const Id = require("./Id");
 const Utils = require("./Utils");
 
@@ -260,6 +262,69 @@ class FrameClient {
     });
   }
 
+  // Reimplementation of ElvClient#UploadFiles to ensure usage of HTML File API to avoid reading all files into memory
+  // and avoid timeout issues with large / many files
+  async UploadFiles({libraryId, objectId, writeToken, fileInfo, callback}) {
+    // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
+    let progress = {};
+    let fileDataMap = {};
+    fileInfo = fileInfo.map(entry => {
+      entry.path = entry.path.replace(/^\/+/, "");
+
+      fileDataMap[entry.path] = entry.data;
+
+      delete entry.data;
+      entry.type = "file";
+
+      progress[entry.path] = {
+        uploaded: 0,
+        total: entry.size
+      };
+
+      return entry;
+    });
+
+    if(callback) {
+      callback(progress);
+    }
+
+    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo});
+
+    await jobs.limitedMap(
+      5,
+      async jobId => {
+        // Retrieve item list for this job
+        const files = (
+          await this.UploadJobStatus({
+            libraryId,
+            objectId,
+            writeToken,
+            uploadId: id,
+            jobId
+          })
+        ).files;
+
+        // Upload each item
+        for(let i = 0; i &lt; files.length; i++) {
+          const fileInfo = files[i];
+          const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+
+          await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId, fileData});
+
+          progress[fileInfo.path] = {
+            ...progress[fileInfo.path],
+            uploaded: progress[fileInfo.path].uploaded + fileInfo.len
+          };
+
+          if(callback) {
+            callback(progress);
+          }
+        }
+      }
+    );
+  }
+
+
   // List of methods that may require a prompt - these should have an unlimited timeout period
   static PromptedMethods() {
     return [
@@ -382,7 +447,7 @@ class FrameClient {
       "SetCustomContentContract",
       "SetNodes",
       "UploadFileData",
-      "UploadFiles",
+      //"UploadFiles",
       "UploadJobStatus",
       "UploadPart",
       "UploadPartChunk",

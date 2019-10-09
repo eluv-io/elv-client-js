@@ -75,6 +75,8 @@ const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
 
+require("elv-components-js/src/utils/LimitedMap");
+
 // Platform specific polyfills
 switch(Utils.Platform()) {
   case Utils.PLATFORM_REACT_NATIVE:
@@ -1604,14 +1606,14 @@ class ElvClient {
    *
    * Expected format of fileInfo:
    *
-    [
-      {
+   [
+   {
         path: string,
         mime_type: string,
         size: number,
-        data: ArrayBuffer || Buffer
+        data: File | ArrayBuffer | Buffer
       }
-    ]
+   ]
    *
    *
    * @methodGroup Parts and Files
@@ -1620,9 +1622,12 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the draft
    * @param {Array&lt;object>} fileInfo - List of files to upload, including their size, type, and contents
+   * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
+   * - Format: {"filename1": {uploaded: number, total: number}, ...}
    */
-  async UploadFiles({libraryId, objectId, writeToken, fileInfo}) {
+  async UploadFiles({libraryId, objectId, writeToken, fileInfo, callback}) {
     // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
+    let progress = {};
     let fileDataMap = {};
     fileInfo = fileInfo.map(entry => {
       entry.path = entry.path.replace(/^\/+/, "");
@@ -1632,45 +1637,52 @@ class ElvClient {
       delete entry.data;
       entry.type = "file";
 
+      progress[entry.path] = {
+        uploaded: 0,
+        total: entry.size
+      };
+
       return entry;
     });
 
+    if(callback) {
+      callback(progress);
+    }
+
     const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo});
 
-    for(let j = 0; j &lt; jobs.length; j++) {
-      const jobId = jobs[j];
-
-      // Retrieve item list for this job
-      const files = (
-        await this.UploadJobStatus({
-          libraryId,
-          objectId,
-          writeToken,
-          fileJobId: id,
-          jobId
-        })
-      ).files;
-
-      // Upload each item
-      for(let i = 0; i &lt; files.length; i++) {
-        const fileInfo = files[i];
-        const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
-
-        const path = UrlJoin("q", writeToken, "file_jobs", id, jobId);
-        await ResponseToJson(
-          this.HttpClient.Request({
-            method: "POST",
-            path: path,
-            body: fileData,
-            bodyType: "BINARY",
-            headers: {
-              "Content-type": "application/octet-stream",
-              ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
-            }
+    await jobs.limitedMap(
+      5,
+      async jobId => {
+        // Retrieve item list for this job
+        const files = (
+          await this.UploadJobStatus({
+            libraryId,
+            objectId,
+            writeToken,
+            uploadId: id,
+            jobId
           })
-        );
+        ).files;
+
+        // Upload each item
+        for(let i = 0; i &lt; files.length; i++) {
+          const fileInfo = files[i];
+          const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+
+          await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId, fileData});
+
+          progress[fileInfo.path] = {
+            ...progress[fileInfo.path],
+            uploaded: progress[fileInfo.path].uploaded + fileInfo.len
+          };
+
+          if(callback) {
+            callback(progress);
+          }
+        }
       }
-    }
+    );
   }
 
   async CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo}) {
@@ -1692,14 +1704,31 @@ class ElvClient {
     );
   }
 
-  async UploadJobStatus({libraryId, objectId, writeToken, fileJobId, jobId}) {
-    let path = UrlJoin("q", writeToken, "file_jobs", fileJobId, "uploads", jobId);
+  async UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId}) {
+    let path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
 
     return ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "GET",
         path: path
+      })
+    );
+  }
+
+  async UploadFileData({libraryId, objectId, writeToken, uploadId, jobId, fileData}) {
+    const path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
+
+    await ResponseToJson(
+      this.HttpClient.Request({
+        method: "POST",
+        path: path,
+        body: fileData,
+        bodyType: "BINARY",
+        headers: {
+          "Content-type": "application/octet-stream",
+          ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
+        }
       })
     );
   }
@@ -2109,12 +2138,16 @@ class ElvClient {
   /**
    * Upload part to an object draft
    *
+   * Note: If uploading a large file (especially with an HTML file and/or when using the FrameClient) it is
+   * recommended to use the CreatePart + UploadPartChunk + FinalizePart flow to upload the file in
+   * smaller chunks.
+   *
    * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
-   * @param {(ArrayBuffer | Buffer)} data - Data to upload
+   * @param {(File | ArrayBuffer | Buffer)} data - Data to upload
    * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
    * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
    *
