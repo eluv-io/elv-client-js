@@ -14,7 +14,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-require("elv-components-js/src/utils/LimitedMap");
+require("@babel/polyfill");
 
 var Id = require("./Id");
 
@@ -471,139 +471,6 @@ function () {
       }
 
       return AwaitMessage;
-    }() // Reimplementation of ElvClient#UploadFiles to ensure usage of HTML File API to avoid reading all files into memory
-    // and avoid timeout issues with large / many files
-
-  }, {
-    key: "UploadFiles",
-    value: function () {
-      var _UploadFiles = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee8(_ref7) {
-        var _this2 = this;
-
-        var libraryId, objectId, writeToken, fileInfo, callback, progress, fileDataMap, _ref8, id, jobs;
-
-        return regeneratorRuntime.wrap(function _callee8$(_context8) {
-          while (1) {
-            switch (_context8.prev = _context8.next) {
-              case 0:
-                libraryId = _ref7.libraryId, objectId = _ref7.objectId, writeToken = _ref7.writeToken, fileInfo = _ref7.fileInfo, callback = _ref7.callback;
-                // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
-                progress = {};
-                fileDataMap = {};
-                fileInfo = fileInfo.map(function (entry) {
-                  entry.path = entry.path.replace(/^\/+/, "");
-                  fileDataMap[entry.path] = entry.data;
-                  delete entry.data;
-                  entry.type = "file";
-                  progress[entry.path] = {
-                    uploaded: 0,
-                    total: entry.size
-                  };
-                  return entry;
-                });
-
-                if (callback) {
-                  callback(progress);
-                }
-
-                _context8.next = 7;
-                return this.CreateFileUploadJob({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  writeToken: writeToken,
-                  fileInfo: fileInfo
-                });
-
-              case 7:
-                _ref8 = _context8.sent;
-                id = _ref8.id;
-                jobs = _ref8.jobs;
-                _context8.next = 12;
-                return jobs.limitedMap(5,
-                /*#__PURE__*/
-                function () {
-                  var _ref9 = _asyncToGenerator(
-                  /*#__PURE__*/
-                  regeneratorRuntime.mark(function _callee7(jobId) {
-                    var files, i, _fileInfo, fileData;
-
-                    return regeneratorRuntime.wrap(function _callee7$(_context7) {
-                      while (1) {
-                        switch (_context7.prev = _context7.next) {
-                          case 0:
-                            _context7.next = 2;
-                            return _this2.UploadJobStatus({
-                              libraryId: libraryId,
-                              objectId: objectId,
-                              writeToken: writeToken,
-                              uploadId: id,
-                              jobId: jobId
-                            });
-
-                          case 2:
-                            files = _context7.sent.files;
-                            i = 0;
-
-                          case 4:
-                            if (!(i < files.length)) {
-                              _context7.next = 14;
-                              break;
-                            }
-
-                            _fileInfo = files[i];
-                            fileData = fileDataMap[_fileInfo.path].slice(_fileInfo.off, _fileInfo.off + _fileInfo.len);
-                            _context7.next = 9;
-                            return _this2.UploadFileData({
-                              libraryId: libraryId,
-                              objectId: objectId,
-                              writeToken: writeToken,
-                              uploadId: id,
-                              jobId: jobId,
-                              fileData: fileData
-                            });
-
-                          case 9:
-                            progress[_fileInfo.path] = _objectSpread({}, progress[_fileInfo.path], {
-                              uploaded: progress[_fileInfo.path].uploaded + _fileInfo.len
-                            });
-
-                            if (callback) {
-                              callback(progress);
-                            }
-
-                          case 11:
-                            i++;
-                            _context7.next = 4;
-                            break;
-
-                          case 14:
-                          case "end":
-                            return _context7.stop();
-                        }
-                      }
-                    }, _callee7);
-                  }));
-
-                  return function (_x12) {
-                    return _ref9.apply(this, arguments);
-                  };
-                }());
-
-              case 12:
-              case "end":
-                return _context8.stop();
-            }
-          }
-        }, _callee8, this);
-      }));
-
-      function UploadFiles(_x11) {
-        return _UploadFiles.apply(this, arguments);
-      }
-
-      return UploadFiles;
     }() // List of methods that may require a prompt - these should have an unlimited timeout period
 
   }, {
@@ -616,8 +483,7 @@ function () {
      * @returns {Array<string>} - List of ElvClient methods available to a FrameClient
      */
     value: function AllowedMethods() {
-      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddLibraryContentType", "AvailableDRMs", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "Configuration", "ContentLibraries", "ContentLibrary", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "CopyContentObject", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentSpace", "CreateContentType", "CreateFileUploadJob", "CreateMediaMaster", "CreateMediaMezzanine", "CreatePart", "CurrentAccountAddress", "CustomContractAddress", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeletePart", "DeployContract", "DownloadFile", "DownloadPart", "EditContentObject", "Encrypt", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeContentObject", "FinalizePart", "FinalizeUploadJobs", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LibraryContentTypes", "ListFiles", "MergeMetadata", "NodeId", "Nodes", "PlayoutOptions", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "UploadFileData", //"UploadFiles",
-      "UploadJobStatus", "UploadPart", "UploadPartChunk", "UseRegion", "VerifyContentObject", "WithdrawContractFunds"];
+      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddLibraryContentType", "AvailableDRMs", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "Configuration", "ContentLibraries", "ContentLibrary", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "CopyContentObject", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentSpace", "CreateContentType", "CreateFileUploadJob", "CreateMediaMaster", "CreateMediaMezzanine", "CreatePart", "CurrentAccountAddress", "CustomContractAddress", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeletePart", "DeployContract", "DownloadFile", "DownloadPart", "EditContentObject", "Encrypt", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeContentObject", "FinalizePart", "FinalizeUploadJobs", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LibraryContentTypes", "ListFiles", "MergeMetadata", "NodeId", "Nodes", "PlayoutOptions", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "UploadFileData", "UploadFiles", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UseRegion", "VerifyContentObject", "WithdrawContractFunds"];
     }
   }, {
     key: "AllowedUserProfileMethods",
