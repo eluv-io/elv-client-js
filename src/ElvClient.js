@@ -2137,12 +2137,13 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string} name - Name of the content
    * @param {string=} description - Description of the content
+   * @param {Object=} metadata - Additional metadata for the content object
    * @param {Object} fileInfo - Files to upload to (See UploadFiles method)
    * @param {function=} callback - Progress callback for file upload (See UploadFiles method)
    *
    * @return {Promise<Object>} - Result of the finalize call
    */
-  async CreateMediaMaster({libraryId, name, description, fileInfo, callback}) {
+  async CreateMediaMaster({libraryId, name, description, metadata={}, fileInfo, callback}) {
     const abrMasterType = await this.ContentType({name: "ABR Master"});
 
     if(!abrMasterType) {
@@ -2177,9 +2178,14 @@ class ElvClient {
       objectId: id,
       writeToken: write_token,
       metadata: {
-        name: name || "",
-        description: description || "",
-        elv_created_at: new Date().getTime()
+        name,
+        description,
+        public: {
+          name: name || "",
+          description: description || ""
+        },
+        elv_created_at: new Date().getTime(),
+        ...(metadata || {})
       }
     });
 
@@ -2199,11 +2205,12 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string} name - Name of the content
    * @param {string=} description - Description of the content
+   * @param {Object=} metadata - Additional metadata for the content object
    * @param {string} masterVersionHash - The version hash of the master content object
    *
    * @return {Promise<Object>} - Result of the finalize call
    */
-  async CreateMediaMezzanine({libraryId, name, description, masterVersionHash}) {
+  async CreateMediaMezzanine({libraryId, name, description, metadata={}, masterVersionHash}) {
     const abrMasterType = await this.ContentType({name: "ABR Master"});
 
     if(!abrMasterType) {
@@ -2237,9 +2244,14 @@ class ElvClient {
       objectId: id,
       writeToken: write_token,
       metadata: {
-        name: name || "",
-        description: description || "",
-        elv_created_at: new Date().getTime()
+        name,
+        description,
+        public: {
+          name: name || "",
+          description: description || ""
+        },
+        elv_created_at: new Date().getTime(),
+        ...(metadata || {})
       }
     });
 

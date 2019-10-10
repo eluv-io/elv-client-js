@@ -4550,6 +4550,7 @@ function () {
      * @param {string} libraryId - ID of the library
      * @param {string} name - Name of the content
      * @param {string=} description - Description of the content
+     * @param {Object=} metadata - Additional metadata for the content object
      * @param {Object} fileInfo - Files to upload to (See UploadFiles method)
      * @param {function=} callback - Progress callback for file upload (See UploadFiles method)
      *
@@ -4562,13 +4563,13 @@ function () {
       var _CreateMediaMaster = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee60(_ref66) {
-        var libraryId, name, description, fileInfo, callback, abrMasterType, _ref67, id, write_token;
+        var libraryId, name, description, _ref66$metadata, metadata, fileInfo, callback, abrMasterType, _ref67, id, write_token;
 
         return regeneratorRuntime.wrap(function _callee60$(_context60) {
           while (1) {
             switch (_context60.prev = _context60.next) {
               case 0:
-                libraryId = _ref66.libraryId, name = _ref66.name, description = _ref66.description, fileInfo = _ref66.fileInfo, callback = _ref66.callback;
+                libraryId = _ref66.libraryId, name = _ref66.name, description = _ref66.description, _ref66$metadata = _ref66.metadata, metadata = _ref66$metadata === void 0 ? {} : _ref66$metadata, fileInfo = _ref66.fileInfo, callback = _ref66.callback;
                 _context60.next = 3;
                 return this.ContentType({
                   name: "ABR Master"
@@ -4622,11 +4623,15 @@ function () {
                   libraryId: libraryId,
                   objectId: id,
                   writeToken: write_token,
-                  metadata: {
-                    name: name || "",
-                    description: description || "",
+                  metadata: _objectSpread({
+                    name: name,
+                    description: description,
+                    "public": {
+                      name: name || "",
+                      description: description || ""
+                    },
                     elv_created_at: new Date().getTime()
-                  }
+                  }, metadata || {})
                 });
 
               case 17:
@@ -4663,6 +4668,7 @@ function () {
      * @param {string} libraryId - ID of the library
      * @param {string} name - Name of the content
      * @param {string=} description - Description of the content
+     * @param {Object=} metadata - Additional metadata for the content object
      * @param {string} masterVersionHash - The version hash of the master content object
      *
      * @return {Promise<Object>} - Result of the finalize call
@@ -4674,13 +4680,13 @@ function () {
       var _CreateMediaMezzanine = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee61(_ref68) {
-        var libraryId, name, description, masterVersionHash, abrMasterType, _ref69, id, write_token;
+        var libraryId, name, description, _ref68$metadata, metadata, masterVersionHash, abrMasterType, _ref69, id, write_token;
 
         return regeneratorRuntime.wrap(function _callee61$(_context61) {
           while (1) {
             switch (_context61.prev = _context61.next) {
               case 0:
-                libraryId = _ref68.libraryId, name = _ref68.name, description = _ref68.description, masterVersionHash = _ref68.masterVersionHash;
+                libraryId = _ref68.libraryId, name = _ref68.name, description = _ref68.description, _ref68$metadata = _ref68.metadata, metadata = _ref68$metadata === void 0 ? {} : _ref68$metadata, masterVersionHash = _ref68.masterVersionHash;
                 _context61.next = 3;
                 return this.ContentType({
                   name: "ABR Master"
@@ -4735,11 +4741,15 @@ function () {
                   libraryId: libraryId,
                   objectId: id,
                   writeToken: write_token,
-                  metadata: {
-                    name: name || "",
-                    description: description || "",
+                  metadata: _objectSpread({
+                    name: name,
+                    description: description,
+                    "public": {
+                      name: name || "",
+                      description: description || ""
+                    },
                     elv_created_at: new Date().getTime()
-                  }
+                  }, metadata || {})
                 });
 
               case 17:
