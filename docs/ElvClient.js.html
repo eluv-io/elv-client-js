@@ -1651,19 +1651,45 @@ class ElvClient {
 
     const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo});
 
-    await jobs.limitedMap(
+    // Get job info for each job
+    const jobInfo = await jobs.limitedMap(
       5,
-      async jobId => {
-        // Retrieve item list for this job
-        const files = (
-          await this.UploadJobStatus({
-            libraryId,
-            objectId,
-            writeToken,
-            uploadId: id,
-            jobId
-          })
-        ).files;
+      async jobId => await this.UploadJobStatus({
+        libraryId,
+        objectId,
+        writeToken,
+        uploadId: id,
+        jobId
+      })
+    );
+
+    // Upload first chunk to estimate bandwidth
+    const firstJob = jobInfo[0];
+    const firstChunk = firstJob.files.pop();
+    const fileData = fileDataMap[firstChunk.path].slice(firstChunk.off, firstChunk.off + firstChunk.len);
+
+    const start = performance.now();
+    await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId: firstJob.id, fileData});
+    const elapsed = (performance.now() - start) / 1000;
+    const mbps = firstChunk.len / elapsed / 1000000;
+
+    if(callback) {
+      progress[firstChunk.path] = {
+        ...progress[firstChunk.path],
+        uploaded: progress[firstChunk.path].uploaded + firstChunk.len
+      };
+
+      callback(progress);
+    }
+
+    // Determine upload concurrency for rest of data based on estimated bandwidth
+    const concurrentUploads = Math.min(5, Math.max(1, Math.floor(mbps / 8)));
+
+    await jobInfo.limitedMap(
+      concurrentUploads,
+      async job  => {
+        const jobId = job.id;
+        const files = job.files;
 
         // Upload each item
         for(let i = 0; i &lt; files.length; i++) {
@@ -1672,12 +1698,12 @@ class ElvClient {
 
           await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId, fileData});
 
-          progress[fileInfo.path] = {
-            ...progress[fileInfo.path],
-            uploaded: progress[fileInfo.path].uploaded + fileInfo.len
-          };
-
           if(callback) {
+            progress[fileInfo.path] = {
+              ...progress[fileInfo.path],
+              uploaded: progress[fileInfo.path].uploaded + fileInfo.len
+            };
+
             callback(progress);
           }
         }

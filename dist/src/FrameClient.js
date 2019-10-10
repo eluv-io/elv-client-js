@@ -287,7 +287,7 @@ function () {
       var _SendMessage = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee4(_ref5) {
-        var _ref5$options, options, callback, _ref5$noResponse, noResponse, requestId, callbackId, operation, timeout;
+        var _ref5$options, options, callback, _ref5$noResponse, noResponse, requestId, callbackId, operation, isFileOperation, timeout;
 
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
@@ -307,19 +307,20 @@ function () {
                 }), "*"); // No timeout for prompted methods
 
                 if (noResponse) {
-                  _context4.next = 10;
+                  _context4.next = 11;
                   break;
                 }
 
                 operation = options.calledMethod || options.operation;
-                timeout = options.prompted ? 0 : this.timeout;
-                _context4.next = 9;
+                isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
+                timeout = options.prompted || isFileOperation ? 0 : this.timeout;
+                _context4.next = 10;
                 return this.AwaitMessage(requestId, timeout, callback, callbackId, operation);
 
-              case 9:
+              case 10:
                 return _context4.abrupt("return", _context4.sent);
 
-              case 10:
+              case 11:
               case "end":
                 return _context4.stop();
             }
@@ -499,6 +500,11 @@ function () {
     key: "MetadataMethods",
     value: function MetadataMethods() {
       return ["DeleteUserMetadata", "MergeUserMetadata", "ReplaceUserMetadata", "UserMetadata"];
+    }
+  }, {
+    key: "FileMethods",
+    value: function FileMethods() {
+      return ["DownloadFile", "DownloadPart", "UploadFiles", "UploadPart", "UploadPartChunk"];
     }
   }]);
 

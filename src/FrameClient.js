@@ -124,7 +124,8 @@ class FrameClient {
     // No timeout for prompted methods
     if(!noResponse) {
       const operation = options.calledMethod || options.operation;
-      const timeout = options.prompted ? 0 : this.timeout;
+      const isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
+      const timeout = options.prompted || isFileOperation ? 0 : this.timeout;
       return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
     }
   }
@@ -222,6 +223,16 @@ class FrameClient {
       "MergeUserMetadata",
       "ReplaceUserMetadata",
       "UserMetadata"
+    ];
+  }
+
+  static FileMethods() {
+    return [
+      "DownloadFile",
+      "DownloadPart",
+      "UploadFiles",
+      "UploadPart",
+      "UploadPartChunk"
     ];
   }
 
