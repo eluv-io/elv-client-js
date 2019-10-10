@@ -389,17 +389,15 @@ class EthClient {
   }
 
   async CommitContent({contentObjectAddress, versionHash, signer}) {
-    const event = await this.CallContractMethodAndWait({
+    return await this.CallContractMethodAndWait({
       contractAddress: contentObjectAddress,
       abi: ContentContract.abi,
       methodName: "commit",
       methodArgs: [versionHash],
-      eventName: "Publish",
-      eventValue: "submitStatus",
+      eventName: "CommitPending",
+      eventValue: "pendingHash",
       signer
     });
-
-    return event;
   }
 
   async EngageAccountLibrary({contentSpaceAddress, signer}) {

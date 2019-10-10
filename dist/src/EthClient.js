@@ -862,7 +862,7 @@ function () {
       var _CommitContent = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee12(_ref16) {
-        var contentObjectAddress, versionHash, signer, event;
+        var contentObjectAddress, versionHash, signer;
         return regeneratorRuntime.wrap(function _callee12$(_context12) {
           while (1) {
             switch (_context12.prev = _context12.next) {
@@ -874,16 +874,15 @@ function () {
                   abi: ContentContract.abi,
                   methodName: "commit",
                   methodArgs: [versionHash],
-                  eventName: "Publish",
-                  eventValue: "submitStatus",
+                  eventName: "CommitPending",
+                  eventValue: "pendingHash",
                   signer: signer
                 });
 
               case 3:
-                event = _context12.sent;
-                return _context12.abrupt("return", event);
+                return _context12.abrupt("return", _context12.sent);
 
-              case 5:
+              case 4:
               case "end":
                 return _context12.stop();
             }

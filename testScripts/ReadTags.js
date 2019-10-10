@@ -200,8 +200,7 @@ const Read = async (name) => {
 const UploadTags = async () => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
-      configUrl,
-      region: "na-east"
+      configUrl
     });
 
     let wallet = client.GenerateWallet();
@@ -226,7 +225,7 @@ const UploadTags = async () => {
       objectId,
       writeToken: write_token,
       metadataSubtree: "video_level_tags",
-      metadata: tags.video_level_tags
+      metadata: Object.keys(tags.video_level_tags)
     });
 
     await client.ReplaceMetadata({
@@ -237,6 +236,7 @@ const UploadTags = async () => {
       metadata: tags.overlay_tags
     });
 
+    console.log("AWAITING FINALIZE")
     console.log(
       await client.FinalizeContentObject({
         libraryId,
