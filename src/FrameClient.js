@@ -339,6 +339,8 @@ class FrameClient {
       "CreateContentSpace",
       "CreateContentType",
       "CreateFileUploadJob",
+      "CreateMediaMaster",
+      "CreateMediaMezzanine",
       "CreatePart",
       "CurrentAccountAddress",
       "CustomContractAddress",

@@ -2127,6 +2127,129 @@ class ElvClient {
     });
   }
 
+  /* Media Creation and Management */
+
+  /**
+   * Create a master media content object with the given files.
+   *
+   * @methodGroup Media
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} name - Name of the content
+   * @param {string=} description - Description of the content
+   * @param {Object} fileInfo - Files to upload to (See UploadFiles method)
+   * @param {function=} callback - Progress callback for file upload (See UploadFiles method)
+   *
+   * @return {Promise<Object>} - Result of the finalize call
+   */
+  async CreateMediaMaster({libraryId, name, description, fileInfo, callback}) {
+    const abrMasterType = await this.ContentType({name: "ABR Master"});
+
+    if(!abrMasterType) {
+      throw Error("Unable to access ABR Master content type");
+    }
+
+    const {id, write_token} = await this.CreateContentObject({
+      libraryId,
+      options: {
+        type: abrMasterType.hash
+      }
+    });
+
+    await this.UploadFiles({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      fileInfo,
+      callback
+    });
+
+    await this.CallBitcodeMethod({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      method: "/media/production_master/init",
+      constant: false
+    });
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      metadata: {
+        name: name || "",
+        description: description || "",
+        elv_created_at: new Date().getTime()
+      }
+    });
+
+    return await this.FinalizeContentObject({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      awaitCommitConfirmation: false
+    });
+  }
+
+  /**
+   * Create a mezzanine of the given master content object
+   *
+   * @methodGroup Media
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} name - Name of the content
+   * @param {string=} description - Description of the content
+   * @param {string} masterVersionHash - The version hash of the master content object
+   *
+   * @return {Promise<Object>} - Result of the finalize call
+   */
+  async CreateMediaMezzanine({libraryId, name, description, masterVersionHash}) {
+    const abrMasterType = await this.ContentType({name: "ABR Master"});
+
+    if(!abrMasterType) {
+      throw Error("Unable to access ABR Master content type");
+    }
+
+    if(!masterVersionHash) {
+      throw Error("Master version hash not specified");
+    }
+
+    const {id, write_token} = await this.CreateContentObject({
+      libraryId,
+      options: {
+        type: abrMasterType.hash
+      }
+    });
+
+    await this.CallBitcodeMethod({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      method: "/media/mezzanine/prep_start",
+      queryParams: {
+        source: masterVersionHash
+      },
+      constant: false
+    });
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      metadata: {
+        name: name || "",
+        description: description || "",
+        elv_created_at: new Date().getTime()
+      }
+    });
+
+    return await this.FinalizeContentObject({
+      libraryId,
+      objectId: id,
+      writeToken: write_token
+    });
+  }
+
   /* Content Object Access */
 
   /**
@@ -2319,7 +2442,7 @@ class ElvClient {
   /**
    * Determine available DRM types available in this browser environment.
    *
-   * @methodGroup URL Generation
+   * @methodGroup Media
    * @return {Promise<Array<string>>}
    */
   async AvailableDRMs() {
@@ -2374,7 +2497,7 @@ class ElvClient {
   /**
    * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
    *
-   * @methodGroup URL Generation
+   * @methodGroup Media
    * @namedParams
    * @param {string} versionHash - Version hash of the content
    * @param {Array<string>} protocols - Acceptable playout protocols
@@ -2448,7 +2571,7 @@ class ElvClient {
    * Retrieve playout options in BitMovin player format for the specified content that satisfy
    * the given protocol and DRM requirements
    *
-   * @methodGroup URL Generation
+   * @methodGroup Media
    * @namedParams
    * @param {string} versionHash - Version hash of the content
    * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
