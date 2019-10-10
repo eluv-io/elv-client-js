@@ -14,7 +14,8 @@ for(let i = 0; i < process.argv.length; i++){
 let plugins = [
   new webpack.optimize.LimitChunkCountPlugin({
     maxChunks: 1,
-  })
+  }),
+  //new BundleAnalyzerPlugin()
 ];
 
 // Exclude node-fetch for web build

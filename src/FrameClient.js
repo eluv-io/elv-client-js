@@ -1,4 +1,3 @@
-require("@babel/polyfill");
 require("elv-components-js/src/utils/LimitedMap");
 
 const Id = require("./Id");
