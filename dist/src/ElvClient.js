@@ -3207,7 +3207,7 @@ function () {
                 firstJob = jobInfo[0];
                 firstChunk = firstJob.files.pop();
                 fileData = fileDataMap[firstChunk.path].slice(firstChunk.off, firstChunk.off + firstChunk.len);
-                start = performance.now();
+                start = new Date().getTime();
                 _context44.next = 19;
                 return this.UploadFileData({
                   libraryId: libraryId,
@@ -3219,7 +3219,7 @@ function () {
                 });
 
               case 19:
-                elapsed = (performance.now() - start) / 1000;
+                elapsed = (new Date().getTime() - start) / 1000;
                 mbps = firstChunk.len / elapsed / 1000000;
 
                 if (callback) {
