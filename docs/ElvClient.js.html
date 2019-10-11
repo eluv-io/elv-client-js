@@ -1668,9 +1668,9 @@ class ElvClient {
     const firstChunk = firstJob.files.pop();
     const fileData = fileDataMap[firstChunk.path].slice(firstChunk.off, firstChunk.off + firstChunk.len);
 
-    const start = performance.now();
+    const start = new Date().getTime();
     await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId: firstJob.id, fileData});
-    const elapsed = (performance.now() - start) / 1000;
+    const elapsed = (new Date().getTime() - start) / 1000;
     const mbps = firstChunk.len / elapsed / 1000000;
 
     if(callback) {
