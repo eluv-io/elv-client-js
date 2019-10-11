@@ -1,9 +1,10 @@
 const { ElvClient } = require("../src/ElvClient");
 const fs = require("fs");
+const path = require("path");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
-const Create = async (libraryId, file) => {
+const Create = async (masterLibraryId, mezLibraryId, filePath) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
@@ -16,11 +17,14 @@ const Create = async (libraryId, file) => {
 
     await client.SetSigner({signer});
 
-    const data = fs.readFileSync(file);
+    const data = fs.readFileSync(filePath);
 
+    //  TODO: use a lib or mechanism to set mime_type based on file ext?
+    //  (e.g. .mov should be video/quicktime)
+    //  https://docs.openx.com/Content/publishers/adunit_linearvideo_mime_types.html
     const fileInfo = [
       {
-        path: "shrek-retold.mp4",
+        path: path.basename(filePath),
         type: "file",
         mime_type: "video/mp4",
         size: data.length,
@@ -29,22 +33,23 @@ const Create = async (libraryId, file) => {
     ];
 
     console.log("Creating Master");
+    title = path.basename(filePath, path.extname(filePath));
+
     const { hash } = await client.CreateMediaMaster({
-      libraryId,
-      name: "Test Master",
-      description: "Test Master",
+      libraryId: masterLibraryId,
+      name: title + " (master)",
+      description: "Master for " + title,
       fileInfo,
       callback: progress => console.log(progress)
     });
 
     console.log("Master hash: ", hash);
 
-
     console.log("Creating Mezzanine");
     const mezzanine = await client.CreateMediaMezzanine({
-      libraryId,
-      name: "Test Mezzanine",
-      description: "Test Mezzanine",
+      libraryId: mezLibraryId,
+      name: title + " (mezzanine)",
+      description: "Mezzanine for " + title,
       masterVersionHash: hash
     });
 
@@ -54,12 +59,13 @@ const Create = async (libraryId, file) => {
   }
 };
 
-const libraryId = process.argv[2];
-const file = process.argv[3];
+const masterLibraryId = process.argv[2];
+const mezLibraryId = process.argv[3];
+const filePath = process.argv[4];
 
-if(!libraryId || !file) {
-  console.error("Usage: PRIVATE_KEY=<private-key> node testScripts/UploadMedia.js libraryId file");
+if(!masterLibraryId || !mezLibraryId || !filePath) {
+  console.error("Usage: PRIVATE_KEY=<private-key> node testScripts/UploadMedia.js masterLibraryId mezLibraryId filePath");
   return;
 }
 
-Create(libraryId, file);
+Create(masterLibraryId, mezLibraryId, filePath);
