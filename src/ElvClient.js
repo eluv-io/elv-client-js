@@ -1612,9 +1612,9 @@ class ElvClient {
     const firstChunk = firstJob.files.pop();
     const fileData = fileDataMap[firstChunk.path].slice(firstChunk.off, firstChunk.off + firstChunk.len);
 
-    const start = performance.now();
+    const start = new Date().getTime();
     await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId: firstJob.id, fileData});
-    const elapsed = (performance.now() - start) / 1000;
+    const elapsed = (new Date().getTime() - start) / 1000;
     const mbps = firstChunk.len / elapsed / 1000000;
 
     if(callback) {
@@ -3226,6 +3226,18 @@ class ElvClient {
   }
 
   /* Contracts */
+
+  /**
+   * Return the name of the contract, as specified in the contracts "version" string
+   *
+   * @namedParams
+   * @param {string} contractAddress - Address of the contract
+   * 
+   * @return {Promise<string>} - Name of the contract
+   */
+  async ContractName({contractAddress}) {
+    return await this.authClient.ContractName(contractAddress);
+  }
 
   /**
    * Format the arguments to be used for the specified method of the contract

@@ -20,7 +20,7 @@ var topics = {
       "name": "RightsChanged",
       "type": "event"
     }],
-    "contract": "BaseAccessWallet"
+    "ambiguous": true
   },
   "0xa33a9370a938260eee2537d9480ca0caa9789521da8e57afb3a0699d3ff9b260": {
     "abi": [{
@@ -41,16 +41,7 @@ var topics = {
       "name": "dbgAddress",
       "type": "event"
     }],
-    "contract": "BaseAccessWallet"
-  },
-  "0xed78a9defa7412748c9513ba9cf680f57703a46dd7e0fb0b1e94063423c73e88": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [],
-      "name": "AccessRequest",
-      "type": "event"
-    }],
-    "contract": "BaseLibrary"
+    "ambiguous": true
   },
   "0x1f6808146a51d157d9343b08ee6fce3b39b0e5b419f4c8524a56512acf5ba2b5": {
     "abi": [{
@@ -63,7 +54,7 @@ var topics = {
       "name": "MaxCreditPerAd",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0xecfcc1bcfb602db0a89a128bad350799ac7741ae87395080e8da39da6f100fcb": {
     "abi": [{
@@ -76,7 +67,7 @@ var topics = {
       "name": "BitcodeAddress",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0xb92a8e382f572ae6133fc542b538c526abdb10f38288b27314dbe5f88e8289c9": {
     "abi": [{
@@ -110,7 +101,7 @@ var topics = {
       "name": "dbgAddress",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0xfdd59060f425ba73a285897b1a70f2e10b4306ab319f982c2cca84f2624b31a3": {
     "abi": [{
@@ -191,7 +182,7 @@ var topics = {
       "name": "Log",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x4c34c2f9a78632f29fa59aaed5514cb742fd9fbcfd7ccc2c03c85f2bbc621c47": {
     "abi": [{
@@ -208,7 +199,7 @@ var topics = {
       "name": "LogBool",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x62ddffe5b5108385f7a590f100e1ee414ad9551a31f089e64e82998440785e1e": {
     "abi": [{
@@ -225,7 +216,7 @@ var topics = {
       "name": "LogAddress",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x31c369d7029afba34b21369bcf9a6ac132fb2621c34558b914859b768d05232d": {
     "abi": [{
@@ -242,7 +233,7 @@ var topics = {
       "name": "LogUint256",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x3d9b341774178bb033613e3a7a1cadb2244b3bcbb1372905d2ba24dca38aeb22": {
     "abi": [{
@@ -259,7 +250,7 @@ var topics = {
       "name": "LogInt256",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x02d93529bba9d141e5e06733c52c7e6fbcb1149586adb5c24064b522ab26f1d7": {
     "abi": [{
@@ -276,7 +267,7 @@ var topics = {
       "name": "LogBytes32",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x6a0f12fe24f7c34df8acc096f076bac6e3f1ff225f4fccc7b0f389657bde895a": {
     "abi": [{
@@ -297,7 +288,7 @@ var topics = {
       "name": "LogPayment",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x9df71221e13c480b974b5d5bd7591b30b7ea3bfff8a56dfa7fde810a14c1c39b": {
     "abi": [{
@@ -310,7 +301,7 @@ var topics = {
       "name": "RunCreate",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x6d0dbfc3805aef247651b04b50fc717599f7e0b66c6b022ae1544406f7bf8f86": {
     "abi": [{
@@ -323,7 +314,7 @@ var topics = {
       "name": "RunKill",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0xb6c1c013bb5004fe8e943c6890e300ccedf9bd73dcd4eb291b31b9f96874feff": {
     "abi": [{
@@ -340,7 +331,7 @@ var topics = {
       "name": "RunStatusChange",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0xffadad18ab3777a19f664019a6261b011ab9405749e01a45950d44fb9360b385": {
     "abi": [{
@@ -357,7 +348,7 @@ var topics = {
       "name": "RunAccessCharge",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0x3e68dc35f88d76818f276322c37f5021ee00e232fe0d27a93c02801aec4d9c58": {
     "abi": [{
@@ -374,7 +365,7 @@ var topics = {
       "name": "RunAccess",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0xbf0f2215c45c5ee802d4c20bdfc915308c4459b0f6a78f23ad350e6408bf2891": {
     "abi": [{
@@ -391,7 +382,7 @@ var topics = {
       "name": "RunFinalize",
       "type": "event"
     }],
-    "contract": "AdmgrAdvertisement"
+    "ambiguous": true
   },
   "0xb251eb052afc73ffd02ffe85ad79990a8b3fed60d76dbc2fa2fdd7123dffd914": {
     "abi": [{
@@ -460,7 +451,7 @@ var topics = {
       "name": "UnauthorizedOperation",
       "type": "event"
     }],
-    "contract": "BaseLibrary"
+    "ambiguous": true
   },
   "0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75": {
     "abi": [{
@@ -481,7 +472,7 @@ var topics = {
       "name": "CommitPending",
       "type": "event"
     }],
-    "contract": "BaseLibrary"
+    "ambiguous": true
   },
   "0x403f30aa5f4f2f89331a7b50054f64a00ce206f4d0a37f566ff344bbe46f8b65": {
     "abi": [{
@@ -494,7 +485,7 @@ var topics = {
       "name": "UpdateRequest",
       "type": "event"
     }],
-    "contract": "BaseLibrary"
+    "ambiguous": true
   },
   "0x482875da75e6d9f93f74a5c1a61f14cf08822057c01232f44cb92ae998e30d8e": {
     "abi": [{
@@ -511,7 +502,7 @@ var topics = {
       "name": "VersionConfirm",
       "type": "event"
     }],
-    "contract": "BaseLibrary"
+    "ambiguous": true
   },
   "0x238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51": {
     "abi": [{
@@ -532,7 +523,7 @@ var topics = {
       "name": "VersionDelete",
       "type": "event"
     }],
-    "contract": "BaseLibrary"
+    "ambiguous": true
   },
   "0x583d8312ef7016406c7ea8ba9796b9e55ac1fdc22455754cbc93869509faefad": {
     "abi": [{
@@ -566,7 +557,7 @@ var topics = {
       "name": "ContentTypeAdded",
       "type": "event"
     }],
-    "contract": "BaseLibrary"
+    "ambiguous": true
   },
   "0xd41375b9d347dfe722f90a780731abd23b7855f9cf14ea7063c4cab5f9ae58e2": {
     "abi": [{
@@ -579,7 +570,16 @@ var topics = {
       "name": "ContentTypeRemoved",
       "type": "event"
     }],
-    "contract": "BaseLibrary"
+    "ambiguous": true
+  },
+  "0xed78a9defa7412748c9513ba9cf680f57703a46dd7e0fb0b1e94063423c73e88": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [],
+      "name": "AccessRequest",
+      "type": "event"
+    }],
+    "ambiguous": true
   },
   "0xc3decc188980e855666b70498ca85e8fa284d97d30483d828fa126f7303d7d19": {
     "abi": [{
@@ -1108,7 +1108,7 @@ var topics = {
       "name": "NodeSubmitted",
       "type": "event"
     }],
-    "contract": "BaseContentSpace"
+    "ambiguous": true
   },
   "0xd644c8164f225d3b7fdbcc404f279bb1e823ef0d93f88dd4b24e85d0e7bc6a54": {
     "abi": [{
@@ -1125,7 +1125,7 @@ var topics = {
       "name": "NodeApproved",
       "type": "event"
     }],
-    "contract": "BaseContentSpace"
+    "ambiguous": true
   },
   "0x2bb0f9ba138ffddb5a8f974e9885b65a7814d3002654f1cf3f2d3f619a4006c4": {
     "abi": [{
@@ -1142,7 +1142,7 @@ var topics = {
       "name": "AddNode",
       "type": "event"
     }],
-    "contract": "BaseContentSpace"
+    "ambiguous": true
   },
   "0x41ec5b9efdbf61871df6a18b687e04bea93d5793af5f8c8b4626e155b23dc19d": {
     "abi": [{
@@ -1159,7 +1159,7 @@ var topics = {
       "name": "RemoveNode",
       "type": "event"
     }],
-    "contract": "BaseContentSpace"
+    "ambiguous": true
   },
   "0xadc3945407fc9e1f5763b74624698197e96e741e6e7c683373498712ba3eb878": {
     "abi": [{

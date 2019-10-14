@@ -6842,6 +6842,47 @@ function () {
     /* Contracts */
 
     /**
+     * Return the name of the contract, as specified in the contracts "version" string
+     *
+     * @namedParams
+     * @param {string} contractAddress - Address of the contract
+     * 
+     * @return {Promise<string>} - Name of the contract
+     */
+
+  }, {
+    key: "ContractName",
+    value: function () {
+      var _ContractName = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee94(_ref103) {
+        var contractAddress;
+        return regeneratorRuntime.wrap(function _callee94$(_context94) {
+          while (1) {
+            switch (_context94.prev = _context94.next) {
+              case 0:
+                contractAddress = _ref103.contractAddress;
+                _context94.next = 3;
+                return this.authClient.ContractName(contractAddress);
+
+              case 3:
+                return _context94.abrupt("return", _context94.sent);
+
+              case 4:
+              case "end":
+                return _context94.stop();
+            }
+          }
+        }, _callee94, this);
+      }));
+
+      function ContractName(_x93) {
+        return _ContractName.apply(this, arguments);
+      }
+
+      return ContractName;
+    }()
+    /**
      * Format the arguments to be used for the specified method of the contract
      *
      * @methodGroup Contracts
@@ -6855,10 +6896,10 @@ function () {
 
   }, {
     key: "FormatContractArguments",
-    value: function FormatContractArguments(_ref103) {
-      var abi = _ref103.abi,
-          methodName = _ref103.methodName,
-          args = _ref103.args;
+    value: function FormatContractArguments(_ref104) {
+      var abi = _ref104.abi,
+          methodName = _ref104.methodName,
+          args = _ref104.args;
       return this.ethClient.FormatContractArguments({
         abi: abi,
         methodName: methodName,
@@ -6883,15 +6924,15 @@ function () {
     value: function () {
       var _DeployContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee94(_ref104) {
-        var abi, bytecode, constructorArgs, _ref104$overrides, overrides;
+      regeneratorRuntime.mark(function _callee95(_ref105) {
+        var abi, bytecode, constructorArgs, _ref105$overrides, overrides;
 
-        return regeneratorRuntime.wrap(function _callee94$(_context94) {
+        return regeneratorRuntime.wrap(function _callee95$(_context95) {
           while (1) {
-            switch (_context94.prev = _context94.next) {
+            switch (_context95.prev = _context95.next) {
               case 0:
-                abi = _ref104.abi, bytecode = _ref104.bytecode, constructorArgs = _ref104.constructorArgs, _ref104$overrides = _ref104.overrides, overrides = _ref104$overrides === void 0 ? {} : _ref104$overrides;
-                _context94.next = 3;
+                abi = _ref105.abi, bytecode = _ref105.bytecode, constructorArgs = _ref105.constructorArgs, _ref105$overrides = _ref105.overrides, overrides = _ref105$overrides === void 0 ? {} : _ref105$overrides;
+                _context95.next = 3;
                 return this.ethClient.DeployContract({
                   abi: abi,
                   bytecode: bytecode,
@@ -6901,17 +6942,17 @@ function () {
                 });
 
               case 3:
-                return _context94.abrupt("return", _context94.sent);
+                return _context95.abrupt("return", _context95.sent);
 
               case 4:
               case "end":
-                return _context94.stop();
+                return _context95.stop();
             }
           }
-        }, _callee94, this);
+        }, _callee95, this);
       }));
 
-      function DeployContract(_x93) {
+      function DeployContract(_x94) {
         return _DeployContract.apply(this, arguments);
       }
 
@@ -6941,15 +6982,15 @@ function () {
     value: function () {
       var _CallContractMethod = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee95(_ref105) {
-        var contractAddress, abi, methodName, _ref105$methodArgs, methodArgs, value, _ref105$overrides, overrides, _ref105$formatArgumen, formatArguments, _ref105$cacheContract, cacheContract;
+      regeneratorRuntime.mark(function _callee96(_ref106) {
+        var contractAddress, abi, methodName, _ref106$methodArgs, methodArgs, value, _ref106$overrides, overrides, _ref106$formatArgumen, formatArguments, _ref106$cacheContract, cacheContract;
 
-        return regeneratorRuntime.wrap(function _callee95$(_context95) {
+        return regeneratorRuntime.wrap(function _callee96$(_context96) {
           while (1) {
-            switch (_context95.prev = _context95.next) {
+            switch (_context96.prev = _context96.next) {
               case 0:
-                contractAddress = _ref105.contractAddress, abi = _ref105.abi, methodName = _ref105.methodName, _ref105$methodArgs = _ref105.methodArgs, methodArgs = _ref105$methodArgs === void 0 ? [] : _ref105$methodArgs, value = _ref105.value, _ref105$overrides = _ref105.overrides, overrides = _ref105$overrides === void 0 ? {} : _ref105$overrides, _ref105$formatArgumen = _ref105.formatArguments, formatArguments = _ref105$formatArgumen === void 0 ? true : _ref105$formatArgumen, _ref105$cacheContract = _ref105.cacheContract, cacheContract = _ref105$cacheContract === void 0 ? true : _ref105$cacheContract;
-                _context95.next = 3;
+                contractAddress = _ref106.contractAddress, abi = _ref106.abi, methodName = _ref106.methodName, _ref106$methodArgs = _ref106.methodArgs, methodArgs = _ref106$methodArgs === void 0 ? [] : _ref106$methodArgs, value = _ref106.value, _ref106$overrides = _ref106.overrides, overrides = _ref106$overrides === void 0 ? {} : _ref106$overrides, _ref106$formatArgumen = _ref106.formatArguments, formatArguments = _ref106$formatArgumen === void 0 ? true : _ref106$formatArgumen, _ref106$cacheContract = _ref106.cacheContract, cacheContract = _ref106$cacheContract === void 0 ? true : _ref106$cacheContract;
+                _context96.next = 3;
                 return this.ethClient.CallContractMethod({
                   contractAddress: contractAddress,
                   abi: abi,
@@ -6963,17 +7004,17 @@ function () {
                 });
 
               case 3:
-                return _context95.abrupt("return", _context95.sent);
+                return _context96.abrupt("return", _context96.sent);
 
               case 4:
               case "end":
-                return _context95.stop();
+                return _context96.stop();
             }
           }
-        }, _callee95, this);
+        }, _callee96, this);
       }));
 
-      function CallContractMethod(_x94) {
+      function CallContractMethod(_x95) {
         return _CallContractMethod.apply(this, arguments);
       }
 
@@ -7003,15 +7044,15 @@ function () {
     value: function () {
       var _CallContractMethodAndWait = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee96(_ref106) {
-        var contractAddress, abi, methodName, methodArgs, value, _ref106$overrides, overrides, _ref106$formatArgumen, formatArguments;
+      regeneratorRuntime.mark(function _callee97(_ref107) {
+        var contractAddress, abi, methodName, methodArgs, value, _ref107$overrides, overrides, _ref107$formatArgumen, formatArguments;
 
-        return regeneratorRuntime.wrap(function _callee96$(_context96) {
+        return regeneratorRuntime.wrap(function _callee97$(_context97) {
           while (1) {
-            switch (_context96.prev = _context96.next) {
+            switch (_context97.prev = _context97.next) {
               case 0:
-                contractAddress = _ref106.contractAddress, abi = _ref106.abi, methodName = _ref106.methodName, methodArgs = _ref106.methodArgs, value = _ref106.value, _ref106$overrides = _ref106.overrides, overrides = _ref106$overrides === void 0 ? {} : _ref106$overrides, _ref106$formatArgumen = _ref106.formatArguments, formatArguments = _ref106$formatArgumen === void 0 ? true : _ref106$formatArgumen;
-                _context96.next = 3;
+                contractAddress = _ref107.contractAddress, abi = _ref107.abi, methodName = _ref107.methodName, methodArgs = _ref107.methodArgs, value = _ref107.value, _ref107$overrides = _ref107.overrides, overrides = _ref107$overrides === void 0 ? {} : _ref107$overrides, _ref107$formatArgumen = _ref107.formatArguments, formatArguments = _ref107$formatArgumen === void 0 ? true : _ref107$formatArgumen;
+                _context97.next = 3;
                 return this.ethClient.CallContractMethodAndWait({
                   contractAddress: contractAddress,
                   abi: abi,
@@ -7024,17 +7065,17 @@ function () {
                 });
 
               case 3:
-                return _context96.abrupt("return", _context96.sent);
+                return _context97.abrupt("return", _context97.sent);
 
               case 4:
               case "end":
-                return _context96.stop();
+                return _context97.stop();
             }
           }
-        }, _callee96, this);
+        }, _callee97, this);
       }));
 
-      function CallContractMethodAndWait(_x95) {
+      function CallContractMethodAndWait(_x96) {
         return _CallContractMethodAndWait.apply(this, arguments);
       }
 
@@ -7058,10 +7099,10 @@ function () {
 
   }, {
     key: "ExtractEventFromLogs",
-    value: function ExtractEventFromLogs(_ref107) {
-      var abi = _ref107.abi,
-          event = _ref107.event,
-          eventName = _ref107.eventName;
+    value: function ExtractEventFromLogs(_ref108) {
+      var abi = _ref108.abi,
+          event = _ref108.event,
+          eventName = _ref108.eventName;
       return this.ethClient.ExtractEventFromLogs({
         abi: abi,
         event: event,
@@ -7085,11 +7126,11 @@ function () {
 
   }, {
     key: "ExtractValueFromEvent",
-    value: function ExtractValueFromEvent(_ref108) {
-      var abi = _ref108.abi,
-          event = _ref108.event,
-          eventName = _ref108.eventName,
-          eventValue = _ref108.eventValue;
+    value: function ExtractValueFromEvent(_ref109) {
+      var abi = _ref109.abi,
+          event = _ref109.event,
+          eventName = _ref109.eventName,
+          eventValue = _ref109.eventValue;
       var eventLog = this.ethClient.ExtractEventFromLogs({
         abi: abi,
         event: event,
@@ -7122,16 +7163,16 @@ function () {
     value: function () {
       var _SetCustomContentContract = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee97(_ref109) {
-        var libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, _ref109$overrides, overrides, setResult, writeToken;
+      regeneratorRuntime.mark(function _callee98(_ref110) {
+        var libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, _ref110$overrides, overrides, setResult, writeToken;
 
-        return regeneratorRuntime.wrap(function _callee97$(_context97) {
+        return regeneratorRuntime.wrap(function _callee98$(_context98) {
           while (1) {
-            switch (_context97.prev = _context97.next) {
+            switch (_context98.prev = _context98.next) {
               case 0:
-                libraryId = _ref109.libraryId, objectId = _ref109.objectId, customContractAddress = _ref109.customContractAddress, name = _ref109.name, description = _ref109.description, abi = _ref109.abi, factoryAbi = _ref109.factoryAbi, _ref109$overrides = _ref109.overrides, overrides = _ref109$overrides === void 0 ? {} : _ref109$overrides;
+                libraryId = _ref110.libraryId, objectId = _ref110.objectId, customContractAddress = _ref110.customContractAddress, name = _ref110.name, description = _ref110.description, abi = _ref110.abi, factoryAbi = _ref110.factoryAbi, _ref110$overrides = _ref110.overrides, overrides = _ref110$overrides === void 0 ? {} : _ref110$overrides;
                 customContractAddress = this.utils.FormatAddress(customContractAddress);
-                _context97.next = 4;
+                _context98.next = 4;
                 return this.ethClient.SetCustomContentContract({
                   contentContractAddress: Utils.HashToAddress(objectId),
                   customContractAddress: customContractAddress,
@@ -7140,16 +7181,16 @@ function () {
                 });
 
               case 4:
-                setResult = _context97.sent;
-                _context97.next = 7;
+                setResult = _context98.sent;
+                _context98.next = 7;
                 return this.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
               case 7:
-                writeToken = _context97.sent.write_token;
-                _context97.next = 10;
+                writeToken = _context98.sent.write_token;
+                _context98.next = 10;
                 return this.ReplaceMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -7165,7 +7206,7 @@ function () {
                 });
 
               case 10:
-                _context97.next = 12;
+                _context98.next = 12;
                 return this.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -7173,17 +7214,17 @@ function () {
                 });
 
               case 12:
-                return _context97.abrupt("return", setResult);
+                return _context98.abrupt("return", setResult);
 
               case 13:
               case "end":
-                return _context97.stop();
+                return _context98.stop();
             }
           }
-        }, _callee97, this);
+        }, _callee98, this);
       }));
 
-      function SetCustomContentContract(_x96) {
+      function SetCustomContentContract(_x97) {
         return _SetCustomContentContract.apply(this, arguments);
       }
 
@@ -7205,23 +7246,23 @@ function () {
     value: function () {
       var _CustomContractAddress = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee98(_ref110) {
+      regeneratorRuntime.mark(function _callee99(_ref111) {
         var libraryId, objectId, customContractAddress;
-        return regeneratorRuntime.wrap(function _callee98$(_context98) {
+        return regeneratorRuntime.wrap(function _callee99$(_context99) {
           while (1) {
-            switch (_context98.prev = _context98.next) {
+            switch (_context99.prev = _context99.next) {
               case 0:
-                libraryId = _ref110.libraryId, objectId = _ref110.objectId;
+                libraryId = _ref111.libraryId, objectId = _ref111.objectId;
 
                 if (!(libraryId === this.contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId))) {
-                  _context98.next = 3;
+                  _context99.next = 3;
                   break;
                 }
 
-                return _context98.abrupt("return");
+                return _context99.abrupt("return");
 
               case 3:
-                _context98.next = 5;
+                _context99.next = 5;
                 return this.ethClient.CallContractMethod({
                   contractAddress: this.utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -7231,27 +7272,27 @@ function () {
                 });
 
               case 5:
-                customContractAddress = _context98.sent;
+                customContractAddress = _context99.sent;
 
                 if (!(customContractAddress === this.utils.nullAddress)) {
-                  _context98.next = 8;
+                  _context99.next = 8;
                   break;
                 }
 
-                return _context98.abrupt("return");
+                return _context99.abrupt("return");
 
               case 8:
-                return _context98.abrupt("return", this.utils.FormatAddress(customContractAddress));
+                return _context99.abrupt("return", this.utils.FormatAddress(customContractAddress));
 
               case 9:
               case "end":
-                return _context98.stop();
+                return _context99.stop();
             }
           }
-        }, _callee98, this);
+        }, _callee99, this);
       }));
 
-      function CustomContractAddress(_x97) {
+      function CustomContractAddress(_x98) {
         return _CustomContractAddress.apply(this, arguments);
       }
 
@@ -7276,60 +7317,21 @@ function () {
     value: function () {
       var _ContractEvents = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee99(_ref111) {
-        var contractAddress, abi, _ref111$fromBlock, fromBlock, toBlock, _ref111$includeTransa, includeTransaction;
+      regeneratorRuntime.mark(function _callee100(_ref112) {
+        var contractAddress, abi, _ref112$fromBlock, fromBlock, toBlock, _ref112$includeTransa, includeTransaction;
 
-        return regeneratorRuntime.wrap(function _callee99$(_context99) {
+        return regeneratorRuntime.wrap(function _callee100$(_context100) {
           while (1) {
-            switch (_context99.prev = _context99.next) {
+            switch (_context100.prev = _context100.next) {
               case 0:
-                contractAddress = _ref111.contractAddress, abi = _ref111.abi, _ref111$fromBlock = _ref111.fromBlock, fromBlock = _ref111$fromBlock === void 0 ? 0 : _ref111$fromBlock, toBlock = _ref111.toBlock, _ref111$includeTransa = _ref111.includeTransaction, includeTransaction = _ref111$includeTransa === void 0 ? false : _ref111$includeTransa;
-                _context99.next = 3;
+                contractAddress = _ref112.contractAddress, abi = _ref112.abi, _ref112$fromBlock = _ref112.fromBlock, fromBlock = _ref112$fromBlock === void 0 ? 0 : _ref112$fromBlock, toBlock = _ref112.toBlock, _ref112$includeTransa = _ref112.includeTransaction, includeTransaction = _ref112$includeTransa === void 0 ? false : _ref112$includeTransa;
+                _context100.next = 3;
                 return this.ethClient.ContractEvents({
                   contractAddress: contractAddress,
                   abi: abi,
                   fromBlock: fromBlock,
                   toBlock: toBlock,
                   includeTransaction: includeTransaction
-                });
-
-              case 3:
-                return _context99.abrupt("return", _context99.sent);
-
-              case 4:
-              case "end":
-                return _context99.stop();
-            }
-          }
-        }, _callee99, this);
-      }));
-
-      function ContractEvents(_x98) {
-        return _ContractEvents.apply(this, arguments);
-      }
-
-      return ContractEvents;
-    }() // TODO: Not implemented in contracts
-
-  }, {
-    key: "WithdrawContractFunds",
-    value: function () {
-      var _WithdrawContractFunds = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee100(_ref112) {
-        var contractAddress, abi, ether;
-        return regeneratorRuntime.wrap(function _callee100$(_context100) {
-          while (1) {
-            switch (_context100.prev = _context100.next) {
-              case 0:
-                contractAddress = _ref112.contractAddress, abi = _ref112.abi, ether = _ref112.ether;
-                _context100.next = 3;
-                return this.ethClient.CallContractMethodAndWait({
-                  contractAddress: contractAddress,
-                  abi: abi,
-                  methodName: "transfer",
-                  methodArgs: [this.signer.address, Ethers.utils.parseEther(ether.toString())],
-                  signer: this.signer
                 });
 
               case 3:
@@ -7343,7 +7345,46 @@ function () {
         }, _callee100, this);
       }));
 
-      function WithdrawContractFunds(_x99) {
+      function ContractEvents(_x99) {
+        return _ContractEvents.apply(this, arguments);
+      }
+
+      return ContractEvents;
+    }() // TODO: Not implemented in contracts
+
+  }, {
+    key: "WithdrawContractFunds",
+    value: function () {
+      var _WithdrawContractFunds = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee101(_ref113) {
+        var contractAddress, abi, ether;
+        return regeneratorRuntime.wrap(function _callee101$(_context101) {
+          while (1) {
+            switch (_context101.prev = _context101.next) {
+              case 0:
+                contractAddress = _ref113.contractAddress, abi = _ref113.abi, ether = _ref113.ether;
+                _context101.next = 3;
+                return this.ethClient.CallContractMethodAndWait({
+                  contractAddress: contractAddress,
+                  abi: abi,
+                  methodName: "transfer",
+                  methodArgs: [this.signer.address, Ethers.utils.parseEther(ether.toString())],
+                  signer: this.signer
+                });
+
+              case 3:
+                return _context101.abrupt("return", _context101.sent);
+
+              case 4:
+              case "end":
+                return _context101.stop();
+            }
+          }
+        }, _callee101, this);
+      }));
+
+      function WithdrawContractFunds(_x100) {
         return _WithdrawContractFunds.apply(this, arguments);
       }
 
@@ -7371,27 +7412,27 @@ function () {
     value: function () {
       var _Events = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee101() {
-        var _ref113,
+      regeneratorRuntime.mark(function _callee102() {
+        var _ref114,
             toBlock,
             fromBlock,
-            _ref113$count,
+            _ref114$count,
             count,
-            _ref113$includeTransa,
+            _ref114$includeTransa,
             includeTransaction,
             latestBlock,
-            _args101 = arguments;
+            _args102 = arguments;
 
-        return regeneratorRuntime.wrap(function _callee101$(_context101) {
+        return regeneratorRuntime.wrap(function _callee102$(_context102) {
           while (1) {
-            switch (_context101.prev = _context101.next) {
+            switch (_context102.prev = _context102.next) {
               case 0:
-                _ref113 = _args101.length > 0 && _args101[0] !== undefined ? _args101[0] : {}, toBlock = _ref113.toBlock, fromBlock = _ref113.fromBlock, _ref113$count = _ref113.count, count = _ref113$count === void 0 ? 10 : _ref113$count, _ref113$includeTransa = _ref113.includeTransaction, includeTransaction = _ref113$includeTransa === void 0 ? false : _ref113$includeTransa;
-                _context101.next = 3;
+                _ref114 = _args102.length > 0 && _args102[0] !== undefined ? _args102[0] : {}, toBlock = _ref114.toBlock, fromBlock = _ref114.fromBlock, _ref114$count = _ref114.count, count = _ref114$count === void 0 ? 10 : _ref114$count, _ref114$includeTransa = _ref114.includeTransaction, includeTransaction = _ref114$includeTransa === void 0 ? false : _ref114$includeTransa;
+                _context102.next = 3;
                 return this.BlockNumber();
 
               case 3:
-                latestBlock = _context101.sent;
+                latestBlock = _context102.sent;
 
                 if (!toBlock) {
                   if (!fromBlock) {
@@ -7414,14 +7455,14 @@ function () {
                 }
 
                 if (!(fromBlock > toBlock)) {
-                  _context101.next = 9;
+                  _context102.next = 9;
                   break;
                 }
 
-                return _context101.abrupt("return", []);
+                return _context102.abrupt("return", []);
 
               case 9:
-                _context101.next = 11;
+                _context102.next = 11;
                 return this.ethClient.Events({
                   toBlock: toBlock,
                   fromBlock: fromBlock,
@@ -7429,14 +7470,14 @@ function () {
                 });
 
               case 11:
-                return _context101.abrupt("return", _context101.sent);
+                return _context102.abrupt("return", _context102.sent);
 
               case 12:
               case "end":
-                return _context101.stop();
+                return _context102.stop();
             }
           }
-        }, _callee101, this);
+        }, _callee102, this);
       }));
 
       function Events() {
@@ -7450,25 +7491,25 @@ function () {
     value: function () {
       var _BlockNumber = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee102() {
-        return regeneratorRuntime.wrap(function _callee102$(_context102) {
+      regeneratorRuntime.mark(function _callee103() {
+        return regeneratorRuntime.wrap(function _callee103$(_context103) {
           while (1) {
-            switch (_context102.prev = _context102.next) {
+            switch (_context103.prev = _context103.next) {
               case 0:
-                _context102.next = 2;
+                _context103.next = 2;
                 return this.ethClient.MakeProviderCall({
                   methodName: "getBlockNumber"
                 });
 
               case 2:
-                return _context102.abrupt("return", _context102.sent);
+                return _context103.abrupt("return", _context103.sent);
 
               case 3:
               case "end":
-                return _context102.stop();
+                return _context103.stop();
             }
           }
-        }, _callee102, this);
+        }, _callee103, this);
       }));
 
       function BlockNumber() {
@@ -7492,36 +7533,36 @@ function () {
     value: function () {
       var _GetBalance = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee103(_ref114) {
+      regeneratorRuntime.mark(function _callee104(_ref115) {
         var address, balance;
-        return regeneratorRuntime.wrap(function _callee103$(_context103) {
+        return regeneratorRuntime.wrap(function _callee104$(_context104) {
           while (1) {
-            switch (_context103.prev = _context103.next) {
+            switch (_context104.prev = _context104.next) {
               case 0:
-                address = _ref114.address;
-                _context103.next = 3;
+                address = _ref115.address;
+                _context104.next = 3;
                 return this.ethClient.MakeProviderCall({
                   methodName: "getBalance",
                   args: [address]
                 });
 
               case 3:
-                balance = _context103.sent;
-                _context103.next = 6;
+                balance = _context104.sent;
+                _context104.next = 6;
                 return Ethers.utils.formatEther(balance);
 
               case 6:
-                return _context103.abrupt("return", _context103.sent);
+                return _context104.abrupt("return", _context104.sent);
 
               case 7:
               case "end":
-                return _context103.stop();
+                return _context104.stop();
             }
           }
-        }, _callee103, this);
+        }, _callee104, this);
       }));
 
-      function GetBalance(_x100) {
+      function GetBalance(_x101) {
         return _GetBalance.apply(this, arguments);
       }
 
@@ -7543,36 +7584,36 @@ function () {
     value: function () {
       var _SendFunds = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee104(_ref115) {
+      regeneratorRuntime.mark(function _callee105(_ref116) {
         var recipient, ether, transaction;
-        return regeneratorRuntime.wrap(function _callee104$(_context104) {
+        return regeneratorRuntime.wrap(function _callee105$(_context105) {
           while (1) {
-            switch (_context104.prev = _context104.next) {
+            switch (_context105.prev = _context105.next) {
               case 0:
-                recipient = _ref115.recipient, ether = _ref115.ether;
-                _context104.next = 3;
+                recipient = _ref116.recipient, ether = _ref116.ether;
+                _context105.next = 3;
                 return this.signer.sendTransaction({
                   to: recipient,
                   value: Ethers.utils.parseEther(ether.toString())
                 });
 
               case 3:
-                transaction = _context104.sent;
-                _context104.next = 6;
+                transaction = _context105.sent;
+                _context105.next = 6;
                 return transaction.wait();
 
               case 6:
-                return _context104.abrupt("return", _context104.sent);
+                return _context105.abrupt("return", _context105.sent);
 
               case 7:
               case "end":
-                return _context104.stop();
+                return _context105.stop();
             }
           }
-        }, _callee104, this);
+        }, _callee105, this);
       }));
 
-      function SendFunds(_x101) {
+      function SendFunds(_x102) {
         return _SendFunds.apply(this, arguments);
       }
 
@@ -7595,20 +7636,20 @@ function () {
     value: function () {
       var _CallFromFrameMessage = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee105(message, Respond) {
+      regeneratorRuntime.mark(function _callee106(message, Respond) {
         var _this8 = this;
 
         var callback, method, methodResults, responseError;
-        return regeneratorRuntime.wrap(function _callee105$(_context105) {
+        return regeneratorRuntime.wrap(function _callee106$(_context106) {
           while (1) {
-            switch (_context105.prev = _context105.next) {
+            switch (_context106.prev = _context106.next) {
               case 0:
                 if (!(message.type !== "ElvFrameRequest")) {
-                  _context105.next = 2;
+                  _context106.next = 2;
                   break;
                 }
 
-                return _context105.abrupt("return");
+                return _context106.abrupt("return");
 
               case 2:
                 if (message.callbackId) {
@@ -7623,44 +7664,44 @@ function () {
                   message.args.callback = callback;
                 }
 
-                _context105.prev = 3;
+                _context106.prev = 3;
                 method = message.calledMethod;
 
                 if (!(message.module === "userProfileClient")) {
-                  _context105.next = 13;
+                  _context106.next = 13;
                   break;
                 }
 
                 if (this.userProfileClient.FrameAllowedMethods().includes(method)) {
-                  _context105.next = 8;
+                  _context106.next = 8;
                   break;
                 }
 
                 throw Error("Invalid user profile method: " + method);
 
               case 8:
-                _context105.next = 10;
+                _context106.next = 10;
                 return this.userProfileClient[method](message.args);
 
               case 10:
-                methodResults = _context105.sent;
-                _context105.next = 18;
+                methodResults = _context106.sent;
+                _context106.next = 18;
                 break;
 
               case 13:
                 if (this.FrameAllowedMethods().includes(method)) {
-                  _context105.next = 15;
+                  _context106.next = 15;
                   break;
                 }
 
                 throw Error("Invalid method: " + method);
 
               case 15:
-                _context105.next = 17;
+                _context106.next = 17;
                 return this[method](message.args);
 
               case 17:
-                methodResults = _context105.sent;
+                methodResults = _context106.sent;
 
               case 18:
                 Respond(this.utils.MakeClonable({
@@ -7668,15 +7709,15 @@ function () {
                   requestId: message.requestId,
                   response: methodResults
                 }));
-                _context105.next = 26;
+                _context106.next = 26;
                 break;
 
               case 21:
-                _context105.prev = 21;
-                _context105.t0 = _context105["catch"](3);
+                _context106.prev = 21;
+                _context106.t0 = _context106["catch"](3);
                 // eslint-disable-next-line no-console
-                console.error(_context105.t0);
-                responseError = _context105.t0 instanceof Error ? _context105.t0.message : _context105.t0;
+                console.error(_context106.t0);
+                responseError = _context106.t0 instanceof Error ? _context106.t0.message : _context106.t0;
                 Respond(this.utils.MakeClonable({
                   type: "ElvFrameResponse",
                   requestId: message.requestId,
@@ -7685,13 +7726,13 @@ function () {
 
               case 26:
               case "end":
-                return _context105.stop();
+                return _context106.stop();
             }
           }
-        }, _callee105, this, [[3, 21]]);
+        }, _callee106, this, [[3, 21]]);
       }));
 
-      function CallFromFrameMessage(_x102, _x103) {
+      function CallFromFrameMessage(_x103, _x104) {
         return _CallFromFrameMessage.apply(this, arguments);
       }
 
@@ -7702,15 +7743,15 @@ function () {
     value: function () {
       var _Configuration = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee106(_ref116) {
+      regeneratorRuntime.mark(function _callee107(_ref117) {
         var configUrl, region, httpClient, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
-        return regeneratorRuntime.wrap(function _callee106$(_context106) {
+        return regeneratorRuntime.wrap(function _callee107$(_context107) {
           while (1) {
-            switch (_context106.prev = _context106.next) {
+            switch (_context107.prev = _context107.next) {
               case 0:
-                configUrl = _ref116.configUrl, region = _ref116.region;
+                configUrl = _ref117.configUrl, region = _ref117.region;
                 httpClient = new HttpClient([configUrl]);
-                _context106.next = 4;
+                _context107.next = 4;
                 return ResponseToJson(httpClient.Request({
                   method: "GET",
                   path: "/config",
@@ -7720,7 +7761,7 @@ function () {
                 }));
 
               case 4:
-                fabricInfo = _context106.sent;
+                fabricInfo = _context107.sent;
 
                 // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
                 filterHTTPS = function filterHTTPS(uri) {
@@ -7739,7 +7780,7 @@ function () {
                   ethereumURIs = ethereumURIs.filter(filterHTTPS);
                 }
 
-                return _context106.abrupt("return", {
+                return _context107.abrupt("return", {
                   nodeId: fabricInfo.node_id,
                   contentSpaceId: fabricInfo.qspace.id,
                   fabricURIs: fabricURIs,
@@ -7748,13 +7789,13 @@ function () {
 
               case 11:
               case "end":
-                return _context106.stop();
+                return _context107.stop();
             }
           }
-        }, _callee106);
+        }, _callee107);
       }));
 
-      function Configuration(_x104) {
+      function Configuration(_x105) {
         return _Configuration.apply(this, arguments);
       }
 
@@ -7779,25 +7820,25 @@ function () {
     value: function () {
       var _FromConfigurationUrl = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee107(_ref117) {
-        var configUrl, region, _ref117$noCache, noCache, _ref117$noAuth, noAuth, _ref118, contentSpaceId, fabricURIs, ethereumURIs, client;
+      regeneratorRuntime.mark(function _callee108(_ref118) {
+        var configUrl, region, _ref118$noCache, noCache, _ref118$noAuth, noAuth, _ref119, contentSpaceId, fabricURIs, ethereumURIs, client;
 
-        return regeneratorRuntime.wrap(function _callee107$(_context107) {
+        return regeneratorRuntime.wrap(function _callee108$(_context108) {
           while (1) {
-            switch (_context107.prev = _context107.next) {
+            switch (_context108.prev = _context108.next) {
               case 0:
-                configUrl = _ref117.configUrl, region = _ref117.region, _ref117$noCache = _ref117.noCache, noCache = _ref117$noCache === void 0 ? false : _ref117$noCache, _ref117$noAuth = _ref117.noAuth, noAuth = _ref117$noAuth === void 0 ? false : _ref117$noAuth;
-                _context107.next = 3;
+                configUrl = _ref118.configUrl, region = _ref118.region, _ref118$noCache = _ref118.noCache, noCache = _ref118$noCache === void 0 ? false : _ref118$noCache, _ref118$noAuth = _ref118.noAuth, noAuth = _ref118$noAuth === void 0 ? false : _ref118$noAuth;
+                _context108.next = 3;
                 return ElvClient.Configuration({
                   configUrl: configUrl,
                   region: region
                 });
 
               case 3:
-                _ref118 = _context107.sent;
-                contentSpaceId = _ref118.contentSpaceId;
-                fabricURIs = _ref118.fabricURIs;
-                ethereumURIs = _ref118.ethereumURIs;
+                _ref119 = _context108.sent;
+                contentSpaceId = _ref119.contentSpaceId;
+                fabricURIs = _ref119.fabricURIs;
+                ethereumURIs = _ref119.ethereumURIs;
                 client = new ElvClient({
                   contentSpaceId: contentSpaceId,
                   fabricURIs: fabricURIs,
@@ -7806,17 +7847,17 @@ function () {
                   noAuth: noAuth
                 });
                 client.configUrl = configUrl;
-                return _context107.abrupt("return", client);
+                return _context108.abrupt("return", client);
 
               case 10:
               case "end":
-                return _context107.stop();
+                return _context108.stop();
             }
           }
-        }, _callee107);
+        }, _callee108);
       }));
 
-      function FromConfigurationUrl(_x105) {
+      function FromConfigurationUrl(_x106) {
         return _FromConfigurationUrl.apply(this, arguments);
       }
 
