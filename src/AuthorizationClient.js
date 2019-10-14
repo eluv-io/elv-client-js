@@ -50,7 +50,7 @@ class AuthorizationClient {
     this.channelContentTokens = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
-    this.accessTypes = {};
+    this.contractNames = {};
   }
 
   // Return authorization token in appropriate headers
@@ -389,53 +389,50 @@ class AuthorizationClient {
     });
   }
 
-  // Determine type of ID based on contract version string
-  async AccessType(id) {
-    if(this.accessTypes[id]) { return this.accessTypes[id]; }
+  async ContractName(contractAddress) {
+    if(!this.contractNames[contractAddress]) {
+      try {
+        // Call using general "ownable" abi
+        // Ensure contract is not cached with this abi
+        const version =
+          Ethers.utils.parseBytes32String(
+            await this.client.CallContractMethod({
+              contractAddress,
+              abi: OwnableContract.abi,
+              methodName: "version",
+              cacheContract: false
+            })
+          );
 
-    let accessType;
-
-    try {
-      // Call using general "ownable" abi
-      // Ensure contract is not cached with this abi
-      const version =
-        Ethers.utils.parseBytes32String(
-          await this.client.CallContractMethod({
-            contractAddress: Utils.HashToAddress(id),
-            abi: OwnableContract.abi,
-            methodName: "version",
-            cacheContract: false
-          })
-        );
-
-      if(version.match(/BaseContentSpace\d+.*/)) {
-        // BaseContentSpace20190612120000PO
-        accessType = ACCESS_TYPES.SPACE;
-      } else if(version.match(/BaseLibrary\d+.*/)) {
-        // BaseLibrary20190605150200ML
-        accessType = ACCESS_TYPES.LIBRARY;
-      } else if(version.match(/BaseContentType\d+.*/)) {
-        // BaseContentType20190605150100ML
-        accessType = ACCESS_TYPES.TYPE;
-      } else if(version.match(/BsAccessWallet\d+.*/)) {
-        // BaseContent20190611120000PO
-        accessType = ACCESS_TYPES.WALLET;
-      } else if(version.match(/BsAccessCtrlGrp\d+.*/)) {
-        // BaseContent20190611120000PO
-        accessType = ACCESS_TYPES.GROUP;
-      } else if(version.match(/BaseContent\d+.*/)) {
-        // BaseContent20190611120000PO
-        accessType = ACCESS_TYPES.OBJECT;
-      } else {
-        accessType = ACCESS_TYPES.OTHER;
+        this.contractNames[contractAddress] = version.split(/\d+/)[0];
+      } catch(error) {
+        this.contractNames[contractAddress] = "Unknown";
       }
-    } catch(error) {
-      accessType = ACCESS_TYPES.OTHER;
     }
 
-    this.accessTypes[id] = accessType;
+    return this.contractNames[contractAddress];
+  }
 
-    return accessType;
+  // Determine type of ID based on contract version string
+  async AccessType(id) {
+    const contractName = await this.ContractName(Utils.HashToAddress(id));
+
+    switch(contractName) {
+      case "BaseContentSpace":
+        return ACCESS_TYPES.SPACE;
+      case "BaseLibrary":
+        return ACCESS_TYPES.LIBRARY;
+      case "BaseContentType":
+        return ACCESS_TYPES.TYPE;
+      case "BsAccessWallet":
+        return ACCESS_TYPES.WALLET;
+      case "BsAccessCtrlGrp":
+        return ACCESS_TYPES.GROUP;
+      case "BaseContent":
+        return ACCESS_TYPES.OBJECT;
+      default:
+        return ACCESS_TYPES.OTHER;
+    }
   }
 
   async AccessComplete({id, abi, score}) {
