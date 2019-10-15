@@ -1166,15 +1166,16 @@ class ElvClient {
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
+   * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
    *
    * @returns {Promise<Object | string>} - Metadata of the content object
    */
-  async ContentObjectMetadata({libraryId, objectId, versionHash, metadataSubtree="/", noAuth=true}) {
+  async ContentObjectMetadata({libraryId, objectId, versionHash, writeToken, metadataSubtree="/", noAuth=true}) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-    let path = UrlJoin("q", versionHash || objectId, "meta", metadataSubtree);
+    let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
 
     try {
       return await ResponseToJson(
