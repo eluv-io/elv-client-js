@@ -42,9 +42,9 @@ class HttpClient {
 
     if(method === "POST" || method === "PUT") {
       if(bodyType === "JSON") {
-        fetchParameters["body"] = JSON.stringify(body);
+        fetchParameters.body = JSON.stringify(body);
       } else {
-        fetchParameters["body"] = body;
+        fetchParameters.body = body;
       }
     }
 
@@ -59,17 +59,16 @@ class HttpClient {
     } catch(error) {
       response = {
         ok: false,
-        status: 500,
-        statusText: error.message,
+        status: 418,
+        statusText: "ElvClient Error: " + error.message,
         url: uri.toString(),
-        ...fetchParameters,
         stack: error.stack
       };
     }
 
     if(!response.ok) {
-      if(response.status === 500 && attempts < this.uris.length) {
-        // Try next node
+      if(parseInt(response.status) >= 500 && attempts < this.uris.length) {
+        // Server error - Try next node
         this.uriIndex = (this.uriIndex + 1) % this.uris.length;
 
         return await this.Request({
@@ -83,14 +82,22 @@ class HttpClient {
         });
       }
 
+      // Parse JSON error if headers indicate JSON
+      const responseType = response.headers.get("content-type");
+
+      let body = "";
+      if(response.text && response.json) {
+        body = responseType.includes("application/json") ? await response.json() : await response.text();
+      }
+
       throw {
         name: "ElvHttpClientError",
         status: response.status,
         statusText: response.statusText,
         message: response.statusText,
         url: uri.toString(),
-        body: response.text ? await response.text() : "",
-        ...fetchParameters,
+        body,
+        requestParams: fetchParameters
       };
     }
 

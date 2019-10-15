@@ -521,7 +521,7 @@ class EthClient {
         }]
       });
 
-      logs = newLogs.concat(logs);
+      logs = logs.concat(newLogs || []);
     }
 
     // Group logs by blocknumber
@@ -532,7 +532,7 @@ class EthClient {
 
     let output = [];
     await [...Array(toBlock - fromBlock + 1).keys()].limitedMap(
-      10,
+      3,
       async i => {
         const blockNumber = toBlock - i;
         let blockInfo = blocks[blockNumber];

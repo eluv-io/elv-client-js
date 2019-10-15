@@ -1189,7 +1189,7 @@ function () {
 
               case 6:
                 newLogs = _context20.sent;
-                logs = newLogs.concat(logs);
+                logs = logs.concat(newLogs || []);
 
               case 8:
                 i += 101;
@@ -1206,7 +1206,7 @@ function () {
                 });
                 output = [];
                 _context20.next = 16;
-                return _toConsumableArray(Array(toBlock - fromBlock + 1).keys()).limitedMap(10,
+                return _toConsumableArray(Array(toBlock - fromBlock + 1).keys()).limitedMap(3,
                 /*#__PURE__*/
                 function () {
                   var _ref23 = _asyncToGenerator(

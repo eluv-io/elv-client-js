@@ -1,9 +1,5 @@
 "use strict";
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
@@ -61,7 +57,7 @@ function () {
       var _Request = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee(_ref) {
-        var method, path, _ref$queryParams, queryParams, _ref$body, body, _ref$bodyType, bodyType, _ref$headers, headers, _ref$attempts, attempts, uri, fetchParameters, response;
+        var method, path, _ref$queryParams, queryParams, _ref$body, body, _ref$bodyType, bodyType, _ref$headers, headers, _ref$attempts, attempts, uri, fetchParameters, response, responseType, _body;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
@@ -76,9 +72,9 @@ function () {
 
                 if (method === "POST" || method === "PUT") {
                   if (bodyType === "JSON") {
-                    fetchParameters["body"] = JSON.stringify(body);
+                    fetchParameters.body = JSON.stringify(body);
                   } else {
-                    fetchParameters["body"] = body;
+                    fetchParameters.body = body;
                   }
                 }
 
@@ -94,34 +90,33 @@ function () {
               case 10:
                 _context.prev = 10;
                 _context.t0 = _context["catch"](4);
-                response = _objectSpread({
+                response = {
                   ok: false,
-                  status: 500,
-                  statusText: _context.t0.message,
-                  url: uri.toString()
-                }, fetchParameters, {
+                  status: 418,
+                  statusText: "ElvClient Error: " + _context.t0.message,
+                  url: uri.toString(),
                   stack: _context.t0.stack
-                });
+                };
 
               case 13:
                 if (response.ok) {
-                  _context.next = 35;
+                  _context.next = 33;
                   break;
                 }
 
-                if (!(response.status === 500 && attempts < this.uris.length)) {
+                if (!(parseInt(response.status) >= 500 && attempts < this.uris.length)) {
                   _context.next = 19;
                   break;
                 }
 
-                // Try next node
+                // Server error - Try next node
                 this.uriIndex = (this.uriIndex + 1) % this.uris.length;
                 _context.next = 18;
                 return this.Request({
                   method: method,
                   path: path,
                   queryParams: queryParams,
-                  body: body,
+                  body: _body,
                   bodyType: bodyType,
                   headers: headers,
                   attempts: attempts + 1
@@ -131,45 +126,53 @@ function () {
                 return _context.abrupt("return", _context.sent);
 
               case 19:
-                _context.t1 = _objectSpread;
-                _context.t2 = response.status;
-                _context.t3 = response.statusText;
-                _context.t4 = response.statusText;
-                _context.t5 = uri.toString();
+                // Parse JSON error if headers indicate JSON
+                responseType = response.headers.get("content-type");
+                _body = "";
 
-                if (!response.text) {
-                  _context.next = 30;
+                if (!(response.text && response.json)) {
+                  _context.next = 32;
                   break;
                 }
 
-                _context.next = 27;
-                return response.text();
+                if (!responseType.includes("application/json")) {
+                  _context.next = 28;
+                  break;
+                }
 
-              case 27:
-                _context.t6 = _context.sent;
+                _context.next = 25;
+                return response.json();
+
+              case 25:
+                _context.t1 = _context.sent;
                 _context.next = 31;
                 break;
 
+              case 28:
+                _context.next = 30;
+                return response.text();
+
               case 30:
-                _context.t6 = "";
+                _context.t1 = _context.sent;
 
               case 31:
-                _context.t7 = _context.t6;
-                _context.t8 = {
-                  name: "ElvHttpClientError",
-                  status: _context.t2,
-                  statusText: _context.t3,
-                  message: _context.t4,
-                  url: _context.t5,
-                  body: _context.t7
-                };
-                _context.t9 = fetchParameters;
-                throw (0, _context.t1)(_context.t8, _context.t9);
+                _body = _context.t1;
 
-              case 35:
+              case 32:
+                throw {
+                  name: "ElvHttpClientError",
+                  status: response.status,
+                  statusText: response.statusText,
+                  message: response.statusText,
+                  url: uri.toString(),
+                  body: _body,
+                  requestParams: fetchParameters
+                };
+
+              case 33:
                 return _context.abrupt("return", response);
 
-              case 36:
+              case 34:
               case "end":
                 return _context.stop();
             }
