@@ -4,7 +4,7 @@ const path = require("path");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
-const Create = async (masterLibraryId, mezLibraryId, filePath) => {
+const Create = async (masterLibraryId, filePath) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
@@ -32,40 +32,49 @@ const Create = async (masterLibraryId, mezLibraryId, filePath) => {
       }
     ];
 
-    console.log("Creating Master");
+    console.log("\nCreating Production Master");
     title = path.basename(filePath, path.extname(filePath));
 
-    const { hash } = await client.CreateMediaMaster({
+    const { notice, objectInfo } = await client.CreateProductionMaster({
       libraryId: masterLibraryId,
-      name: title + " (master)",
-      description: "Master for " + title,
+      name: title,
+      description: "Production Master for " + title,
+      contentTypeName: "Production Master",
       fileInfo,
       callback: progress => console.log(progress)
     });
 
-    console.log("Master hash: ", hash);
+    if (objectInfo && objectInfo.hash) {
+      console.log("\nPRODUCTION MASTER OBJECT CREATED, HASH= " + objectInfo.hash);
+    }
 
-    console.log("Creating Mezzanine");
-    const mezzanine = await client.CreateMediaMezzanine({
-      libraryId: mezLibraryId,
-      name: title + " (mezzanine)",
-      description: "Mezzanine for " + title,
-      masterVersionHash: hash
-    });
+    if (notice) {
+      if (notice.errors && notice.errors.length > 0) {
+        console.log("\nERRORS:");
+        notice.errors.forEach((msg)=>console.log("  * " + msg));
+      }
+      if (notice.warnings && notice.warnings.length > 0) {
+        console.log("\nWARNINGS:");
+        notice.warnings.forEach((msg)=>console.log("  * " + msg));
+      }
+      if (notice.full_log && notice.full_log.length > 0) {
 
-    console.log(mezzanine);
+      }
+    }
+
   } catch(error) {
     console.error(error);
   }
+  console.log("");
 };
 
 const masterLibraryId = process.argv[2];
-const mezLibraryId = process.argv[3];
-const filePath = process.argv[4];
+const filePath = process.argv[3];
 
-if(!masterLibraryId || !mezLibraryId || !filePath) {
-  console.error("Usage: PRIVATE_KEY=<private-key> node testScripts/UploadMedia.js masterLibraryId mezLibraryId filePath");
+if(!masterLibraryId || !filePath) {
+  console.error("Usage: PRIVATE_KEY=<private-key> node ./testScripts/CreateProductionMaster.js masterLibraryId filePath");
   return;
 }
 
-Create(masterLibraryId, mezLibraryId, filePath);
+Create(masterLibraryId, filePath);
+
