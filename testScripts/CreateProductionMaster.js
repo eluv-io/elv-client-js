@@ -1,6 +1,7 @@
 const { ElvClient } = require("../src/ElvClient");
 const fs = require("fs");
 const path = require("path");
+const mime = require("mime-types");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
@@ -9,63 +10,69 @@ const Create = async (masterLibraryId, filePath) => {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
     });
-
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       privateKey: process.env.PRIVATE_KEY
     });
-
     await client.SetSigner({signer});
 
-    const data = fs.readFileSync(filePath);
+    const title = path.basename(filePath);
+    const mimeType = mime.lookup(title) || "video/mp4";
 
-    //  TODO: use a lib or mechanism to set mime_type based on file ext?
-    //  (e.g. .mov should be video/quicktime)
-    //  https://docs.openx.com/Content/publishers/adunit_linearvideo_mime_types.html
-    const fileInfo = [
-      {
-        path: path.basename(filePath),
-        type: "file",
-        mime_type: "video/mp4",
-        size: data.length,
-        data
-      }
-    ];
+    console.log(`Detected mime type ${mimeType} for ${title}`);
+
+    const data = fs.readFileSync(filePath);
+    const fileInfo = [{
+      path: path.basename(filePath),
+      type: "file",
+      mime_type: mimeType,
+      size: data.length,
+      data
+    }];
 
     console.log("\nCreating Production Master");
-    title = path.basename(filePath, path.extname(filePath));
 
-    const { notice, objectInfo } = await client.CreateProductionMaster({
-      libraryId: masterLibraryId,
-      name: title,
-      description: "Production Master for " + title,
-      contentTypeName: "Production Master",
-      fileInfo,
-      callback: progress => console.log(progress)
-    });
+    try {
+      const {errors, warnings, id, hash} = await client.CreateProductionMaster({
+        libraryId: masterLibraryId,
+        name: title,
+        description: "Production Master for " + title,
+        contentTypeName: "ABR Master",
+        fileInfo,
+        callback: progress => {
+          console.log();
 
-    if (objectInfo && objectInfo.hash) {
-      console.log("\nPRODUCTION MASTER OBJECT CREATED, HASH= " + objectInfo.hash);
+          Object.keys(progress).sort().forEach(filename => {
+            const {uploaded, total} = progress[filename];
+            const percentage = total === 0 ? "100.0%" : (100 * uploaded / total).toFixed(1) + "%";
+
+            console.log(`${filename}: ${percentage}`);
+          });
+        }
+      });
+
+      if(id && hash) {
+        console.log("\nProduction master object created:");
+        console.log("\tObject ID:", id);
+        console.log("\tVersion Hash:", hash, "\n");
+      }
+
+      if(errors.length > 0) {
+        console.error("Errors:");
+        console.error(errors.join("\n"), "\n");
+      }
+
+      if(warnings.length) {
+        console.warn("Warnings:");
+        console.warn(warnings.join("\n"), "\n");
+      }
+    } catch(error) {
+      console.error("Unrecoverable error:");
+      console.error(error.body ? error.body : error);
     }
-
-    if (notice) {
-      if (notice.errors && notice.errors.length > 0) {
-        console.log("\nERRORS:");
-        notice.errors.forEach((msg)=>console.log("  * " + msg));
-      }
-      if (notice.warnings && notice.warnings.length > 0) {
-        console.log("\nWARNINGS:");
-        notice.warnings.forEach((msg)=>console.log("  * " + msg));
-      }
-      if (notice.full_log && notice.full_log.length > 0) {
-
-      }
-    }
-
   } catch(error) {
     console.error(error);
   }
-  console.log("");
 };
 
 const masterLibraryId = process.argv[2];

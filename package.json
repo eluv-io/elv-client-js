@@ -64,6 +64,7 @@
     "ethers": "^4.0.26",
     "hash.js": "^1.1.7",
     "js-polyfills": "^0.1.42",
+    "mime-types": "^2.1.24",
     "multicodec": "^0.5.3",
     "multihashes": "^0.4.14",
     "node-fetch": "^2.3.0",
