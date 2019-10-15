@@ -472,6 +472,7 @@ function () {
                 _this$AccessInfo = this.AccessInfo({
                   accessType: accessType,
                   publicKey: publicKey,
+                  update: update,
                   args: args
                 }), abi = _this$AccessInfo.abi, cache = _this$AccessInfo.cache, accessArgs = _this$AccessInfo.accessArgs, checkAccessCharge = _this$AccessInfo.checkAccessCharge;
                 address = Utils.HashToAddress(id); // Check cache for existing transaction
@@ -745,6 +746,8 @@ function () {
     value: function AccessInfo(_ref10) {
       var accessType = _ref10.accessType,
           publicKey = _ref10.publicKey,
+          _ref10$update = _ref10.update,
+          update = _ref10$update === void 0 ? false : _ref10$update,
           args = _ref10.args;
       var abi, cache, checkAccessCharge;
 
