@@ -240,7 +240,7 @@ class AuthorizationClient {
     const id = objectId || libraryId || this.contentSpaceId;
     const accessType = await this.AccessType(id);
 
-    const {abi, cache, accessArgs, checkAccessCharge} = this.AccessInfo({accessType, publicKey, args});
+    const {abi, cache, accessArgs, checkAccessCharge} = this.AccessInfo({accessType, publicKey, update, args});
 
     const address = Utils.HashToAddress(id);
 
@@ -352,7 +352,7 @@ class AuthorizationClient {
     cache[address] = transactionHash;
   }
 
-  AccessInfo({accessType, publicKey, args}) {
+  AccessInfo({accessType, publicKey, update=false, args}) {
     let abi, cache, checkAccessCharge;
 
     switch(accessType) {

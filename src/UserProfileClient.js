@@ -121,12 +121,15 @@ await client.userProfileClient.UserMetadata()
       await this.client.ContentObject({libraryId, objectId});
     } catch(error) {
       if(error.status === 404) {
-        const libraryType = await this.client.ContentType({name: "library"});
-        const createResponse = await this.client.CreateContentObject({
+        const createResponse = await this.client.CreateContentObject({libraryId, objectId});
+
+        await this.client.ReplaceMetadata({
           libraryId,
           objectId,
-          options: {
-            type: libraryType ? libraryType.hash : undefined
+          writeToken: createResponse.write_token,
+          metadata: {
+            "bitcode_flags": "abrmaster",
+            "bitcode_format": "builtin"
           }
         });
 
@@ -353,7 +356,7 @@ await client.userProfileClient.UserMetadata()
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(walletAddress);
 
-    return await this.client.Rep({
+    return await this.client.PublicRep({
       libraryId,
       objectId,
       rep: "image",

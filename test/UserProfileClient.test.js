@@ -110,7 +110,7 @@ describe("Test UserProfileClient", () => {
   });
 
   test("User Profile Image", async () => {
-    const image = BufferToArrayBuffer(fs.readFileSync("test/images/test-image1.png"));
+    const image = BufferToArrayBuffer(fs.readFileSync("test/files/test-image1.png"));
     await client.userProfileClient.SetUserProfileImage({image});
     const oldImageHash = await client.userProfileClient.UserMetadata({metadataSubtree: "image"});
     expect(oldImageHash).toBeDefined();
@@ -118,7 +118,7 @@ describe("Test UserProfileClient", () => {
     const oldImageUrl = await client.userProfileClient.UserProfileImage();
     expect(oldImageUrl).toBeDefined();
 
-    const newImage = BufferToArrayBuffer(fs.readFileSync("test/images/test-image2.png"));
+    const newImage = BufferToArrayBuffer(fs.readFileSync("test/files/test-image2.png"));
     await client.userProfileClient.SetUserProfileImage({image: newImage});
 
     const newImageHash = await client.userProfileClient.UserMetadata({metadataSubtree: "image"});

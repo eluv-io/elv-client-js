@@ -23,7 +23,7 @@ const RandomString = (size) => {
   return crypto.randomBytes(size).toString("hex");
 };
 
-const CreateClient = async (bux="2") => {
+const CreateClient = async (bux="10") => {
   try {
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
     const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
@@ -32,12 +32,6 @@ const CreateClient = async (bux="2") => {
     const fundedSigner = wallet.AddAccount({privateKey});
 
     await fundedClient.SetSigner({signer: fundedSigner});
-
-    const groupAddress = await fundedClient.ContentObjectMetadata({
-      libraryId: fundedClient.contentSpaceLibraryId,
-      objectId: fundedClient.contentSpaceObjectId,
-      metadataSubtree: "contentSpaceGroupAddress"
-    });
 
     const mnemonic = wallet.GenerateMnemonic();
     // Create a new account and send some ether
@@ -61,23 +55,36 @@ const CreateClient = async (bux="2") => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     await client.SetSigner({signer});
-
-    // Add new account to content space group
-    await fundedClient.AddAccessGroupMember({
-      contractAddress: groupAddress,
-      memberAddress: signer.address
-    });
-
     return client;
   } catch(error) {
     console.error("ERROR INITIALIZING TEST CLIENT: ");
     console.error(error);
+
+    throw (error);
   }
+};
+
+const ReturnBalance = async (client) => {
+  const balance = await client.GetBalance({address: client.signer.address});
+
+  if(balance < 1) {
+    return;
+  }
+
+  const wallet = client.GenerateWallet();
+  const fundedSigner = wallet.AddAccount({privateKey});
+
+  console.log("Returning ", balance);
+  await client.SendFunds({
+    recipient: fundedSigner.address,
+    ether: balance - 1
+  });
 };
 
 module.exports = {
   BufferToArrayBuffer,
   RandomBytes,
   RandomString,
-  CreateClient
+  CreateClient,
+  ReturnBalance
 };

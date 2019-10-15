@@ -143,7 +143,7 @@ function () {
       var _WalletAddress = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee2() {
-        var balance, walletCreationEvent, libraryId, objectId, libraryType, createResponse;
+        var balance, walletCreationEvent, libraryId, objectId, createResponse;
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
@@ -214,7 +214,7 @@ function () {
                 });
 
               case 20:
-                _context2.next = 33;
+                _context2.next = 32;
                 break;
 
               case 22:
@@ -222,39 +222,41 @@ function () {
                 _context2.t0 = _context2["catch"](17);
 
                 if (!(_context2.t0.status === 404)) {
-                  _context2.next = 33;
+                  _context2.next = 32;
                   break;
                 }
 
                 _context2.next = 27;
-                return this.client.ContentType({
-                  name: "library"
+                return this.client.CreateContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId
                 });
 
               case 27:
-                libraryType = _context2.sent;
+                createResponse = _context2.sent;
                 _context2.next = 30;
-                return this.client.CreateContentObject({
+                return this.client.ReplaceMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
-                  options: {
-                    type: libraryType ? libraryType.hash : undefined
+                  writeToken: createResponse.write_token,
+                  metadata: {
+                    "bitcode_flags": "abrmaster",
+                    "bitcode_format": "builtin"
                   }
                 });
 
               case 30:
-                createResponse = _context2.sent;
-                _context2.next = 33;
+                _context2.next = 32;
                 return this.client.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: createResponse.write_token
                 });
 
-              case 33:
+              case 32:
                 return _context2.abrupt("return", this.walletAddress);
 
-              case 34:
+              case 33:
               case "end":
                 return _context2.stop();
             }
@@ -864,7 +866,7 @@ function () {
                 libraryId = this.client.contentSpaceLibraryId;
                 objectId = Utils.AddressToObjectId(walletAddress);
                 _context10.next = 20;
-                return this.client.Rep({
+                return this.client.PublicRep({
                   libraryId: libraryId,
                   objectId: objectId,
                   rep: "image",
