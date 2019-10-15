@@ -8,7 +8,6 @@ const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
 const TypeContract = require("./contracts/BaseContentType");
 const ContentContract = require("./contracts/BaseContent");
-const OwnableContract = require("./contracts/Ownable");
 const AccessibleContract = require("./contracts/Accessible");
 const EditableContract = require("./contracts/Editable");
 
@@ -50,7 +49,6 @@ class AuthorizationClient {
     this.channelContentTokens = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
-    this.contractNames = {};
   }
 
   // Return authorization token in appropriate headers
@@ -242,8 +240,120 @@ class AuthorizationClient {
     const id = objectId || libraryId || this.contentSpaceId;
     const accessType = await this.AccessType(id);
 
-    let abi, cache;
-    let checkAccessCharge = false;
+    const {abi, cache, accessArgs, checkAccessCharge} = this.AccessInfo({accessType, publicKey, args});
+
+    const address = Utils.HashToAddress(id);
+
+    // Check cache for existing transaction
+    if(!noCache && !skipCache) {
+      let cacheHit = update ? cache.modify[address] : cache.access[address];
+
+      if(cacheHit) { return { transactionHash: cacheHit }; }
+    }
+
+    // If only checking the cache, don't continue to make access request
+    if(cacheOnly) { return; }
+
+    let accessRequest = { transactionHash: "" };
+    // Make the request
+    if(update) {
+      accessRequest = await this.UpdateRequest({id, abi});
+    } else {
+      accessRequest = await this.AccessRequest({id, abi, args: accessArgs, checkAccessCharge});
+    }
+
+    // Cache the transaction hash
+    if(!noCache) {
+      this.CacheTransaction({accessType, address, publicKey, update, transactionHash: accessRequest.transactionHash});
+
+      // Save request ID if present
+      accessRequest.logs.some(log => {
+        if(log.values && log.values.requestID) {
+          this.requestIds[address] = log.values.requestID;
+          return true;
+        }
+      });
+    }
+
+    this.RecordTags({accessType, libraryId, objectId, versionHash});
+
+    return accessRequest;
+  }
+
+  async AccessRequest({id, abi, args=[], checkAccessCharge=false}) {
+    // Send some bux if access charge is required
+    let accessCharge = 0;
+    const accessType = await this.AccessType(id);
+    if(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT) {
+      const owner = await this.Owner({id, abi});
+      // Owner doesn't have to pay
+      if(!Utils.EqualAddress(this.client.signer.address, owner)) {
+        // Extract level, custom values and stakeholders from accessRequest arguments
+        const accessChargeArgs = [args[0], args[3], args[4]];
+        // Access charge is in wei, but methods take ether - convert to charge to ether
+        accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
+      }
+    }
+
+    // If access request did not succeed, no event will be emitted
+    const event = await this.client.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress(id),
+      abi,
+      methodName: "accessRequest",
+      methodArgs: args,
+      value: accessCharge,
+    });
+
+    const accessRequestEvent = this.client.ExtractEventFromLogs({
+      abi,
+      event,
+      eventName: "AccessRequest"
+    });
+
+    if(event.logs.length === 0 || !accessRequestEvent) {
+      throw Error("Access denied");
+    }
+
+    return event;
+  }
+
+  async UpdateRequest({id, abi}) {
+    return await this.client.CallContractMethodAndWait({
+      contractAddress: Utils.HashToAddress(id),
+      abi,
+      methodName: "updateRequest",
+      methodArgs: [],
+    });
+  }
+
+  CacheTransaction({accessType, address, publicKey, update, transactionHash}) {
+    let cache = update ? this.modifyTransactions : this.accessTransactions;
+
+    switch(accessType) {
+      case ACCESS_TYPES.SPACE:
+        cache = cache.spaces;
+        break;
+
+      case ACCESS_TYPES.LIBRARY:
+        cache = cache.libraries;
+        break;
+
+      case ACCESS_TYPES.TYPE:
+        cache = cache.types;
+        break;
+
+      case ACCESS_TYPES.OBJECT:
+        cache = publicKey ? cache.encryptedObjects : cache.objects;
+        break;
+      default:
+        cache = cache.other;
+    }
+
+    cache[address] = transactionHash;
+  }
+
+  AccessInfo({accessType, publicKey, args}) {
+    let abi, cache, checkAccessCharge;
 
     switch(accessType) {
       case ACCESS_TYPES.SPACE:
@@ -305,117 +415,17 @@ class AuthorizationClient {
         };
     }
 
-    // Check cache for existing transaction
-    if(!noCache && !skipCache) {
-      let cacheHit = update ? cache.modify[id] : cache.access[id];
-
-      if(cacheHit) { return { transactionHash: cacheHit }; }
-    }
-
-    // If only checking the cache, don't continue to make access request
-    if(cacheOnly) { return; }
-
-    let accessRequest = { transactionHash: "" };
-    // Make the request
-    if(update) {
-      accessRequest = await this.UpdateRequest({id, abi});
-    } else {
-      accessRequest = await this.AccessRequest({id, abi, args, checkAccessCharge});
-    }
-
-    // Cache the transaction hash
-    if(!noCache) {
-      update ?
-        cache.modify[id] = accessRequest.transactionHash :
-        cache.access[id] = accessRequest.transactionHash;
-
-      // Save request ID if present
-      accessRequest.logs.some(log => {
-        if(log.values && log.values.requestID) {
-          this.requestIds[id] = log.values.requestID;
-          return true;
-        }
-      });
-    }
-
-    this.RecordTags({accessType, libraryId, objectId, versionHash});
-
-    return accessRequest;
-  }
-
-  async AccessRequest({id, abi, args=[], checkAccessCharge=false}) {
-    // Send some bux if access charge is required
-    let accessCharge = 0;
-    const accessType = await this.AccessType(id);
-    if(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT) {
-      const owner = await this.Owner({id, abi});
-      // Owner doesn't have to pay
-      if(!Utils.EqualAddress(this.client.signer.address, owner)) {
-        // Extract level, custom values and stakeholders from accessRequest arguments
-        const accessChargeArgs = [args[0], args[3], args[4]];
-        // Access charge is in wei, but methods take ether - convert to charge to ether
-        accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
-      }
-    }
-
-    // If access request did not succeed, no event will be emitted
-    const event = await this.client.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress(id),
+    return {
       abi,
-      methodName: "accessRequest",
-      methodArgs: args,
-      value: accessCharge,
-    });
-
-    const accessRequestEvent = this.client.ExtractEventFromLogs({
-      abi,
-      event,
-      eventName: "AccessRequest"
-    });
-
-    if(event.logs.length === 0 || !accessRequestEvent) {
-      throw Error("Access denied");
-    }
-
-    return event;
-  }
-
-  async UpdateRequest({id, abi}) {
-    return await this.client.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress(id),
-      abi,
-      methodName: "updateRequest",
-      methodArgs: [],
-    });
-  }
-
-  async ContractName(contractAddress) {
-    if(!this.contractNames[contractAddress]) {
-      try {
-        // Call using general "ownable" abi
-        // Ensure contract is not cached with this abi
-        const version =
-          Ethers.utils.parseBytes32String(
-            await this.client.CallContractMethod({
-              contractAddress,
-              abi: OwnableContract.abi,
-              methodName: "version",
-              cacheContract: false
-            })
-          );
-
-        this.contractNames[contractAddress] = version.split(/\d+/)[0];
-      } catch(error) {
-        this.contractNames[contractAddress] = "Unknown";
-      }
-    }
-
-    return this.contractNames[contractAddress];
+      cache,
+      accessArgs: args,
+      checkAccessCharge
+    };
   }
 
   // Determine type of ID based on contract version string
   async AccessType(id) {
-    const contractName = await this.ContractName(Utils.HashToAddress(id));
+    const contractName = await this.client.ethClient.ContractName(Utils.HashToAddress(id));
 
     switch(contractName) {
       case "BaseContentSpace":
@@ -436,20 +446,21 @@ class AuthorizationClient {
   }
 
   async AccessComplete({id, abi, score}) {
-    const requestId = this.requestIds[id];
+    const address = Utils.HashToAddress(id);
+    const requestId = this.requestIds[address];
 
     if(!requestId) { throw Error("Unknown request ID for " + id); }
 
     // If access request did not succeed, no event will be emitted
     const event = await this.client.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress(id),
+      contractAddress: address,
       abi,
       methodName: "accessComplete",
       methodArgs: [requestId, score, ""]
     });
 
-    delete this.requestIds[id];
-    delete this.accessTransactions.objects[id];
+    delete this.requestIds[address];
+    delete this.accessTransactions.objects[address];
 
     return event;
   }

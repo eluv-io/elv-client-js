@@ -6846,7 +6846,7 @@ function () {
      *
      * @namedParams
      * @param {string} contractAddress - Address of the contract
-     * 
+     *
      * @return {Promise<string>} - Name of the contract
      */
 
@@ -6863,7 +6863,7 @@ function () {
               case 0:
                 contractAddress = _ref103.contractAddress;
                 _context94.next = 3;
-                return this.authClient.ContractName(contractAddress);
+                return this.ethClient.ContractName(contractAddress);
 
               case 3:
                 return _context94.abrupt("return", _context94.sent);

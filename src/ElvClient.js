@@ -3232,11 +3232,11 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contractAddress - Address of the contract
-   * 
+   *
    * @return {Promise<string>} - Name of the contract
    */
   async ContractName({contractAddress}) {
-    return await this.authClient.ContractName(contractAddress);
+    return await this.ethClient.ContractName(contractAddress);
   }
 
   /**
