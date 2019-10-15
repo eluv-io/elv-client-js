@@ -66,6 +66,7 @@ function () {
     this.locked = false;
     this.cachedContracts = {};
     this.contractNames = {};
+    Ethers.errors.setLogLevel("error");
   }
 
   _createClass(EthClient, [{
