@@ -2169,120 +2169,68 @@ class ElvClient {
    * @param {Object} fileInfo - Files to upload to (See UploadFiles method)
    * @param {function=} callback - Progress callback for file upload (See UploadFiles method)
    *
-   * @return {Object} notice - errors/warnings/full_log, objectInfo - Info on finalized object (if finalization succeeded)
+   * @throws {Object} error - If the initialization of the master fails, error details can be found in error.body
+   *
+   * @return {Object} - The finalize response for the object, as well as any errors and/or warnings from the initialization of the master.
    */
   async CreateProductionMaster({libraryId, name, description, contentTypeName, metadata={}, fileInfo, callback}) {
-    let notice = {errors: [], warnings: [], full_log:[]};
-    let msg = "";
+    const contentType = await this.ContentType({name: contentTypeName});
 
-    notice.full_log.push("CreateProductionMaster()");
-
-    msg = "Looking up Content Type '" + contentTypeName + "'";
-    notice.full_log.push(msg);
-    console.log(msg);
-
-    try {
-      // TODO: pull content type directly from target library
-      const contentType = await this.ContentType({name: contentTypeName});
-
-      if(!contentType) {
-        throw "Unable to access content type '" + contentTypeName + "' to create production master";
-      }
-
-      msg = "Found content type, hash=" + contentType.hash;
-      notice.full_log.push(msg);
-      console.log(msg);
-
-      msg = "Creating draft content object in library with id=" + libraryId;
-      notice.full_log.push(msg);
-      console.log(msg);
-
-      const {id, write_token} = await this.CreateContentObject({
-        libraryId,
-        options: {
-          type: contentType.hash
-        }
-      });
-
-      msg = "Draft content object created, write token=" + write_token;
-      notice.full_log.push(msg);
-      console.log(msg);
-
-      msg = "Uploading file: " + fileInfo[0].path;
-      notice.full_log.push(msg);
-      console.log(msg);
-
-      await this.UploadFiles({
-        libraryId,
-        objectId: id,
-        writeToken: write_token,
-        fileInfo,
-        callback
-      });
-
-      msg = "Analyzing files and creating default variant for production master";
-      notice.full_log.push(msg);
-      console.log(msg);
-
-      let goNotice = {};
-
-      try {
-        let response = await this.CallBitcodeMethod({
-          libraryId,
-          objectId: id,
-          writeToken: write_token,
-          method: "/media/production_master/init",
-          constant: false
-        });
-        // get errors/warnings/logs from init call
-        goNotice = await response;
-      } catch(error) {
-        goNotice = error.body;
-      }
-
-      if(goNotice.errors && goNotice.errors.length > 0) {notice.errors.push(...goNotice.errors);}
-      if(goNotice.warnings && goNotice.warnings.length > 0) {notice.warnings.push(...goNotice.warnings);}
-      if(goNotice.full_log && goNotice.full_log.length > 0) notice.full_log.push(...goNotice.full_log);
-
-      msg = "Setting generic metadata fields";
-      notice.full_log.push(msg);
-      console.log(msg);
-
-      await this.MergeMetadata({
-        libraryId,
-        objectId: id,
-        writeToken: write_token,
-        metadata: {
-          name,
-          description,
-          public: {
-            name: name || "",
-            description: description || ""
-          },
-          elv_created_at: new Date().getTime(),
-          ...(metadata || {})
-        }
-      });
-
-      msg = "Finalizing content object";
-      notice.full_log.push(msg);
-      console.log(msg);
-
-      let objectInfo = await this.FinalizeContentObject({
-        libraryId,
-        objectId: id,
-        writeToken: write_token,
-        awaitCommitConfirmation: false
-      });
-
-      return {objectInfo, notice};
-
-    } catch(error) {
-      msg = error.toString();
-      notice.errors.push(msg);
-      console.log(msg);
-      return {notice};
+    if(!contentType) {
+      throw "Unable to access content type '" + contentTypeName + "' to create production master";
     }
+
+    const {id, write_token} = await this.CreateContentObject({
+      libraryId,
+      options: {
+        type: contentType.hash
+      }
+    });
+
+    await this.UploadFiles({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      fileInfo,
+      callback
+    });
+
+    const { errors, warnings } = await this.CallBitcodeMethod({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      method: "/media/production_master/init",
+      constant: false
+    });
+
+    await this.MergeMetadata({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      metadata: {
+        name,
+        description,
+        public: {
+          name: name || "",
+          description: description || ""
+        },
+        elv_created_at: new Date().getTime(),
+        ...(metadata || {})
+      }
+    });
+
+    const finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      awaitCommitConfirmation: false
+    });
+
+    return {
+      errors: errors || [],
+      warnings: warnings || [],
+      ...finalizeResponse
+    };
   }
 
   /**
@@ -2294,32 +2242,27 @@ class ElvClient {
    * @param {string} name - Name for mezzanine content object
    * @param {string=} description - Description for mezzanine content object
    * @param {Object=} metadata - Additional metadata for mezzanine content object
-   * @param {string} versionHash - The version hash of the production master content object
+   * @param {string} masterVersionHash - The version hash of the production master content object
    * @param {string=} variant - What variant of the master content object to use
    *
-   * @return {objectInfo} - objectInfo - Info on finalized object (if finalization succeeded)
+   * @return {Object} - The finalize response for the object
    */
-  async CreateABRMezzanine({libraryId, name, description, metadata={}, versionHash, variant="default"}) {
+  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, variant="default"}) {
     const abrMasterType = await this.ContentType({name: "ABR Master"});
 
     if(!abrMasterType) {
       throw Error("Unable to access ABR Master content type in library with ID=" + libraryId);
     }
 
-    if(!versionHash) {
+    if(!masterVersionHash) {
       throw Error("Master version hash not specified");
     }
 
     // get master object name
-    const masterMetadata = await this.ContentObjectMetadata({versionHash, metadataSubtree: "/public"});
-
-    let masterName = masterMetadata["name"];
-    if(!masterName) {
-      console.log("No name found for production master object with version hash: " + versionHash);
-      masterName = versionHash;
-    }
-
-    console.log(masterMetadata);
+    const masterName = (await this.ContentObjectMetadata({
+      versionHash: masterVersionHash,
+      metadataSubtree: UrlJoin("public", "name")
+    })) || masterVersionHash;
 
     const {id, write_token} = await this.CreateContentObject({
       libraryId,
@@ -2334,7 +2277,7 @@ class ElvClient {
       writeToken: write_token,
       method: "/media/mezzanine/prep_start",
       queryParams: {
-        source: versionHash,
+        source: masterVersionHash,
         variant: variant
       },
       constant: false
@@ -2345,10 +2288,13 @@ class ElvClient {
       objectId: id,
       writeToken: write_token,
       metadata: {
-        name: masterName,
+        master: {
+          id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
+          hash: masterVersionHash
+        },
         description: "ABR mezzanine for " + masterName + " (variant: " + variant + ")",
         public: {
-          name: name || "",
+          name: name || `${masterName} Mezzanine`,
           description: description || ""
         },
         elv_created_at: new Date().getTime(),
@@ -2356,15 +2302,11 @@ class ElvClient {
       }
     });
 
-    let objectInfo = await this.FinalizeContentObject({
+    return await this.FinalizeContentObject({
       libraryId,
       objectId: id,
       writeToken: write_token
     });
-
-    console.log("\nABR MEZZANINE OBJECT CREATED, HASH= " + objectInfo.hash);
-    console.log("");
-    return {objectInfo};
   }
 
   /* Content Object Access */
