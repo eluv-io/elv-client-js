@@ -1,5 +1,9 @@
 "use strict";
 
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
@@ -57,13 +61,13 @@ function () {
       var _Request = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee(_ref) {
-        var method, path, _ref$queryParams, queryParams, _ref$body, body, _ref$bodyType, bodyType, _ref$headers, headers, _ref$attempts, attempts, uri, fetchParameters, response, responseType, _body;
+        var method, path, _ref$queryParams, queryParams, _ref$body, body, _ref$bodyType, bodyType, _ref$headers, headers, _ref$attempts, attempts, _ref$failover, failover, uri, fetchParameters, response, responseType, errorBody;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                method = _ref.method, path = _ref.path, _ref$queryParams = _ref.queryParams, queryParams = _ref$queryParams === void 0 ? {} : _ref$queryParams, _ref$body = _ref.body, body = _ref$body === void 0 ? {} : _ref$body, _ref$bodyType = _ref.bodyType, bodyType = _ref$bodyType === void 0 ? "JSON" : _ref$bodyType, _ref$headers = _ref.headers, headers = _ref$headers === void 0 ? {} : _ref$headers, _ref$attempts = _ref.attempts, attempts = _ref$attempts === void 0 ? 0 : _ref$attempts;
+                method = _ref.method, path = _ref.path, _ref$queryParams = _ref.queryParams, queryParams = _ref$queryParams === void 0 ? {} : _ref$queryParams, _ref$body = _ref.body, body = _ref$body === void 0 ? {} : _ref$body, _ref$bodyType = _ref.bodyType, bodyType = _ref$bodyType === void 0 ? "JSON" : _ref$bodyType, _ref$headers = _ref.headers, headers = _ref$headers === void 0 ? {} : _ref$headers, _ref$attempts = _ref.attempts, attempts = _ref$attempts === void 0 ? 0 : _ref$attempts, _ref$failover = _ref.failover, failover = _ref$failover === void 0 ? true : _ref$failover;
                 uri = this.BaseURI().path(path).query(queryParams).hash("");
                 fetchParameters = {
                   method: method,
@@ -74,7 +78,7 @@ function () {
                   if (bodyType === "JSON") {
                     fetchParameters.body = JSON.stringify(body);
                   } else {
-                    fetchParameters.body = body;
+                    fetchParameters.body = _objectSpread({}, body);
                   }
                 }
 
@@ -104,7 +108,7 @@ function () {
                   break;
                 }
 
-                if (!(parseInt(response.status) >= 500 && attempts < this.uris.length)) {
+                if (!(failover && parseInt(response.status) >= 500 && attempts < this.uris.length)) {
                   _context.next = 19;
                   break;
                 }
@@ -116,7 +120,7 @@ function () {
                   method: method,
                   path: path,
                   queryParams: queryParams,
-                  body: _body,
+                  body: body,
                   bodyType: bodyType,
                   headers: headers,
                   attempts: attempts + 1
@@ -128,7 +132,7 @@ function () {
               case 19:
                 // Parse JSON error if headers indicate JSON
                 responseType = response.headers.get("content-type");
-                _body = "";
+                errorBody = "";
 
                 if (!(response.text && response.json)) {
                   _context.next = 32;
@@ -156,7 +160,7 @@ function () {
                 _context.t1 = _context.sent;
 
               case 31:
-                _body = _context.t1;
+                errorBody = _context.t1;
 
               case 32:
                 throw {
@@ -165,7 +169,7 @@ function () {
                   statusText: response.statusText,
                   message: response.statusText,
                   url: uri.toString(),
-                  body: _body,
+                  body: errorBody,
                   requestParams: fetchParameters
                 };
 
