@@ -946,7 +946,8 @@ class ElvClient {
           update: true
         }),
         method: "POST",
-        path: path
+        path: path,
+        failover: false
       })
     );
 
@@ -1270,7 +1271,8 @@ class ElvClient {
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
-        body: options
+        body: options,
+        failover: false
       })
     );
   }
@@ -1340,7 +1342,8 @@ class ElvClient {
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
-        body: options
+        body: options,
+        failover: false
       })
     );
   }
@@ -1366,7 +1369,8 @@ class ElvClient {
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
-        path: path
+        path: path,
+        failover: false
       })
     );
 
@@ -1470,7 +1474,8 @@ class ElvClient {
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "POST",
       path: path,
-      body: metadata
+      body: metadata,
+      failover: false
     });
   }
 
@@ -1494,7 +1499,8 @@ class ElvClient {
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "PUT",
       path: path,
-      body: metadata
+      body: metadata,
+      failover: false
     });
   }
 
@@ -1517,7 +1523,8 @@ class ElvClient {
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "DELETE",
-      path: path
+      path: path,
+      failover: false
     });
   }
 
@@ -1544,6 +1551,54 @@ class ElvClient {
         path: path,
       })
     );
+  }
+
+  /**
+   * Copy/reference files from S3 to a content object
+   *
+   * @methodGroup Parts and Files
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {string} region - AWS region to use
+   * @param {string} bucket - AWS bucket to use
+   * @param {Array<string>} filePaths - List of files/directories to copy/reference
+   * @param {string} accessKey - AWS access key
+   * @param {string} secret - AWS secret
+   * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
+   */
+  async UploadFilesFromS3({libraryId, objectId, writeToken, region, bucket, filePaths, accessKey, secret, copy=false}) {
+    const defaults = {
+      access: {
+        protocol: "s3",
+        platform: "aws",
+        path: bucket,
+        storage_endpoint: {
+          region
+        },
+        cloud_credentials: {
+          access_key_id: accessKey,
+          secret_access_key: secret
+        }
+      }
+    };
+
+    const ops = filePaths.map(path =>
+      ({
+        op: copy ? "ingest-copy" : "add-reference",
+        path,
+        reference: {
+          type: "key",
+          path
+        }
+      })
+    );
+
+    // eslint-disable-next-line no-unused-vars
+    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults});
+
+    await this.FinalizeUploadJob({libraryId, objectId, writeToken});
   }
 
   /**
@@ -1594,7 +1649,7 @@ class ElvClient {
       callback(progress);
     }
 
-    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo});
+    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops: fileInfo});
 
     // Get job info for each job
     const jobInfo = await jobs.limitedMap(
@@ -1656,13 +1711,14 @@ class ElvClient {
     );
   }
 
-  async CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo}) {
+  async CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults={}}) {
     let path = UrlJoin("q", writeToken, "file_jobs");
 
     const body = {
       seq: 0,
       seq_complete: true,
-      ops: fileInfo
+      defaults,
+      ops
     };
 
     return ResponseToJson(
@@ -1670,7 +1726,8 @@ class ElvClient {
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "POST",
         path: path,
-        body
+        body,
+        failover: false
       })
     );
   }
@@ -1682,7 +1739,8 @@ class ElvClient {
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
         method: "GET",
-        path: path
+        path: path,
+        failover: false
       })
     );
   }
@@ -1699,9 +1757,22 @@ class ElvClient {
         headers: {
           "Content-type": "application/octet-stream",
           ...(await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}))
-        }
+        },
+        failover: false
       })
     );
+  }
+
+  async FinalizeUploadJob({libraryId, objectId, writeToken}) {
+    const path = UrlJoin("q", writeToken, "files");
+
+    await this.HttpClient.Request({
+      method: "POST",
+      path: path,
+      bodyType: "BINARY",
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+      failover: false
+    });
   }
 
   /**
@@ -2041,7 +2112,8 @@ class ElvClient {
         method: "POST",
         path,
         bodyType: "BINARY",
-        body: ""
+        body: "",
+        failover: false
       })
     );
 
@@ -2076,6 +2148,7 @@ class ElvClient {
         path: UrlJoin(path, partWriteToken),
         body: chunk,
         bodyType: "BINARY",
+        failover: false
       })
     );
   }
@@ -2101,7 +2174,8 @@ class ElvClient {
         method: "POST",
         path: UrlJoin(path, partWriteToken),
         bodyType: "BINARY",
-        body: ""
+        body: "",
+        failover: false
       })
     );
   }
@@ -2150,7 +2224,8 @@ class ElvClient {
     await this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "DELETE",
-      path: path
+      path: path,
+      failover: false
     });
   }
 

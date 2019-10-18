@@ -29,7 +29,16 @@ class HttpClient {
     return headers;
   }
 
-  async Request({method, path, queryParams={}, body={}, bodyType="JSON", headers={}, attempts=0}) {
+  async Request({
+    method,
+    path,
+    queryParams={},
+    body={},
+    bodyType="JSON",
+    headers={},
+    attempts=0,
+    failover=true
+  }) {
     let uri = this.BaseURI()
       .path(path)
       .query(queryParams)
@@ -44,7 +53,7 @@ class HttpClient {
       if(bodyType === "JSON") {
         fetchParameters.body = JSON.stringify(body);
       } else {
-        fetchParameters.body = body;
+        fetchParameters.body = {...body};
       }
     }
 
@@ -67,7 +76,7 @@ class HttpClient {
     }
 
     if(!response.ok) {
-      if(parseInt(response.status) >= 500 && attempts < this.uris.length) {
+      if(failover && parseInt(response.status) >= 500 && attempts < this.uris.length) {
         // Server error - Try next node
         this.uriIndex = (this.uriIndex + 1) % this.uris.length;
 
@@ -85,9 +94,9 @@ class HttpClient {
       // Parse JSON error if headers indicate JSON
       const responseType = response.headers.get("content-type");
 
-      let body = "";
+      let errorBody = "";
       if(response.text && response.json) {
-        body = responseType.includes("application/json") ? await response.json() : await response.text();
+        errorBody = responseType.includes("application/json") ? await response.json() : await response.text();
       }
 
       throw {
@@ -96,7 +105,7 @@ class HttpClient {
         statusText: response.statusText,
         message: response.statusText,
         url: uri.toString(),
-        body,
+        body: errorBody,
         requestParams: fetchParameters
       };
     }
