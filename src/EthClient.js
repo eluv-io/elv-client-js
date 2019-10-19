@@ -26,6 +26,8 @@ class EthClient {
 
     this.cachedContracts = {};
     this.contractNames = {};
+
+    Ethers.errors.setLogLevel("error");
   }
 
   Provider() {

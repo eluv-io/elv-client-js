@@ -15,14 +15,18 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
 
     await client.SetSigner({signer});
 
-    console.log("Creating ABR Mezzanine");
-    await client.CreateABRMezzanine({
+    console.log("Creating ABR Mezzanine...");
+    const {id, hash} = await client.CreateABRMezzanine({
       libraryId: mezLibraryId,
-      versionHash: productionMasterHash,
-      variant: productionMasterVariant,
+      masterVersionHash: productionMasterHash,
+      variant: productionMasterVariant
     });
 
+    console.log("\nABR mezzanine object created:");
+    console.log("\tObject ID:", id);
+    console.log("\tVersion Hash:", hash, "\n");
   } catch(error) {
+    console.error("Error creating mezzanine:");
     console.error(error);
   }
 };
