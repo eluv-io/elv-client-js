@@ -1671,7 +1671,11 @@ class ElvClient {
     while(true) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const {ingest} = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: id});
+      const {ingest, error} = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: id});
+
+      if(error) {
+        throw error;
+      }
 
       if(callback) {
         callback({
