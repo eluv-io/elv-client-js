@@ -1653,16 +1653,27 @@ class ElvClient {
       }
     };
 
-    const ops = filePaths.map(path =>
-      ({
-        op: copy ? "ingest-copy" : "add-reference",
-        path,
-        reference: {
-          type: "key",
-          path
-        }
-      })
-    );
+    const ops = filePaths.map(path => {
+      if(copy) {
+        return {
+          op: copy ? "ingest-copy" : "add-reference",
+          path,
+          ingest: {
+            type: "key",
+            path
+          }
+        };
+      } else {
+        return {
+          op: copy ? "ingest-copy" : "add-reference",
+          path,
+          reference: {
+            type: "key",
+            path
+          }
+        };
+      }
+    });
 
     // eslint-disable-next-line no-unused-vars
     const {id} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults});

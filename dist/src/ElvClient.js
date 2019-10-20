@@ -3148,14 +3148,25 @@ function () {
                   }
                 };
                 ops = filePaths.map(function (path) {
-                  return {
-                    op: copy ? "ingest-copy" : "add-reference",
-                    path: path,
-                    reference: {
-                      type: "key",
-                      path: path
-                    }
-                  };
+                  if (copy) {
+                    return {
+                      op: copy ? "ingest-copy" : "add-reference",
+                      path: path,
+                      ingest: {
+                        type: "key",
+                        path: path
+                      }
+                    };
+                  } else {
+                    return {
+                      op: copy ? "ingest-copy" : "add-reference",
+                      path: path,
+                      reference: {
+                        type: "key",
+                        path: path
+                      }
+                    };
+                  }
                 }); // eslint-disable-next-line no-unused-vars
 
                 _context42.next = 5;
