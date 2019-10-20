@@ -1567,8 +1567,21 @@ class ElvClient {
    * @param {string} accessKey - AWS access key
    * @param {string} secret - AWS secret
    * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
+   * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
+   * - Format: { done: true, resolve: 'completed - (1/1)', download: 'completed - (0/0)' }
    */
-  async UploadFilesFromS3({libraryId, objectId, writeToken, region, bucket, filePaths, accessKey, secret, copy=false}) {
+  async UploadFilesFromS3({
+    libraryId,
+    objectId,
+    writeToken,
+    region,
+    bucket,
+    filePaths,
+    accessKey,
+    secret,
+    copy=false,
+    callback
+  }) {
     const defaults = {
       access: {
         protocol: "s3",
@@ -1596,9 +1609,26 @@ class ElvClient {
     );
 
     // eslint-disable-next-line no-unused-vars
-    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults});
+    const {id} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults});
 
-    await this.FinalizeUploadJob({libraryId, objectId, writeToken});
+    // eslint-disable-next-line no-constant-condition
+    while(true) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const {ingest} = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: id});
+
+      if(callback) {
+        callback({
+          done: ingest.done,
+          resolve: ingest.resolve,
+          download: ingest.download
+        });
+      }
+
+      if(ingest.done) {
+        break;
+      }
+    }
   }
 
   /**
@@ -1727,6 +1757,19 @@ class ElvClient {
         method: "POST",
         path: path,
         body,
+        failover: false
+      })
+    );
+  }
+
+  async UploadStatus({libraryId, objectId, writeToken, uploadId}) {
+    let path = UrlJoin("q", writeToken, "file_jobs", uploadId);
+
+    return ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+        method: "GET",
+        path: path,
         failover: false
       })
     );
