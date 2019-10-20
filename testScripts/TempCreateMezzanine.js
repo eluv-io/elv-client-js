@@ -27,7 +27,7 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
     console.log("\tVersion Hash:", hash, "\n");
   } catch(error) {
     console.error("Error creating mezzanine:");
-    console.error(JSON.stringify( error));
+    console.error(error);
   }
 };
 
@@ -36,7 +36,7 @@ const productionMasterHash = process.argv[3];
 const productionMasterVariant = process.argv[4];
 
 if(!mezLibraryId || !productionMasterHash ) {
-  console.error("Usage: PRIVATE_KEY=<private-key> node ./testScripts/CreateABRMezzanine.js mezLibraryId productionMasterHash [productionMasterVariant]");
+  console.error("Usage: PRIVATE_KEY=<private-key> node ./testScripts/TempCreateMezzanine.js mezLibraryId productionMasterHash [productionMasterVariant]");
   return;
 }
 

@@ -2295,7 +2295,7 @@ class ElvClient {
    *
    * @return {Object} - The finalize response for the object, as well as any errors and/or warnings from the initialization of the master.
    */
-  async CreateProductionMaster({libraryId, name, description, contentTypeName, metadata={}, fileInfo, callback}) {
+  async CreateProductionMaster({libraryId, name, description, contentTypeName, metadata = {}, fileInfo, callback}) {
     const contentType = await this.ContentType({name: contentTypeName});
 
     if(!contentType) {
@@ -2317,7 +2317,7 @@ class ElvClient {
       callback
     });
 
-    const { errors, warnings } = await this.CallBitcodeMethod({
+    const { logs, errors, warnings } = await this.CallBitcodeMethod({
       libraryId,
       objectId: id,
       writeToken: write_token,
@@ -2350,6 +2350,7 @@ class ElvClient {
 
     return {
       errors: errors || [],
+      logs: logs || null,
       warnings: warnings || [],
       ...finalizeResponse
     };
@@ -2369,38 +2370,65 @@ class ElvClient {
    *
    * @return {Object} - The finalize response for the object
    */
-  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, variant="default"}) {
-    const abrMasterType = await this.ContentType({name: "ABR Master"});
+  async CreateABRMezzanine({libraryId, name, description, metadata = {}, masterVersionHash, variant = "default"}) {
+    const abrMezType = await this.ContentType({name: "ABR Mezzanine"});
 
-    if(!abrMasterType) {
-      throw Error("Unable to access ABR Master content type in library with ID=" + libraryId);
+    if(!abrMezType) {
+      throw Error("Unable to access ABR Mezzanine content type in library with ID=" + libraryId);
     }
 
     if(!masterVersionHash) {
       throw Error("Master version hash not specified");
     }
 
+    // get master object metadata
+    const masterMetaData = (await this.ContentObjectMetadata({
+      versionHash: masterVersionHash
+    }));
+
+    // ** temporary workaround for server permissions issue **
+    const production_master = masterMetaData["production_master"];
+    const masterName = masterMetaData["name"];
+    // const production_master_files = masterMetaData["fies"];
+
     // get master object name
-    const masterName = (await this.ContentObjectMetadata({
-      versionHash: masterVersionHash,
-      metadataSubtree: UrlJoin("public", "name")
-    })) || masterVersionHash;
+    // const masterName = (await this.ContentObjectMetadata({
+    //   versionHash: masterVersionHash,
+    //   metadataSubtree: UrlJoin( "public", "name")
+    // })) || masterVersionHash;
+
+
+    // ** temporary workaround for server permissions issue **
+    // get target library metadata
+    const targetLib = (await this.ContentLibrary({libraryId}));
+    const abr_profile = (await this.ContentObjectMetadata(
+      {
+        libraryId,
+        objectId: targetLib.qid,
+        metadataSubtree: UrlJoin("public", "abr_profile")
+      }
+    ));
+
+
 
     const {id, write_token} = await this.CreateContentObject({
       libraryId,
       options: {
-        type: abrMasterType.hash
+        type: abrMezType.hash
       }
     });
 
-    await this.CallBitcodeMethod({
+    const {logs, errors, warnings} = await this.CallBitcodeMethod({
       libraryId,
       objectId: id,
       writeToken: write_token,
-      method: "/media/mezzanine/prep_start",
-      queryParams: {
-        source: masterVersionHash,
-        variant: variant
+      method: "/media/abr_mezzanine/init",
+      body: {
+        "offering_key": variant,
+        "variant_key": variant,
+        "prod_master_hash": masterVersionHash,
+        production_master, // ** temporary workaround for server permissions issue **
+        abr_profile // ** temporary workaround for server permissions issue **
       },
       constant: false
     });
@@ -2410,13 +2438,10 @@ class ElvClient {
       objectId: id,
       writeToken: write_token,
       metadata: {
-        master: {
-          id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
-          hash: masterVersionHash
-        },
+        name: masterName,
         description: "ABR mezzanine for " + masterName + " (variant: " + variant + ")",
         public: {
-          name: name || `${masterName} Mezzanine`,
+          name: masterName,
           description: description || ""
         },
         elv_created_at: new Date().getTime(),
@@ -2424,12 +2449,20 @@ class ElvClient {
       }
     });
 
-    return await this.FinalizeContentObject({
+    const finalizeResponse = await this.FinalizeContentObject({
       libraryId,
       objectId: id,
       writeToken: write_token
     });
+
+    return {
+      errors: errors || [],
+      logs: logs || null,
+      warnings: warnings || [],
+      ...finalizeResponse
+    };
   }
+
 
   /* Content Object Access */
 
