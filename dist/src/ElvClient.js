@@ -3126,7 +3126,7 @@ function () {
       var _UploadFilesFromS = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee42(_ref47) {
-        var libraryId, objectId, writeToken, region, bucket, filePaths, accessKey, secret, _ref47$copy, copy, callback, defaults, ops, _ref48, id, _ref49, ingest;
+        var libraryId, objectId, writeToken, region, bucket, filePaths, accessKey, secret, _ref47$copy, copy, callback, defaults, ops, _ref48, id, _ref49, ingest, error;
 
         return regeneratorRuntime.wrap(function _callee42$(_context42) {
           while (1) {
@@ -3173,7 +3173,7 @@ function () {
 
               case 7:
                 if (!true) {
-                  _context42.next = 19;
+                  _context42.next = 22;
                   break;
                 }
 
@@ -3194,7 +3194,16 @@ function () {
               case 12:
                 _ref49 = _context42.sent;
                 ingest = _ref49.ingest;
+                error = _ref49.error;
 
+                if (!error) {
+                  _context42.next = 17;
+                  break;
+                }
+
+                throw error;
+
+              case 17:
                 if (callback) {
                   callback({
                     done: ingest.done,
@@ -3204,17 +3213,17 @@ function () {
                 }
 
                 if (!ingest.done) {
-                  _context42.next = 17;
+                  _context42.next = 20;
                   break;
                 }
 
-                return _context42.abrupt("break", 19);
+                return _context42.abrupt("break", 22);
 
-              case 17:
+              case 20:
                 _context42.next = 7;
                 break;
 
-              case 19:
+              case 22:
               case "end":
                 return _context42.stop();
             }
