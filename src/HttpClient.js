@@ -53,7 +53,7 @@ class HttpClient {
       if(bodyType === "JSON") {
         fetchParameters.body = JSON.stringify(body);
       } else {
-        fetchParameters.body = {...body};
+        fetchParameters.body = body;
       }
     }
 
