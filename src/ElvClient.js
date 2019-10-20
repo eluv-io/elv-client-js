@@ -2821,13 +2821,24 @@ class ElvClient {
    * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query parameters to include in the request
+   * @param {Object=} body - Request body to include, if calling a non-constant method
    * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
    * Otherwise, a POST with an UpdateRequest will be performed
    * @param {string=} format=json - The format of the response
    *
    * @returns {Promise<format>} - The response from the call in the specified format
    */
-  async CallBitcodeMethod({libraryId, objectId, versionHash, writeToken, method, queryParams={}, constant=true, format="json"}) {
+  async CallBitcodeMethod({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    method,
+    queryParams={},
+    body={},
+    constant=true,
+    format="json"
+  }) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     const path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
@@ -2838,7 +2849,8 @@ class ElvClient {
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: !constant}),
         method: constant ? "GET" : "POST",
         path,
-        queryParams
+        queryParams,
+        body
       })
     );
   }

@@ -5890,6 +5890,7 @@ function () {
      * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
      * @param {string} method - Bitcode method to call
      * @param {Object=} queryParams - Query parameters to include in the request
+     * @param {Object=} body - Request body to include, if calling a non-constant method
      * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
      * Otherwise, a POST with an UpdateRequest will be performed
      * @param {string=} format=json - The format of the response
@@ -5903,13 +5904,13 @@ function () {
       var _CallBitcodeMethod = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee76(_ref87) {
-        var libraryId, objectId, versionHash, writeToken, method, _ref87$queryParams, queryParams, _ref87$constant, constant, _ref87$format, format, path;
+        var libraryId, objectId, versionHash, writeToken, method, _ref87$queryParams, queryParams, _ref87$body, body, _ref87$constant, constant, _ref87$format, format, path;
 
         return regeneratorRuntime.wrap(function _callee76$(_context76) {
           while (1) {
             switch (_context76.prev = _context76.next) {
               case 0:
-                libraryId = _ref87.libraryId, objectId = _ref87.objectId, versionHash = _ref87.versionHash, writeToken = _ref87.writeToken, method = _ref87.method, _ref87$queryParams = _ref87.queryParams, queryParams = _ref87$queryParams === void 0 ? {} : _ref87$queryParams, _ref87$constant = _ref87.constant, constant = _ref87$constant === void 0 ? true : _ref87$constant, _ref87$format = _ref87.format, format = _ref87$format === void 0 ? "json" : _ref87$format;
+                libraryId = _ref87.libraryId, objectId = _ref87.objectId, versionHash = _ref87.versionHash, writeToken = _ref87.writeToken, method = _ref87.method, _ref87$queryParams = _ref87.queryParams, queryParams = _ref87$queryParams === void 0 ? {} : _ref87$queryParams, _ref87$body = _ref87.body, body = _ref87$body === void 0 ? {} : _ref87$body, _ref87$constant = _ref87.constant, constant = _ref87$constant === void 0 ? true : _ref87$constant, _ref87$format = _ref87.format, format = _ref87$format === void 0 ? "json" : _ref87$format;
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -5931,20 +5932,22 @@ function () {
                 _context76.t4 = constant ? "GET" : "POST";
                 _context76.t5 = path;
                 _context76.t6 = queryParams;
-                _context76.t7 = {
+                _context76.t7 = body;
+                _context76.t8 = {
                   headers: _context76.t3,
                   method: _context76.t4,
                   path: _context76.t5,
-                  queryParams: _context76.t6
+                  queryParams: _context76.t6,
+                  body: _context76.t7
                 };
-                _context76.next = 15;
-                return _context76.t2.Request.call(_context76.t2, _context76.t7);
+                _context76.next = 16;
+                return _context76.t2.Request.call(_context76.t2, _context76.t8);
 
-              case 15:
-                _context76.t8 = _context76.sent;
-                return _context76.abrupt("return", (0, _context76.t0)(_context76.t1, _context76.t8));
+              case 16:
+                _context76.t9 = _context76.sent;
+                return _context76.abrupt("return", (0, _context76.t0)(_context76.t1, _context76.t9));
 
-              case 17:
+              case 18:
               case "end":
                 return _context76.stop();
             }
