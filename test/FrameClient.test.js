@@ -8,7 +8,7 @@ Object.defineProperty(global.self, "crypto", {
 
 const {FrameClient} = require("../src/FrameClient");
 const OutputLogger = require("./utils/OutputLogger");
-const {RandomBytes, CreateClient} = require("./utils/Utils");
+const {RandomBytes, CreateClient, ReturnBalance} = require("./utils/Utils");
 
 let frameClient, client, libraryId, objectId, partHash;
 
@@ -38,7 +38,7 @@ describe("Test FrameClient", () => {
       ["AwaitMessage"]
     );
 
-    client = await CreateClient();
+    client = await CreateClient("FrameClient");
 
     window.addEventListener("message", async (event) => {
       if(!event || !event.data || event.data.type !== "ElvFrameRequest") { return; }
@@ -59,6 +59,10 @@ describe("Test FrameClient", () => {
     });
   });
 
+  afterAll(async () => {
+    await ReturnBalance(client);
+  });
+
   test("FrameClient methods match expected ElvClient methods", () => {
     CompareMethods(frameClient.AllowedMethods(), client.FrameAllowedMethods());
   });
@@ -75,7 +79,7 @@ describe("Test FrameClient", () => {
     expect(frameResult).toMatchObject(result);
   });
 
-  test.only("Call ElvClient Method - Errors", async () => {
+  test("Call ElvClient Method - Errors", async () => {
     console.error = jest.fn();
 
     try {
@@ -105,11 +109,7 @@ describe("Test FrameClient", () => {
   });
 
   test("User Profile Methods", async () => {
-    await expect(frameClient.userProfileClient.AccessLevel()).rejects.toThrow(
-      new Error("'requestor' param required when calling user profile methods from FrameClient")
-    );
-
-    const accessLevel = await frameClient.userProfileClient.AccessLevel({requestor: "Test"});
+    const accessLevel = await frameClient.userProfileClient.AccessLevel();
     expect(accessLevel).toEqual("prompt");
   });
 

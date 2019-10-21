@@ -1,10 +1,10 @@
 [
   {
     "signature": "async PassRequest({\n  \"request\": {\n    \"calledMethod\": \"ContentLibraries\",\n    \"args\": {},\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 123\n  }\n});",
-    "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 123,\n  \"response\": [\n    \"ilib4QTzTZsdDXuPTA721BwjLjeEuE2A\",\n    \"ilib2Zwzgrfr75Jqx8ibRGdLSixkxmN6\",\n    \"ilibVamNMuHxn9x4hYF1ZTBTsWkb3sA\",\n    \"ilib4WfnhTFjm1hmL41fZ4ADm6Kg4ekP\",\n    \"ilib4RusN9iFiJ9puV6kZPVpVFq5zZF5\"\n  ]\n}"
+    "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 123,\n  \"response\": [\n    \"ilibojiffcjL8ZWHmhA3FmVosGmKSWv\"\n  ]\n}"
   },
   {
-    "signature": "async PassRequest({\n  \"request\": {\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 1234,\n    \"calledMethod\": \"DownloadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib2xAud6WASkvU4dBTwWbm1RbEFKZe\",\n      \"objectId\": \"iq__2KqumXdnmFqaU8q3xhoVANMqAQyf\",\n      \"partHash\": \"hqp_B7wMqSzf1igY8HvxsJ5t87kfpzFhDKXXvJWDSAvVJHHKKry3\",\n      \"chunked\": true,\n      \"chunkSize\": 10000\n    },\n    \"callbackId\": 321\n  }\n});",
+    "signature": "async PassRequest({\n  \"request\": {\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 1234,\n    \"calledMethod\": \"DownloadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib3shM8sKepa2DiEmSbijrNjAVmpZz\",\n      \"objectId\": \"iq__3vCXDGHvXetfMwhEkTJVDbGqrvts\",\n      \"partHash\": \"hqp_J9nQS8kdJXRSyvEi2iN1vfsS8sSjkcgYdgFDQy94REiuaQiy\",\n      \"chunked\": true,\n      \"chunkSize\": 10000\n    },\n    \"callbackId\": 321\n  }\n});",
     "result": "{\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 1234\n}"
   }
 ]
