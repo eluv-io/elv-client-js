@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +6,7 @@
   <link rel="shortcut icon" href="images/favicon.png" >
 
   <title>
-    Crypto.js - Documentation
+    StartABRMezzanineJobs - Documentation
   </title>
 
   <script src="scripts/prettify/prettify.js"></script>
@@ -46,239 +44,341 @@
       <div class="main-content">
         
         <h1 class="page-title">
-          Crypto.js
+          StartABRMezzanineJobs
         </h1>
         
 
         
+
+<section>
+  <header>
+    
+
+
+      
+    
+  </header>
+
+  <article>
+    <div class="container-overview">
+      
+        
+
+
+  
+
+  <span class='name-container'>
+    <a class="link-icon" href="#StartABRMezzanineJobs">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+    </a>
+    <h4 class="name" id="StartABRMezzanineJobs">
+      <span class="type-signature">async </span>new StartABRMezzanineJobs<span class="signature">(<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">offeringKey<span class="signature-attributes">optional</span>,</div><div class="block-param">access<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"> &rarr;  Promise.&lt;{writeToken: Object.write_token, data: format.data, logs: format.logs, warnings: format.warnings, errors: format.errors}></span>
+    </h4>
+  </span>
+
+  
+
+
+
+  <div class="description">
+    <p>Start any incomplete jobs on the specified mezzanine</p>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <h5>Parameters:</h5>
+  
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
       
 
-<a class="button" href="Crypto.html">Back</a>
-<div class="source-container">
-  <pre class="prettyprint source linenums"><code>if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+      <th>Type</th>
 
-const bs58 = require("bs58");
-const Stream = require("stream");
-const Utils = require("./Utils");
+      
+        <th>Attributes</th>
+      
 
-let ElvCrypto;
-switch(Utils.Platform()) {
-  case Utils.PLATFORM_WEB:
-    if(typeof crypto === "undefined") {
-      const crypto = require("crypto");
+      
+        <th>Default</th>
+      
 
-      Object.defineProperty(global.self, "crypto", {
-        value: {
-          getRandomValues: arr => crypto.randomBytes(arr.length),
-        },
-      });
-    }
+      <th class="last">Description</th>
+    </tr>
+  </thead>
 
-    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.js").default;
-    break;
-  default:
-    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;
-    break;
-}
+  <tbody>
+    
+      <tr>
+        
+          <td class="name"><code>libraryId</code></td>
+        
 
-/**
- * @namespace
- * @description This namespace contains cryptographic helper methods to encrypt and decrypt
- * data with automatic handling of keys
- */
-const Crypto = {
-  ElvCrypto: async () => {
-    try {
-      if(!Crypto.elvCrypto) {
-        Crypto.elvCrypto = await new ElvCrypto().init();
-      }
-
-      return Crypto.elvCrypto;
-    } catch(error) {
-      // eslint-disable-next-line no-console
-      console.error("Error initializing ElvCrypto:");
-      // eslint-disable-next-line no-console
-      console.error(error);
-    }
-  },
-
-  async EncryptConk(conk, publicKey) {
-    const elvCrypto = await Crypto.ElvCrypto();
-    publicKey = new Uint8Array(Buffer.from(publicKey.replace("0x", ""), "hex"));
-    conk = new Uint8Array(Buffer.from(JSON.stringify(conk)));
-
-    const {data, ephemeralKey, tag} = await elvCrypto.encryptECIES(conk, publicKey);
-
-    const cap = Buffer.concat([
-      Buffer.from(ephemeralKey),
-      Buffer.from(tag),
-      Buffer.from(data)
-    ]);
-
-    return Utils.B64(cap);
-  },
-
-  async DecryptCap(encryptedCap, privateKey) {
-    const elvCrypto = await Crypto.ElvCrypto();
-    privateKey = new Uint8Array(Buffer.from(privateKey.replace("0x", ""), "hex"));
-
-    encryptedCap = Buffer.from(encryptedCap, "base64");
-    const ephemeralKey = encryptedCap.slice(0, 65);
-    const tag = encryptedCap.slice(65, 81);
-    const data = encryptedCap.slice(81);
-
-    const cap = elvCrypto.decryptECIES(
-      new Uint8Array(data),
-      privateKey,
-      new Uint8Array(ephemeralKey),
-      new Uint8Array(tag)
-    );
-
-    return JSON.parse(Buffer.from(cap).toString());
-  },
-
-  async GeneratePrimaryConk() {
-    const elvCrypto = await Crypto.ElvCrypto();
-
-    const {secretKey, publicKey} = elvCrypto.generatePrimaryKeys();
-    const symmetricKey = (elvCrypto.generateSymmetricKey()).key;
-
-    return {
-      symm_key: `kpsy${bs58.encode(Buffer.from(symmetricKey))}`,
-      secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
-      public_key: `kppk${bs58.encode(Buffer.from(publicKey))}`
-    };
-  },
-
-  async GenerateTargetConk() {
-    const elvCrypto = await Crypto.ElvCrypto();
-
-    const {secretKey, publicKey} = elvCrypto.generateTargetKeys();
-
-    return {
-      secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
-      public_key: `ktpk${bs58.encode(Buffer.from(publicKey))}`
-    };
-  },
-
-  CapToConk(cap) {
-    const keyToBytes = key => new Uint8Array(bs58.decode(key.slice(4)));
-
-    return {
-      symmetricKey: keyToBytes(cap.symm_key),
-      secretKey: keyToBytes(cap.secret_key),
-      publicKey: keyToBytes(cap.public_key)
-    };
-  },
-
-  async EncryptionContext(cap) {
-    const elvCrypto = await Crypto.ElvCrypto();
-
-    const {symmetricKey, secretKey, publicKey} = Crypto.CapToConk(cap);
-
-    let context, type;
-    if(publicKey.length === elvCrypto.PRIMARY_PK_KEY_SIZE) {
-      // Primary context
-      type = elvCrypto.CRYPTO_TYPE_PRIMARY;
-      context = elvCrypto.newPrimaryContext(
-        publicKey,
-        secretKey,
-        symmetricKey
-      );
-    } else {
-      // Target context
-      type = elvCrypto.CRYPTO_TYPE_TARGET;
-      context = elvCrypto.newTargetDecryptionContext(
-        secretKey,
-        symmetricKey
-      );
-    }
-
-    return {context, type};
-  },
-
-  /**
-   * Encrypt data with headers
-   *
-   * @namedParams
-   * @param {ArrayBuffer | Buffer} data - Data to encrypt
-   * @param {Object} cap - Encryption "capsule" containing keys
-   *
-   * @returns {Promise&lt;Buffer>} - Encrypted data
-   */
-  Encrypt: async (cap, data) => {
-    // Convert Blob to ArrayBuffer if necessary
-    if(!Buffer.isBuffer(data) &amp;&amp; !(data instanceof ArrayBuffer)) {
-      data = Buffer.from(await new Response(data).arrayBuffer());
-    }
-
-    const elvCrypto = await Crypto.ElvCrypto();
-
-    const { context } = await Crypto.EncryptionContext(cap);
-
-    const dataArray = new Uint8Array(data);
-    const encryptedData = elvCrypto.encryptPrimaryH(context, dataArray);
-    const encryptedDataBuffer = Buffer.from(encryptedData);
-
-    context.free();
-
-    return encryptedDataBuffer;
-  },
-
-  /**
-   * Decrypt data with headers
-   *
-   * @namedParams
-   * @param {Object} cap - Encryption "capsule" containing keys
-   * @param {ArrayBuffer | Buffer} encryptedData - Data to encrypt
-   *
-   * @returns {Promise&lt;Buffer>} - Decrypted data
-   */
-  Decrypt: async (cap, encryptedData) => {
-    const stream = await Crypto.OpenDecryptionStream(cap);
-
-    stream.end(new Uint8Array(encryptedData));
-
-    let decryptedChunks = [];
-    await new Promise((resolve, reject) => {
-      stream
-        .on("data", chunk => {
-          decryptedChunks.push(chunk);
-        })
-        .on("finish", () => {
-          resolve();
-        })
-        .on("error", (e) => {
-          reject(e);
-        });
-    });
-
-    return Buffer.concat(decryptedChunks);
-  },
-
-  OpenDecryptionStream: async (cap) => {
-    const elvCrypto = await Crypto.ElvCrypto();
-    const {context, type} = await Crypto.EncryptionContext(cap);
-
-    const stream = new Stream.PassThrough();
-    const decipher = elvCrypto.createDecipher(type, context);
-
-    return stream
-      .pipe(decipher)
-      .on("finish", () => {
-        context.free();
-      })
-      .on("error", (e) => {
-        throw Error(e);
-      });
-  }
-};
-
-module.exports = Crypto;
-</code></pre>
-</div>
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
 
     
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>ID of the mezzanine library</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>objectId</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>ID of the mezzanine object</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>offeringKey</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              default
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The offering to process</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>access</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Object
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>(S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references</p>
+<ul>
+<li>Format: {region, bucket, accessKey, secret}</li>
+</ul>
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source">
+      <ul class="dummy">
+        <li>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line2553">line 2553</a>
+        </li>
+      </ul>
+    </dd>
+  
+
+  
+
+  
+</dl>
+
+
+      
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+
+    
+
+    
+  </article>
+</section>
+
+
 
 
 
