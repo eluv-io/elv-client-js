@@ -2438,7 +2438,7 @@ class ElvClient {
       objectId: id,
       writeToken: write_token,
       metadata: {
-        name: masterName,
+        name: name,
         description: "ABR mezzanine for " + masterName + " (variant: " + variant + ")",
         public: {
           name: masterName,

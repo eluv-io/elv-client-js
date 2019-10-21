@@ -17,8 +17,9 @@ const Test = async () => {
 
     client.HttpClient.uriIndex = 1;
 
-    const libraryId = "ilibMeiZ3F266sx1hk3QvccVsLhQKfp";
-    const objectId = "iq__3vpkCFRq9GkCDknRgXZeaCcxVtcV";
+    const libraryId = "ilibbdQBYaURdXCiHZNkH78B56wQ6eJ";
+    const objectId = "iq__3HweGJqpyuZ6Cj3VubU6GFbFDPQ5";
+
 
 
     const {write_token} = await client.EditContentObject({libraryId, objectId});
@@ -29,13 +30,13 @@ const Test = async () => {
       libraryId,
       objectId,
       writeToken: write_token,
-      region: "us-west-1",
-      bucket: "eluvio-mez-test",
+      region:process.env.AWS_REGION,
+      bucket: process.env.AWS_BUCKET,
       filePaths: [
         "ENTIRE_CREED_2min_.mp4"
       ],
-      accessKey: "AKIARUSRUCETHFADF7UN",
-      secret: "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"
+      accessKey: process.env.AWS_KEY,
+      secret: process.env.AWS_SECRET
     });
 
     await client.FinalizeContentObject({

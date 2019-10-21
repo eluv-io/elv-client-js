@@ -40,7 +40,7 @@ const Create = async (libraryId, contentTypeName, filePaths, remote_info, name =
       filePaths: filePaths,
       accessKey: remote_info.accessKey,
       secret: remote_info.secret,
-      copy: true
+      copy: false
     });
     await new Promise(resolve => setTimeout(resolve, 5000));
 
@@ -94,13 +94,13 @@ if(!libraryId || !filePath) {
 
 Create(
   libraryId,
-  "Production Master",
+  "ABR Mezzanine",
   [filePath],
   {
-    region: "us-west-1",
-    bucket: "eluvio-mez-test",
-    accessKey: "AKIARUSRUCETHFADF7UN",
-    secret: "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"
+    region: process.env.AWS_REGION,
+    bucket: process.env.AWS_BUCKET,
+    accessKey: process.env.AWS_KEY,
+    secret: process.env.AWS_SECRET
   },
   filePath
 );

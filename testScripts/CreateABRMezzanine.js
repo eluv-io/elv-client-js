@@ -2,7 +2,7 @@ const { ElvClient } = require("../src/ElvClient");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
-const Create = async (mezLibraryId, productionMasterHash, productionMasterVariant) => {
+const Create = async (mezLibraryId, productionMasterHash, productionMasterVariant="default") => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]

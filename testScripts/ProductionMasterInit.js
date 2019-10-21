@@ -1,8 +1,13 @@
+// initialize production master without uploading any files
+// - use to turn a manually created object into a production master
+
+// still need to pass in cloud credentials if files are remote
+
 const { ElvClient } = require("../src/ElvClient");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
-const Probe = async (contentHash, file_paths, access) => {
+const ProductionMasterInit = async (libraryId, objectId, access) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
@@ -13,15 +18,29 @@ const Probe = async (contentHash, file_paths, access) => {
     });
     await client.SetSigner({signer});
 
-    console.log("\nCalling files/probe");
+    console.log("\nCalling production_master/init");
 
     try {
-      const body = {file_paths, access};
+
+      const response = await client.EditContentObject({libraryId, objectId});
+
+      console.log(JSON.stringify(response));
+      const {id, write_token} = response;
+
       const {data, errors, warnings, logs} = await client.CallBitcodeMethod({
-        versionHash: contentHash,
-        method: "/media/files/probe",
-        constant: false,
-        body: body
+        objectId,
+        libraryId,
+        method: "/media/production_master/init",
+        writeToken: write_token,
+        body: {access},
+        constant: false
+      });
+
+      const finalizeResponse = await client.FinalizeContentObject({
+        libraryId,
+        objectId: id,
+        writeToken: write_token,
+        awaitCommitConfirmation: false
       });
 
       console.log(JSON.stringify(data, null, 2));
@@ -50,7 +69,7 @@ const Probe = async (contentHash, file_paths, access) => {
   }
 };
 
-const [ , , objectHash, ...filePaths ] = process.argv;
+const [ , , libraryId, objectId ] = process.argv;
 
 // const access = null;
 
@@ -75,10 +94,9 @@ const access = [
 ];
 
 
-
-if(!objectHash ) {
-  console.error("Usage: PRIVATE_KEY=<private-key> node ./testScripts/ProbeFiles.js objectHash filePaths...");
+if(!libraryId || !objectId ) {
+  console.error("Usage: PRIVATE_KEY=<private-key> node ./testScripts/ProductionMasterInit.js libraryId objectId");
   return;
 }
 
-Probe(objectHash, filePaths, access);
+ProductionMasterInit(libraryId, objectId, access);
