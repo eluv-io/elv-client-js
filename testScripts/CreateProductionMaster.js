@@ -37,7 +37,7 @@ const Create = async (masterLibraryId, filePath) => {
         libraryId: masterLibraryId,
         name: title,
         description: "Production Master for " + title,
-        contentTypeName: "ABR Master",
+        contentTypeName: "Production Master",
         fileInfo,
         callback: progress => {
           console.log();
@@ -68,7 +68,8 @@ const Create = async (masterLibraryId, filePath) => {
       }
     } catch(error) {
       console.error("Unrecoverable error:");
-      console.error(error.body ? error.body : error);
+      console.log(JSON.stringify(error, null, 2));
+      console.error(error.body ? JSON.stringify(error.body, null, 2): error);
     }
   } catch(error) {
     console.error(error);
@@ -84,4 +85,3 @@ if(!masterLibraryId || !filePath) {
 }
 
 Create(masterLibraryId, filePath);
-
