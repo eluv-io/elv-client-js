@@ -1,0 +1,10 @@
+[
+  {
+    "signature": " AudienceData({\n  \"objectId\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"versionHash\": \"hq__14UPxw8FpEv7g226T5hGT1JpfqA8CsRFVw6WBWsUjLcVoa2BMmfNWXE48vLxwJVYXu1ptJHxnf\",\n  \"protocols\": [\n    \"hls\",\n    \"dash\"\n  ],\n  \"drms\": [\n    \"widevine\",\n    \"aes-128\"\n  ]\n});",
+    "result": "{\n  \"user_address\": \"0x439408c33a7fca969d34a5616c175a44434bb209\",\n  \"content_id\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"content_hash\": \"hq__14UPxw8FpEv7g226T5hGT1JpfqA8CsRFVw6WBWsUjLcVoa2BMmfNWXE48vLxwJVYXu1ptJHxnf\",\n  \"hostname\": \"host-35-233-145-232.test.contentfabric.io\",\n  \"access_time\": \"1572304060040\",\n  \"format\": \"hls,dash\",\n  \"drm\": \"widevine,aes-128\",\n  \"user_string\": \"Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/11.12.0\",\n  \"language\": \"en-US\"\n}"
+  },
+  {
+    "signature": " AudienceData({\n  \"objectId\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"versionHash\": \"hq__14UPxw8FpEv7g226T5hGT1JpfqA8CsRFVw6WBWsUjLcVoa2BMmfNWXE48vLxwJVYXu1ptJHxnf\",\n  \"protocols\": [\n    \"hls\",\n    \"dash\"\n  ],\n  \"drms\": [\n    \"widevine\",\n    \"aes-128\"\n  ]\n});",
+    "result": "{\n  \"user_address\": \"0x439408c33a7fca969d34a5616c175a44434bb209\",\n  \"content_id\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"content_hash\": \"hq__14UPxw8FpEv7g226T5hGT1JpfqA8CsRFVw6WBWsUjLcVoa2BMmfNWXE48vLxwJVYXu1ptJHxnf\",\n  \"hostname\": \"host-35-233-145-232.test.contentfabric.io\",\n  \"access_time\": \"1572304061122\",\n  \"format\": \"hls,dash\",\n  \"drm\": \"widevine,aes-128\",\n  \"user_string\": \"Mozilla/5.0 (darwin) AppleWebKit/537.36 (KHTML, like Gecko) jsdom/11.12.0\",\n  \"language\": \"en-US\"\n}"
+  }
+]

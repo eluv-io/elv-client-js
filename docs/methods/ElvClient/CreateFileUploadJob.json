@@ -1,6 +1,10 @@
 [
   {
-    "signature": "async CreateFileUploadJob({\n  \"libraryId\": \"ilibXdXKj6hKg9Xb3A8mnDP2X25CQ4P\",\n  \"objectId\": \"iq__Q6qJ11PzpDs3M3PXRFs54WXwMFr\",\n  \"writeToken\": \"tqw_KgpwZvUe51PQvrnzpZLh8nKh1bz1qBKY3\",\n  \"fileInfo\": [\n    {\n      \"path\": \"testDirectory\",\n      \"type\": \"directory\"\n    },\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"size\": 100000\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"size\": 100000\n    }\n  ]\n});",
-    "result": "{\n  \"upload_jobs\": [\n    {\n      \"id\": \"iqfuQMohSE5UJdFGxRWLKbavix\",\n      \"files\": [\n        {\n          \"path\": \"testDirectory/File 1\",\n          \"size\": 100000,\n          \"off\": 0,\n          \"len\": 100000,\n          \"rem\": 100000\n        },\n        {\n          \"path\": \"testDirectory/File 2\",\n          \"size\": 100000,\n          \"off\": 0,\n          \"len\": 100000,\n          \"rem\": 100000\n        }\n      ]\n    }\n  ]\n}"
+    "signature": "async CreateFileUploadJob({\n  \"libraryId\": \"ilib3eXfnnhHfDCHsFGb7VusYjx5Wr5g\",\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"writeToken\": \"tqw_Pu7ov3pw2UhDzL15kS9RUWF5Us8ndMj7b\",\n  \"ops\": [\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    }\n  ]\n});",
+    "result": "{\n  \"id\": \"iqfjS5TPCq8SqbxpQPJHmBm2Bp\",\n  \"jobs\": [\n    \"iqfuLKWfq75NG42XTthp5x3wPq\"\n  ]\n}"
+  },
+  {
+    "signature": "async CreateFileUploadJob({\n  \"libraryId\": \"ilibCz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"objectId\": \"iq__26cX975E6bPQ3JYCXRE6qoNcDaKh\",\n  \"writeToken\": \"tqw_3Ab5wzrVffLV2mchDBBR3NjvMCmokutpN\",\n  \"ops\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"mime_type\": \"video/mp4\",\n      \"size\": 97944174,\n      \"type\": \"file\"\n    }\n  ]\n});",
+    "result": "{\n  \"id\": \"iqfjTsmUG4ydMoGMKmhRCspypw\",\n  \"jobs\": [\n    \"iqfuRiKqjSYw2deCeTCbW8QXdv\",\n    \"iqfuPs99xjr4PKUrqHYMcqPfWr\",\n    \"iqfuy18jve58rsqHRwjeQs414\"\n  ]\n}"
   }
 ]
