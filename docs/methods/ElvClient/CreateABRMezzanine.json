@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async CreateABRMezzanine({\n  \"libraryId\": \"ilibCz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"masterVersionHash\": \"hq__28T8P2AiWnm1xP4xzHJ9katFJLzJA8U1KwAFmLPd1EfQ1EvLBJ2tSAAsrfG9PNuqVjUwQQkUhm\",\n  \"name\": \"Mezzanine Test\",\n  \"description\": \"Mezzanine Test Description\",\n  \"metadata\": {\n    \"test\": \"mezzanine\"\n  }\n});",
+    "result": "{\n  \"logs\": [\n    \"2019-10-28 23:05:15 Debug: apiAbrMezzanineInit()\",\n    \"2019-10-28 23:05:15 Info: Get production.Variant\",\n    \"2019-10-28 23:05:15 Info: Generate abr.Offering\",\n    \"2019-10-28 23:05:15 Info: Saving metadata\"\n  ],\n  \"warnings\": [],\n  \"errors\": [],\n  \"id\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"hash\": \"hq__FU8EtZMFxy2tQ29hKXMy4KvH7ozHC67pxsT5vFYRBg82R4GCGS74mtDdQL5S2XcCNprhMpUQSw\",\n  \"write_token\": \"tqw_3Mb1RedBTupLT48L4HkDYxsjMjbKumFxk\",\n  \"type\": \"hq__Kru6PPKc9erztaxvcDNyUii6LmG9cXjMee2pcPQKwMz6ntq65AP6yNwsePvJ96sMFvZxb5uNkx\"\n}"
+  }
+]

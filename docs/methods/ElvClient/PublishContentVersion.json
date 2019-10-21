@@ -1,11 +1,89 @@
 [
   {
-    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilibpEvxZTda3FP5wzFNLEvMAv7oTzV\",\n  \"objectId\": \"iq__3DuKVpx3747dfTrqj1P7sQ1rx18n\",\n  \"versionHash\": \"hq__JJuJNGjhUoXpYJcodCkHBpqUr1UzLW3XDjDFvAK8dbEZnoXsraHah3NG9oTW19vtqp5BSWjTv2\"\n});"
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__3TAkYM5CUSM1pbgE2g4y9DepTWm3\",\n  \"versionHash\": \"hq__4aPW7G6N8org2bQxTuEXCNa8LUepGUgDFX8Xn6cz9rj3A8jUKtZyLJdnATcmBmNuBGakj1pP6V\",\n  \"awaitCommitConfirmation\": true\n});"
   },
   {
-    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"objectId\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\",\n  \"versionHash\": \"hq__KqzHEPBV8zZYLnqab7GXokH9nfQ4KgUNRMJXXsKgS6d4Zu6miT26XEsX7s7f4bRMDEnkrdjkXv\"\n});"
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__9vCt4P2VWDW1kXLadmCyTWgG9HP\",\n  \"versionHash\": \"hq__5ciWSimcLJiSjsCUTgWDPcRybmDWF5SdyKjQLA5jE3fCjJ7M7v9Ds9Rx5U2SfymM4weMi7LXjB\",\n  \"awaitCommitConfirmation\": true\n});"
   },
   {
-    "signature": "async PublishContentVersion({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"objectId\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\",\n  \"versionHash\": \"hq__8uvpiduwcTep5RpDpx9BH7GEp4mPGyfJCXYL1Ke2nFNqWcTNDRMYWtD9whXKZALC9BEx4qqjhe\"\n});"
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__3eXfnnhHfDCHsFGb7VusYjx5Wr5g\",\n  \"versionHash\": \"hq__K3srUtiMiCr833E2pd8FBjMQcRRTdKs1cvG7vpY8WSC3DQnNdCYQJKyzpnqtQonFXVKu3SUvMQ\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__3eXfnnhHfDCHsFGb7VusYjx5Wr5g\",\n  \"versionHash\": \"hq__ToqzdG9xNSWztwv3iGd9CtLio17RPCAsnoJbdcoZGEHsX1W2vZJKgK14ApC4r4g9RWDz5cYJE\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__5vrpYhFRmuTEkdTWFEwMSnJYPzC59QsbesgWZAQYEjzousjh2RKUtAkpcg2RmSWkDME173V9h8\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__7LYSWEAjj5MCNH3iXQXjg25ZXTtRogTyQup8HR5ekK1CWgkQEtv1ct9dsc29dKKnwtzuvc6MaN\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__4UJ69FGy3q4h3zvRRyrzVweLnFbw\",\n  \"versionHash\": \"hq__A7prUCju4RdVT3gm3Hfhdrtvb9bw7VhJiAh3KuTKMnqpkczfQcvP1FmhNB53EDyM4PDYP2LMZb\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__3HqmGg5b9YF41FSQt2S7ZmrxTzB2\",\n  \"versionHash\": \"hq__8QFArPeUDZosLV1mfKKkLiowVz2KHZ8N4oNmEdheiEy8CkF5c68JyXzjVf1r4C5GxohRt1ut6U\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__4TC1v6zHtkQhg5oBLaaPy6ZYY8Ns\",\n  \"versionHash\": \"hq__Jt25k5rgvqwuwzs2Cq7sNL7RPwoqKtkuxKACvakPrhh7zXYu2eTkuiXoxsSX1ZHey7Tgvsu8kX\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__3v2dcwbE7YxmPbxzmE83pReJYXRh\",\n  \"versionHash\": \"hq__5KvWof9Mg8p8adD3wuqeWLy4dRjr6C92TrQqvAxNbDYAtTkPHoCj5QFPCsm3AXH1XhGWqGrdNo\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2X2yb3568hXTzvVNrFyFYUW34Gbw\",\n  \"versionHash\": \"hq__8YArgA6uPAH5ygjaWAjsuAaG3oxqoxFreYXqKVLdkP7Lp3pcNJDDrN6qvjjdzUhgyfxwN5Ujsj\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__4NpRNi1tC6SydsJjTaScR9LXEaYS\",\n  \"versionHash\": \"hq__4ANGdjRQURJapjzkfuAsyvG4sd8RjvJqHabAVPfBjTuwX5U83gSKNCaCZGKPum1vdhYhEaJ9zi\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__3i74LU4ojsZAzq6wm1GKFBtFcTBR\",\n  \"versionHash\": \"hq__JsHE3prWU9xCwhHQVnsvgkzgqY94wqJu6QgS7wzjRJumBYp3NRdFTguswCgdKRHnuKxqH4M9kF\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__Sh5QwCBYs8gbRnoRkJVLx9PU6Et\",\n  \"versionHash\": \"hq__FhmsJQrLfJb39sTt9X8vYQFQonHu89wZ7jFG11JzvRCurERJcaPou4bJrCDZwR5ZjJb6gtL8gQ\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__25RcYbExPVjv2RZQCN2MkW4EQ8L\",\n  \"versionHash\": \"hq__D2GjSURFHsTjZatxyC3bu82me8LYY27zRYZi8BqmHVViH47gnC2DtJXsTwQs78xaTi3MetkNTW\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__3d22YW2WmB19Lfqg948GneupQYzt\",\n  \"versionHash\": \"hq__3QTtmJm1TNN6XDuxqtA5MKhXGcc9TUDmgRYCLrya66CK5Du6nfPh2w8BMeW7AHbVLUpE1vistt\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__4UYZKX7ffmqYgC7J67ZELDA65EDy\",\n  \"versionHash\": \"hq__7YcrLt3mEFvD9u32LxjmPj9oeM99GNL5J6kwYEd2jByBPT6m3M9Hd9DdLpZg12JNFDdw58swXq\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__HXuLqih2vd5nJsPnqkY5CN8R3cQq5XQLKbvLuBHmbRQx5arpckZkkN2wCYVKh39azxUt6vdsMQ\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__92wgXRHQ4dHREGkZqBzydAD9TgMN9eVDTDKvBFPNepYrq9gKkH4YsFMCfS472yVcD46pDt4k3G\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__Jbap3UFPTYDuYqLehyXWwqaKvmDRE1mnVBWDo1pwUZwZEzNBdhwsVkq6pGRPB8PzcPe4LgN8mk\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__D9EUv7rm1pPGLhmDJGiAjD6nBgB2xDFZbnEw49SUhko3TVKqsN11aAwP17ov7dRaDMRNn1izhU\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__3TAkYM5CUSM1pbgE2g4y9DepTWm3\",\n  \"versionHash\": \"hq__42wTdZuQrcNaJ1BzWkqcrfzXtsnM1SysrBbP8ewhnLmU9skyAVTyF1YuVdtTCyXHEGCBrtMWPo\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__JjnGDZeZFYSBBtP7MswHB2Vojf6xUocGTwsGy6HC3AEcFiCbfBh9VdKbtLvpZSEjpEmiXUW8SS\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__Cz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"versionHash\": \"hq__D2HNBDXRKR2okZmoC1PdqhHi6r4zyrnQZsa7uWwBypwfMgmMAmexijSLWyJRCgzfLmSXj3Lzgr\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__26cX975E6bPQ3JYCXRE6qoNcDaKh\",\n  \"versionHash\": \"hq__28T8P2AiWnm1xP4xzHJ9katFJLzJA8U1KwAFmLPd1EfQ1EvLBJ2tSAAsrfG9PNuqVjUwQQkUhm\",\n  \"awaitCommitConfirmation\": false\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"versionHash\": \"hq__FU8EtZMFxy2tQ29hKXMy4KvH7ozHC67pxsT5vFYRBg82R4GCGS74mtDdQL5S2XcCNprhMpUQSw\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"versionHash\": \"hq__14UPxw8FpEv7g226T5hGT1JpfqA8CsRFVw6WBWsUjLcVoa2BMmfNWXE48vLxwJVYXu1ptJHxnf\",\n  \"awaitCommitConfirmation\": false\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__KQzSJCwh614c8fqDxiTwA96tK7jUnjnwzijZaVWbFZ5psiFduz3qQcd74eH5v4yMkAoDznRvQW\",\n  \"awaitCommitConfirmation\": true\n});"
+  },
+  {
+    "signature": "async PublishContentVersion({\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"versionHash\": \"hq__2hpXZ3t8SyCZbGF4GH9oAJNv49wqLjXmCGMmovYQtdxYmSHfkMGKbQ7H4NdLVZnQAPfAiBu26J\",\n  \"awaitCommitConfirmation\": true\n});"
   }
 ]
