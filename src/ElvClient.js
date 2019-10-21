@@ -2292,6 +2292,9 @@ class ElvClient {
   /**
    * Create a master media content object with the given files.
    *
+   * - If uploading using local files, use fileInfo parameter (see UploadFiles for format)
+   * - If uploading from S3 bucket, use access, filePath and copy, parameters (see UploadFilesFromS3 method)
+   *
    * @methodGroup Media
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -2299,18 +2302,32 @@ class ElvClient {
    * @param {string=} description - Description of the content
    * @param {string} contentTypeName - Name of the content type to use
    * @param {Object=} metadata - Additional metadata for the content object
-   * @param {Object} fileInfo - Files to upload to (See UploadFiles method)
-   * @param {function=} callback - Progress callback for file upload (See UploadFiles method)
+   * @param {Object=} fileInfo - (Local) Files to upload to (See UploadFiles method)
+   * @param {Array<string>} filePaths - (S3) List of files to copy/reference from bucket
+   * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
+   * @param {function=} callback - Progress callback for file upload (See UploadFiles or UploadFilesFromS3 method)
+   * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
+   * - Format: {region, bucket, accessKey, secret}
    *
    * @throws {Object} error - If the initialization of the master fails, error details can be found in error.body
-   *
-   * @return {Object} - The finalize response for the object, as well as any errors and/or warnings from the initialization of the master.
+   * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the master initialization
    */
-  async CreateProductionMaster({libraryId, name, description, contentTypeName, metadata={}, fileInfo, callback}) {
+  async CreateProductionMaster({
+    libraryId,
+    name,
+    description,
+    contentTypeName,
+    metadata={},
+    fileInfo,
+    access,
+    filePaths=[],
+    copy=false,
+    callback
+  }) {
     const contentType = await this.ContentType({name: contentTypeName});
 
     if(!contentType) {
-      throw "Unable to access content type '" + contentTypeName + "' to create production master";
+      throw `Unable to access content type '${contentTypeName}' to create production master`;
     }
 
     const {id, write_token} = await this.CreateContentObject({
@@ -2320,19 +2337,59 @@ class ElvClient {
       }
     });
 
-    await this.UploadFiles({
-      libraryId,
-      objectId: id,
-      writeToken: write_token,
-      fileInfo,
-      callback
-    });
+    let accessParameter;
+    if(access) {
+      // S3 Upload
+      const {region, bucket, accessKey, secret} = access;
 
-    const { errors, warnings } = await this.CallBitcodeMethod({
+      await this.UploadFilesFromS3({
+        libraryId,
+        objectId: id,
+        writeToken: write_token,
+        filePaths,
+        region,
+        bucket,
+        accessKey,
+        secret,
+        copy,
+        callback
+      });
+
+      accessParameter = [
+        {
+          path_matchers: [".*"],
+          remote_access: {
+            protocol: "s3",
+            platform: "aws",
+            path: bucket + "/",
+            storage_endpoint: {
+              region
+            },
+            cloud_credentials: {
+              access_key_id: accessKey,
+              secret_access_key: secret
+            }
+          }
+        }
+      ];
+    } else {
+      await this.UploadFiles({
+        libraryId,
+        objectId: id,
+        writeToken: write_token,
+        fileInfo,
+        callback
+      });
+    }
+
+    const { logs, errors, warnings } = await this.CallBitcodeMethod({
       libraryId,
       objectId: id,
       writeToken: write_token,
-      method: "/media/production_master/init",
+      method: UrlJoin("media", "production_master", "init"),
+      body: {
+        access: accessParameter
+      },
       constant: false
     });
 
@@ -2343,6 +2400,7 @@ class ElvClient {
       metadata: {
         name,
         description,
+        reference: access && !copy,
         public: {
           name: name || "",
           description: description || ""
@@ -2361,6 +2419,7 @@ class ElvClient {
 
     return {
       errors: errors || [],
+      logs: logs || [],
       warnings: warnings || [],
       ...finalizeResponse
     };
@@ -2378,40 +2437,67 @@ class ElvClient {
    * @param {string} masterVersionHash - The version hash of the production master content object
    * @param {string=} variant - What variant of the master content object to use
    *
-   * @return {Object} - The finalize response for the object
+   * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
    */
   async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, variant="default"}) {
-    const abrMasterType = await this.ContentType({name: "ABR Master"});
+    const abrMezType = await this.ContentType({name: "ABR Master"});
 
-    if(!abrMasterType) {
-      throw Error("Unable to access ABR Master content type in library with ID=" + libraryId);
+    if(!abrMezType) {
+      throw Error("Unable to access ABR Mezzanine content type in library with ID=" + libraryId);
     }
 
     if(!masterVersionHash) {
       throw Error("Master version hash not specified");
     }
 
-    // get master object name
-    const masterName = (await this.ContentObjectMetadata({
-      versionHash: masterVersionHash,
-      metadataSubtree: UrlJoin("public", "name")
-    })) || masterVersionHash;
+    const masterMetadata = (await this.ContentObjectMetadata({
+      versionHash: masterVersionHash
+    }));
+
+    // ** temporary workaround for server permissions issue **
+    const production_master = masterMetadata["production_master"];
+    const masterName = masterMetadata.public.name;
+
+    // ** temporary workaround for server permissions issue **
+    // get target library metadata
+    const targetLib = (await this.ContentLibrary({libraryId}));
+    const abr_profile = (await this.ContentObjectMetadata(
+      {
+        libraryId,
+        objectId: targetLib.qid,
+        metadataSubtree: "abr_profile"
+      }
+    ));
 
     const {id, write_token} = await this.CreateContentObject({
       libraryId,
       options: {
-        type: abrMasterType.hash
+        type: abrMezType.hash
       }
     });
 
-    await this.CallBitcodeMethod({
+    // Include authorization for library, master, and mezzanine
+    let authorizationTokens = [];
+    authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId, objectId: id, update: true}));
+    authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId}));
+    authorizationTokens.push(await this.authClient.AuthorizationToken({versionHash: masterVersionHash}));
+
+    const headers = {
+      Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+    };
+
+    const {logs, errors, warnings} = await this.CallBitcodeMethod({
       libraryId,
       objectId: id,
       writeToken: write_token,
-      method: "/media/mezzanine/prep_start",
-      queryParams: {
-        source: masterVersionHash,
-        variant: variant
+      method: UrlJoin("media", "abr_mezzanine", "init"),
+      headers,
+      body: {
+        "offering_key": variant,
+        "variant_key": variant,
+        "prod_master_hash": masterVersionHash,
+        production_master, // ** temporary workaround for server permissions issue **
+        abr_profile // ** temporary workaround for server permissions issue **
       },
       constant: false
     });
@@ -2422,10 +2508,13 @@ class ElvClient {
       writeToken: write_token,
       metadata: {
         master: {
+          name: masterName,
           id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
-          hash: masterVersionHash
+          hash: masterVersionHash,
+          variant
         },
-        description: "ABR mezzanine for " + masterName + " (variant: " + variant + ")",
+        name: name || `${masterName} Mezzanine`,
+        description,
         public: {
           name: name || `${masterName} Mezzanine`,
           description: description || ""
@@ -2435,11 +2524,119 @@ class ElvClient {
       }
     });
 
-    return await this.FinalizeContentObject({
+    const finalizeResponse = await this.FinalizeContentObject({
       libraryId,
       objectId: id,
       writeToken: write_token
     });
+
+    return {
+      errors: errors || [],
+      logs: logs || [],
+      warnings: warnings || [],
+      ...finalizeResponse
+    };
+  }
+
+  /**
+   * Start any incomplete jobs on the specified mezzanine
+   *
+   * @param {string} libraryId - ID of the mezzanine library
+   * @param {string} objectId - ID of the mezzanine object
+   * @param {string=} offeringKey=default - The offering to process
+   * @param {Object=} access - (S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references
+   * - Format: {region, bucket, accessKey, secret}
+   *
+   * @return {Promise<{writeToken: Object.write_token, data: format.data, logs: format.logs, warnings: format.warnings, errors: format.errors}>}
+   * @constructor
+   */
+  async StartABRMezzanineJobs({libraryId, objectId, offeringKey="default", access={}}) {
+    const mezzanineMetadata = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
+    });
+
+    const masterHash = mezzanineMetadata.default.prod_master_hash;
+
+    // get file list from master
+    // ** temporary workaround for permissions issue
+    const masterFileData = await this.ContentObjectMetadata({
+      versionHash: masterHash,
+      metadataSubtree: "files"
+    });
+
+
+    const prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || [];
+
+    /*
+    // Retrieve all masters associated with this offering
+    const masterVersionHashes = prepSpecs.map(spec =>
+      (spec.source_streams || []).map(stream => stream.master_hash)
+    )
+      .flat()
+      .filter(hash => hash)
+      .filter((v, i, a) => a.indexOf(v) === i);
+    */
+
+    const masterVersionHashes = [masterHash];
+
+    // Retrieve authorization tokens for all masters and the mezzanine
+    let authorizationTokens = await Promise.all(
+      masterVersionHashes.map(async versionHash => await this.authClient.AuthorizationToken({versionHash}))
+    );
+    authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId, objectId}));
+
+    const headers = {
+      Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+    };
+
+    let accessParameter;
+    if(access && Object.keys(access).length > 0) {
+      const {region, bucket, accessKey, secret} = access;
+      accessParameter = [
+        {
+          path_matchers: [".*"],
+          remote_access: {
+            protocol: "s3",
+            platform: "aws",
+            path: bucket + "/",
+            storage_endpoint: {
+              region
+            },
+            cloud_credentials: {
+              access_key_id: accessKey,
+              secret_access_key: secret
+            }
+          }
+        }
+      ];
+    }
+
+    const {write_token} = await this.EditContentObject({libraryId, objectId});
+
+    const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
+      libraryId,
+      objectId,
+      writeToken: write_token,
+      headers,
+      method: UrlJoin("media", "abr_mezzanine", "prep_start"),
+      constant: false,
+      body: {
+        access: accessParameter,
+        offering_key: offeringKey,
+        job_indexes: [...Array(prepSpecs.length).keys()],
+        production_master_files: masterFileData
+      }
+    });
+
+    return {
+      writeToken: write_token,
+      data,
+      logs: logs || [],
+      warnings: warnings || [],
+      errors: errors || []
+    };
   }
 
   /* Content Object Access */
@@ -2842,6 +3039,7 @@ class ElvClient {
    * @param {string} method - Bitcode method to call
    * @param {Object=} queryParams - Query parameters to include in the request
    * @param {Object=} body - Request body to include, if calling a non-constant method
+   * @param {Object=} headers - Request headers to include
    * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
    * Otherwise, a POST with an UpdateRequest will be performed
    * @param {string=} format=json - The format of the response
@@ -2856,21 +3054,38 @@ class ElvClient {
     method,
     queryParams={},
     body={},
+    headers={},
     constant=true,
     format="json"
   }) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-    const path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
+    let path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
+
+    if(libraryId) {
+      path = UrlJoin("qlibs", libraryId, path);
+    }
+
+    let authHeader = headers.authorization || headers.Authorization;
+    if(!authHeader) {
+      headers.Authorization = (
+        await this.authClient.AuthorizationHeader({
+          libraryId,
+          objectId,
+          update: !constant
+        })
+      ).Authorization;
+    }
 
     return ResponseToFormat(
       format,
       await this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: !constant}),
+        body,
+        headers,
         method: constant ? "GET" : "POST",
         path,
         queryParams,
-        body
+        failover: false
       })
     );
   }
