@@ -40,10 +40,11 @@ function () {
    * these cases, the normal FrameClient timeout period will be ignored, and the response will come
    * only after the user accepts or rejects the request.
    *
+   * Access and modification of user metadata is namespaced to the requesting application when using the
+   * FrameClient. Public user metadata can be accessed using the PublicUserMetadata method.
+   *
    * If the user refuses to give permission, an error will be thrown. Otherwise, the request will proceed
    * as normal.
-   *
-   * For all prompted methods, an extra argument "requestor" is required.
    *
    * <h4>Usage</h4>
    *
@@ -57,9 +58,9 @@ function () {
   privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
   });
   client.SetSigner({signer});
-  await client.userProfileClient.UserMetadata({accountAddress: signer.address})
+  await client.userProfileClient.UserMetadata()
   let frameClient = new FrameClient();
-  await client.userProfileClient.UserMetadata({accountAddress: signer.address})
+  await client.userProfileClient.UserMetadata()
    *
    */
   function UserProfileClient(_ref) {
@@ -142,7 +143,7 @@ function () {
       var _WalletAddress = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee2() {
-        var balance, walletCreationEvent, libraryId, objectId, libraryType, createResponse;
+        var balance, walletCreationEvent, libraryId, objectId, createResponse;
         return regeneratorRuntime.wrap(function _callee2$(_context2) {
           while (1) {
             switch (_context2.prev = _context2.next) {
@@ -213,7 +214,7 @@ function () {
                 });
 
               case 20:
-                _context2.next = 33;
+                _context2.next = 32;
                 break;
 
               case 22:
@@ -221,39 +222,41 @@ function () {
                 _context2.t0 = _context2["catch"](17);
 
                 if (!(_context2.t0.status === 404)) {
-                  _context2.next = 33;
+                  _context2.next = 32;
                   break;
                 }
 
                 _context2.next = 27;
-                return this.client.ContentType({
-                  name: "library"
+                return this.client.CreateContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId
                 });
 
               case 27:
-                libraryType = _context2.sent;
+                createResponse = _context2.sent;
                 _context2.next = 30;
-                return this.client.CreateContentObject({
+                return this.client.ReplaceMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
-                  options: {
-                    type: libraryType ? libraryType.hash : undefined
+                  writeToken: createResponse.write_token,
+                  metadata: {
+                    "bitcode_flags": "abrmaster",
+                    "bitcode_format": "builtin"
                   }
                 });
 
               case 30:
-                createResponse = _context2.sent;
-                _context2.next = 33;
+                _context2.next = 32;
                 return this.client.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: createResponse.write_token
                 });
 
-              case 33:
+              case 32:
                 return _context2.abrupt("return", this.walletAddress);
 
-              case 34:
+              case 33:
               case "end":
                 return _context2.stop();
             }
@@ -345,20 +348,21 @@ function () {
                 return _context3.abrupt("return");
 
               case 6:
+                metadataSubtree = UrlJoin("public", metadataSubtree || "/");
                 libraryId = this.client.contentSpaceLibraryId;
                 objectId = Utils.AddressToObjectId(walletAddress); // If caching not enabled, make direct query to object
 
-                _context3.next = 10;
+                _context3.next = 11;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
                   metadataSubtree: metadataSubtree
                 });
 
-              case 10:
+              case 11:
                 return _context3.abrupt("return", _context3.sent);
 
-              case 11:
+              case 12:
               case "end":
                 return _context3.stop();
             }
@@ -862,7 +866,7 @@ function () {
                 libraryId = this.client.contentSpaceLibraryId;
                 objectId = Utils.AddressToObjectId(walletAddress);
                 _context10.next = 20;
-                return this.client.Rep({
+                return this.client.PublicRep({
                   libraryId: libraryId,
                   objectId: objectId,
                   rep: "image",
@@ -1274,6 +1278,12 @@ function () {
     key: "PromptedMethods",
     value: function PromptedMethods() {
       return FrameClient.PromptedMethods();
+    } // List of methods for accessing user metadata - these should be namespaced when used by an app
+
+  }, {
+    key: "MetadataMethods",
+    value: function MetadataMethods() {
+      return FrameClient.MetadataMethods();
     } // Whitelist of methods allowed to be called using the frame API
 
   }, {

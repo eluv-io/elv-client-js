@@ -18,7 +18,8 @@ const OutputLogger = require("./utils/OutputLogger");
 const {
   RandomBytes,
   RandomString,
-  CreateClient
+  CreateClient,
+  ReturnBalance
 } = require("./utils/Utils");
 
 const testFileSize = 100000;
@@ -30,18 +31,22 @@ let testFile1, testFile2, testFile3, testHash;
 let fileInfo = [];
 let partInfo = {};
 
-// Describe blocks and tests within them are run in order
+// Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
     jest.setTimeout(60000);
 
-    client = OutputLogger(ElvClient, await CreateClient());
-    accessClient = OutputLogger(ElvClient, await CreateClient("1"));
+    client = OutputLogger(ElvClient, await CreateClient("50"));
+    accessClient = OutputLogger(ElvClient, await CreateClient());
 
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
     testFile3 = RandomBytes(testFileSize);
     testHash = RandomString(10);
+  });
+
+  afterAll(async () => {
+    await Promise.all([client, accessClient].map(async client => ReturnBalance(client)));
   });
 
   describe("Initialize From Configuration Url", () => {
@@ -92,7 +97,7 @@ describe("Test ElvClient", () => {
   });
 
   describe("Content Types", () => {
-    test("Create Content Type", async () => {
+    test.only("Create Content Type", async () => {
       // Ensure unique name for later lookup
       typeName = "Test Content Type " + testHash;
 

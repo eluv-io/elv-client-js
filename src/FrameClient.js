@@ -1,4 +1,5 @@
 require("@babel/polyfill");
+
 const Id = require("./Id");
 const Utils = require("./Utils");
 
@@ -59,12 +60,6 @@ class FrameClient {
     // Dynamically defined user profile methods defined in AllowedUserProfileMethods
     for(const methodName of this.AllowedUserProfileMethods()) {
       this.userProfileClient[methodName] = async (args) => {
-        const isPrompted = FrameClient.PromptedMethods().includes(methodName);
-
-        if(isPrompted && (!args || !args.requestor)) {
-          throw new Error("'requestor' param required when calling user profile methods from FrameClient");
-        }
-
         let callback = args && args.callback;
         if(callback) { delete args.callback; }
 
@@ -73,8 +68,7 @@ class FrameClient {
             module: "userProfileClient",
             calledMethod: methodName,
             args: this.utils.MakeClonable(args),
-            prompted: FrameClient.PromptedMethods().includes(methodName),
-            requestor: args.requestor,
+            prompted: FrameClient.PromptedMethods().includes(methodName)
           },
           callback
         });
@@ -130,7 +124,8 @@ class FrameClient {
     // No timeout for prompted methods
     if(!noResponse) {
       const operation = options.calledMethod || options.operation;
-      const timeout = options.prompted ? 0 : this.timeout;
+      const isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
+      const timeout = options.prompted || isFileOperation ? 0 : this.timeout;
       return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
     }
   }
@@ -222,6 +217,25 @@ class FrameClient {
     ];
   }
 
+  static MetadataMethods() {
+    return [
+      "DeleteUserMetadata",
+      "MergeUserMetadata",
+      "ReplaceUserMetadata",
+      "UserMetadata"
+    ];
+  }
+
+  static FileMethods() {
+    return [
+      "DownloadFile",
+      "DownloadPart",
+      "UploadFiles",
+      "UploadPart",
+      "UploadPartChunk"
+    ];
+  }
+
   // List of allowed methods available to frames
   // This should match ElvClient.FrameAvailableMethods()
   // ElvClient will also reject any disallowed methods
@@ -266,7 +280,9 @@ class FrameClient {
       "ContentTypeOwner",
       "ContentTypes",
       "ContractEvents",
+      "ContractName",
       "CopyContentObject",
+      "CreateABRMezzanine",
       "CreateAccessGroup",
       "CreateContentLibrary",
       "CreateContentObject",
@@ -274,6 +290,7 @@ class FrameClient {
       "CreateContentType",
       "CreateFileUploadJob",
       "CreatePart",
+      "CreateProductionMaster",
       "CurrentAccountAddress",
       "CustomContractAddress",
       "DefaultKMSAddress",
@@ -281,13 +298,14 @@ class FrameClient {
       "DeleteContentLibrary",
       "DeleteContentObject",
       "DeleteContentVersion",
+      "DeleteFiles",
       "DeleteMetadata",
       "DeletePart",
       "DeployContract",
       "DownloadFile",
       "DownloadPart",
       "EditContentObject",
-      "EncryptionCap",
+      "Encrypt",
       "Events",
       "ExtractEventFromLogs",
       "ExtractValueFromEvent",
@@ -302,6 +320,7 @@ class FrameClient {
       "LibraryContentTypes",
       "ListFiles",
       "MergeMetadata",
+      "NodeId",
       "Nodes",
       "PlayoutOptions",
       "Proofs",
@@ -316,6 +335,7 @@ class FrameClient {
       "ResetRegion",
       "SendFunds",
       "SetAccessCharge",
+      "SetAuth",
       "SetContentLibraryImage",
       "SetContentObjectImage",
       "SetCustomContentContract",

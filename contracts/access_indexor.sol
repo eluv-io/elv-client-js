@@ -9,12 +9,13 @@ AccessIndexor20190510150600ML: Removes debug events
 AccessIndexor20190528194200ML: Removes contentSpace is field as it is now inherited from Ownable
 AccessIndexor20190605162000ML: Adds cleanUp functions to remove references to dead objects
 AccessIndexor20190722214200ML: Fix false positive for group-based rights when object owner match group owner
+AccessIndexor20190801141000ML: Adds method to provide ACCESS right to the caller object
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20190722214200ML";
+    bytes32 public version = "AccessIndexor20190801141000ML";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
     //event dbUint8(string label, uint8 value);
@@ -224,6 +225,28 @@ contract AccessIndexor is Ownable {
             }
         }
         return false;
+    }
+
+
+    // Provides ACCESS right to the caller object
+    function setAccessRights() public  {
+        address obj = msg.sender;
+        uint8 currentAggregate = contentObjects.rights[obj];
+        uint8[3] memory currentRights;
+        currentRights[0] = currentAggregate % 10;
+        currentRights[1] = currentAggregate % 100 - currentRights[0];
+        currentRights[2] = currentAggregate - currentRights[1] - currentRights[0];
+
+        currentRights[TYPE_ACCESS] = ACCESS_CONFIRMED * ranking[TYPE_ACCESS]; //Set access to confirmed
+
+        uint8 newAggregate = currentRights[0] + currentRights[1] + currentRights[2];
+        contentObjects.rights[obj] = newAggregate;
+
+        //add to array if newly added
+        if ((newAggregate != 0) && (currentAggregate == 0)) {
+            addToList(contentObjects, obj);
+        }
+        emit RightsChanged(address(this), obj, newAggregate);
     }
 
     //event dbAddress(string label, address addr);
