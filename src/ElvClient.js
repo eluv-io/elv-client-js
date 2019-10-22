@@ -2303,10 +2303,11 @@ class ElvClient {
    * @param {string} contentTypeName - Name of the content type to use
    * @param {Object=} metadata - Additional metadata for the content object
    * @param {Object=} fileInfo - (Local) Files to upload to (See UploadFiles method)
-   * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
    * @param {Array<string>} filePaths - (S3) List of files to copy/reference from bucket
    * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
    * @param {function=} callback - Progress callback for file upload (See UploadFiles or UploadFilesFromS3 method)
+   * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
+   * - Format: {region, bucket, accessKey, secret}
    *
    * @throws {Object} error - If the initialization of the master fails, error details can be found in error.body
    * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the master initialization
@@ -2326,7 +2327,7 @@ class ElvClient {
     const contentType = await this.ContentType({name: contentTypeName});
 
     if(!contentType) {
-      throw "Unable to access content type '" + contentTypeName + "' to create production master";
+      throw `Unable to access content type '${contentTypeName}' to create production master`;
     }
 
     const {id, write_token} = await this.CreateContentObject({
@@ -2385,7 +2386,7 @@ class ElvClient {
       libraryId,
       objectId: id,
       writeToken: write_token,
-      method: "/media/production_master/init",
+      method: UrlJoin("media", "production_master", "init"),
       body: {
         access: accessParameter
       },
@@ -2489,7 +2490,7 @@ class ElvClient {
       libraryId,
       objectId: id,
       writeToken: write_token,
-      method: "/media/abr_mezzanine/init",
+      method: UrlJoin("media", "abr_mezzanine", "init"),
       headers,
       body: {
         "offering_key": variant,
@@ -2508,7 +2509,7 @@ class ElvClient {
       metadata: {
         master: {
           name: masterName,
-          id: this.utils.DecodeVersionHash(masterVersionHash),
+          id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
           hash: masterVersionHash,
           variant
         },
@@ -2537,11 +2538,23 @@ class ElvClient {
     };
   }
 
-  async StartABRMezzanineJobs({libraryId, objectId, offeringKey, access={}}) {
+  /**
+   * Start any incomplete jobs on the specified mezzanine
+   *
+   * @param {string} libraryId - ID of the mezzanine library
+   * @param {string} objectId - ID of the mezzanine object
+   * @param {string=} offeringKey=default - The offering to process
+   * @param {Object=} access - (S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references
+   * - Format: {region, bucket, accessKey, secret}
+   *
+   * @return {Promise<{writeToken: Object.write_token, data: format.data, logs: format.logs, warnings: format.warnings, errors: format.errors}>}
+   * @constructor
+   */
+  async StartABRMezzanineJobs({libraryId, objectId, offeringKey="default", access={}}) {
     const mezzanineMetadata = await this.ContentObjectMetadata({
       libraryId,
       objectId,
-      metadataSubtree: "abr_mezzanine/offerings"
+      metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
     });
 
     const masterHash = mezzanineMetadata.default.prod_master_hash;
@@ -2578,8 +2591,6 @@ class ElvClient {
       Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
     };
 
-    const {write_token} = await this.EditContentObject({libraryId, objectId});
-
     let accessParameter;
     if(access && Object.keys(access).length > 0) {
       const {region, bucket, accessKey, secret} = access;
@@ -2602,14 +2613,16 @@ class ElvClient {
       ];
     }
 
+    const {write_token} = await this.EditContentObject({libraryId, objectId});
+
     const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
-      objectId,
       libraryId,
+      objectId,
       writeToken: write_token,
       headers,
-      method: "/media/abr_mezzanine/prep_start",
+      method: UrlJoin("media", "abr_mezzanine", "prep_start"),
       constant: false,
-      body:  {
+      body: {
         access: accessParameter,
         offering_key: offeringKey,
         job_indexes: [...Array(prepSpecs.length).keys()],
@@ -2620,9 +2633,9 @@ class ElvClient {
     return {
       writeToken: write_token,
       data,
-      logs,
-      warnings,
-      errors
+      logs: logs || [],
+      warnings: warnings || [],
+      errors: errors || []
     };
   }
 
@@ -3027,7 +3040,11 @@ class ElvClient {
   }) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-    const path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
+    let path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
+
+    if(libraryId) {
+      path = UrlJoin("qlibs", libraryId, path);
+    }
 
     let authHeader = headers.authorization || headers.Authorization;
     if(!authHeader) {

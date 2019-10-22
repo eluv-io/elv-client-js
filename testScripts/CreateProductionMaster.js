@@ -112,4 +112,4 @@ if(!masterLibraryId || !title || filePaths.length === 0) {
   return;
 }
 
-Create(masterLibraryId, title, false, filePaths);
+Create(masterLibraryId, title, true, filePaths);

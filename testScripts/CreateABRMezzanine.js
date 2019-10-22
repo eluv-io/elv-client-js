@@ -61,6 +61,7 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
       console.warn(warnings.join("\n"), "\n");
     }
 
+    /*
     while(true) {
       const status = await client.ContentObjectMetadata({
         libraryId: mezLibraryId,
@@ -76,6 +77,7 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
 
       await new Promise(resolve => setTimeout(resolve, 10000));
     }
+    */
 
     await client.FinalizeContentObject({
       libraryId: mezLibraryId,
