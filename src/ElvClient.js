@@ -2405,7 +2405,7 @@ class ElvClient {
       {
         libraryId,
         objectId: targetLib.qid,
-        metadataSubtree: UrlJoin("public", "abr_profile")
+        metadataSubtree: "/abr_profile"
       }
     ));
 

@@ -5058,7 +5058,7 @@ function () {
                 return this.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: targetLib.qid,
-                  metadataSubtree: UrlJoin("public", "abr_profile")
+                  metadataSubtree: "/abr_profile"
                 });
 
               case 18:
