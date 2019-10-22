@@ -1207,12 +1207,12 @@ class ElvClient {
    *
    * @returns {Promise<Object>} - Response containing versions of the object
    */
-  async ContentObjectVersions({libraryId, objectId}) {
+  async ContentObjectVersions({libraryId, objectId, noAuth=false}) {
     let path = UrlJoin("qid", objectId);
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, noAuth}),
         method: "GET",
         path: path
       })
@@ -2601,7 +2601,7 @@ class ElvClient {
   async GenerateStateChannelToken({objectId, versionHash, noCache=false}) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-    const audienceData = this.AudienceData({versionHash});
+    const audienceData = this.AudienceData({objectId, versionHash});
 
     return await this.authClient.AuthorizationToken({
       objectId,
@@ -2668,9 +2668,10 @@ class ElvClient {
     return availableDRMs;
   }
 
-  AudienceData({versionHash, protocols=[], drms=[]}) {
+  AudienceData({objectId, versionHash, protocols=[], drms=[]}) {
     let data = {
       user_address: this.utils.FormatAddress(this.signer.address),
+      content_id: objectId || this.utils.DecodeVersionHash(versionHash).id,
       content_hash: versionHash,
       hostname: this.HttpClient.BaseURI().hostname(),
       access_time: Math.round(new Date().getTime()).toString(),
@@ -2689,22 +2690,33 @@ class ElvClient {
   /**
    * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
    *
+   * If only objectId is specified, latest version will be played. To retrieve playout options for
+   * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
+   *
    * @methodGroup Media
    * @namedParams
-   * @param {string} versionHash - Version hash of the content
+   * @param {string=} objectId - Id of the content
+   * @param {string=} versionHash - Version hash of the content
    * @param {Array<string>} protocols - Acceptable playout protocols
    * @param {Array<string>} drms - Acceptable DRM formats
    */
-  async PlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
+  async PlayoutOptions({objectId, versionHash, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
     protocols = protocols.map(p => p.toLowerCase());
     drms = drms.map(d => d.toLowerCase());
 
-    const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    if(!objectId) {
+      objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    }
+
     const libraryId = await this.ContentObjectLibraryId({objectId});
+
+    if(!versionHash) {
+      versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
+    }
 
     let path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
 
-    const audienceData = this.AudienceData({versionHash, protocols, drms});
+    const audienceData = this.AudienceData({objectId, versionHash, protocols, drms});
 
     const playoutOptions = Object.values(
       await ResponseToJson(
@@ -2738,6 +2750,7 @@ class ElvClient {
         playoutMap[protocol] = {
           playoutUrl: await this.Rep({
             libraryId,
+            objectId,
             versionHash,
             rep: UrlJoin("playout", "default", option.uri),
             channelAuth: true,
@@ -2763,15 +2776,22 @@ class ElvClient {
    * Retrieve playout options in BitMovin player format for the specified content that satisfy
    * the given protocol and DRM requirements
    *
+   * If only objectId is specified, latest version will be played. To retrieve playout options for
+   * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
+   *
    * @methodGroup Media
    * @namedParams
+   * @param {string=} objectId - Id of the content
    * @param {string} versionHash - Version hash of the content
    * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
    * @param {Array<string>=} drms=[] - Acceptable DRM formats
    */
-  async BitmovinPlayoutOptions({versionHash, protocols=["dash", "hls"], drms=[]}) {
-    const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-    const playoutOptions = await this.PlayoutOptions({versionHash, protocols, drms, hlsjsProfile: false});
+  async BitmovinPlayoutOptions({objectId, versionHash, protocols=["dash", "hls"], drms=[]}) {
+    if(!objectId) {
+      objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    const playoutOptions = await this.PlayoutOptions({objectId, versionHash, protocols, drms, hlsjsProfile: false});
     let config = {
       drm: {}
     };
