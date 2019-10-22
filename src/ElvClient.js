@@ -2582,10 +2582,10 @@ class ElvClient {
     const masterVersionHashes = [masterHash];
 
     // Retrieve authorization tokens for all masters and the mezzanine
-    let authorizationTokens = await Promise.all(
+    let authorizationTokens = [await this.authClient.AuthorizationToken({libraryId, objectId, update: true})];
+    authorizationTokens = authorizationTokens.concat(await Promise.all(
       masterVersionHashes.map(async versionHash => await this.authClient.AuthorizationToken({versionHash}))
-    );
-    authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId, objectId}));
+    ));
 
     const headers = {
       Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
