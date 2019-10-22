@@ -2260,19 +2260,21 @@ function () {
       var _ContentObjectVersions = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee30(_ref34) {
-        var libraryId, objectId, path;
+        var libraryId, objectId, _ref34$noAuth, noAuth, path;
+
         return regeneratorRuntime.wrap(function _callee30$(_context30) {
           while (1) {
             switch (_context30.prev = _context30.next) {
               case 0:
-                libraryId = _ref34.libraryId, objectId = _ref34.objectId;
+                libraryId = _ref34.libraryId, objectId = _ref34.objectId, _ref34$noAuth = _ref34.noAuth, noAuth = _ref34$noAuth === void 0 ? false : _ref34$noAuth;
                 path = UrlJoin("qid", objectId);
                 _context30.t0 = ResponseToJson;
                 _context30.t1 = this.HttpClient;
                 _context30.next = 6;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
-                  objectId: objectId
+                  objectId: objectId,
+                  noAuth: noAuth
                 });
 
               case 6:
@@ -3148,14 +3150,25 @@ function () {
                   }
                 };
                 ops = filePaths.map(function (path) {
-                  return {
-                    op: copy ? "ingest-copy" : "add-reference",
-                    path: path,
-                    reference: {
-                      type: "key",
-                      path: path
-                    }
-                  };
+                  if (copy) {
+                    return {
+                      op: copy ? "ingest-copy" : "add-reference",
+                      path: path,
+                      ingest: {
+                        type: "key",
+                        path: path
+                      }
+                    };
+                  } else {
+                    return {
+                      op: copy ? "ingest-copy" : "add-reference",
+                      path: path,
+                      reference: {
+                        type: "key",
+                        path: path
+                      }
+                    };
+                  }
                 }); // eslint-disable-next-line no-unused-vars
 
                 _context42.next = 5;
@@ -5442,6 +5455,7 @@ function () {
                 }
 
                 audienceData = this.AudienceData({
+                  objectId: objectId,
                   versionHash: versionHash
                 });
                 _context71.next = 5;
@@ -5609,13 +5623,15 @@ function () {
   }, {
     key: "AudienceData",
     value: function AudienceData(_ref84) {
-      var versionHash = _ref84.versionHash,
+      var objectId = _ref84.objectId,
+          versionHash = _ref84.versionHash,
           _ref84$protocols = _ref84.protocols,
           protocols = _ref84$protocols === void 0 ? [] : _ref84$protocols,
           _ref84$drms = _ref84.drms,
           drms = _ref84$drms === void 0 ? [] : _ref84$drms;
       var data = {
         user_address: this.utils.FormatAddress(this.signer.address),
+        content_id: objectId || this.utils.DecodeVersionHash(versionHash).id,
         content_hash: versionHash,
         hostname: this.HttpClient.BaseURI().hostname(),
         access_time: Math.round(new Date().getTime()).toString(),
@@ -5633,9 +5649,13 @@ function () {
     /**
      * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
      *
+     * If only objectId is specified, latest version will be played. To retrieve playout options for
+     * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
+     *
      * @methodGroup Media
      * @namedParams
-     * @param {string} versionHash - Version hash of the content
+     * @param {string=} objectId - Id of the content
+     * @param {string=} versionHash - Version hash of the content
      * @param {Array<string>} protocols - Acceptable playout protocols
      * @param {Array<string>} drms - Acceptable DRM formats
      */
@@ -5646,20 +5666,24 @@ function () {
       var _PlayoutOptions = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee74(_ref85) {
-        var versionHash, _ref85$protocols, protocols, _ref85$drms, drms, _ref85$hlsjsProfile, hlsjsProfile, objectId, libraryId, path, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
+        var objectId, versionHash, _ref85$protocols, protocols, _ref85$drms, drms, _ref85$hlsjsProfile, hlsjsProfile, libraryId, path, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
 
         return regeneratorRuntime.wrap(function _callee74$(_context74) {
           while (1) {
             switch (_context74.prev = _context74.next) {
               case 0:
-                versionHash = _ref85.versionHash, _ref85$protocols = _ref85.protocols, protocols = _ref85$protocols === void 0 ? ["dash", "hls"] : _ref85$protocols, _ref85$drms = _ref85.drms, drms = _ref85$drms === void 0 ? [] : _ref85$drms, _ref85$hlsjsProfile = _ref85.hlsjsProfile, hlsjsProfile = _ref85$hlsjsProfile === void 0 ? true : _ref85$hlsjsProfile;
+                objectId = _ref85.objectId, versionHash = _ref85.versionHash, _ref85$protocols = _ref85.protocols, protocols = _ref85$protocols === void 0 ? ["dash", "hls"] : _ref85$protocols, _ref85$drms = _ref85.drms, drms = _ref85$drms === void 0 ? [] : _ref85$drms, _ref85$hlsjsProfile = _ref85.hlsjsProfile, hlsjsProfile = _ref85$hlsjsProfile === void 0 ? true : _ref85$hlsjsProfile;
                 protocols = protocols.map(function (p) {
                   return p.toLowerCase();
                 });
                 drms = drms.map(function (d) {
                   return d.toLowerCase();
                 });
-                objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+
+                if (!objectId) {
+                  objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+                }
+
                 _context74.next = 6;
                 return this.ContentObjectLibraryId({
                   objectId: objectId
@@ -5667,8 +5691,26 @@ function () {
 
               case 6:
                 libraryId = _context74.sent;
+
+                if (versionHash) {
+                  _context74.next = 11;
+                  break;
+                }
+
+                _context74.next = 10;
+                return this.ContentObjectVersions({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  noAuth: true
+                });
+
+              case 10:
+                versionHash = _context74.sent.versions[0].hash;
+
+              case 11:
                 path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
                 audienceData = this.AudienceData({
+                  objectId: objectId,
                   versionHash: versionHash,
                   protocols: protocols,
                   drms: drms
@@ -5676,14 +5718,14 @@ function () {
                 _context74.t0 = Object;
                 _context74.t1 = ResponseToJson;
                 _context74.t2 = this.HttpClient;
-                _context74.next = 14;
+                _context74.next = 18;
                 return this.authClient.AuthorizationHeader({
                   objectId: objectId,
                   channelAuth: true,
                   audienceData: audienceData
                 });
 
-              case 14:
+              case 18:
                 _context74.t3 = _context74.sent;
                 _context74.t4 = path;
                 _context74.t5 = {
@@ -5692,18 +5734,18 @@ function () {
                   path: _context74.t4
                 };
                 _context74.t6 = _context74.t2.Request.call(_context74.t2, _context74.t5);
-                _context74.next = 20;
+                _context74.next = 24;
                 return (0, _context74.t1)(_context74.t6);
 
-              case 20:
+              case 24:
                 _context74.t7 = _context74.sent;
                 playoutOptions = _context74.t0.values.call(_context74.t0, _context74.t7);
                 playoutMap = {};
                 i = 0;
 
-              case 24:
+              case 28:
                 if (!(i < playoutOptions.length)) {
-                  _context74.next = 42;
+                  _context74.next = 46;
                   break;
                 }
 
@@ -5716,21 +5758,22 @@ function () {
                 drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
 
                 if (!(!protocolMatch || !drmMatch)) {
-                  _context74.next = 33;
+                  _context74.next = 37;
                   break;
                 }
 
-                return _context74.abrupt("continue", 39);
+                return _context74.abrupt("continue", 43);
 
-              case 33:
+              case 37:
                 if (playoutMap[protocol]) {
-                  _context74.next = 38;
+                  _context74.next = 42;
                   break;
                 }
 
-                _context74.next = 36;
+                _context74.next = 40;
                 return this.Rep({
                   libraryId: libraryId,
+                  objectId: objectId,
                   versionHash: versionHash,
                   rep: UrlJoin("playout", "default", option.uri),
                   channelAuth: true,
@@ -5739,28 +5782,28 @@ function () {
                   } : {}
                 });
 
-              case 36:
+              case 40:
                 _context74.t8 = _context74.sent;
                 playoutMap[protocol] = {
                   playoutUrl: _context74.t8
                 };
 
-              case 38:
+              case 42:
                 if (drm) {
                   playoutMap[protocol].drms = _objectSpread({}, playoutMap[protocol].drms || {}, _defineProperty({}, drm, {
                     licenseServers: licenseServers
                   }));
                 }
 
-              case 39:
+              case 43:
                 i++;
-                _context74.next = 24;
+                _context74.next = 28;
                 break;
 
-              case 42:
+              case 46:
                 return _context74.abrupt("return", playoutMap);
 
-              case 43:
+              case 47:
               case "end":
                 return _context74.stop();
             }
@@ -5778,8 +5821,12 @@ function () {
      * Retrieve playout options in BitMovin player format for the specified content that satisfy
      * the given protocol and DRM requirements
      *
+     * If only objectId is specified, latest version will be played. To retrieve playout options for
+     * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
+     *
      * @methodGroup Media
      * @namedParams
+     * @param {string=} objectId - Id of the content
      * @param {string} versionHash - Version hash of the content
      * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
      * @param {Array<string>=} drms=[] - Acceptable DRM formats
@@ -5793,16 +5840,21 @@ function () {
       regeneratorRuntime.mark(function _callee75(_ref86) {
         var _this5 = this;
 
-        var versionHash, _ref86$protocols, protocols, _ref86$drms, drms, objectId, playoutOptions, config;
+        var objectId, versionHash, _ref86$protocols, protocols, _ref86$drms, drms, playoutOptions, config;
 
         return regeneratorRuntime.wrap(function _callee75$(_context75) {
           while (1) {
             switch (_context75.prev = _context75.next) {
               case 0:
-                versionHash = _ref86.versionHash, _ref86$protocols = _ref86.protocols, protocols = _ref86$protocols === void 0 ? ["dash", "hls"] : _ref86$protocols, _ref86$drms = _ref86.drms, drms = _ref86$drms === void 0 ? [] : _ref86$drms;
-                objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+                objectId = _ref86.objectId, versionHash = _ref86.versionHash, _ref86$protocols = _ref86.protocols, protocols = _ref86$protocols === void 0 ? ["dash", "hls"] : _ref86$protocols, _ref86$drms = _ref86.drms, drms = _ref86$drms === void 0 ? [] : _ref86$drms;
+
+                if (!objectId) {
+                  objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+                }
+
                 _context75.next = 4;
                 return this.PlayoutOptions({
+                  objectId: objectId,
                   versionHash: versionHash,
                   protocols: protocols,
                   drms: drms,
@@ -5879,6 +5931,7 @@ function () {
      * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
      * @param {string} method - Bitcode method to call
      * @param {Object=} queryParams - Query parameters to include in the request
+     * @param {Object=} body - Request body to include, if calling a non-constant method
      * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
      * Otherwise, a POST with an UpdateRequest will be performed
      * @param {string=} format=json - The format of the response
@@ -5892,13 +5945,13 @@ function () {
       var _CallBitcodeMethod = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee76(_ref87) {
-        var libraryId, objectId, versionHash, writeToken, method, _ref87$queryParams, queryParams, _ref87$constant, constant, _ref87$format, format, path;
+        var libraryId, objectId, versionHash, writeToken, method, _ref87$queryParams, queryParams, _ref87$body, body, _ref87$constant, constant, _ref87$format, format, path;
 
         return regeneratorRuntime.wrap(function _callee76$(_context76) {
           while (1) {
             switch (_context76.prev = _context76.next) {
               case 0:
-                libraryId = _ref87.libraryId, objectId = _ref87.objectId, versionHash = _ref87.versionHash, writeToken = _ref87.writeToken, method = _ref87.method, _ref87$queryParams = _ref87.queryParams, queryParams = _ref87$queryParams === void 0 ? {} : _ref87$queryParams, _ref87$constant = _ref87.constant, constant = _ref87$constant === void 0 ? true : _ref87$constant, _ref87$format = _ref87.format, format = _ref87$format === void 0 ? "json" : _ref87$format;
+                libraryId = _ref87.libraryId, objectId = _ref87.objectId, versionHash = _ref87.versionHash, writeToken = _ref87.writeToken, method = _ref87.method, _ref87$queryParams = _ref87.queryParams, queryParams = _ref87$queryParams === void 0 ? {} : _ref87$queryParams, _ref87$body = _ref87.body, body = _ref87$body === void 0 ? {} : _ref87$body, _ref87$constant = _ref87.constant, constant = _ref87$constant === void 0 ? true : _ref87$constant, _ref87$format = _ref87.format, format = _ref87$format === void 0 ? "json" : _ref87$format;
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -5920,20 +5973,22 @@ function () {
                 _context76.t4 = constant ? "GET" : "POST";
                 _context76.t5 = path;
                 _context76.t6 = queryParams;
-                _context76.t7 = {
+                _context76.t7 = body;
+                _context76.t8 = {
                   headers: _context76.t3,
                   method: _context76.t4,
                   path: _context76.t5,
-                  queryParams: _context76.t6
+                  queryParams: _context76.t6,
+                  body: _context76.t7
                 };
-                _context76.next = 15;
-                return _context76.t2.Request.call(_context76.t2, _context76.t7);
+                _context76.next = 16;
+                return _context76.t2.Request.call(_context76.t2, _context76.t8);
 
-              case 15:
-                _context76.t8 = _context76.sent;
-                return _context76.abrupt("return", (0, _context76.t0)(_context76.t1, _context76.t8));
+              case 16:
+                _context76.t9 = _context76.sent;
+                return _context76.abrupt("return", (0, _context76.t0)(_context76.t1, _context76.t9));
 
-              case 17:
+              case 18:
               case "end":
                 return _context76.stop();
             }
