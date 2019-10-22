@@ -9,9 +9,18 @@ const BuildContracts = () => {
     .filter(filename => filename.endsWith(".sol") && filename !== "Migrations.sol");
 
   let sources = {};
-  for (const contractFilename of contractFiles) {
+  for(const contractFilename of contractFiles) {
     sources[contractFilename] = fs.readFileSync(path.join(__dirname, "..", "contracts", contractFilename)).toString();
   }
+
+  const interfaceContracts = [
+    "access_indexor",
+    "accessible",
+    "container",
+    "editable",
+    "ownable",
+    "transactable"
+  ];
 
   const compilationResult = solc.compile({ sources }, 1);
   let topicMap = {};
@@ -32,9 +41,14 @@ const BuildContracts = () => {
     events.forEach(event => {
       const signature = `${event.name}(${event.inputs.map(input => input.type).join(",")})`;
       const signatureHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(signature));
-      if(!topicMap[signatureHash] || contractName.startsWith("Base")) {
-        // Base contracts take priority of there are methods with identical signatures
-        topicMap[signatureHash] = {abi: [event], contract: contractName};
+
+      if(!interfaceContracts.includes(contractName.toLowerCase())) {
+        if(topicMap[signatureHash]) {
+          topicMap[signatureHash].ambiguous = true;
+          delete topicMap[signatureHash].contract;
+        } else {
+          topicMap[signatureHash] = {abi: [event], contract: contractName};
+        }
       }
     });
   }));

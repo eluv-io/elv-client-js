@@ -153,43 +153,32 @@ function () {
           var _ref3 = _asyncToGenerator(
           /*#__PURE__*/
           regeneratorRuntime.mark(function _callee2(args) {
-            var isPrompted, callback;
+            var callback;
             return regeneratorRuntime.wrap(function _callee2$(_context2) {
               while (1) {
                 switch (_context2.prev = _context2.next) {
                   case 0:
-                    isPrompted = FrameClient.PromptedMethods().includes(methodName);
-
-                    if (!(isPrompted && (!args || !args.requestor))) {
-                      _context2.next = 3;
-                      break;
-                    }
-
-                    throw new Error("'requestor' param required when calling user profile methods from FrameClient");
-
-                  case 3:
                     callback = args && args.callback;
 
                     if (callback) {
                       delete args.callback;
                     }
 
-                    _context2.next = 7;
+                    _context2.next = 4;
                     return _this.SendMessage({
                       options: {
                         module: "userProfileClient",
                         calledMethod: methodName,
                         args: _this.utils.MakeClonable(args),
-                        prompted: FrameClient.PromptedMethods().includes(methodName),
-                        requestor: args.requestor
+                        prompted: FrameClient.PromptedMethods().includes(methodName)
                       },
                       callback: callback
                     });
 
-                  case 7:
+                  case 4:
                     return _context2.abrupt("return", _context2.sent);
 
-                  case 8:
+                  case 5:
                   case "end":
                     return _context2.stop();
                 }
@@ -298,7 +287,7 @@ function () {
       var _SendMessage = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee4(_ref5) {
-        var _ref5$options, options, callback, _ref5$noResponse, noResponse, requestId, callbackId, operation, timeout;
+        var _ref5$options, options, callback, _ref5$noResponse, noResponse, requestId, callbackId, operation, isFileOperation, timeout;
 
         return regeneratorRuntime.wrap(function _callee4$(_context4) {
           while (1) {
@@ -318,19 +307,20 @@ function () {
                 }), "*"); // No timeout for prompted methods
 
                 if (noResponse) {
-                  _context4.next = 10;
+                  _context4.next = 11;
                   break;
                 }
 
                 operation = options.calledMethod || options.operation;
-                timeout = options.prompted ? 0 : this.timeout;
-                _context4.next = 9;
+                isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
+                timeout = options.prompted || isFileOperation ? 0 : this.timeout;
+                _context4.next = 10;
                 return this.AwaitMessage(requestId, timeout, callback, callbackId, operation);
 
-              case 9:
+              case 10:
                 return _context4.abrupt("return", _context4.sent);
 
-              case 10:
+              case 11:
               case "end":
                 return _context4.stop();
             }
@@ -494,7 +484,7 @@ function () {
      * @returns {Array<string>} - List of ElvClient methods available to a FrameClient
      */
     value: function AllowedMethods() {
-      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddLibraryContentType", "AvailableDRMs", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "Configuration", "ContentLibraries", "ContentLibrary", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "CopyContentObject", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentSpace", "CreateContentType", "CreateFileUploadJob", "CreatePart", "CurrentAccountAddress", "CustomContractAddress", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteMetadata", "DeletePart", "DeployContract", "DownloadFile", "DownloadPart", "EditContentObject", "EncryptionCap", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeContentObject", "FinalizePart", "FinalizeUploadJobs", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LibraryContentTypes", "ListFiles", "MergeMetadata", "Nodes", "PlayoutOptions", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "ResetRegion", "SendFunds", "SetAccessCharge", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "UploadFileData", "UploadFiles", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UseRegion", "VerifyContentObject", "WithdrawContractFunds"];
+      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddLibraryContentType", "AvailableDRMs", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "Configuration", "ContentLibraries", "ContentLibrary", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "ContractName", "CopyContentObject", "CreateABRMezzanine", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentSpace", "CreateContentType", "CreateFileUploadJob", "CreatePart", "CreateProductionMaster", "CurrentAccountAddress", "CustomContractAddress", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeletePart", "DeployContract", "DownloadFile", "DownloadPart", "EditContentObject", "Encrypt", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeContentObject", "FinalizePart", "FinalizeUploadJobs", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LibraryContentTypes", "ListFiles", "MergeMetadata", "NodeId", "Nodes", "PlayoutOptions", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "UploadFileData", "UploadFiles", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UseRegion", "VerifyContentObject", "WithdrawContractFunds"];
     }
   }, {
     key: "AllowedUserProfileMethods",
@@ -505,6 +495,16 @@ function () {
     key: "PromptedMethods",
     value: function PromptedMethods() {
       return ["CollectedTags", "DeleteUserMetadata", "MergeUserMetadata", "ReplaceUserMetadata", "UserMetadata"];
+    }
+  }, {
+    key: "MetadataMethods",
+    value: function MetadataMethods() {
+      return ["DeleteUserMetadata", "MergeUserMetadata", "ReplaceUserMetadata", "UserMetadata"];
+    }
+  }, {
+    key: "FileMethods",
+    value: function FileMethods() {
+      return ["DownloadFile", "DownloadPart", "UploadFiles", "UploadPart", "UploadPartChunk"];
     }
   }]);
 

@@ -1,7 +1,8 @@
+require("elv-components-js/src/utils/LimitedMap");
+
 // NOTE: Querying Ethereum requires CORS enabled
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
 const Ethers = require("ethers");
-const URI = require("urijs");
 
 // -- Contract javascript files built using build/BuildContracts.js
 const FactoryContract = require("./contracts/BaseFactory");
@@ -24,6 +25,9 @@ class EthClient {
     this.locked = false;
 
     this.cachedContracts = {};
+    this.contractNames = {};
+
+    Ethers.errors.setLogLevel("error");
   }
 
   Provider() {
@@ -32,6 +36,34 @@ class EthClient {
     }
 
     return this.provider;
+  }
+
+  async ContractName(contractAddress) {
+    const versionContract = new Ethers.Contract(contractAddress, ContentSpaceContract.abi, this.Provider());
+
+    if(!this.contractNames[contractAddress]) {
+      try {
+        // Call using general "ownable" abi
+        const versionBytes32 = await this.CallContractMethod({
+          contract: versionContract,
+          abi: ContentSpaceContract.abi,
+          methodName: "version",
+          cacheContract: false
+        });
+
+        const version =
+          Ethers.utils.parseBytes32String(
+            // Ensure bytes32 string is null terminated
+            versionBytes32.slice(0, -2) + "00"
+          );
+
+        this.contractNames[contractAddress] = version.split(/\d+/)[0];
+      } catch(error) {
+        this.contractNames[contractAddress] = "Unknown";
+      }
+    }
+
+    return this.contractNames[contractAddress];
   }
 
   Contract({contractAddress, abi, signer, cacheContract}) {
@@ -64,6 +96,8 @@ class EthClient {
         this.ethereumURIIndex = (this.ethereumURIIndex + 1) % this.ethereumURIs.length;
         return this.MakeProviderCall({methodName, args, attempts: attempts + 1});
       }
+
+      return {};
     }
   }
 
@@ -105,16 +139,9 @@ class EthClient {
     return args.map((arg, i) => this.FormatContractArgument({type: method.inputs[i].type, value: arg}));
   }
 
-  // Validate signer is set and provider is correct
+  // Validate signer is set
   ValidateSigner(signer) {
-    if(!signer) {
-      throw Error("Signer not set");
-    }
-
-    if(!this.ethereumURIs.find(ethereumURI => URI(signer.provider.connection.url).equals(ethereumURI))) {
-      throw Error("Signer provider '" + signer.provider.connection.url +
-        "' does not match client provider");
-    }
+    if(!signer) { throw Error("Signer not set"); }
   }
 
   async DeployContract({
@@ -175,8 +202,6 @@ class EthClient {
         // Convert Ether to Wei
         overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
       }
-
-      this.ValidateSigner(signer);
 
       if(contract.functions[methodName] === undefined) {
         throw Error("Unknown method: " + methodName);
@@ -256,6 +281,17 @@ class EthClient {
     }
 
     return methodEvent;
+  }
+
+  async AwaitEvent({contractAddress, abi, eventName, signer}) {
+    const contract = this.Contract({contractAddress, abi, signer});
+
+    return await new Promise(resolve => {
+      contract.on(eventName, (_, __, event) => {
+        contract.removeAllListeners(eventName);
+        resolve(event);
+      });
+    });
   }
 
   ExtractEventFromLogs({abi, event, eventName}) {
@@ -386,17 +422,15 @@ class EthClient {
   }
 
   async CommitContent({contentObjectAddress, versionHash, signer}) {
-    const event = await this.CallContractMethodAndWait({
+    return await this.CallContractMethodAndWait({
       contractAddress: contentObjectAddress,
       abi: ContentContract.abi,
       methodName: "commit",
       methodArgs: [versionHash],
-      eventName: "Publish",
-      eventValue: "submitStatus",
+      eventName: "CommitPending",
+      eventValue: "pendingHash",
       signer
     });
-
-    return event;
   }
 
   async EngageAccountLibrary({contentSpaceAddress, signer}) {
@@ -432,8 +466,9 @@ class EthClient {
     });
 
     let blocks = {};
-    await Promise.all(
-      contractLogs.map(async log => {
+    await contractLogs.limitedMap(
+      5,
+      async log => {
         const eventInterface = new Ethers.utils.Interface(abi);
         let parsedLog = {
           ...log,
@@ -448,7 +483,7 @@ class EthClient {
         }
 
         blocks[log.blockNumber] = [parsedLog].concat((blocks[log.blockNumber] || []));
-      })
+      }
     );
 
     return Object.values(blocks).sort((a, b) => a[0].blockNumber < b[0].blockNumber ? 1 : -1);
@@ -477,7 +512,19 @@ class EthClient {
   // Get logs for all blocks in the specified range
   // Returns a list, sorted in descending block order, with each entry containing all logs or transactions in that block
   async Events({toBlock, fromBlock, includeTransaction=false}) {
-    const logs = await this.MakeProviderCall({methodName: "getLogs", args: [{fromBlock, toBlock}]});
+    // Pull logs in batches of 100
+    let logs = [];
+    for(let i = fromBlock; i < toBlock; i += 101) {
+      const newLogs = await this.MakeProviderCall({
+        methodName: "getLogs",
+        args: [{
+          fromBlock: i,
+          toBlock: Math.min(toBlock, i + 100)
+        }]
+      });
+
+      logs = logs.concat(newLogs || []);
+    }
 
     // Group logs by blocknumber
     let blocks = {};
@@ -485,46 +532,49 @@ class EthClient {
       blocks[log.blockNumber] = [this.ParseUnknownLog({log})].concat((blocks[log.blockNumber] || []));
     });
 
-    // Iterate through each block, filling in any missing blocks
     let output = [];
-    for(let blockNumber = toBlock; blockNumber >= fromBlock; blockNumber--) {
-      let blockInfo = blocks[blockNumber];
+    await [...Array(toBlock - fromBlock + 1).keys()].limitedMap(
+      3,
+      async i => {
+        const blockNumber = toBlock - i;
+        let blockInfo = blocks[blockNumber];
 
-      if(!blockInfo) {
-        blockInfo = await this.MakeProviderCall({methodName: "getBlock", args: [blockNumber]});
-        blockInfo = blockInfo.transactions.map(transactionHash => {
-          return {
-            blockNumber: blockInfo.number,
-            blockHash: blockInfo.hash,
-            ...blockInfo,
-            transactionHash
-          };
-        });
-
-        blocks[blockNumber] = blockInfo;
-      }
-
-      if(includeTransaction) {
-        let transactionInfo = {};
-
-        blocks[blockNumber] = await Promise.all(
-          blockInfo.map(async block => {
-            if(!transactionInfo[block.transactionHash]) {
-              transactionInfo[block.transactionHash] = {
-                ...(await this.MakeProviderCall({methodName: "getTransaction", args: [block.transactionHash]})),
-                ...(await this.MakeProviderCall({methodName: "getTransactionReceipt", args: [block.transactionHash]})),
-              };
-            }
+        if(!blockInfo) {
+          blockInfo = await this.MakeProviderCall({methodName: "getBlock", args: [blockNumber]});
+          blockInfo = blockInfo.transactions.map(transactionHash => {
             return {
-              ...block,
-              ...transactionInfo[block.transactionHash]
+              blockNumber: blockInfo.number,
+              blockHash: blockInfo.hash,
+              ...blockInfo,
+              transactionHash
             };
-          })
-        );
-      }
+          });
 
-      output.push(blocks[blockNumber]);
-    }
+          blocks[blockNumber] = blockInfo;
+        }
+
+        if(includeTransaction) {
+          let transactionInfo = {};
+
+          blocks[blockNumber] = await Promise.all(
+            blockInfo.map(async block => {
+              if(!transactionInfo[block.transactionHash]) {
+                transactionInfo[block.transactionHash] = {
+                  ...(await this.MakeProviderCall({methodName: "getTransaction", args: [block.transactionHash]})),
+                  ...(await this.MakeProviderCall({methodName: "getTransactionReceipt", args: [block.transactionHash]})),
+                };
+              }
+              return {
+                ...block,
+                ...transactionInfo[block.transactionHash]
+              };
+            })
+          );
+        }
+
+        output.push(blocks[blockNumber]);
+      }
+    );
 
     return output;
   }

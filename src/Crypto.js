@@ -45,20 +45,20 @@ const Crypto = {
     }
   },
 
-  async EncryptCap(cap, publicKey) {
+  async EncryptConk(conk, publicKey) {
     const elvCrypto = await Crypto.ElvCrypto();
     publicKey = new Uint8Array(Buffer.from(publicKey.replace("0x", ""), "hex"));
-    cap = new Uint8Array(Buffer.from(JSON.stringify(cap)));
+    conk = new Uint8Array(Buffer.from(JSON.stringify(conk)));
 
-    const {data, ephemeralKey, tag} = await elvCrypto.encryptECIES(cap, publicKey);
+    const {data, ephemeralKey, tag} = await elvCrypto.encryptECIES(conk, publicKey);
 
-    const encryptedCap = Buffer.concat([
+    const cap = Buffer.concat([
       Buffer.from(ephemeralKey),
       Buffer.from(tag),
       Buffer.from(data)
     ]);
 
-    return Utils.B64(encryptedCap);
+    return Utils.B64(cap);
   },
 
   async DecryptCap(encryptedCap, privateKey) {
@@ -80,7 +80,7 @@ const Crypto = {
     return JSON.parse(Buffer.from(cap).toString());
   },
 
-  async GeneratePrimaryCap() {
+  async GeneratePrimaryConk() {
     const elvCrypto = await Crypto.ElvCrypto();
 
     const {secretKey, publicKey} = elvCrypto.generatePrimaryKeys();
@@ -93,7 +93,7 @@ const Crypto = {
     };
   },
 
-  async GenerateTargetCap() {
+  async GenerateTargetConk() {
     const elvCrypto = await Crypto.ElvCrypto();
 
     const {secretKey, publicKey} = elvCrypto.generateTargetKeys();
@@ -104,8 +104,8 @@ const Crypto = {
     };
   },
 
-  CapToKeys(cap) {
-    const keyToBytes = (key) => new Uint8Array(bs58.decode(key.slice(4)));
+  CapToConk(cap) {
+    const keyToBytes = key => new Uint8Array(bs58.decode(key.slice(4)));
 
     return {
       symmetricKey: keyToBytes(cap.symm_key),
@@ -117,7 +117,7 @@ const Crypto = {
   async EncryptionContext(cap) {
     const elvCrypto = await Crypto.ElvCrypto();
 
-    const {symmetricKey, secretKey, publicKey} = Crypto.CapToKeys(cap);
+    const {symmetricKey, secretKey, publicKey} = Crypto.CapToConk(cap);
 
     let context, type;
     if(publicKey.length === elvCrypto.PRIMARY_PK_KEY_SIZE) {

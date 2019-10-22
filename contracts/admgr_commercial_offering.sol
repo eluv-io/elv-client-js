@@ -15,11 +15,12 @@ import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 AdmgrCommOfferng20190228164900ML: First versioned released
 AdmgrCommOfferng20190301124200ML: Adds stub for runAccessInfo to replace runAccessCharge
 AdmgrCommOfferng20190510152300ML: updated for new runAccessInfo API
+AdmgrCommOfferng20190801141200ML: Modifies access information so that access is granted by avails for requesting user
 */
 
 contract AdmgrCommercialOffering is Content {
 
-    bytes32 public version ="AdmgrCommOfferng20190510152300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="AdmgrCommOfferng20190801141200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public commercialOfferingManagerAddress;
     address public campaignManager;
@@ -123,7 +124,7 @@ contract AdmgrCommercialOffering is Content {
         if (mandatoryPresetAccessCharge == true) {
             return (DEFAULT_ACCESS, availCode, 0, presetAccessCharge);
         }
-        return (DEFAULT_SEE + DEFAULT_ACCESS + DEFAULT_CHARGE, 0, 0, 0);
+        return (DEFAULT_SEE + DEFAULT_CHARGE, 0, 0, 0); //access is granted by avails for requesting user
     }
 
     /*

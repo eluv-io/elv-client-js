@@ -8,7 +8,6 @@ const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
 const TypeContract = require("./contracts/BaseContentType");
 const ContentContract = require("./contracts/BaseContent");
-const OwnableContract = require("./contracts/Ownable");
 const AccessibleContract = require("./contracts/Accessible");
 const EditableContract = require("./contracts/Editable");
 
@@ -50,7 +49,6 @@ class AuthorizationClient {
     this.channelContentTokens = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
-    this.accessTypes = {};
   }
 
   // Return authorization token in appropriate headers
@@ -73,6 +71,7 @@ class AuthorizationClient {
     versionHash,
     partHash,
     encryption,
+    audienceData,
     update=false,
     channelAuth=false,
     noCache=false,
@@ -88,7 +87,7 @@ class AuthorizationClient {
 
       let authorizationToken;
       if(channelAuth) {
-        authorizationToken = await this.GenerateChannelContentToken({objectId});
+        authorizationToken = await this.GenerateChannelContentToken({objectId, audienceData});
       } else {
         authorizationToken = await this.GenerateAuthorizationToken({
           libraryId,
@@ -109,12 +108,12 @@ class AuthorizationClient {
     }
   }
 
-  async GenerateChannelContentToken({objectId, value=0}) {
+  async GenerateChannelContentToken({objectId, audienceData, value=0}) {
     if(!this.noCache && this.channelContentTokens[objectId]) {
       return this.channelContentTokens[objectId];
     }
 
-    const nonce = (Date.now() + Id.next());
+    const nonce = Date.now() + Id.next();
 
     const paramTypes = [
       "address",
@@ -133,9 +132,15 @@ class AuthorizationClient {
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
     params[4] = await this.Sign(packedHash);
 
+    let stateChannelApi = "elv_channelContentRequest";
+    if(audienceData) {
+      stateChannelApi = "elv_channelContentRequestContext";
+      params[5] = JSON.stringify(audienceData);
+    }
+
     const stateChannelUri = await this.KMSUrl({objectId});
     const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-    const payload = await stateChannelProvider.send("elv_channelContentRequest", params);
+    const payload = await stateChannelProvider.send(stateChannelApi, params);
 
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
     const multiSig = Utils.FormatSignature(signature);
@@ -157,17 +162,17 @@ class AuthorizationClient {
     if(encryption && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
       if(!Utils.EqualAddress(owner, this.client.signer.address)) {
-        const cap = await this.ReEncryptionCap({libraryId, objectId});
+        const cap = await this.ReEncryptionConk({libraryId, objectId});
         publicKey = cap.public_key;
       }
     }
 
     let token = {
       qspace_id: this.contentSpaceId,
-      addr: ((this.client.signer && this.client.signer.address) || "").replace("0x", "")
+      addr: Utils.FormatAddress(((this.client.signer && this.client.signer.address) || ""))
     };
 
-    if(!noAuth) {
+    if(!(this.noAuth || noAuth)) {
       const { transactionHash } =  await this.MakeAccessRequest({
         libraryId,
         objectId,
@@ -234,51 +239,16 @@ class AuthorizationClient {
 
     const id = objectId || libraryId || this.contentSpaceId;
     const accessType = await this.AccessType(id);
-    const cacheCollection = update ? this.modifyTransactions : this.accessTransactions;
 
-    let abi, cache;
-    let checkAccessCharge = false;
+    const {abi, cache, accessArgs, checkAccessCharge} = this.AccessInfo({accessType, publicKey, update, args});
 
-    switch(accessType) {
-      case ACCESS_TYPES.SPACE:
-        abi = SpaceContract.abi;
-        cache = cacheCollection.spaces;
-        break;
-      case ACCESS_TYPES.LIBRARY:
-        abi = LibraryContract.abi;
-        cache = cacheCollection.libraries;
-        break;
-      case ACCESS_TYPES.TYPE:
-        abi = TypeContract.abi;
-        cache = cacheCollection.types;
-        break;
-      case ACCESS_TYPES.OBJECT:
-        abi = ContentContract.abi;
-        cache = publicKey ? cacheCollection.encryptedObjects : cacheCollection.objects;
-        checkAccessCharge = true;
-
-        if(args && args.length > 0) {
-          // Inject public key of requester
-          args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
-        } else {
-          // Set default args
-          args = [
-            0, // Access level
-            this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-            publicKey, //cap.public_key,
-            [], // Custom values
-            [] // Stakeholders
-          ];
-        }
-        break;
-      default:
-        abi = update ? EditableContract.abi : AccessibleContract.abi;
-        cache = cacheCollection.other;
-    }
+    const address = Utils.HashToAddress(id);
 
     // Check cache for existing transaction
     if(!noCache && !skipCache) {
-      if(cache[id]) { return { transactionHash: cache[id] }; }
+      let cacheHit = update ? cache.modify[address] : cache.access[address];
+
+      if(cacheHit) { return { transactionHash: cacheHit }; }
     }
 
     // If only checking the cache, don't continue to make access request
@@ -289,17 +259,17 @@ class AuthorizationClient {
     if(update) {
       accessRequest = await this.UpdateRequest({id, abi});
     } else {
-      accessRequest = await this.AccessRequest({id, abi, args, checkAccessCharge});
+      accessRequest = await this.AccessRequest({id, abi, args: accessArgs, checkAccessCharge});
     }
 
     // Cache the transaction hash
     if(!noCache) {
-      cache[id] = accessRequest.transactionHash;
+      this.CacheTransaction({accessType, address, publicKey, update, transactionHash: accessRequest.transactionHash});
 
       // Save request ID if present
       accessRequest.logs.some(log => {
         if(log.values && log.values.requestID) {
-          this.requestIds[id] = log.values.requestID;
+          this.requestIds[address] = log.values.requestID;
           return true;
         }
       });
@@ -356,70 +326,141 @@ class AuthorizationClient {
     });
   }
 
-  // Determine type of ID based on contract version string
-  async AccessType(id) {
-    if(this.accessTypes[id]) { return this.accessTypes[id]; }
+  CacheTransaction({accessType, address, publicKey, update, transactionHash}) {
+    let cache = update ? this.modifyTransactions : this.accessTransactions;
 
-    let accessType;
+    switch(accessType) {
+      case ACCESS_TYPES.SPACE:
+        cache = cache.spaces;
+        break;
 
-    try {
-      // Call using general "ownable" abi
-      // Ensure contract is not cached with this abi
-      const version =
-        Ethers.utils.parseBytes32String(
-          await this.client.CallContractMethod({
-            contractAddress: Utils.HashToAddress(id),
-            abi: OwnableContract.abi,
-            methodName: "version",
-            cacheContract: false
-          })
-        );
+      case ACCESS_TYPES.LIBRARY:
+        cache = cache.libraries;
+        break;
 
-      if(version.match(/BaseContentSpace\d+.*/)) {
-        // BaseContentSpace20190612120000PO
-        accessType = ACCESS_TYPES.SPACE;
-      } else if(version.match(/BaseLibrary\d+.*/)) {
-        // BaseLibrary20190605150200ML
-        accessType = ACCESS_TYPES.LIBRARY;
-      } else if(version.match(/BaseContentType\d+.*/)) {
-        // BaseContentType20190605150100ML
-        accessType = ACCESS_TYPES.TYPE;
-      } else if(version.match(/BsAccessWallet\d+.*/)) {
-        // BaseContent20190611120000PO
-        accessType = ACCESS_TYPES.WALLET;
-      } else if(version.match(/BsAccessCtrlGrp\d+.*/)) {
-        // BaseContent20190611120000PO
-        accessType = ACCESS_TYPES.GROUP;
-      } else if(version.match(/BaseContent\d+.*/)) {
-        // BaseContent20190611120000PO
-        accessType = ACCESS_TYPES.OBJECT;
-      } else {
-        accessType = ACCESS_TYPES.OTHER;
-      }
-    } catch(error) {
-      accessType = ACCESS_TYPES.OTHER;
+      case ACCESS_TYPES.TYPE:
+        cache = cache.types;
+        break;
+
+      case ACCESS_TYPES.OBJECT:
+        cache = publicKey ? cache.encryptedObjects : cache.objects;
+        break;
+      default:
+        cache = cache.other;
     }
 
-    this.accessTypes[id] = accessType;
+    cache[address] = transactionHash;
+  }
 
-    return accessType;
+  AccessInfo({accessType, publicKey, update=false, args}) {
+    let abi, cache, checkAccessCharge;
+
+    switch(accessType) {
+      case ACCESS_TYPES.SPACE:
+        abi = SpaceContract.abi;
+        cache = {
+          access: this.accessTransactions.spaces,
+          modify: this.modifyTransactions.spaces,
+        };
+        break;
+
+      case ACCESS_TYPES.LIBRARY:
+        abi = LibraryContract.abi;
+        cache = {
+          access: this.accessTransactions.libraries,
+          modify: this.modifyTransactions.libraries,
+        };
+        break;
+
+      case ACCESS_TYPES.TYPE:
+        abi = TypeContract.abi;
+        cache = {
+          access: this.accessTransactions.types,
+          modify: this.modifyTransactions.types
+        };
+        break;
+
+      case ACCESS_TYPES.OBJECT:
+        abi = ContentContract.abi;
+        cache = publicKey ?
+          {
+            access: this.accessTransactions.encryptedObjects,
+            modify: this.modifyTransactions.encryptedObjects
+          } :
+          {
+            access: this.accessTransactions.objects,
+            modify: this.modifyTransactions.objects
+          };
+        checkAccessCharge = true;
+
+        if(args && args.length > 0) {
+          // Inject public key of requester
+          args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
+        } else {
+          // Set default args
+          args = [
+            0, // Access level
+            this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+            publicKey, //cap.public_key,
+            [], // Custom values
+            [] // Stakeholders
+          ];
+        }
+        break;
+      default:
+        abi = update ? EditableContract.abi : AccessibleContract.abi;
+        cache = {
+          access: this.accessTransactions.other,
+          modify: this.modifyTransactions.other
+        };
+    }
+
+    return {
+      abi,
+      cache,
+      accessArgs: args,
+      checkAccessCharge
+    };
+  }
+
+  // Determine type of ID based on contract version string
+  async AccessType(id) {
+    const contractName = await this.client.ethClient.ContractName(Utils.HashToAddress(id));
+
+    switch(contractName) {
+      case "BaseContentSpace":
+        return ACCESS_TYPES.SPACE;
+      case "BaseLibrary":
+        return ACCESS_TYPES.LIBRARY;
+      case "BaseContentType":
+        return ACCESS_TYPES.TYPE;
+      case "BsAccessWallet":
+        return ACCESS_TYPES.WALLET;
+      case "BsAccessCtrlGrp":
+        return ACCESS_TYPES.GROUP;
+      case "BaseContent":
+        return ACCESS_TYPES.OBJECT;
+      default:
+        return ACCESS_TYPES.OTHER;
+    }
   }
 
   async AccessComplete({id, abi, score}) {
-    const requestId = this.requestIds[id];
+    const address = Utils.HashToAddress(id);
+    const requestId = this.requestIds[address];
 
     if(!requestId) { throw Error("Unknown request ID for " + id); }
 
     // If access request did not succeed, no event will be emitted
     const event = await this.client.CallContractMethodAndWait({
-      contractAddress: Utils.HashToAddress(id),
+      contractAddress: address,
       abi,
       methodName: "accessComplete",
       methodArgs: [requestId, score, ""]
     });
 
-    delete this.requestIds[id];
-    delete this.accessTransactions.objects[id];
+    delete this.requestIds[address];
+    delete this.accessTransactions.objects[address];
 
     return event;
   }
@@ -520,13 +561,13 @@ class AuthorizationClient {
     return await stateChannelProvider.send("elv_getSymmetricKey", args);
   }
 
-  async ReEncryptionCap({libraryId, objectId, versionHash}) {
+  async ReEncryptionConk({libraryId, objectId, versionHash}) {
     if(versionHash) {
       objectId = Utils.DecodeVersionHash(versionHash).objectId;
     }
 
     if(!this.reencryptionKeys[objectId]) {
-      let cap = await Crypto.GenerateTargetCap();
+      let cap = await Crypto.GenerateTargetConk();
       cap.symm_key = await this.KMSSymmetricKey({libraryId, objectId});
 
       this.reencryptionKeys[objectId] = cap;
@@ -594,6 +635,12 @@ class AuthorizationClient {
       typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
       signer: this.client.signer
     });
+
+    // Cache object creation transaction for use in future updates
+    const objectId = Utils.AddressToObjectId(contractAddress);
+    if(!this.noCache) {
+      this.modifyTransactions.objects[objectId] = transactionHash;
+    }
 
     return {
       contractAddress,

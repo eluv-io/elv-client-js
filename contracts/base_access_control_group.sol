@@ -15,13 +15,14 @@ BsAccessCtrlGrp20190506153800ML: Adds access indexing
 BsAccessCtrlGrp20190510150700ML: Fixes bug (wrong index was used for group rights)
 BsAccessCtrlGrp20190722161600ML: Made editable
 BsAccessCtrlGrp20190722214400ML: Provides the list of members and managers
-BsAccessCtrlGrp20190723130500ML: Fix typo in managersNum
+BsAccessCtrlGrp20190723130500ML: Fixes typo in managersNum
+BsAccessCtrlGrp20190723165900ML: Fixes deletion/adding to groups
 */
 
 
 contract BaseAccessControlGroup is AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20190723130500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20190723165900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     //mapping (address => bool) public members;
     //mapping (address => bool) public managers;
@@ -53,7 +54,11 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             }
         }
         if (already == false) {
-            managersList.push(manager);
+            if (managersList.length == managersNum) {
+                managersList.push(manager);
+            } else {
+                managersList[managersNum] = manager;
+            }
             managersNum++;
         }
         emit ManagerAccessGranted(manager);
@@ -109,7 +114,11 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             }
         }
         if (already == false) {
-            membersList.push(candidate);
+            if (membersList.length == membersNum) {
+                membersList.push(candidate);
+            } else {
+                membersList[membersNum] = candidate;
+            }
             membersNum++;
         }
 

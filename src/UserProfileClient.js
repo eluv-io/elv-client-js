@@ -23,10 +23,11 @@ class UserProfileClient {
    * these cases, the normal FrameClient timeout period will be ignored, and the response will come
    * only after the user accepts or rejects the request.
    *
+   * Access and modification of user metadata is namespaced to the requesting application when using the
+   * FrameClient. Public user metadata can be accessed using the PublicUserMetadata method.
+   *
    * If the user refuses to give permission, an error will be thrown. Otherwise, the request will proceed
    * as normal.
-   *
-   * For all prompted methods, an extra argument "requestor" is required.
    *
    * <h4>Usage</h4>
    *
@@ -42,10 +43,10 @@ let signer = wallet.AddAccount({
 });
 client.SetSigner({signer});
 
-await client.userProfileClient.UserMetadata({accountAddress: signer.address})
+await client.userProfileClient.UserMetadata()
 
 let frameClient = new FrameClient();
-await client.userProfileClient.UserMetadata({accountAddress: signer.address})
+await client.userProfileClient.UserMetadata()
    *
    */
   constructor({client}) {
@@ -120,12 +121,15 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
       await this.client.ContentObject({libraryId, objectId});
     } catch(error) {
       if(error.status === 404) {
-        const libraryType = await this.client.ContentType({name: "library"});
-        const createResponse = await this.client.CreateContentObject({
+        const createResponse = await this.client.CreateContentObject({libraryId, objectId});
+
+        await this.client.ReplaceMetadata({
           libraryId,
           objectId,
-          options: {
-            type: libraryType ? libraryType.hash : undefined
+          writeToken: createResponse.write_token,
+          metadata: {
+            "bitcode_flags": "abrmaster",
+            "bitcode_format": "builtin"
           }
         });
 
@@ -186,6 +190,8 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
     const walletAddress = await this.UserWalletAddress({address});
 
     if(!walletAddress) { return; }
+
+    metadataSubtree = UrlJoin("public", metadataSubtree || "/");
 
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(walletAddress);
@@ -350,7 +356,7 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(walletAddress);
 
-    return await this.client.Rep({
+    return await this.client.PublicRep({
       libraryId,
       objectId,
       rep: "image",
@@ -402,7 +408,6 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
 
     this.__InvalidateCache();
   }
-
 
   /**
    * Get the accumulated tags for the current user
@@ -544,6 +549,11 @@ await client.userProfileClient.UserMetadata({accountAddress: signer.address})
   // List of methods that may require a prompt - these should have an unlimited timeout period
   PromptedMethods() {
     return FrameClient.PromptedMethods();
+  }
+
+  // List of methods for accessing user metadata - these should be namespaced when used by an app
+  MetadataMethods() {
+    return FrameClient.MetadataMethods();
   }
 
   // Whitelist of methods allowed to be called using the frame API
