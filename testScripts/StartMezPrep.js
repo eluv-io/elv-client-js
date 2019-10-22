@@ -46,8 +46,29 @@ const MezStart = async (libraryId, objectId, offeringKey, jobIndexes, access) =>
       console.log(JSON.stringify(response));
       const {id, write_token} = response;
 
+      // Include authorization for master, and mezzanine
+      let authorizationTokens = [];
+      authorizationTokens.push(await client.authClient.AuthorizationToken({versionHash: "hq__3U9FKfHkpwvcgknqfSXNQudr9eDYiygr4yncs8xQAH7w3VHkQYHndhw9366G1yDc8re6Z8UTHu"}));
+      authorizationTokens.push(await client.authClient.AuthorizationToken({libraryId, objectId, update: true}));
+
+      const headers = {
+        Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+      };
+
+
+      console.log("=====================");
+      console.log("=====================");
+      console.log("=====================");
+      console.log("=====================");
+      console.log(JSON.stringify(headers));
+      console.log("=====================");
+      console.log("=====================");
+      console.log("=====================");
+      console.log("=====================");
+
 
       const {data, errors, warnings, logs} = await client.CallBitcodeMethod({
+        headers,
         objectId,
         libraryId,
         writeToken: write_token,

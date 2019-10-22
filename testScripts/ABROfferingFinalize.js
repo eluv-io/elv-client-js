@@ -14,10 +14,44 @@ const OfferingFinalize = async (libraryId, objectId, offeringKey) => {
     await client.SetSigner({signer});
 
     try {
+      const metadata = await client.ContentObjectMetadata({libraryId, objectId});
+      const prodMasterHash = metadata.abr_mezzanine.offerings[offeringKey].prod_master_hash;
+
+      console.log("master hash:" + prodMasterHash);
+
+      console.log("mez qid:" + objectId);
+      console.log("Mez lib:" + libraryId);
 
       const {write_token} = await client.EditContentObject({libraryId, objectId});
 
+      const masterInfoReply = await client.ContentObject({versionHash: prodMasterHash});
+      console.log(JSON.stringify(masterInfoReply));
+      const masterId = masterInfoReply.id;
+
+      console.log("objectID mez:" + objectId);
+      console.log();
+
+      // Include authorization for master, and mezzanine
+      let authorizationTokens = [];
+
+      console.log("prod qid: " + masterId);
+      console.log("prod lib: " + masterId);
+
+      authorizationTokens.push(await client.authClient.AuthorizationToken({libraryId, objectId, update: true}));
+      authorizationTokens.push(await client.authClient.AuthorizationToken({objectId:masterId, libraryId:"ilibMeiZ3F266sx1hk3QvccVsLhQKfp", versionHash: prodMasterHash}));
+
+
+      const headers = {
+        Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+      };
+
+
+      console.log(JSON.stringify(headers, null, 2));
+
+      console.log();
+
       const {data, errors, warnings, logs} = await client.CallBitcodeMethod({
+        headers,
         objectId,
         libraryId,
         writeToken: write_token,
@@ -27,7 +61,7 @@ const OfferingFinalize = async (libraryId, objectId, offeringKey) => {
 
       const finalizeResponse = await client.FinalizeContentObject({
         libraryId,
-        objectId: id,
+        objectId: objectId,
         writeToken: write_token,
         awaitCommitConfirmation: false
       });
