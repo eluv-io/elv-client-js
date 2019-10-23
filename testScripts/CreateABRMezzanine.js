@@ -70,7 +70,7 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
     while(true) {
       const status = await client.ContentObjectMetadata({
         libraryId: mezLibraryId,
-        objectId: id,
+        objectId,
         writeToken,
         metadataSubtree: "lro_status"
       });
