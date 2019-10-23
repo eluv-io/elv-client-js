@@ -2,6 +2,18 @@ const { ElvClient } = require("../src/ElvClient");
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
+const Report = response => {
+  if(response.errors.length > 0) {
+    console.error("Errors:");
+    console.error(response.errors.join("\n"), "\n");
+  }
+
+  if(response.warnings.length) {
+    console.warn("Warnings:");
+    console.warn(response.warnings.join("\n"), "\n");
+  }
+};
+
 const Create = async (mezLibraryId, productionMasterHash, productionMasterVariant="default") => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
@@ -15,7 +27,6 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
 
     await client.SetSigner({signer});
 
-
     const access = {
       region: process.env.AWS_REGION,
       bucket: process.env.AWS_BUCKET,
@@ -24,22 +35,22 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
     };
 
     console.log("Creating ABR Mezzanine...");
-    const {id, hash} = await client.CreateABRMezzanine({
+    const createResponse = await client.CreateABRMezzanine({
       libraryId: mezLibraryId,
       masterVersionHash: productionMasterHash,
       variant: productionMasterVariant,
       access
     });
 
-    console.log("\nABR mezzanine object created:");
-    console.log("\tObject ID:", id);
-    console.log("\tVersion Hash:", hash, "\n");
+    Report(createResponse);
+
+    const objectId = createResponse.id;
 
     console.log("Starting Mezzanine Job(s)");
 
-    const {writeToken, data, warnings, errors} = await client.StartABRMezzanineJobs({
+    const startResponse = await client.StartABRMezzanineJobs({
       libraryId: mezLibraryId,
-      objectId: id,
+      objectId,
       offeringKey: productionMasterVariant,
       access: {
         region: process.env.AWS_REGION,
@@ -49,17 +60,12 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
       }
     });
 
-    console.log(data);
+    Report(startResponse);
 
-    if(errors.length > 0) {
-      console.error("Errors:");
-      console.error(errors.join("\n"), "\n");
-    }
+    const writeToken = startResponse.writeToken;
 
-    if(warnings.length) {
-      console.warn("Warnings:");
-      console.warn(warnings.join("\n"), "\n");
-    }
+    //console.log(data);
+
 
     /*
     while(true) {
@@ -79,11 +85,18 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
     }
     */
 
-    await client.FinalizeContentObject({
+    const finalizeResponse = await client.FinalizeABRMezzanine({
       libraryId: mezLibraryId,
-      objectId: id,
-      writeToken
+      objectId,
+      writeToken,
+      offeringKey: productionMasterVariant
     });
+
+    Report(finalizeResponse);
+
+    console.log("\nABR mezzanine object created:");
+    console.log("\tObject ID:", objectId);
+    console.log("\tVersion Hash:", finalizeResponse.hash, "\n");
   } catch(error) {
     console.error("Error creating mezzanine:");
     console.error(error.body ? JSON.stringify(error, null, 2): error);
