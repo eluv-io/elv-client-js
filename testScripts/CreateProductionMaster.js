@@ -48,7 +48,6 @@ const Create = async (masterLibraryId, title, copy, filePaths) => {
         libraryId: masterLibraryId,
         name: title,
         description: "Production Master for " + title,
-        contentTypeName: "ABR Master",
         fileInfo,
         filePaths,
         access,

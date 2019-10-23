@@ -497,13 +497,15 @@ class ElvClient {
    * @returns {Promise<string>} - The account address of the owner
    */
   async ContentLibraryOwner({libraryId}) {
-    return await this.ethClient.CallContractMethod({
-      contractAddress: Utils.HashToAddress(libraryId),
-      abi: LibraryContract.abi,
-      methodName: "owner",
-      methodArgs: [],
-      signer: this.signer
-    });
+    return this.utils.FormatAddress(
+      await this.ethClient.CallContractMethod({
+        contractAddress: Utils.HashToAddress(libraryId),
+        abi: LibraryContract.abi,
+        methodName: "owner",
+        methodArgs: [],
+        signer: this.signer
+      })
+    );
   }
 
   /* Library creation and deletion */
@@ -815,13 +817,15 @@ class ElvClient {
   async ContentTypeOwner({name, typeId, versionHash}) {
     const contentType = await this.ContentType({name, typeId, versionHash});
 
-    return await this.ethClient.CallContractMethod({
-      contractAddress: Utils.HashToAddress(contentType.id),
-      abi: ContentTypeContract.abi,
-      methodName: "owner",
-      methodArgs: [],
-      signer: this.signer
-    });
+    return this.utils.FormatAddress(
+      await this.ethClient.CallContractMethod({
+        contractAddress: Utils.HashToAddress(contentType.id),
+        abi: ContentTypeContract.abi,
+        methodName: "owner",
+        methodArgs: [],
+        signer: this.signer
+      })
+    );
   }
 
   /**
@@ -891,7 +895,21 @@ class ElvClient {
   async ContentTypes() {
     this.contentTypes = this.contentTypes || {};
 
-    const typeAddresses = await this.Collection({collectionType: "contentTypes"});
+    // Personally available types
+    let typeAddresses = await this.Collection({collectionType: "contentTypes"});
+
+    // Content space types
+    const contentSpaceTypeAddresses = Object.values(await this.ContentObjectMetadata({
+      libraryId: this.contentSpaceLibraryId,
+      objectId: this.contentSpaceObjectId,
+      metadataSubtree: "contentTypes"
+    })).map(typeId => this.utils.HashToAddress(typeId));
+
+    typeAddresses = typeAddresses
+      .concat(contentSpaceTypeAddresses)
+      .filter(address => address)
+      .map(address => this.utils.FormatAddress(address))
+      .filter((v, i, a) => a.indexOf(v) === i);
 
     await Promise.all(
       typeAddresses.map(async typeAddress => {
@@ -931,6 +949,10 @@ class ElvClient {
    */
   async CreateContentType({name, metadata={}, bitcode}) {
     metadata.name = name;
+    metadata.public = {
+      name,
+      ...(metadata.public || {})
+    };
 
     const { contractAddress } = await this.authClient.CreateContentType();
 
@@ -1124,14 +1146,16 @@ class ElvClient {
    * @returns {Promise<string>} - The account address of the owner
    */
   async ContentObjectOwner({objectId}) {
-    return await this.ethClient.CallContractMethod({
-      contractAddress: Utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "owner",
-      methodArgs: [],
-      cacheContract: false,
-      signer: this.signer
-    });
+    return this.utils.FormatAddress(
+      await this.ethClient.CallContractMethod({
+        contractAddress: Utils.HashToAddress(objectId),
+        abi: ContentContract.abi,
+        methodName: "owner",
+        methodArgs: [],
+        cacheContract: false,
+        signer: this.signer
+      })
+    );
   }
 
   /**
@@ -2316,7 +2340,6 @@ class ElvClient {
     libraryId,
     name,
     description,
-    contentTypeName,
     metadata={},
     fileInfo,
     access,
@@ -2324,10 +2347,10 @@ class ElvClient {
     copy=false,
     callback
   }) {
-    const contentType = await this.ContentType({name: contentTypeName});
+    const contentType = await this.ContentType({name: "Production Master"});
 
     if(!contentType) {
-      throw `Unable to access content type '${contentTypeName}' to create production master`;
+      throw "Unable to access content type 'Production Master' to create production master";
     }
 
     const {id, write_token} = await this.CreateContentObject({
@@ -2531,9 +2554,9 @@ class ElvClient {
     });
 
     return {
-      errors: errors || [],
       logs: logs || [],
       warnings: warnings || [],
+      errors: errors || [],
       ...finalizeResponse
     };
   }
@@ -2541,14 +2564,15 @@ class ElvClient {
   /**
    * Start any incomplete jobs on the specified mezzanine
    *
+   * @methodGroup Media
+   * @namedParams
    * @param {string} libraryId - ID of the mezzanine library
    * @param {string} objectId - ID of the mezzanine object
    * @param {string=} offeringKey=default - The offering to process
    * @param {Object=} access - (S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references
    * - Format: {region, bucket, accessKey, secret}
    *
-   * @return {Promise<{writeToken: Object.write_token, data: format.data, logs: format.logs, warnings: format.warnings, errors: format.errors}>}
-   * @constructor
+   * @return {Promise<Object>} - A write token for the mezzanine object, as well as any logs, warnings and errors from the job initialization
    */
   async StartABRMezzanineJobs({libraryId, objectId, offeringKey="default", access={}}) {
     const mezzanineMetadata = await this.ContentObjectMetadata({
@@ -2636,6 +2660,63 @@ class ElvClient {
       logs: logs || [],
       warnings: warnings || [],
       errors: errors || []
+    };
+  }
+
+  /**
+   * Finalize a mezzanine object after all jobs have finished
+   *
+   * @methodGroup Media
+   * @namedParams
+   * @param {string} libraryId - ID of the mezzanine library
+   * @param {string} objectId - ID of the mezzanine object
+   * @param {string} writeToken - Write token for the mezzanine object
+   * @param {string=} offeringKey=default - The offering to process
+   *
+   * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
+   */
+  async FinalizeABRMezzanine({libraryId, objectId, writeToken, offeringKey="default"}) {
+    const mezzanineMetadata = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
+    });
+
+    const masterHash = mezzanineMetadata.default.prod_master_hash;
+
+    // Authorization token for mezzanine and master
+    let authorizationTokens = [
+      await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
+      await this.authClient.AuthorizationToken({versionHash: masterHash})
+    ];
+
+    const headers = {
+      Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+    };
+
+    const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
+      objectId,
+      libraryId,
+      writeToken,
+      method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
+      headers,
+      constant: false
+    });
+
+    const finalizeResponse = await this.FinalizeContentObject({
+      libraryId,
+      objectId: objectId,
+      writeToken,
+      awaitCommitConfirmation: false
+    });
+
+    return {
+      data,
+      logs: logs || [],
+      warnings: warnings || [],
+      errors: errors || [],
+      ...finalizeResponse
     };
   }
 
@@ -3294,13 +3375,15 @@ class ElvClient {
    * @returns {Promise<string>} - The account address of the owner
    */
   async AccessGroupOwner({contractAddress}) {
-    return await this.ethClient.CallContractMethod({
-      contractAddress,
-      abi: AccessGroupContract.abi,
-      methodName: "owner",
-      methodArgs: [],
-      signer: this.signer
-    });
+    return this.utils.FormatAddress(
+      await this.ethClient.CallContractMethod({
+        contractAddress,
+        abi: AccessGroupContract.abi,
+        methodName: "owner",
+        methodArgs: [],
+        signer: this.signer
+      })
+    );
   }
 
   /**
