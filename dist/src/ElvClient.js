@@ -1632,7 +1632,7 @@ function () {
       regeneratorRuntime.mark(function _callee23() {
         var _this3 = this;
 
-        var typeAddresses, contentSpaceTypeAddresses;
+        var typeAddresses, contentSpaceTypes, contentSpaceTypeAddresses;
         return regeneratorRuntime.wrap(function _callee23$(_context23) {
           while (1) {
             switch (_context23.prev = _context23.next) {
@@ -1646,22 +1646,28 @@ function () {
 
               case 3:
                 typeAddresses = _context23.sent;
-                _context23.t0 = Object;
-                _context23.next = 7;
+                _context23.next = 6;
                 return this.ContentObjectMetadata({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: this.contentSpaceObjectId,
                   metadataSubtree: "contentTypes"
                 });
 
-              case 7:
-                _context23.t1 = _context23.sent;
+              case 6:
+                _context23.t0 = _context23.sent;
 
-                _context23.t2 = function (typeId) {
+                if (_context23.t0) {
+                  _context23.next = 9;
+                  break;
+                }
+
+                _context23.t0 = {};
+
+              case 9:
+                contentSpaceTypes = _context23.t0;
+                contentSpaceTypeAddresses = Object.values(contentSpaceTypes).map(function (typeId) {
                   return _this3.utils.HashToAddress(typeId);
-                };
-
-                contentSpaceTypeAddresses = _context23.t0.values.call(_context23.t0, _context23.t1).map(_context23.t2);
+                });
                 typeAddresses = typeAddresses.concat(contentSpaceTypeAddresses).filter(function (address) {
                   return address;
                 }).map(function (address) {
@@ -1669,7 +1675,7 @@ function () {
                 }).filter(function (v, i, a) {
                   return a.indexOf(v) === i;
                 });
-                _context23.next = 13;
+                _context23.next = 14;
                 return Promise.all(typeAddresses.map(
                 /*#__PURE__*/
                 function () {
@@ -1716,10 +1722,10 @@ function () {
                   };
                 }()));
 
-              case 13:
+              case 14:
                 return _context23.abrupt("return", this.contentTypes);
 
-              case 14:
+              case 15:
               case "end":
                 return _context23.stop();
             }
@@ -5381,18 +5387,17 @@ function () {
 
               case 12:
                 authorizationTokens = _context67.sent;
-                _context67.t0 = authorizationTokens;
-                _context67.next = 16;
+                _context67.next = 15;
                 return this.authClient.AuthorizationToken({
                   libraryId: libraryId,
-                  objectId: objectId
+                  objectId: objectId,
+                  update: true
                 });
 
-              case 16:
-                _context67.t1 = _context67.sent;
-
-                _context67.t0.push.call(_context67.t0, _context67.t1);
-
+              case 15:
+                _context67.t0 = _context67.sent;
+                _context67.t1 = _toConsumableArray(authorizationTokens);
+                authorizationTokens = [_context67.t0].concat(_context67.t1);
                 headers = {
                   Authorization: authorizationTokens.map(function (token) {
                     return "Bearer ".concat(token);
