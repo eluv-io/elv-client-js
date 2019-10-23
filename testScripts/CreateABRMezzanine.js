@@ -67,23 +67,23 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
     //console.log(data);
 
 
-    /*
     while(true) {
       const status = await client.ContentObjectMetadata({
         libraryId: mezLibraryId,
         objectId: id,
-        writeToken
+        writeToken,
+        metadataSubtree: "lro_status"
       });
 
       if(status.end) {
+        console.log(status.run_state);
         break;
       }
 
-      console.log(status.progress.percentage);
+      console.log(`${status.progress.percentage || 0}%`);
 
       await new Promise(resolve => setTimeout(resolve, 10000));
     }
-    */
 
     const finalizeResponse = await client.FinalizeABRMezzanine({
       libraryId: mezLibraryId,
