@@ -899,11 +899,14 @@ class ElvClient {
     let typeAddresses = await this.Collection({collectionType: "contentTypes"});
 
     // Content space types
-    const contentSpaceTypeAddresses = Object.values(await this.ContentObjectMetadata({
+    const contentSpaceTypes = await this.ContentObjectMetadata({
       libraryId: this.contentSpaceLibraryId,
       objectId: this.contentSpaceObjectId,
       metadataSubtree: "contentTypes"
-    })).map(typeId => this.utils.HashToAddress(typeId));
+    }) || {};
+
+    const contentSpaceTypeAddresses = Object.values(contentSpaceTypes)
+      .map(typeId => this.utils.HashToAddress(typeId));
 
     typeAddresses = typeAddresses
       .concat(contentSpaceTypeAddresses)
