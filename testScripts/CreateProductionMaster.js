@@ -16,8 +16,6 @@ const Create = async (masterLibraryId, title, copy, filePaths) => {
     });
     await client.SetSigner({signer});
 
-    client.HttpClient.uriIndex = 1;
-
     const s3 = !!process.env.AWS_KEY;
 
     let fileInfo, access;
