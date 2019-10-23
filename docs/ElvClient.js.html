@@ -955,11 +955,14 @@ class ElvClient {
     let typeAddresses = await this.Collection({collectionType: "contentTypes"});
 
     // Content space types
-    const contentSpaceTypeAddresses = Object.values(await this.ContentObjectMetadata({
+    const contentSpaceTypes = await this.ContentObjectMetadata({
       libraryId: this.contentSpaceLibraryId,
       objectId: this.contentSpaceObjectId,
       metadataSubtree: "contentTypes"
-    })).map(typeId => this.utils.HashToAddress(typeId));
+    }) || {};
+
+    const contentSpaceTypeAddresses = Object.values(contentSpaceTypes)
+      .map(typeId => this.utils.HashToAddress(typeId));
 
     typeAddresses = typeAddresses
       .concat(contentSpaceTypeAddresses)
@@ -2662,10 +2665,15 @@ class ElvClient {
     const masterVersionHashes = [masterHash];
 
     // Retrieve authorization tokens for all masters and the mezzanine
+
     let authorizationTokens = await Promise.all(
       masterVersionHashes.map(async versionHash => await this.authClient.AuthorizationToken({versionHash}))
     );
-    authorizationTokens.push(await this.authClient.AuthorizationToken({libraryId, objectId}));
+
+    authorizationTokens = [
+      await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
+      ...authorizationTokens
+    ];
 
     const headers = {
       Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
