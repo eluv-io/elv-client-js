@@ -8,6 +8,7 @@ The Eluvio Javascript Client is designed to make interacting with the Eluvio Con
 - [ Getting Started ](#initialization)
 - [ Authorization ](#authorization)
 - [ Identifying Content ](#id-format)
+- [ Creating and Editing Content ](#editing)
 - [ Playing Video ](#video)
 - [ Other Resources](#resources)
 
@@ -147,7 +148,7 @@ client.utils.HashToAddress(libraryId);
 
 ### Version Hashes
 
-Content on the Fabric has immutable versions. Whenever content is modified, a new version is created, while older versions remain unchanged.
+Content objects on the Fabric are comprised of immutable versions. Whenever content is modified, a new version is created, while older versions remain unchanged.
 
 When referring to an object, an object ID (`iq__2vDbmxTdaivPnmDn8RKLbxSHUMfj`) refers to the object as a whole. Referring to content with an object ID will refer to the latest version.
 
@@ -181,6 +182,89 @@ client.utils.DecodeVersionHash("hq__BD1BouHkFraAcDjvoyHoiKpVhf4dXzNsDT5USe8mrZ7Y
 Note that version hashes can not be generated from contract addresses like object IDs. They are specific to the Fabric and must be retrieved using the object ID. 
 
 See [ElvClient#ContentObjectVersions](https://eluv-io.github.io/elv-client-js/ElvClient.html#ContentObjectVersions)
+
+<a name="editing"></a>
+## Creating and Editing Content
+
+As mentioned in the previous section, content is comprised of immutable versions. These versions are created by making a draft, modifying that draft, then finalizing and committing the draft.
+
+In this client, new drafts are created with the `CreateContentObject` and `EditContentObject` methods. The former creates a new content object, with the draft referring to the initial version of the object, while the latter creates a new draft based on the latest version of the specified content object.
+
+Both methods return *write tokens*. These tokens are used in all of the methods used to modify content and in the finalize method to refer to the draft.
+
+When the object is finalized, the draft is closed for editing, the version hash is created for the new version, and the object is committed and distributed across the fabric.
+
+The process for creating or editing a content object is the following:
+- Open draft and retrieve a write token
+- Use the write token to modify the content (update metadata, upload files, etc.)
+- Finalize the draft to create a new version of the content
+
+Here is an example of creating new content with files and metadata:
+
+```javascript
+const createResponse = await client.CreateContentObject({libraryId});
+const objectId = createResponse.id;
+const writeToken = createResponse.write_token;
+
+await client.ReplaceMetadata({
+  libraryId,
+  objectId,
+  writeToken,
+  metadata: {
+    tags: [
+      "video",
+      "audio"
+    ]
+  }
+});
+
+await client.UploadFiles({
+  libraryId,
+  objectId,
+  writeToken,
+  fileInfo: [
+    {
+      path: "VideoFile.mp4",
+      mime_type: "video/mp4",
+      size: 10000,
+      data: (<ArrayBuffer 10000>)
+    }
+  ]
+});
+
+const finalizeResponse = await client.FinalizeContentObject({
+  libraryId,
+  objectId,
+  writeToken
+});
+
+const versionHash = finalizeResponse.hash;
+```
+
+Regardless of what kind of edits are made, the process of editing content will always be bookended by `CreateContentObject` or `EditContentObject` to open a draft, and `FinalizeContentObject` to publish it.
+
+Besides content objects, other entities on the fabric can be accessed and modified in the same way, including libraries, access groups and user wallets. To do so, obtain the objectId of the entity by converting its address:
+
+```javascript
+const libraryId = "ilib2vDbmxTdaivPnmDn8RKLbxSHUMfj";
+const libraryAddress = client.utils.HashToAddress(libraryId);
+const libraryObjectId = client.utils.AddressToObjectId(libraryAddress);
+```
+
+The objectId can then be used in these methods to modify them as content objects. For the libraryId parameter, specify libraryId for libraries, and `client.contentSpaceLibraryId` for other types.
+
+**NOTE** By default, `FinalizeContentObject` will wait for the new version to be distributed and confirmed across the fabric. In most cases, this occurs very quickly. However, if a lot of file content is uploaded in a draft, this may take some time. In this case, you can specify not to wait when finalizing so your program can continue:
+
+```javascript
+await client.FinalizeContentObject({
+  libraryId,
+  objectId,
+  writeToken,
+  awaitCommitConfirmation: false
+});
+```
+
+Only the modifications made within a version are distributed, so this is only a factor when large files are uploaded within an edit.
 
 <a name="frame-client"></a>
 ## Frame Client
