@@ -1189,7 +1189,7 @@ class ElvClient {
    *
    * @see /qlibs/:qlibid/q/:qhit/meta
    *
-   * @methodGroup Content Objects
+   * @methodGroup Metadata
    * @namedParams
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -1486,7 +1486,7 @@ class ElvClient {
    *
    * @see POST /qlibs/:qlibid/q/:write_token/meta
    *
-   * @methodGroup Content Objects
+   * @methodGroup Metadata
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1511,7 +1511,7 @@ class ElvClient {
    *
    * @see PUT /qlibs/:qlibid/q/:write_token/meta
    *
-   * @methodGroup Content Objects
+   * @methodGroup Metadata
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1536,7 +1536,7 @@ class ElvClient {
    *
    * @see DELETE /qlibs/:qlibid/q/:write_token/meta
    *
-   * @methodGroup Content Objects
+   * @methodGroup Metadata
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
@@ -1679,7 +1679,7 @@ class ElvClient {
    * Expected format of fileInfo:
    *
    [
-   {
+     {
         path: string,
         mime_type: string,
         size: number,
