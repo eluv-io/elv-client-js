@@ -50,7 +50,7 @@ const { ElvClient } = require("elv-client-js/dist/ElvClient-node-min.js");
 Initializing the client is as simple as pointing it at the appropriate Eluvio configuration URL. This URL will automatically return information about the best Fabric, blockchain and KMS nodes, as well as the Fabric's content space - all the information the client needs to know to communicate with the Fabric.
 
 ```javascript
-const client = ElvClient.FromConfigurationUrl({
+const client = await ElvClient.FromConfigurationUrl({
   configUrl: "https://main.net955304.contentfabric.io/config"
 });
 ```
