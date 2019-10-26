@@ -1,4 +1,32 @@
 const { ElvClient } = require("../src/ElvClient");
+const readline = require("readline");
+
+const yargs = require("yargs");
+const argv = yargs
+  .option("library", {
+    description: "ID of the library in which to create the mezzanine"
+  })
+  .option("masterHash", {
+    description: "Version hash of the master object"
+  })
+  .option("title", {
+    description: "Title for the mezzanine"
+  })
+  .option("metadata", {
+    description: "Metadata JSON string to include in the object metadata"
+  })
+  .option("variant", {
+    description: "Variant of the mezzanine",
+    default: "default"
+  })
+  .option("existingMezzId", {
+    description: "If re-running the mezzanine process, the ID of an existing mezzanine object"
+  })
+  .demandOption(
+    ["library", "title", "masterHash"],
+    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>)\n"
+  )
+  .argv;
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
@@ -14,7 +42,7 @@ const Report = response => {
   }
 };
 
-const Create = async (mezLibraryId, productionMasterHash, productionMasterVariant="default") => {
+const Create = async (mezLibraryId, productionMasterHash, productionMasterVariant="default", title, metadata, existingMezzId) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
@@ -34,17 +62,24 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
       secret: process.env.AWS_SECRET
     };
 
-    console.log("Creating ABR Mezzanine...");
-    const createResponse = await client.CreateABRMezzanine({
-      libraryId: mezLibraryId,
-      masterVersionHash: productionMasterHash,
-      variant: productionMasterVariant,
-      access
-    });
+    let objectId;
+    if(existingMezzId) {
+      objectId = existingMezzId;
+    } else {
+      console.log("\nCreating ABR Mezzanine...");
+      const createResponse = await client.CreateABRMezzanine({
+        name: title,
+        libraryId: mezLibraryId,
+        masterVersionHash: productionMasterHash,
+        variant: productionMasterVariant,
+        metadata,
+        access
+      });
 
-    Report(createResponse);
+      Report(createResponse);
 
-    const objectId = createResponse.id;
+      objectId = createResponse.id;
+    }
 
     console.log("Starting Mezzanine Job(s)");
 
@@ -64,8 +99,7 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
 
     const writeToken = startResponse.writeToken;
 
-    //console.log(data);
-
+    console.log();
 
     while(true) {
       const status = await client.ContentObjectMetadata({
@@ -80,7 +114,9 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
         break;
       }
 
-      console.log(`${status.progress.percentage || 0}%`);
+      readline.clearLine(process.stdout, 0);
+      readline.cursorTo(process.stdout, 0, null);
+      process.stdout.write(`Progress: ${parseFloat(status.progress.percentage || 0).toFixed(1)}%`);
 
       await new Promise(resolve => setTimeout(resolve, 10000));
     }
@@ -103,13 +139,21 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
   }
 };
 
-const mezLibraryId = process.argv[2];
-const productionMasterHash = process.argv[3];
-const productionMasterVariant = process.argv[4];
+let {library, masterHash, title, existingMezzId, variant, metadata} = argv;
 
-if(!mezLibraryId || !productionMasterHash ) {
-  console.error("Usage: PRIVATE_KEY=<private-key> node ./testScripts/CreateABRMezzanine.js mezLibraryId productionMasterHash (productionMasterVariant)");
+const privateKey = process.env.PRIVATE_KEY;
+if(!privateKey) {
+  console.error("PRIVATE_KEY environment variable must be specified");
   return;
 }
 
-Create(mezLibraryId, productionMasterHash, productionMasterVariant);
+if(metadata) {
+  try {
+    metadata = JSON.parse(metadata);
+  } catch(error) {
+    console.error("Error parsing metadata:");
+    console.error(error);
+  }
+}
+
+Create(library, masterHash, variant, title, metadata, existingMezzId);
