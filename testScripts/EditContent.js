@@ -53,129 +53,133 @@ const EditContent = async ({objectId, replaceMetadata, mergeMetadata, deleteMeta
 
   client.SetSigner({signer});
 
-  const libraryId = await client.ContentObjectLibraryId({objectId});
+  try {
+    const libraryId = await client.ContentObjectLibraryId({objectId});
 
-  const {write_token} = await client.EditContentObject({
-    libraryId,
-    objectId
-  });
-
-  while(replaceMetadata && replaceMetadata.length > 0) {
-    const metadataSubtree = replaceMetadata.shift() || "";
-    let metadata = replaceMetadata.shift() || "";
-
-    if(!metadataSubtree || !metadata) {
-      console.error(`Invalid metadata or subtree in replaceMetadata: ${metadataSubtree} ${metadata}`);
-      return;
-    }
-
-    try {
-      metadata = JSON.parse(metadata);
-    } catch(error) {
-      console.error(`Invalid metadata in replaceMetadata: ${metadata}`);
-      console.error(error);
-    }
-
-    await client.ReplaceMetadata({
+    const {write_token} = await client.EditContentObject({
       libraryId,
-      objectId,
-      writeToken: write_token,
-      metadataSubtree,
-      metadata
+      objectId
     });
-  }
 
-  while(mergeMetadata && mergeMetadata.length > 0) {
-    const metadataSubtree = mergeMetadata.shift() || "";
-    let metadata = mergeMetadata.shift() || "";
+    while(replaceMetadata && replaceMetadata.length > 0) {
+      const metadataSubtree = replaceMetadata.shift() || "";
+      let metadata = replaceMetadata.shift() || "";
 
-    if(!metadataSubtree || !metadata) {
-      console.error(`Invalid metadata or subtree in mergeMetadata: ${metadataSubtree} ${metadata}`);
-      return;
-    }
+      if(!metadataSubtree || !metadata) {
+        console.error(`Invalid metadata or subtree in replaceMetadata: ${metadataSubtree} ${metadata}`);
+        return;
+      }
 
-    try {
-      metadata = JSON.parse(metadata);
-    } catch(error) {
-      console.error(`Invalid metadata in mergeMetadata: ${metadata}`);
-      console.error(error);
-    }
+      try {
+        metadata = JSON.parse(metadata);
+      } catch(error) {
+        console.error(`Invalid metadata in replaceMetadata: ${metadata}`);
+        console.error(error);
+      }
 
-    await client.MergeMetadata({
-      libraryId,
-      objectId,
-      writeToken: write_token,
-      metadataSubtree,
-      metadata
-    });
-  }
-
-  while(deleteMetadata && deleteMetadata.length > 0) {
-    const metadataSubtree = deleteMetadata.shift();
-
-    await client.DeleteMetadata({
-      libraryId,
-      objectId,
-      writeToken: write_token,
-      metadataSubtree
-    });
-  }
-
-  if(files) {
-    if(access) {
-      // S3 Upload
-      const {region, bucket, accessKey, secret} = access;
-
-      await client.UploadFilesFromS3({
+      await client.ReplaceMetadata({
         libraryId,
         objectId,
         writeToken: write_token,
-        filePaths: files,
-        region,
-        bucket,
-        accessKey,
-        secret,
-        copy: s3Copy && !s3Reference,
-        callback: console.log
-      });
-    } else {
-      const fileInfo = files.map(path => {
-        const data = fs.readFileSync(path);
-        const mimeType = mime.lookup(path) || "video/mp4";
-
-        return {
-          path: Path.basename(path),
-          type: "file",
-          mime_type: mimeType,
-          size: data.length,
-          data
-        };
-      });
-
-      await client.UploadFiles({
-        libraryId,
-        objectId,
-        writeToken: write_token,
-        fileInfo,
-        callback: progress => {
-          console.log();
-          Object.keys(progress).forEach(filename => {
-            const percent = (100 * progress[filename].uploaded / progress[filename].total).toFixed(1);
-            console.log(`${filename}: ${percent}%`);
-          });
-        }
+        metadataSubtree,
+        metadata
       });
     }
 
+    while(mergeMetadata && mergeMetadata.length > 0) {
+      const metadataSubtree = mergeMetadata.shift() || "";
+      let metadata = mergeMetadata.shift() || "";
+
+      if(!metadataSubtree || !metadata) {
+        console.error(`Invalid metadata or subtree in mergeMetadata: ${metadataSubtree} ${metadata}`);
+        return;
+      }
+
+      try {
+        metadata = JSON.parse(metadata);
+      } catch(error) {
+        console.error(`Invalid metadata in mergeMetadata: ${metadata}`);
+        console.error(error);
+      }
+
+      await client.MergeMetadata({
+        libraryId,
+        objectId,
+        writeToken: write_token,
+        metadataSubtree,
+        metadata
+      });
+    }
+
+    while(deleteMetadata && deleteMetadata.length > 0) {
+      const metadataSubtree = deleteMetadata.shift();
+
+      await client.DeleteMetadata({
+        libraryId,
+        objectId,
+        writeToken: write_token,
+        metadataSubtree
+      });
+    }
+
+    if(files) {
+      if(access) {
+        // S3 Upload
+        const {region, bucket, accessKey, secret} = access;
+
+        await client.UploadFilesFromS3({
+          libraryId,
+          objectId,
+          writeToken: write_token,
+          filePaths: files,
+          region,
+          bucket,
+          accessKey,
+          secret,
+          copy: s3Copy && !s3Reference,
+          callback: console.log
+        });
+      } else {
+        const fileInfo = files.map(path => {
+          const data = fs.readFileSync(path);
+          const mimeType = mime.lookup(path) || "video/mp4";
+
+          return {
+            path: Path.basename(path),
+            type: "file",
+            mime_type: mimeType,
+            size: data.length,
+            data
+          };
+        });
+
+        await client.UploadFiles({
+          libraryId,
+          objectId,
+          writeToken: write_token,
+          fileInfo,
+          callback: progress => {
+            console.log();
+            Object.keys(progress).forEach(filename => {
+              const percent = (100 * progress[filename].uploaded / progress[filename].total).toFixed(1);
+              console.log(`${filename}: ${percent}%`);
+            });
+          }
+        });
+      }
+    }
+
+    const {hash} = await client.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken: write_token
+    });
+
+    console.log(`\nSuccessfully created new content version: ${hash}`);
+  } catch(error) {
+    console.error("Error editing content object:");
+    console.error(error);
   }
-
-  const {hash} = await client.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken: write_token
-  });
-
-  console.log(`\nSuccessfully created new content version: ${hash}`);
 };
 
 let {objectId, replaceMetadata, mergeMetadata, deleteMetadata, files, s3Reference, s3Copy} = argv;
