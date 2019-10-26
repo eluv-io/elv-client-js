@@ -232,7 +232,7 @@ const versionHash = finalizeResponse.hash;
 </code></pre>
 <p>Regardless of what kind of edits are made, the process of editing content will always be bookended by <code>CreateContentObject</code> or <code>EditContentObject</code> to open a draft, and <code>FinalizeContentObject</code> to publish it.</p>
 <p>Besides content objects, other entities on the fabric can be accessed and modified in the same way, including libraries, access groups and user wallets. To do so, obtain the objectId of the entity by converting its address:</p>
-<pre class="prettyprint source lang-javascript"><code>const libraryId = &quot;iq__2vDbmxTdaivPnmDn8RKLbxSHUMfj&quot;;
+<pre class="prettyprint source lang-javascript"><code>const libraryId = &quot;ilib2vDbmxTdaivPnmDn8RKLbxSHUMfj&quot;;
 const libraryAddress = client.utils.HashToAddress(libraryId);
 const libraryObjectId = client.utils.AddressToObjectId(libraryAddress);
 </code></pre>
