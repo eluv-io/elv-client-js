@@ -47,6 +47,28 @@ describe("Test ElvClient", () => {
     testFile2 = RandomBytes(testFileSize);
     testFile3 = RandomBytes(testFileSize);
     testHash = RandomString(10);
+
+    await client.userProfileClient.WalletAddress();
+    await accessClient.userProfileClient.WalletAddress();
+
+    // Create required types
+    const requiredContentTypes = ["ABR Master", "Library", "Production Master"];
+
+    await Promise.all(
+      requiredContentTypes.map(async typeName => {
+        const type = await client.ContentType({name: typeName});
+
+        if(!type) {
+          await client.CreateContentType({
+            name: typeName,
+            metadata: {
+              "bitcode_flags": "abrmaster",
+              "bitcode_format": "builtin"
+            }
+          });
+        }
+      })
+    );
   });
 
   afterAll(async () => {
@@ -110,10 +132,6 @@ describe("Test ElvClient", () => {
     });
 
     test("Access Group Members", async () => {
-      // Ensure user wallets are created
-      await client.userProfileClient.WalletAddress();
-      await accessClient.userProfileClient.WalletAddress();
-
       const clientAddress = client.utils.FormatAddress(client.signer.address);
       const accessAddress = client.utils.FormatAddress(accessClient.signer.address);
 
