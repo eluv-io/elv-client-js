@@ -1,18 +1,26 @@
 [
   {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibpEvxZTda3FP5wzFNLEvMAv7oTzV\",\n  \"objectId\": \"iq__3DuKVpx3747dfTrqj1P7sQ1rx18n\"\n});",
-    "result": "{\n  \"id\": \"iq__3DuKVpx3747dfTrqj1P7sQ1rx18n\",\n  \"write_token\": \"tqw_BiE5fhCm732pvDQUUWn3xCCVei8UNuFb2\",\n  \"type\": \"hq__BsA2CyaqqVVDtoJg78DjenKQPM3W5xiyBTjfoNSwmjc9bbripGWff58KYithx73c1NVw33JwYP\",\n  \"meta\": null\n}"
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1\",\n  \"objectId\": \"iq__3TAkYM5CUSM1pbgE2g4y9DepTWm3\"\n});",
+    "result": "{\n  \"id\": \"iq__3TAkYM5CUSM1pbgE2g4y9DepTWm3\",\n  \"write_token\": \"tqw_7jit568WQoCyc5fKZq26LfipGbjwxZS7a\",\n  \"type\": \"\"\n}"
   },
   {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"objectId\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\"\n});",
-    "result": "{\n  \"id\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\",\n  \"write_token\": \"tqw_ATNee8dyj9Cf71hPSD7QByFB1mLycrLqj\",\n  \"type\": \"hq__495vHNWReF1vGTVhJvQ3HQHucswMzK9cjK8oeCzHcDX5dUerfomH7niiKaWHi7Zk1zkELFysRg\",\n  \"meta\": null\n}"
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilib3eXfnnhHfDCHsFGb7VusYjx5Wr5g\",\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\"\n});",
+    "result": "{\n  \"id\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"write_token\": \"tqw_Pu7ov3pw2UhDzL15kS9RUWF5Us8ndMj7b\",\n  \"type\": \"hq__5ciWSimcLJiSjsCUTgWDPcRybmDWF5SdyKjQLA5jE3fCjJ7M7v9Ds9Rx5U2SfymM4weMi7LXjB\"\n}"
   },
   {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"objectId\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\"\n});",
-    "result": "{\n  \"id\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\",\n  \"write_token\": \"tqw_FWoZS7pnHS7LGyNgN6V3HoPfJUR6kQTNH\",\n  \"type\": \"hq__495vHNWReF1vGTVhJvQ3HQHucswMzK9cjK8oeCzHcDX5dUerfomH7niiKaWHi7Zk1zkELFysRg\",\n  \"meta\": null\n}"
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibCz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"objectId\": \"iq__Cz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"options\": {\n    \"type\": \"hq__9F7Roe1547dPZ98N3KtipdwU9fL2o4VPUXJhtsPs29gGSRJ9D14jPchwt6HwYwjTVVBxPBzrwL\"\n  }\n});",
+    "result": "{\n  \"id\": \"iq__Cz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"write_token\": \"tqw_Kgvp5VsB3Cixy387T9EiFYe3mW8cGbsjw\",\n  \"type\": \"hq__9F7Roe1547dPZ98N3KtipdwU9fL2o4VPUXJhtsPs29gGSRJ9D14jPchwt6HwYwjTVVBxPBzrwL\"\n}"
   },
   {
-    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibcw2SXJK4PHewfyUvvoEC5Qt3QCS\",\n  \"objectId\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\"\n});",
-    "result": "{\n  \"id\": \"iq__3Kfb8Cbm3uZv5FDf7nca5X45rSDz\",\n  \"write_token\": \"tqw_GemBozTuD3fxc35HR4u2WdCUrtivK6zpm\",\n  \"type\": \"hq__495vHNWReF1vGTVhJvQ3HQHucswMzK9cjK8oeCzHcDX5dUerfomH7niiKaWHi7Zk1zkELFysRg\",\n  \"meta\": null\n}"
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilibCz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"objectId\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\"\n});",
+    "result": "{\n  \"id\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"write_token\": \"tqw_Ene9X5LFNzszb7QqxwakGahsQsYdh936e\",\n  \"type\": \"hq__Kru6PPKc9erztaxvcDNyUii6LmG9cXjMee2pcPQKwMz6ntq65AP6yNwsePvJ96sMFvZxb5uNkx\"\n}"
+  },
+  {
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilib3eXfnnhHfDCHsFGb7VusYjx5Wr5g\",\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\"\n});",
+    "result": "{\n  \"id\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"write_token\": \"tqw_PcH9fTZqfyCZ16A8yZghxHa9wVV9JvdqK\",\n  \"type\": \"hq__5ciWSimcLJiSjsCUTgWDPcRybmDWF5SdyKjQLA5jE3fCjJ7M7v9Ds9Rx5U2SfymM4weMi7LXjB\"\n}"
+  },
+  {
+    "signature": "async EditContentObject({\n  \"libraryId\": \"ilib3eXfnnhHfDCHsFGb7VusYjx5Wr5g\",\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\"\n});",
+    "result": "{\n  \"id\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"write_token\": \"tqw_C77TbASUUJJSthSug4MbiJaqGcRPtLmkG\",\n  \"type\": \"hq__5ciWSimcLJiSjsCUTgWDPcRybmDWF5SdyKjQLA5jE3fCjJ7M7v9Ds9Rx5U2SfymM4weMi7LXjB\"\n}"
   }
 ]

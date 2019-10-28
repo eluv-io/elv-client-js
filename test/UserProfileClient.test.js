@@ -8,7 +8,7 @@ Object.defineProperty(global.self, "crypto", {
 
 const fs = require("fs");
 const OutputLogger = require("./utils/OutputLogger");
-const {CreateClient, BufferToArrayBuffer} = require("./utils/Utils");
+const {CreateClient, BufferToArrayBuffer, ReturnBalance} = require("./utils/Utils");
 const UserProfileClient = require("../src/UserProfileClient");
 
 let client, tagClient;
@@ -16,8 +16,18 @@ let client, tagClient;
 const CreateTaggedObject = async (tagLibraryId, tags) => {
   const createResponse = await tagClient.CreateContentObject({
     libraryId: tagLibraryId,
-    options: { meta: { video_tags: [{ tags }] } }
+    options: {
+      visibility: 100
+    }
   });
+
+  await tagClient.ReplaceMetadata({
+    libraryId: tagLibraryId,
+    objectId: createResponse.id,
+    writeToken: createResponse.write_token,
+    metadata: { video_tags: [{ tags }] }
+  });
+
   await tagClient.FinalizeContentObject({libraryId: tagLibraryId, objectId: createResponse.id, writeToken: createResponse.write_token});
 
   return createResponse.id;
@@ -28,23 +38,26 @@ describe("Test UserProfileClient", () => {
   beforeAll(async () => {
     jest.setTimeout(1000000);
 
-    client = await CreateClient();
-    tagClient = await CreateClient();
+    client = await CreateClient("UserProfileClient");
+    tagClient = await CreateClient("UserProfileClient Tags");
 
     client.userProfileClient = OutputLogger(UserProfileClient, client.userProfileClient);
   });
 
+  afterAll(async () => {
+    await Promise.all([client, tagClient].map(async client => ReturnBalance(client)));
+  });
+
   test("User Profile Automatically Created", async () => {
     const walletAddress = await client.userProfileClient.WalletAddress();
-
     expect(walletAddress).toBeDefined();
-    const libraryId = client.contentSpaceLibraryId;
-    const objectId = client.utils.AddressToObjectId(walletAddress);
+  });
 
-    const walletObject = await client.ContentObject({libraryId, objectId});
-    expect(walletObject).toBeDefined();
-
-    const metadata = {
+  test("Metadata", async () => {
+    const initialMetadata = {
+      public: {
+        meta: "data"
+      },
       toMerge: {
         meta: "data"
       },
@@ -56,35 +69,29 @@ describe("Test UserProfileClient", () => {
       }
     };
 
-    await client.userProfileClient.ReplaceUserMetadata({metadata});
-  });
+    await client.userProfileClient.MergeUserMetadata({metadata: initialMetadata});
 
-  test("Metadata", async () => {
     const metadata = await client.userProfileClient.UserMetadata();
     expect(metadata).toBeDefined();
-    expect(metadata).toMatchObject({
-      toMerge: {
-        meta: "data"
-      },
-      toReplace: {
-        meta: "data"
-      },
-      toDelete: {
-        meta: "data"
-      }
-    });
+    expect(metadata).toMatchObject(initialMetadata);
 
     const subMetadata = await client.userProfileClient.UserMetadata({metadataSubtree: "toMerge"});
     expect(subMetadata).toBeDefined();
     expect(subMetadata).toEqual({meta: "data"});
 
     await client.userProfileClient.MergeUserMetadata({metadataSubtree: "toMerge", metadata: {new: "metadata"}});
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await client.userProfileClient.ReplaceUserMetadata({metadataSubtree: "toReplace", metadata: {new: "metadata"}});
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await client.userProfileClient.DeleteUserMetadata({metadataSubtree: "toDelete"});
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const updatedMetadata = await client.userProfileClient.UserMetadata();
     expect(updatedMetadata).toBeDefined();
     expect(updatedMetadata).toMatchObject({
+      public: {
+        meta: "data"
+      },
       toMerge: {
         meta: "data",
         new: "metadata"
@@ -97,16 +104,7 @@ describe("Test UserProfileClient", () => {
 
     const publicMetadata = await client.userProfileClient.PublicUserMetadata({address: client.signer.address});
     expect(publicMetadata).toBeDefined();
-    expect(publicMetadata).toMatchObject({
-      toMerge: {
-        meta: "data",
-        new: "metadata"
-      },
-      toReplace: {
-        new: "metadata"
-      }
-    });
-    expect(publicMetadata.toDelete).not.toBeDefined();
+    expect(publicMetadata).toMatchObject({meta: "data"});
   });
 
   test("User Profile Image", async () => {
@@ -165,21 +163,28 @@ describe("Test UserProfileClient", () => {
         { "score": 0.5, "tag": "mayhem" },
         { "score": 0.8, "tag": "shark" },
         { "score": 0.9, "tag": "boat" }
-      ],
+      ]
     ];
 
     const recordTagsSpy = jest.spyOn(client.userProfileClient, "RecordTags");
 
     const tagLibraryId = await tagClient.CreateContentLibrary({name: "Test Tagging"});
     // Create tagged objects with another user, then access them with this user
+    client.ClearCache();
+
     for(let i = 0; i < testTags.length; i++) {
       const objectId = await CreateTaggedObject(tagLibraryId, testTags[i]);
+
       await client.ContentObjectMetadata({libraryId: tagLibraryId, objectId, noAuth: false});
     }
+
+    // Tag recording is asynchronous - give the tag updates time to settle.
+    await new Promise(resolve => setTimeout(resolve, 5000));
 
     expect(recordTagsSpy).toHaveBeenCalledTimes(testTags.length);
 
     const collectedTags = await client.userProfileClient.CollectedTags();
+
     expect(collectedTags).toBeDefined();
     expect(collectedTags).toEqual({
       boat: { aggregate: 1.5, occurrences: 2 },
