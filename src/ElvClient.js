@@ -1737,7 +1737,7 @@ class ElvClient {
 
     // Upload first chunk to estimate bandwidth
     const firstJob = jobInfo[0];
-    const firstChunk = firstJob.files.pop();
+    const firstChunk = firstJob.files.shift();
     const fileData = fileDataMap[firstChunk.path].slice(firstChunk.off, firstChunk.off + firstChunk.len);
 
     const start = new Date().getTime();
