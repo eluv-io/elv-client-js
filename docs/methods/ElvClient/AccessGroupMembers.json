@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async AccessGroupMembers({\n  \"contractAddress\": \"0x8296dce93b25fd507710c9b46e915d830f5dd33b\"\n});",
+    "result": "[\n  \"0x60098b7e10364f9f81ec457fc637a2fe8c91e4d1\",\n  \"0x439408c33a7fca969d34a5616c175a44434bb209\"\n]"
+  },
+  {
+    "signature": "async AccessGroupMembers({\n  \"contractAddress\": \"0x8296dce93b25fd507710c9b46e915d830f5dd33b\"\n});",
+    "result": "[\n  \"0x439408c33a7fca969d34a5616c175a44434bb209\"\n]"
+  }
+]

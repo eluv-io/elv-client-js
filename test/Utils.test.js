@@ -13,8 +13,7 @@ describe("Test Utils", () => {
     const client = new ElvClient({
       contentSpaceId: "ispc2tNqMTr51szPGsttFQJSq6gRdKaZ",
       fabricURIs: ["http://localhost:8008"],
-      ethereumURIs: ["http://localhost:8545"],
-      stateChannelURIs: ["http://localhost:8545"]
+      ethereumURIs: ["http://localhost:8545"]
     });
 
     expect(client.utils).toBeDefined();

@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async CreateAccessGroup();",
-    "result": "\"0x8e2e5f42a2fc1ac27bb040ae1eca3d46be79baeb\""
+    "signature": "async CreateAccessGroup({\n  \"name\": \"Test Access Group\",\n  \"description\": \"Test Access Group Description\",\n  \"metadata\": {\n    \"group\": \"metadata\"\n  }\n});",
+    "result": "\"0x8296dce93b25fd507710c9b46e915d830f5dd33b\""
   }
 ]

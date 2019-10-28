@@ -23,7 +23,7 @@ const RandomString = (size) => {
   return crypto.randomBytes(size).toString("hex");
 };
 
-const CreateClient = async (bux="10") => {
+const CreateClient = async (name, bux="10") => {
   try {
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
     const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
@@ -55,6 +55,10 @@ const CreateClient = async (bux="10") => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     await client.SetSigner({signer});
+
+    client.clientName = name;
+    client.initialBalance = parseFloat(bux);
+
     return client;
   } catch(error) {
     console.error("ERROR INITIALIZING TEST CLIENT: ");
@@ -74,10 +78,10 @@ const ReturnBalance = async (client) => {
   const wallet = client.GenerateWallet();
   const fundedSigner = wallet.AddAccount({privateKey});
 
-  console.log("Returning ", balance);
+  console.log(`${client.clientName} used ${(client.initialBalance - balance).toFixed(3)} ether`);
   await client.SendFunds({
     recipient: fundedSigner.address,
-    ether: balance - 1
+    ether: balance - 0.25
   });
 };
 
