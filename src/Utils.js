@@ -250,8 +250,31 @@ const Utils = {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   },
 
-  B64: (str) => {
-    return Buffer.from(str).toString("base64");
+  B64: str => {
+    return Buffer.from(str, "utf-8").toString("base64");
+  },
+
+  FromB64: str => {
+    return Buffer.from(str, "base64").toString("utf-8");
+  },
+
+  /**
+   * Decode the given fabric authorization token
+   *
+   * @param {string} token - The authorization token to decode
+   * @return {Object} - Token Info: {qspace_id, qlib_id*, addr, tx_id*, afgh_pk*, signature}
+   */
+  DecodeAuthorizationToken: token => {
+    token = decodeURIComponent(token);
+
+    let [info, signature] = token.split(".");
+
+    info = JSON.parse(Utils.FromB64(info));
+
+    return {
+      ...info,
+      signature
+    };
   },
 
   /**

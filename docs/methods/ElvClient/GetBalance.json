@@ -1,6 +1,14 @@
 [
   {
-    "signature": "async GetBalance({\n  \"address\": \"0xa6a842711b88b67bc523c9f45487edbfb01f3abd\"\n});",
+    "signature": "async GetBalance({\n  \"address\": \"0x63b2dc00f3c1931279400418ac6b894182d902f7\"\n});",
     "result": "\"0.01\""
+  },
+  {
+    "signature": "async GetBalance({\n  \"address\": \"0x60098b7E10364F9f81ec457fC637A2fe8C91E4d1\"\n});",
+    "result": "\"49.377898512\""
+  },
+  {
+    "signature": "async GetBalance({\n  \"address\": \"0x439408C33A7fcA969d34A5616c175A44434BB209\"\n});",
+    "result": "\"9.964130008\""
   }
 ]
