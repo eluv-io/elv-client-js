@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async CreateProductionMaster({\n  \"libraryId\": \"ilibCz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"name\": \"Production Master Test\",\n  \"description\": \"Production Master Test Description\",\n  \"metadata\": {\n    \"test\": \"master\"\n  },\n  \"fileInfo\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"mime_type\": \"video/mp4\",\n      \"size\": 97944174,\n      \"type\": \"file\"\n    }\n  ]\n});",
+    "result": "{\n  \"errors\": [],\n  \"logs\": [\n    \"2019-10-28 23:05:08 Debug: avtest.initProdMaster()\",\n    \"2019-10-28 23:05:08 Info: Get list of files from object\",\n    \"2019-10-28 23:05:08 Info: 2 item(s) found in file list.\",\n    \"2019-10-28 23:05:08 Info: Skipping '.'\",\n    \"2019-10-28 23:05:08 Info: Analyzing Video.mp4\",\n    \"2019-10-28 23:05:08 Debug: getAvpReqCtx, filePath=Video.mp4, qhot=tqw_3Ab5wzrVffLV2mchDBBR3NjvMCmokutpN\"\n  ],\n  \"warnings\": [],\n  \"id\": \"iq__26cX975E6bPQ3JYCXRE6qoNcDaKh\",\n  \"hash\": \"hq__28T8P2AiWnm1xP4xzHJ9katFJLzJA8U1KwAFmLPd1EfQ1EvLBJ2tSAAsrfG9PNuqVjUwQQkUhm\",\n  \"write_token\": \"tqw_3Ab5wzrVffLV2mchDBBR3NjvMCmokutpN\",\n  \"type\": \"hq__6rQT55Awj6t6kT4jHRFya6rwQVArGsth4KMeNzFEfkCyxDkQY54ME4jMetQQWjwiyDv6YmrE35\"\n}"
+  }
+]

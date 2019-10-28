@@ -1,4 +1,7 @@
 const crypto = require("crypto");
+const ClientConfiguration = require("../TestConfiguration");
+const fs = require("fs");
+const Path = require("path");
 
 Object.defineProperty(global.self, "crypto", {
   value: {
@@ -26,6 +29,7 @@ const testFileSize = 100000;
 
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
+let mediaLibraryId, masterHash, mezzanineId;
 
 let testFile1, testFile2, testFile3, testHash;
 let fileInfo = [];
@@ -36,8 +40,8 @@ describe("Test ElvClient", () => {
   beforeAll(async () => {
     jest.setTimeout(60000);
 
-    client = OutputLogger(ElvClient, await CreateClient("50"));
-    accessClient = OutputLogger(ElvClient, await CreateClient());
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "50"));
+    accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
@@ -51,19 +55,51 @@ describe("Test ElvClient", () => {
 
   describe("Initialize From Configuration Url", () => {
     test("Initialization", async () => {
-      const bootstrapClient = await ElvClient.FromConfigurationUrl({configUrl: "http://main.net955304.contentfabric.io/config"});
+      const bootstrapClient = await ElvClient.FromConfigurationUrl({
+        configUrl: ClientConfiguration["config-url"]
+      });
 
       expect(bootstrapClient).toBeDefined();
       expect(bootstrapClient.fabricURIs).toBeDefined();
       expect(bootstrapClient.fabricURIs.length).toBeGreaterThan(0);
       expect(bootstrapClient.ethereumURIs).toBeDefined();
       expect(bootstrapClient.ethereumURIs.length).toBeGreaterThan(0);
+      expect(bootstrapClient.ContentSpaceId()).toBeDefined();
+    });
+
+    test("Initialization with region", async () => {
+      const bootstrapClient = await ElvClient.FromConfigurationUrl({
+        configUrl: ClientConfiguration["config-url"],
+        region: "eu-west"
+      });
+
+      expect(bootstrapClient).toBeDefined();
+      expect(bootstrapClient.fabricURIs).toBeDefined();
+      expect(bootstrapClient.fabricURIs.length).toBeGreaterThan(0);
+      expect(bootstrapClient.ethereumURIs).toBeDefined();
+      expect(bootstrapClient.ethereumURIs.length).toBeGreaterThan(0);
+
+      const fabricURIs = bootstrapClient.fabricURIs;
+
+      await bootstrapClient.UseRegion({region: "na-west-south"});
+
+      expect(bootstrapClient.fabricURIs[0]).not.toEqual(fabricURIs[0]);
+
+      await bootstrapClient.UseRegion({region: "eu-west"});
+
+      expect(bootstrapClient.fabricURIs[0]).toEqual(fabricURIs[0]);
     });
   });
 
   describe("Access Groups", () => {
     test("Create Access Group", async () => {
-      accessGroupAddress = await client.CreateAccessGroup();
+      accessGroupAddress = await client.CreateAccessGroup({
+        name: "Test Access Group",
+        description: "Test Access Group Description",
+        metadata: {
+          group: "metadata"
+        }
+      });
       expect(accessGroupAddress).toBeDefined();
     });
 
@@ -74,30 +110,93 @@ describe("Test ElvClient", () => {
     });
 
     test("Access Group Members", async () => {
+      // Ensure user wallets are created
+      await client.userProfileClient.WalletAddress();
+      await accessClient.userProfileClient.WalletAddress();
+
+      const clientAddress = client.utils.FormatAddress(client.signer.address);
+      const accessAddress = client.utils.FormatAddress(accessClient.signer.address);
+
       await client.AddAccessGroupMember({
         contractAddress: accessGroupAddress,
-        memberAddress: client.signer.address
+        memberAddress: clientAddress
       });
 
-      await client.RemoveAccessGroupMember({
+      await client.AddAccessGroupMember({
         contractAddress: accessGroupAddress,
-        memberAddress: client.signer.address
+        memberAddress: accessAddress
+      });
+
+      const members = await client.AccessGroupMembers({
+        contractAddress: accessGroupAddress
+      });
+
+      expect(members.length).toEqual(2);
+      expect(members.includes(clientAddress)).toBeTruthy();
+      expect(members.includes(accessAddress)).toBeTruthy();
+
+      await client.AddAccessGroupManager({
+        contractAddress: accessGroupAddress,
+        memberAddress: clientAddress.replace("0x", "")
       });
 
       await client.AddAccessGroupManager({
         contractAddress: accessGroupAddress,
-        memberAddress: client.signer.address.replace("0x", "")
+        memberAddress: accessAddress
+      });
+
+      const managers = await client.AccessGroupManagers({
+        contractAddress: accessGroupAddress
+      });
+
+      expect(managers.length).toEqual(2);
+      expect(managers.includes(clientAddress)).toBeTruthy();
+      expect(managers.includes(accessAddress)).toBeTruthy();
+
+      await client.RemoveAccessGroupMember({
+        contractAddress: accessGroupAddress,
+        memberAddress: clientAddress
       });
 
       await client.RemoveAccessGroupManager({
         contractAddress: accessGroupAddress,
-        memberAddress: client.signer.address
+        memberAddress: clientAddress
+      });
+
+      const newMembers = await client.AccessGroupMembers({
+        contractAddress: accessGroupAddress
+      });
+
+      expect(newMembers.length).toEqual(1);
+      expect(newMembers.includes(clientAddress)).toBeFalsy();
+      expect(newMembers.includes(accessAddress)).toBeTruthy();
+
+
+      const newManagers = await client.AccessGroupManagers({
+        contractAddress: accessGroupAddress
+      });
+
+      expect(newManagers.length).toEqual(1);
+      expect(newManagers.includes(clientAddress)).toBeFalsy();
+      expect(newManagers.includes(accessAddress)).toBeTruthy();
+    });
+
+    test("Retrieve Access Group Metadata", async () => {
+      const groupMetadata = await client.ContentObjectMetadata({
+        libraryId: client.contentSpaceLibraryId,
+        objectId: client.utils.AddressToObjectId(accessGroupAddress)
+      });
+
+      expect(groupMetadata.group).toEqual("metadata");
+      expect(groupMetadata.public).toEqual({
+        name: "Test Access Group",
+        description: "Test Access Group Description"
       });
     });
   });
 
   describe("Content Types", () => {
-    test.only("Create Content Type", async () => {
+    test("Create Content Type", async () => {
       // Ensure unique name for later lookup
       typeName = "Test Content Type " + testHash;
 
@@ -209,6 +308,56 @@ describe("Test ElvClient", () => {
       libraryTypes = await client.LibraryContentTypes({libraryId});
       expect(libraryTypes).toEqual({});
     });
+
+    test("Test Content Library Group Permissions", async () => {
+      await client.AddContentLibraryGroup({
+        libraryId,
+        groupAddress: accessGroupAddress,
+        permission: "contributor"
+      });
+
+      await client.AddContentLibraryGroup({
+        libraryId,
+        groupAddress: accessGroupAddress,
+        permission: "reviewer"
+      });
+
+      const permissions = await client.ContentLibraryGroupPermissions({libraryId});
+      expect(permissions[accessGroupAddress]).toBeDefined();
+      expect(permissions[accessGroupAddress]).toEqual(["contributor", "reviewer"]);
+
+      // Maintain accessor permissions so accessClient has access to library
+      await client.AddContentLibraryGroup({
+        libraryId,
+        groupAddress: accessGroupAddress,
+        permission: "accessor"
+      });
+
+      await client.RemoveContentLibraryGroup({
+        libraryId,
+        groupAddress: accessGroupAddress,
+        permission: "reviewer"
+      });
+
+      const newPermissions = await client.ContentLibraryGroupPermissions({libraryId});
+      expect(newPermissions[accessGroupAddress]).toBeDefined();
+      expect(newPermissions[accessGroupAddress]).toEqual(["accessor", "contributor"]);
+    });
+
+    test("Set Library Image", async () => {
+      const buffer = fs.readFileSync(Path.resolve(__dirname, "files", "test-image1.png"));
+      const image = client.utils.BufferToArrayBuffer(buffer);
+
+      await client.SetContentLibraryImage({libraryId, image});
+
+      const libraryMetadata = await client.ContentObjectMetadata({
+        libraryId,
+        objectId: libraryId.replace("ilib", "iq__")
+      });
+
+      expect(libraryMetadata.image).toBeDefined();
+      expect(libraryMetadata.public.image).toBeDefined();
+    });
   });
 
   describe("Content Objects", () => {
@@ -230,7 +379,8 @@ describe("Test ElvClient", () => {
         libraryId,
         options: {
           type: typeName,
-          meta: testMetadata
+          meta: testMetadata,
+          visibility: 100
         }
       });
       const writeToken = createResponse.write_token;
@@ -442,7 +592,7 @@ describe("Test ElvClient", () => {
       expect(client.utils.FormatAddress(owner)).toEqual(client.utils.FormatAddress(client.signer.address));
     });
 
-    test("Copy Content Object", async () => {
+    test.skip("Copy Content Object", async () => {
       const objectCopy = await client.CopyContentObject({
         libraryId,
         originalVersionHash: versionHash,
@@ -655,18 +805,16 @@ describe("Test ElvClient", () => {
     test("Upload Files", async () => {
       fileInfo = [
         {
-          path: "testDirectory",
-          type: "directory"
-        },
-        {
           path: "testDirectory/File 1",
           type: "file",
+          mime_type: "text/plain",
           size: testFileSize,
           data: testFile1
         },
         {
           path: "testDirectory/File 2",
           type: "file",
+          mime_type: "text/plain",
           size: testFileSize,
           data: testFile2
         }
@@ -686,11 +834,11 @@ describe("Test ElvClient", () => {
 
     test("Download Files", async () => {
       const fileData1 = await client.DownloadFile({libraryId, objectId, filePath: "testDirectory/File 1", format: "arrayBuffer"});
-      expect(new Uint8Array(fileData1).toString()).toEqual(new Uint8Array(fileInfo[1].data).toString());
-      expect(new Uint8Array(fileData1).toString()).not.toEqual(new Uint8Array(fileInfo[2].data).toString());
+      expect(new Uint8Array(fileData1).toString()).toEqual(new Uint8Array(testFile1).toString());
+      expect(new Uint8Array(fileData1).toString()).not.toEqual(new Uint8Array(testFile2).toString());
 
       const fileData2 = await client.DownloadFile({libraryId, objectId, filePath: "testDirectory/File 2", format: "arrayBuffer"});
-      expect(new Uint8Array(fileData2).toString()).toEqual(new Uint8Array(fileInfo[2].data).toString());
+      expect(new Uint8Array(fileData2).toString()).toEqual(new Uint8Array(testFile2).toString());
     });
 
     test("List Files", async () => {
@@ -698,6 +846,270 @@ describe("Test ElvClient", () => {
       expect(files.testDirectory).toBeDefined();
       expect(files.testDirectory["File 1"]).toBeDefined();
       expect(files.testDirectory["File 2"]).toBeDefined();
+    });
+  });
+
+  describe("Media", () => {
+    test("Create Production Master", async () => {
+      jest.setTimeout(600000);
+
+      mediaLibraryId = await client.CreateContentLibrary({
+        name: "Test Media Library",
+        metadata: {
+          "abr_profile": {
+            "ladder_specs": {
+              "{\"media_type\":\"audio\",\"channels\":2}": {
+                "rung_specs": [
+                  {
+                    "media_type": "audio",
+                    "bit_rate": 128000,
+                    "pregenerate": true
+                  }
+                ]
+              },
+              "{\"media_type\":\"video\",\"aspect_ratio_height\":3,\"aspect_ratio_width\":4}": {
+                "rung_specs": [
+                  {
+                    "media_type": "video",
+                    "bit_rate": 4900000,
+                    "pregenerate": true,
+                    "height": 1080,
+                    "width": 1452
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 3375000,
+                    "pregenerate": false,
+                    "height": 720,
+                    "width": 968
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 1500000,
+                    "pregenerate": false,
+                    "height": 540,
+                    "width": 726
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 825000,
+                    "pregenerate": false,
+                    "height": 432,
+                    "width": 580
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 300000,
+                    "pregenerate": false,
+                    "height": 360,
+                    "width": 484
+                  }
+                ]
+              },
+              "{\"media_type\":\"video\",\"aspect_ratio_height\":9,\"aspect_ratio_width\":16}": {
+                "rung_specs": [
+                  {
+                    "media_type": "video",
+                    "bit_rate": 6500000,
+                    "pregenerate": true,
+                    "height": 1080,
+                    "width": 1920
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 4500000,
+                    "pregenerate": false,
+                    "height": 720,
+                    "width": 1280
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 2000000,
+                    "pregenerate": false,
+                    "height": 540,
+                    "width": 960
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 1100000,
+                    "pregenerate": false,
+                    "height": 432,
+                    "width": 768
+                  },
+                  {
+                    "media_type": "video",
+                    "bit_rate": 400000,
+                    "pregenerate": false,
+                    "height": 360,
+                    "width": 640
+                  }
+                ]
+              }
+            },
+            "playout_formats": {
+              "dash-clear": {
+                "drm": null,
+                "protocol": {
+                  "min_buffer_length": 2,
+                  "type": "ProtoDash"
+                }
+              },
+              "dash-widevine": {
+                "drm": {
+                  "type": "DrmWidevine",
+                  "license_servers": [],
+                  "enc_scheme_name": "cenc",
+                  "content_id": ""
+                },
+                "protocol": {
+                  "type": "ProtoDash",
+                  "min_buffer_length": 2
+                }
+              },
+              "hls-aes128": {
+                "drm": {
+                  "type": "DrmAes128",
+                  "enc_scheme_name": "aes-128"
+                },
+                "protocol": {
+                  "type": "ProtoHls"
+                }
+              },
+              "hls-clear": {
+                "drm": null,
+                "protocol": {
+                  "type": "ProtoHls"
+                }
+              }
+            },
+            "segment_specs": {
+              "audio": {
+                "segs_per_chunk": 15,
+                "target_dur": 2
+              },
+              "video": {
+                "segs_per_chunk": 15,
+                "target_dur": 2.03
+              }
+            }
+          }
+        }
+      });
+
+      const buffer = fs.readFileSync(Path.resolve(__dirname, "files", "Video.mp4"));
+      const data = client.utils.BufferToArrayBuffer(buffer);
+      const fileInfo = [{
+        path: "Video.mp4",
+        mime_type: "video/mp4",
+        size: data.byteLength,
+        data: data
+      }];
+
+      const {id, hash} = await client.CreateProductionMaster({
+        libraryId: mediaLibraryId,
+        name: "Production Master Test",
+        description: "Production Master Test Description",
+        metadata: {test: "master"},
+        fileInfo
+      });
+
+      expect(id).toBeDefined();
+      expect(hash).toBeDefined();
+
+      const metadata = await client.ContentObjectMetadata({
+        versionHash: hash
+      });
+
+      expect(metadata).toBeDefined();
+      expect(metadata.test).toEqual("master");
+      expect(metadata.public.name).toEqual("Production Master Test");
+      expect(metadata.public.description).toEqual("Production Master Test Description");
+
+      masterHash = hash;
+    });
+
+    test("Create Mezzanine", async () => {
+      const {id, hash} = await client.CreateABRMezzanine({
+        libraryId: mediaLibraryId,
+        masterVersionHash: masterHash,
+        name: "Mezzanine Test",
+        description: "Mezzanine Test Description",
+        metadata: {test: "mezzanine"}
+      });
+
+      expect(id).toBeDefined();
+      expect(hash).toBeDefined();
+
+      const metadata = await client.ContentObjectMetadata({
+        versionHash: hash
+      });
+
+      expect(metadata).toBeDefined();
+      expect(metadata.test).toEqual("mezzanine");
+      expect(metadata.public.name).toEqual("Mezzanine Test");
+      expect(metadata.public.description).toEqual("Mezzanine Test Description");
+
+      mezzanineId = id;
+    });
+
+    test("Process Mezzanine", async () => {
+      jest.setTimeout(600000);
+
+      const startResponse = await client.StartABRMezzanineJobs({
+        libraryId: mediaLibraryId,
+        objectId: mezzanineId,
+        offeringKey: "default",
+      });
+
+      const writeToken = startResponse.writeToken;
+
+      // eslint-disable-next-line no-constant-condition
+      while(true) {
+        const status = await client.ContentObjectMetadata({
+          libraryId: mediaLibraryId,
+          objectId: mezzanineId,
+          writeToken,
+          metadataSubtree: "lro_status"
+        });
+
+        if(status.end) {
+          console.log(status.run_state);
+          break;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 10000));
+      }
+
+      await client.FinalizeABRMezzanine({
+        libraryId: mediaLibraryId,
+        objectId: mezzanineId,
+        writeToken,
+        offeringKey: "default"
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    });
+
+    test("Playout Options", async () => {
+      const playoutOptions = await accessClient.PlayoutOptions({
+        objectId: mezzanineId,
+        protocols: ["hls", "dash"],
+        drms: ["widevine", "aes-128"]
+      });
+
+      expect(playoutOptions.dash).toBeDefined();
+      expect(playoutOptions.dash.playoutUrl).toBeDefined();
+
+      expect(playoutOptions.hls).toBeDefined();
+      expect(playoutOptions.hls.playoutUrl).toBeDefined();
+
+      const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
+        objectId: mezzanineId,
+        protocols: ["hls", "dash"],
+        drms: ["widevine", "aes-128"]
+      });
+
+      expect(bitmovinPlayoutOptions).toBeDefined();
     });
   });
 
@@ -709,21 +1121,6 @@ describe("Test ElvClient", () => {
       client.ClearCache();
       const noTransaction = await client.CachedAccessTransaction({versionHash});
       expect(noTransaction).not.toBeDefined();
-
-      expect(client.authClient.accessTransactions).toEqual({
-        spaces: {},
-        libraries: {},
-        types: {},
-        objects: {},
-        other: {}
-      });
-      expect(client.authClient.modifyTransactions).toEqual({
-        spaces: {},
-        libraries: {},
-        types: {},
-        objects: {},
-        other: {}
-      });
     });
 
     test("Access Charge and Info", async () => {
@@ -741,7 +1138,7 @@ describe("Test ElvClient", () => {
       });
 
       expect(accessible).toBeTruthy();
-      expect(accessCode).toEqual(0);
+      expect(accessCode).toEqual(10);
       expect(accessCharge).toEqual("0.5");
 
       const initialBalance = parseFloat(await accessClient.GetBalance({address: accessClient.signer.address}));
@@ -888,7 +1285,7 @@ describe("Test ElvClient", () => {
   });
 
   describe("Verification", () => {
-    test("Verify Content Version", async () => {
+    test.skip("Verify Content Version", async () => {
       const verification = await client.VerifyContentObject({libraryId, objectId, versionHash});
 
       expect(verification).toBeDefined();
@@ -907,10 +1304,15 @@ describe("Test ElvClient", () => {
 
       expect(url.path()).toEqual(expectedPath);
 
+      const authToken = url.query(true).authorization;
+      expect(authToken).toBeDefined();
+
+      const token = client.utils.DecodeAuthorizationToken(authToken);
+
       if(authorization) {
-        expect(url.query(true).authorization).toBeDefined();
+        expect(token.tx_id).toBeDefined();
       } else {
-        expect(url.query(true).authorization).not.toBeDefined();
+        expect(token.tx_id).not.toBeDefined();
       }
 
       if(expectedQueryParams) {
@@ -1003,17 +1405,14 @@ describe("Test ElvClient", () => {
       expect(parts.find(part => part.hash === partInfo.whole)).not.toBeDefined();
     });
 
-    /*
-
     test("Delete Content Version", async () => {
       await client.DeleteContentVersion({libraryId, objectId, versionHash});
 
       try {
         await client.ContentObject({libraryId, objectId, versionHash});
         expect(undefined).toBeDefined();
-      } catch(error) {
-        expect(error.status).toEqual(404);
-      }
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
     });
 
     test("Delete Content Object", async () => {
@@ -1022,10 +1421,11 @@ describe("Test ElvClient", () => {
       try {
         await client.ContentObject({libraryId, objectId});
         expect(undefined).toBeDefined();
-      } catch(error) {
-        expect(error.status).toEqual(404);
-      }
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
     });
+
+    /*
 
     test("Delete Content Type", async () => {
       await client.DeleteContentObject({libraryId: contentSpaceLibraryId, objectId: typeId});

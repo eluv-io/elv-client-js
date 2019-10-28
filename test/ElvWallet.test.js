@@ -1,5 +1,5 @@
 const OutputLogger = require("./utils/OutputLogger");
-const {CreateClient} = require("./utils/Utils");
+const {CreateClient, ReturnBalance} = require("./utils/Utils");
 
 const ElvWallet = require("../src/ElvWallet");
 
@@ -10,8 +10,12 @@ describe("Test ElvWallet", () => {
   beforeAll(async () => {
     jest.setTimeout(30000);
 
-    client = await CreateClient();
+    client = await CreateClient("ElvWallet");
     wallet = OutputLogger(ElvWallet, client.GenerateWallet());
+  });
+
+  afterAll(async () => {
+    await ReturnBalance(client);
   });
 
   test("Generate Wallet", () => {
@@ -20,7 +24,7 @@ describe("Test ElvWallet", () => {
   });
 
   test("Add/Remove Accounts", () => {
-    const privateKey = "0x0000000000000000000000000000000000000000000000000000000000000000";
+    const privateKey = "0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd";
     const accountName = "test";
 
     wallet.AddAccount({accountName, privateKey});

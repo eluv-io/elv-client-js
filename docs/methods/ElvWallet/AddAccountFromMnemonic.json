@@ -1,6 +1,6 @@
 [
   {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"prepare horror screen answer stumble close gate net snow vapor small now\"\n});",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"image hood awful ordinary broom reason parade deal wolf smoke rebuild hollow\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

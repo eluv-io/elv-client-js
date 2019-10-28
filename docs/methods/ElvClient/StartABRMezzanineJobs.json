@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async StartABRMezzanineJobs({\n  \"libraryId\": \"ilibCz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"objectId\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"offeringKey\": \"default\"\n});",
+    "result": "{\n  \"writeToken\": \"tqw_Ene9X5LFNzszb7QqxwakGahsQsYdh936e\",\n  \"logs\": [\n    \"2019-10-28 23:05:20 Debug: getAvpReqCtx, filePath=Video.mp4, qhot=hq__28T8P2AiWnm1xP4xzHJ9katFJLzJA8U1KwAFmLPd1EfQ1EvLBJ2tSAAsrfG9PNuqVjUwQQkUhm\"\n  ],\n  \"warnings\": [],\n  \"errors\": []\n}"
+  }
+]
