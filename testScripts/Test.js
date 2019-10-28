@@ -14,6 +14,10 @@ const Test = async () => {
     });
 
     client.SetSigner({signer});
+
+    console.log(await client.PlayoutOptions({
+      versionHash: "hq__4SEQeYSN7aB7UUeB9wLU9v7yHtVGVteNxQPxrZ1F83fP6AfoHCCJrWYVjcVYsSfsjMnsuD2GYF"
+    }))
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));

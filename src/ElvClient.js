@@ -201,10 +201,6 @@ class ElvClient {
     });
 
     this.userProfileClient = new UserProfileClient({client: this});
-
-    if(this.signer) {
-      this.userProfileClient.WalletAddress();
-    }
   }
 
   SetAuth(auth) {
@@ -546,7 +542,11 @@ class ElvClient {
     metadata = {
       ...metadata,
       name,
-      "eluv.description": description
+      description,
+      public: {
+        name,
+        description
+      }
     };
 
     const libraryId = this.utils.AddressToLibraryId(contractAddress);
@@ -592,7 +592,7 @@ class ElvClient {
    * @methodGroup Content Libraries
    * @namedParams
    * @param {string} libraryId - ID of the library
-   * @param {blob} image - Image to upload
+   * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
    */
   async SetContentLibraryImage({libraryId, image}) {
     const objectId = libraryId.replace("ilib", "iq__");
@@ -613,7 +613,7 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
-   * @param {blob} image - Image to upload
+   * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
    */
   async SetContentObjectImage({libraryId, objectId, image}) {
     const editResponse = await this.EditContentObject({
@@ -1289,6 +1289,15 @@ class ElvClient {
       const { contractAddress } = await this.authClient.CreateContentObject({libraryId, typeId});
 
       objectId = this.utils.AddressToObjectId(contractAddress);
+    }
+
+    if(options.visibility) {
+      await this.CallContractMethod({
+        abi: ContentContract.abi,
+        contractAddress: this.utils.HashToAddress(objectId),
+        methodName: "setVisibility",
+        methodArgs: [options.visibility]
+      });
     }
 
     const path = UrlJoin("qid", objectId);
@@ -3340,11 +3349,12 @@ class ElvClient {
    * @methodGroup Access Groups
    * @namedParams
    * @param {string} name - Name of the access group
+   * @param {string=} description - Description for the access group
    * @param {object=} meta - Metadata for the access group
    *
    * @returns {Promise<string>} - Contract address of created access group
    */
-  async CreateAccessGroup({name, metadata={}}) {
+  async CreateAccessGroup({name, description, metadata={}}) {
     const { contractAddress } = await this.authClient.CreateAccessGroup();
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
@@ -3359,7 +3369,12 @@ class ElvClient {
       objectId,
       writeToken: editResponse.write_token,
       metadata: {
+        public: {
+          name,
+          description
+        },
         name,
+        description,
         ...metadata
       }
     });
@@ -3589,6 +3604,151 @@ class ElvClient {
       memberAddress,
       methodName: "revokeManagerAccess",
       eventName: "ManagerAccessRevoked"
+    });
+  }
+
+  /**
+   * List all of the groups with permissions on the specified library.
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} libraryId - The ID of the library* @param {string} libraryId - The ID of the library
+   * @param {(Array<string>)=} permissions - Limit permission types. If not specified, all permissions will be included
+   *
+   * @return {Promise<Object>} - Object mapping group addresses to permissions, as an array
+   * - Example: { "0x0": ["accessor", "contributor"], ...}
+   */
+  async ContentLibraryGroupPermissions({libraryId, permissions=[]}) {
+    let libraryPermissions = {};
+
+    if(!permissions || permissions.length === 0) {
+      permissions = ["accessor", "contributor", "reviewer"];
+    } else {
+      // Format and validate specified permissions
+      permissions = permissions.map(permission => {
+        permission = permission.toLowerCase();
+
+        if(!["accessor", "contributor", "reviewer"].includes(permission)) {
+          throw Error(`Invalid permission: ${permission}`);
+        }
+
+        return permission;
+      });
+    }
+
+    await Promise.all(
+      permissions.map(async type => {
+        // Get library access groups of the specified type
+        let numGroups = await this.CallContractMethod({
+          contractAddress: this.utils.HashToAddress(libraryId),
+          abi: LibraryContract.abi,
+          methodName: type + "GroupsLength"
+        });
+
+        numGroups = parseInt(numGroups._hex, 16);
+
+        const accessGroupAddresses = await [...Array(numGroups).keys()].limitedMap(
+          3,
+          async i => {
+            try {
+              return this.utils.FormatAddress(
+                await this.CallContractMethod({
+                  contractAddress: this.utils.HashToAddress(libraryId),
+                  abi: LibraryContract.abi,
+                  methodName: type + "Groups",
+                  methodArgs: [i]
+                })
+              );
+            } catch(error) {
+              // eslint-disable-next-line no-console
+              console.error(error);
+            }
+          }
+        );
+
+        accessGroupAddresses.forEach(address =>
+          libraryPermissions[address] = [...(libraryPermissions[address] || []), type].sort());
+      })
+    );
+
+    return libraryPermissions;
+  }
+
+  /**
+   * Add accessor, contributor or reviewer permissions for the specified group on the specified library
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} libraryId - The ID of the library
+   * @param {string} groupAddress - The address of the group
+   * @param {string} permission - The type of permission to add ("accessor", "contributor", "reviewer")
+   */
+  async AddContentLibraryGroup({libraryId, groupAddress, permission}) {
+    groupAddress = this.utils.FormatAddress(groupAddress);
+
+    if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
+      throw Error(`Invalid group type: ${permission}`);
+    }
+
+    const existingPermissions = await this.ContentLibraryGroupPermissions({
+      libraryId,
+      permissions: [permission]
+    });
+
+    if(existingPermissions[groupAddress]) { return; }
+
+    // Capitalize permission to match method and event names
+    permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
+
+    const event = await this.CallContractMethodAndWait({
+      contractAddress: this.utils.HashToAddress(libraryId),
+      abi: LibraryContract.abi,
+      methodName: `add${permission}Group`,
+      methodArgs: [this.utils.FormatAddress(groupAddress)]
+    });
+
+    await this.ExtractEventFromLogs({
+      abi: LibraryContract.abi,
+      event,
+      eventName: `${permission}GroupAdded`
+    });
+  }
+
+  /**
+   * Remove accessor, contributor or reviewer permissions for the specified group on the specified library
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} libraryId - The ID of the library
+   * @param {string} groupAddress - The address of the group
+   * @param {string} permission - The type of permission to remove ("accessor", "contributor", "reviewer")
+   */
+  async RemoveContentLibraryGroup({libraryId, groupAddress, permission}) {
+    if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
+      throw Error(`Invalid group type: ${permission}`);
+    }
+
+    const existingPermissions = await this.ContentLibraryGroupPermissions({
+      libraryId,
+      permissions: [permission]
+    });
+
+    if(!existingPermissions[groupAddress]) { return; }
+
+    // Capitalize permission to match method and event names
+    permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
+
+    const event = await this.CallContractMethodAndWait({
+      contractAddress: this.utils.HashToAddress(libraryId),
+      abi: LibraryContract.abi,
+      methodName: `remove${permission}Group`,
+      methodArgs: [this.utils.FormatAddress(groupAddress)]
+    });
+
+    await this.ExtractEventFromLogs({
+      abi: LibraryContract.abi,
+      event,
+      eventName: `${permission}GroupRemoved`
     });
   }
 

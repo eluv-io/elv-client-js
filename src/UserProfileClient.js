@@ -88,58 +88,74 @@ await client.userProfileClient.UserMetadata()
   async WalletAddress() {
     if(this.walletAddress) { return this.walletAddress; }
 
+    if(this.walletCreationPromise) {
+      await this.walletCreationPromise;
+    }
+
     this.walletAddress = await this.UserWalletAddress({address: this.client.signer.address});
 
-    // No wallet contract for the current user - create one
-    if(!this.walletAddress || this.walletAddress === Utils.nullAddress) {
-      // Don't attempt to create a user wallet if user has no funds
-      const balance = await this.client.GetBalance({address: this.client.signer.address});
-      if(balance < 0.1) {
-        return undefined;
-      }
-
-      const walletCreationEvent = await this.client.CallContractMethodAndWait({
-        contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-        abi: SpaceContract.abi,
-        methodName: "createAccessWallet",
-        methodArgs: []
-      });
-
-      this.walletAddress = this.client.ExtractValueFromEvent({
-        abi: SpaceContract.abi,
-        event: walletCreationEvent,
-        eventName: "CreateAccessWallet",
-        eventValue: "wallet"
-      });
-    }
-
-    // Ensure wallet object is created
-    const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(this.walletAddress);
-
-    try {
-      await this.client.ContentObject({libraryId, objectId});
-    } catch(error) {
-      if(error.status === 404) {
-        const createResponse = await this.client.CreateContentObject({libraryId, objectId});
-
-        await this.client.ReplaceMetadata({
-          libraryId,
-          objectId,
-          writeToken: createResponse.write_token,
-          metadata: {
-            "bitcode_flags": "abrmaster",
-            "bitcode_format": "builtin"
+    if(!this.walletAddress) {
+      // Make promise available so any other calls will wait
+      this.walletCreationPromise = new Promise(async resolve => {
+        // No wallet contract for the current user - create one
+        if(!this.walletAddress || this.walletAddress === Utils.nullAddress) {
+          // Don't attempt to create a user wallet if user has no funds
+          const balance = await this.client.GetBalance({address: this.client.signer.address});
+          if(balance < 0.1) {
+            return undefined;
           }
-        });
 
-        await this.client.FinalizeContentObject({
-          libraryId,
-          objectId,
-          writeToken: createResponse.write_token
-        });
-      }
+          const walletCreationEvent = await this.client.CallContractMethodAndWait({
+            contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+            abi: SpaceContract.abi,
+            methodName: "createAccessWallet",
+            methodArgs: []
+          });
+
+          this.walletAddress = this.client.ExtractValueFromEvent({
+            abi: SpaceContract.abi,
+            event: walletCreationEvent,
+            eventName: "CreateAccessWallet",
+            eventValue: "wallet"
+          });
+
+          this.userWalletAddresses[Utils.FormatAddress(this.client.signer.address)] = this.walletAddress;
+        }
+
+        // Ensure wallet object is created
+        const libraryId = this.client.contentSpaceLibraryId;
+        const objectId = Utils.AddressToObjectId(this.walletAddress);
+
+        try {
+          await this.client.ContentObject({libraryId, objectId});
+        } catch(error) {
+          if(error.status === 404) {
+            const createResponse = await this.client.CreateContentObject({libraryId, objectId});
+
+            await this.client.ReplaceMetadata({
+              libraryId,
+              objectId,
+              writeToken: createResponse.write_token,
+              metadata: {
+                "bitcode_flags": "abrmaster",
+                "bitcode_format": "builtin"
+              }
+            });
+
+            await this.client.FinalizeContentObject({
+              libraryId,
+              objectId,
+              writeToken: createResponse.write_token
+            });
+          }
+        }
+
+        resolve();
+      });
     }
+
+    await this.walletCreationPromise;
+    this.walletCreationPromise = undefined;
 
     return this.walletAddress;
   }
@@ -561,6 +577,7 @@ await client.userProfileClient.UserMetadata()
     const forbiddenMethods = [
       "constructor",
       "FrameAllowedMethods",
+      "MetadataMethods",
       "PromptedMethods",
       "RecordTags",
       "SetAccessLevel",
