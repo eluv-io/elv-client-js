@@ -1,14 +1,14 @@
 [
   {
-    "signature": " AddAccount({\n  \"accountName\": \"test\",\n  \"privateKey\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"test\",\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": " AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0xa87b0b05a2f5aed95719f2b598295d98e8088adf28de5f3d00d94de086e23c16\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0x4db4e19e78fe69644d007b47e20a5e04ac5010592313e775c08cab2ed117dca7\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": " AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
@@ -16,7 +16,7 @@
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": " AddAccount({\n  \"privateKey\": \"0x0000000000000000000000000000000000000000000000000000000000000000\"\n});",
+    "signature": " AddAccount({\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]
