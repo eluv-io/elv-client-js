@@ -3400,7 +3400,7 @@ function () {
                 jobInfo = _context45.sent;
                 // Upload first chunk to estimate bandwidth
                 firstJob = jobInfo[0];
-                firstChunk = firstJob.files.pop();
+                firstChunk = firstJob.files.shift();
                 fileData = fileDataMap[firstChunk.path].slice(firstChunk.off, firstChunk.off + firstChunk.len);
                 start = new Date().getTime();
                 _context45.next = 19;
