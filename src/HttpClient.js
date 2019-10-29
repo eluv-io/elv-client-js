@@ -92,7 +92,7 @@ class HttpClient {
       }
 
       // Parse JSON error if headers indicate JSON
-      const responseType = response.headers.get("content-type");
+      const responseType = response.headers ? response.headers.get("content-type") : "";
 
       let errorBody = "";
       if(response.text && response.json) {
