@@ -108,52 +108,6 @@ class AuthorizationClient {
     }
   }
 
-  async GenerateChannelContentToken({objectId, audienceData, value=0}) {
-    if(!this.noCache && this.channelContentTokens[objectId]) {
-      return this.channelContentTokens[objectId];
-    }
-
-    const nonce = Date.now() + Id.next();
-
-    const paramTypes = [
-      "address",
-      "address",
-      "uint",
-      "uint"
-    ];
-
-    let params = [
-      this.client.signer.address,
-      Utils.HashToAddress(objectId),
-      value,
-      nonce
-    ];
-
-    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-    params[4] = await this.Sign(packedHash);
-
-    let stateChannelApi = "elv_channelContentRequest";
-    if(audienceData) {
-      stateChannelApi = "elv_channelContentRequestContext";
-      params[5] = JSON.stringify(audienceData);
-    }
-
-    const stateChannelUri = await this.KMSUrl({objectId});
-    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-    const payload = await stateChannelProvider.send(stateChannelApi, params);
-
-    const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
-    const multiSig = Utils.FormatSignature(signature);
-
-    const token = `${payload}.${Utils.B64(multiSig)}`;
-
-    if(!this.noCache) {
-      this.channelContentTokens[objectId] = token;
-    }
-
-    return token;
-  }
-
   async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, encryption, update=false, noAuth=false}) {
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
@@ -324,6 +278,81 @@ class AuthorizationClient {
       methodName: "updateRequest",
       methodArgs: [],
     });
+  }
+
+  async GenerateChannelContentToken({objectId, audienceData, value=0}) {
+    if(!this.noCache && this.channelContentTokens[objectId]) {
+      return this.channelContentTokens[objectId];
+    }
+
+    const nonce = Date.now() + Id.next();
+
+    const paramTypes = [
+      "address",
+      "address",
+      "uint",
+      "uint"
+    ];
+
+    let params = [
+      this.client.signer.address,
+      Utils.HashToAddress(objectId),
+      value,
+      nonce
+    ];
+
+    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+    params[4] = await this.Sign(packedHash);
+
+    let stateChannelApi = "elv_channelContentRequest";
+    if(audienceData) {
+      stateChannelApi = "elv_channelContentRequestContext";
+      params[5] = JSON.stringify(audienceData);
+    }
+
+    const stateChannelUri = await this.KMSUrl({objectId});
+    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
+    const payload = await stateChannelProvider.send(stateChannelApi, params);
+
+    const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
+    const multiSig = Utils.FormatSignature(signature);
+
+    const token = `${payload}.${Utils.B64(multiSig)}`;
+
+    if(!this.noCache) {
+      this.channelContentTokens[objectId] = token;
+    }
+
+    return token;
+  }
+
+  async ChannelContentFinalize({objectId, audienceData, percent=0}) {
+    const nonce = Date.now() + Id.next();
+
+    const paramTypes = [
+      "address",
+      "address",
+      "uint",
+      "uint"
+    ];
+
+    let params = [
+      this.client.signer.address,
+      Utils.HashToAddress(objectId),
+      percent,
+      nonce
+    ];
+
+    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+    params[4] = await this.Sign(packedHash);
+
+    const stateChannelApi = "elv_channelContentFinalizeContext";
+    params[5] = JSON.stringify(audienceData);
+
+    const stateChannelUri = await this.KMSUrl({objectId});
+    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
+
+    await stateChannelProvider.send(stateChannelApi, params);
   }
 
   CacheTransaction({accessType, address, publicKey, update, transactionHash}) {

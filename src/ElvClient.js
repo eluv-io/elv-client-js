@@ -2491,7 +2491,7 @@ class ElvClient {
 
     // ** temporary workaround for server permissions issue **
     const production_master = masterMetadata["production_master"];
-    const masterName = masterMetadata.public.name;
+    const masterName = masterMetadata.public ? masterMetadata.public.name : masterMetadata.name;
 
     // ** temporary workaround for server permissions issue **
     // get target library metadata
@@ -2903,6 +2903,27 @@ class ElvClient {
       channelAuth: true,
       audienceData,
       noCache
+    });
+  }
+
+  /**
+   * Finalize state channel access
+   *
+   * @methodGroup Access Requests
+   * @namedParams
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   * @param {number} percentComplete - Completion percentage of the content
+   */
+  async FinalizeStateChannelAccess({objectId, versionHash, percentComplete}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    const audienceData = this.AudienceData({objectId, versionHash});
+
+    await this.authClient.ChannelContentFinalize({
+      objectId,
+      audienceData,
+      percent: percentComplete
     });
   }
 
