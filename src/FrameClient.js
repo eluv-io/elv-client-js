@@ -317,6 +317,7 @@ class FrameClient {
       "FinalizeABRMezzanine",
       "FinalizeContentObject",
       "FinalizePart",
+      "FinalizeStateChannelAccess",
       "FinalizeUploadJob",
       "FormatContractArguments",
       "GenerateStateChannelToken",
