@@ -5771,8 +5771,6 @@ function () {
      *
      * Note: If the access request has an associated charge, this charge will be determined and supplied automatically.
      *
-     * TODO: Content space and library access requests are currently disabled for performance reasons
-     *
      * @methodGroup Access Requests
      * @namedParams
      * @param {string=} libraryId - ID of the library

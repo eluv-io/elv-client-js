@@ -40,15 +40,42 @@ contract BaseContent is Editable {
     uint256 public requestID = 0;
 
     uint8 public visibility = 0;
-    uint8 public CAN_SEE = 1;
-    uint8 public CAN_ACCESS = 10;
-    uint8 public CAN_EDIT = 100;
+    uint8 public constant CAN_SEE = 1;
+    uint8 public constant CAN_ACCESS = 10;
+    uint8 public constant CAN_EDIT = 100;
 
     struct RequestData {
         address originator; // client address requesting
         uint256 amountPaid; // number of token received
         int8 status; //0 access requested, 1 access granted, -1 access refused, 2 access completed, -2 access error
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
+    }
+
+    function migrate(address _contentType,
+            address _addressKMS,
+            address _contentContractAddress,
+            // address _libraryAddress,
+            uint256 _accessCharge,
+            int _statusCode,
+            uint256 _requestID,
+            uint8 _visibility,
+            string _objectHash,
+            string _versionHashes
+        ) public onlyOwner {
+
+        contentType = _contentType;
+        addressKMS = _addressKMS;
+        contentContractAddress = _contentContractAddress;
+        // libraryAddress = _libraryAddress; // TODO: set by library factory method?
+
+        accessCharge = _accessCharge;
+        statusCode = _statusCode;
+        requestID = _requestID;
+        visibility = _visibility;
+
+        super.migrate(_objectHash, _versionHashes);
+
+        return;
     }
 
     mapping(uint256 => RequestData) public requestMap;
@@ -515,7 +542,11 @@ contract BaseContent is Editable {
     function kill() public onlyFromLibrary {
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            require(c.runKill() == 0);
+            uint canKill = c.runKill();
+            require((canKill == 0) || (canKill == 100));
+            if (canKill == 100) {
+                c.kill();
+            }
         }
         super.kill();
     }

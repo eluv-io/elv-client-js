@@ -19,12 +19,13 @@ BaseLibrary20190522154000SS: Changed hash bytes32 to string
 BaseLibrary20190523121700ML: Fixes logic of add/remove of groups to revert to compact arrays
 BaseLibrary20190528151200ML: Uses Container abstraction
 BaseLibrary20190605150200ML: Splits out canConfirm from canPublish
+BaseLibrary20191010140800ML: Content can be deleted by content owner or the library owner
 */
 
 
 contract BaseLibrary is MetaObject, Accessible, Container {
 
-    bytes32 public version ="BaseLibrary20190605150200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20191010140800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public contributorGroups;
     address[] public reviewerGroups;
@@ -289,10 +290,10 @@ contract BaseLibrary is MetaObject, Accessible, Container {
         return content;
     }
 
-    // content can be deleted by content owner
+    // content can be deleted by content owner or the library owner
     function deleteContent(address _contentAddr) public {
         BaseContent content = BaseContent(_contentAddr);
-        require(content.owner() == msg.sender);
+        require((content.owner() == msg.sender) || (owner == msg.sender));
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }
