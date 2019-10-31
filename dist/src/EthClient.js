@@ -1059,9 +1059,28 @@ function () {
                 });
 
               case 3:
-                contractLogs = _context17.sent;
+                _context17.t0 = _context17.sent;
+
+                if (_context17.t0) {
+                  _context17.next = 6;
+                  break;
+                }
+
+                _context17.t0 = [];
+
+              case 6:
+                contractLogs = _context17.t0;
+
+                if (Array.isArray(contractLogs)) {
+                  _context17.next = 9;
+                  break;
+                }
+
+                return _context17.abrupt("return", []);
+
+              case 9:
                 blocks = {};
-                _context17.next = 7;
+                _context17.next = 12;
                 return contractLogs.limitedMap(5,
                 /*#__PURE__*/
                 function () {
@@ -1110,12 +1129,12 @@ function () {
                   };
                 }());
 
-              case 7:
+              case 12:
                 return _context17.abrupt("return", Object.values(blocks).sort(function (a, b) {
                   return a[0].blockNumber < b[0].blockNumber ? 1 : -1;
                 }));
 
-              case 8:
+              case 13:
               case "end":
                 return _context17.stop();
             }

@@ -5116,13 +5116,13 @@ function () {
       var _CreateABRMezzanine = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee65(_ref75) {
-        var libraryId, name, description, _ref75$metadata, metadata, masterVersionHash, _ref75$variant, variant, abrMezType, masterMetadata, production_master, masterName, targetLib, abr_profile, _ref76, id, write_token, authorizationTokens, headers, _ref77, logs, errors, warnings, finalizeResponse;
+        var libraryId, name, description, _ref75$metadata, metadata, masterVersionHash, abrProfile, _ref75$variant, variant, abrMezType, _ref76, id, write_token, masterName, authorizationTokens, headers, body, _ref77, logs, errors, warnings, finalizeResponse;
 
         return regeneratorRuntime.wrap(function _callee65$(_context65) {
           while (1) {
             switch (_context65.prev = _context65.next) {
               case 0:
-                libraryId = _ref75.libraryId, name = _ref75.name, description = _ref75.description, _ref75$metadata = _ref75.metadata, metadata = _ref75$metadata === void 0 ? {} : _ref75$metadata, masterVersionHash = _ref75.masterVersionHash, _ref75$variant = _ref75.variant, variant = _ref75$variant === void 0 ? "default" : _ref75$variant;
+                libraryId = _ref75.libraryId, name = _ref75.name, description = _ref75.description, _ref75$metadata = _ref75.metadata, metadata = _ref75$metadata === void 0 ? {} : _ref75$metadata, masterVersionHash = _ref75.masterVersionHash, abrProfile = _ref75.abrProfile, _ref75$variant = _ref75.variant, variant = _ref75$variant === void 0 ? "default" : _ref75$variant;
                 _context65.next = 3;
                 return this.ContentType({
                   name: "ABR Master"
@@ -5148,34 +5148,6 @@ function () {
 
               case 8:
                 _context65.next = 10;
-                return this.ContentObjectMetadata({
-                  versionHash: masterVersionHash
-                });
-
-              case 10:
-                masterMetadata = _context65.sent;
-                // ** temporary workaround for server permissions issue **
-                production_master = masterMetadata["production_master"];
-                masterName = masterMetadata["public"] ? masterMetadata["public"].name : masterMetadata.name; // ** temporary workaround for server permissions issue **
-                // get target library metadata
-
-                _context65.next = 15;
-                return this.ContentLibrary({
-                  libraryId: libraryId
-                });
-
-              case 15:
-                targetLib = _context65.sent;
-                _context65.next = 18;
-                return this.ContentObjectMetadata({
-                  libraryId: libraryId,
-                  objectId: targetLib.qid,
-                  metadataSubtree: "abr_profile"
-                });
-
-              case 18:
-                abr_profile = _context65.sent;
-                _context65.next = 21;
                 return this.CreateContentObject({
                   libraryId: libraryId,
                   options: {
@@ -5183,43 +5155,51 @@ function () {
                   }
                 });
 
-              case 21:
+              case 10:
                 _ref76 = _context65.sent;
                 id = _ref76.id;
                 write_token = _ref76.write_token;
+                _context65.next = 15;
+                return this.ContentObjectMetadata({
+                  versionHash: masterVersionHash,
+                  metadataSubtree: "public/name"
+                });
+
+              case 15:
+                masterName = _context65.sent;
                 // Include authorization for library, master, and mezzanine
                 authorizationTokens = [];
                 _context65.t0 = authorizationTokens;
-                _context65.next = 28;
+                _context65.next = 20;
                 return this.authClient.AuthorizationToken({
                   libraryId: libraryId,
                   objectId: id,
                   update: true
                 });
 
-              case 28:
+              case 20:
                 _context65.t1 = _context65.sent;
 
                 _context65.t0.push.call(_context65.t0, _context65.t1);
 
                 _context65.t2 = authorizationTokens;
-                _context65.next = 33;
+                _context65.next = 25;
                 return this.authClient.AuthorizationToken({
                   libraryId: libraryId
                 });
 
-              case 33:
+              case 25:
                 _context65.t3 = _context65.sent;
 
                 _context65.t2.push.call(_context65.t2, _context65.t3);
 
                 _context65.t4 = authorizationTokens;
-                _context65.next = 38;
+                _context65.next = 30;
                 return this.authClient.AuthorizationToken({
                   versionHash: masterVersionHash
                 });
 
-              case 38:
+              case 30:
                 _context65.t5 = _context65.sent;
 
                 _context65.t4.push.call(_context65.t4, _context65.t5);
@@ -5229,31 +5209,33 @@ function () {
                     return "Bearer ".concat(token);
                   }).join(",")
                 };
-                _context65.next = 43;
+                body = {
+                  offering_key: variant,
+                  variant_key: variant,
+                  prod_master_hash: masterVersionHash
+                };
+
+                if (abrProfile) {
+                  body.abr_profile = abrProfile;
+                }
+
+                _context65.next = 37;
                 return this.CallBitcodeMethod({
                   libraryId: libraryId,
                   objectId: id,
                   writeToken: write_token,
                   method: UrlJoin("media", "abr_mezzanine", "init"),
                   headers: headers,
-                  body: {
-                    "offering_key": variant,
-                    "variant_key": variant,
-                    "prod_master_hash": masterVersionHash,
-                    production_master: production_master,
-                    // ** temporary workaround for server permissions issue **
-                    abr_profile: abr_profile // ** temporary workaround for server permissions issue **
-
-                  },
+                  body: body,
                   constant: false
                 });
 
-              case 43:
+              case 37:
                 _ref77 = _context65.sent;
                 logs = _ref77.logs;
                 errors = _ref77.errors;
                 warnings = _ref77.warnings;
-                _context65.next = 49;
+                _context65.next = 43;
                 return this.MergeMetadata({
                   libraryId: libraryId,
                   objectId: id,
@@ -5275,15 +5257,15 @@ function () {
                   }, metadata || {})
                 });
 
-              case 49:
-                _context65.next = 51;
+              case 43:
+                _context65.next = 45;
                 return this.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: id,
                   writeToken: write_token
                 });
 
-              case 51:
+              case 45:
                 finalizeResponse = _context65.sent;
                 return _context65.abrupt("return", _objectSpread({
                   logs: logs || [],
@@ -5291,7 +5273,7 @@ function () {
                   errors: errors || []
                 }, finalizeResponse));
 
-              case 53:
+              case 47:
               case "end":
                 return _context65.stop();
             }
@@ -5327,7 +5309,7 @@ function () {
       regeneratorRuntime.mark(function _callee67(_ref78) {
         var _this5 = this;
 
-        var libraryId, objectId, _ref78$offeringKey, offeringKey, _ref78$access, access, mezzanineMetadata, masterHash, masterFileData, prepSpecs, masterVersionHashes, authorizationTokens, headers, accessParameter, region, bucket, accessKey, secret, _ref80, write_token, _ref81, data, errors, warnings, logs;
+        var libraryId, objectId, _ref78$offeringKey, offeringKey, _ref78$access, access, mezzanineMetadata, prepSpecs, masterVersionHashes, authorizationTokens, headers, accessParameter, region, bucket, accessKey, secret, _ref80, write_token, _ref81, data, errors, warnings, logs;
 
         return regeneratorRuntime.wrap(function _callee67$(_context67) {
           while (1) {
@@ -5343,31 +5325,19 @@ function () {
 
               case 3:
                 mezzanineMetadata = _context67.sent;
-                masterHash = mezzanineMetadata["default"].prod_master_hash; // get file list from master
-                // ** temporary workaround for permissions issue
+                prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || []; // Retrieve all masters associated with this offering
 
-                _context67.next = 7;
-                return this.ContentObjectMetadata({
-                  versionHash: masterHash,
-                  metadataSubtree: "files"
-                });
+                masterVersionHashes = prepSpecs.map(function (spec) {
+                  return (spec.source_streams || []).map(function (stream) {
+                    return stream.master_hash;
+                  });
+                }).flat().filter(function (hash) {
+                  return hash;
+                }).filter(function (v, i, a) {
+                  return a.indexOf(v) === i;
+                }); // Retrieve authorization tokens for all masters and the mezzanine
 
-              case 7:
-                masterFileData = _context67.sent;
-                prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || [];
-                /*
-                // Retrieve all masters associated with this offering
-                const masterVersionHashes = prepSpecs.map(spec =>
-                  (spec.source_streams || []).map(stream => stream.master_hash)
-                )
-                  .flat()
-                  .filter(hash => hash)
-                  .filter((v, i, a) => a.indexOf(v) === i);
-                */
-
-                masterVersionHashes = [masterHash]; // Retrieve authorization tokens for all masters and the mezzanine
-
-                _context67.next = 12;
+                _context67.next = 8;
                 return Promise.all(masterVersionHashes.map(
                 /*#__PURE__*/
                 function () {
@@ -5399,16 +5369,16 @@ function () {
                   };
                 }()));
 
-              case 12:
+              case 8:
                 authorizationTokens = _context67.sent;
-                _context67.next = 15;
+                _context67.next = 11;
                 return this.authClient.AuthorizationToken({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 15:
+              case 11:
                 _context67.t0 = _context67.sent;
                 _context67.t1 = _toConsumableArray(authorizationTokens);
                 authorizationTokens = [_context67.t0].concat(_context67.t1);
@@ -5437,16 +5407,16 @@ function () {
                   }];
                 }
 
-                _context67.next = 22;
+                _context67.next = 18;
                 return this.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 22:
+              case 18:
                 _ref80 = _context67.sent;
                 write_token = _ref80.write_token;
-                _context67.next = 26;
+                _context67.next = 22;
                 return this.CallBitcodeMethod({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -5456,13 +5426,11 @@ function () {
                   constant: false,
                   body: {
                     access: accessParameter,
-                    offering_key: offeringKey,
-                    job_indexes: _toConsumableArray(Array(prepSpecs.length).keys()),
-                    production_master_files: masterFileData
+                    offering_key: offeringKey
                   }
                 });
 
-              case 26:
+              case 22:
                 _ref81 = _context67.sent;
                 data = _ref81.data;
                 errors = _ref81.errors;
@@ -5476,7 +5444,7 @@ function () {
                   errors: errors || []
                 });
 
-              case 32:
+              case 28:
               case "end":
                 return _context67.stop();
             }

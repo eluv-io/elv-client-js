@@ -463,7 +463,11 @@ class EthClient {
         fromBlock,
         toBlock
       }]
-    });
+    }) || [];
+
+    if(!Array.isArray(contractLogs)) {
+      return [];
+    }
 
     let blocks = {};
     await contractLogs.limitedMap(
