@@ -44,6 +44,7 @@ contract Content is Ownable {
     }
 
     //0 indicates that the deletion/inactivation can proceed.
+    //100 indicates that the deletion can proceed and the custom contract should be killed too
     // Other numbers can be used as error codes and would stop the processing.
     function runKill() public payable returns (uint) {
         return 0;

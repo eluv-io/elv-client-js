@@ -249,66 +249,66 @@ contract AccessIndexor is Ownable {
         emit RightsChanged(address(this), obj, newAggregate);
     }
 
-    //event dbAddress(string label, address addr);
-    //event dbUint8(string label, uint8 i);
-    //event dbbool(string label, bool b);
+    // Indexor managers can revoke anything
+    // Indexor managers can confirm tentative
+    // Object rights holders can grant tentative
+    // Object rights holders can revoke
+    // Object rights holders can grant confirm if they are also Wallet manager
+    //access is either ACCESS_NONE (0), or any uint8 > 0, the current rights and privilege of granter and grantee will drive the new rights values
     function setRights(AccessIndex storage index, address obj, uint8 access_type, uint8 access) private  {
-        if (access != ACCESS_NONE) {
-            UserSpace space = UserSpace(contentSpace);
-            address walletAddress = space.userWallets(tx.origin);
-            if  (walletAddress == 0x0) {
-                Ownable instance = Ownable(obj);
-                require(tx.origin == instance.owner());
-            }
-            if (walletAddress != 0x0) {
-                AccessIndexor wallet = AccessIndexor(walletAddress);
-                //emit dbAddress("wallet address", walletAddress);
-                //emit dbUint8("cateogry", index.category);
-                //emit dbAddress("obj", obj);
-                //emit dbUint8("access type checked", TYPE_EDIT);
-                //bool b = wallet.checkRights(index.category, obj, TYPE_EDIT);
-                //emit dbbool("has access", b);
-                require(wallet.checkRights(index.category, obj, TYPE_EDIT));
-            }
+
+        bool isIndexorManager = hasManagerAccess(tx.origin);
+        bool isObjRightHolder = false;
+        UserSpace space = UserSpace(contentSpace);
+        address walletAddress = space.userWallets(tx.origin);
+        /*
+        if  (walletAddress == 0x0) {
+            Ownable instance = Ownable(obj);
+            isObjRightHolder = (tx.origin == instance.owner());
+        } else {
+            AccessIndexor wallet = AccessIndexor(walletAddress);
+            isObjRightHolder = wallet.checkRights(index.category, obj, TYPE_EDIT);
         }
+    */
+        AccessIndexor wallet = AccessIndexor(walletAddress);
+        isObjRightHolder = wallet.checkRights(index.category, obj, TYPE_EDIT);
+
         uint8 currentAggregate = index.rights[obj];
         uint8[3] memory currentRights;
         currentRights[0] = currentAggregate % 10;
         currentRights[1] = currentAggregate % 100 - currentRights[0];
         currentRights[2] = currentAggregate - currentRights[1] - currentRights[0];
 
-        if (hasManagerAccess(tx.origin) == true) {
-            //manager can revoke
-            if (access == ACCESS_NONE) {
-                currentRights[access_type] = 0;
-            }
+        bool operationAuthorized = false;
+        uint8 targetAccess = access;
 
-            //manager can confirm or infirm something tentative
-            if ((currentRights[access_type] == ACCESS_TENTATIVE) && (access != ACCESS_TENTATIVE)) {
-                currentRights[access_type] = access * ranking[access_type];
-            }
-
-            //if access grant is tentative, but user is manager, then make it confirmed
-            if (access >= ACCESS_TENTATIVE) {
-                currentRights[access_type] = ACCESS_CONFIRMED * ranking[access_type];
-            }
-
-            //to be discussed, manager can also adds itself viewing privileges, acting as a bookmark.
-            if ((access_type == TYPE_SEE)  && (access != ACCESS_NONE)) {
-                currentRights[access_type] = ACCESS_CONFIRMED;
-            }
-        } else {
-
-            //library can add tentative rights, unless rights are already confirmed
-            if ((access >= ACCESS_TENTATIVE) && (currentRights[access_type] == 0)) {
-                currentRights[access_type] = ACCESS_TENTATIVE * ranking[access_type];
-            }
-
-            //library can withdraw privilege
-            if (access == ACCESS_NONE) {
-                currentRights[access_type] = ACCESS_NONE;
-            }
+        // Indexor managers can revoke anything, Object rights holders can revoke
+        if ((access == ACCESS_NONE) && (isIndexorManager ||  isObjRightHolder)) {
+            operationAuthorized = true;
         }
+
+        // Indexor managers can confirm tentative
+        if ((access != ACCESS_NONE) && isIndexorManager && (currentRights[access_type] == ACCESS_TENTATIVE)) {
+            operationAuthorized = true;
+            targetAccess = ACCESS_CONFIRMED;
+        }
+
+        // Object rights holders can grant tentative
+        if ((access != ACCESS_NONE) && isObjRightHolder && (currentRights[access_type] != ACCESS_CONFIRMED)){
+            operationAuthorized = true;
+            targetAccess = ACCESS_TENTATIVE;
+         }
+
+        // Object rights holders can grant confirm if they are also Wallet manager
+        if ((access != ACCESS_NONE) && isIndexorManager && isObjRightHolder) {
+            operationAuthorized = true;
+            targetAccess = ACCESS_CONFIRMED;
+        }
+
+        require(operationAuthorized);
+
+        currentRights[access_type] = targetAccess * ranking[access_type];
+
         uint8 newAggregate = currentRights[0] + currentRights[1] + currentRights[2];
         index.rights[obj] = newAggregate;
 

@@ -1,12 +1,19 @@
 const fs = require("fs");
 const path = require("path");
-const solc = require("solc");
+const nodeSolc = require("solc");
 const ethers = require("ethers");
 
 // Create minimal JS containing ABI and bytecode from compiled contract
-const BuildContracts = () => {
+const BuildContracts = async () => {
   const contractFiles = fs.readdirSync(path.join(__dirname, "..", "contracts"))
     .filter(filename => filename.endsWith(".sol") && filename !== "Migrations.sol");
+
+  const solc = await new Promise((resolve, reject) =>
+    nodeSolc.loadRemoteVersion(
+      "v0.4.24+commit.e67f0147",
+      (error, solc) => error ? reject(error) : resolve(solc)
+    )
+  );
 
   let sources = {};
   for(const contractFilename of contractFiles) {
@@ -23,6 +30,13 @@ const BuildContracts = () => {
   ];
 
   const compilationResult = solc.compile({ sources }, 1);
+
+  compilationResult.errors.map(error => console.error(error));
+
+  if(Object.keys(compilationResult.contracts).length === 0) {
+    console.error("\n\nFailed to compile\n\n");
+  }
+
   let topicMap = {};
   Object.keys(compilationResult.contracts).map((contractKey => {
     const contractName = contractKey.split(":")[1];
