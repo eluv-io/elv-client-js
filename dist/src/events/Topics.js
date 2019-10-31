@@ -43,347 +43,6 @@ var topics = {
     }],
     "ambiguous": true
   },
-  "0x1f6808146a51d157d9343b08ee6fce3b39b0e5b419f4c8524a56512acf5ba2b5": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "maxCreditPerAd",
-        "type": "uint256"
-      }],
-      "name": "MaxCreditPerAd",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0xecfcc1bcfb602db0a89a128bad350799ac7741ae87395080e8da39da6f100fcb": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "bitcode",
-        "type": "address"
-      }],
-      "name": "BitcodeAddress",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0xb92a8e382f572ae6133fc542b538c526abdb10f38288b27314dbe5f88e8289c9": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "msg",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "flag",
-        "type": "bool"
-      }],
-      "name": "dbgBool",
-      "type": "event"
-    }],
-    "contract": "AdmgrAdvertisement"
-  },
-  "0x6ff7fb64b6de68edefccdbd8bcbc45f7693866bfe7cf42112e795b744a36a979": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "msg",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "addr",
-        "type": "address"
-      }],
-      "name": "dbgAddress",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0xfdd59060f425ba73a285897b1a70f2e10b4306ab319f982c2cca84f2624b31a3": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "msg",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "num",
-        "type": "uint256"
-      }],
-      "name": "dbgUint256",
-      "type": "event"
-    }],
-    "contract": "AdmgrAdvertisement"
-  },
-  "0xa6d42b96edd4a573a32700876f80ba069a9ae914e8eafadde0105d4f88655b65": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "msg",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "num",
-        "type": "uint8"
-      }],
-      "name": "dbgUint8",
-      "type": "event"
-    }],
-    "contract": "AdmgrAdvertisement"
-  },
-  "0xaece22630686dbd55b6abda418f40cdac4e6a852a84d7dd1b92dc7c116a30e52": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "msg",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "b",
-        "type": "bytes32"
-      }],
-      "name": "dbgByte32",
-      "type": "event"
-    }],
-    "contract": "AdmgrAdvertisement"
-  },
-  "0xf32c87b0fe4dc0f05e659e69aefad874adfa8d887470813f002140900047e744": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "msg",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "b",
-        "type": "bytes"
-      }],
-      "name": "dbgBytes",
-      "type": "event"
-    }],
-    "contract": "AdmgrAdvertisement"
-  },
-  "0xcf34ef537ac33ee1ac626ca1587a0a7e8e51561e5514f8cb36afa1c5102b3bab": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "label",
-        "type": "string"
-      }],
-      "name": "Log",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x4c34c2f9a78632f29fa59aaed5514cb742fd9fbcfd7ccc2c03c85f2bbc621c47": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "label",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "b",
-        "type": "bool"
-      }],
-      "name": "LogBool",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x62ddffe5b5108385f7a590f100e1ee414ad9551a31f089e64e82998440785e1e": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "label",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "a",
-        "type": "address"
-      }],
-      "name": "LogAddress",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x31c369d7029afba34b21369bcf9a6ac132fb2621c34558b914859b768d05232d": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "label",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "u",
-        "type": "uint256"
-      }],
-      "name": "LogUint256",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x3d9b341774178bb033613e3a7a1cadb2244b3bcbb1372905d2ba24dca38aeb22": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "label",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "u",
-        "type": "int256"
-      }],
-      "name": "LogInt256",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x02d93529bba9d141e5e06733c52c7e6fbcb1149586adb5c24064b522ab26f1d7": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "label",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "b",
-        "type": "bytes32"
-      }],
-      "name": "LogBytes32",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x6a0f12fe24f7c34df8acc096f076bac6e3f1ff225f4fccc7b0f389657bde895a": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "label",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "payee",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "amount",
-        "type": "uint256"
-      }],
-      "name": "LogPayment",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x9df71221e13c480b974b5d5bd7591b30b7ea3bfff8a56dfa7fde810a14c1c39b": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "result",
-        "type": "uint256"
-      }],
-      "name": "RunCreate",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x6d0dbfc3805aef247651b04b50fc717599f7e0b66c6b022ae1544406f7bf8f86": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "result",
-        "type": "uint256"
-      }],
-      "name": "RunKill",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0xb6c1c013bb5004fe8e943c6890e300ccedf9bd73dcd4eb291b31b9f96874feff": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "proposedStatusCode",
-        "type": "int256"
-      }, {
-        "indexed": false,
-        "name": "returnStatusCode",
-        "type": "int256"
-      }],
-      "name": "RunStatusChange",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0xffadad18ab3777a19f664019a6261b011ab9405749e01a45950d44fb9360b385": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "level",
-        "type": "uint8"
-      }, {
-        "indexed": false,
-        "name": "calculateAccessCharge",
-        "type": "int256"
-      }],
-      "name": "RunAccessCharge",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x3e68dc35f88d76818f276322c37f5021ee00e232fe0d27a93c02801aec4d9c58": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "requestID",
-        "type": "uint256"
-      }, {
-        "indexed": false,
-        "name": "result",
-        "type": "uint256"
-      }],
-      "name": "RunAccess",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0xbf0f2215c45c5ee802d4c20bdfc915308c4459b0f6a78f23ad350e6408bf2891": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "requestID",
-        "type": "uint256"
-      }, {
-        "indexed": false,
-        "name": "result",
-        "type": "uint256"
-      }],
-      "name": "RunFinalize",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
   "0xb251eb052afc73ffd02ffe85ad79990a8b3fed60d76dbc2fa2fdd7123dffd914": {
     "abi": [{
       "anonymous": false,
@@ -912,6 +571,64 @@ var topics = {
     }],
     "contract": "BaseContent"
   },
+  "0x4461f9cdcf9ac44bc5cf3219f1d1e52e19ffc2bd4af5999df15f51c1396a178b": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "libraryAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "contentAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "userAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "contextHash",
+        "type": "bytes32"
+      }, {
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint64"
+      }],
+      "name": "AccessRequest",
+      "type": "event"
+    }],
+    "contract": "BaseContentFactoryExt"
+  },
+  "0xe319d76ed8c228f343b3ed07f3b89fda4a39776dcedcb4c02b06273d89f51d48": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "libraryAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "contentAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "userAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "contextHash",
+        "type": "bytes32"
+      }, {
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint64"
+      }],
+      "name": "AccessComplete",
+      "type": "event"
+    }],
+    "contract": "BaseContentFactoryExt"
+  },
   "0x9e69777f30c55126be256664fa7beff4b796ac32ebceab94df5071b0148017f8": {
     "abi": [{
       "anonymous": false,
@@ -1328,57 +1045,260 @@ var topics = {
     }],
     "contract": "BaseLibrary"
   },
-  "0xe7f8e24d42ea8b87bac0d5fed794e840346a2473644783f7e209404b34ccaaa4": {
+  "0xcf34ef537ac33ee1ac626ca1587a0a7e8e51561e5514f8cb36afa1c5102b3bab": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
         "indexed": false,
-        "name": "stream",
+        "name": "label",
+        "type": "string"
+      }],
+      "name": "Log",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x4c34c2f9a78632f29fa59aaed5514cb742fd9fbcfd7ccc2c03c85f2bbc621c47": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "label",
+        "type": "string"
+      }, {
+        "indexed": false,
+        "name": "b",
+        "type": "bool"
+      }],
+      "name": "LogBool",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x62ddffe5b5108385f7a590f100e1ee414ad9551a31f089e64e82998440785e1e": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "label",
+        "type": "string"
+      }, {
+        "indexed": false,
+        "name": "a",
         "type": "address"
+      }],
+      "name": "LogAddress",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x31c369d7029afba34b21369bcf9a6ac132fb2621c34558b914859b768d05232d": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "label",
+        "type": "string"
+      }, {
+        "indexed": false,
+        "name": "u",
+        "type": "uint256"
+      }],
+      "name": "LogUint256",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x3d9b341774178bb033613e3a7a1cadb2244b3bcbb1372905d2ba24dca38aeb22": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "label",
+        "type": "string"
+      }, {
+        "indexed": false,
+        "name": "u",
+        "type": "int256"
+      }],
+      "name": "LogInt256",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x02d93529bba9d141e5e06733c52c7e6fbcb1149586adb5c24064b522ab26f1d7": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "label",
+        "type": "string"
+      }, {
+        "indexed": false,
+        "name": "b",
+        "type": "bytes32"
+      }],
+      "name": "LogBytes32",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x6a0f12fe24f7c34df8acc096f076bac6e3f1ff225f4fccc7b0f389657bde895a": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "label",
+        "type": "string"
+      }, {
+        "indexed": false,
+        "name": "payee",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "amount",
+        "type": "uint256"
+      }],
+      "name": "LogPayment",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x9df71221e13c480b974b5d5bd7591b30b7ea3bfff8a56dfa7fde810a14c1c39b": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "result",
+        "type": "uint256"
+      }],
+      "name": "RunCreate",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x6d0dbfc3805aef247651b04b50fc717599f7e0b66c6b022ae1544406f7bf8f86": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "result",
+        "type": "uint256"
+      }],
+      "name": "RunKill",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0xb6c1c013bb5004fe8e943c6890e300ccedf9bd73dcd4eb291b31b9f96874feff": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "proposedStatusCode",
+        "type": "int256"
+      }, {
+        "indexed": false,
+        "name": "returnStatusCode",
+        "type": "int256"
+      }],
+      "name": "RunStatusChange",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0xffadad18ab3777a19f664019a6261b011ab9405749e01a45950d44fb9360b385": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "level",
+        "type": "uint8"
+      }, {
+        "indexed": false,
+        "name": "calculateAccessCharge",
+        "type": "int256"
+      }],
+      "name": "RunAccessCharge",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x3e68dc35f88d76818f276322c37f5021ee00e232fe0d27a93c02801aec4d9c58": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "requestID",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "result",
+        "type": "uint256"
+      }],
+      "name": "RunAccess",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0xbf0f2215c45c5ee802d4c20bdfc915308c4459b0f6a78f23ad350e6408bf2891": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "requestID",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "result",
+        "type": "uint256"
+      }],
+      "name": "RunFinalize",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0xe36c3ab835cea1a8af00f744c77bb77bbbd33d20062bee3f9aceb6518d08e45e": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
       }, {
         "indexed": false,
         "name": "accessor",
         "type": "address"
       }, {
         "indexed": false,
-        "name": "decision",
+        "name": "rightsHolder",
+        "type": "bool"
+      }, {
+        "indexed": false,
+        "name": "provider",
+        "type": "bool"
+      }, {
+        "indexed": false,
+        "name": "membership",
         "type": "bool"
       }],
       "name": "AuthorizeRecording",
       "type": "event"
     }],
-    "contract": "LvProvider"
+    "contract": "LvRecordableStream"
   },
-  "0x4c49660aa366f5dbbcb1dbd1ec3af09f0a347b35d038e0cadcaa66a649ba71a1": {
+  "0x41b90676ca6c9f288172c8f4f1f0253bfc527115acd3f7a972a5219ea4b0d0c5": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
         "indexed": false,
-        "name": "stream",
-        "type": "address"
-      }],
-      "name": "EnableRecording",
-      "type": "event"
-    }],
-    "contract": "LvProvider"
-  },
-  "0x6317042190d28c86a2c94288b6415af2216320653d1b7fca2145f320833e46ec": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
         "indexed": false,
-        "name": "stream",
+        "name": "accessor",
         "type": "address"
-      }],
-      "name": "DisableRecording",
-      "type": "event"
-    }],
-    "contract": "LvProvider"
-  },
-  "0x88d83a7de442802022aa288b908ff05118e7afe867b54bb84ad9a218a24530ff": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
+      }, {
         "indexed": false,
         "name": "recObj",
         "type": "address"
@@ -1392,10 +1312,43 @@ var topics = {
     }],
     "contract": "LvRecordableStream"
   },
-  "0xcf1ab023fd92a162f9a12f24f382865d826229cdc805aba8fc2d0b29d861d017": {
+  "0x9d3bb073bb2ef4d4a880f32fbbc665abfad2b29f532a231d93ab2207396f0b25": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "accessor",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "recObj",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "recContract",
+        "type": "address"
+      }],
+      "name": "DeleteRecording",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0x8e6b298cf577550234f0d0de33a4910d4bf1c4e08fe31b1173b2c6232297b3f4": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "accessor",
+        "type": "address"
+      }, {
         "indexed": false,
         "name": "recObj",
         "type": "address"
@@ -1413,10 +1366,18 @@ var topics = {
     }],
     "contract": "LvRecordableStream"
   },
-  "0xf5f1b9ac9ffc50cdf153723b101ce0018c29b510ca349492db7af003633a43c5": {
+  "0x93ee8bc66b5d08a5dc39e788b1f78aa5f9ff2deda9e1387aa1fe22f9c329ed85": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "accessor",
+        "type": "address"
+      }, {
         "indexed": false,
         "name": "recObj",
         "type": "address"
@@ -1430,28 +1391,179 @@ var topics = {
     }],
     "contract": "LvRecordableStream"
   },
-  "0xb7265c44543d51dcc479cfb7a0466c404a0dbd72d73e710adbb95e96306f8ad9": {
+  "0xc61a2a2e8a2557b79670b411852a149a0fa08362d65b5fae5c80f3707895fab6": {
     "abi": [{
       "anonymous": false,
-      "inputs": [],
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "accessor",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "recObj",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "requestID",
+        "type": "uint256"
+      }],
+      "name": "RecordingPlaybackStarted",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0x866782e28e44a4d70c03424400263ca66123fc80169e55d609304bb6c2735f2d": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "accessor",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "recObj",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "requestID",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "percentPlayed",
+        "type": "uint8"
+      }],
+      "name": "RecordingPlaybackCompleted",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0xcddd560f6a99df10337f1469b38ea8180453522d5f5d199786c39eab27e25d2e": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "accessor",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "recObj",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "programId",
+        "type": "string"
+      }],
+      "name": "RecordedProgramId",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0x7b4822b1021af568bad37d56a35fbc255dc67153c544aa4116a289632a4e5955": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "group",
+        "type": "address"
+      }],
+      "name": "MembershipGroupRemoved",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0x467a7c1305f91e354a8a1e9046906d4d1a4852f958a073a392555d809be313a7": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "group",
+        "type": "address"
+      }],
+      "name": "MembershipGroupAdded",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0x8d7e6a8f23ccc8845c41fd09bebe570a0885272343268bbdfd71090b878b4b21": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }],
       "name": "StartStream",
       "type": "event"
     }],
     "contract": "LvRecordableStream"
   },
-  "0xe8db87f5171e056cf93f2e0556c9ddb41f8064a02eeef3896fdb168adaf9afa5": {
+  "0x1b01b687e3428bc184341f729ec8a57bdd569536206cfb59e5d0cecb30dfcb7e": {
     "abi": [{
       "anonymous": false,
-      "inputs": [],
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }],
       "name": "StopStream",
       "type": "event"
     }],
     "contract": "LvRecordableStream"
   },
-  "0x2eae0d0a99cbf5ab05babf7ee1f4bdf6e9bb99ffdca04682fa54f6682d5d80fe": {
+  "0xe1182e14924c528bfb564fb8d4feefe9766244f88b00051f28182e635e9a1ae8": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }],
+      "name": "EnableRecording",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0x3a5d2272abc5c09c8e771719f0eeca97e31d2fc425f6c34cf1d7a712b5fb6bfd": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }],
+      "name": "DisableRecording",
+      "type": "event"
+    }],
+    "contract": "LvRecordableStream"
+  },
+  "0x3e5026851758e1ab6e995b071b048e26e92f459b047600ff68914479d5074c54": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
         "indexed": false,
         "name": "startTime",
         "type": "uint256"
@@ -1465,10 +1577,14 @@ var topics = {
     }],
     "contract": "LvRecording"
   },
-  "0x490ac9eb5b1f79da1eb0ef95d420e2f06562a7530e4db9c52693b06b26567328": {
+  "0x6fff8c8938f3906f27a679f8d6b6652c28d82df5e27e55ef5cdc5f96b06dee09": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
         "indexed": false,
         "name": "status",
         "type": "uint8"
@@ -1477,6 +1593,90 @@ var topics = {
       "type": "event"
     }],
     "contract": "LvRecording"
+  },
+  "0x453384b91e17e6c44d171f27d5d32a864cf9cc9740578ffd6552d323aa973372": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "programId",
+        "type": "string"
+      }],
+      "name": "RecordProgramId",
+      "type": "event"
+    }],
+    "contract": "LvRecording"
+  },
+  "0xb72dd3ed580fe54dae87f5560d5617f1425b22e33e0a8e6ca80bf5cca9505535": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "stream",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "accessor",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "rightsHolder",
+        "type": "bool"
+      }, {
+        "indexed": false,
+        "name": "provider",
+        "type": "bool"
+      }, {
+        "indexed": false,
+        "name": "membership",
+        "type": "bool"
+      }],
+      "name": "AuthorizeRecording",
+      "type": "event"
+    }],
+    "contract": "LvStreamRightsHolder"
+  },
+  "0xc9861f7825199418647d352092481fbd508dc7420e7a6e2f0f41be183d6e2c8d": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "stream",
+        "type": "address"
+      }],
+      "name": "EnableRecording",
+      "type": "event"
+    }],
+    "contract": "LvStreamRightsHolder"
+  },
+  "0xaeba60bf43bc8bad9685cf80e62ae6d5cd753813786f1821576545517a3e49cb": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "stream",
+        "type": "address"
+      }],
+      "name": "DisableRecording",
+      "type": "event"
+    }],
+    "contract": "LvStreamRightsHolder"
   },
   "0x66887b54b3a468d1f49f169043427354bba12c2a112aea5390bb426a96bf916c": {
     "abi": [{
@@ -1540,57 +1740,6 @@ var topics = {
       "type": "event"
     }],
     "contract": "PaymentService"
-  },
-  "0xfad6c097c568a4bcebf08faf3b35206ff6b371b1f71c78ea7a483d026e4ac5c4": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "tokenCreditPerAd",
-        "type": "uint256"
-      }],
-      "name": "TokenCreditPerAd",
-      "type": "event"
-    }],
-    "contract": "SampleContentAdvertising"
-  },
-  "0x21a238faf9b1599dfd0896a25399dae15f4b9876675a2987f55a6460b8a79fc4": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "message",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "stakeHolder0",
-        "type": "address"
-      }],
-      "name": "HelloWorldEvent",
-      "type": "event"
-    }],
-    "contract": "SampleContentHelloWorld"
-  },
-  "0x6fad978e8a2a7d154cdbeac8b127068f0cb03d8f2d585fe8087161308cc3dd1d": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "payee",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "content",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "amount",
-        "type": "uint256"
-      }],
-      "name": "PayCredit",
-      "type": "event"
-    }],
-    "contract": "SampleContentLicensing"
   }
 };
 module.exports = topics;
