@@ -2530,7 +2530,7 @@ class ElvClient {
    *
    * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
    */
-  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, variant="default"}) {
+  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default"}) {
     const abrMezType = await this.ContentType({name: "ABR Master"});
 
     if(!abrMezType) {
@@ -2540,31 +2540,16 @@ class ElvClient {
     if(!masterVersionHash) {
       throw Error("Master version hash not specified");
     }
-
-    const masterMetadata = (await this.ContentObjectMetadata({
-      versionHash: masterVersionHash
-    }));
-
-    // ** temporary workaround for server permissions issue **
-    const production_master = masterMetadata["production_master"];
-    const masterName = masterMetadata.public ? masterMetadata.public.name : masterMetadata.name;
-
-    // ** temporary workaround for server permissions issue **
-    // get target library metadata
-    const targetLib = (await this.ContentLibrary({libraryId}));
-    const abr_profile = (await this.ContentObjectMetadata(
-      {
-        libraryId,
-        objectId: targetLib.qid,
-        metadataSubtree: "abr_profile"
-      }
-    ));
-
     const {id, write_token} = await this.CreateContentObject({
       libraryId,
       options: {
         type: abrMezType.hash
       }
+    });
+
+    const masterName = await this.ContentObjectMetadata({
+      versionHash: masterVersionHash,
+      metadataSubtree: "public/name"
     });
 
     // Include authorization for library, master, and mezzanine
@@ -2577,19 +2562,21 @@ class ElvClient {
       Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
     };
 
+    const body = {
+      offering_key: variant,
+      variant_key: variant,
+      prod_master_hash: masterVersionHash
+    };
+
+    if(abrProfile) { body.abr_profile = abrProfile; }
+
     const {logs, errors, warnings} = await this.CallBitcodeMethod({
       libraryId,
       objectId: id,
       writeToken: write_token,
       method: UrlJoin("media", "abr_mezzanine", "init"),
       headers,
-      body: {
-        "offering_key": variant,
-        "variant_key": variant,
-        "prod_master_hash": masterVersionHash,
-        production_master, // ** temporary workaround for server permissions issue **
-        abr_profile // ** temporary workaround for server permissions issue **
-      },
+      body,
       constant: false
     });
 
@@ -2649,19 +2636,8 @@ class ElvClient {
       metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
     });
 
-    const masterHash = mezzanineMetadata.default.prod_master_hash;
-
-    // get file list from master
-    // ** temporary workaround for permissions issue
-    const masterFileData = await this.ContentObjectMetadata({
-      versionHash: masterHash,
-      metadataSubtree: "files"
-    });
-
-
     const prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || [];
 
-    /*
     // Retrieve all masters associated with this offering
     const masterVersionHashes = prepSpecs.map(spec =>
       (spec.source_streams || []).map(stream => stream.master_hash)
@@ -2669,9 +2645,6 @@ class ElvClient {
       .flat()
       .filter(hash => hash)
       .filter((v, i, a) => a.indexOf(v) === i);
-    */
-
-    const masterVersionHashes = [masterHash];
 
     // Retrieve authorization tokens for all masters and the mezzanine
 
@@ -2721,9 +2694,7 @@ class ElvClient {
       constant: false,
       body: {
         access: accessParameter,
-        offering_key: offeringKey,
-        job_indexes: [...Array(prepSpecs.length).keys()],
-        production_master_files: masterFileData
+        offering_key: offeringKey
       }
     });
 
