@@ -99,7 +99,7 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
 
     const writeToken = startResponse.writeToken;
 
-    console.log();
+    console.log("\nProgress:");
 
     while(true) {
       const status = await client.ContentObjectMetadata({
@@ -109,14 +109,20 @@ const Create = async (mezLibraryId, productionMasterHash, productionMasterVarian
         metadataSubtree: "lro_status"
       });
 
-      if(status.end) {
-        console.log(status.run_state);
-        break;
-      }
+      let done = true;
+      const progress = Object.keys(status).map(id => {
+        const info = status[id];
+
+        if(!info.end) { done = false; }
+
+        return `${id}: ${parseFloat(info.progress.percentage || 0).toFixed(1)}%`;
+      });
+
+      if(done) { break; }
 
       readline.clearLine(process.stdout, 0);
       readline.cursorTo(process.stdout, 0, null);
-      process.stdout.write(`Progress: ${parseFloat(status.progress.percentage || 0).toFixed(1)}%`);
+      process.stdout.write(progress.join(" "));
 
       await new Promise(resolve => setTimeout(resolve, 10000));
     }
