@@ -214,6 +214,7 @@ class ElvClient {
     this.contentTypes = {};
     this.encryptionConks = {};
     this.reencryptionConks = {};
+    this.stateChannelAccess = {};
 
     this.HttpClient = new HttpClient(this.fabricURIs);
     this.ethClient = new EthClient(this.ethereumURIs);
@@ -3023,7 +3024,14 @@ class ElvClient {
    * @return {Promise<string>} - The state channel token
    */
   async GenerateStateChannelToken({objectId, versionHash, noCache=false}) {
-    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+    if(versionHash) {
+      objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    } else if(!this.stateChannelAccess[objectId]) {
+      const libraryId = await this.ContentObjectLibraryId({objectId});
+      versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
+    }
+
+    this.stateChannelAccess[objectId] = versionHash;
 
     const audienceData = this.AudienceData({objectId, versionHash});
 
@@ -3045,7 +3053,18 @@ class ElvClient {
    * @param {number} percentComplete - Completion percentage of the content
    */
   async FinalizeStateChannelAccess({objectId, versionHash, percentComplete}) {
-    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+    if(versionHash) {
+      objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    } else {
+      if(this.stateChannelAccess[objectId]) {
+        versionHash = this.stateChannelAccess[objectId];
+      } else {
+        const libraryId = await this.ContentObjectLibraryId({objectId});
+        versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
+      }
+    }
+
+    this.stateChannelAccess[objectId] = undefined;
 
     const audienceData = this.AudienceData({objectId, versionHash});
 
