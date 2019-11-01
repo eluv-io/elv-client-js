@@ -260,6 +260,7 @@ function () {
       this.contentTypes = {};
       this.encryptionConks = {};
       this.reencryptionConks = {};
+      this.stateChannelAccess = {};
       this.HttpClient = new HttpClient(this.fabricURIs);
       this.ethClient = new EthClient(this.ethereumURIs);
       this.authClient = new AuthorizationClient({
@@ -5988,7 +5989,7 @@ function () {
       var _GenerateStateChannelToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee74(_ref89) {
-        var objectId, versionHash, _ref89$noCache, noCache, audienceData;
+        var objectId, versionHash, _ref89$noCache, noCache, libraryId, audienceData;
 
         return regeneratorRuntime.wrap(function _callee74$(_context74) {
           while (1) {
@@ -5996,15 +5997,45 @@ function () {
               case 0:
                 objectId = _ref89.objectId, versionHash = _ref89.versionHash, _ref89$noCache = _ref89.noCache, noCache = _ref89$noCache === void 0 ? false : _ref89$noCache;
 
-                if (versionHash) {
-                  objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+                if (!versionHash) {
+                  _context74.next = 5;
+                  break;
                 }
 
+                objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+                _context74.next = 12;
+                break;
+
+              case 5:
+                if (this.stateChannelAccess[objectId]) {
+                  _context74.next = 12;
+                  break;
+                }
+
+                _context74.next = 8;
+                return this.ContentObjectLibraryId({
+                  objectId: objectId
+                });
+
+              case 8:
+                libraryId = _context74.sent;
+                _context74.next = 11;
+                return this.ContentObjectVersions({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  noAuth: true
+                });
+
+              case 11:
+                versionHash = _context74.sent.versions[0].hash;
+
+              case 12:
+                this.stateChannelAccess[objectId] = versionHash;
                 audienceData = this.AudienceData({
                   objectId: objectId,
                   versionHash: versionHash
                 });
-                _context74.next = 5;
+                _context74.next = 16;
                 return this.authClient.AuthorizationToken({
                   objectId: objectId,
                   channelAuth: true,
@@ -6012,10 +6043,10 @@ function () {
                   noCache: noCache
                 });
 
-              case 5:
+              case 16:
                 return _context74.abrupt("return", _context74.sent);
 
-              case 6:
+              case 17:
               case "end":
                 return _context74.stop();
             }
@@ -6045,29 +6076,64 @@ function () {
       var _FinalizeStateChannelAccess = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee75(_ref90) {
-        var objectId, versionHash, percentComplete, audienceData;
+        var objectId, versionHash, percentComplete, libraryId, audienceData;
         return regeneratorRuntime.wrap(function _callee75$(_context75) {
           while (1) {
             switch (_context75.prev = _context75.next) {
               case 0:
                 objectId = _ref90.objectId, versionHash = _ref90.versionHash, percentComplete = _ref90.percentComplete;
 
-                if (versionHash) {
-                  objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+                if (!versionHash) {
+                  _context75.next = 5;
+                  break;
                 }
 
+                objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+                _context75.next = 15;
+                break;
+
+              case 5:
+                if (!this.stateChannelAccess[objectId]) {
+                  _context75.next = 9;
+                  break;
+                }
+
+                versionHash = this.stateChannelAccess[objectId];
+                _context75.next = 15;
+                break;
+
+              case 9:
+                _context75.next = 11;
+                return this.ContentObjectLibraryId({
+                  objectId: objectId
+                });
+
+              case 11:
+                libraryId = _context75.sent;
+                _context75.next = 14;
+                return this.ContentObjectVersions({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  noAuth: true
+                });
+
+              case 14:
+                versionHash = _context75.sent.versions[0].hash;
+
+              case 15:
+                this.stateChannelAccess[objectId] = undefined;
                 audienceData = this.AudienceData({
                   objectId: objectId,
                   versionHash: versionHash
                 });
-                _context75.next = 5;
+                _context75.next = 19;
                 return this.authClient.ChannelContentFinalize({
                   objectId: objectId,
                   audienceData: audienceData,
                   percent: percentComplete
                 });
 
-              case 5:
+              case 19:
               case "end":
                 return _context75.stop();
             }
