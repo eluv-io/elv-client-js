@@ -12,6 +12,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -180,20 +182,42 @@ function () {
 var ElvClient =
 /*#__PURE__*/
 function () {
-  /**
-   * Create a new ElvClient
-   *
-   * @constructor
-   *
-   * @namedParams
-   * @param {string} contentSpaceId - ID of the content space
-   * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
-   * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
-   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
-   *
-   * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
-   */
+  _createClass(ElvClient, [{
+    key: "Log",
+    value: function Log(message) {
+      if (!this.debug) {
+        return;
+      }
+
+      if (_typeof(message) === "object") {
+        message = JSON.stringify(message);
+      } // eslint-disable-next-line no-console
+
+
+      console.log("\n(elv-client-js) ".concat(message, "\n"));
+    }
+  }, {
+    key: "ToggleLogging",
+    value: function ToggleLogging(enable) {
+      this.debug = enable;
+    }
+    /**
+     * Create a new ElvClient
+     *
+     * @constructor
+     *
+     * @namedParams
+     * @param {string} contentSpaceId - ID of the content space
+     * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
+     * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+     * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+     * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+     *
+     * @return {ElvClient} - New ElvClient connected to the specified content fabric and blockchain
+     */
+
+  }]);
+
   function ElvClient(_ref3) {
     var contentSpaceId = _ref3.contentSpaceId,
         fabricURIs = _ref3.fabricURIs,
@@ -214,6 +238,7 @@ function () {
     this.ethereumURIs = ethereumURIs;
     this.noCache = noCache;
     this.noAuth = noAuth;
+    this.debug = false;
     this.InitializeClients();
   }
   /**
@@ -901,12 +926,14 @@ function () {
                 kmsId = _context12.t0.concat.call(_context12.t0, _context12.t3);
 
               case 9:
-                _context12.next = 11;
+                this.Log("Creating content library");
+                this.Log("KMS ID: ".concat(kmsId));
+                _context12.next = 13;
                 return this.authClient.CreateContentLibrary({
                   kmsId: kmsId
                 });
 
-              case 11:
+              case 13:
                 _ref15 = _context12.sent;
                 contractAddress = _ref15.contractAddress;
                 metadata = _objectSpread({}, metadata, {
@@ -917,10 +944,12 @@ function () {
                     description: description
                   }
                 });
-                libraryId = this.utils.AddressToLibraryId(contractAddress); // Set library content object type and metadata on automatically created library object
+                libraryId = this.utils.AddressToLibraryId(contractAddress);
+                this.Log("Library ID: ".concat(libraryId));
+                this.Log("Contract address: ".concat(contractAddress)); // Set library content object type and metadata on automatically created library object
 
                 objectId = libraryId.replace("ilib", "iq__");
-                _context12.next = 18;
+                _context12.next = 22;
                 return this.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -929,9 +958,9 @@ function () {
                   }
                 });
 
-              case 18:
+              case 22:
                 editResponse = _context12.sent;
-                _context12.next = 21;
+                _context12.next = 25;
                 return this.ReplaceMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -939,30 +968,31 @@ function () {
                   writeToken: editResponse.write_token
                 });
 
-              case 21:
-                _context12.next = 23;
+              case 25:
+                _context12.next = 27;
                 return this.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editResponse.write_token
                 });
 
-              case 23:
+              case 27:
                 if (!image) {
-                  _context12.next = 26;
+                  _context12.next = 30;
                   break;
                 }
 
-                _context12.next = 26;
+                _context12.next = 30;
                 return this.SetContentLibraryImage({
                   libraryId: libraryId,
                   image: image
                 });
 
-              case 26:
+              case 30:
+                this.Log("Library ".concat(libraryId, " created"));
                 return _context12.abrupt("return", libraryId);
 
-              case 27:
+              case 32:
               case "end":
                 return _context12.stop();
             }
@@ -1195,29 +1225,31 @@ function () {
             switch (_context16.prev = _context16.next) {
               case 0:
                 libraryId = _ref19.libraryId, typeId = _ref19.typeId, typeName = _ref19.typeName, typeHash = _ref19.typeHash, customContractAddress = _ref19.customContractAddress;
+                this.Log("Adding library content type to ".concat(libraryId, ": ").concat(typeId || typeHash || typeName));
 
                 if (typeHash) {
                   typeId = this.utils.DecodeVersionHash(typeHash).objectId;
                 }
 
                 if (typeId) {
-                  _context16.next = 7;
+                  _context16.next = 8;
                   break;
                 }
 
-                _context16.next = 5;
+                _context16.next = 6;
                 return this.ContentType({
                   name: typeName
                 });
 
-              case 5:
+              case 6:
                 type = _context16.sent;
                 typeId = type.id;
 
-              case 7:
+              case 8:
+                this.Log("Type ID: ".concat(typeId));
                 typeAddress = this.utils.HashToAddress(typeId);
                 customContractAddress = customContractAddress || this.utils.nullAddress;
-                _context16.next = 11;
+                _context16.next = 13;
                 return this.ethClient.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(libraryId),
                   abi: LibraryContract.abi,
@@ -1226,11 +1258,11 @@ function () {
                   signer: this.signer
                 });
 
-              case 11:
+              case 13:
                 event = _context16.sent;
                 return _context16.abrupt("return", event.transactionHash);
 
-              case 13:
+              case 15:
               case "end":
                 return _context16.stop();
             }
@@ -1269,28 +1301,30 @@ function () {
             switch (_context17.prev = _context17.next) {
               case 0:
                 libraryId = _ref20.libraryId, typeId = _ref20.typeId, typeName = _ref20.typeName, typeHash = _ref20.typeHash;
+                this.Log("Removing library content type from ".concat(libraryId, ": ").concat(typeId || typeHash || typeName));
 
                 if (typeHash) {
                   typeId = this.utils.DecodeVersionHash(typeHash).objectId;
                 }
 
                 if (typeId) {
-                  _context17.next = 7;
+                  _context17.next = 8;
                   break;
                 }
 
-                _context17.next = 5;
+                _context17.next = 6;
                 return this.ContentType({
                   name: typeName
                 });
 
-              case 5:
+              case 6:
                 type = _context17.sent;
                 typeId = type.id;
 
-              case 7:
+              case 8:
+                this.Log("Type ID: ".concat(typeId));
                 typeAddress = this.utils.HashToAddress(typeId);
-                _context17.next = 10;
+                _context17.next = 12;
                 return this.ethClient.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(libraryId),
                   abi: LibraryContract.abi,
@@ -1299,11 +1333,11 @@ function () {
                   signer: this.signer
                 });
 
-              case 10:
+              case 12:
                 event = _context17.sent;
                 return _context17.abrupt("return", event.transactionHash);
 
-              case 12:
+              case 14:
               case "end":
                 return _context17.stop();
             }
@@ -1345,7 +1379,8 @@ function () {
             switch (_context19.prev = _context19.next) {
               case 0:
                 libraryId = _ref21.libraryId;
-                _context19.next = 3;
+                this.Log("Retrieving library content types for ".concat(libraryId));
+                _context19.next = 4;
                 return this.ethClient.CallContractMethod({
                   contractAddress: Utils.HashToAddress(libraryId),
                   abi: LibraryContract.abi,
@@ -1354,20 +1389,21 @@ function () {
                   signer: this.signer
                 });
 
-              case 3:
+              case 4:
                 typesLength = _context19.sent.toNumber();
+                this.Log("".concat(typesLength, " types")); // No allowed types set - any type accepted
 
                 if (!(typesLength === 0)) {
-                  _context19.next = 6;
+                  _context19.next = 8;
                   break;
                 }
 
                 return _context19.abrupt("return", {});
 
-              case 6:
+              case 8:
                 // Get the list of allowed content type addresses
                 allowedTypes = {};
-                _context19.next = 9;
+                _context19.next = 11;
                 return Promise.all(Array.from(new Array(typesLength),
                 /*#__PURE__*/
                 function () {
@@ -1412,10 +1448,11 @@ function () {
                   };
                 }()));
 
-              case 9:
+              case 11:
+                this.Log(allowedTypes);
                 return _context19.abrupt("return", allowedTypes);
 
-              case 10:
+              case 13:
               case "end":
                 return _context19.stop();
             }
@@ -1516,40 +1553,44 @@ function () {
             switch (_context21.prev = _context21.next) {
               case 0:
                 name = _ref24.name, typeId = _ref24.typeId, versionHash = _ref24.versionHash;
+                this.Log("Retrieving content type: ".concat(name || typeId || versionHash));
 
                 if (versionHash) {
                   typeId = this.utils.DecodeVersionHash(versionHash).objectId;
                 }
 
                 if (!name) {
-                  _context21.next = 6;
+                  _context21.next = 8;
                   break;
                 }
 
-                _context21.next = 5;
+                this.Log("Looking up type by name in content space metadata..."); // Look up named type in content space metadata
+
+                _context21.next = 7;
                 return this.ContentObjectMetadata({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: this.contentSpaceObjectId,
                   metadataSubtree: UrlJoin("contentTypes", name)
                 });
 
-              case 5:
+              case 7:
                 typeId = _context21.sent;
 
-              case 6:
+              case 8:
                 if (typeId) {
-                  _context21.next = 15;
+                  _context21.next = 18;
                   break;
                 }
 
-                _context21.next = 9;
+                this.Log("Looking up type by name in available types...");
+                _context21.next = 12;
                 return this.ContentTypes();
 
-              case 9:
+              case 12:
                 types = _context21.sent;
 
                 if (!name) {
-                  _context21.next = 14;
+                  _context21.next = 17;
                   break;
                 }
 
@@ -1557,56 +1598,59 @@ function () {
                   return (type.name || "").toLowerCase() === name.toLowerCase();
                 }));
 
-              case 14:
+              case 17:
                 return _context21.abrupt("return", Object.values(types).find(function (type) {
                   return type.hash === versionHash;
                 }));
 
-              case 15:
-                _context21.prev = 15;
-                _context21.next = 18;
+              case 18:
+                _context21.prev = 18;
+                this.Log("Looking up type by ID...");
+                _context21.next = 22;
                 return this.ContentObject({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: typeId
                 });
 
-              case 18:
+              case 22:
                 typeInfo = _context21.sent;
                 delete typeInfo.type;
-                _context21.next = 22;
+                _context21.next = 26;
                 return this.ContentObjectMetadata({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: typeId
                 });
 
-              case 22:
+              case 26:
                 _context21.t0 = _context21.sent;
 
                 if (_context21.t0) {
-                  _context21.next = 25;
+                  _context21.next = 29;
                   break;
                 }
 
                 _context21.t0 = {};
 
-              case 25:
+              case 29:
                 metadata = _context21.t0;
                 return _context21.abrupt("return", _objectSpread({}, typeInfo, {
                   name: metadata.name,
                   meta: metadata
                 }));
 
-              case 29:
-                _context21.prev = 29;
-                _context21.t1 = _context21["catch"](15);
+              case 33:
+                _context21.prev = 33;
+                _context21.t1 = _context21["catch"](18);
+                this.Log("Error looking up content type:");
+                this.Log(_context21.t1);
                 throw new Error("Content Type ".concat(name || typeId, " is invalid"));
 
-              case 32:
+              case 38:
               case "end":
                 return _context21.stop();
             }
           }
-        }, _callee21, this, [[15, 29]]);
+        }, _callee21, this, [[18, 33]]);
       }));
 
       function ContentType(_x20) {
@@ -1637,37 +1681,43 @@ function () {
           while (1) {
             switch (_context23.prev = _context23.next) {
               case 0:
-                this.contentTypes = this.contentTypes || {}; // Personally available types
+                this.contentTypes = this.contentTypes || {};
+                this.Log("Looking up all available content types"); // Personally available types
 
-                _context23.next = 3;
+                _context23.next = 4;
                 return this.Collection({
                   collectionType: "contentTypes"
                 });
 
-              case 3:
+              case 4:
                 typeAddresses = _context23.sent;
-                _context23.next = 6;
+                this.Log("Personally available types:");
+                this.Log(typeAddresses); // Content space types
+
+                _context23.next = 9;
                 return this.ContentObjectMetadata({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: this.contentSpaceObjectId,
                   metadataSubtree: "contentTypes"
                 });
 
-              case 6:
+              case 9:
                 _context23.t0 = _context23.sent;
 
                 if (_context23.t0) {
-                  _context23.next = 9;
+                  _context23.next = 12;
                   break;
                 }
 
                 _context23.t0 = {};
 
-              case 9:
+              case 12:
                 contentSpaceTypes = _context23.t0;
                 contentSpaceTypeAddresses = Object.values(contentSpaceTypes).map(function (typeId) {
                   return _this3.utils.HashToAddress(typeId);
                 });
+                this.Log("Content space types:");
+                this.Log(contentSpaceTypeAddresses);
                 typeAddresses = typeAddresses.concat(contentSpaceTypeAddresses).filter(function (address) {
                   return address;
                 }).map(function (address) {
@@ -1675,7 +1725,7 @@ function () {
                 }).filter(function (v, i, a) {
                   return a.indexOf(v) === i;
                 });
-                _context23.next = 14;
+                _context23.next = 19;
                 return Promise.all(typeAddresses.map(
                 /*#__PURE__*/
                 function () {
@@ -1722,10 +1772,10 @@ function () {
                   };
                 }()));
 
-              case 14:
+              case 19:
                 return _context23.abrupt("return", this.contentTypes);
 
-              case 15:
+              case 20:
               case "end":
                 return _context23.stop();
             }
@@ -1771,30 +1821,32 @@ function () {
             switch (_context24.prev = _context24.next) {
               case 0:
                 name = _ref26.name, _ref26$metadata = _ref26.metadata, metadata = _ref26$metadata === void 0 ? {} : _ref26$metadata, bitcode = _ref26.bitcode;
+                this.Log("Creating content type: ".concat(name));
                 metadata.name = name;
                 metadata["public"] = _objectSpread({
                   name: name
                 }, metadata["public"] || {});
-                _context24.next = 5;
+                _context24.next = 6;
                 return this.authClient.CreateContentType();
 
-              case 5:
+              case 6:
                 _ref27 = _context24.sent;
                 contractAddress = _ref27.contractAddress;
                 objectId = this.utils.AddressToObjectId(contractAddress);
                 path = UrlJoin("qlibs", this.contentSpaceLibraryId, "qid", objectId);
+                this.Log("Created type: ".concat(contractAddress, " ").concat(objectId));
                 /* Create object, upload bitcode and finalize */
 
                 _context24.t0 = ResponseToJson;
                 _context24.t1 = this.HttpClient;
-                _context24.next = 13;
+                _context24.next = 15;
                 return this.authClient.AuthorizationHeader({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 13:
+              case 15:
                 _context24.t2 = _context24.sent;
                 _context24.t3 = path;
                 _context24.t4 = {
@@ -1804,12 +1856,12 @@ function () {
                   failover: false
                 };
                 _context24.t5 = _context24.t1.Request.call(_context24.t1, _context24.t4);
-                _context24.next = 19;
+                _context24.next = 21;
                 return (0, _context24.t0)(_context24.t5);
 
-              case 19:
+              case 21:
                 createResponse = _context24.sent;
-                _context24.next = 22;
+                _context24.next = 24;
                 return this.ReplaceMetadata({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: objectId,
@@ -1817,13 +1869,13 @@ function () {
                   metadata: metadata
                 });
 
-              case 22:
+              case 24:
                 if (!bitcode) {
-                  _context24.next = 28;
+                  _context24.next = 30;
                   break;
                 }
 
-                _context24.next = 25;
+                _context24.next = 27;
                 return this.UploadPart({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: objectId,
@@ -1832,9 +1884,9 @@ function () {
                   encrypted: false
                 });
 
-              case 25:
+              case 27:
                 uploadResponse = _context24.sent;
-                _context24.next = 28;
+                _context24.next = 30;
                 return this.ReplaceMetadata({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: objectId,
@@ -1843,18 +1895,18 @@ function () {
                   metadata: uploadResponse.part.hash
                 });
 
-              case 28:
-                _context24.next = 30;
+              case 30:
+                _context24.next = 32;
                 return this.FinalizeContentObject({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: objectId,
                   writeToken: createResponse.write_token
                 });
 
-              case 30:
+              case 32:
                 return _context24.abrupt("return", objectId);
 
-              case 31:
+              case 33:
               case "end":
                 return _context24.stop();
             }
@@ -1908,6 +1960,7 @@ function () {
             switch (_context25.prev = _context25.next) {
               case 0:
                 libraryId = _ref28.libraryId, _ref28$filterOptions = _ref28.filterOptions, filterOptions = _ref28$filterOptions === void 0 ? {} : _ref28$filterOptions;
+                this.Log("Retrieving content objects from ".concat(libraryId));
                 path = UrlJoin("qlibs", libraryId, "q");
                 queryParams = {
                   filter: []
@@ -1975,14 +2028,16 @@ function () {
                   }
                 }
 
+                this.Log("Filter options:");
+                this.Log(filterOptions);
                 _context25.t0 = ResponseToJson;
                 _context25.t1 = this.HttpClient;
-                _context25.next = 16;
+                _context25.next = 19;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId
                 });
 
-              case 16:
+              case 19:
                 _context25.t2 = _context25.sent;
                 _context25.t3 = path;
                 _context25.t4 = queryParams;
@@ -1993,13 +2048,13 @@ function () {
                   queryParams: _context25.t4
                 };
                 _context25.t6 = _context25.t1.Request.call(_context25.t1, _context25.t5);
-                _context25.next = 23;
+                _context25.next = 26;
                 return (0, _context25.t0)(_context25.t6);
 
-              case 23:
+              case 26:
                 return _context25.abrupt("return", _context25.sent);
 
-              case 24:
+              case 27:
               case "end":
                 return _context25.stop();
             }
@@ -2039,6 +2094,7 @@ function () {
             switch (_context26.prev = _context26.next) {
               case 0:
                 libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash;
+                this.Log("Retrieving content object: ".concat(libraryId || "", " ").concat(objectId || versionHash));
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -2047,7 +2103,7 @@ function () {
                 path = UrlJoin("q", versionHash || objectId);
                 _context26.t0 = ResponseToJson;
                 _context26.t1 = this.HttpClient;
-                _context26.next = 7;
+                _context26.next = 8;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -2055,7 +2111,7 @@ function () {
                   noAuth: true
                 });
 
-              case 7:
+              case 8:
                 _context26.t2 = _context26.sent;
                 _context26.t3 = path;
                 _context26.t4 = {
@@ -2064,13 +2120,13 @@ function () {
                   path: _context26.t3
                 };
                 _context26.t5 = _context26.t1.Request.call(_context26.t1, _context26.t4);
-                _context26.next = 13;
+                _context26.next = 14;
                 return (0, _context26.t0)(_context26.t5);
 
-              case 13:
+              case 14:
                 return _context26.abrupt("return", _context26.sent);
 
-              case 14:
+              case 15:
               case "end":
                 return _context26.stop();
             }
@@ -2106,8 +2162,9 @@ function () {
             switch (_context27.prev = _context27.next) {
               case 0:
                 objectId = _ref31.objectId;
+                this.Log("Retrieving content object owner: ".concat(objectId));
                 _context27.t0 = this.utils;
-                _context27.next = 4;
+                _context27.next = 5;
                 return this.ethClient.CallContractMethod({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -2117,11 +2174,11 @@ function () {
                   signer: this.signer
                 });
 
-              case 4:
+              case 5:
                 _context27.t1 = _context27.sent;
                 return _context27.abrupt("return", _context27.t0.FormatAddress.call(_context27.t0, _context27.t1));
 
-              case 6:
+              case 7:
               case "end":
                 return _context27.stop();
             }
@@ -2159,24 +2216,25 @@ function () {
             switch (_context28.prev = _context28.next) {
               case 0:
                 objectId = _ref32.objectId, versionHash = _ref32.versionHash;
+                this.Log("Retrieving content object library ID: ".concat(objectId || versionHash));
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
                 }
 
                 _context28.t0 = Utils;
-                _context28.next = 5;
+                _context28.next = 6;
                 return this.CallContractMethod({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
                   methodName: "libraryAddress"
                 });
 
-              case 5:
+              case 6:
                 _context28.t1 = _context28.sent;
                 return _context28.abrupt("return", _context28.t0.AddressToLibraryId.call(_context28.t0, _context28.t1));
 
-              case 7:
+              case 8:
               case "end":
                 return _context28.stop();
             }
@@ -2220,16 +2278,17 @@ function () {
             switch (_context29.prev = _context29.next) {
               case 0:
                 libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, writeToken = _ref33.writeToken, _ref33$metadataSubtre = _ref33.metadataSubtree, metadataSubtree = _ref33$metadataSubtre === void 0 ? "/" : _ref33$metadataSubtre, _ref33$noAuth = _ref33.noAuth, noAuth = _ref33$noAuth === void 0 ? true : _ref33$noAuth;
+                this.Log("Retrieving content object metadata: ".concat(libraryId || "", " ").concat(objectId || versionHash, " ").concat(writeToken || "", "\n       Subtree: ").concat(metadataSubtree));
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
                 }
 
                 path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
-                _context29.prev = 3;
+                _context29.prev = 4;
                 _context29.t0 = ResponseToJson;
                 _context29.t1 = this.HttpClient;
-                _context29.next = 8;
+                _context29.next = 9;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -2237,7 +2296,7 @@ function () {
                   noAuth: noAuth
                 });
 
-              case 8:
+              case 9:
                 _context29.t2 = _context29.sent;
                 _context29.t3 = path;
                 _context29.t4 = {
@@ -2246,32 +2305,32 @@ function () {
                   path: _context29.t3
                 };
                 _context29.t5 = _context29.t1.Request.call(_context29.t1, _context29.t4);
-                _context29.next = 14;
+                _context29.next = 15;
                 return (0, _context29.t0)(_context29.t5);
 
-              case 14:
+              case 15:
                 return _context29.abrupt("return", _context29.sent);
 
-              case 17:
-                _context29.prev = 17;
-                _context29.t6 = _context29["catch"](3);
+              case 18:
+                _context29.prev = 18;
+                _context29.t6 = _context29["catch"](4);
 
                 if (!(_context29.t6.status !== 404)) {
-                  _context29.next = 21;
+                  _context29.next = 22;
                   break;
                 }
 
                 throw _context29.t6;
 
-              case 21:
+              case 22:
                 return _context29.abrupt("return", metadataSubtree === "/" ? {} : undefined);
 
-              case 22:
+              case 23:
               case "end":
                 return _context29.stop();
             }
           }
-        }, _callee29, this, [[3, 17]]);
+        }, _callee29, this, [[4, 18]]);
       }));
 
       function ContentObjectMetadata(_x27) {
@@ -2306,17 +2365,18 @@ function () {
             switch (_context30.prev = _context30.next) {
               case 0:
                 libraryId = _ref34.libraryId, objectId = _ref34.objectId, _ref34$noAuth = _ref34.noAuth, noAuth = _ref34$noAuth === void 0 ? false : _ref34$noAuth;
+                this.Log("Retrieving content object versions: ".concat(libraryId || "", " ").concat(objectId || versionHash));
                 path = UrlJoin("qid", objectId);
                 _context30.t0 = ResponseToJson;
                 _context30.t1 = this.HttpClient;
-                _context30.next = 6;
+                _context30.next = 7;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   noAuth: noAuth
                 });
 
-              case 6:
+              case 7:
                 _context30.t2 = _context30.sent;
                 _context30.t3 = path;
                 _context30.t4 = {
@@ -2327,7 +2387,7 @@ function () {
                 _context30.t5 = _context30.t1.Request.call(_context30.t1, _context30.t4);
                 return _context30.abrupt("return", (0, _context30.t0)(_context30.t5));
 
-              case 11:
+              case 12:
               case "end":
                 return _context30.stop();
             }
@@ -2377,64 +2437,75 @@ function () {
             switch (_context31.prev = _context31.next) {
               case 0:
                 libraryId = _ref35.libraryId, objectId = _ref35.objectId, _ref35$options = _ref35.options, options = _ref35$options === void 0 ? {} : _ref35$options;
+                this.Log("Creating content object: ".concat(libraryId, " ").concat(objectId || "")); // Look up content type, if specified
 
                 if (!options.type) {
-                  _context31.next = 13;
+                  _context31.next = 15;
                   break;
                 }
+
+                this.Log("Type specified: ".concat(options.type));
 
                 if (options.type.startsWith("hq__")) {
-                  _context31.next = 8;
+                  _context31.next = 10;
                   break;
                 }
 
-                _context31.next = 5;
+                _context31.next = 7;
                 return this.ContentType({
                   name: options.type
                 });
 
-              case 5:
+              case 7:
                 type = _context31.sent;
-                _context31.next = 11;
+                _context31.next = 13;
                 break;
 
-              case 8:
-                _context31.next = 10;
+              case 10:
+                _context31.next = 12;
                 return this.ContentType({
                   versionHash: options.type
                 });
 
-              case 10:
+              case 12:
                 type = _context31.sent;
 
-              case 11:
+              case 13:
                 typeId = type.id;
                 options.type = type.hash;
 
-              case 13:
+              case 15:
                 if (objectId) {
-                  _context31.next = 19;
+                  _context31.next = 25;
                   break;
                 }
 
-                _context31.next = 16;
+                this.Log("Deploying contract...");
+                _context31.next = 19;
                 return this.authClient.CreateContentObject({
                   libraryId: libraryId,
                   typeId: typeId
                 });
 
-              case 16:
+              case 19:
                 _ref36 = _context31.sent;
                 contractAddress = _ref36.contractAddress;
                 objectId = this.utils.AddressToObjectId(contractAddress);
+                this.Log("Contract deployed: ".concat(contractAddress, " ").concat(objectId));
+                _context31.next = 26;
+                break;
 
-              case 19:
+              case 25:
+                this.Log("Contract already deployed for contract type: ".concat(this.authClient.AccessType(objectId)));
+
+              case 26:
                 if (!options.visibility) {
-                  _context31.next = 22;
+                  _context31.next = 30;
                   break;
                 }
 
-                _context31.next = 22;
+                this.Log("Setting visibility to ".concat(options.visibility));
+                _context31.next = 30;
                 return this.CallContractMethod({
                   abi: ContentContract.abi,
                   contractAddress: this.utils.HashToAddress(objectId),
@@ -2442,18 +2513,18 @@ function () {
                   methodArgs: [options.visibility]
                 });
 
-              case 22:
+              case 30:
                 path = UrlJoin("qid", objectId);
                 _context31.t0 = ResponseToJson;
                 _context31.t1 = this.HttpClient;
-                _context31.next = 27;
+                _context31.next = 35;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 27:
+              case 35:
                 _context31.t2 = _context31.sent;
                 _context31.t3 = path;
                 _context31.t4 = options;
@@ -2465,13 +2536,13 @@ function () {
                   failover: false
                 };
                 _context31.t6 = _context31.t1.Request.call(_context31.t1, _context31.t5);
-                _context31.next = 34;
+                _context31.next = 42;
                 return (0, _context31.t0)(_context31.t6);
 
-              case 34:
+              case 42:
                 return _context31.abrupt("return", _context31.sent);
 
-              case 35:
+              case 43:
               case "end":
                 return _context31.stop();
             }
@@ -2569,75 +2640,76 @@ function () {
             switch (_context33.prev = _context33.next) {
               case 0:
                 libraryId = _ref38.libraryId, objectId = _ref38.objectId, _ref38$options = _ref38.options, options = _ref38$options === void 0 ? {} : _ref38$options;
+                this.Log("Opening content draft: ".concat(libraryId, " ").concat(objectId));
 
                 if (this.utils.EqualHash(libraryId, objectId)) {
-                  _context33.next = 5;
+                  _context33.next = 6;
                   break;
                 }
 
                 // Don't allow changing of content type in this method
                 delete options.type;
-                _context33.next = 21;
+                _context33.next = 22;
                 break;
 
-              case 5:
+              case 6:
                 if (!options.type) {
-                  _context33.next = 21;
+                  _context33.next = 22;
                   break;
                 }
 
                 if (!options.type.startsWith("hq__")) {
-                  _context33.next = 12;
+                  _context33.next = 13;
                   break;
                 }
 
-                _context33.next = 9;
+                _context33.next = 10;
                 return this.ContentType({
                   versionHash: options.type
                 });
 
-              case 9:
+              case 10:
                 options.type = _context33.sent.hash;
-                _context33.next = 21;
+                _context33.next = 22;
                 break;
 
-              case 12:
+              case 13:
                 if (!options.type.startsWith("iq__")) {
-                  _context33.next = 18;
+                  _context33.next = 19;
                   break;
                 }
 
-                _context33.next = 15;
+                _context33.next = 16;
                 return this.ContentType({
                   typeId: options.type
                 });
 
-              case 15:
+              case 16:
                 options.type = _context33.sent.hash;
-                _context33.next = 21;
+                _context33.next = 22;
                 break;
 
-              case 18:
-                _context33.next = 20;
+              case 19:
+                _context33.next = 21;
                 return this.ContentType({
                   name: options.type
                 });
 
-              case 20:
+              case 21:
                 options.type = _context33.sent.hash;
 
-              case 21:
+              case 22:
                 path = UrlJoin("qid", objectId);
                 _context33.t0 = ResponseToJson;
                 _context33.t1 = this.HttpClient;
-                _context33.next = 26;
+                _context33.next = 27;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 26:
+              case 27:
                 _context33.t2 = _context33.sent;
                 _context33.t3 = path;
                 _context33.t4 = options;
@@ -2651,7 +2723,7 @@ function () {
                 _context33.t6 = _context33.t1.Request.call(_context33.t1, _context33.t5);
                 return _context33.abrupt("return", (0, _context33.t0)(_context33.t6));
 
-              case 32:
+              case 33:
               case "end":
                 return _context33.stop();
             }
@@ -2693,17 +2765,18 @@ function () {
             switch (_context34.prev = _context34.next) {
               case 0:
                 libraryId = _ref39.libraryId, objectId = _ref39.objectId, writeToken = _ref39.writeToken, _ref39$publish = _ref39.publish, publish = _ref39$publish === void 0 ? true : _ref39$publish, _ref39$awaitCommitCon = _ref39.awaitCommitConfirmation, awaitCommitConfirmation = _ref39$awaitCommitCon === void 0 ? true : _ref39$awaitCommitCon;
+                this.Log("Finalizing content draft: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
                 path = UrlJoin("q", writeToken);
                 _context34.t0 = ResponseToJson;
                 _context34.t1 = this.HttpClient;
-                _context34.next = 6;
+                _context34.next = 7;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 6:
+              case 7:
                 _context34.t2 = _context34.sent;
                 _context34.t3 = path;
                 _context34.t4 = {
@@ -2713,30 +2786,31 @@ function () {
                   failover: false
                 };
                 _context34.t5 = _context34.t1.Request.call(_context34.t1, _context34.t4);
-                _context34.next = 12;
+                _context34.next = 13;
                 return (0, _context34.t0)(_context34.t5);
 
-              case 12:
+              case 13:
                 finalizeResponse = _context34.sent;
+                this.Log("Finalized: ".concat(finalizeResponse.hash));
 
                 if (!publish) {
-                  _context34.next = 16;
+                  _context34.next = 18;
                   break;
                 }
 
-                _context34.next = 16;
+                _context34.next = 18;
                 return this.PublishContentVersion({
                   objectId: objectId,
                   versionHash: finalizeResponse.hash,
                   awaitCommitConfirmation: awaitCommitConfirmation
                 });
 
-              case 16:
+              case 18:
                 // Invalidate cached content type, if this is one.
                 delete this.contentTypes[objectId];
                 return _context34.abrupt("return", finalizeResponse);
 
-              case 18:
+              case 20:
               case "end":
                 return _context34.stop();
             }
@@ -2774,25 +2848,27 @@ function () {
             switch (_context35.prev = _context35.next) {
               case 0:
                 objectId = _ref40.objectId, versionHash = _ref40.versionHash, _ref40$awaitCommitCon = _ref40.awaitCommitConfirmation, awaitCommitConfirmation = _ref40$awaitCommitCon === void 0 ? true : _ref40$awaitCommitCon;
+                this.Log("Publishing: ".concat(objectId || versionHash));
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
                 }
 
-                _context35.next = 4;
+                _context35.next = 5;
                 return this.ethClient.CommitContent({
                   contentObjectAddress: this.utils.HashToAddress(objectId),
                   versionHash: versionHash,
                   signer: this.signer
                 });
 
-              case 4:
+              case 5:
                 if (!awaitCommitConfirmation) {
-                  _context35.next = 7;
+                  _context35.next = 9;
                   break;
                 }
 
-                _context35.next = 7;
+                this.Log("Awaiting commit confirmation...");
+                _context35.next = 9;
                 return this.ethClient.AwaitEvent({
                   contractAddress: this.utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -2800,7 +2876,7 @@ function () {
                   signer: this.signer
                 });
 
-              case 7:
+              case 9:
               case "end":
                 return _context35.stop();
             }
@@ -2835,8 +2911,9 @@ function () {
             switch (_context36.prev = _context36.next) {
               case 0:
                 versionHash = _ref41.versionHash;
+                this.Log("Deleting content version: ".concat(versionHash));
                 _this$utils$DecodeVer = this.utils.DecodeVersionHash(versionHash), objectId = _this$utils$DecodeVer.objectId;
-                _context36.next = 4;
+                _context36.next = 5;
                 return this.CallContractMethodAndWait({
                   contractAddress: this.utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -2844,7 +2921,7 @@ function () {
                   methodArgs: [versionHash]
                 });
 
-              case 4:
+              case 5:
               case "end":
                 return _context36.stop();
             }
@@ -2879,7 +2956,8 @@ function () {
             switch (_context37.prev = _context37.next) {
               case 0:
                 libraryId = _ref42.libraryId, objectId = _ref42.objectId;
-                _context37.next = 3;
+                this.Log("Deleting content version: ".concat(libraryId, " ").concat(objectId));
+                _context37.next = 4;
                 return this.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(libraryId),
                   abi: LibraryContract.abi,
@@ -2887,7 +2965,7 @@ function () {
                   methodArgs: [this.utils.HashToAddress(objectId)]
                 });
 
-              case 3:
+              case 4:
               case "end":
                 return _context37.stop();
             }
@@ -2930,16 +3008,18 @@ function () {
             switch (_context38.prev = _context38.next) {
               case 0:
                 libraryId = _ref43.libraryId, objectId = _ref43.objectId, writeToken = _ref43.writeToken, _ref43$metadataSubtre = _ref43.metadataSubtree, metadataSubtree = _ref43$metadataSubtre === void 0 ? "/" : _ref43$metadataSubtre, _ref43$metadata = _ref43.metadata, metadata = _ref43$metadata === void 0 ? {} : _ref43$metadata;
+                this.Log("Merging metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken, "\n      Subtree: ").concat(metadataSubtree));
+                this.Log(metadata);
                 path = UrlJoin("q", writeToken, "meta", metadataSubtree);
                 _context38.t0 = this.HttpClient;
-                _context38.next = 5;
+                _context38.next = 7;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 5:
+              case 7:
                 _context38.t1 = _context38.sent;
                 _context38.t2 = path;
                 _context38.t3 = metadata;
@@ -2950,10 +3030,10 @@ function () {
                   body: _context38.t3,
                   failover: false
                 };
-                _context38.next = 11;
+                _context38.next = 13;
                 return _context38.t0.Request.call(_context38.t0, _context38.t4);
 
-              case 11:
+              case 13:
               case "end":
                 return _context38.stop();
             }
@@ -2994,16 +3074,18 @@ function () {
             switch (_context39.prev = _context39.next) {
               case 0:
                 libraryId = _ref44.libraryId, objectId = _ref44.objectId, writeToken = _ref44.writeToken, _ref44$metadataSubtre = _ref44.metadataSubtree, metadataSubtree = _ref44$metadataSubtre === void 0 ? "/" : _ref44$metadataSubtre, _ref44$metadata = _ref44.metadata, metadata = _ref44$metadata === void 0 ? {} : _ref44$metadata;
+                this.Log("Replacing metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken, "\n      Subtree: ").concat(metadataSubtree));
+                this.Log(metadata);
                 path = UrlJoin("q", writeToken, "meta", metadataSubtree);
                 _context39.t0 = this.HttpClient;
-                _context39.next = 5;
+                _context39.next = 7;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 5:
+              case 7:
                 _context39.t1 = _context39.sent;
                 _context39.t2 = path;
                 _context39.t3 = metadata;
@@ -3014,10 +3096,10 @@ function () {
                   body: _context39.t3,
                   failover: false
                 };
-                _context39.next = 11;
+                _context39.next = 13;
                 return _context39.t0.Request.call(_context39.t0, _context39.t4);
 
-              case 11:
+              case 13:
               case "end":
                 return _context39.stop();
             }
@@ -3058,16 +3140,18 @@ function () {
             switch (_context40.prev = _context40.next) {
               case 0:
                 libraryId = _ref45.libraryId, objectId = _ref45.objectId, writeToken = _ref45.writeToken, _ref45$metadataSubtre = _ref45.metadataSubtree, metadataSubtree = _ref45$metadataSubtre === void 0 ? "/" : _ref45$metadataSubtre;
+                this.Log("Deleting metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken, "\n      Subtree: ").concat(metadataSubtree));
+                this.Log("Subtree: ".concat(metadataSubtree));
                 path = UrlJoin("q", writeToken, "meta", metadataSubtree);
                 _context40.t0 = this.HttpClient;
-                _context40.next = 5;
+                _context40.next = 7;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 5:
+              case 7:
                 _context40.t1 = _context40.sent;
                 _context40.t2 = path;
                 _context40.t3 = {
@@ -3076,10 +3160,10 @@ function () {
                   path: _context40.t2,
                   failover: false
                 };
-                _context40.next = 10;
+                _context40.next = 12;
                 return _context40.t0.Request.call(_context40.t0, _context40.t3);
 
-              case 10:
+              case 12:
               case "end":
                 return _context40.stop();
             }
@@ -3336,14 +3420,15 @@ function () {
       regeneratorRuntime.mark(function _callee45(_ref50) {
         var _this4 = this;
 
-        var libraryId, objectId, writeToken, fileInfo, callback, progress, fileDataMap, _ref51, id, jobs, jobInfo, firstJob, firstChunk, fileData, start, elapsed, mbps, concurrentUploads;
+        var libraryId, objectId, writeToken, fileInfo, callback, progress, fileDataMap, _ref51, id, jobs, jobInfo, concurrentUploads, firstJob, firstChunk, fileData, start, elapsed, mbps;
 
         return regeneratorRuntime.wrap(function _callee45$(_context45) {
           while (1) {
             switch (_context45.prev = _context45.next) {
               case 0:
                 libraryId = _ref50.libraryId, objectId = _ref50.objectId, writeToken = _ref50.writeToken, fileInfo = _ref50.fileInfo, callback = _ref50.callback;
-                // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
+                this.Log("Uploading files: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken)); // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
+
                 progress = {};
                 fileDataMap = {};
                 fileInfo = fileInfo.map(function (entry) {
@@ -3357,12 +3442,13 @@ function () {
                   };
                   return entry;
                 });
+                this.Log(fileInfo);
 
                 if (callback) {
                   callback(progress);
                 }
 
-                _context45.next = 7;
+                _context45.next = 9;
                 return this.CreateFileUploadJob({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -3370,11 +3456,14 @@ function () {
                   ops: fileInfo
                 });
 
-              case 7:
+              case 9:
                 _ref51 = _context45.sent;
                 id = _ref51.id;
                 jobs = _ref51.jobs;
-                _context45.next = 12;
+                this.Log("Upload ID: ".concat(id));
+                this.Log(jobs); // Get job info for each job
+
+                _context45.next = 16;
                 return jobs.limitedMap(5,
                 /*#__PURE__*/
                 function () {
@@ -3410,14 +3499,21 @@ function () {
                   };
                 }());
 
-              case 12:
+              case 16:
                 jobInfo = _context45.sent;
+                concurrentUploads = 1;
+
+                if (!(jobInfo.length > 1)) {
+                  _context45.next = 31;
+                  break;
+                }
+
                 // Upload first chunk to estimate bandwidth
                 firstJob = jobInfo[0];
                 firstChunk = firstJob.files.shift();
                 fileData = fileDataMap[firstChunk.path].slice(firstChunk.off, firstChunk.off + firstChunk.len);
                 start = new Date().getTime();
-                _context45.next = 19;
+                _context45.next = 25;
                 return this.UploadFileData({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -3427,7 +3523,7 @@ function () {
                   fileData: fileData
                 });
 
-              case 19:
+              case 25:
                 elapsed = (new Date().getTime() - start) / 1000;
                 mbps = firstChunk.len / elapsed / 1000000;
 
@@ -3440,7 +3536,11 @@ function () {
 
 
                 concurrentUploads = Math.min(5, Math.max(1, Math.floor(mbps / 8)));
-                _context45.next = 25;
+                this.Log("Calculated speed: ".concat(mbps, " Mbps"));
+                this.Log("Proceeding with ".concat(concurrentUploads, " concurrent upload(s)"));
+
+              case 31:
+                _context45.next = 33;
                 return jobInfo.limitedMap(concurrentUploads,
                 /*#__PURE__*/
                 function () {
@@ -3502,7 +3602,7 @@ function () {
                   };
                 }());
 
-              case 25:
+              case 33:
               case "end":
                 return _context45.stop();
             }
@@ -3529,6 +3629,8 @@ function () {
             switch (_context46.prev = _context46.next) {
               case 0:
                 libraryId = _ref54.libraryId, objectId = _ref54.objectId, writeToken = _ref54.writeToken, ops = _ref54.ops, _ref54$defaults = _ref54.defaults, defaults = _ref54$defaults === void 0 ? {} : _ref54$defaults;
+                this.Log("Creating file upload job: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
+                this.Log(ops);
                 path = UrlJoin("q", writeToken, "file_jobs");
                 body = {
                   seq: 0,
@@ -3538,14 +3640,14 @@ function () {
                 };
                 _context46.t0 = ResponseToJson;
                 _context46.t1 = this.HttpClient;
-                _context46.next = 7;
+                _context46.next = 9;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 7:
+              case 9:
                 _context46.t2 = _context46.sent;
                 _context46.t3 = path;
                 _context46.t4 = body;
@@ -3559,7 +3661,7 @@ function () {
                 _context46.t6 = _context46.t1.Request.call(_context46.t1, _context46.t5);
                 return _context46.abrupt("return", (0, _context46.t0)(_context46.t6));
 
-              case 13:
+              case 15:
               case "end":
                 return _context46.stop();
             }
@@ -3738,17 +3840,18 @@ function () {
             switch (_context50.prev = _context50.next) {
               case 0:
                 libraryId = _ref58.libraryId, objectId = _ref58.objectId, writeToken = _ref58.writeToken;
+                this.Log("Finalizing upload job: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
                 path = UrlJoin("q", writeToken, "files");
                 _context50.t0 = this.HttpClient;
                 _context50.t1 = path;
-                _context50.next = 6;
+                _context50.next = 7;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 6:
+              case 7:
                 _context50.t2 = _context50.sent;
                 _context50.t3 = {
                   method: "POST",
@@ -3757,10 +3860,10 @@ function () {
                   headers: _context50.t2,
                   failover: false
                 };
-                _context50.next = 10;
+                _context50.next = 11;
                 return _context50.t0.Request.call(_context50.t0, _context50.t3);
 
-              case 10:
+              case 11:
               case "end":
                 return _context50.stop();
             }
@@ -3797,13 +3900,15 @@ function () {
             switch (_context51.prev = _context51.next) {
               case 0:
                 libraryId = _ref59.libraryId, objectId = _ref59.objectId, writeToken = _ref59.writeToken, filePaths = _ref59.filePaths;
+                this.Log("Deleting Files: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
+                this.Log(filePaths);
                 ops = filePaths.map(function (path) {
                   return {
                     op: "del",
                     path: path
                   };
                 });
-                _context51.next = 4;
+                _context51.next = 6;
                 return this.CreateFileUploadJob({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -3811,7 +3916,7 @@ function () {
                   fileInfo: ops
                 });
 
-              case 4:
+              case 6:
               case "end":
                 return _context51.stop();
             }
@@ -3921,6 +4026,7 @@ function () {
             switch (_context53.prev = _context53.next) {
               case 0:
                 libraryId = _ref61.libraryId, objectId = _ref61.objectId, versionHash = _ref61.versionHash;
+                this.Log("Retrieving parts: ".concat(libraryId, " ").concat(objectId || versionHash));
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -3929,14 +4035,14 @@ function () {
                 path = UrlJoin("q", versionHash || objectId, "parts");
                 _context53.t0 = ResponseToJson;
                 _context53.t1 = this.HttpClient;
-                _context53.next = 7;
+                _context53.next = 8;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash
                 });
 
-              case 7:
+              case 8:
                 _context53.t2 = _context53.sent;
                 _context53.t3 = path;
                 _context53.t4 = {
@@ -3945,14 +4051,14 @@ function () {
                   path: _context53.t3
                 };
                 _context53.t5 = _context53.t1.Request.call(_context53.t1, _context53.t4);
-                _context53.next = 13;
+                _context53.next = 14;
                 return (0, _context53.t0)(_context53.t5);
 
-              case 13:
+              case 14:
                 response = _context53.sent;
                 return _context53.abrupt("return", response.parts);
 
-              case 15:
+              case 16:
               case "end":
                 return _context53.stop();
             }
@@ -3991,6 +4097,7 @@ function () {
             switch (_context54.prev = _context54.next) {
               case 0:
                 libraryId = _ref62.libraryId, objectId = _ref62.objectId, versionHash = _ref62.versionHash, partHash = _ref62.partHash;
+                this.Log("Retrieving part: ".concat(libraryId, " ").concat(objectId || versionHash, " ").concat(partHash));
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -3999,14 +4106,14 @@ function () {
                 path = UrlJoin("q", versionHash || objectId, "parts", partHash);
                 _context54.t0 = ResponseToJson;
                 _context54.t1 = this.HttpClient;
-                _context54.next = 7;
+                _context54.next = 8;
                 return this.authClient.AuthorizationHeader({
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash
                 });
 
-              case 7:
+              case 8:
                 _context54.t2 = _context54.sent;
                 _context54.t3 = path;
                 _context54.t4 = {
@@ -4015,13 +4122,13 @@ function () {
                   path: _context54.t3
                 };
                 _context54.t5 = _context54.t1.Request.call(_context54.t1, _context54.t4);
-                _context54.next = 13;
+                _context54.next = 14;
                 return (0, _context54.t0)(_context54.t5);
 
-              case 13:
+              case 14:
                 return _context54.abrupt("return", _context54.sent);
 
-              case 14:
+              case 15:
               case "end":
                 return _context54.stop();
             }
@@ -5588,7 +5695,8 @@ function () {
             switch (_context69.prev = _context69.next) {
               case 0:
                 objectId = _ref84.objectId, accessCharge = _ref84.accessCharge;
-                _context69.next = 3;
+                this.Log("Setting access charge: ".concat(objectId, " ").concat(accessCharge));
+                _context69.next = 4;
                 return this.ethClient.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -5597,7 +5705,7 @@ function () {
                   signer: this.signer
                 });
 
-              case 3:
+              case 4:
               case "end":
                 return _context69.stop();
             }
@@ -5692,7 +5800,9 @@ function () {
                   ];
                 }
 
-                _context71.next = 4;
+                this.Log("Retrieving access info: ".concat(objectId));
+                this.Log(args);
+                _context71.next = 6;
                 return this.ethClient.CallContractMethod({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -5701,8 +5811,9 @@ function () {
                   signer: this.signer
                 });
 
-              case 4:
+              case 6:
                 info = _context71.sent;
+                this.Log(info);
                 return _context71.abrupt("return", {
                   visibilityCode: info[0],
                   visible: info[0] >= 1,
@@ -5713,7 +5824,7 @@ function () {
                   accessCharge: Utils.WeiToEther(info[2]).toString()
                 });
 
-              case 6:
+              case 9:
               case "end":
                 return _context71.stop();
             }
@@ -6116,6 +6227,7 @@ function () {
           protocols = _ref92$protocols === void 0 ? [] : _ref92$protocols,
           _ref92$drms = _ref92.drms,
           drms = _ref92$drms === void 0 ? [] : _ref92$drms;
+      this.Log("Retrieving audience data: ".concat(objectId));
       var data = {
         user_address: this.utils.FormatAddress(this.signer.address),
         content_id: objectId || this.utils.DecodeVersionHash(versionHash).id,
@@ -6131,6 +6243,7 @@ function () {
         data.language = window.navigator.language;
       }
 
+      this.Log(data);
       return data;
     }
     /**
@@ -6288,9 +6401,10 @@ function () {
                 break;
 
               case 46:
+                this.Log(playoutMap);
                 return _context78.abrupt("return", playoutMap);
 
-              case 47:
+              case 48:
               case "end":
                 return _context78.stop();
             }
@@ -6469,9 +6583,17 @@ function () {
                 headers.Authorization = _context80.sent.Authorization;
 
               case 9:
+                this.Log("Calling bitcode method: ".concat(libraryId || "", " ").concat(objectId || versionHash, " ").concat(writeToken || ""));
+                this.Log("".concat(constant ? "GET" : "POST", " ").concat(path));
+                this.Log("Query Params:");
+                this.Log(queryParams);
+                this.Log("Body:");
+                this.Log(body);
+                this.Log("Headers:");
+                this.Log(headers);
                 _context80.t0 = ResponseToFormat;
                 _context80.t1 = format;
-                _context80.next = 13;
+                _context80.next = 21;
                 return this.HttpClient.Request({
                   body: body,
                   headers: headers,
@@ -6481,11 +6603,11 @@ function () {
                   failover: false
                 });
 
-              case 13:
+              case 21:
                 _context80.t2 = _context80.sent;
                 return _context80.abrupt("return", (0, _context80.t0)(_context80.t1, _context80.t2));
 
-              case 15:
+              case 23:
               case "end":
                 return _context80.stop();
             }
@@ -6807,22 +6929,24 @@ function () {
             switch (_context85.prev = _context85.next) {
               case 0:
                 name = _ref100.name, description = _ref100.description, _ref100$metadata = _ref100.metadata, metadata = _ref100$metadata === void 0 ? {} : _ref100$metadata;
-                _context85.next = 3;
+                this.Log("Creating access group: ".concat(name || "", " ").concat(description || ""));
+                _context85.next = 4;
                 return this.authClient.CreateAccessGroup();
 
-              case 3:
+              case 4:
                 _ref101 = _context85.sent;
                 contractAddress = _ref101.contractAddress;
                 objectId = this.utils.AddressToObjectId(contractAddress);
-                _context85.next = 8;
+                this.Log("Access group: ".concat(contractAddress, " ").concat(objectId));
+                _context85.next = 10;
                 return this.EditContentObject({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: objectId
                 });
 
-              case 8:
+              case 10:
                 editResponse = _context85.sent;
-                _context85.next = 11;
+                _context85.next = 13;
                 return this.ReplaceMetadata({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: objectId,
@@ -6837,18 +6961,18 @@ function () {
                   }, metadata)
                 });
 
-              case 11:
-                _context85.next = 13;
+              case 13:
+                _context85.next = 15;
                 return this.FinalizeContentObject({
                   libraryId: this.contentSpaceLibraryId,
                   objectId: objectId,
                   writeToken: editResponse.write_token
                 });
 
-              case 13:
+              case 15:
                 return _context85.abrupt("return", contractAddress);
 
-              case 14:
+              case 16:
               case "end":
                 return _context85.stop();
             }
@@ -8900,8 +9024,9 @@ function () {
             switch (_context119.prev = _context119.next) {
               case 0:
                 configUrl = _ref136.configUrl, region = _ref136.region;
+                _context119.prev = 1;
                 httpClient = new HttpClient([configUrl]);
-                _context119.next = 4;
+                _context119.next = 5;
                 return ResponseToJson(httpClient.Request({
                   method: "GET",
                   path: "/config",
@@ -8910,7 +9035,7 @@ function () {
                   } : ""
                 }));
 
-              case 4:
+              case 5:
                 fabricInfo = _context119.sent;
 
                 // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
@@ -8937,12 +9062,21 @@ function () {
                   ethereumURIs: ethereumURIs
                 });
 
-              case 11:
+              case 14:
+                _context119.prev = 14;
+                _context119.t0 = _context119["catch"](1);
+                // eslint-disable-next-line no-console
+                console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
+
+                console.error(_context119.t0);
+                throw _context119.t0;
+
+              case 19:
               case "end":
                 return _context119.stop();
             }
           }
-        }, _callee119);
+        }, _callee119, null, [[1, 14]]);
       }));
 
       function Configuration(_x117) {

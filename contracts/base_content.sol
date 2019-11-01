@@ -17,12 +17,13 @@ BaseContent20190528193400ML: Modified to support non-library containers
 BaseContent20190605203200ML: Splits publish and confirm logic
 BaseContent20190724203300ML: Enforces access rights in access request
 BaseContent20190801141600ML: Fixes the access rights grant for paid content
+BaseContent20191029161700ML: Removed debug statements for accessRequest
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190801141600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20191029161700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -416,15 +417,15 @@ contract BaseContent is Editable {
         uint8 accessCode;
 
         (visibilityCode, accessCode, requiredFund) = getAccessInfo(level, custom_values, stakeholders);
-        emit DbgAccessCode(accessCode);
+        //emit DbgAccessCode(accessCode);
 
         if (accessCode == 100) { //Check if request is funded, except if user is owner or has paid already
-            //require(msg.value >= uint(requiredFund));
-            emit DbgAccess(requiredFund, msg.value, uint(requiredFund), (msg.value >= uint(requiredFund)));
+            require(msg.value >= uint(requiredFund));
+            //emit DbgAccess(requiredFund, msg.value, uint(requiredFund), (msg.value >= uint(requiredFund)));
             setPaidRights();
             accessCode = 0;
         }
-        emit DbgAccessCode(accessCode);
+        //emit DbgAccessCode(accessCode);
         require(accessCode == 0);
 
 
