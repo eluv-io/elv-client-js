@@ -571,10 +571,14 @@ var topics = {
     }],
     "contract": "BaseContent"
   },
-  "0x4461f9cdcf9ac44bc5cf3219f1d1e52e19ffc2bd4af5999df15f51c1396a178b": {
+  "0x8354ff8c2c210fd53709db56438bb45d36a62de8bcc95c8459d80ce933d47680": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
         "indexed": false,
         "name": "libraryAddress",
         "type": "address"
@@ -592,7 +596,7 @@ var topics = {
         "type": "bytes32"
       }, {
         "indexed": false,
-        "name": "timestamp",
+        "name": "request_timestamp",
         "type": "uint64"
       }],
       "name": "AccessRequest",
@@ -600,10 +604,14 @@ var topics = {
     }],
     "contract": "BaseContentFactoryExt"
   },
-  "0xe319d76ed8c228f343b3ed07f3b89fda4a39776dcedcb4c02b06273d89f51d48": {
+  "0x078326d18c0223483393342523f51da024ddcb0f1e929aa1f142100381c794f5": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
+        "indexed": false,
+        "name": "timestamp",
+        "type": "uint256"
+      }, {
         "indexed": false,
         "name": "libraryAddress",
         "type": "address"
@@ -621,7 +629,7 @@ var topics = {
         "type": "bytes32"
       }, {
         "indexed": false,
-        "name": "timestamp",
+        "name": "request_timestamp",
         "type": "uint64"
       }],
       "name": "AccessComplete",
@@ -1391,7 +1399,7 @@ var topics = {
     }],
     "contract": "LvRecordableStream"
   },
-  "0xc61a2a2e8a2557b79670b411852a149a0fa08362d65b5fae5c80f3707895fab6": {
+  "0x182a726f966f22c96d651085c2a7143482b8d96fb0964ff2664ab8bdf2b703aa": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
@@ -1410,13 +1418,17 @@ var topics = {
         "indexed": false,
         "name": "requestID",
         "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "accessTimestamp",
+        "type": "uint256"
       }],
       "name": "RecordingPlaybackStarted",
       "type": "event"
     }],
     "contract": "LvRecordableStream"
   },
-  "0x866782e28e44a4d70c03424400263ca66123fc80169e55d609304bb6c2735f2d": {
+  "0x208745b583bd0c257eced13411dc4b50e9a3a9c1ef0cc2f95b30a7457ec50cc1": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
@@ -1439,13 +1451,17 @@ var topics = {
         "indexed": false,
         "name": "percentPlayed",
         "type": "uint8"
+      }, {
+        "indexed": false,
+        "name": "finalizeTimestamp",
+        "type": "uint256"
       }],
       "name": "RecordingPlaybackCompleted",
       "type": "event"
     }],
     "contract": "LvRecordableStream"
   },
-  "0xcddd560f6a99df10337f1469b38ea8180453522d5f5d199786c39eab27e25d2e": {
+  "0xe3b30c4da7320d1a542eb57f205a34d2fc36ecd114595f3d50be2a73b3426e6b": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
@@ -1463,6 +1479,18 @@ var topics = {
       }, {
         "indexed": false,
         "name": "programId",
+        "type": "string"
+      }, {
+        "indexed": false,
+        "name": "programStart",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "programEnd",
+        "type": "uint256"
+      }, {
+        "indexed": false,
+        "name": "programTitle",
         "type": "string"
       }],
       "name": "RecordedProgramId",
