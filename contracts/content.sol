@@ -9,11 +9,12 @@ Content20190301121800ML: Adds stub for runAccessInfo
 Content20190315171500ML: Migrated to 0.4.24
 Content20190506155000ML: Makes the default for runAccess match content object behavior that does not have custom contract
 Content20190510151600ML: Modified API for runAccessInfo to add Access information
+Content20191031162000ML: Adds finalize method for state channel
 */
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20190510151600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20191031162000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint8 public constant DEFAULT_SEE  = 1;
     uint8 public constant DEFAULT_ACCESS  = 2;
@@ -110,6 +111,10 @@ contract Content is Ownable {
     // 0 indicates that the finalization can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runFinalize(uint256 /*request_ID*/, uint256 /*score_pct*/) public payable returns (uint) {
+        return 0;
+    }
+
+    function runFinalizeExt(uint256 requestID, uint256 score_pct, address originator) public payable returns (uint) {
         return 0;
     }
 
