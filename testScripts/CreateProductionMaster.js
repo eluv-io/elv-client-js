@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const { ElvClient } = require("../src/ElvClient");
 const fs = require("fs");
 const Path = require("path");

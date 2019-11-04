@@ -194,12 +194,28 @@ function () {
       } // eslint-disable-next-line no-console
 
 
-      console.log("\n(elv-client-js) ".concat(message, "\n"));
+      console.log("\n(elv-client-js#ElvClient) ".concat(message, "\n"));
     }
+    /**
+     * Enable or disable verbose logging
+     *
+     * @methodGroup - Miscellaneous
+     *
+     * @param {boolean} enable - Set logging
+     */
+
   }, {
     key: "ToggleLogging",
     value: function ToggleLogging(enable) {
       this.debug = enable;
+      this.authClient ? this.authClient.debug = enable : undefined;
+      this.ethClient ? this.ethClient.debug = enable : undefined;
+      this.HttpClient ? this.HttpClient.debug = enable : undefined;
+      this.userProfileClient ? this.userProfileClient.debug = enable : undefined;
+
+      if (enable) {
+        this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\n\t\t").concat(this.ethereumURIs.join(", \n\t\t"), "\n\t]"));
+      }
     }
     /**
      * Create a new ElvClient
@@ -261,17 +277,25 @@ function () {
       this.encryptionConks = {};
       this.reencryptionConks = {};
       this.stateChannelAccess = {};
-      this.HttpClient = new HttpClient(this.fabricURIs);
-      this.ethClient = new EthClient(this.ethereumURIs);
+      this.HttpClient = new HttpClient({
+        uris: this.fabricURIs,
+        debug: this.debug
+      });
+      this.ethClient = new EthClient({
+        uris: this.ethereumURIs,
+        debug: this.debug
+      });
       this.authClient = new AuthorizationClient({
         client: this,
         contentSpaceId: this.contentSpaceId,
         signer: this.signer,
         noCache: this.noCache,
-        noAuth: this.noAuth
+        noAuth: this.noAuth,
+        debug: this.debug
       });
       this.userProfileClient = new UserProfileClient({
-        client: this
+        client: this,
+        debug: this.debug
       });
     }
   }, {
@@ -5802,8 +5826,7 @@ function () {
                 }
 
                 this.Log("Retrieving access info: ".concat(objectId));
-                this.Log(args);
-                _context71.next = 6;
+                _context71.next = 5;
                 return this.ethClient.CallContractMethod({
                   contractAddress: Utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -5812,7 +5835,7 @@ function () {
                   signer: this.signer
                 });
 
-              case 6:
+              case 5:
                 info = _context71.sent;
                 this.Log(info);
                 return _context71.abrupt("return", {
@@ -5825,7 +5848,7 @@ function () {
                   accessCharge: Utils.WeiToEther(info[2]).toString()
                 });
 
-              case 9:
+              case 8:
               case "end":
                 return _context71.stop();
             }
@@ -6839,11 +6862,12 @@ function () {
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-                } // Clone queryParams to avoid modification of the original
+                }
 
+                this.Log("Building Fabric URL:\n      libraryId: ".concat(libraryId, "\n      objectId: ").concat(objectId, "\n      versionHash: ").concat(versionHash, "\n      partHash: ").concat(partHash, "\n      rep: ").concat(rep, "\n      publicRep: ").concat(publicRep, "\n      call: ").concat(call, "\n      channelAuth: ").concat(channelAuth, "\n      noAuth: ").concat(noAuth, "\n      noCache: ").concat(noCache, "\n      queryParams: ").concat(JSON.stringify(queryParams || {}, null, 2))); // Clone queryParams to avoid modification of the original
 
                 queryParams = _objectSpread({}, queryParams);
-                _context83.next = 5;
+                _context83.next = 6;
                 return this.authClient.AuthorizationToken({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -6853,7 +6877,7 @@ function () {
                   noCache: noCache
                 });
 
-              case 5:
+              case 6:
                 queryParams.authorization = _context83.sent;
                 path = "";
 
@@ -6882,7 +6906,7 @@ function () {
                   queryParams: queryParams
                 }));
 
-              case 10:
+              case 11:
               case "end":
                 return _context83.stop();
             }
@@ -7074,8 +7098,9 @@ function () {
             switch (_context86.prev = _context86.next) {
               case 0:
                 contractAddress = _ref102.contractAddress;
+                this.Log("Retrieving owner of access group ".concat(contractAddress));
                 _context86.t0 = this.utils;
-                _context86.next = 4;
+                _context86.next = 5;
                 return this.ethClient.CallContractMethod({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
@@ -7084,11 +7109,11 @@ function () {
                   signer: this.signer
                 });
 
-              case 4:
+              case 5:
                 _context86.t1 = _context86.sent;
                 return _context86.abrupt("return", _context86.t0.FormatAddress.call(_context86.t0, _context86.t1));
 
-              case 6:
+              case 7:
               case "end":
                 return _context86.stop();
             }
@@ -7124,7 +7149,8 @@ function () {
             switch (_context87.prev = _context87.next) {
               case 0:
                 contractAddress = _ref103.contractAddress;
-                _context87.next = 3;
+                this.Log("Deleting access group ".concat(contractAddress));
+                _context87.next = 4;
                 return this.CallContractMethodAndWait({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
@@ -7132,7 +7158,7 @@ function () {
                   methodArgs: []
                 });
 
-              case 3:
+              case 4:
               case "end":
                 return _context87.stop();
             }
@@ -7170,16 +7196,17 @@ function () {
             switch (_context89.prev = _context89.next) {
               case 0:
                 contractAddress = _ref104.contractAddress;
-                _context89.next = 3;
+                this.Log("Retrieving members for group ".concat(contractAddress));
+                _context89.next = 4;
                 return this.CallContractMethod({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
                   methodName: "membersNum"
                 });
 
-              case 3:
+              case 4:
                 length = _context89.sent.toNumber();
-                _context89.next = 6;
+                _context89.next = 7;
                 return Promise.all(_toConsumableArray(Array(length)).map(
                 /*#__PURE__*/
                 function () {
@@ -7216,10 +7243,10 @@ function () {
                   };
                 }()));
 
-              case 6:
+              case 7:
                 return _context89.abrupt("return", _context89.sent);
 
-              case 7:
+              case 8:
               case "end":
                 return _context89.stop();
             }
@@ -7257,16 +7284,17 @@ function () {
             switch (_context91.prev = _context91.next) {
               case 0:
                 contractAddress = _ref106.contractAddress;
-                _context91.next = 3;
+                this.Log("Retrieving managers for group ".concat(contractAddress));
+                _context91.next = 4;
                 return this.CallContractMethod({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
                   methodName: "managersNum"
                 });
 
-              case 3:
+              case 4:
                 length = _context91.sent.toNumber();
-                _context91.next = 6;
+                _context91.next = 7;
                 return Promise.all(_toConsumableArray(Array(length)).map(
                 /*#__PURE__*/
                 function () {
@@ -7303,10 +7331,10 @@ function () {
                   };
                 }()));
 
-              case 6:
+              case 7:
                 return _context91.abrupt("return", _context91.sent);
 
-              case 7:
+              case 8:
               case "end":
                 return _context91.stop();
             }
@@ -7357,7 +7385,8 @@ function () {
                 throw Error("Manager access required");
 
               case 7:
-                _context92.next = 9;
+                this.Log("Calling ".concat(methodName, " on group ").concat(contractAddress, " for user ").concat(memberAddress));
+                _context92.next = 10;
                 return this.CallContractMethodAndWait({
                   contractAddress: contractAddress,
                   abi: AccessGroupContract.abi,
@@ -7367,7 +7396,7 @@ function () {
                   eventValue: "candidate"
                 });
 
-              case 9:
+              case 10:
                 event = _context92.sent;
                 candidate = this.ExtractValueFromEvent({
                   abi: AccessGroupContract.abi,
@@ -7377,7 +7406,7 @@ function () {
                 });
 
                 if (!(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress))) {
-                  _context92.next = 14;
+                  _context92.next = 15;
                   break;
                 }
 
@@ -7385,10 +7414,10 @@ function () {
                 console.error("Mismatch: " + candidate + " :: " + memberAddress);
                 throw Error("Access group method " + methodName + " failed");
 
-              case 14:
+              case 15:
                 return _context92.abrupt("return", event.transactionHash);
 
-              case 15:
+              case 16:
               case "end":
                 return _context92.stop();
             }
@@ -7642,7 +7671,8 @@ function () {
                   });
                 }
 
-                _context99.next = 5;
+                this.Log("Retrieving ".concat(permissions.join(", "), " group(s) for library ").concat(libraryId));
+                _context99.next = 6;
                 return Promise.all(permissions.map(
                 /*#__PURE__*/
                 function () {
@@ -7727,15 +7757,15 @@ function () {
                   };
                 }()));
 
-              case 5:
+              case 6:
                 return _context99.abrupt("return", libraryPermissions);
 
-              case 6:
+              case 7:
               case "end":
                 return _context99.stop();
             }
           }
-        }, _callee99);
+        }, _callee99, this);
       }));
 
       function ContentLibraryGroupPermissions(_x96) {
@@ -7776,26 +7806,27 @@ function () {
                 throw Error("Invalid group type: ".concat(permission));
 
               case 4:
-                _context100.next = 6;
+                this.Log("Adding ".concat(permission, " group ").concat(groupAddress, " to library ").concat(libraryId));
+                _context100.next = 7;
                 return this.ContentLibraryGroupPermissions({
                   libraryId: libraryId,
                   permissions: [permission]
                 });
 
-              case 6:
+              case 7:
                 existingPermissions = _context100.sent;
 
                 if (!existingPermissions[groupAddress]) {
-                  _context100.next = 9;
+                  _context100.next = 10;
                   break;
                 }
 
                 return _context100.abrupt("return");
 
-              case 9:
+              case 10:
                 // Capitalize permission to match method and event names
                 permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
-                _context100.next = 12;
+                _context100.next = 13;
                 return this.CallContractMethodAndWait({
                   contractAddress: this.utils.HashToAddress(libraryId),
                   abi: LibraryContract.abi,
@@ -7803,16 +7834,16 @@ function () {
                   methodArgs: [this.utils.FormatAddress(groupAddress)]
                 });
 
-              case 12:
+              case 13:
                 event = _context100.sent;
-                _context100.next = 15;
+                _context100.next = 16;
                 return this.ExtractEventFromLogs({
                   abi: LibraryContract.abi,
                   event: event,
                   eventName: "".concat(permission, "GroupAdded")
                 });
 
-              case 15:
+              case 16:
               case "end":
                 return _context100.stop();
             }
@@ -7857,26 +7888,27 @@ function () {
                 throw Error("Invalid group type: ".concat(permission));
 
               case 3:
-                _context101.next = 5;
+                this.Log("Removing ".concat(permission, " group ").concat(groupAddress, " from library ").concat(libraryId));
+                _context101.next = 6;
                 return this.ContentLibraryGroupPermissions({
                   libraryId: libraryId,
                   permissions: [permission]
                 });
 
-              case 5:
+              case 6:
                 existingPermissions = _context101.sent;
 
                 if (existingPermissions[groupAddress]) {
-                  _context101.next = 8;
+                  _context101.next = 9;
                   break;
                 }
 
                 return _context101.abrupt("return");
 
-              case 8:
+              case 9:
                 // Capitalize permission to match method and event names
                 permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
-                _context101.next = 11;
+                _context101.next = 12;
                 return this.CallContractMethodAndWait({
                   contractAddress: this.utils.HashToAddress(libraryId),
                   abi: LibraryContract.abi,
@@ -7884,16 +7916,16 @@ function () {
                   methodArgs: [this.utils.FormatAddress(groupAddress)]
                 });
 
-              case 11:
+              case 12:
                 event = _context101.sent;
-                _context101.next = 14;
+                _context101.next = 15;
                 return this.ExtractEventFromLogs({
                   abi: LibraryContract.abi,
                   event: event,
                   eventName: "".concat(permission, "GroupRemoved")
                 });
 
-              case 14:
+              case 15:
               case "end":
                 return _context101.stop();
             }
@@ -7974,16 +8006,17 @@ function () {
                 throw new Error("Unable to get collection: User wallet doesn't exist");
 
               case 14:
-                _context102.next = 16;
+                this.Log("Retrieving ".concat(collectionType, " contract collection for user ").concat(this.signer.address));
+                _context102.next = 17;
                 return this.ethClient.MakeProviderCall({
                   methodName: "send",
                   args: ["elv_getWalletCollection", [this.contentSpaceId, "iusr".concat(this.utils.AddressToHash(this.signer.address)), collectionType]]
                 });
 
-              case 16:
+              case 17:
                 return _context102.abrupt("return", _context102.sent);
 
-              case 17:
+              case 18:
               case "end":
                 return _context102.stop();
             }
@@ -8512,7 +8545,8 @@ function () {
               case 0:
                 libraryId = _ref129.libraryId, objectId = _ref129.objectId, customContractAddress = _ref129.customContractAddress, name = _ref129.name, description = _ref129.description, abi = _ref129.abi, factoryAbi = _ref129.factoryAbi, _ref129$overrides = _ref129.overrides, overrides = _ref129$overrides === void 0 ? {} : _ref129$overrides;
                 customContractAddress = this.utils.FormatAddress(customContractAddress);
-                _context110.next = 4;
+                this.Log("Setting custom contract address: ".concat(objectId, " ").concat(customContractAddress));
+                _context110.next = 5;
                 return this.ethClient.SetCustomContentContract({
                   contentContractAddress: Utils.HashToAddress(objectId),
                   customContractAddress: customContractAddress,
@@ -8520,17 +8554,17 @@ function () {
                   signer: this.signer
                 });
 
-              case 4:
+              case 5:
                 setResult = _context110.sent;
-                _context110.next = 7;
+                _context110.next = 8;
                 return this.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 7:
+              case 8:
                 writeToken = _context110.sent.write_token;
-                _context110.next = 10;
+                _context110.next = 11;
                 return this.ReplaceMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -8545,18 +8579,18 @@ function () {
                   }
                 });
 
-              case 10:
-                _context110.next = 12;
+              case 11:
+                _context110.next = 13;
                 return this.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: writeToken
                 });
 
-              case 12:
+              case 13:
                 return _context110.abrupt("return", setResult);
 
-              case 13:
+              case 14:
               case "end":
                 return _context110.stop();
             }
@@ -8602,7 +8636,8 @@ function () {
                 return _context111.abrupt("return");
 
               case 3:
-                _context111.next = 5;
+                this.Log("Retrieving custom contract address: ".concat(objectId));
+                _context111.next = 6;
                 return this.ethClient.CallContractMethod({
                   contractAddress: this.utils.HashToAddress(objectId),
                   abi: ContentContract.abi,
@@ -8611,20 +8646,20 @@ function () {
                   signer: this.signer
                 });
 
-              case 5:
+              case 6:
                 customContractAddress = _context111.sent;
 
                 if (!(customContractAddress === this.utils.nullAddress)) {
-                  _context111.next = 8;
+                  _context111.next = 9;
                   break;
                 }
 
                 return _context111.abrupt("return");
 
-              case 8:
+              case 9:
                 return _context111.abrupt("return", this.utils.FormatAddress(customContractAddress));
 
-              case 9:
+              case 10:
               case "end":
                 return _context111.stop();
             }
@@ -8638,141 +8673,24 @@ function () {
 
       return CustomContractAddress;
     }()
-    /**
-     * Get all events on the specified contract
-     *
-     * @methodGroup Contracts
-     * @namedParams
-     * @param {string} contractAddress - The address of the contract
-     * @param {object} abi - The ABI of the contract
-     * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
-     * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
-     * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
-     * Note: This requires one extra network call per block, so it should not be used for very large ranges
-     * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
-     */
-
   }, {
-    key: "ContractEvents",
+    key: "FormatBlockNumbers",
     value: function () {
-      var _ContractEvents = _asyncToGenerator(
+      var _FormatBlockNumbers = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee112(_ref131) {
-        var contractAddress, abi, _ref131$fromBlock, fromBlock, toBlock, _ref131$includeTransa, includeTransaction;
+        var fromBlock, toBlock, _ref131$count, count, latestBlock;
 
         return regeneratorRuntime.wrap(function _callee112$(_context112) {
           while (1) {
             switch (_context112.prev = _context112.next) {
               case 0:
-                contractAddress = _ref131.contractAddress, abi = _ref131.abi, _ref131$fromBlock = _ref131.fromBlock, fromBlock = _ref131$fromBlock === void 0 ? 0 : _ref131$fromBlock, toBlock = _ref131.toBlock, _ref131$includeTransa = _ref131.includeTransaction, includeTransaction = _ref131$includeTransa === void 0 ? false : _ref131$includeTransa;
+                fromBlock = _ref131.fromBlock, toBlock = _ref131.toBlock, _ref131$count = _ref131.count, count = _ref131$count === void 0 ? 10 : _ref131$count;
                 _context112.next = 3;
-                return this.ethClient.ContractEvents({
-                  contractAddress: contractAddress,
-                  abi: abi,
-                  fromBlock: fromBlock,
-                  toBlock: toBlock,
-                  includeTransaction: includeTransaction
-                });
-
-              case 3:
-                return _context112.abrupt("return", _context112.sent);
-
-              case 4:
-              case "end":
-                return _context112.stop();
-            }
-          }
-        }, _callee112, this);
-      }));
-
-      function ContractEvents(_x111) {
-        return _ContractEvents.apply(this, arguments);
-      }
-
-      return ContractEvents;
-    }() // TODO: Not implemented in contracts
-
-  }, {
-    key: "WithdrawContractFunds",
-    value: function () {
-      var _WithdrawContractFunds = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee113(_ref132) {
-        var contractAddress, abi, ether;
-        return regeneratorRuntime.wrap(function _callee113$(_context113) {
-          while (1) {
-            switch (_context113.prev = _context113.next) {
-              case 0:
-                contractAddress = _ref132.contractAddress, abi = _ref132.abi, ether = _ref132.ether;
-                _context113.next = 3;
-                return this.ethClient.CallContractMethodAndWait({
-                  contractAddress: contractAddress,
-                  abi: abi,
-                  methodName: "transfer",
-                  methodArgs: [this.signer.address, Ethers.utils.parseEther(ether.toString())],
-                  signer: this.signer
-                });
-
-              case 3:
-                return _context113.abrupt("return", _context113.sent);
-
-              case 4:
-              case "end":
-                return _context113.stop();
-            }
-          }
-        }, _callee113, this);
-      }));
-
-      function WithdrawContractFunds(_x112) {
-        return _WithdrawContractFunds.apply(this, arguments);
-      }
-
-      return WithdrawContractFunds;
-    }()
-    /* Other blockchain operations */
-
-    /**
-     * Get events from the blockchain in reverse chronological order, starting from toBlock. This will also attempt
-     * to identify and parse any known Eluvio contract methods. If successful, the method name, signature, and input
-     * values will be included in the log entry.
-     *
-     * @methodGroup Contracts
-     * @namedParams
-     * @param {number=} toBlock - Limit results to events before the specified block (inclusive) - If not specified, will start from latest block
-     * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
-     * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are unspecified)
-     * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
-     * Note: This requires two extra network calls per transaction, so it should not be used for very large ranges
-     * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
-     */
-
-  }, {
-    key: "Events",
-    value: function () {
-      var _Events = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee114() {
-        var _ref133,
-            toBlock,
-            fromBlock,
-            _ref133$count,
-            count,
-            _ref133$includeTransa,
-            includeTransaction,
-            latestBlock,
-            _args114 = arguments;
-
-        return regeneratorRuntime.wrap(function _callee114$(_context114) {
-          while (1) {
-            switch (_context114.prev = _context114.next) {
-              case 0:
-                _ref133 = _args114.length > 0 && _args114[0] !== undefined ? _args114[0] : {}, toBlock = _ref133.toBlock, fromBlock = _ref133.fromBlock, _ref133$count = _ref133.count, count = _ref133$count === void 0 ? 10 : _ref133$count, _ref133$includeTransa = _ref133.includeTransaction, includeTransaction = _ref133$includeTransa === void 0 ? false : _ref133$includeTransa;
-                _context114.next = 3;
                 return this.BlockNumber();
 
               case 3:
-                latestBlock = _context114.sent;
+                latestBlock = _context112.sent;
 
                 if (!toBlock) {
                   if (!fromBlock) {
@@ -8794,30 +8712,192 @@ function () {
                   fromBlock = 0;
                 }
 
-                if (!(fromBlock > toBlock)) {
-                  _context114.next = 9;
-                  break;
-                }
-
-                return _context114.abrupt("return", []);
-
-              case 9:
-                _context114.next = 11;
-                return this.ethClient.Events({
-                  toBlock: toBlock,
+                return _context112.abrupt("return", {
                   fromBlock: fromBlock,
+                  toBlock: toBlock
+                });
+
+              case 8:
+              case "end":
+                return _context112.stop();
+            }
+          }
+        }, _callee112, this);
+      }));
+
+      function FormatBlockNumbers(_x111) {
+        return _FormatBlockNumbers.apply(this, arguments);
+      }
+
+      return FormatBlockNumbers;
+    }()
+    /**
+     * Get all events on the specified contract
+     *
+     * @methodGroup Contracts
+     * @namedParams
+     * @param {string} contractAddress - The address of the contract
+     * @param {object} abi - The ABI of the contract
+     * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
+     * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
+     * @param {number=} count=1000 - Maximum range of blocks to search (unless both toBlock and fromBlock are specified)
+     * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
+     * Note: This requires one extra network call per block, so it should not be used for very large ranges
+     * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+     */
+
+  }, {
+    key: "ContractEvents",
+    value: function () {
+      var _ContractEvents = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee113(_ref132) {
+        var contractAddress, abi, _ref132$fromBlock, fromBlock, toBlock, _ref132$count, count, _ref132$includeTransa, includeTransaction, blocks;
+
+        return regeneratorRuntime.wrap(function _callee113$(_context113) {
+          while (1) {
+            switch (_context113.prev = _context113.next) {
+              case 0:
+                contractAddress = _ref132.contractAddress, abi = _ref132.abi, _ref132$fromBlock = _ref132.fromBlock, fromBlock = _ref132$fromBlock === void 0 ? 0 : _ref132$fromBlock, toBlock = _ref132.toBlock, _ref132$count = _ref132.count, count = _ref132$count === void 0 ? 1000 : _ref132$count, _ref132$includeTransa = _ref132.includeTransaction, includeTransaction = _ref132$includeTransa === void 0 ? false : _ref132$includeTransa;
+                _context113.next = 3;
+                return this.FormatBlockNumbers({
+                  fromBlock: fromBlock,
+                  toBlock: toBlock,
+                  count: count
+                });
+
+              case 3:
+                blocks = _context113.sent;
+                this.Log("Querying contract events ".concat(contractAddress, " - Blocks ").concat(blocks.fromBlock, " to ").concat(blocks.toBlock));
+                _context113.next = 7;
+                return this.ethClient.ContractEvents({
+                  contractAddress: contractAddress,
+                  abi: abi,
+                  fromBlock: blocks.fromBlock,
+                  toBlock: blocks.toBlock,
                   includeTransaction: includeTransaction
                 });
 
-              case 11:
+              case 7:
+                return _context113.abrupt("return", _context113.sent);
+
+              case 8:
+              case "end":
+                return _context113.stop();
+            }
+          }
+        }, _callee113, this);
+      }));
+
+      function ContractEvents(_x112) {
+        return _ContractEvents.apply(this, arguments);
+      }
+
+      return ContractEvents;
+    }() // TODO: Not implemented in contracts
+
+  }, {
+    key: "WithdrawContractFunds",
+    value: function () {
+      var _WithdrawContractFunds = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee114(_ref133) {
+        var contractAddress, abi, ether;
+        return regeneratorRuntime.wrap(function _callee114$(_context114) {
+          while (1) {
+            switch (_context114.prev = _context114.next) {
+              case 0:
+                contractAddress = _ref133.contractAddress, abi = _ref133.abi, ether = _ref133.ether;
+                _context114.next = 3;
+                return this.ethClient.CallContractMethodAndWait({
+                  contractAddress: contractAddress,
+                  abi: abi,
+                  methodName: "transfer",
+                  methodArgs: [this.signer.address, Ethers.utils.parseEther(ether.toString())],
+                  signer: this.signer
+                });
+
+              case 3:
                 return _context114.abrupt("return", _context114.sent);
 
-              case 12:
+              case 4:
               case "end":
                 return _context114.stop();
             }
           }
         }, _callee114, this);
+      }));
+
+      function WithdrawContractFunds(_x113) {
+        return _WithdrawContractFunds.apply(this, arguments);
+      }
+
+      return WithdrawContractFunds;
+    }()
+    /* Other blockchain operations */
+
+    /**
+     * Get events from the blockchain in reverse chronological order, starting from toBlock. This will also attempt
+     * to identify and parse any known Eluvio contract methods. If successful, the method name, signature, and input
+     * values will be included in the log entry.
+     *
+     * @methodGroup Contracts
+     * @namedParams
+     * @param {number=} toBlock - Limit results to events before the specified block (inclusive) - If not specified, will start from latest block
+     * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
+     * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are specified)
+     * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
+     * Note: This requires two extra network calls per transaction, so it should not be used for very large ranges
+     * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+     */
+
+  }, {
+    key: "Events",
+    value: function () {
+      var _Events = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee115() {
+        var _ref134,
+            toBlock,
+            fromBlock,
+            _ref134$count,
+            count,
+            _ref134$includeTransa,
+            includeTransaction,
+            blocks,
+            _args115 = arguments;
+
+        return regeneratorRuntime.wrap(function _callee115$(_context115) {
+          while (1) {
+            switch (_context115.prev = _context115.next) {
+              case 0:
+                _ref134 = _args115.length > 0 && _args115[0] !== undefined ? _args115[0] : {}, toBlock = _ref134.toBlock, fromBlock = _ref134.fromBlock, _ref134$count = _ref134.count, count = _ref134$count === void 0 ? 10 : _ref134$count, _ref134$includeTransa = _ref134.includeTransaction, includeTransaction = _ref134$includeTransa === void 0 ? false : _ref134$includeTransa;
+                _context115.next = 3;
+                return this.FormatBlockNumbers({
+                  fromBlock: fromBlock,
+                  toBlock: toBlock,
+                  count: count
+                });
+
+              case 3:
+                blocks = _context115.sent;
+                this.Log("Querying events - Blocks ".concat(blocks.fromBlock, " to ").concat(blocks.toBlock));
+                _context115.next = 7;
+                return this.ethClient.Events({
+                  fromBlock: blocks.fromBlock,
+                  toBlock: blocks.toBlock,
+                  includeTransaction: includeTransaction
+                });
+
+              case 7:
+                return _context115.abrupt("return", _context115.sent);
+
+              case 8:
+              case "end":
+                return _context115.stop();
+            }
+          }
+        }, _callee115, this);
       }));
 
       function Events() {
@@ -8831,25 +8911,25 @@ function () {
     value: function () {
       var _BlockNumber = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee115() {
-        return regeneratorRuntime.wrap(function _callee115$(_context115) {
+      regeneratorRuntime.mark(function _callee116() {
+        return regeneratorRuntime.wrap(function _callee116$(_context116) {
           while (1) {
-            switch (_context115.prev = _context115.next) {
+            switch (_context116.prev = _context116.next) {
               case 0:
-                _context115.next = 2;
+                _context116.next = 2;
                 return this.ethClient.MakeProviderCall({
                   methodName: "getBlockNumber"
                 });
 
               case 2:
-                return _context115.abrupt("return", _context115.sent);
+                return _context116.abrupt("return", _context116.sent);
 
               case 3:
               case "end":
-                return _context115.stop();
+                return _context116.stop();
             }
           }
-        }, _callee115, this);
+        }, _callee116, this);
       }));
 
       function BlockNumber() {
@@ -8873,36 +8953,36 @@ function () {
     value: function () {
       var _GetBalance = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee116(_ref134) {
+      regeneratorRuntime.mark(function _callee117(_ref135) {
         var address, balance;
-        return regeneratorRuntime.wrap(function _callee116$(_context116) {
+        return regeneratorRuntime.wrap(function _callee117$(_context117) {
           while (1) {
-            switch (_context116.prev = _context116.next) {
+            switch (_context117.prev = _context117.next) {
               case 0:
-                address = _ref134.address;
-                _context116.next = 3;
+                address = _ref135.address;
+                _context117.next = 3;
                 return this.ethClient.MakeProviderCall({
                   methodName: "getBalance",
                   args: [address]
                 });
 
               case 3:
-                balance = _context116.sent;
-                _context116.next = 6;
+                balance = _context117.sent;
+                _context117.next = 6;
                 return Ethers.utils.formatEther(balance);
 
               case 6:
-                return _context116.abrupt("return", _context116.sent);
+                return _context117.abrupt("return", _context117.sent);
 
               case 7:
               case "end":
-                return _context116.stop();
+                return _context117.stop();
             }
           }
-        }, _callee116, this);
+        }, _callee117, this);
       }));
 
-      function GetBalance(_x113) {
+      function GetBalance(_x114) {
         return _GetBalance.apply(this, arguments);
       }
 
@@ -8924,36 +9004,36 @@ function () {
     value: function () {
       var _SendFunds = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee117(_ref135) {
+      regeneratorRuntime.mark(function _callee118(_ref136) {
         var recipient, ether, transaction;
-        return regeneratorRuntime.wrap(function _callee117$(_context117) {
+        return regeneratorRuntime.wrap(function _callee118$(_context118) {
           while (1) {
-            switch (_context117.prev = _context117.next) {
+            switch (_context118.prev = _context118.next) {
               case 0:
-                recipient = _ref135.recipient, ether = _ref135.ether;
-                _context117.next = 3;
+                recipient = _ref136.recipient, ether = _ref136.ether;
+                _context118.next = 3;
                 return this.signer.sendTransaction({
                   to: recipient,
                   value: Ethers.utils.parseEther(ether.toString())
                 });
 
               case 3:
-                transaction = _context117.sent;
-                _context117.next = 6;
+                transaction = _context118.sent;
+                _context118.next = 6;
                 return transaction.wait();
 
               case 6:
-                return _context117.abrupt("return", _context117.sent);
+                return _context118.abrupt("return", _context118.sent);
 
               case 7:
               case "end":
-                return _context117.stop();
+                return _context118.stop();
             }
           }
-        }, _callee117, this);
+        }, _callee118, this);
       }));
 
-      function SendFunds(_x114) {
+      function SendFunds(_x115) {
         return _SendFunds.apply(this, arguments);
       }
 
@@ -8976,20 +9056,20 @@ function () {
     value: function () {
       var _CallFromFrameMessage = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee118(message, Respond) {
+      regeneratorRuntime.mark(function _callee119(message, Respond) {
         var _this10 = this;
 
         var callback, method, methodResults, responseError;
-        return regeneratorRuntime.wrap(function _callee118$(_context118) {
+        return regeneratorRuntime.wrap(function _callee119$(_context119) {
           while (1) {
-            switch (_context118.prev = _context118.next) {
+            switch (_context119.prev = _context119.next) {
               case 0:
                 if (!(message.type !== "ElvFrameRequest")) {
-                  _context118.next = 2;
+                  _context119.next = 2;
                   break;
                 }
 
-                return _context118.abrupt("return");
+                return _context119.abrupt("return");
 
               case 2:
                 if (message.callbackId) {
@@ -9004,44 +9084,44 @@ function () {
                   message.args.callback = callback;
                 }
 
-                _context118.prev = 3;
+                _context119.prev = 3;
                 method = message.calledMethod;
 
                 if (!(message.module === "userProfileClient")) {
-                  _context118.next = 13;
+                  _context119.next = 13;
                   break;
                 }
 
                 if (this.userProfileClient.FrameAllowedMethods().includes(method)) {
-                  _context118.next = 8;
+                  _context119.next = 8;
                   break;
                 }
 
                 throw Error("Invalid user profile method: " + method);
 
               case 8:
-                _context118.next = 10;
+                _context119.next = 10;
                 return this.userProfileClient[method](message.args);
 
               case 10:
-                methodResults = _context118.sent;
-                _context118.next = 18;
+                methodResults = _context119.sent;
+                _context119.next = 18;
                 break;
 
               case 13:
                 if (this.FrameAllowedMethods().includes(method)) {
-                  _context118.next = 15;
+                  _context119.next = 15;
                   break;
                 }
 
                 throw Error("Invalid method: " + method);
 
               case 15:
-                _context118.next = 17;
+                _context119.next = 17;
                 return this[method](message.args);
 
               case 17:
-                methodResults = _context118.sent;
+                methodResults = _context119.sent;
 
               case 18:
                 Respond(this.utils.MakeClonable({
@@ -9049,30 +9129,32 @@ function () {
                   requestId: message.requestId,
                   response: methodResults
                 }));
-                _context118.next = 26;
+                _context119.next = 27;
                 break;
 
               case 21:
-                _context118.prev = 21;
-                _context118.t0 = _context118["catch"](3);
+                _context119.prev = 21;
+                _context119.t0 = _context119["catch"](3);
                 // eslint-disable-next-line no-console
-                console.error(_context118.t0);
-                responseError = _context118.t0 instanceof Error ? _context118.t0.message : _context118.t0;
+                this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2))); // eslint-disable-next-line no-console
+
+                console.error(_context119.t0);
+                responseError = _context119.t0 instanceof Error ? _context119.t0.message : _context119.t0;
                 Respond(this.utils.MakeClonable({
                   type: "ElvFrameResponse",
                   requestId: message.requestId,
                   error: responseError
                 }));
 
-              case 26:
+              case 27:
               case "end":
-                return _context118.stop();
+                return _context119.stop();
             }
           }
-        }, _callee118, this, [[3, 21]]);
+        }, _callee119, this, [[3, 21]]);
       }));
 
-      function CallFromFrameMessage(_x115, _x116) {
+      function CallFromFrameMessage(_x116, _x117) {
         return _CallFromFrameMessage.apply(this, arguments);
       }
 
@@ -9083,16 +9165,18 @@ function () {
     value: function () {
       var _Configuration = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee119(_ref136) {
+      regeneratorRuntime.mark(function _callee120(_ref137) {
         var configUrl, region, httpClient, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
-        return regeneratorRuntime.wrap(function _callee119$(_context119) {
+        return regeneratorRuntime.wrap(function _callee120$(_context120) {
           while (1) {
-            switch (_context119.prev = _context119.next) {
+            switch (_context120.prev = _context120.next) {
               case 0:
-                configUrl = _ref136.configUrl, region = _ref136.region;
-                _context119.prev = 1;
-                httpClient = new HttpClient([configUrl]);
-                _context119.next = 5;
+                configUrl = _ref137.configUrl, region = _ref137.region;
+                _context120.prev = 1;
+                httpClient = new HttpClient({
+                  uris: [configUrl]
+                });
+                _context120.next = 5;
                 return ResponseToJson(httpClient.Request({
                   method: "GET",
                   path: "/config",
@@ -9102,7 +9186,7 @@ function () {
                 }));
 
               case 5:
-                fabricInfo = _context119.sent;
+                fabricInfo = _context120.sent;
 
                 // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
                 filterHTTPS = function filterHTTPS(uri) {
@@ -9121,7 +9205,7 @@ function () {
                   ethereumURIs = ethereumURIs.filter(filterHTTPS);
                 }
 
-                return _context119.abrupt("return", {
+                return _context120.abrupt("return", {
                   nodeId: fabricInfo.node_id,
                   contentSpaceId: fabricInfo.qspace.id,
                   fabricURIs: fabricURIs,
@@ -9129,23 +9213,23 @@ function () {
                 });
 
               case 14:
-                _context119.prev = 14;
-                _context119.t0 = _context119["catch"](1);
+                _context120.prev = 14;
+                _context120.t0 = _context120["catch"](1);
                 // eslint-disable-next-line no-console
                 console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
 
-                console.error(_context119.t0);
-                throw _context119.t0;
+                console.error(_context120.t0);
+                throw _context120.t0;
 
               case 19:
               case "end":
-                return _context119.stop();
+                return _context120.stop();
             }
           }
-        }, _callee119, null, [[1, 14]]);
+        }, _callee120, null, [[1, 14]]);
       }));
 
-      function Configuration(_x117) {
+      function Configuration(_x118) {
         return _Configuration.apply(this, arguments);
       }
 
@@ -9170,25 +9254,25 @@ function () {
     value: function () {
       var _FromConfigurationUrl = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee120(_ref137) {
-        var configUrl, region, _ref137$noCache, noCache, _ref137$noAuth, noAuth, _ref138, contentSpaceId, fabricURIs, ethereumURIs, client;
+      regeneratorRuntime.mark(function _callee121(_ref138) {
+        var configUrl, region, _ref138$noCache, noCache, _ref138$noAuth, noAuth, _ref139, contentSpaceId, fabricURIs, ethereumURIs, client;
 
-        return regeneratorRuntime.wrap(function _callee120$(_context120) {
+        return regeneratorRuntime.wrap(function _callee121$(_context121) {
           while (1) {
-            switch (_context120.prev = _context120.next) {
+            switch (_context121.prev = _context121.next) {
               case 0:
-                configUrl = _ref137.configUrl, region = _ref137.region, _ref137$noCache = _ref137.noCache, noCache = _ref137$noCache === void 0 ? false : _ref137$noCache, _ref137$noAuth = _ref137.noAuth, noAuth = _ref137$noAuth === void 0 ? false : _ref137$noAuth;
-                _context120.next = 3;
+                configUrl = _ref138.configUrl, region = _ref138.region, _ref138$noCache = _ref138.noCache, noCache = _ref138$noCache === void 0 ? false : _ref138$noCache, _ref138$noAuth = _ref138.noAuth, noAuth = _ref138$noAuth === void 0 ? false : _ref138$noAuth;
+                _context121.next = 3;
                 return ElvClient.Configuration({
                   configUrl: configUrl,
                   region: region
                 });
 
               case 3:
-                _ref138 = _context120.sent;
-                contentSpaceId = _ref138.contentSpaceId;
-                fabricURIs = _ref138.fabricURIs;
-                ethereumURIs = _ref138.ethereumURIs;
+                _ref139 = _context121.sent;
+                contentSpaceId = _ref139.contentSpaceId;
+                fabricURIs = _ref139.fabricURIs;
+                ethereumURIs = _ref139.ethereumURIs;
                 client = new ElvClient({
                   contentSpaceId: contentSpaceId,
                   fabricURIs: fabricURIs,
@@ -9197,17 +9281,17 @@ function () {
                   noAuth: noAuth
                 });
                 client.configUrl = configUrl;
-                return _context120.abrupt("return", client);
+                return _context121.abrupt("return", client);
 
               case 10:
               case "end":
-                return _context120.stop();
+                return _context121.stop();
             }
           }
-        }, _callee120);
+        }, _callee121);
       }));
 
-      function FromConfigurationUrl(_x118) {
+      function FromConfigurationUrl(_x119) {
         return _FromConfigurationUrl.apply(this, arguments);
       }
 

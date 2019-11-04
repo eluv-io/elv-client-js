@@ -4,6 +4,8 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -44,9 +46,27 @@ var ACCESS_TYPES = {
 var AuthorizationClient =
 /*#__PURE__*/
 function () {
+  _createClass(AuthorizationClient, [{
+    key: "Log",
+    value: function Log(message) {
+      if (!this.debug) {
+        return;
+      }
+
+      if (_typeof(message) === "object") {
+        message = JSON.stringify(message);
+      } // eslint-disable-next-line no-console
+
+
+      console.log("\n(elv-client-js#AuthorizationClient) ".concat(message, "\n"));
+    }
+  }]);
+
   function AuthorizationClient(_ref) {
     var client = _ref.client,
         contentSpaceId = _ref.contentSpaceId,
+        _ref$debug = _ref.debug,
+        debug = _ref$debug === void 0 ? false : _ref$debug,
         _ref$noCache = _ref.noCache,
         noCache = _ref$noCache === void 0 ? false : _ref$noCache,
         _ref$noAuth = _ref.noAuth,
@@ -58,6 +78,7 @@ function () {
     this.contentSpaceId = contentSpaceId;
     this.noCache = noCache;
     this.noAuth = noAuth;
+    this.debug = debug;
     this.accessTransactions = {
       spaces: {},
       libraries: {},
@@ -428,23 +449,25 @@ function () {
                 }; // Make the request
 
                 if (!update) {
-                  _context4.next = 32;
+                  _context4.next = 33;
                   break;
                 }
 
-                _context4.next = 29;
+                this.Log("Making update request on ".concat(accessType, " ").concat(id));
+                _context4.next = 30;
                 return this.UpdateRequest({
                   id: id,
                   abi: abi
                 });
 
-              case 29:
+              case 30:
                 accessRequest = _context4.sent;
-                _context4.next = 35;
+                _context4.next = 37;
                 break;
 
-              case 32:
-                _context4.next = 34;
+              case 33:
+                this.Log("Making access request on ".concat(accessType, " ").concat(id));
+                _context4.next = 36;
                 return this.AccessRequest({
                   id: id,
                   abi: abi,
@@ -452,10 +475,10 @@ function () {
                   checkAccessCharge: checkAccessCharge
                 });
 
-              case 34:
+              case 36:
                 accessRequest = _context4.sent;
 
-              case 35:
+              case 37:
                 // Cache the transaction hash
                 if (!noCache) {
                   this.CacheTransaction({
@@ -482,7 +505,7 @@ function () {
                 });
                 return _context4.abrupt("return", accessRequest);
 
-              case 38:
+              case 40:
               case "end":
                 return _context4.stop();
             }
@@ -551,7 +574,12 @@ function () {
                 accessCharge = _context5.t0.WeiToEther.call(_context5.t0, _context5.t1);
 
               case 16:
-                _context5.next = 18;
+                if (accessCharge > 0) {
+                  this.Log("Access charge: ".concat(accessCharge));
+                } // If access request did not succeed, no event will be emitted
+
+
+                _context5.next = 19;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: Utils.HashToAddress(id),
                   abi: abi,
@@ -560,7 +588,7 @@ function () {
                   value: accessCharge
                 });
 
-              case 18:
+              case 19:
                 event = _context5.sent;
                 accessRequestEvent = this.client.ExtractEventFromLogs({
                   abi: abi,
@@ -569,16 +597,16 @@ function () {
                 });
 
                 if (!(event.logs.length === 0 || !accessRequestEvent)) {
-                  _context5.next = 22;
+                  _context5.next = 23;
                   break;
                 }
 
                 throw Error("Access denied");
 
-              case 22:
+              case 23:
                 return _context5.abrupt("return", event);
 
-              case 23:
+              case 24:
               case "end":
                 return _context5.stop();
             }
@@ -651,14 +679,15 @@ function () {
                 return _context7.abrupt("return", this.channelContentTokens[objectId]);
 
               case 3:
+                this.Log("Making state channel access request: ".concat(objectId));
                 nonce = Date.now() + Id.next();
                 paramTypes = ["address", "address", "uint", "uint"];
                 params = [this.client.signer.address, Utils.HashToAddress(objectId), value, nonce];
                 packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-                _context7.next = 9;
+                _context7.next = 10;
                 return this.Sign(packedHash);
 
-              case 9:
+              case 10:
                 params[4] = _context7.sent;
                 stateChannelApi = "elv_channelContentRequest";
 
@@ -667,23 +696,23 @@ function () {
                   params[5] = JSON.stringify(audienceData);
                 }
 
-                _context7.next = 14;
+                _context7.next = 15;
                 return this.KMSUrl({
                   objectId: objectId
                 });
 
-              case 14:
+              case 15:
                 stateChannelUri = _context7.sent;
                 stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-                _context7.next = 18;
+                _context7.next = 19;
                 return stateChannelProvider.send(stateChannelApi, params);
 
-              case 18:
+              case 19:
                 payload = _context7.sent;
-                _context7.next = 21;
+                _context7.next = 22;
                 return this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
 
-              case 21:
+              case 22:
                 signature = _context7.sent;
                 multiSig = Utils.FormatSignature(signature);
                 token = "".concat(payload, ".").concat(Utils.B64(multiSig));
@@ -694,7 +723,7 @@ function () {
 
                 return _context7.abrupt("return", token);
 
-              case 26:
+              case 27:
               case "end":
                 return _context7.stop();
             }
@@ -721,29 +750,30 @@ function () {
             switch (_context8.prev = _context8.next) {
               case 0:
                 objectId = _ref9.objectId, audienceData = _ref9.audienceData, _ref9$percent = _ref9.percent, percent = _ref9$percent === void 0 ? 0 : _ref9$percent;
+                this.Log("Making state channel finalize request: ".concat(objectId));
                 nonce = Date.now() + Id.next();
                 paramTypes = ["address", "address", "uint", "uint"];
                 params = [this.client.signer.address, Utils.HashToAddress(objectId), percent, nonce];
                 packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-                _context8.next = 7;
+                _context8.next = 8;
                 return this.Sign(packedHash);
 
-              case 7:
+              case 8:
                 params[4] = _context8.sent;
                 stateChannelApi = "elv_channelContentFinalizeContext";
                 params[5] = JSON.stringify(audienceData);
-                _context8.next = 12;
+                _context8.next = 13;
                 return this.KMSUrl({
                   objectId: objectId
                 });
 
-              case 12:
+              case 13:
                 stateChannelUri = _context8.sent;
                 stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-                _context8.next = 16;
+                _context8.next = 17;
                 return stateChannelProvider.send(stateChannelApi, params);
 
-              case 16:
+              case 17:
               case "end":
                 return _context8.stop();
             }
@@ -934,18 +964,19 @@ function () {
             switch (_context10.prev = _context10.next) {
               case 0:
                 id = _ref12.id, abi = _ref12.abi, score = _ref12.score;
+                this.Log("Calling access complete on ".concat(id, " with score ").concat(score));
                 address = Utils.HashToAddress(id);
                 requestId = this.requestIds[address];
 
                 if (requestId) {
-                  _context10.next = 5;
+                  _context10.next = 6;
                   break;
                 }
 
                 throw Error("Unknown request ID for " + id);
 
-              case 5:
-                _context10.next = 7;
+              case 6:
+                _context10.next = 8;
                 return this.client.CallContractMethodAndWait({
                   contractAddress: address,
                   abi: abi,
@@ -953,13 +984,13 @@ function () {
                   methodArgs: [requestId, score, ""]
                 });
 
-              case 7:
+              case 8:
                 event = _context10.sent;
                 delete this.requestIds[address];
                 delete this.accessTransactions.objects[address];
                 return _context10.abrupt("return", event);
 
-              case 11:
+              case 12:
               case "end":
                 return _context10.stop();
             }
