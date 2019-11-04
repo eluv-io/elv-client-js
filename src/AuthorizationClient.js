@@ -22,11 +22,23 @@ const ACCESS_TYPES = {
 };
 
 class AuthorizationClient {
-  constructor({client, contentSpaceId, noCache=false, noAuth=false}) {
+  Log(message) {
+    if(!this.debug) { return; }
+
+    if(typeof message === "object") {
+      message = JSON.stringify(message);
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(`\n(elv-client-js#AuthorizationClient) ${message}\n`);
+  }
+
+  constructor({client, contentSpaceId, debug=false, noCache=false, noAuth=false}) {
     this.client = client;
     this.contentSpaceId = contentSpaceId;
     this.noCache = noCache;
     this.noAuth = noAuth;
+    this.debug = debug;
 
     this.accessTransactions = {
       spaces: {},
@@ -211,8 +223,10 @@ class AuthorizationClient {
     let accessRequest = { transactionHash: "" };
     // Make the request
     if(update) {
+      this.Log(`Making update request on ${accessType} ${id}`);
       accessRequest = await this.UpdateRequest({id, abi});
     } else {
+      this.Log(`Making access request on ${accessType} ${id}`);
       accessRequest = await this.AccessRequest({id, abi, args: accessArgs, checkAccessCharge});
     }
 
@@ -247,6 +261,10 @@ class AuthorizationClient {
         // Access charge is in wei, but methods take ether - convert to charge to ether
         accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
       }
+    }
+
+    if(accessCharge > 0) {
+      this.Log(`Access charge: ${accessCharge}`);
     }
 
     // If access request did not succeed, no event will be emitted
@@ -284,6 +302,8 @@ class AuthorizationClient {
     if(!this.noCache && this.channelContentTokens[objectId]) {
       return this.channelContentTokens[objectId];
     }
+
+    this.Log(`Making state channel access request: ${objectId}`);
 
     const nonce = Date.now() + Id.next();
 
@@ -327,6 +347,8 @@ class AuthorizationClient {
   }
 
   async ChannelContentFinalize({objectId, audienceData, percent=0}) {
+    this.Log(`Making state channel finalize request: ${objectId}`);
+
     const nonce = Date.now() + Id.next();
 
     const paramTypes = [
@@ -475,6 +497,8 @@ class AuthorizationClient {
   }
 
   async AccessComplete({id, abi, score}) {
+    this.Log(`Calling access complete on ${id} with score ${score}`);
+
     const address = Utils.HashToAddress(id);
     const requestId = this.requestIds[address];
 

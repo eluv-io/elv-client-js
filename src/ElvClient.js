@@ -69,11 +69,31 @@ class ElvClient {
     }
 
     // eslint-disable-next-line no-console
-    console.log(`\n(elv-client-js) ${message}\n`);
+    console.log(`\n(elv-client-js#ElvClient) ${message}\n`);
   }
 
+  /**
+   * Enable or disable verbose logging
+   *
+   * @methodGroup - Miscellaneous
+   *
+   * @param {boolean} enable - Set logging
+   */
   ToggleLogging(enable) {
     this.debug = enable;
+    this.authClient ? this.authClient.debug = enable : undefined;
+    this.ethClient ? this.ethClient.debug = enable : undefined;
+    this.HttpClient ? this.HttpClient.debug = enable : undefined;
+    this.userProfileClient ? this.userProfileClient.debug = enable : undefined;
+
+    if(enable) {
+      this.Log(
+        `Debug Logging Enabled:
+        Content Space: ${this.contentSpaceId}
+        Fabric URLs: [\n\t\t${this.fabricURIs.join(", \n\t\t")}\n\t]
+        Ethereum URLs: [\n\t\t${this.ethereumURIs.join(", \n\t\t")}\n\t]`
+      );
+    }
   }
 
   /**
@@ -131,7 +151,7 @@ class ElvClient {
     region
   }) {
     try {
-      const httpClient = new HttpClient([configUrl]);
+      const httpClient = new HttpClient({uris: [configUrl]});
       const fabricInfo = await ResponseToJson(
         httpClient.Request({
           method: "GET",
@@ -216,18 +236,22 @@ class ElvClient {
     this.reencryptionConks = {};
     this.stateChannelAccess = {};
 
-    this.HttpClient = new HttpClient(this.fabricURIs);
-    this.ethClient = new EthClient(this.ethereumURIs);
+    this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
+    this.ethClient = new EthClient({uris: this.ethereumURIs, debug: this.debug});
 
     this.authClient = new AuthorizationClient({
       client: this,
       contentSpaceId: this.contentSpaceId,
       signer: this.signer,
       noCache: this.noCache,
-      noAuth: this.noAuth
+      noAuth: this.noAuth,
+      debug: this.debug
     });
 
-    this.userProfileClient = new UserProfileClient({client: this});
+    this.userProfileClient = new UserProfileClient({
+      client: this,
+      debug: this.debug
+    });
   }
 
   SetAuth(auth) {
@@ -2925,7 +2949,6 @@ class ElvClient {
     }
 
     this.Log(`Retrieving access info: ${objectId}`);
-    this.Log(args);
 
     const info = await this.ethClient.CallContractMethod({
       contractAddress: Utils.HashToAddress(objectId),
@@ -3454,6 +3477,21 @@ class ElvClient {
   }) {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
+    this.Log(
+      `Building Fabric URL:
+      libraryId: ${libraryId}
+      objectId: ${objectId}
+      versionHash: ${versionHash}
+      partHash: ${partHash}
+      rep: ${rep}
+      publicRep: ${publicRep}
+      call: ${call}
+      channelAuth: ${channelAuth}
+      noAuth: ${noAuth}
+      noCache: ${noCache}
+      queryParams: ${JSON.stringify(queryParams || {}, null, 2)}`
+    );
+
     // Clone queryParams to avoid modification of the original
     queryParams = {...queryParams};
 
@@ -3585,6 +3623,8 @@ class ElvClient {
    * @returns {Promise<string>} - The account address of the owner
    */
   async AccessGroupOwner({contractAddress}) {
+    this.Log(`Retrieving owner of access group ${contractAddress}`);
+
     return this.utils.FormatAddress(
       await this.ethClient.CallContractMethod({
         contractAddress,
@@ -3606,6 +3646,8 @@ class ElvClient {
    * @param {string} contractAddress - The address of the access group contract
    */
   async DeleteAccessGroup({contractAddress}) {
+    this.Log(`Deleting access group ${contractAddress}`);
+
     await this.CallContractMethodAndWait({
       contractAddress,
       abi: AccessGroupContract.abi,
@@ -3624,6 +3666,8 @@ class ElvClient {
    * @return {Promise<Array<string>>} - List of member addresses
    */
   async AccessGroupMembers({contractAddress}) {
+    this.Log(`Retrieving members for group ${contractAddress}`);
+
     const length = (await this.CallContractMethod({
       contractAddress,
       abi: AccessGroupContract.abi,
@@ -3654,6 +3698,8 @@ class ElvClient {
    * @return {Promise<Array<string>>} - List of manager addresses
    */
   async AccessGroupManagers({contractAddress}) {
+    this.Log(`Retrieving managers for group ${contractAddress}`);
+
     const length = (await this.CallContractMethod({
       contractAddress,
       abi: AccessGroupContract.abi,
@@ -3688,6 +3734,8 @@ class ElvClient {
         throw Error("Manager access required");
       }
     }
+
+    this.Log(`Calling ${methodName} on group ${contractAddress} for user ${memberAddress}`);
 
     const event = await this.CallContractMethodAndWait({
       contractAddress,
@@ -3823,6 +3871,8 @@ class ElvClient {
       });
     }
 
+    this.Log(`Retrieving ${permissions.join(", ")} group(s) for library ${libraryId}`);
+
     await Promise.all(
       permissions.map(async type => {
         // Get library access groups of the specified type
@@ -3877,6 +3927,8 @@ class ElvClient {
       throw Error(`Invalid group type: ${permission}`);
     }
 
+    this.Log(`Adding ${permission} group ${groupAddress} to library ${libraryId}`);
+
     const existingPermissions = await this.ContentLibraryGroupPermissions({
       libraryId,
       permissions: [permission]
@@ -3914,6 +3966,8 @@ class ElvClient {
     if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
       throw Error(`Invalid group type: ${permission}`);
     }
+
+    this.Log(`Removing ${permission} group ${groupAddress} from library ${libraryId}`);
 
     const existingPermissions = await this.ContentLibraryGroupPermissions({
       libraryId,
@@ -3973,6 +4027,8 @@ class ElvClient {
     if(!walletAddress) {
       throw new Error("Unable to get collection: User wallet doesn't exist");
     }
+
+    this.Log(`Retrieving ${collectionType} contract collection for user ${this.signer.address}`);
 
     return await this.ethClient.MakeProviderCall({
       methodName: "send",
@@ -4231,6 +4287,8 @@ class ElvClient {
   async SetCustomContentContract({libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, overrides={}}) {
     customContractAddress = this.utils.FormatAddress(customContractAddress);
 
+    this.Log(`Setting custom contract address: ${objectId} ${customContractAddress}`);
+
     const setResult = await this.ethClient.SetCustomContentContract({
       contentContractAddress: Utils.HashToAddress(objectId),
       customContractAddress,
@@ -4275,6 +4333,8 @@ class ElvClient {
       return;
     }
 
+    this.Log(`Retrieving custom contract address: ${objectId}`);
+
     const customContractAddress = await this.ethClient.CallContractMethod({
       contractAddress: this.utils.HashToAddress(objectId),
       abi: ContentContract.abi,
@@ -4288,6 +4348,32 @@ class ElvClient {
     return this.utils.FormatAddress(customContractAddress);
   }
 
+  async FormatBlockNumbers({fromBlock, toBlock, count=10}) {
+    const latestBlock = await this.BlockNumber();
+
+    if(!toBlock) {
+      if(!fromBlock) {
+        toBlock = latestBlock;
+        fromBlock = toBlock - count + 1;
+      } else {
+        toBlock = fromBlock + count - 1;
+      }
+    } else if(!fromBlock) {
+      fromBlock = toBlock - count + 1;
+    }
+
+    // Ensure block numbers are valid
+    if(toBlock > latestBlock) {
+      toBlock = latestBlock;
+    }
+
+    if(fromBlock < 0) {
+      fromBlock = 0;
+    }
+
+    return { fromBlock, toBlock };
+  }
+
   /**
    * Get all events on the specified contract
    *
@@ -4297,16 +4383,21 @@ class ElvClient {
    * @param {object} abi - The ABI of the contract
    * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
    * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
+   * @param {number=} count=1000 - Maximum range of blocks to search (unless both toBlock and fromBlock are specified)
    * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
    * Note: This requires one extra network call per block, so it should not be used for very large ranges
    * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
-  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false}) {
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, count=1000, includeTransaction=false}) {
+    const blocks = await this.FormatBlockNumbers({fromBlock, toBlock, count});
+
+    this.Log(`Querying contract events ${contractAddress} - Blocks ${blocks.fromBlock} to ${blocks.toBlock}`);
+
     return await this.ethClient.ContractEvents({
       contractAddress,
       abi,
-      fromBlock,
-      toBlock,
+      fromBlock: blocks.fromBlock,
+      toBlock: blocks.toBlock,
       includeTransaction
     });
   }
@@ -4333,41 +4424,19 @@ class ElvClient {
    * @namedParams
    * @param {number=} toBlock - Limit results to events before the specified block (inclusive) - If not specified, will start from latest block
    * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
-   * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are unspecified)
+   * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are specified)
    * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
    * Note: This requires two extra network calls per transaction, so it should not be used for very large ranges
    * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
   async Events({toBlock, fromBlock, count=10, includeTransaction=false}={}) {
-    const latestBlock = await this.BlockNumber();
+    const blocks = await this.FormatBlockNumbers({fromBlock, toBlock, count});
 
-    if(!toBlock) {
-      if(!fromBlock) {
-        toBlock = latestBlock;
-        fromBlock = toBlock - count + 1;
-      } else {
-        toBlock = fromBlock + count - 1;
-      }
-    } else if(!fromBlock) {
-      fromBlock = toBlock - count + 1;
-    }
-
-    // Ensure block numbers are valid
-    if(toBlock > latestBlock) {
-      toBlock = latestBlock;
-    }
-
-    if(fromBlock < 0) {
-      fromBlock = 0;
-    }
-
-    if(fromBlock > toBlock) {
-      return [];
-    }
+    this.Log(`Querying events - Blocks ${blocks.fromBlock} to ${blocks.toBlock}`);
 
     return await this.ethClient.Events({
-      toBlock,
-      fromBlock,
+      fromBlock: blocks.fromBlock,
+      toBlock: blocks.toBlock,
       includeTransaction
     });
   }
@@ -4471,6 +4540,13 @@ class ElvClient {
         response: methodResults
       }));
     } catch(error) {
+      // eslint-disable-next-line no-console
+      this.Log(
+        `Frame Message Error:
+        Method: ${message.calledMethod}
+        Arguments: ${JSON.stringify(message.args, null, 2)}`
+      );
+
       // eslint-disable-next-line no-console
       console.error(error);
 
