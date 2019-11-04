@@ -5,6 +5,17 @@ const { FrameClient } = require("./FrameClient");
 const SpaceContract = require("./contracts/BaseContentSpace");
 
 class UserProfileClient {
+  Log(message) {
+    if(!this.debug) { return; }
+
+    if(typeof message === "object") {
+      message = JSON.stringify(message);
+    }
+
+    // eslint-disable-next-line no-console
+    console.log(`\n(elv-client-js#UserProfileClient) ${message}\n`);
+  }
+
   /**
    * Methods used to access and modify information about the user
    *
@@ -49,8 +60,9 @@ let frameClient = new FrameClient();
 await client.userProfileClient.UserMetadata()
    *
    */
-  constructor({client}) {
+  constructor({client, debug}) {
     this.client = client;
+    this.debug = debug;
     this.userWalletAddresses = {};
   }
 
@@ -64,6 +76,8 @@ await client.userProfileClient.UserMetadata()
    */
   async UserWalletAddress({address}) {
     if(!this.userWalletAddresses[address]) {
+      this.Log(`Retrieving user wallet address for user ${address}`);
+
       const walletAddress =
         await this.client.CallContractMethod({
           abi: SpaceContract.abi,
@@ -95,6 +109,8 @@ await client.userProfileClient.UserMetadata()
     this.walletAddress = await this.UserWalletAddress({address: this.client.signer.address});
 
     if(!this.walletAddress) {
+      this.Log(`Creating user wallet for user ${this.client.signer.address}`);
+
       // Make promise available so any other calls will wait
       this.walletCreationPromise = new Promise(async resolve => {
         // No wallet contract for the current user - create one
@@ -130,6 +146,8 @@ await client.userProfileClient.UserMetadata()
           await this.client.ContentObject({libraryId, objectId});
         } catch(error) {
           if(error.status === 404) {
+            this.Log(`Creating wallet object for user ${this.client.signer.address}`);
+
             const createResponse = await this.client.CreateContentObject({libraryId, objectId});
 
             await this.client.ReplaceMetadata({
@@ -212,7 +230,6 @@ await client.userProfileClient.UserMetadata()
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(walletAddress);
 
-    // If caching not enabled, make direct query to object
     return await this.client.ContentObjectMetadata({
       libraryId,
       objectId,
@@ -237,6 +254,8 @@ await client.userProfileClient.UserMetadata()
     if(!noCache && this.cachedPrivateMetadata) {
       return this.__GetCachedMetadata(metadataSubtree);
     }
+
+    this.Log(`Accessing private user metadata at ${metadataSubtree}`);
 
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(await this.WalletAddress());
@@ -264,6 +283,8 @@ await client.userProfileClient.UserMetadata()
    * @param {string=} metadataSubtree - Subtree to merge into - modifies root metadata if not specified
    */
   async MergeUserMetadata({metadataSubtree="/", metadata={}}) {
+    this.Log(`Merging user metadata at ${metadataSubtree}`);
+
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(await this.WalletAddress());
 
@@ -283,6 +304,8 @@ await client.userProfileClient.UserMetadata()
    * @param {string=} metadataSubtree - Subtree to replace - modifies root metadata if not specified
    */
   async ReplaceUserMetadata({metadataSubtree="/", metadata={}}) {
+    this.Log(`Replacing user metadata at ${metadataSubtree}`);
+
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(await this.WalletAddress());
 
@@ -301,6 +324,8 @@ await client.userProfileClient.UserMetadata()
    * @param {string=} metadataSubtree - Subtree to delete - deletes all metadata if not specified
    */
   async DeleteUserMetadata({metadataSubtree="/"}) {
+    this.Log(`Deleting user metadata at ${metadataSubtree}`);
+
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(await this.WalletAddress());
 
@@ -389,6 +414,8 @@ await client.userProfileClient.UserMetadata()
    * @param {blob} image - The new profile image for the current user
    */
   async SetUserProfileImage({image}) {
+    this.Log(`Setting profile image for user ${address}`);
+
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(await this.WalletAddress());
 

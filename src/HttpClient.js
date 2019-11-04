@@ -9,9 +9,24 @@ const Fetch = (input, init={}) => {
 };
 
 class HttpClient {
-  constructor(uris) {
+  Log(message, error=false) {
+    if(!this.debug) { return; }
+
+    if(typeof message === "object") {
+      message = JSON.stringify(message);
+    }
+
+    error ?
+      // eslint-disable-next-line no-console
+      console.error(`\n(elv-client-js#HttpClient) ${message}\n`) :
+      // eslint-disable-next-line no-console
+      console.log(`\n(elv-client-js#HttpClient) ${message}\n`);
+  }
+
+  constructor({uris, debug}) {
     this.uris = uris;
     this.uriIndex = 0;
+    this.debug = debug;
   }
 
   BaseURI() {
@@ -45,7 +60,7 @@ class HttpClient {
       .hash("");
 
     let fetchParameters = {
-      method: method,
+      method,
       headers: this.RequestHeaders(bodyType, headers),
     };
 
@@ -80,6 +95,8 @@ class HttpClient {
         // Server error - Try next node
         this.uriIndex = (this.uriIndex + 1) % this.uris.length;
 
+        this.Log(`HttpClient failing over: ${attempts + 1} attempts`, true);
+
         return await this.Request({
           method,
           path,
@@ -109,6 +126,8 @@ class HttpClient {
         requestParams: fetchParameters
       };
     }
+
+    this.Log(`${response.status} - ${method} ${uri.toString()}`);
 
     return response;
   }

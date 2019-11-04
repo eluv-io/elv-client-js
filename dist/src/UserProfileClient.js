@@ -4,6 +4,8 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -22,53 +24,72 @@ var SpaceContract = require("./contracts/BaseContentSpace");
 var UserProfileClient =
 /*#__PURE__*/
 function () {
-  /**
-   * Methods used to access and modify information about the user
-   *
-   * <h4 id="PromptsAndAccessLevels">A note about access level and prompts: </h4>
-   *
-   * Note: This section only applies to applications working within Eluvio Core
-   *
-   * Users can choose whether or not their info is shared to applications. A user
-   * may choose to allow open access to their profile, no access to their profile, or
-   * they may choose to be prompted to give access when an application requests it. The
-   * user's access level can be determined using the <a href="#AccessLevel">AccessLevel</a>
-   * method.
-   *
-   * By default, users will be prompted to give access. For methods that access the user's private information,
-   * Eluvio Core will intercept the request and prompt the user for permission before proceeding. In
-   * these cases, the normal FrameClient timeout period will be ignored, and the response will come
-   * only after the user accepts or rejects the request.
-   *
-   * Access and modification of user metadata is namespaced to the requesting application when using the
-   * FrameClient. Public user metadata can be accessed using the PublicUserMetadata method.
-   *
-   * If the user refuses to give permission, an error will be thrown. Otherwise, the request will proceed
-   * as normal.
-   *
-   * <h4>Usage</h4>
-   *
-   * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
-   *
-   * @example
-  let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
-  let wallet = client.GenerateWallet();
-  let signer = wallet.AddAccount({
-  accountName: "Alice",
-  privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
-  });
-  client.SetSigner({signer});
-  await client.userProfileClient.UserMetadata()
-  let frameClient = new FrameClient();
-  await client.userProfileClient.UserMetadata()
-   *
-   */
+  _createClass(UserProfileClient, [{
+    key: "Log",
+    value: function Log(message) {
+      if (!this.debug) {
+        return;
+      }
+
+      if (_typeof(message) === "object") {
+        message = JSON.stringify(message);
+      } // eslint-disable-next-line no-console
+
+
+      console.log("\n(elv-client-js#UserProfileClient) ".concat(message, "\n"));
+    }
+    /**
+     * Methods used to access and modify information about the user
+     *
+     * <h4 id="PromptsAndAccessLevels">A note about access level and prompts: </h4>
+     *
+     * Note: This section only applies to applications working within Eluvio Core
+     *
+     * Users can choose whether or not their info is shared to applications. A user
+     * may choose to allow open access to their profile, no access to their profile, or
+     * they may choose to be prompted to give access when an application requests it. The
+     * user's access level can be determined using the <a href="#AccessLevel">AccessLevel</a>
+     * method.
+     *
+     * By default, users will be prompted to give access. For methods that access the user's private information,
+     * Eluvio Core will intercept the request and prompt the user for permission before proceeding. In
+     * these cases, the normal FrameClient timeout period will be ignored, and the response will come
+     * only after the user accepts or rejects the request.
+     *
+     * Access and modification of user metadata is namespaced to the requesting application when using the
+     * FrameClient. Public user metadata can be accessed using the PublicUserMetadata method.
+     *
+     * If the user refuses to give permission, an error will be thrown. Otherwise, the request will proceed
+     * as normal.
+     *
+     * <h4>Usage</h4>
+     *
+     * Access the UserProfileClient from ElvClient or FrameClient via client.userProfileClient
+     *
+     * @example
+    let client = ElvClient.FromConfiguration({configuration: ClientConfiguration});
+    let wallet = client.GenerateWallet();
+    let signer = wallet.AddAccount({
+    accountName: "Alice",
+    privateKey: "0x0000000000000000000000000000000000000000000000000000000000000000"
+    });
+    client.SetSigner({signer});
+    await client.userProfileClient.UserMetadata()
+    let frameClient = new FrameClient();
+    await client.userProfileClient.UserMetadata()
+     *
+     */
+
+  }]);
+
   function UserProfileClient(_ref) {
-    var client = _ref.client;
+    var client = _ref.client,
+        debug = _ref.debug;
 
     _classCallCheck(this, UserProfileClient);
 
     this.client = client;
+    this.debug = debug;
     this.userWalletAddresses = {};
   }
   /**
@@ -95,11 +116,12 @@ function () {
                 address = _ref2.address;
 
                 if (this.userWalletAddresses[address]) {
-                  _context.next = 6;
+                  _context.next = 7;
                   break;
                 }
 
-                _context.next = 4;
+                this.Log("Retrieving user wallet address for user ".concat(address));
+                _context.next = 5;
                 return this.client.CallContractMethod({
                   abi: SpaceContract.abi,
                   contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
@@ -107,17 +129,17 @@ function () {
                   methodArgs: [address]
                 });
 
-              case 4:
+              case 5:
                 walletAddress = _context.sent;
 
                 if (!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
                   this.userWalletAddresses[address] = walletAddress;
                 }
 
-              case 6:
+              case 7:
                 return _context.abrupt("return", this.userWalletAddresses[address]);
 
-              case 7:
+              case 8:
               case "end":
                 return _context.stop();
             }
@@ -175,7 +197,8 @@ function () {
                 this.walletAddress = _context3.sent;
 
                 if (!this.walletAddress) {
-                  // Make promise available so any other calls will wait
+                  this.Log("Creating user wallet for user ".concat(this.client.signer.address)); // Make promise available so any other calls will wait
+
                   this.walletCreationPromise = new Promise(
                   /*#__PURE__*/
                   function () {
@@ -238,7 +261,7 @@ function () {
                               });
 
                             case 16:
-                              _context2.next = 28;
+                              _context2.next = 29;
                               break;
 
                             case 18:
@@ -246,19 +269,21 @@ function () {
                               _context2.t0 = _context2["catch"](13);
 
                               if (!(_context2.t0.status === 404)) {
-                                _context2.next = 28;
+                                _context2.next = 29;
                                 break;
                               }
 
-                              _context2.next = 23;
+                              _this.Log("Creating wallet object for user ".concat(_this.client.signer.address));
+
+                              _context2.next = 24;
                               return _this.client.CreateContentObject({
                                 libraryId: libraryId,
                                 objectId: objectId
                               });
 
-                            case 23:
+                            case 24:
                               createResponse = _context2.sent;
-                              _context2.next = 26;
+                              _context2.next = 27;
                               return _this.client.ReplaceMetadata({
                                 libraryId: libraryId,
                                 objectId: objectId,
@@ -269,18 +294,18 @@ function () {
                                 }
                               });
 
-                            case 26:
-                              _context2.next = 28;
+                            case 27:
+                              _context2.next = 29;
                               return _this.client.FinalizeContentObject({
                                 libraryId: libraryId,
                                 objectId: objectId,
                                 writeToken: createResponse.write_token
                               });
 
-                            case 28:
+                            case 29:
                               resolve();
 
-                            case 29:
+                            case 30:
                             case "end":
                               return _context2.stop();
                           }
@@ -395,8 +420,7 @@ function () {
               case 6:
                 metadataSubtree = UrlJoin("public", metadataSubtree || "/");
                 libraryId = this.client.contentSpaceLibraryId;
-                objectId = Utils.AddressToObjectId(walletAddress); // If caching not enabled, make direct query to object
-
+                objectId = Utils.AddressToObjectId(walletAddress);
                 _context4.next = 11;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
@@ -465,45 +489,46 @@ function () {
                 return _context5.abrupt("return", this.__GetCachedMetadata(metadataSubtree));
 
               case 3:
+                this.Log("Accessing private user metadata at ".concat(metadataSubtree));
                 libraryId = this.client.contentSpaceLibraryId;
                 _context5.t0 = Utils;
-                _context5.next = 7;
+                _context5.next = 8;
                 return this.WalletAddress();
 
-              case 7:
+              case 8:
                 _context5.t1 = _context5.sent;
                 objectId = _context5.t0.AddressToObjectId.call(_context5.t0, _context5.t1);
 
                 if (!noCache) {
-                  _context5.next = 13;
+                  _context5.next = 14;
                   break;
                 }
 
-                _context5.next = 12;
+                _context5.next = 13;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
                   metadataSubtree: metadataSubtree
                 });
 
-              case 12:
+              case 13:
                 return _context5.abrupt("return", _context5.sent);
 
-              case 13:
-                _context5.next = 15;
+              case 14:
+                _context5.next = 16;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 15:
+              case 16:
                 metadata = _context5.sent;
 
                 this.__CacheMetadata(metadata);
 
                 return _context5.abrupt("return", this.__GetCachedMetadata(metadataSubtree));
 
-              case 18:
+              case 19:
               case "end":
                 return _context5.stop();
             }
@@ -538,23 +563,24 @@ function () {
             switch (_context6.prev = _context6.next) {
               case 0:
                 _ref6$metadataSubtree = _ref6.metadataSubtree, metadataSubtree = _ref6$metadataSubtree === void 0 ? "/" : _ref6$metadataSubtree, _ref6$metadata = _ref6.metadata, metadata = _ref6$metadata === void 0 ? {} : _ref6$metadata;
+                this.Log("Merging user metadata at ".concat(metadataSubtree));
                 libraryId = this.client.contentSpaceLibraryId;
                 _context6.t0 = Utils;
-                _context6.next = 5;
+                _context6.next = 6;
                 return this.WalletAddress();
 
-              case 5:
+              case 6:
                 _context6.t1 = _context6.sent;
                 objectId = _context6.t0.AddressToObjectId.call(_context6.t0, _context6.t1);
-                _context6.next = 9;
+                _context6.next = 10;
                 return this.client.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 9:
+              case 10:
                 editRequest = _context6.sent;
-                _context6.next = 12;
+                _context6.next = 13;
                 return this.client.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -563,18 +589,18 @@ function () {
                   metadata: metadata
                 });
 
-              case 12:
-                _context6.next = 14;
+              case 13:
+                _context6.next = 15;
                 return this.client.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editRequest.write_token
                 });
 
-              case 14:
+              case 15:
                 this.__InvalidateCache();
 
-              case 15:
+              case 16:
               case "end":
                 return _context6.stop();
             }
@@ -609,23 +635,24 @@ function () {
             switch (_context7.prev = _context7.next) {
               case 0:
                 _ref7$metadataSubtree = _ref7.metadataSubtree, metadataSubtree = _ref7$metadataSubtree === void 0 ? "/" : _ref7$metadataSubtree, _ref7$metadata = _ref7.metadata, metadata = _ref7$metadata === void 0 ? {} : _ref7$metadata;
+                this.Log("Replacing user metadata at ".concat(metadataSubtree));
                 libraryId = this.client.contentSpaceLibraryId;
                 _context7.t0 = Utils;
-                _context7.next = 5;
+                _context7.next = 6;
                 return this.WalletAddress();
 
-              case 5:
+              case 6:
                 _context7.t1 = _context7.sent;
                 objectId = _context7.t0.AddressToObjectId.call(_context7.t0, _context7.t1);
-                _context7.next = 9;
+                _context7.next = 10;
                 return this.client.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 9:
+              case 10:
                 editRequest = _context7.sent;
-                _context7.next = 12;
+                _context7.next = 13;
                 return this.client.ReplaceMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -634,18 +661,18 @@ function () {
                   metadata: metadata
                 });
 
-              case 12:
-                _context7.next = 14;
+              case 13:
+                _context7.next = 15;
                 return this.client.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editRequest.write_token
                 });
 
-              case 14:
+              case 15:
                 this.__InvalidateCache();
 
-              case 15:
+              case 16:
               case "end":
                 return _context7.stop();
             }
@@ -679,23 +706,24 @@ function () {
             switch (_context8.prev = _context8.next) {
               case 0:
                 _ref8$metadataSubtree = _ref8.metadataSubtree, metadataSubtree = _ref8$metadataSubtree === void 0 ? "/" : _ref8$metadataSubtree;
+                this.Log("Deleting user metadata at ".concat(metadataSubtree));
                 libraryId = this.client.contentSpaceLibraryId;
                 _context8.t0 = Utils;
-                _context8.next = 5;
+                _context8.next = 6;
                 return this.WalletAddress();
 
-              case 5:
+              case 6:
                 _context8.t1 = _context8.sent;
                 objectId = _context8.t0.AddressToObjectId.call(_context8.t0, _context8.t1);
-                _context8.next = 9;
+                _context8.next = 10;
                 return this.client.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 9:
+              case 10:
                 editRequest = _context8.sent;
-                _context8.next = 12;
+                _context8.next = 13;
                 return this.client.DeleteMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -703,18 +731,18 @@ function () {
                   metadataSubtree: metadataSubtree
                 });
 
-              case 12:
-                _context8.next = 14;
+              case 13:
+                _context8.next = 15;
                 return this.client.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editRequest.write_token
                 });
 
-              case 14:
+              case 15:
                 this.__InvalidateCache();
 
-              case 15:
+              case 16:
               case "end":
                 return _context8.stop();
             }
@@ -958,23 +986,24 @@ function () {
             switch (_context12.prev = _context12.next) {
               case 0:
                 image = _ref11.image;
+                this.Log("Setting profile image for user ".concat(address));
                 libraryId = this.client.contentSpaceLibraryId;
                 _context12.t0 = Utils;
-                _context12.next = 5;
+                _context12.next = 6;
                 return this.WalletAddress();
 
-              case 5:
+              case 6:
                 _context12.t1 = _context12.sent;
                 objectId = _context12.t0.AddressToObjectId.call(_context12.t0, _context12.t1);
-                _context12.next = 9;
+                _context12.next = 10;
                 return this.client.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 9:
+              case 10:
                 editRequest = _context12.sent;
-                _context12.next = 12;
+                _context12.next = 13;
                 return this.client.UploadPart({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -982,9 +1011,9 @@ function () {
                   data: image
                 });
 
-              case 12:
+              case 13:
                 uploadResponse = _context12.sent;
-                _context12.next = 15;
+                _context12.next = 16;
                 return this.client.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -994,8 +1023,8 @@ function () {
                   }
                 });
 
-              case 15:
-                _context12.next = 17;
+              case 16:
+                _context12.next = 18;
                 return this.client.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -1006,18 +1035,18 @@ function () {
                   }
                 });
 
-              case 17:
-                _context12.next = 19;
+              case 18:
+                _context12.next = 20;
                 return this.client.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: editRequest.write_token
                 });
 
-              case 19:
+              case 20:
                 this.__InvalidateCache();
 
-              case 20:
+              case 21:
               case "end":
                 return _context12.stop();
             }
