@@ -629,7 +629,7 @@ function () {
       var _UpdateRequest = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee6(_ref7) {
-        var id, abi;
+        var id, abi, event, updateRequestEvent;
         return regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
@@ -644,9 +644,24 @@ function () {
                 });
 
               case 3:
-                return _context6.abrupt("return", _context6.sent);
+                event = _context6.sent;
+                updateRequestEvent = this.client.ExtractEventFromLogs({
+                  abi: abi,
+                  event: event,
+                  eventName: "UpdateRequest"
+                });
 
-              case 4:
+                if (!(event.logs.length === 0 || !updateRequestEvent)) {
+                  _context6.next = 7;
+                  break;
+                }
+
+                throw Error("Update request denied");
+
+              case 7:
+                return _context6.abrupt("return", event);
+
+              case 8:
               case "end":
                 return _context6.stop();
             }

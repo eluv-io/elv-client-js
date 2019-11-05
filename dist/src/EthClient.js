@@ -578,7 +578,7 @@ function () {
                   break;
                 }
 
-                throw Error("Timed out waiting for completion of ".concat(methodName, ". TXID: ").concat(transactionHash));
+                throw Error("Timed out waiting for completion of ".concat(methodName, ". TXID: ").concat(createMethodCall.hash));
 
               case 22:
                 return _context5.abrupt("return", methodEvent);
@@ -674,8 +674,6 @@ function () {
           }
         }
       }
-
-      throw Error(eventName + " event not found");
     }
   }, {
     key: "DeployDependentContract",
@@ -707,13 +705,22 @@ function () {
                   eventName: eventName,
                   eventValue: eventValue
                 });
+
+                if (eventLog) {
+                  _context7.next = 7;
+                  break;
+                }
+
+                throw Error("".concat(methodName, " failed - Log not present in transaction"));
+
+              case 7:
                 newContractAddress = eventLog.values[eventValue];
                 return _context7.abrupt("return", {
                   contractAddress: Utils.FormatAddress(newContractAddress),
                   transactionHash: event.transactionHash
                 });
 
-              case 7:
+              case 9:
               case "end":
                 return _context7.stop();
             }

@@ -293,12 +293,24 @@ class AuthorizationClient {
   }
 
   async UpdateRequest({id, abi}) {
-    return await this.client.CallContractMethodAndWait({
+    const event = await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "updateRequest",
       methodArgs: [],
     });
+
+    const updateRequestEvent = this.client.ExtractEventFromLogs({
+      abi,
+      event,
+      eventName: "UpdateRequest"
+    });
+
+    if(event.logs.length === 0 || !updateRequestEvent) {
+      throw Error("Update request denied");
+    }
+
+    return event;
   }
 
   async GenerateChannelContentToken({objectId, audienceData, value=0}) {

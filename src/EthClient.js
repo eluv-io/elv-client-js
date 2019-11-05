@@ -310,7 +310,7 @@ class EthClient {
     }
 
     if(!methodEvent) {
-      throw Error(`Timed out waiting for completion of ${methodName}. TXID: ${transactionHash}`);
+      throw Error(`Timed out waiting for completion of ${methodName}. TXID: ${createMethodCall.hash}`);
     }
 
     return methodEvent;
@@ -336,8 +336,6 @@ class EthClient {
         return parsedLog;
       }
     }
-
-    throw Error(eventName + " event not found");
   }
 
   async DeployDependentContract({
@@ -352,6 +350,11 @@ class EthClient {
     const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs: args, signer});
 
     const eventLog = this.ExtractEventFromLogs({abi, event, eventName, eventValue});
+
+    if(!eventLog) {
+      throw Error(`${methodName} failed - Log not present in transaction`);
+    }
+
     const newContractAddress = eventLog.values[eventValue];
 
     return {
