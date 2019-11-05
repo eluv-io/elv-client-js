@@ -27,15 +27,18 @@ function () {
   _createClass(UserProfileClient, [{
     key: "Log",
     value: function Log(message) {
+      var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
       if (!this.debug) {
         return;
       }
 
       if (_typeof(message) === "object") {
         message = JSON.stringify(message);
-      } // eslint-disable-next-line no-console
+      }
 
-
+      error ? // eslint-disable-next-line no-console
+      console.error("\n(elv-client-js#UserProfileClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
       console.log("\n(elv-client-js#UserProfileClient) ".concat(message, "\n"));
     }
     /**
