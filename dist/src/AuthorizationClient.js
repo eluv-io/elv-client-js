@@ -757,7 +757,7 @@ function () {
       var _ChannelContentFinalize = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee8(_ref9) {
-        var objectId, audienceData, _ref9$percent, percent, nonce, paramTypes, params, packedHash;
+        var objectId, audienceData, _ref9$percent, percent, nonce, paramTypes, params, packedHash, result;
 
         return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
@@ -783,9 +783,11 @@ function () {
                 });
 
               case 12:
-                return _context8.abrupt("return", _context8.sent);
+                result = _context8.sent;
+                this.channelContentTokens[objectId] = undefined;
+                return _context8.abrupt("return", result);
 
-              case 13:
+              case 15:
               case "end":
                 return _context8.stop();
             }
