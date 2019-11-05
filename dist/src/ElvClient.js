@@ -185,15 +185,18 @@ function () {
   _createClass(ElvClient, [{
     key: "Log",
     value: function Log(message) {
+      var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
       if (!this.debug) {
         return;
       }
 
       if (_typeof(message) === "object") {
         message = JSON.stringify(message);
-      } // eslint-disable-next-line no-console
+      }
 
-
+      error ? // eslint-disable-next-line no-console
+      console.error("\n(elv-client-js#ElvClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
       console.log("\n(elv-client-js#ElvClient) ".concat(message, "\n"));
     }
     /**
@@ -6672,17 +6675,10 @@ function () {
                 headers.Authorization = _context80.sent.Authorization;
 
               case 9:
-                this.Log("Calling bitcode method: ".concat(libraryId || "", " ").concat(objectId || versionHash, " ").concat(writeToken || ""));
-                this.Log("".concat(constant ? "GET" : "POST", " ").concat(path));
-                this.Log("Query Params:");
-                this.Log(queryParams);
-                this.Log("Body:");
-                this.Log(body);
-                this.Log("Headers:");
-                this.Log(headers);
+                this.Log("Calling bitcode method: ".concat(libraryId || "", " ").concat(objectId || versionHash, " ").concat(writeToken || "", "\n      ").concat(constant ? "GET" : "POST", " ").concat(path, "\n      Query Params:\n      ").concat(queryParams, "\n      Body:\n      ").concat(body, "\n      Headers\n      ").concat(headers));
                 _context80.t0 = ResponseToFormat;
                 _context80.t1 = format;
-                _context80.next = 21;
+                _context80.next = 14;
                 return this.HttpClient.Request({
                   body: body,
                   headers: headers,
@@ -6692,11 +6688,11 @@ function () {
                   failover: false
                 });
 
-              case 21:
+              case 14:
                 _context80.t2 = _context80.sent;
                 return _context80.abrupt("return", (0, _context80.t0)(_context80.t1, _context80.t2));
 
-              case 23:
+              case 16:
               case "end":
                 return _context80.stop();
             }
@@ -9045,7 +9041,7 @@ function () {
   }, {
     key: "FrameAllowedMethods",
     value: function FrameAllowedMethods() {
-      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "SetSigner", "SetSignerFromWeb3Provider"];
+      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "SetSigner", "SetSignerFromWeb3Provider", "ToggleLogging"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return !forbiddenMethods.includes(method);
       });

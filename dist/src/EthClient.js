@@ -334,7 +334,7 @@ function () {
             switch (_context3.prev = _context3.next) {
               case 0:
                 abi = _ref6.abi, bytecode = _ref6.bytecode, _ref6$constructorArgs = _ref6.constructorArgs, constructorArgs = _ref6$constructorArgs === void 0 ? [] : _ref6$constructorArgs, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides, signer = _ref6.signer;
-                this.Log("Deploying contract with args [".concat(args.join(", "), "]"));
+                this.Log("Deploying contract with args [".concat(constructorArgs.join(", "), "]"));
                 signer = signer.connect(this.Provider());
                 this.ValidateSigner(signer);
                 contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);

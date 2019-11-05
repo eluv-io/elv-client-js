@@ -22,15 +22,18 @@ const ACCESS_TYPES = {
 };
 
 class AuthorizationClient {
-  Log(message) {
+  Log(message, error=false) {
     if(!this.debug) { return; }
 
     if(typeof message === "object") {
       message = JSON.stringify(message);
     }
 
-    // eslint-disable-next-line no-console
-    console.log(`\n(elv-client-js#AuthorizationClient) ${message}\n`);
+    error ?
+      // eslint-disable-next-line no-console
+      console.error(`\n(elv-client-js#AuthorizationClient) ${message}\n`) :
+      // eslint-disable-next-line no-console
+      console.log(`\n(elv-client-js#AuthorizationClient) ${message}\n`);
   }
 
   constructor({client, contentSpaceId, debug=false, noCache=false, noAuth=false}) {
@@ -330,9 +333,11 @@ class AuthorizationClient {
       params[5] = JSON.stringify(audienceData);
     }
 
-    const stateChannelUri = await this.KMSUrl({objectId});
-    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-    const payload = await stateChannelProvider.send(stateChannelApi, params);
+    const payload = await this.MakeKMSCall({
+      objectId,
+      methodName: stateChannelApi,
+      params
+    });
 
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
     const multiSig = Utils.FormatSignature(signature);
@@ -368,13 +373,13 @@ class AuthorizationClient {
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
     params[4] = await this.Sign(packedHash);
 
-    const stateChannelApi = "elv_channelContentFinalizeContext";
     params[5] = JSON.stringify(audienceData);
 
-    const stateChannelUri = await this.KMSUrl({objectId});
-    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-
-    await stateChannelProvider.send(stateChannelApi, params);
+    return await this.MakeKMSCall({
+      objectId,
+      methodName: "elv_channelContentFinalizeContext",
+      params
+    });
   }
 
   CacheTransaction({accessType, address, publicKey, update, transactionHash}) {
@@ -563,9 +568,7 @@ class AuthorizationClient {
   }
 
   async KMSInfo({objectId, versionHash}) {
-    if(versionHash) {
-      objectId = Utils.DecodeVersionHash(versionHash).objectId;
-    }
+    if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
     // Get KMS info for the object
     const KMSInfo = await this.client.CallContractMethod({
@@ -580,19 +583,9 @@ class AuthorizationClient {
     const publicKey = Ethers.utils.computePublicKey(Utils.HashToAddress(KMSInfo[1]), false);
 
     return {
-      urls: KMSInfo[0],
+      urls: KMSInfo[0].split(","),
       publicKey
     };
-  }
-
-  async KMSUrl({objectId, versionHash}) {
-    let KMSUrls = (await this.KMSInfo({objectId, versionHash})).urls;
-
-    // Randomize order of URLs so the same one isn't chosen every time
-    KMSUrls = KMSUrls.split(",").sort(() => 0.5 - Math.random());
-
-    // Prefer HTTPS urls
-    return KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
   }
 
   // Retrieve symmetric key for object
@@ -607,11 +600,38 @@ class AuthorizationClient {
       metadataSubtree: kmsCapId
     });
 
-    const args = [this.client.contentSpaceId, libraryId, objectId, kmsCap];
-    const stateChannelUri = await this.KMSUrl({objectId});
-    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
+    return await this.MakeKMSCall({
+      objectId,
+      methodName: "elv_getSymmetricKey",
+      params: [this.client.contentSpaceId, libraryId, objectId, kmsCap]
+    });
+  }
 
-    return await stateChannelProvider.send("elv_getSymmetricKey", args);
+  async MakeKMSCall({objectId, versionHash, methodName, params}) {
+    if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
+
+    const KMSUrls = (await this.KMSInfo({objectId, versionHash})).urls;
+
+    for(let i = 0; i < KMSUrls.length; i++) {
+      try {
+        this.Log(
+          `Making KMS request:
+          URL: ${KMSUrls[i]}
+          Method: ${methodName}
+          Params: ${params.join(", ")}`
+        );
+
+        const stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
+        return await stateChannelProvider.send(methodName, params);
+      } catch(error) {
+        this.Log(`KMS Call Error: ${error}`, true);
+
+        // If the request has been attempted on all KMS urls, throw the error
+        if(i === KMSUrls.length - 1) {
+          throw error;
+        }
+      }
+    }
   }
 
   async ReEncryptionConk({libraryId, objectId, versionHash}) {
