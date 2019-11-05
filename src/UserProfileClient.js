@@ -5,15 +5,18 @@ const { FrameClient } = require("./FrameClient");
 const SpaceContract = require("./contracts/BaseContentSpace");
 
 class UserProfileClient {
-  Log(message) {
+  Log(message, error=false) {
     if(!this.debug) { return; }
 
     if(typeof message === "object") {
       message = JSON.stringify(message);
     }
 
-    // eslint-disable-next-line no-console
-    console.log(`\n(elv-client-js#UserProfileClient) ${message}\n`);
+    error ?
+      // eslint-disable-next-line no-console
+      console.error(`\n(elv-client-js#UserProfileClient) ${message}\n`) :
+      // eslint-disable-next-line no-console
+      console.log(`\n(elv-client-js#UserProfileClient) ${message}\n`);
   }
 
   /**
