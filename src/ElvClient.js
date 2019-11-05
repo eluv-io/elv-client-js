@@ -1826,10 +1826,11 @@ class ElvClient {
       }
 
       let done = false;
-      if(callback) {
-        if(copy) {
+      if(copy) {
+        done = status.ingest_copy.done;
+
+        if(callback) {
           const progress = status.ingest_copy.progress;
-          done = status.ingest_copy.done;
 
           callback({
             done,
@@ -1839,9 +1840,12 @@ class ElvClient {
             totalFiles: progress.files.total,
             fileStatus: progress.files.details
           });
-        } else {
+        }
+      } else {
+        done = status.add_reference.done;
+
+        if(callback) {
           const progress = status.add_reference.progress;
-          done = status.add_reference.done;
 
           callback({
             done,
