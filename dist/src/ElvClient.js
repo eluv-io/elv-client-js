@@ -3383,10 +3383,11 @@ function () {
               case 15:
                 done = false;
 
-                if (callback) {
-                  if (copy) {
+                if (copy) {
+                  done = status.ingest_copy.done;
+
+                  if (callback) {
                     progress = status.ingest_copy.progress;
-                    done = status.ingest_copy.done;
                     callback({
                       done: done,
                       uploaded: progress.bytes.completed,
@@ -3395,9 +3396,12 @@ function () {
                       totalFiles: progress.files.total,
                       fileStatus: progress.files.details
                     });
-                  } else {
+                  }
+                } else {
+                  done = status.add_reference.done;
+
+                  if (callback) {
                     _progress = status.add_reference.progress;
-                    done = status.add_reference.done;
                     callback({
                       done: done,
                       uploadedFiles: _progress.files.completed,
