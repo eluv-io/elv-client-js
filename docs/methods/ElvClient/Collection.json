@@ -1,10 +1,14 @@
 [
   {
     "signature": "async Collection({\n  \"collectionType\": \"contentTypes\"\n});",
-    "result": "[\n  \"0x0b0928F130bd58D521eb17925712F4F962077f3e\"\n]"
+    "result": "[]"
+  },
+  {
+    "signature": "async Collection({\n  \"collectionType\": \"contentTypes\"\n});",
+    "result": "[\n  \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n]"
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"libraries\"\n});",
-    "result": "[\n  \"0xbE0085d2087f6429D9C83E894085ab7360731B1b\"\n]"
+    "result": "[\n  \"0x341c59b16a9B2664B7bB4FC20306faeF50B6CF14\"\n]"
   }
 ]

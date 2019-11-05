@@ -5,15 +5,18 @@ const { FrameClient } = require("./FrameClient");
 const SpaceContract = require("./contracts/BaseContentSpace");
 
 class UserProfileClient {
-  Log(message) {
+  Log(message, error=false) {
     if(!this.debug) { return; }
 
     if(typeof message === "object") {
       message = JSON.stringify(message);
     }
 
-    // eslint-disable-next-line no-console
-    console.log(`\n(elv-client-js#UserProfileClient) ${message}\n`);
+    error ?
+      // eslint-disable-next-line no-console
+      console.error(`\n(elv-client-js#UserProfileClient) ${message}\n`) :
+      // eslint-disable-next-line no-console
+      console.log(`\n(elv-client-js#UserProfileClient) ${message}\n`);
   }
 
   /**
@@ -414,7 +417,7 @@ await client.userProfileClient.UserMetadata()
    * @param {blob} image - The new profile image for the current user
    */
   async SetUserProfileImage({image}) {
-    this.Log(`Setting profile image for user ${address}`);
+    this.Log(`Setting profile image for user ${this.client.signer.address}`);
 
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(await this.WalletAddress());
@@ -604,6 +607,7 @@ await client.userProfileClient.UserMetadata()
     const forbiddenMethods = [
       "constructor",
       "FrameAllowedMethods",
+      "Log",
       "MetadataMethods",
       "PromptedMethods",
       "RecordTags",
