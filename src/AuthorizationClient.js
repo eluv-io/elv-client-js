@@ -387,11 +387,15 @@ class AuthorizationClient {
 
     params[5] = JSON.stringify(audienceData);
 
-    return await this.MakeKMSCall({
+    const result = await this.MakeKMSCall({
       objectId,
       methodName: "elv_channelContentFinalizeContext",
       params
     });
+
+    this.channelContentTokens[objectId] = undefined;
+
+    return result;
   }
 
   CacheTransaction({accessType, address, publicKey, update, transactionHash}) {
