@@ -49,15 +49,18 @@ function () {
   _createClass(AuthorizationClient, [{
     key: "Log",
     value: function Log(message) {
+      var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
       if (!this.debug) {
         return;
       }
 
       if (_typeof(message) === "object") {
         message = JSON.stringify(message);
-      } // eslint-disable-next-line no-console
+      }
 
-
+      error ? // eslint-disable-next-line no-console
+      console.error("\n(elv-client-js#AuthorizationClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
       console.log("\n(elv-client-js#AuthorizationClient) ".concat(message, "\n"));
     }
   }]);
@@ -663,7 +666,7 @@ function () {
       var _GenerateChannelContentToken = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee7(_ref8) {
-        var objectId, audienceData, _ref8$value, value, nonce, paramTypes, params, packedHash, stateChannelApi, stateChannelUri, stateChannelProvider, payload, signature, multiSig, token;
+        var objectId, audienceData, _ref8$value, value, nonce, paramTypes, params, packedHash, stateChannelApi, payload, signature, multiSig, token;
 
         return regeneratorRuntime.wrap(function _callee7$(_context7) {
           while (1) {
@@ -697,22 +700,18 @@ function () {
                 }
 
                 _context7.next = 15;
-                return this.KMSUrl({
-                  objectId: objectId
+                return this.MakeKMSCall({
+                  objectId: objectId,
+                  methodName: stateChannelApi,
+                  params: params
                 });
 
               case 15:
-                stateChannelUri = _context7.sent;
-                stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-                _context7.next = 19;
-                return stateChannelProvider.send(stateChannelApi, params);
-
-              case 19:
                 payload = _context7.sent;
-                _context7.next = 22;
+                _context7.next = 18;
                 return this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
 
-              case 22:
+              case 18:
                 signature = _context7.sent;
                 multiSig = Utils.FormatSignature(signature);
                 token = "".concat(payload, ".").concat(Utils.B64(multiSig));
@@ -723,7 +722,7 @@ function () {
 
                 return _context7.abrupt("return", token);
 
-              case 27:
+              case 23:
               case "end":
                 return _context7.stop();
             }
@@ -743,7 +742,7 @@ function () {
       var _ChannelContentFinalize = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee8(_ref9) {
-        var objectId, audienceData, _ref9$percent, percent, nonce, paramTypes, params, packedHash, stateChannelApi, stateChannelUri, stateChannelProvider;
+        var objectId, audienceData, _ref9$percent, percent, nonce, paramTypes, params, packedHash;
 
         return regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
@@ -760,20 +759,18 @@ function () {
 
               case 8:
                 params[4] = _context8.sent;
-                stateChannelApi = "elv_channelContentFinalizeContext";
                 params[5] = JSON.stringify(audienceData);
-                _context8.next = 13;
-                return this.KMSUrl({
-                  objectId: objectId
+                _context8.next = 12;
+                return this.MakeKMSCall({
+                  objectId: objectId,
+                  methodName: "elv_channelContentFinalizeContext",
+                  params: params
                 });
 
-              case 13:
-                stateChannelUri = _context8.sent;
-                stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-                _context8.next = 17;
-                return stateChannelProvider.send(stateChannelApi, params);
+              case 12:
+                return _context8.abrupt("return", _context8.sent);
 
-              case 17:
+              case 13:
               case "end":
                 return _context8.stop();
             }
@@ -1194,7 +1191,7 @@ function () {
                 // Public key is compressed and hashed
                 publicKey = Ethers.utils.computePublicKey(Utils.HashToAddress(KMSInfo[1]), false);
                 return _context15.abrupt("return", {
-                  urls: KMSInfo[0],
+                  urls: KMSInfo[0].split(","),
                   publicKey: publicKey
                 });
 
@@ -1211,51 +1208,6 @@ function () {
       }
 
       return KMSInfo;
-    }()
-  }, {
-    key: "KMSUrl",
-    value: function () {
-      var _KMSUrl = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee16(_ref17) {
-        var objectId, versionHash, KMSUrls;
-        return regeneratorRuntime.wrap(function _callee16$(_context16) {
-          while (1) {
-            switch (_context16.prev = _context16.next) {
-              case 0:
-                objectId = _ref17.objectId, versionHash = _ref17.versionHash;
-                _context16.next = 3;
-                return this.KMSInfo({
-                  objectId: objectId,
-                  versionHash: versionHash
-                });
-
-              case 3:
-                KMSUrls = _context16.sent.urls;
-                // Randomize order of URLs so the same one isn't chosen every time
-                KMSUrls = KMSUrls.split(",").sort(function () {
-                  return 0.5 - Math.random();
-                }); // Prefer HTTPS urls
-
-                return _context16.abrupt("return", KMSUrls.find(function (url) {
-                  return url.startsWith("https");
-                }) || KMSUrls.find(function (url) {
-                  return url.startsWith("http");
-                }));
-
-              case 6:
-              case "end":
-                return _context16.stop();
-            }
-          }
-        }, _callee16, this);
-      }));
-
-      function KMSUrl(_x16) {
-        return _KMSUrl.apply(this, arguments);
-      }
-
-      return KMSUrl;
     }() // Retrieve symmetric key for object
 
   }, {
@@ -1263,13 +1215,13 @@ function () {
     value: function () {
       var _KMSSymmetricKey = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee17(_ref18) {
-        var libraryId, objectId, kmsAddress, kmsCapId, kmsCap, args, stateChannelUri, stateChannelProvider;
-        return regeneratorRuntime.wrap(function _callee17$(_context17) {
+      regeneratorRuntime.mark(function _callee16(_ref17) {
+        var libraryId, objectId, kmsAddress, kmsCapId, kmsCap;
+        return regeneratorRuntime.wrap(function _callee16$(_context16) {
           while (1) {
-            switch (_context17.prev = _context17.next) {
+            switch (_context16.prev = _context16.next) {
               case 0:
-                libraryId = _ref18.libraryId, objectId = _ref18.objectId;
+                libraryId = _ref17.libraryId, objectId = _ref17.objectId;
 
                 if (!libraryId) {
                   libraryId = this.client.ContentObjectLibraryId({
@@ -1277,15 +1229,15 @@ function () {
                   });
                 }
 
-                _context17.next = 4;
+                _context16.next = 4;
                 return this.KMSAddress({
                   objectId: objectId
                 });
 
               case 4:
-                kmsAddress = _context17.sent;
+                kmsAddress = _context16.sent;
                 kmsCapId = "eluv.caps.ikms".concat(Utils.AddressToHash(kmsAddress));
-                _context17.next = 8;
+                _context16.next = 8;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -1293,35 +1245,103 @@ function () {
                 });
 
               case 8:
-                kmsCap = _context17.sent;
-                args = [this.client.contentSpaceId, libraryId, objectId, kmsCap];
-                _context17.next = 12;
-                return this.KMSUrl({
-                  objectId: objectId
+                kmsCap = _context16.sent;
+                _context16.next = 11;
+                return this.MakeKMSCall({
+                  objectId: objectId,
+                  methodName: "elv_getSymmetricKey",
+                  params: [this.client.contentSpaceId, libraryId, objectId, kmsCap]
                 });
 
+              case 11:
+                return _context16.abrupt("return", _context16.sent);
+
               case 12:
-                stateChannelUri = _context17.sent;
-                stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-                _context17.next = 16;
-                return stateChannelProvider.send("elv_getSymmetricKey", args);
-
-              case 16:
-                return _context17.abrupt("return", _context17.sent);
-
-              case 17:
               case "end":
-                return _context17.stop();
+                return _context16.stop();
             }
           }
-        }, _callee17, this);
+        }, _callee16, this);
       }));
 
-      function KMSSymmetricKey(_x17) {
+      function KMSSymmetricKey(_x16) {
         return _KMSSymmetricKey.apply(this, arguments);
       }
 
       return KMSSymmetricKey;
+    }()
+  }, {
+    key: "MakeKMSCall",
+    value: function () {
+      var _MakeKMSCall = _asyncToGenerator(
+      /*#__PURE__*/
+      regeneratorRuntime.mark(function _callee17(_ref18) {
+        var objectId, versionHash, methodName, params, KMSUrls, i, stateChannelProvider;
+        return regeneratorRuntime.wrap(function _callee17$(_context17) {
+          while (1) {
+            switch (_context17.prev = _context17.next) {
+              case 0:
+                objectId = _ref18.objectId, versionHash = _ref18.versionHash, methodName = _ref18.methodName, params = _ref18.params;
+
+                if (versionHash) {
+                  objectId = Utils.DecodeVersionHash(versionHash).objectId;
+                }
+
+                _context17.next = 4;
+                return this.KMSInfo({
+                  objectId: objectId,
+                  versionHash: versionHash
+                });
+
+              case 4:
+                KMSUrls = _context17.sent.urls;
+                i = 0;
+
+              case 6:
+                if (!(i < KMSUrls.length)) {
+                  _context17.next = 23;
+                  break;
+                }
+
+                _context17.prev = 7;
+                this.Log("Making KMS request:\n          URL: ".concat(KMSUrls[i], "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
+                stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
+                _context17.next = 12;
+                return stateChannelProvider.send(methodName, params);
+
+              case 12:
+                return _context17.abrupt("return", _context17.sent);
+
+              case 15:
+                _context17.prev = 15;
+                _context17.t0 = _context17["catch"](7);
+                this.Log("KMS Call Error: ".concat(_context17.t0), true); // If the request has been attempted on all KMS urls, throw the error
+
+                if (!(i === KMSUrls.length - 1)) {
+                  _context17.next = 20;
+                  break;
+                }
+
+                throw _context17.t0;
+
+              case 20:
+                i++;
+                _context17.next = 6;
+                break;
+
+              case 23:
+              case "end":
+                return _context17.stop();
+            }
+          }
+        }, _callee17, this, [[7, 15]]);
+      }));
+
+      function MakeKMSCall(_x17) {
+        return _MakeKMSCall.apply(this, arguments);
+      }
+
+      return MakeKMSCall;
     }()
   }, {
     key: "ReEncryptionConk",

@@ -27,15 +27,18 @@ function () {
   _createClass(UserProfileClient, [{
     key: "Log",
     value: function Log(message) {
+      var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
       if (!this.debug) {
         return;
       }
 
       if (_typeof(message) === "object") {
         message = JSON.stringify(message);
-      } // eslint-disable-next-line no-console
+      }
 
-
+      error ? // eslint-disable-next-line no-console
+      console.error("\n(elv-client-js#UserProfileClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
       console.log("\n(elv-client-js#UserProfileClient) ".concat(message, "\n"));
     }
     /**
@@ -986,7 +989,7 @@ function () {
             switch (_context12.prev = _context12.next) {
               case 0:
                 image = _ref11.image;
-                this.Log("Setting profile image for user ".concat(address));
+                this.Log("Setting profile image for user ".concat(this.client.signer.address));
                 libraryId = this.client.contentSpaceLibraryId;
                 _context12.t0 = Utils;
                 _context12.next = 6;
@@ -1363,7 +1366,7 @@ function () {
   }, {
     key: "FrameAllowedMethods",
     value: function FrameAllowedMethods() {
-      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "MetadataMethods", "PromptedMethods", "RecordTags", "SetAccessLevel", "SetUserProfileImage", "__CacheMetadata", "__GetCachedMetadata", "__InvalidateCache", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
+      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "Log", "MetadataMethods", "PromptedMethods", "RecordTags", "SetAccessLevel", "SetUserProfileImage", "__CacheMetadata", "__GetCachedMetadata", "__InvalidateCache", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return !forbiddenMethods.includes(method);
       });

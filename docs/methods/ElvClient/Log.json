@@ -1,0 +1,2087 @@
+[
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2fkf3hb3upAKx6CpHnBG4nUgZcns\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2fkf3hb3upAKx6CpHnBG4nUgZcns\");"
+  },
+  {
+    "signature": " Log(\"Contract already deployed for contract type: [object Promise]\");"
+  },
+  {
+    "signature": " Log(\"Replacing metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2fkf3hb3upAKx6CpHnBG4nUgZcns tqw_A4Lj2XEAs2jZAT2zr2NfVE7cMq9m1bDLr\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"bitcode_flags\": \"abrmaster\",\n  \"bitcode_format\": \"builtin\"\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2fkf3hb3upAKx6CpHnBG4nUgZcns tqw_A4Lj2XEAs2jZAT2zr2NfVE7cMq9m1bDLr\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__98a8EmGA9zatuYTuRUJMzWKMZUkdyEy2GdBLQg8CJsVtDVLNG3Pw51Eh4w5nuM6rizVWBwyMz7\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__2fkf3hb3upAKx6CpHnBG4nUgZcns\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: ABR Master\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/ABR Master\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Library\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Library\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Production Master\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Production Master\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3Fd24Yeyi6ap826va5kYR1VnYNkX\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fd24Yeyi6ap826va5kYR1VnYNkX\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__36jjGPHhacyPgehzKN1CLZGXxnwB\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__36jjGPHhacyPgehzKN1CLZGXxnwB\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3ugM27TmKaK3aH5FhroqAGddFoty\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3ugM27TmKaK3aH5FhroqAGddFoty\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__ruJTQUEiuvWwP5VV6z7A39j5pkr\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__ruJTQUEiuvWwP5VV6z7A39j5pkr\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3KicsTfHxAru9hwCDAfWsLtCKYMa\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3KicsTfHxAru9hwCDAfWsLtCKYMa\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__22H7vhkwVD8QDPWjANkB4aAXpCUg\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__22H7vhkwVD8QDPWjANkB4aAXpCUg\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3syfVBh2A9tvygGHPetwggkfDwtn\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3syfVBh2A9tvygGHPetwggkfDwtn\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__2punfHYE6Xv6B5GmRiuCorsELxei\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2punfHYE6Xv6B5GmRiuCorsELxei\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3Fd24Yeyi6ap826va5kYR1VnYNkX\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fd24Yeyi6ap826va5kYR1VnYNkX\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__36jjGPHhacyPgehzKN1CLZGXxnwB\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__36jjGPHhacyPgehzKN1CLZGXxnwB\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3ugM27TmKaK3aH5FhroqAGddFoty\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3ugM27TmKaK3aH5FhroqAGddFoty\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__ruJTQUEiuvWwP5VV6z7A39j5pkr\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__ruJTQUEiuvWwP5VV6z7A39j5pkr\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3KicsTfHxAru9hwCDAfWsLtCKYMa\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3KicsTfHxAru9hwCDAfWsLtCKYMa\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__22H7vhkwVD8QDPWjANkB4aAXpCUg\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__22H7vhkwVD8QDPWjANkB4aAXpCUg\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3syfVBh2A9tvygGHPetwggkfDwtn\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3syfVBh2A9tvygGHPetwggkfDwtn\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__2punfHYE6Xv6B5GmRiuCorsELxei\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2punfHYE6Xv6B5GmRiuCorsELxei\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3Fd24Yeyi6ap826va5kYR1VnYNkX\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fd24Yeyi6ap826va5kYR1VnYNkX\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__36jjGPHhacyPgehzKN1CLZGXxnwB\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__36jjGPHhacyPgehzKN1CLZGXxnwB\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3ugM27TmKaK3aH5FhroqAGddFoty\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3ugM27TmKaK3aH5FhroqAGddFoty\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__ruJTQUEiuvWwP5VV6z7A39j5pkr\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__ruJTQUEiuvWwP5VV6z7A39j5pkr\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3KicsTfHxAru9hwCDAfWsLtCKYMa\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3KicsTfHxAru9hwCDAfWsLtCKYMa\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__22H7vhkwVD8QDPWjANkB4aAXpCUg\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__22H7vhkwVD8QDPWjANkB4aAXpCUg\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3syfVBh2A9tvygGHPetwggkfDwtn\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3syfVBh2A9tvygGHPetwggkfDwtn\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__2punfHYE6Xv6B5GmRiuCorsELxei\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2punfHYE6Xv6B5GmRiuCorsELxei\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fd24Yeyi6ap826va5kYR1VnYNkX \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__36jjGPHhacyPgehzKN1CLZGXxnwB \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__22H7vhkwVD8QDPWjANkB4aAXpCUg \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3KicsTfHxAru9hwCDAfWsLtCKYMa \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3KicsTfHxAru9hwCDAfWsLtCKYMa \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3syfVBh2A9tvygGHPetwggkfDwtn \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fd24Yeyi6ap826va5kYR1VnYNkX \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1 \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3syfVBh2A9tvygGHPetwggkfDwtn \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3KicsTfHxAru9hwCDAfWsLtCKYMa \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2punfHYE6Xv6B5GmRiuCorsELxei \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fd24Yeyi6ap826va5kYR1VnYNkX \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__36jjGPHhacyPgehzKN1CLZGXxnwB \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2punfHYE6Xv6B5GmRiuCorsELxei \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__36jjGPHhacyPgehzKN1CLZGXxnwB \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2punfHYE6Xv6B5GmRiuCorsELxei \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__22H7vhkwVD8QDPWjANkB4aAXpCUg \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3kEo6MBsom7Jt5ud5tbMVa6GxXbG \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3Fy51pJBpjo7nrNFQFETUAYvRe9E \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3syfVBh2A9tvygGHPetwggkfDwtn \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__22H7vhkwVD8QDPWjANkB4aAXpCUg \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3ugM27TmKaK3aH5FhroqAGddFoty \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3ugM27TmKaK3aH5FhroqAGddFoty \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__3ugM27TmKaK3aH5FhroqAGddFoty \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1 \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__UQCrqjSX4YuBotjvRg2Cx3FJ3D1 \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__ruJTQUEiuvWwP5VV6z7A39j5pkr \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__ruJTQUEiuvWwP5VV6z7A39j5pkr \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__ruJTQUEiuvWwP5VV6z7A39j5pkr \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Creating access group: Test Access Group Test Access Group Description\");"
+  },
+  {
+    "signature": " Log(\"Access group: 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee iq__KnHhtRsXQmyM3azAiuWz7v9PoVF\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__KnHhtRsXQmyM3azAiuWz7v9PoVF\");"
+  },
+  {
+    "signature": " Log(\"Replacing metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__KnHhtRsXQmyM3azAiuWz7v9PoVF tqw_JLwPtB72gfTYLwJKs9uU8XcXFN2pn9a8h\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"public\": {\n    \"name\": \"Test Access Group\",\n    \"description\": \"Test Access Group Description\"\n  },\n  \"name\": \"Test Access Group\",\n  \"description\": \"Test Access Group Description\",\n  \"group\": \"metadata\"\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__KnHhtRsXQmyM3azAiuWz7v9PoVF tqw_JLwPtB72gfTYLwJKs9uU8XcXFN2pn9a8h\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__LJFEE6q64wxpgPPuu5iiuX9C2Ayk7P5bQTpH3bLYsiBTHDABb2AeAvZLj4hws1g2qUuUw5Fz5K\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__KnHhtRsXQmyM3azAiuWz7v9PoVF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving owner of access group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\");"
+  },
+  {
+    "signature": " Log(\"Calling grantAccess on group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee for user 0x8fa6a828624352163df8ed7c1faa745c1ab3939b\");"
+  },
+  {
+    "signature": " Log(\"Calling grantAccess on group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee for user 0xdbf299fb9646e863fdd27f6a1c6506e83250c1e8\");"
+  },
+  {
+    "signature": " Log(\"Retrieving members for group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\");"
+  },
+  {
+    "signature": " Log(\"Calling grantManagerAccess on group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee for user 8fa6a828624352163df8ed7c1faa745c1ab3939b\");"
+  },
+  {
+    "signature": " Log(\"Calling grantManagerAccess on group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee for user 0xdbf299fb9646e863fdd27f6a1c6506e83250c1e8\");"
+  },
+  {
+    "signature": " Log(\"Retrieving managers for group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\");"
+  },
+  {
+    "signature": " Log(\"Calling revokeAccess on group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee for user 0x8fa6a828624352163df8ed7c1faa745c1ab3939b\");"
+  },
+  {
+    "signature": " Log(\"Calling revokeManagerAccess on group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee for user 0x8fa6a828624352163df8ed7c1faa745c1ab3939b\");"
+  },
+  {
+    "signature": " Log(\"Retrieving members for group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\");"
+  },
+  {
+    "signature": " Log(\"Retrieving managers for group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__KnHhtRsXQmyM3azAiuWz7v9PoVF \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Creating content type: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Created type: 0x417ff711191e0128700c731895fa6c0593c5d782 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Replacing metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw tqw_7dHGbCztoC2LVavRbjmfs4jdzRHmWvsZY\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"name\": \"Test Content Type 814f71709583db291066\",\n  \"public\": {\n    \"name\": \"Test Content Type 814f71709583db291066\"\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw tqw_7dHGbCztoC2LVavRbjmfs4jdzRHmWvsZY\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__AoYY7jhnmMYJSjGTWeXq3aJUhgHAS2463PYqdW5BVUVU5rNXmoo4bM5YgjV7ycP4MAG9hGhcJD\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: hq__AoYY7jhnmMYJSjGTWeXq3aJUhgHAS2463PYqdW5BVUVU5rNXmoo4bM5YgjV7ycP4MAG9hGhcJD\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Invalid Type Name\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Invalid Type Name\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Creating content library\");"
+  },
+  {
+    "signature": " Log(\"KMS ID: ikms2s41ivY1BDJ8K5PJyAtTtJZQcHZ\");"
+  },
+  {
+    "signature": " Log(\"Library ID: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Contract address: 0x341c59b16a9b2664b7bb4fc20306faef50b6cf14\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: library\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/library\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Replacing metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X tqw_59KYhYj5CNiikbnFFWaRSmeMWDQhYZcXS\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"private\": {\n    \"meta\": \"data\"\n  },\n  \"name\": \"Test Library 814f71709583db291066\",\n  \"description\": \"Test Library Description\",\n  \"public\": {\n    \"name\": \"Test Library 814f71709583db291066\",\n    \"description\": \"Test Library Description\"\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X tqw_59KYhYj5CNiikbnFFWaRSmeMWDQhYZcXS\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__3mZ249jBNGkDp6BoN3rGec7zmCQcm6mW4vvXoTR6fTgTYZVSqDfbwYsmqSYEzEcjRW8yAHYrdH\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X created\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X \\n       Subtree: private\");"
+  },
+  {
+    "signature": " Log(\"Retrieving libraries contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Retrieving library content types for ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"0 types\");"
+  },
+  {
+    "signature": " Log(\"Adding library content type to ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Type ID: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving library content types for ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"1 types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\": {\n    \"id\": \"iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\",\n    \"hash\": \"hq__AoYY7jhnmMYJSjGTWeXq3aJUhgHAS2463PYqdW5BVUVU5rNXmoo4bM5YgjV7ycP4MAG9hGhcJD\",\n    \"name\": \"Test Content Type 814f71709583db291066\",\n    \"meta\": {\n      \"name\": \"Test Content Type 814f71709583db291066\",\n      \"public\": {\n        \"name\": \"Test Content Type 814f71709583db291066\"\n      }\n    }\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Removing library content type from ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Type ID: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving library content types for ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"0 types\");"
+  },
+  {
+    "signature": " Log(\"Adding library content type to ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Type ID: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving library content types for ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"1 types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\": {\n    \"id\": \"iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\",\n    \"hash\": \"hq__AoYY7jhnmMYJSjGTWeXq3aJUhgHAS2463PYqdW5BVUVU5rNXmoo4bM5YgjV7ycP4MAG9hGhcJD\",\n    \"name\": \"Test Content Type 814f71709583db291066\",\n    \"meta\": {\n      \"name\": \"Test Content Type 814f71709583db291066\",\n      \"public\": {\n        \"name\": \"Test Content Type 814f71709583db291066\"\n      }\n    }\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Removing library content type from ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Type ID: iq__uvjE3xbe5UfuvHpBHUwnRsZn8Mw\");"
+  },
+  {
+    "signature": " Log(\"Retrieving library content types for ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"0 types\");"
+  },
+  {
+    "signature": " Log(\"Adding contributor group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee to library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contributor group(s) for library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Adding reviewer group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee to library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Retrieving reviewer group(s) for library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Retrieving accessor, contributor, reviewer group(s) for library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Adding accessor group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee to library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Retrieving accessor group(s) for library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Removing reviewer group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee from library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Retrieving reviewer group(s) for library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Retrieving accessor, contributor, reviewer group(s) for library ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Merging metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X tqw_7cAHPxjed35QVwYiDaW9mwqd7YjzHWvuY\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"image\": \"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\"\n});"
+  },
+  {
+    "signature": " Log(\"Merging metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X tqw_7cAHPxjed35QVwYiDaW9mwqd7YjzHWvuY\\n      Subtree: public\");"
+  },
+  {
+    "signature": " Log({\n  \"image\": \"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\"\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X tqw_7cAHPxjed35QVwYiDaW9mwqd7YjzHWvuY\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__3oHTD7mjdHm53c6gy47XaKfag8HW7hiquscjDGVNm5QnwWusPMV26efawmqiGxr2ZLe4dYCeGK\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__j7EQhpEXmLhVjynsCtGJ9Nxnx6X \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X \");"
+  },
+  {
+    "signature": " Log(\"Type specified: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Test Content Type 814f71709583db291066\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0xd4e1b2f36470f09d3858d34da41b70682416caba iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Setting visibility to 100\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_KMmnWEkenezphAXTwU2KnHp4Zzkscisqf\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__JPrfGed2RwSFjZLrZzfS1ew18KMmy15eGRnGTuJdNf1QQTT6zgYT49Vi3v2aywt85mQXi1DWcy\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF \\n       Subtree: toMerge\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF \\n       Subtree: bad\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Merging metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_7gunC5EeqHK7Z9xpvaQGcRfPzLciCj2Hz\\n      Subtree: toMerge\");"
+  },
+  {
+    "signature": " Log({\n  \"new\": \"metadata\"\n});"
+  },
+  {
+    "signature": " Log(\"Replacing metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_7gunC5EeqHK7Z9xpvaQGcRfPzLciCj2Hz\\n      Subtree: toReplace\");"
+  },
+  {
+    "signature": " Log({\n  \"new\": \"metadata\"\n});"
+  },
+  {
+    "signature": " Log(\"Deleting metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_7gunC5EeqHK7Z9xpvaQGcRfPzLciCj2Hz\\n      Subtree: toDelete\");"
+  },
+  {
+    "signature": " Log(\"Subtree: toDelete\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_7gunC5EeqHK7Z9xpvaQGcRfPzLciCj2Hz\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Creating content library\");"
+  },
+  {
+    "signature": " Log(\"KMS ID: ikms2s41ivY1BDJ8K5PJyAtTtJZQcHZ\");"
+  },
+  {
+    "signature": " Log(\"Library ID: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH\");"
+  },
+  {
+    "signature": " Log(\"Contract address: 0xd703a1849fc7f31154a510e0b0b602c901a49e90\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__3zjtkDYnCXEygRXLdwmLbkiYNJjH\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: library\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/library\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Replacing metadata: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__3zjtkDYnCXEygRXLdwmLbkiYNJjH tqw_4iM9mUzr7mDTh96jiseJGh89q4ZjiokX9\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"name\": \"Test Object Filtering\",\n  \"public\": {\n    \"name\": \"Test Object Filtering\"\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__3zjtkDYnCXEygRXLdwmLbkiYNJjH tqw_4iM9mUzr7mDTh96jiseJGh89q4ZjiokX9\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__8yX7y5Maazcv2A62dKYDN2sHMZ1tg5MsVSML8BFuz7oz9JkVr7vfEytxBUoRZ2wwGTj1ztdpsq\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3zjtkDYnCXEygRXLdwmLbkiYNJjH\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Library ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH created\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH \");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0xfba57afb42d63e7b09f783fa6e0604239d7bd779 iq__4WLhrVjbLH6sMfjE4w95BtyBJqpC\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0x364890ad0ad806907de2936656d9e1df63d5ee3b iq__ks4N2jhDCaZshRzedjpwMDiYqCN\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0xf0055d45e4397968723e5c1456ca9acab3f535c7 iq__4Lws6zJFqrktapng8G3L6yBL3QQN\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0x425d88bb87e01f269457dbcc62ac7a0533e3271a iq__vdHsWKLbyrjZWrxE3r18w6W2wsP\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0x2e3590ecf1b621aaa0cea1ea7b36f4400cfd6305 iq__eLeizDfnP13BrJS2f7DgKF3C7jJ\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0xfba79ff00a86594f188556ff43f7332847419316 iq__4WM6d6spASZe3MLNrmhKp1dFK68V\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0x3abc8d972ac4293257412009e9e690efedbcd15e iq__pTktYQvLxYnroo5Ggo58fPmvs3T\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0x65c523399f60f5ffcc53dffee8ddcae2028d9156 iq__2REaH98i14HFEYciB4guURubHgUV\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0x02f4fa9e893fe03cccdf5a67aa75b4bd5a3f872c iq__3Pah8KLs9nDmW9G6xGneAEaVqco\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0x682d20541e47883f4d10c739e14f0a4b328835a7 iq__2TBLvH4suhraVHfpcdoRoZadLFSn\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__4WLhrVjbLH6sMfjE4w95BtyBJqpC tqw_FNESXWVqyNpjiC6TCiYAJzyaAT4R7pjMq\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__79G2gQsnaAm9tSBqmThtRVZYamnSJwhKgAK7ikw9EjjSJF8c4z7QCrnhpggMrxM48UvFc3nxtg\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__4WLhrVjbLH6sMfjE4w95BtyBJqpC\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__ks4N2jhDCaZshRzedjpwMDiYqCN tqw_BQBnzjBB6HJbvo1ddn4CDQToheP9mVtXh\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__AzFLbauj6AUispeH1C7AJFbsuoBVK269zSXGSC4MGv9CtFY4uXepHK5sBEksRafuhheeChtMQW\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__ks4N2jhDCaZshRzedjpwMDiYqCN\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__4Lws6zJFqrktapng8G3L6yBL3QQN tqw_E1ougJVQVwVPgNKpcR4zULKCyiyw8n6XS\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__3mXcJRjH2WuV1h7695B9mJZd2pRddSEKKaNvgURxWbYvgk2QqwEDVHUqVMV1AT71PrfWZUbJYW\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__4Lws6zJFqrktapng8G3L6yBL3QQN\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__vdHsWKLbyrjZWrxE3r18w6W2wsP tqw_6WMyTYGJetwqDnXqCFY4WEhbz5KEPkRoS\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__JiAy3iqpRifV7Yyd7CZLprEKK3MF5qCnt7t7vAhgohpWeMUuAuGvfyLi47p8abLoECfX6yK7BF\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__vdHsWKLbyrjZWrxE3r18w6W2wsP\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__eLeizDfnP13BrJS2f7DgKF3C7jJ tqw_BzPirQ3zvn94pzdGoUCj2SYQ85PZHALPC\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__JnvPC8XLFfgJQXCUTU1V4jDFY4jqNSzvNJCfceAdpNxXxpNVdZoG45cLSohERnk4dwWm5izUk4\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__eLeizDfnP13BrJS2f7DgKF3C7jJ\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__4WM6d6spASZe3MLNrmhKp1dFK68V tqw_7CMYNRunuJdvFwBAoCn7ZGCoeQXazMS9i\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__6WeMHrA9maB1uUqKbniCiMtno5wZX14DCiNVYk14mWTkPujVEDkio3SwMPEp7E6N2asG1YjFkZ\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__4WM6d6spASZe3MLNrmhKp1dFK68V\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__pTktYQvLxYnroo5Ggo58fPmvs3T tqw_86gA3mGGMkuijiEJfvAcAVretXjzxK7g3\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__L9ewFRkwTZhLzt5mHZWcgRjH1AE2bmtCni1ze4NeGGBWd4rebFv4tBK5zykzk4PyiEAseMWJcd\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__pTktYQvLxYnroo5Ggo58fPmvs3T\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__2REaH98i14HFEYciB4guURubHgUV tqw_APdtV8ebxoRKGoPqtmgWcMHSfswCtupF2\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__LiDphZwC8Ycys4BfeZnQoktZLFooFCrNu2R6TxGE452puq5TZsYkMgbdDQSZLBHgcCHoVG7NC5\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__2REaH98i14HFEYciB4guURubHgUV\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__3Pah8KLs9nDmW9G6xGneAEaVqco tqw_25sJ3Wm6s5x3nCRgaxyFuopVwP9Go3hgn\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__DvLPzdtXnBpouXzr3RDkGveAn2GNFhgPoWKLmZHSV2AmAwdnzhp11YpbDu9PZxEFQxmnnxjTYX\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3Pah8KLs9nDmW9G6xGneAEaVqco\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH iq__2TBLvH4suhraVHfpcdoRoZadLFSn tqw_9GGY6j94ewDqmmXjLY81VHkWikePAjB41\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__GhPV4dD1jH93vpnj9dryf6H5wn2dpMk6cscqrfa5j8GL9dLVWWesZwNpRx4CjAWzPuwJ3oJkN\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__2TBLvH4suhraVHfpcdoRoZadLFSn\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content objects from ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH\");"
+  },
+  {
+    "signature": " Log(\"Filter options:\");"
+  },
+  {
+    "signature": " Log({});"
+  },
+  {
+    "signature": " Log(\"Retrieving content objects from ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH\");"
+  },
+  {
+    "signature": " Log(\"Filter options:\");"
+  },
+  {
+    "signature": " Log({\n  \"sort\": \"name\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content objects from ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH\");"
+  },
+  {
+    "signature": " Log(\"Filter options:\");"
+  },
+  {
+    "signature": " Log({\n  \"sort\": \"name\",\n  \"sortDesc\": true\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content objects from ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH\");"
+  },
+  {
+    "signature": " Log(\"Filter options:\");"
+  },
+  {
+    "signature": " Log({\n  \"sort\": [\n    \"name\"\n  ],\n  \"filter\": [\n    {\n      \"key\": \"name\",\n      \"type\": \"gte\",\n      \"filter\": \"Test Object 3\"\n    },\n    {\n      \"key\": \"name\",\n      \"type\": \"lte\",\n      \"filter\": \"Test Object 7\"\n    }\n  ]\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content objects from ilib3zjtkDYnCXEygRXLdwmLbkiYNJjH\");"
+  },
+  {
+    "signature": " Log(\"Filter options:\");"
+  },
+  {
+    "signature": " Log({\n  \"sort\": \"name\",\n  \"select\": [\n    \"name\"\n  ]\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object versions: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object:  hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object owner: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_7tk7chq1AQ93VPKo4Yhb6knJqC7EoTUB8\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__LRHHrTRn23KCY4mu5jJ8DhZGDTeoXP6GTBM371oANnt7eVwgWQJo1BhZMTGWkvECxzU9Fmy3jo\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X tqw_eWdYYX6Znpb7rdqbdmxwbGRwc79C14H7 \\n       Subtree: eluv.caps.iusr315NdZw7kWywXVDTX8psFHfLD4iN\");"
+  },
+  {
+    "signature": " Log(\"Merging metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_eWdYYX6Znpb7rdqbdmxwbGRwc79C14H7\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"eluv.caps.iusr315NdZw7kWywXVDTX8psFHfLD4iN\": \"BJJlq4qGiWMep6rRIlmUyC8nGYWQwdTuws8I3dwYki/IzSXCo6mYBGxXtY3iJr8Cu+0KBpT4fDDz8FY0myvwQKPInVBDAyU0g7F/LybqnPWIinrRAbMv/kaRmzUUNtifegn8vOWP38UmEB84kHLHhnyU+nKVYL+X0r6Lfi43nXJLf3L1T7I2VSHZiaGjPlwme0tpLHsKyjLkyBy8oyi0XLYuBFKcxd888QBgu01EhNmDYQUh8q/45lCkH9mkV/y/F0Y2Tqa9tAznbVVRHRBNorhFuxye9rwHiwu0ww2vYEPGQSe+RahU2YF1bVcIBRVTpQwjkLPVC3Q5o1Du2cKTsBPWi9bVxd+hxayMpfXOCEFbWYP2+66MVSMGTMqSDSY5LcAc/VFzSPb7AKCs4nFVUTpM0Ol8lOCGWCLiJFk/oOEPNUdAC1rnhCSe/aT6Okv7O2sg2CwzgnhcKnjYkJIkoTyX51R7B3R9Af7NpAQyC63k\",\n  \"eluv.caps.ikms2s41ivY1BDJ8K5PJyAtTtJZQcHZ\": \"BJJlq4qGiWMep6rRIlmUyC8nGYWQwdTuws8I3dwYki/IzSXCo6mYBGxXtY3iJr8Cu+0KBpT4fDDz8FY0myvwQKMF04y8ymqQjn2lhO1k3cRkJgxd8cich5mvv6vjOQ3aAYtXsrwNM2TB+dyUEjMywX58cgiFPsIKMh7VYF6/ygnlIpjM0ycXoegWILJkQ4HGrHTJwJMe6SdFEvGuVFzwu+U9VKNYaeCx6limOvqD4pJCJdW35zMHx8ewKdmCb6Fl2ed8lzkOt+T/17sQ+V1MoRqBEBj8G0Njgt62Fnvzp2Omu2mXMQpMRzNpvmd6WjxqMEP0jOfDXXomd6D273Q5Aik7+n7vDUxreo8TdpZxe81cbQU49+ZJ1hVf9I7KAzd6IXdNoLOqINFkdpCQ38I+Ho3u/sa7KK+D5yHCf3jbkpqwA6dLBHyoQXjkjuorvNLNPT/K1eyMQH6nmTYde10GiyRt6EkXjP+BUKCkcntnWj07\"\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_eWdYYX6Znpb7rdqbdmxwbGRwc79C14H7\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__AXeK3BgANWxCLdG8ERnuCr14iuvdVz8hkRqyV5LEAkTpRyNWLPtrEV36MLtjAAD5qd9QgPS96H\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_29uXUboDch3qXainuXVfxwA8jmAyw2soq\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__vQARpf6NDzxUn3fmnTHCUjPZNrGF1bYDMvPpcMwoAidN3xMvBjmZx8TMeDJmY1tjdXWbBmXso\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_6pjm3DE8dhS5KJNfE4nYHXeNhoDPNQryb\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__88dxvLswyPTQE22XzsQaT14sBMLFWvw5BSbCu1TvHqidxCpMWAmDvFzMgouPHfcXyJ35QU2J1X\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving part: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF hqp_YSs9MXvYzpFaaaG4VTB7tfkLwqEUAb8tH8dZVNXAYBFCZid\");"
+  },
+  {
+    "signature": " Log(\"Retrieving part: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF hqpeFDcWNmfQP2XpXNzegdoRTygoG78Yy43YWk9tGMDURnKKP6Ay\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF \\n       Subtree: eluv.caps.ikms2s41ivY1BDJ8K5PJyAtTtJZQcHZ\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2fkf3hb3upAKx6CpHnBG4nUgZcns \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2fkf3hb3upAKx6CpHnBG4nUgZcns\");"
+  },
+  {
+    "signature": " Log(\"Replacing metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2fkf3hb3upAKx6CpHnBG4nUgZcns tqw_KTtz3MNZMtKxYg7VTCzzZDDs4tK2mz7qC\\n      Subtree: accessed_content/hq__88dxvLswyPTQE22XzsQaT14sBMLFWvw5BSbCu1TvHqidxCpMWAmDvFzMgouPHfcXyJ35QU2J1X\");"
+  },
+  {
+    "signature": " Log(1572986127157);"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF \\n       Subtree: video_tags\");"
+  },
+  {
+    "signature": " Log(\"Retrieving parts: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2fkf3hb3upAKx6CpHnBG4nUgZcns tqw_KTtz3MNZMtKxYg7VTCzzZDDs4tK2mz7qC\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__HLDVp81TZZnuTFKd8Bjy5t4Mi56cvGNywmRZbvhsXs351v9BzCaehcWBubtr6E8kTRqvy4zwBm\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__2fkf3hb3upAKx6CpHnBG4nUgZcns\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Uploading files: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_7E9k9RjmcCUm6ztMKFVbeWPwkcCUB6Xf3\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": {\n    \"path\": \"testDirectory/File 1\",\n    \"type\": \"file\",\n    \"mime_type\": \"text/plain\",\n    \"size\": 100000\n  },\n  \"1\": {\n    \"path\": \"testDirectory/File 2\",\n    \"type\": \"file\",\n    \"mime_type\": \"text/plain\",\n    \"size\": 100000\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Creating file upload job: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_7E9k9RjmcCUm6ztMKFVbeWPwkcCUB6Xf3\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": {\n    \"path\": \"testDirectory/File 1\",\n    \"type\": \"file\",\n    \"mime_type\": \"text/plain\",\n    \"size\": 100000\n  },\n  \"1\": {\n    \"path\": \"testDirectory/File 2\",\n    \"type\": \"file\",\n    \"mime_type\": \"text/plain\",\n    \"size\": 100000\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Upload ID: iqfjQGCczHXsafE1P1EzwBTL2a\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"iqfuNEiiB65HTTLDdaMGSnviua\"\n});"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_7E9k9RjmcCUm6ztMKFVbeWPwkcCUB6Xf3\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__4roUEk8TH17TAwaBfoc1vjkTjnMd4gq6VEVev82iiAHozxAxbZ1s3gn84iBouqjfdPsK56AyKF\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Creating content library\");"
+  },
+  {
+    "signature": " Log(\"KMS ID: ikms2s41ivY1BDJ8K5PJyAtTtJZQcHZ\");"
+  },
+  {
+    "signature": " Log(\"Library ID: ilib2JzDGHWNKanusky3W1Anh7Fca5M4\");"
+  },
+  {
+    "signature": " Log(\"Contract address: 0x5e09c89225aa6dff5d81f5b00bf0f846b71198b3\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__2JzDGHWNKanusky3W1Anh7Fca5M4\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: library\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/library\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__42gJKSsPoLCNkmEiDopEfPSujc2e \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Replacing metadata: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__2JzDGHWNKanusky3W1Anh7Fca5M4 tqw_3jcddRSPM4SAMu4bmusmH6K6A3odtF2vV\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"abr_profile\": {\n    \"ladder_specs\": {\n      \"{\\\"media_type\\\":\\\"audio\\\",\\\"channels\\\":2}\": {\n        \"rung_specs\": [\n          {\n            \"media_type\": \"audio\",\n            \"bit_rate\": 128000,\n            \"pregenerate\": true\n          }\n        ]\n      },\n      \"{\\\"media_type\\\":\\\"video\\\",\\\"aspect_ratio_height\\\":3,\\\"aspect_ratio_width\\\":4}\": {\n        \"rung_specs\": [\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 4900000,\n            \"pregenerate\": true,\n            \"height\": 1080,\n            \"width\": 1452\n          },\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 3375000,\n            \"pregenerate\": false,\n            \"height\": 720,\n            \"width\": 968\n          },\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 1500000,\n            \"pregenerate\": false,\n            \"height\": 540,\n            \"width\": 726\n          },\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 825000,\n            \"pregenerate\": false,\n            \"height\": 432,\n            \"width\": 580\n          },\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 300000,\n            \"pregenerate\": false,\n            \"height\": 360,\n            \"width\": 484\n          }\n        ]\n      },\n      \"{\\\"media_type\\\":\\\"video\\\",\\\"aspect_ratio_height\\\":9,\\\"aspect_ratio_width\\\":16}\": {\n        \"rung_specs\": [\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 6500000,\n            \"pregenerate\": true,\n            \"height\": 1080,\n            \"width\": 1920\n          },\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 4500000,\n            \"pregenerate\": false,\n            \"height\": 720,\n            \"width\": 1280\n          },\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 2000000,\n            \"pregenerate\": false,\n            \"height\": 540,\n            \"width\": 960\n          },\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 1100000,\n            \"pregenerate\": false,\n            \"height\": 432,\n            \"width\": 768\n          },\n          {\n            \"media_type\": \"video\",\n            \"bit_rate\": 400000,\n            \"pregenerate\": false,\n            \"height\": 360,\n            \"width\": 640\n          }\n        ]\n      }\n    },\n    \"playout_formats\": {\n      \"dash-clear\": {\n        \"drm\": null,\n        \"protocol\": {\n          \"min_buffer_length\": 2,\n          \"type\": \"ProtoDash\"\n        }\n      },\n      \"dash-widevine\": {\n        \"drm\": {\n          \"type\": \"DrmWidevine\",\n          \"license_servers\": [],\n          \"enc_scheme_name\": \"cenc\",\n          \"content_id\": \"\"\n        },\n        \"protocol\": {\n          \"type\": \"ProtoDash\",\n          \"min_buffer_length\": 2\n        }\n      },\n      \"hls-aes128\": {\n        \"drm\": {\n          \"type\": \"DrmAes128\",\n          \"enc_scheme_name\": \"aes-128\"\n        },\n        \"protocol\": {\n          \"type\": \"ProtoHls\"\n        }\n      },\n      \"hls-clear\": {\n        \"drm\": null,\n        \"protocol\": {\n          \"type\": \"ProtoHls\"\n        }\n      }\n    },\n    \"segment_specs\": {\n      \"audio\": {\n        \"segs_per_chunk\": 15,\n        \"target_dur\": 2\n      },\n      \"video\": {\n        \"segs_per_chunk\": 15,\n        \"target_dur\": 2.03\n      }\n    }\n  },\n  \"name\": \"Test Media Library\",\n  \"public\": {\n    \"name\": \"Test Media Library\"\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__2JzDGHWNKanusky3W1Anh7Fca5M4 tqw_3jcddRSPM4SAMu4bmusmH6K6A3odtF2vV\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__AAU9t9ikYdvuvdpwNzU8c1wBgKpYe8nwAjbAEo2prmcNymNYc4DTsWzCAMUr8mbBSoNhT7uJA6\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__2JzDGHWNKanusky3W1Anh7Fca5M4\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Library ilib2JzDGHWNKanusky3W1Anh7Fca5M4 created\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: Production Master\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/Production Master\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 \");"
+  },
+  {
+    "signature": " Log(\"Type specified: hq__6rQT55Awj6t6kT4jHRFya6rwQVArGsth4KMeNzFEfkCyxDkQY54ME4jMetQQWjwiyDv6YmrE35\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: hq__6rQT55Awj6t6kT4jHRFya6rwQVArGsth4KMeNzFEfkCyxDkQY54ME4jMetQQWjwiyDv6YmrE35\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__45zaXofB4Gy5k1dNhRGJZb7vRMjq \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0x8a06fb2c8cf28e6d2530969e0e78a67d8d6d99cf iq__2vXoz6eDz9U8gRmT8prgEi1iPJS2\");"
+  },
+  {
+    "signature": " Log(\"Uploading files: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__2vXoz6eDz9U8gRmT8prgEi1iPJS2 tqw_Hs2ntEcsSkQLW766deZfEjQfiAuT2X8Jy\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": {\n    \"path\": \"Video.mp4\",\n    \"mime_type\": \"video/mp4\",\n    \"size\": 97944174,\n    \"type\": \"file\"\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Creating file upload job: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__2vXoz6eDz9U8gRmT8prgEi1iPJS2 tqw_Hs2ntEcsSkQLW766deZfEjQfiAuT2X8Jy\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": {\n    \"path\": \"Video.mp4\",\n    \"mime_type\": \"video/mp4\",\n    \"size\": 97944174,\n    \"type\": \"file\"\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Upload ID: iqfj13mVHiKRfcUzc46rGD3rtC\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"iqfuKVRQh4bNzHepPmFRPTdHhT\",\n  \"1\": \"iqfuTgxWdnknang4wuz7W6NCmw\",\n  \"2\": \"iqfu7FFfw4dQgFGRYHtmH21yMN\"\n});"
+  },
+  {
+    "signature": " Log(\"Calculated speed: 2.622259456080025 Mbps\");"
+  },
+  {
+    "signature": " Log(\"Proceeding with 1 concurrent upload(s)\");"
+  },
+  {
+    "signature": " Log(\"Calling bitcode method: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__2vXoz6eDz9U8gRmT8prgEi1iPJS2 tqw_Hs2ntEcsSkQLW766deZfEjQfiAuT2X8Jy\");"
+  },
+  {
+    "signature": " Log(\"POST qlibs/ilib2JzDGHWNKanusky3W1Anh7Fca5M4/q/tqw_Hs2ntEcsSkQLW766deZfEjQfiAuT2X8Jy/call/media/production_master/init\");"
+  },
+  {
+    "signature": " Log(\"Query Params:\");"
+  },
+  {
+    "signature": " Log({});"
+  },
+  {
+    "signature": " Log(\"Body:\");"
+  },
+  {
+    "signature": " Log({});"
+  },
+  {
+    "signature": " Log(\"Headers:\");"
+  },
+  {
+    "signature": " Log({\n  \"Authorization\": \"Bearer eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDhmYTZhODI4NjI0MzUyMTYzZGY4ZWQ3YzFmYWE3NDVjMWFiMzkzOWIiLCJ0eF9pZCI6IjB4YmMzNDkxNDk3ZWViODI4MTI5ZWZiMWMxOWQ0M2JhNmZiYjBkYzg0ZjFmODQ1ZGIxOTQ1ZWVlMDhmNDY2NjA1OSIsInFsaWJfaWQiOiJpbGliMkp6REdIV05LYW51c2t5M1cxQW5oN0ZjYTVNNCJ9.RVMyNTZLXzVSbmViWVp4UlBxVVhScjlMbzlVOEtpV05XWmtLdVJtMnM2REZpanB1cU5tV2FXaWJQZGFzTnhITGNCRTJUc2pvVGFtQ3F3anNTdG9zdVNldEw2YTloajFN\"\n});"
+  },
+  {
+    "signature": " Log(\"Merging metadata: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__2vXoz6eDz9U8gRmT8prgEi1iPJS2 tqw_Hs2ntEcsSkQLW766deZfEjQfiAuT2X8Jy\\n      Subtree: /\");"
+  },
+  {
+    "signature": " Log({\n  \"name\": \"Production Master Test\",\n  \"description\": \"Production Master Test Description\",\n  \"public\": {\n    \"name\": \"Production Master Test\",\n    \"description\": \"Production Master Test Description\"\n  },\n  \"elv_created_at\": 1572986187007,\n  \"test\": \"master\"\n});"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__2vXoz6eDz9U8gRmT8prgEi1iPJS2 tqw_Hs2ntEcsSkQLW766deZfEjQfiAuT2X8Jy\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__Bs1ZoN5Zha64ycUUkRkXMVUNTBVvk9mft1b4mXawc5nF3U83cupB1inCAYKx3g7xhrvmDFg3xS\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__2vXoz6eDz9U8gRmT8prgEi1iPJS2\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata:  hq__Bs1ZoN5Zha64ycUUkRkXMVUNTBVvk9mft1b4mXawc5nF3U83cupB1inCAYKx3g7xhrvmDFg3xS \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: ABR Master\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in content space metadata...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes/ABR Master\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by name in available types...\");"
+  },
+  {
+    "signature": " Log(\"Looking up all available content types\");"
+  },
+  {
+    "signature": " Log(\"Retrieving contentTypes contract collection for user 0x8FA6A828624352163dF8ed7C1FaA745C1AB3939b\");"
+  },
+  {
+    "signature": " Log(\"Personally available types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x417fF711191E0128700C731895FA6C0593c5d782\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__2zqa4gZ8N3DH1QWakR2e5UowDLF1 \\n       Subtree: contentTypes\");"
+  },
+  {
+    "signature": " Log(\"Content space types:\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": \"0x9a4aab1d4408d14deab7ccd49be106b28482fa49\",\n  \"1\": \"0xa1a6f3fabb5e306974a3c8d08c345297757592f8\",\n  \"2\": \"0x96a84140dc5613f1441ad0326de2e845638074f2\",\n  \"3\": \"0xd0c02bc765130b77e327491f4446ad4c3568d36e\",\n  \"4\": \"0x3dc1b810a579389bbc5dc484e621d0066d8bfccb\",\n  \"5\": \"0xa6b8cfa0b9ca98e82d3e54176566f3e56cd2e225\",\n  \"6\": \"0xc51140942f0814157e295b3a7d0c9790dd9c68e3\",\n  \"7\": \"0xd969a2b1683b88d6b93c2cc4e355bd5a3774ee3b\",\n  \"8\": \"0x21e8cf5038429e3f30dc91830b5981caa6e60608\",\n  \"9\": \"0xdd83ef98093b547d737538ef85f1a62e45b1c5d4\",\n  \"10\": \"0x495c408fa4ccf680d4c997bc8d2be2a6dd6a8069\",\n  \"11\": \"0xcea522e8fb528ec69963271bf86d4c8e314e92b3\",\n  \"12\": \"0x831220607349c2abbef714c1bcfe29387dab7b8f\",\n  \"13\": \"0xa2147a77569790bf0ed2fc495c3dcf791e09de41\"\n});"
+  },
+  {
+    "signature": " Log(\"Creating content object: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 \");"
+  },
+  {
+    "signature": " Log(\"Type specified: hq__Kru6PPKc9erztaxvcDNyUii6LmG9cXjMee2pcPQKwMz6ntq65AP6yNwsePvJ96sMFvZxb5uNkx\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content type: hq__Kru6PPKc9erztaxvcDNyUii6LmG9cXjMee2pcPQKwMz6ntq65AP6yNwsePvJ96sMFvZxb5uNkx\");"
+  },
+  {
+    "signature": " Log(\"Looking up type by ID...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1 iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Deploying contract...\");"
+  },
+  {
+    "signature": " Log(\"Contract deployed: 0xd8c228ae585482f7b851d777414bbec2c6807f43 iq__429e2qfKW7TRWjdtx2ZmLomyKpyg\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata:  hq__Bs1ZoN5Zha64ycUUkRkXMVUNTBVvk9mft1b4mXawc5nF3U83cupB1inCAYKx3g7xhrvmDFg3xS \\n       Subtree: public/name\");"
+  },
+  {
+    "signature": " Log(\"Calling bitcode method: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 iq__429e2qfKW7TRWjdtx2ZmLomyKpyg tqw_7hbveMLBhoBoSH4uBCKneAaL28TmDaz1y\");"
+  },
+  {
+    "signature": " Log(\"POST qlibs/ilib2JzDGHWNKanusky3W1Anh7Fca5M4/q/tqw_7hbveMLBhoBoSH4uBCKneAaL28TmDaz1y/call/media/abr_mezzanine/init\");"
+  },
+  {
+    "signature": " Log(\"Query Params:\");"
+  },
+  {
+    "signature": " Log({});"
+  },
+  {
+    "signature": " Log(\"Body:\");"
+  },
+  {
+    "signature": " Log({\n  \"offering_key\": \"default\",\n  \"variant_key\": \"default\",\n  \"prod_master_hash\": \"hq__Bs1ZoN5Zha64ycUUkRkXMVUNTBVvk9mft1b4mXawc5nF3U83cupB1inCAYKx3g7xhrvmDFg3xS\"\n});"
+  },
+  {
+    "signature": " Log(\"Headers:\");"
+  },
+  {
+    "signature": " Log({\n  \"Authorization\": \"Bearer eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDhmYTZhODI4NjI0MzUyMTYzZGY4ZWQ3YzFmYWE3NDVjMWFiMzkzOWIiLCJ0eF9pZCI6IjB4NDMyYzIzZmE2MjZkZjNiNTNmNmVkZjhkNDllNTYxMDVlNWMwYTczN2Y0NmQ1MDg3ZDQzOTU5NjBiMzMyZWE3OSIsInFsaWJfaWQiOiJpbGliMkp6REdIV05LYW51c2t5M1cxQW5oN0ZjYTVNNCJ9.RVMyNTZLX0NVa04xemd4NTZ0UXduazhwc2hYVnVWUlBqZ2hNbnA2THpiRVNNU2dFV3FpYWsxdmJWVFpEZlp5WmM5WDgxcTdvYUtvNlNReEczZWZzc1FDM1dvVTN4c1JE,Bearer eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDhmYTZhODI4NjI0MzUyMTYzZGY4ZWQ3YzFmYWE3NDVjMWFiMzkzOWIiLCJ0eF9pZCI6IjB4ZTc2Yzk4ZjAxOGQwMDc3MGI4MzBkYTgxODYxMmMzZmNkMmEyMDI2MzYyYzYwYmViNjYyZWE5OWY5MDdkYjdmNCIsInFsaWJfaWQiOiJpbGliMkp6REdIV05LYW51c2t5M1cxQW5oN0ZjYTVNNCJ9.RVMyNTZLX0dIbkxUODZzZ0s2WEVGakU4RFI4ZWE0SjJBNGhuaUdmNjR5MmJWTWl5ZHpQbUV3YUdiWXNyVEgyenpKZGM1NHpjd2h6YW8yNDVOOFdRU1N5VXdiVG03TWJo,Bearer eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDhmYTZhODI4NjI0MzUyMTYzZGY4ZWQ3YzFmYWE3NDVjMWFiMzkzOWIiLCJ0eF9pZCI6IjB4NjdlZGVlMDEwMmRhMTBkMThjMDQ5MDZlYzlmNjE3OTVmMDkzYmIwNmZlMjEwOTEzMmViNTMxNDU4NzVmYjcwMyJ9.RVMyNTZLX0czSzVGTmV6YkhaZVMyV3lNa2JxRUNrWVM3a0NMQXdiOWZEcmtwSnZiRW5yVW5wWWFRYXlQY2I1QVpjMmJqRFoxdFpyaEZwazlEN25GaWtCYXYxdTQxWkJn\"\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilib2JzDGHWNKanusky3W1Anh7Fca5M4 undefined \\n       Subtree: abr_mezzanine/offerings\");"
+  },
+  {
+    "signature": " Log(\"Setting access charge: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF 0.5\");"
+  },
+  {
+    "signature": " Log(\"Retrieving access info: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log({\n  \"0\": 10,\n  \"1\": 10,\n  \"2\": {\n    \"_hex\": \"0x06f05b59d3b20000\"\n  }\n});"
+  },
+  {
+    "signature": " Log(\"Retrieving content object metadata: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF \\n       Subtree: /\");"
+  },
+  {
+    "signature": " Log(\"Querying contract events 0x341c59b16a9b2664b7bb4fc20306faef50b6cf14 - Blocks 99030 to 100029\");"
+  },
+  {
+    "signature": " Log(\"Querying events - Blocks 100026 to 100030\");"
+  },
+  {
+    "signature": " Log(\"Querying events - Blocks 100011 to 100030\");"
+  },
+  {
+    "signature": " Log(\"Querying events - Blocks 100031 to 100030\");"
+  },
+  {
+    "signature": " Log(\"Querying events - Blocks 100025 to 100030\");"
+  },
+  {
+    "signature": " Log(\"Querying events - Blocks 100010 to 100020\");"
+  },
+  {
+    "signature": " Log(\"Querying events - Blocks 99931 to 100030\");"
+  },
+  {
+    "signature": " Log(\"Querying events - Blocks 99931 to 100030\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\\n      objectId: undefined\\n      versionHash: undefined\\n      partHash: undefined\\n      rep: undefined\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: undefined\\n      partHash: undefined\\n      rep: undefined\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\\n      partHash: undefined\\n      rep: undefined\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: undefined\\n      partHash: hqp_5b3v6fKs2v4XqNCLwAWXj1q5Dkh8TUk5BNVZX1tVBHihrDRX\\n      rep: undefined\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: undefined\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\\n      partHash: hqp_5b3v6fKs2v4XqNCLwAWXj1q5Dkh8TUk5BNVZX1tVBHihrDRX\\n      rep: undefined\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: undefined\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\\n      partHash: undefined\\n      rep: undefined\\n      publicRep: undefined\\n      call: method\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: undefined\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\\n      partHash: undefined\\n      rep: image\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: undefined\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\\n      partHash: hqp_5b3v6fKs2v4XqNCLwAWXj1q5Dkh8TUk5BNVZX1tVBHihrDRX\\n      rep: undefined\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: undefined\\n      partHash: undefined\\n      rep: undefined\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {\\n  \\\"param1\\\": \\\"value1\\\",\\n  \\\"param2\\\": \\\"value2\\\",\\n  \\\"param3\\\": \\\"value3\\\"\\n}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: undefined\\n      partHash: undefined\\n      rep: undefined\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: true\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: undefined\\n      partHash: undefined\\n      rep: image\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: false\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Building Fabric URL:\\n      libraryId: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\\n      objectId: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\\n      versionHash: undefined\\n      partHash: undefined\\n      rep: image\\n      publicRep: undefined\\n      call: undefined\\n      channelAuth: false\\n      noAuth: true\\n      noCache: false\\n      queryParams: {}\");"
+  },
+  {
+    "signature": " Log(\"Opening content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Finalizing content draft: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF tqw_DThdE8vv9T4MkcxSanzHwtutVrPvrTy4P\");"
+  },
+  {
+    "signature": " Log(\"Finalized: hq__AKsdBFcw2SjcpvET5uZFmHFTzE7uTiwAkpGZLn4Y2zAbuJmzidk72SFoX16ANR7Mz4xzWwjczM\");"
+  },
+  {
+    "signature": " Log(\"Publishing: iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Awaiting commit confirmation...\");"
+  },
+  {
+    "signature": " Log(\"Retrieving parts: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Deleting content version: hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Deleting content version: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Retrieving content object: ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\");"
+  },
+  {
+    "signature": " Log(\"Deleting access group 0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\");"
+  }
+]

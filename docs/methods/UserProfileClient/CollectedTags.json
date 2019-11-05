@@ -13,6 +13,6 @@
   },
   {
     "signature": "async CollectedTags();",
-    "result": "{\n  \"boat\": {\n    \"aggregate\": 1.5,\n    \"occurrences\": 2\n  },\n  \"buoy\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 1,\n    \"occurrences\": 2\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  },\n  \"duck\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"mayhem\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"shark\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
+    "result": "{\n  \"boat\": {\n    \"aggregate\": 1.5,\n    \"occurrences\": 2\n  },\n  \"buoy\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 1,\n    \"occurrences\": 2\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  },\n  \"duck\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"mayhem\": {\n    \"occurrences\": 1,\n    \"aggregate\": 0.5\n  },\n  \"shark\": {\n    \"occurrences\": 1,\n    \"aggregate\": 0.8\n  }\n}"
   }
 ]

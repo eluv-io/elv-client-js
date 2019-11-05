@@ -1,8 +1,8 @@
 [
   {
-    "signature": "async DeletePart({\n  \"libraryId\": \"ilib3eXfnnhHfDCHsFGb7VusYjx5Wr5g\",\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"writeToken\": \"tqw_C77TbASUUJJSthSug4MbiJaqGcRPtLmkG\",\n  \"partHash\": \"hqp_AXZTqFxw7XLPVGtCxz8rCxRVP68q46BQ1BJvxQnTFcRcesUh\"\n});"
+    "signature": "async DeletePart({\n  \"libraryId\": \"ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\",\n  \"objectId\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\",\n  \"writeToken\": \"tqw_DThdE8vv9T4MkcxSanzHwtutVrPvrTy4P\",\n  \"partHash\": \"hqp_YSs9MXvYzpFaaaG4VTB7tfkLwqEUAb8tH8dZVNXAYBFCZid\"\n});"
   },
   {
-    "signature": "async DeletePart({\n  \"libraryId\": \"ilib3eXfnnhHfDCHsFGb7VusYjx5Wr5g\",\n  \"objectId\": \"iq__2PZVisWxFW3Fm9vXamCbu7K8yS7g\",\n  \"writeToken\": \"tqw_C77TbASUUJJSthSug4MbiJaqGcRPtLmkG\",\n  \"partHash\": \"hqp_48LpN5ZvbFFxAfj6VDHkCYWhA212bgBQTUNMWdcAmTYRvwSV\"\n});"
+    "signature": "async DeletePart({\n  \"libraryId\": \"ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\",\n  \"objectId\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\",\n  \"writeToken\": \"tqw_DThdE8vv9T4MkcxSanzHwtutVrPvrTy4P\",\n  \"partHash\": \"hqp_5b3v6fKs2v4XqNCLwAWXj1q5Dkh8TUk5BNVZX1tVBHihrDRX\"\n});"
   }
 ]

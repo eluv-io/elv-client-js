@@ -116,7 +116,7 @@ class HttpClient {
         errorBody = responseType.includes("application/json") ? await response.json() : await response.text();
       }
 
-      throw {
+      const error = {
         name: "ElvHttpClientError",
         status: response.status,
         statusText: response.statusText,
@@ -125,6 +125,13 @@ class HttpClient {
         body: errorBody,
         requestParams: fetchParameters
       };
+
+      this.Log(
+        JSON.stringify(error, null, 2),
+        true
+      );
+
+      throw error;
     }
 
     this.Log(`${response.status} - ${method} ${uri.toString()}`);

@@ -61,15 +61,18 @@ const ResponseToFormat = async (format, response) => {
 };
 
 class ElvClient {
-  Log(message) {
+  Log(message, error=false) {
     if(!this.debug) { return; }
 
     if(typeof message === "object") {
       message = JSON.stringify(message);
     }
 
-    // eslint-disable-next-line no-console
-    console.log(`\n(elv-client-js#ElvClient) ${message}\n`);
+    error ?
+      // eslint-disable-next-line no-console
+      console.error(`\n(elv-client-js#ElvClient) ${message}\n`) :
+      // eslint-disable-next-line no-console
+      console.log(`\n(elv-client-js#ElvClient) ${message}\n`);
   }
 
   /**
@@ -2662,6 +2665,7 @@ class ElvClient {
     if(!masterVersionHash) {
       throw Error("Master version hash not specified");
     }
+
     const {id, write_token} = await this.CreateContentObject({
       libraryId,
       options: {
@@ -3373,14 +3377,16 @@ class ElvClient {
       ).Authorization;
     }
 
-    this.Log(`Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}`);
-    this.Log(`${constant ? "GET" : "POST"} ${path}`);
-    this.Log("Query Params:");
-    this.Log(queryParams);
-    this.Log("Body:");
-    this.Log(body);
-    this.Log("Headers:");
-    this.Log(headers);
+    this.Log(
+      `Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
+      ${constant ? "GET" : "POST"} ${path}
+      Query Params:
+      ${queryParams}
+      Body:
+      ${body}
+      Headers
+      ${headers}`
+    );
 
     return ResponseToFormat(
       format,
@@ -4487,12 +4493,15 @@ class ElvClient {
       "AccessGroupMembershipMethod",
       "CallFromFrameMessage",
       "ClearSigner",
+      "FormatBlockNumbers",
       "FrameAllowedMethods",
       "FromConfigurationUrl",
       "GenerateWallet",
       "InitializeClients",
+      "Log",
       "SetSigner",
       "SetSignerFromWeb3Provider",
+      "ToggleLogging"
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))

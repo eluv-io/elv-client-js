@@ -82,7 +82,7 @@ function () {
       var _Request = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee(_ref2) {
-        var method, path, _ref2$queryParams, queryParams, _ref2$body, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, uri, fetchParameters, response, responseType, errorBody;
+        var method, path, _ref2$queryParams, queryParams, _ref2$body, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, uri, fetchParameters, response, responseType, errorBody, error;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
@@ -125,7 +125,7 @@ function () {
 
               case 13:
                 if (response.ok) {
-                  _context.next = 34;
+                  _context.next = 36;
                   break;
                 }
 
@@ -185,7 +185,7 @@ function () {
                 errorBody = _context.t1;
 
               case 33:
-                throw {
+                error = {
                   name: "ElvHttpClientError",
                   status: response.status,
                   statusText: response.statusText,
@@ -194,12 +194,14 @@ function () {
                   body: errorBody,
                   requestParams: fetchParameters
                 };
+                this.Log(JSON.stringify(error, null, 2), true);
+                throw error;
 
-              case 34:
+              case 36:
                 this.Log("".concat(response.status, " - ").concat(method, " ").concat(uri.toString()));
                 return _context.abrupt("return", response);
 
-              case 36:
+              case 38:
               case "end":
                 return _context.stop();
             }

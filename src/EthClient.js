@@ -171,7 +171,7 @@ class EthClient {
     overrides={},
     signer
   }) {
-    this.Log(`Deploying contract with args [${args.join(", ")}]`);
+    this.Log(`Deploying contract with args [${constructorArgs.join(", ")}]`);
 
     signer = signer.connect(this.Provider());
     this.ValidateSigner(signer);
