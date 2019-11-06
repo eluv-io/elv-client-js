@@ -1321,6 +1321,7 @@ class ElvClient {
       return await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
+          queryParams: {resolve: false},
           method: "GET",
           path: path
         })
@@ -1742,6 +1743,56 @@ class ElvClient {
         method: "GET",
         path: path,
       })
+    );
+  }
+
+  /**
+   * Create links
+   *
+   * Expected format of links:
+   *
+   [
+     {
+        path: string (path to link)
+        target: string (path to target file),
+        targetHash: string (optional, for cross-object links)
+      }
+   ]
+   * @methodGroup Parts and Files
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Array<Object>} links - Link specifications
+   */
+  async CreateLinks({
+    libraryId,
+    objectId,
+    writeToken,
+    links=[]
+  }) {
+    await links.limitedMap(
+      5,
+      async info => {
+        const path = info.path.replace(/^(\/|\.)+/, "");
+
+        let target = info.target.replace(/^(\/|\.)+/, "");
+        if(info.targetHash) {
+          target = `/qfab/${info.targetHash}/files/${target}`;
+        } else {
+          target = `./files/${target}`;
+        }
+
+        await this.ReplaceMetadata({
+          libraryId,
+          objectId,
+          writeToken,
+          metadataSubtree: path,
+          metadata: {
+            "/": target
+          }
+        });
+      }
     );
   }
 
@@ -3535,9 +3586,9 @@ class ElvClient {
    *
    * @methodGroup URL Generation
    * @namedParams
-   * @param {string=} libraryId - ID of an library - Required if versionHash not specified
+   * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
-   * @param {string=} versionHash - Hash of an object version - Required if libraryId is not specified
+   * @param {string=} versionHash - Hash of an object version
    * @param {string} filePath - Path to the content object file
    * @param {Object=} queryParams - Query params to add to the URL
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -3564,6 +3615,66 @@ class ElvClient {
         ...queryParams,
         authorization: authorizationToken
       }
+    });
+  }
+
+  /**
+   * Generate a URL to the specified file link with appropriate authentication
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string=} libraryId - ID of an library
+   * @param {string=} objectId - ID of an object
+   * @param {string=} versionHash - Hash of an object version
+   * @param {string} linkPath - Path to the content object link
+   * @param {string=} mimeType - Mime type to use when rendering the file
+   * @param {Object=} queryParams - Query params to add to the URL
+   * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+   * whether such a request exists in the client cache. This request will not be cached.
+   *
+   * @returns {Promise<string>} - URL to the specified file with authorization token
+   */
+  async LinkUrl({libraryId, objectId, versionHash, linkPath, mimeType, queryParams={}, noCache=false}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    let path;
+
+    if(libraryId) {
+      path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
+    } else {
+      path = UrlJoin("q", versionHash, "meta", linkPath);
+    }
+
+    let authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+
+    const linkInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      metadataSubtree: UrlJoin(linkPath)
+    });
+
+    if(linkInfo) {
+      const targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
+      if(targetHash) {
+        authorizationToken = [
+          authorizationToken,
+          await this.authClient.AuthorizationToken({versionHash: targetHash, noCache})
+        ];
+      }
+    }
+
+    queryParams = {
+      ...queryParams,
+      resolve: true,
+      authorization: authorizationToken
+    };
+
+    if(mimeType) { queryParams["header-accept"] = mimeType; }
+
+    return this.HttpClient.URL({
+      path: path,
+      queryParams
     });
   }
 

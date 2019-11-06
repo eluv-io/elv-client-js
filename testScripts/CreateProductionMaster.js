@@ -144,7 +144,7 @@ if(metadata) {
   } catch(error) {
     console.error("Error parsing metadata:");
     console.error(error);
-    return
+    return;
   }
 }
 
