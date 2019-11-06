@@ -117,7 +117,7 @@ function () {
                 _context.t0 = _context["catch"](4);
                 response = {
                   ok: false,
-                  status: 418,
+                  status: 500,
                   statusText: "ElvClient Error: " + _context.t0.message,
                   url: uri.toString(),
                   stack: _context.t0.stack

@@ -1810,8 +1810,9 @@ class ElvClient {
    * @param {string} accessKey - AWS access key
    * @param {string} secret - AWS secret
    * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
-   * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
-   * - Format: { done: true, resolve: 'completed - (1/1)', download: 'completed - (0/0)' }
+   * @param {function=} callback - If specified, will be periodically called with current upload status
+   * - Arguments (copy): { done: boolean, uploaded: number, total: number, uploadedFiles: number, totalFiles: number, fileStatus: Object }
+   * - Arguments (reference): { done: boolean, uploadedFiles: number, totalFiles: number }
    */
   async UploadFilesFromS3({
     libraryId,
@@ -1869,23 +1870,43 @@ class ElvClient {
     while(true) {
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const {ingest, error} = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: id});
+      const status = await this.UploadStatus({libraryId, objectId, writeToken, uploadId: id});
 
-      if(error) {
-        throw error;
+      if(status.errors && status.errors.length > 1) {
+        throw status.errors.join("\n");
       }
 
-      if(callback) {
-        callback({
-          done: ingest.done,
-          resolve: ingest.resolve,
-          download: ingest.download
-        });
+      let done = false;
+      if(copy) {
+        done = status.ingest_copy.done;
+
+        if(callback) {
+          const progress = status.ingest_copy.progress;
+
+          callback({
+            done,
+            uploaded: progress.bytes.completed,
+            total: progress.bytes.total,
+            uploadedFiles: progress.files.completed,
+            totalFiles: progress.files.total,
+            fileStatus: progress.files.details
+          });
+        }
+      } else {
+        done = status.add_reference.done;
+
+        if(callback) {
+          const progress = status.add_reference.progress;
+
+          callback({
+            done,
+            uploadedFiles: progress.files.completed,
+            totalFiles: progress.files.total,
+          });
+        }
       }
 
-      if(ingest.done) {
-        break;
-      }
+      if(done) { break; }
     }
   }
 
@@ -4664,7 +4685,9 @@ class ElvClient {
       this.Log(
         `Frame Message Error:
         Method: ${message.calledMethod}
-        Arguments: ${JSON.stringify(message.args, null, 2)}`
+        Arguments: ${JSON.stringify(message.args, null, 2)}
+        Error: ${typeof error === "object" ? JSON.stringify(error, null, 2) : error}`,
+        true
       );
 
       // eslint-disable-next-line no-console
