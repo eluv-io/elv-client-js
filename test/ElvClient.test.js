@@ -9,6 +9,14 @@ Object.defineProperty(global.self, "crypto", {
   },
 });
 
+const Fetch = (input, init={}) => {
+  if(typeof fetch === "undefined") {
+    return (require("node-fetch")(input, init));
+  } else {
+    return fetch(input, init);
+  }
+};
+
 const UrlJoin = require("url-join");
 const URI = require("urijs");
 const BaseLibraryContract = require("../src/contracts/BaseLibrary");
@@ -864,6 +872,56 @@ describe("Test ElvClient", () => {
       expect(files.testDirectory).toBeDefined();
       expect(files.testDirectory["File 1"]).toBeDefined();
       expect(files.testDirectory["File 2"]).toBeDefined();
+    });
+
+    test("Create Local File Links", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      await client.CreateLinks({
+        libraryId,
+        objectId,
+        writeToken,
+        links: [
+          {
+            target: "testDirectory/File 1",
+            path: "myLink"
+          },
+          {
+            target: "testDirectory/File 2",
+            path: "links/myLink2"
+          }
+        ]
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Create Link URLs", async () => {
+      const link1 = await client.LinkUrl({
+        libraryId,
+        objectId,
+        linkPath: "myLink",
+        mimeType: "application/octet-stream"
+      });
+
+      expect(link1).toBeDefined();
+      expect(decodeURIComponent(link1).includes("header-accept=application/octet-stream")).toBeTruthy();
+
+      const data = await (await Fetch(link1)).arrayBuffer();
+      expect(new Uint8Array(data).toString()).toEqual(new Uint8Array(testFile1).toString());
+
+      const link2 = await client.LinkUrl({
+        libraryId,
+        objectId,
+        linkPath: "links/myLink2",
+        mimeType: "image/*"
+      });
+
+      expect(link2).toBeDefined();
+      expect(decodeURIComponent(link2).includes("header-accept=image/*")).toBeTruthy();
+
+      const data2 = await (await Fetch(link2)).arrayBuffer();
+      expect(new Uint8Array(data2).toString()).toEqual(new Uint8Array(testFile2).toString());
     });
   });
 
