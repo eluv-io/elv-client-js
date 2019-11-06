@@ -83,7 +83,7 @@ class HttpClient {
     } catch(error) {
       response = {
         ok: false,
-        status: 418,
+        status: 500,
         statusText: "ElvClient Error: " + error.message,
         url: uri.toString(),
         stack: error.stack
