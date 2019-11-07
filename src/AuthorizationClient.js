@@ -22,11 +22,26 @@ const ACCESS_TYPES = {
 };
 
 class AuthorizationClient {
-  constructor({client, contentSpaceId, noCache=false, noAuth=false}) {
+  Log(message, error=false) {
+    if(!this.debug) { return; }
+
+    if(typeof message === "object") {
+      message = JSON.stringify(message);
+    }
+
+    error ?
+      // eslint-disable-next-line no-console
+      console.error(`\n(elv-client-js#AuthorizationClient) ${message}\n`) :
+      // eslint-disable-next-line no-console
+      console.log(`\n(elv-client-js#AuthorizationClient) ${message}\n`);
+  }
+
+  constructor({client, contentSpaceId, debug=false, noCache=false, noAuth=false}) {
     this.client = client;
     this.contentSpaceId = contentSpaceId;
     this.noCache = noCache;
     this.noAuth = noAuth;
+    this.debug = debug;
 
     this.accessTransactions = {
       spaces: {},
@@ -106,52 +121,6 @@ class AuthorizationClient {
     } finally {
       this.noCache = initialNoCache;
     }
-  }
-
-  async GenerateChannelContentToken({objectId, audienceData, value=0}) {
-    if(!this.noCache && this.channelContentTokens[objectId]) {
-      return this.channelContentTokens[objectId];
-    }
-
-    const nonce = Date.now() + Id.next();
-
-    const paramTypes = [
-      "address",
-      "address",
-      "uint",
-      "uint"
-    ];
-
-    let params = [
-      this.client.signer.address,
-      Utils.HashToAddress(objectId),
-      value,
-      nonce
-    ];
-
-    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-    params[4] = await this.Sign(packedHash);
-
-    let stateChannelApi = "elv_channelContentRequest";
-    if(audienceData) {
-      stateChannelApi = "elv_channelContentRequestContext";
-      params[5] = JSON.stringify(audienceData);
-    }
-
-    const stateChannelUri = await this.KMSUrl({objectId});
-    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
-    const payload = await stateChannelProvider.send(stateChannelApi, params);
-
-    const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
-    const multiSig = Utils.FormatSignature(signature);
-
-    const token = `${payload}.${Utils.B64(multiSig)}`;
-
-    if(!this.noCache) {
-      this.channelContentTokens[objectId] = token;
-    }
-
-    return token;
   }
 
   async GenerateAuthorizationToken({libraryId, objectId, versionHash, partHash, encryption, update=false, noAuth=false}) {
@@ -257,8 +226,10 @@ class AuthorizationClient {
     let accessRequest = { transactionHash: "" };
     // Make the request
     if(update) {
+      this.Log(`Making update request on ${accessType} ${id}`);
       accessRequest = await this.UpdateRequest({id, abi});
     } else {
+      this.Log(`Making access request on ${accessType} ${id}`);
       accessRequest = await this.AccessRequest({id, abi, args: accessArgs, checkAccessCharge});
     }
 
@@ -295,6 +266,10 @@ class AuthorizationClient {
       }
     }
 
+    if(accessCharge > 0) {
+      this.Log(`Access charge: ${accessCharge}`);
+    }
+
     // If access request did not succeed, no event will be emitted
     const event = await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
@@ -318,12 +293,109 @@ class AuthorizationClient {
   }
 
   async UpdateRequest({id, abi}) {
-    return await this.client.CallContractMethodAndWait({
+    const event = await this.client.CallContractMethodAndWait({
       contractAddress: Utils.HashToAddress(id),
       abi,
       methodName: "updateRequest",
       methodArgs: [],
     });
+
+    const updateRequestEvent = this.client.ExtractEventFromLogs({
+      abi,
+      event,
+      eventName: "UpdateRequest"
+    });
+
+    if(event.logs.length === 0 || !updateRequestEvent) {
+      throw Error("Update request denied");
+    }
+
+    return event;
+  }
+
+  async GenerateChannelContentToken({objectId, audienceData, value=0}) {
+    if(!this.noCache && this.channelContentTokens[objectId]) {
+      return this.channelContentTokens[objectId];
+    }
+
+    this.Log(`Making state channel access request: ${objectId}`);
+
+    const nonce = Date.now() + Id.next();
+
+    const paramTypes = [
+      "address",
+      "address",
+      "uint",
+      "uint"
+    ];
+
+    let params = [
+      this.client.signer.address,
+      Utils.HashToAddress(objectId),
+      value,
+      nonce
+    ];
+
+    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+    params[4] = await this.Sign(packedHash);
+
+    let stateChannelApi = "elv_channelContentRequest";
+    if(audienceData) {
+      stateChannelApi = "elv_channelContentRequestContext";
+      params[5] = JSON.stringify(audienceData);
+    }
+
+    const payload = await this.MakeKMSCall({
+      objectId,
+      methodName: stateChannelApi,
+      params
+    });
+
+    const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
+    const multiSig = Utils.FormatSignature(signature);
+
+    const token = `${payload}.${Utils.B64(multiSig)}`;
+
+    if(!this.noCache) {
+      this.channelContentTokens[objectId] = token;
+    }
+
+    return token;
+  }
+
+  async ChannelContentFinalize({objectId, audienceData, percent=0}) {
+    this.Log(`Making state channel finalize request: ${objectId}`);
+
+    const nonce = Date.now() + Id.next();
+
+    const paramTypes = [
+      "address",
+      "address",
+      "uint",
+      "uint"
+    ];
+
+    let params = [
+      this.client.signer.address,
+      Utils.HashToAddress(objectId),
+      percent,
+      nonce
+    ];
+
+    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+    params[4] = await this.Sign(packedHash);
+
+    params[5] = JSON.stringify(audienceData);
+
+    const result = await this.MakeKMSCall({
+      objectId,
+      methodName: "elv_channelContentFinalizeContext",
+      params
+    });
+
+    this.channelContentTokens[objectId] = undefined;
+
+    return result;
   }
 
   CacheTransaction({accessType, address, publicKey, update, transactionHash}) {
@@ -446,6 +518,8 @@ class AuthorizationClient {
   }
 
   async AccessComplete({id, abi, score}) {
+    this.Log(`Calling access complete on ${id} with score ${score}`);
+
     const address = Utils.HashToAddress(id);
     const requestId = this.requestIds[address];
 
@@ -510,9 +584,7 @@ class AuthorizationClient {
   }
 
   async KMSInfo({objectId, versionHash}) {
-    if(versionHash) {
-      objectId = Utils.DecodeVersionHash(versionHash).objectId;
-    }
+    if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
     // Get KMS info for the object
     const KMSInfo = await this.client.CallContractMethod({
@@ -527,19 +599,9 @@ class AuthorizationClient {
     const publicKey = Ethers.utils.computePublicKey(Utils.HashToAddress(KMSInfo[1]), false);
 
     return {
-      urls: KMSInfo[0],
+      urls: KMSInfo[0].split(","),
       publicKey
     };
-  }
-
-  async KMSUrl({objectId, versionHash}) {
-    let KMSUrls = (await this.KMSInfo({objectId, versionHash})).urls;
-
-    // Randomize order of URLs so the same one isn't chosen every time
-    KMSUrls = KMSUrls.split(",").sort(() => 0.5 - Math.random());
-
-    // Prefer HTTPS urls
-    return KMSUrls.find(url => url.startsWith("https")) || KMSUrls.find(url => url.startsWith("http"));
   }
 
   // Retrieve symmetric key for object
@@ -554,11 +616,38 @@ class AuthorizationClient {
       metadataSubtree: kmsCapId
     });
 
-    const args = [this.client.contentSpaceId, libraryId, objectId, kmsCap];
-    const stateChannelUri = await this.KMSUrl({objectId});
-    const stateChannelProvider = new Ethers.providers.JsonRpcProvider(stateChannelUri);
+    return await this.MakeKMSCall({
+      objectId,
+      methodName: "elv_getSymmetricKey",
+      params: [this.client.contentSpaceId, libraryId, objectId, kmsCap]
+    });
+  }
 
-    return await stateChannelProvider.send("elv_getSymmetricKey", args);
+  async MakeKMSCall({objectId, versionHash, methodName, params}) {
+    if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
+
+    const KMSUrls = (await this.KMSInfo({objectId, versionHash})).urls;
+
+    for(let i = 0; i < KMSUrls.length; i++) {
+      try {
+        this.Log(
+          `Making KMS request:
+          URL: ${KMSUrls[i]}
+          Method: ${methodName}
+          Params: ${params.join(", ")}`
+        );
+
+        const stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
+        return await stateChannelProvider.send(methodName, params);
+      } catch(error) {
+        this.Log(`KMS Call Error: ${error}`, true);
+
+        // If the request has been attempted on all KMS urls, throw the error
+        if(i === KMSUrls.length - 1) {
+          throw error;
+        }
+      }
+    }
   }
 
   async ReEncryptionConk({libraryId, objectId, versionHash}) {

@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
-
+import "strings.sol";
 
 /* -- Revision history --
 Editable20190222140100ML: First versioned released
@@ -15,6 +15,7 @@ Editable20190801135500ML: Made explicit the definition of parentAddress method
 
 
 contract Editable is Ownable {
+    using strings for *;
 
     bytes32 public version ="Editable20190801135500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -29,6 +30,25 @@ contract Editable is Ownable {
     uint[] public versionTimestamp;
 
     string public pendingHash;
+    bool commitPending;
+
+    function migrate(string _objectHash, string _versionHashesConcat) internal onlyOwner {
+
+        objectHash = _objectHash;
+
+        if (bytes(_versionHashesConcat).length == 0)
+            return;
+
+        var s = _versionHashesConcat.toSlice();
+        var delim = ":".toSlice();
+        var hashes = new string[](s.count(delim) + 1);
+        for(uint i = 0; i < hashes.length; i++) {
+            hashes[i] = s.split(delim).toString();
+        }
+        versionHashes = hashes;
+
+        return;
+    }
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
@@ -50,13 +70,16 @@ contract Editable is Ownable {
 
     function commit(string _objectHash) public {
         require(canCommit());
+        require(!commitPending); // don't allow two possibly different commits to step on each other - one always wins
 	    require(bytes(_objectHash).length < 128);
         pendingHash = _objectHash;
+        commitPending = true;
         emit CommitPending(contentSpace, parentAddress(), pendingHash);
     }
 
     function confirmCommit() public payable returns (bool) {
         require(canConfirm());
+        require(commitPending);
 
         if (bytes(objectHash).length > 0) {
             versionHashes.push(objectHash); // save existing version info
@@ -65,6 +88,7 @@ contract Editable is Ownable {
         objectHash = pendingHash;
         objectTimestamp = block.timestamp;
         pendingHash = "";
+        commitPending = false;
         emit VersionConfirm(contentSpace, objectHash);
         return true;
     }

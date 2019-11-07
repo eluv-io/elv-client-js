@@ -17,12 +17,13 @@ BaseContent20190528193400ML: Modified to support non-library containers
 BaseContent20190605203200ML: Splits publish and confirm logic
 BaseContent20190724203300ML: Enforces access rights in access request
 BaseContent20190801141600ML: Fixes the access rights grant for paid content
+BaseContent20191029161700ML: Removed debug statements for accessRequest
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20190801141600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20191029161700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -40,15 +41,42 @@ contract BaseContent is Editable {
     uint256 public requestID = 0;
 
     uint8 public visibility = 0;
-    uint8 public CAN_SEE = 1;
-    uint8 public CAN_ACCESS = 10;
-    uint8 public CAN_EDIT = 100;
+    uint8 public constant CAN_SEE = 1;
+    uint8 public constant CAN_ACCESS = 10;
+    uint8 public constant CAN_EDIT = 100;
 
     struct RequestData {
         address originator; // client address requesting
         uint256 amountPaid; // number of token received
         int8 status; //0 access requested, 1 access granted, -1 access refused, 2 access completed, -2 access error
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
+    }
+
+    function migrate(address _contentType,
+            address _addressKMS,
+            address _contentContractAddress,
+            // address _libraryAddress,
+            uint256 _accessCharge,
+            int _statusCode,
+            uint256 _requestID,
+            uint8 _visibility,
+            string _objectHash,
+            string _versionHashes
+        ) public onlyOwner {
+
+        contentType = _contentType;
+        addressKMS = _addressKMS;
+        contentContractAddress = _contentContractAddress;
+        // libraryAddress = _libraryAddress; // TODO: set by library factory method?
+
+        accessCharge = _accessCharge;
+        statusCode = _statusCode;
+        requestID = _requestID;
+        visibility = _visibility;
+
+        super.migrate(_objectHash, _versionHashes);
+
+        return;
     }
 
     mapping(uint256 => RequestData) public requestMap;
@@ -389,15 +417,15 @@ contract BaseContent is Editable {
         uint8 accessCode;
 
         (visibilityCode, accessCode, requiredFund) = getAccessInfo(level, custom_values, stakeholders);
-        emit DbgAccessCode(accessCode);
+        //emit DbgAccessCode(accessCode);
 
         if (accessCode == 100) { //Check if request is funded, except if user is owner or has paid already
-            //require(msg.value >= uint(requiredFund));
-            emit DbgAccess(requiredFund, msg.value, uint(requiredFund), (msg.value >= uint(requiredFund)));
+            require(msg.value >= uint(requiredFund));
+            //emit DbgAccess(requiredFund, msg.value, uint(requiredFund), (msg.value >= uint(requiredFund)));
             setPaidRights();
             accessCode = 0;
         }
-        emit DbgAccessCode(accessCode);
+        //emit DbgAccessCode(accessCode);
         require(accessCode == 0);
 
 
@@ -515,7 +543,11 @@ contract BaseContent is Editable {
     function kill() public onlyFromLibrary {
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
-            require(c.runKill() == 0);
+            uint canKill = c.runKill();
+            require((canKill == 0) || (canKill == 100));
+            if (canKill == 100) {
+                c.kill();
+            }
         }
         super.kill();
     }

@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const { ElvClient } = require("../src/ElvClient");
 const fs = require("fs");
 const Path = require("path");
@@ -142,7 +144,7 @@ if(metadata) {
   } catch(error) {
     console.error("Error parsing metadata:");
     console.error(error);
-    return
+    return;
   }
 }
 

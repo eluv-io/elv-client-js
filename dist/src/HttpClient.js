@@ -4,6 +4,8 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
@@ -25,11 +27,34 @@ var Fetch = function Fetch(input) {
 var HttpClient =
 /*#__PURE__*/
 function () {
-  function HttpClient(uris) {
+  _createClass(HttpClient, [{
+    key: "Log",
+    value: function Log(message) {
+      var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+
+      if (!this.debug) {
+        return;
+      }
+
+      if (_typeof(message) === "object") {
+        message = JSON.stringify(message);
+      }
+
+      error ? // eslint-disable-next-line no-console
+      console.error("\n(elv-client-js#HttpClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
+      console.log("\n(elv-client-js#HttpClient) ".concat(message, "\n"));
+    }
+  }]);
+
+  function HttpClient(_ref) {
+    var uris = _ref.uris,
+        debug = _ref.debug;
+
     _classCallCheck(this, HttpClient);
 
     this.uris = uris;
     this.uriIndex = 0;
+    this.debug = debug;
   }
 
   _createClass(HttpClient, [{
@@ -56,14 +81,14 @@ function () {
     value: function () {
       var _Request = _asyncToGenerator(
       /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee(_ref) {
-        var method, path, _ref$queryParams, queryParams, _ref$body, body, _ref$bodyType, bodyType, _ref$headers, headers, _ref$attempts, attempts, _ref$failover, failover, uri, fetchParameters, response, responseType, errorBody;
+      regeneratorRuntime.mark(function _callee(_ref2) {
+        var method, path, _ref2$queryParams, queryParams, _ref2$body, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, uri, fetchParameters, response, responseType, errorBody, error;
 
         return regeneratorRuntime.wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
               case 0:
-                method = _ref.method, path = _ref.path, _ref$queryParams = _ref.queryParams, queryParams = _ref$queryParams === void 0 ? {} : _ref$queryParams, _ref$body = _ref.body, body = _ref$body === void 0 ? {} : _ref$body, _ref$bodyType = _ref.bodyType, bodyType = _ref$bodyType === void 0 ? "JSON" : _ref$bodyType, _ref$headers = _ref.headers, headers = _ref$headers === void 0 ? {} : _ref$headers, _ref$attempts = _ref.attempts, attempts = _ref$attempts === void 0 ? 0 : _ref$attempts, _ref$failover = _ref.failover, failover = _ref$failover === void 0 ? true : _ref$failover;
+                method = _ref2.method, path = _ref2.path, _ref2$queryParams = _ref2.queryParams, queryParams = _ref2$queryParams === void 0 ? {} : _ref2$queryParams, _ref2$body = _ref2.body, body = _ref2$body === void 0 ? {} : _ref2$body, _ref2$bodyType = _ref2.bodyType, bodyType = _ref2$bodyType === void 0 ? "JSON" : _ref2$bodyType, _ref2$headers = _ref2.headers, headers = _ref2$headers === void 0 ? {} : _ref2$headers, _ref2$attempts = _ref2.attempts, attempts = _ref2$attempts === void 0 ? 0 : _ref2$attempts, _ref2$failover = _ref2.failover, failover = _ref2$failover === void 0 ? true : _ref2$failover;
                 uri = this.BaseURI().path(path).query(queryParams).hash("");
                 fetchParameters = {
                   method: method,
@@ -92,7 +117,7 @@ function () {
                 _context.t0 = _context["catch"](4);
                 response = {
                   ok: false,
-                  status: 418,
+                  status: 500,
                   statusText: "ElvClient Error: " + _context.t0.message,
                   url: uri.toString(),
                   stack: _context.t0.stack
@@ -100,18 +125,19 @@ function () {
 
               case 13:
                 if (response.ok) {
-                  _context.next = 33;
+                  _context.next = 36;
                   break;
                 }
 
                 if (!(failover && parseInt(response.status) >= 500 && attempts < this.uris.length)) {
-                  _context.next = 19;
+                  _context.next = 20;
                   break;
                 }
 
                 // Server error - Try next node
                 this.uriIndex = (this.uriIndex + 1) % this.uris.length;
-                _context.next = 18;
+                this.Log("HttpClient failing over: ".concat(attempts + 1, " attempts"), true);
+                _context.next = 19;
                 return this.Request({
                   method: method,
                   path: path,
@@ -122,44 +148,44 @@ function () {
                   attempts: attempts + 1
                 });
 
-              case 18:
+              case 19:
                 return _context.abrupt("return", _context.sent);
 
-              case 19:
+              case 20:
                 // Parse JSON error if headers indicate JSON
-                responseType = response.headers.get("content-type");
+                responseType = response.headers ? response.headers.get("content-type") : "";
                 errorBody = "";
 
                 if (!(response.text && response.json)) {
-                  _context.next = 32;
+                  _context.next = 33;
                   break;
                 }
 
                 if (!responseType.includes("application/json")) {
-                  _context.next = 28;
+                  _context.next = 29;
                   break;
                 }
 
-                _context.next = 25;
+                _context.next = 26;
                 return response.json();
 
-              case 25:
+              case 26:
                 _context.t1 = _context.sent;
-                _context.next = 31;
+                _context.next = 32;
                 break;
 
-              case 28:
-                _context.next = 30;
+              case 29:
+                _context.next = 31;
                 return response.text();
 
-              case 30:
+              case 31:
                 _context.t1 = _context.sent;
 
-              case 31:
+              case 32:
                 errorBody = _context.t1;
 
-              case 32:
-                throw {
+              case 33:
+                error = {
                   name: "ElvHttpClientError",
                   status: response.status,
                   statusText: response.statusText,
@@ -168,11 +194,14 @@ function () {
                   body: errorBody,
                   requestParams: fetchParameters
                 };
+                this.Log(JSON.stringify(error, null, 2), true);
+                throw error;
 
-              case 33:
+              case 36:
+                this.Log("".concat(response.status, " - ").concat(method, " ").concat(uri.toString()));
                 return _context.abrupt("return", response);
 
-              case 34:
+              case 38:
               case "end":
                 return _context.stop();
             }
@@ -188,10 +217,10 @@ function () {
     }()
   }, {
     key: "URL",
-    value: function URL(_ref2) {
-      var path = _ref2.path,
-          _ref2$queryParams = _ref2.queryParams,
-          queryParams = _ref2$queryParams === void 0 ? {} : _ref2$queryParams;
+    value: function URL(_ref3) {
+      var path = _ref3.path,
+          _ref3$queryParams = _ref3.queryParams,
+          queryParams = _ref3$queryParams === void 0 ? {} : _ref3$queryParams;
       return this.BaseURI().path(path).query(queryParams).hash("").toString();
     }
   }]);

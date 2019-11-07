@@ -9,6 +9,14 @@ Object.defineProperty(global.self, "crypto", {
   },
 });
 
+const Fetch = (input, init={}) => {
+  if(typeof fetch === "undefined") {
+    return (require("node-fetch")(input, init));
+  } else {
+    return fetch(input, init);
+  }
+};
+
 const UrlJoin = require("url-join");
 const URI = require("urijs");
 const BaseLibraryContract = require("../src/contracts/BaseLibrary");
@@ -47,6 +55,28 @@ describe("Test ElvClient", () => {
     testFile2 = RandomBytes(testFileSize);
     testFile3 = RandomBytes(testFileSize);
     testHash = RandomString(10);
+
+    await client.userProfileClient.WalletAddress();
+    await accessClient.userProfileClient.WalletAddress();
+
+    // Create required types
+    const requiredContentTypes = ["ABR Master", "Library", "Production Master"];
+
+    await Promise.all(
+      requiredContentTypes.map(async typeName => {
+        const type = await client.ContentType({name: typeName});
+
+        if(!type) {
+          await client.CreateContentType({
+            name: typeName,
+            metadata: {
+              "bitcode_flags": "abrmaster",
+              "bitcode_format": "builtin"
+            }
+          });
+        }
+      })
+    );
   });
 
   afterAll(async () => {
@@ -110,10 +140,6 @@ describe("Test ElvClient", () => {
     });
 
     test("Access Group Members", async () => {
-      // Ensure user wallets are created
-      await client.userProfileClient.WalletAddress();
-      await accessClient.userProfileClient.WalletAddress();
-
       const clientAddress = client.utils.FormatAddress(client.signer.address);
       const accessAddress = client.utils.FormatAddress(accessClient.signer.address);
 
@@ -847,6 +873,56 @@ describe("Test ElvClient", () => {
       expect(files.testDirectory["File 1"]).toBeDefined();
       expect(files.testDirectory["File 2"]).toBeDefined();
     });
+
+    test("Create Local File Links", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      await client.CreateLinks({
+        libraryId,
+        objectId,
+        writeToken,
+        links: [
+          {
+            target: "testDirectory/File 1",
+            path: "myLink"
+          },
+          {
+            target: "testDirectory/File 2",
+            path: "links/myLink2"
+          }
+        ]
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Create Link URLs", async () => {
+      const link1 = await client.LinkUrl({
+        libraryId,
+        objectId,
+        linkPath: "myLink",
+        mimeType: "application/octet-stream"
+      });
+
+      expect(link1).toBeDefined();
+      expect(decodeURIComponent(link1).includes("header-accept=application/octet-stream")).toBeTruthy();
+
+      const data = await (await Fetch(link1)).arrayBuffer();
+      expect(new Uint8Array(data).toString()).toEqual(new Uint8Array(testFile1).toString());
+
+      const link2 = await client.LinkUrl({
+        libraryId,
+        objectId,
+        linkPath: "links/myLink2",
+        mimeType: "image/*"
+      });
+
+      expect(link2).toBeDefined();
+      expect(decodeURIComponent(link2).includes("header-accept=image/*")).toBeTruthy();
+
+      const data2 = await (await Fetch(link2)).arrayBuffer();
+      expect(new Uint8Array(data2).toString()).toEqual(new Uint8Array(testFile2).toString());
+    });
   });
 
   describe("Media", () => {
@@ -1072,10 +1148,15 @@ describe("Test ElvClient", () => {
           metadataSubtree: "lro_status"
         });
 
-        if(status.end) {
-          console.log(status.run_state);
-          break;
-        }
+        let done = true;
+        Object.keys(status).forEach(id => {
+          const info = status[id];
+          console.log(info);
+
+          if(!info.end) { done = false; }
+        });
+
+        if(done) { break; }
 
         await new Promise(resolve => setTimeout(resolve, 10000));
       }
