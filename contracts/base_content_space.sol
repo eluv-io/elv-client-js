@@ -17,6 +17,7 @@ import "./node.sol";
 import "./meta_object.sol";
 import "./transactable.sol";
 import "./lib_precompile.sol";
+import "./lv_recording.sol"; // need to bring in event definitions
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -157,18 +158,18 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
 
     // TODO: TESTING
-    function createUserGuarantorWallet(address _user) public returns (bool) {
-        if (userWallets[_user] != 0x0) {
-            return false;
-        }
-        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-        BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
-        // wallet.setGuarantor(msg.sender);
-        wallet.transferOwnership(_user);
-        userWallets[_user] = walletAddress;
-        emit CreateAccessWallet(walletAddress); // TODO: different event here?
-        return true;
-    }
+//    function createUserGuarantorWallet(address _user) public returns (bool) {
+//        if (userWallets[_user] != 0x0) {
+//            return false;
+//        }
+//        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
+//        BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
+//        // wallet.setGuarantor(msg.sender);
+//        wallet.transferOwnership(_user);
+//        userWallets[_user] = walletAddress;
+//        emit CreateAccessWallet(walletAddress); // TODO: different event here?
+//        return true;
+//    }
 
     //This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
@@ -404,11 +405,12 @@ contract BaseLibraryFactory is Ownable {
 
 /* -- Revision history --
 BaseCtFactory20190509171900ML: Split out of BaseLibraryFactory
+BaseCtFactory20191017165200ML: Updated to reflect change in BaseContent20190801141600ML
 */
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20190509171900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20191017165200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);
@@ -426,5 +428,73 @@ contract BaseContentFactory is Ownable {
         userWallet.setContentObjectRights(address(content), userWallet.TYPE_EDIT(), userWallet.ACCESS_CONFIRMED());
 
         return address(content);
+    }
+}
+
+//BaseCtFactoryXt20191031115100PO: adds support for custom contract
+//BaseCtFactoryXt20191031153200ML: passes accessor to the runAccess via the addresses array
+//BaseCtFactoryXt20191031170400ML: adds request timestamp to event
+
+contract BaseContentFactoryExt is BaseContentFactory {
+
+    bytes32 public version ="BaseCtFactoryXt20191031170400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
+    // TODO: naming this the same as the event in BaseContentObject ...?
+    event AccessRequest(
+        uint256 timestamp,
+        address libraryAddress,
+        address contentAddress,
+        address userAddress,
+        bytes32 contextHash,
+        uint64 request_timestamp
+    );
+
+    event AccessComplete(
+        uint256 timestamp,
+        address libraryAddress,
+        address contentAddress,
+        address userAddress,
+        bytes32 contextHash,
+        uint64 request_timestamp
+    );
+
+    uint32 public constant OP_ACCESS_REQUEST = 1;
+    uint32 public constant OP_ACCESS_COMPLETE = 2;
+
+    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
+
+        //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
+        //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
+
+        uint paramsLen = _opCodes.length;
+
+        require(_contentAddrs.length == paramsLen);
+        require(_userAddrs.length == paramsLen);
+        require(_ctxHashes.length == paramsLen);
+        require(_ts.length == paramsLen);
+
+        for (uint i = 0; i < paramsLen; i++) {
+            BaseContent cobj = BaseContent(_contentAddrs[i]);
+            Content c;
+            // require(msg.sender == owner || cobj.addressKMS() == msg.sender);
+            if (_opCodes[i] == OP_ACCESS_REQUEST) {
+                emit AccessRequest(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
+                if (cobj.contentContractAddress() != 0x0) {
+                    bytes32[] memory emptyVals;
+                    address[] storage paramAddrs;
+                    paramAddrs.push( _userAddrs[i]);
+                    c = Content(cobj.contentContractAddress());
+                    c.runAccess(_ts[i], 100, emptyVals, paramAddrs); // TODO: level?
+                }
+            } else if (_opCodes[i] == OP_ACCESS_COMPLETE) {
+                emit AccessComplete(now, cobj.libraryAddress(), _contentAddrs[i], _userAddrs[i], _ctxHashes[i], uint64(_ts[i]));
+                if (cobj.contentContractAddress() != 0x0) {
+                    c = Content(cobj.contentContractAddress());
+                    c.runFinalizeExt(_ts[i], _amt[i], _userAddrs[i]);
+                }
+            } else {
+                require(false);
+            }
+        }
     }
 }

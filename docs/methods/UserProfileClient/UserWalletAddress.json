@@ -1,9 +1,9 @@
 [
   {
-    "signature": "async UserWalletAddress({\n  \"address\": \"0x387b1be903015A2Ec2058E32Ab6e76fe25ed0b51\"\n});"
+    "signature": "async UserWalletAddress({\n  \"address\": \"0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\"\n});"
   },
   {
-    "signature": "async UserWalletAddress({\n  \"address\": \"0x387b1be903015A2Ec2058E32Ab6e76fe25ed0b51\"\n});",
-    "result": "\"0xc116D8A63e2E4820B9D054Eb00fC7B1926A08202\""
+    "signature": "async UserWalletAddress({\n  \"address\": \"0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\"\n});",
+    "result": "\"0x39270790C89A7CdC21504a87834ed68317c91452\""
   }
 ]

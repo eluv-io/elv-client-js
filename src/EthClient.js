@@ -19,10 +19,26 @@ const Utils = require("./Utils");
 const Topics = require("./events/Topics");
 
 class EthClient {
-  constructor(ethereumURIs) {
-    this.ethereumURIs = ethereumURIs;
+  Log(message, error=false) {
+    if(!this.debug) { return; }
+
+    if(typeof message === "object") {
+      message = JSON.stringify(message);
+    }
+
+    error ?
+      // eslint-disable-next-line no-console
+      console.error(`\n(elv-client-js#EthClient) ${message}\n`) :
+      // eslint-disable-next-line no-console
+      console.log(`\n(elv-client-js#EthClient) ${message}\n`);
+    // eslint-disable-next-line no-console
+  }
+
+  constructor({uris, debug}) {
+    this.ethereumURIs = uris;
     this.ethereumURIIndex = 0;
     this.locked = false;
+    this.debug = debug;
 
     this.cachedContracts = {};
     this.contractNames = {};
@@ -86,12 +102,16 @@ class EthClient {
 
   async MakeProviderCall({methodName, args=[], attempts=0}) {
     try {
-      return await this.Provider()[methodName](...args);
+      const provider = this.Provider();
+
+      this.Log(`ETH ${provider.connection.url} ${methodName} [${args.join(", ")}]`);
+      return await provider[methodName](...args);
     } catch(error) {
       // eslint-disable-next-line no-console
       console.error(error);
 
       if(attempts < this.ethereumURIs.length) {
+        this.Log(`EthClient failing over: ${attempts + 1} attempts`, true);
         this.provider = undefined;
         this.ethereumURIIndex = (this.ethereumURIIndex + 1) % this.ethereumURIs.length;
         return this.MakeProviderCall({methodName, args, attempts: attempts + 1});
@@ -151,6 +171,8 @@ class EthClient {
     overrides={},
     signer
   }) {
+    this.Log(`Deploying contract with args [${constructorArgs.join(", ")}]`);
+
     signer = signer.connect(this.Provider());
     this.ValidateSigner(signer);
 
@@ -158,6 +180,8 @@ class EthClient {
 
     let contract = await contractFactory.deploy(...constructorArgs, overrides);
     await contract.deployed();
+
+    this.Log(`Deployed: ${contract.address}`);
 
     return {
       contractAddress: Utils.FormatAddress(contract.address),
@@ -207,6 +231,13 @@ class EthClient {
         throw Error("Unknown method: " + methodName);
       }
 
+      this.Log(
+        `Calling contract method:
+        Address: ${contract.address}
+        Method: ${methodName}
+        Args: [${methodArgs.join(", ")}]`
+      );
+
       let result;
       let success = false;
       while(!success) {
@@ -253,6 +284,8 @@ class EthClient {
       signer
     });
 
+    this.Log(`Awaiting transaction completion: ${createMethodCall.hash}`);
+
     // Poll for transaction completion
     const interval = 250;
     let elapsed = 0;
@@ -277,7 +310,7 @@ class EthClient {
     }
 
     if(!methodEvent) {
-      throw Error(`Timed out waiting for completion of ${methodName}. TXID: ${transactionHash}`);
+      throw Error(`Timed out waiting for completion of ${methodName}. TXID: ${createMethodCall.hash}`);
     }
 
     return methodEvent;
@@ -303,8 +336,6 @@ class EthClient {
         return parsedLog;
       }
     }
-
-    throw Error(eventName + " event not found");
   }
 
   async DeployDependentContract({
@@ -319,6 +350,11 @@ class EthClient {
     const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs: args, signer});
 
     const eventLog = this.ExtractEventFromLogs({abi, event, eventName, eventValue});
+
+    if(!eventLog) {
+      throw Error(`${methodName} failed - Log not present in transaction`);
+    }
+
     const newContractAddress = eventLog.values[eventValue];
 
     return {
@@ -463,7 +499,11 @@ class EthClient {
         fromBlock,
         toBlock
       }]
-    });
+    }) || [];
+
+    if(!Array.isArray(contractLogs)) {
+      return [];
+    }
 
     let blocks = {};
     await contractLogs.limitedMap(

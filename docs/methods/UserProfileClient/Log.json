@@ -1,0 +1,59 @@
+[
+  {
+    "signature": " Log(\"Retrieving user wallet address for user 0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\");"
+  },
+  {
+    "signature": " Log(\"Creating user wallet for user 0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\");"
+  },
+  {
+    "signature": " Log(\"Creating wallet object for user 0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\");"
+  },
+  {
+    "signature": " Log(\"Retrieving user wallet address for user 0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\");"
+  },
+  {
+    "signature": " Log(\"Merging user metadata at /\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at /\");"
+  },
+  {
+    "signature": " Log(\"Merging user metadata at toMerge\");"
+  },
+  {
+    "signature": " Log(\"Replacing user metadata at toReplace\");"
+  },
+  {
+    "signature": " Log(\"Deleting user metadata at toDelete\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at /\");"
+  },
+  {
+    "signature": " Log(\"Setting profile image for user 0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at image\");"
+  },
+  {
+    "signature": " Log(\"Setting profile image for user 0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at image\");"
+  },
+  {
+    "signature": " Log(\"Replacing user metadata at access_level\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at access_level\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at accessed_content/hq__FMEcSMuyucQ7zTKQF2AuX8xd2obfZnY7P8v959RyVKqgVJgqzmFR9igLoqL6ny194uRHiGtJwL\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at accessed_content/hq__AwxPa2z1izt9BYBXSueBXV7CMXLwfBcjijM9TGsJ9wsYn7RhGvzbwoC6pugFWULEx3EeyvnfxF\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at collected_data\");"
+  }
+]

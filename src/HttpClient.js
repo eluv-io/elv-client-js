@@ -9,9 +9,24 @@ const Fetch = (input, init={}) => {
 };
 
 class HttpClient {
-  constructor(uris) {
+  Log(message, error=false) {
+    if(!this.debug) { return; }
+
+    if(typeof message === "object") {
+      message = JSON.stringify(message);
+    }
+
+    error ?
+      // eslint-disable-next-line no-console
+      console.error(`\n(elv-client-js#HttpClient) ${message}\n`) :
+      // eslint-disable-next-line no-console
+      console.log(`\n(elv-client-js#HttpClient) ${message}\n`);
+  }
+
+  constructor({uris, debug}) {
     this.uris = uris;
     this.uriIndex = 0;
+    this.debug = debug;
   }
 
   BaseURI() {
@@ -45,7 +60,7 @@ class HttpClient {
       .hash("");
 
     let fetchParameters = {
-      method: method,
+      method,
       headers: this.RequestHeaders(bodyType, headers),
     };
 
@@ -68,7 +83,7 @@ class HttpClient {
     } catch(error) {
       response = {
         ok: false,
-        status: 418,
+        status: 500,
         statusText: "ElvClient Error: " + error.message,
         url: uri.toString(),
         stack: error.stack
@@ -79,6 +94,8 @@ class HttpClient {
       if(failover && parseInt(response.status) >= 500 && attempts < this.uris.length) {
         // Server error - Try next node
         this.uriIndex = (this.uriIndex + 1) % this.uris.length;
+
+        this.Log(`HttpClient failing over: ${attempts + 1} attempts`, true);
 
         return await this.Request({
           method,
@@ -92,14 +109,14 @@ class HttpClient {
       }
 
       // Parse JSON error if headers indicate JSON
-      const responseType = response.headers.get("content-type");
+      const responseType = response.headers ? response.headers.get("content-type") : "";
 
       let errorBody = "";
       if(response.text && response.json) {
         errorBody = responseType.includes("application/json") ? await response.json() : await response.text();
       }
 
-      throw {
+      const error = {
         name: "ElvHttpClientError",
         status: response.status,
         statusText: response.statusText,
@@ -108,7 +125,16 @@ class HttpClient {
         body: errorBody,
         requestParams: fetchParameters
       };
+
+      this.Log(
+        JSON.stringify(error, null, 2),
+        true
+      );
+
+      throw error;
     }
+
+    this.Log(`${response.status} - ${method} ${uri.toString()}`);
 
     return response;
   }
