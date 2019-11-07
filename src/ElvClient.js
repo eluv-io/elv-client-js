@@ -5,6 +5,7 @@ if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 const mime = require("mime-types");
+
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
@@ -13,14 +14,13 @@ const HttpClient = require("./HttpClient");
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
+const LimitedMap = require("./LimitedMap");
 
 const SpaceContract = require("./contracts/BaseContentSpace");
 const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
-
-require("elv-components-js/src/utils/LimitedMap");
 
 // Platform specific polyfills
 switch(Utils.Platform()) {
@@ -79,7 +79,7 @@ class ElvClient {
   /**
    * Enable or disable verbose logging
    *
-   * @methodGroup - Miscellaneous
+   * @methodGroup Miscellaneous
    *
    * @param {boolean} enable - Set logging
    */
@@ -1772,8 +1772,9 @@ class ElvClient {
     writeToken,
     links=[]
   }) {
-    await links.limitedMap(
+    await LimitedMap(
       5,
+      links,
       async info => {
         const path = info.path.replace(/^(\/|\.)+/, "");
 
@@ -1972,9 +1973,9 @@ class ElvClient {
     this.Log(`Upload ID: ${id}`);
     this.Log(jobs);
 
-    // Get job info for each job
-    const jobInfo = await jobs.limitedMap(
+    const jobInfo = await LimitedMap(
       5,
+      jobs,
       async jobId => await this.UploadJobStatus({
         libraryId,
         objectId,
@@ -2012,8 +2013,9 @@ class ElvClient {
       this.Log(`Proceeding with ${concurrentUploads} concurrent upload(s)`);
     }
 
-    await jobInfo.limitedMap(
+    await LimitedMap(
       concurrentUploads,
+      jobInfo,
       async job  => {
         const jobId = job.id;
         const files = job.files;
@@ -4027,8 +4029,9 @@ class ElvClient {
 
         numGroups = parseInt(numGroups._hex, 16);
 
-        const accessGroupAddresses = await [...Array(numGroups).keys()].limitedMap(
+        const accessGroupAddresses = await LimitedMap(
           3,
+          [...Array(numGroups).keys()],
           async i => {
             try {
               return this.utils.FormatAddress(
@@ -4267,6 +4270,8 @@ class ElvClient {
 
   /**
    * Return the name of the contract, as specified in the contracts "version" string
+   *
+   * @methodGroup Contracts
    *
    * @namedParams
    * @param {string} contractAddress - Address of the contract

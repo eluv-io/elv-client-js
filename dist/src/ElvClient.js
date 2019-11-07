@@ -51,6 +51,8 @@ var Utils = require("./Utils");
 
 var Crypto = require("./Crypto");
 
+var LimitedMap = require("./LimitedMap");
+
 var SpaceContract = require("./contracts/BaseContentSpace");
 
 var LibraryContract = require("./contracts/BaseLibrary");
@@ -59,9 +61,7 @@ var ContentContract = require("./contracts/BaseContent");
 
 var ContentTypeContract = require("./contracts/BaseContentType");
 
-var AccessGroupContract = require("./contracts/BaseAccessControlGroup");
-
-require("elv-components-js/src/utils/LimitedMap"); // Platform specific polyfills
+var AccessGroupContract = require("./contracts/BaseAccessControlGroup"); // Platform specific polyfills
 
 
 switch (Utils.Platform()) {
@@ -204,7 +204,7 @@ function () {
     /**
      * Enable or disable verbose logging
      *
-     * @methodGroup - Miscellaneous
+     * @methodGroup Miscellaneous
      *
      * @param {boolean} enable - Set logging
      */
@@ -3311,7 +3311,7 @@ function () {
               case 0:
                 libraryId = _ref47.libraryId, objectId = _ref47.objectId, writeToken = _ref47.writeToken, _ref47$links = _ref47.links, links = _ref47$links === void 0 ? [] : _ref47$links;
                 _context43.next = 3;
-                return links.limitedMap(5,
+                return LimitedMap(5, links,
                 /*#__PURE__*/
                 function () {
                   var _ref48 = _asyncToGenerator(
@@ -3613,10 +3613,9 @@ function () {
                 id = _ref52.id;
                 jobs = _ref52.jobs;
                 this.Log("Upload ID: ".concat(id));
-                this.Log(jobs); // Get job info for each job
-
+                this.Log(jobs);
                 _context47.next = 16;
-                return jobs.limitedMap(5,
+                return LimitedMap(5, jobs,
                 /*#__PURE__*/
                 function () {
                   var _ref53 = _asyncToGenerator(
@@ -3693,7 +3692,7 @@ function () {
 
               case 31:
                 _context47.next = 33;
-                return jobInfo.limitedMap(concurrentUploads,
+                return LimitedMap(concurrentUploads, jobInfo,
                 /*#__PURE__*/
                 function () {
                   var _ref54 = _asyncToGenerator(
@@ -7928,7 +7927,7 @@ function () {
                             numGroups = _context101.sent;
                             numGroups = parseInt(numGroups._hex, 16);
                             _context101.next = 6;
-                            return _toConsumableArray(Array(numGroups).keys()).limitedMap(3,
+                            return LimitedMap(3, _toConsumableArray(Array(numGroups).keys()),
                             /*#__PURE__*/
                             function () {
                               var _ref117 = _asyncToGenerator(
@@ -8449,6 +8448,8 @@ function () {
 
     /**
      * Return the name of the contract, as specified in the contracts "version" string
+     *
+     * @methodGroup Contracts
      *
      * @namedParams
      * @param {string} contractAddress - Address of the contract
