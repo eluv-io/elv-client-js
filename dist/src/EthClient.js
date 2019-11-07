@@ -32,11 +32,11 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-require("elv-components-js/src/utils/LimitedMap"); // NOTE: Querying Ethereum requires CORS enabled
+// NOTE: Querying Ethereum requires CORS enabled
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
+var Ethers = require("ethers");
 
-
-var Ethers = require("ethers"); // -- Contract javascript files built using build/BuildContracts.js
+var LimitedMap = require("./LimitedMap"); // -- Contract javascript files built using build/BuildContracts.js
 
 
 var FactoryContract = require("./contracts/BaseFactory");
@@ -1120,7 +1120,7 @@ function () {
               case 9:
                 blocks = {};
                 _context17.next = 12;
-                return contractLogs.limitedMap(5,
+                return LimitedMap(5, contractLogs,
                 /*#__PURE__*/
                 function () {
                   var _ref21 = _asyncToGenerator(
@@ -1265,7 +1265,7 @@ function () {
                 });
                 output = [];
                 _context20.next = 16;
-                return _toConsumableArray(Array(toBlock - fromBlock + 1).keys()).limitedMap(3,
+                return LimitedMap(3, _toConsumableArray(Array(toBlock - fromBlock + 1).keys()),
                 /*#__PURE__*/
                 function () {
                   var _ref24 = _asyncToGenerator(
