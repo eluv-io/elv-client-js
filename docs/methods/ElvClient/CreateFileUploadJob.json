@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async CreateFileUploadJob({\n  \"libraryId\": \"ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\",\n  \"objectId\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\",\n  \"writeToken\": \"tqw_7E9k9RjmcCUm6ztMKFVbeWPwkcCUB6Xf3\",\n  \"ops\": [\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    }\n  ]\n});",
-    "result": "{\n  \"id\": \"iqfjQGCczHXsafE1P1EzwBTL2a\",\n  \"jobs\": [\n    \"iqfuNEiiB65HTTLDdaMGSnviua\"\n  ]\n}"
+    "signature": "async CreateFileUploadJob({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"writeToken\": \"tqw_CucTuLqApqRWYUA5aRPM5cXnSVV9qqxzB\",\n  \"ops\": [\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    }\n  ]\n});",
+    "result": "{\n  \"id\": \"iqfj5DzouNr5tv2s3S87C5ZXuP\",\n  \"jobs\": [\n    \"iqfuDu5xDzdjq9814MNLja4mj7\"\n  ]\n}"
   },
   {
-    "signature": "async CreateFileUploadJob({\n  \"libraryId\": \"ilib2JzDGHWNKanusky3W1Anh7Fca5M4\",\n  \"objectId\": \"iq__2vXoz6eDz9U8gRmT8prgEi1iPJS2\",\n  \"writeToken\": \"tqw_Hs2ntEcsSkQLW766deZfEjQfiAuT2X8Jy\",\n  \"ops\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"mime_type\": \"video/mp4\",\n      \"size\": 97944174,\n      \"type\": \"file\"\n    }\n  ]\n});",
-    "result": "{\n  \"id\": \"iqfj13mVHiKRfcUzc46rGD3rtC\",\n  \"jobs\": [\n    \"iqfuKVRQh4bNzHepPmFRPTdHhT\",\n    \"iqfuTgxWdnknang4wuz7W6NCmw\",\n    \"iqfu7FFfw4dQgFGRYHtmH21yMN\"\n  ]\n}"
+    "signature": "async CreateFileUploadJob({\n  \"libraryId\": \"ilib3wBzK5LdVMJXfJDC2QzzyN3jytqs\",\n  \"objectId\": \"iq__3dXBZ3KQaWJfSZrpJaY1x6iQoejH\",\n  \"writeToken\": \"tqw_KUaWH2rPWW6gkP3fybaRjZqRCb3GvK1Q9\",\n  \"ops\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"mime_type\": \"video/mp4\",\n      \"size\": 97944174,\n      \"type\": \"file\"\n    }\n  ]\n});",
+    "result": "{\n  \"id\": \"iqfj85vU4AKU5PXpCSx2FnRBqy\",\n  \"jobs\": [\n    \"iqfuLSxJW2pCrFABTRSeLPZECo\",\n    \"iqfu3hq5gwER918rNeoRTwnHRu\",\n    \"iqfuRwU1KB5ZzSS9nTrsoDQEDu\"\n  ]\n}"
   }
 ]

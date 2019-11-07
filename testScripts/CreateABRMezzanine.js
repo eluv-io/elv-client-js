@@ -105,12 +105,13 @@ const Create = async (
     }
 
     if(poster) {
+      const posterFilename = Path.basename(poster);
       const {write_token} = await client.EditContentObject({libraryId: mezLibraryId, objectId});
 
       if(s3Copy || s3Reference) {
         const {region, bucket, accessKey, secret} = access;
 
-        await this.UploadFilesFromS3({
+        await client.UploadFilesFromS3({
           libraryId: mezLibraryId,
           objectId,
           writeToken: write_token,
@@ -125,7 +126,7 @@ const Create = async (
         const data = fs.readFileSync(poster);
         const fileInfo = [
           {
-            path: Path.basename(poster),
+            path: posterFilename,
             type: "file",
             mimeType: mime.lookup(poster) || "image/*",
             size: data.length,
@@ -140,6 +141,18 @@ const Create = async (
           fileInfo
         });
       }
+
+      await client.CreateLinks({
+        libraryId: mezLibraryId,
+        objectId,
+        writeToken: write_token,
+        links: [
+          {
+            target: posterFilename,
+            path: "asset_metadata/components/poster"
+          }
+        ]
+      });
 
       await client.FinalizeContentObject({libraryId: mezLibraryId, objectId, writeToken: write_token});
     }
@@ -159,6 +172,7 @@ const Create = async (
 
     console.log("\nProgress:");
 
+    // eslint-disable-next-line no-constant-condition
     while(true) {
       const status = await client.ContentObjectMetadata({
         libraryId: mezLibraryId,
@@ -176,11 +190,11 @@ const Create = async (
         return `${id}: ${parseFloat(info.progress.percentage || 0).toFixed(1)}%`;
       });
 
-      if(done) { break; }
-
       readline.clearLine(process.stdout, 0);
       readline.cursorTo(process.stdout, 0, null);
       process.stdout.write(progress.join(" "));
+
+      if(done) { break; }
 
       await new Promise(resolve => setTimeout(resolve, 10000));
     }
@@ -194,7 +208,7 @@ const Create = async (
 
     Report(finalizeResponse);
 
-    console.log("\nABR mezzanine object created:");
+    console.log("\n\nABR mezzanine object created:");
     console.log("\tObject ID:", objectId);
     console.log("\tVersion Hash:", finalizeResponse.hash, "\n");
   } catch(error) {

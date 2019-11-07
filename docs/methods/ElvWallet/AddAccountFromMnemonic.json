@@ -1,6 +1,6 @@
 [
   {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"matrix jaguar unusual finish rug federal level shock exchange royal pass focus\"\n});",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"garment vocal despair come robust depend produce exercise rib proof yellow claw\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

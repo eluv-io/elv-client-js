@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async StartABRMezzanineJobs({\n  \"libraryId\": \"ilibCz2dWXKjpMcyyg4g7yQgdQzcgm8\",\n  \"objectId\": \"iq__hVX1Cg1Utmchs7oXomPYBFuswym\",\n  \"offeringKey\": \"default\"\n});",
-    "result": "{\n  \"writeToken\": \"tqw_Ene9X5LFNzszb7QqxwakGahsQsYdh936e\",\n  \"logs\": [\n    \"2019-10-28 23:05:20 Debug: getAvpReqCtx, filePath=Video.mp4, qhot=hq__28T8P2AiWnm1xP4xzHJ9katFJLzJA8U1KwAFmLPd1EfQ1EvLBJ2tSAAsrfG9PNuqVjUwQQkUhm\"\n  ],\n  \"warnings\": [],\n  \"errors\": []\n}"
+    "signature": "async StartABRMezzanineJobs({\n  \"libraryId\": \"ilib3wBzK5LdVMJXfJDC2QzzyN3jytqs\",\n  \"objectId\": \"iq__2fMULiDWqoBoeku6xt16qLhzQsbo\",\n  \"offeringKey\": \"default\"\n});",
+    "result": "{\n  \"writeToken\": \"tqw_8tY4rpi712snkAo1ZCzX3RAij5UHZYY5z\",\n  \"data\": [\n    \"99c3f49f-932a-448a-8328-c9e90034b8db\"\n  ],\n  \"logs\": [\n    \"2019-11-07 00:46:11 Debug: getAvpReqCtx filePath=Video.mp4 qhot=hq__7oocnXUErhdBqCi6sTr21h34AWn3Qczsd4ycYVAh8AKS86V1eNtR7gLVmZDA1BWwe6tmc5tHTD key=hq__7oocnXUErhdBqCi6sTr21h34AWn3Qczsd4ycYVAh8AKS86V1eNtR7gLVmZDA1BWwe6tmc5tHTD.txVideo.Video.mp4\"\n  ],\n  \"warnings\": [],\n  \"errors\": []\n}"
   }
 ]

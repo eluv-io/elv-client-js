@@ -43,9 +43,8 @@
     "/contracts",
     "/setup",
     "/src",
-    "ElvClient-min.js",
-    "ElvClient-node-min.js",
     "LICENSE",
+    "README.md",
     "package.json",
     "package-lock.json",
     "webpack.config.js"

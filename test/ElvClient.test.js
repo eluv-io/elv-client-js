@@ -1148,10 +1148,15 @@ describe("Test ElvClient", () => {
           metadataSubtree: "lro_status"
         });
 
-        if(status.end) {
-          console.log(status.run_state);
-          break;
-        }
+        let done = true;
+        Object.keys(status).forEach(id => {
+          const info = status[id];
+          console.log(info);
+
+          if(!info.end) { done = false; }
+        });
+
+        if(done) { break; }
 
         await new Promise(resolve => setTimeout(resolve, 10000));
       }

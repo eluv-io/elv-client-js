@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"writeToken\": \"tqw_3QgDod3XmHYDDnGsbSpE9xy5KZ9xwNqB3\",\n  \"links\": [\n    {\n      \"target\": \"testDirectory/File 1\",\n      \"path\": \"myLink\"\n    },\n    {\n      \"target\": \"testDirectory/File 2\",\n      \"path\": \"links/myLink2\"\n    }\n  ]\n});"
+  }
+]

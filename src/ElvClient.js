@@ -4,6 +4,7 @@ if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
+const mime = require("mime-types");
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
@@ -1842,13 +1843,16 @@ class ElvClient {
     };
 
     const ops = filePaths.map(path => {
+      const mimeType = mime.lookup(path);
+
       if(copy) {
         return {
           op: copy ? "ingest-copy" : "add-reference",
           path,
           ingest: {
             type: "key",
-            path
+            path,
+            mime_type: mimeType
           }
         };
       } else {
@@ -1857,7 +1861,8 @@ class ElvClient {
           path,
           reference: {
             type: "key",
-            path
+            path,
+            mime_type: mimeType
           }
         };
       }
@@ -2837,8 +2842,8 @@ class ElvClient {
     const prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || [];
 
     // Retrieve all masters associated with this offering
-    const masterVersionHashes = prepSpecs.map(spec =>
-      (spec.source_streams || []).map(stream => stream.master_hash)
+    const masterVersionHashes = Object.keys(prepSpecs).map(spec =>
+      (prepSpecs[spec].source_streams || []).map(stream => stream.source_hash)
     )
       .flat()
       .filter(hash => hash)
