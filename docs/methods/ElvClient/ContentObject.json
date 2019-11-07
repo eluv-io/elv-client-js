@@ -1,7 +1,7 @@
 [
   {
-    "signature": "async ContentObject({\n  \"libraryId\": \"ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\",\n  \"objectId\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\"\n});",
-    "result": "{\n  \"id\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\",\n  \"hash\": \"hq__88dxvLswyPTQE22XzsQaT14sBMLFWvw5BSbCu1TvHqidxCpMWAmDvFzMgouPHfcXyJ35QU2J1X\",\n  \"type\": \"hq__AoYY7jhnmMYJSjGTWeXq3aJUhgHAS2463PYqdW5BVUVU5rNXmoo4bM5YgjV7ycP4MAG9hGhcJD\"\n}"
+    "signature": "async ContentObject({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\"\n});",
+    "result": "{\n  \"id\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"hash\": \"hq__4ipZ25KY8zENKnorjomawgF8yJnLgRRmYtGC9Q1pa4cbEJRta3C5C5E15b14Q8ykQ9tep2ijZJ\",\n  \"type\": \"hq__DAT3Za6brRzwqSHPVcr7WB3VRmBfp5jg3QeGDyd3AJYb7JrYAtT3XhGJ1CvwXpU4uXkW3c5NDF\"\n}"
   },
   {
     "signature": "async ContentObject({\n  \"libraryId\": \"ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1\",\n  \"objectId\": \"iq__42gJKSsPoLCNkmEiDopEfPSujc2e\"\n});",
@@ -16,7 +16,7 @@
     "result": "{\n  \"id\": \"iq__39g4WK8kDXVP8yuq6nQTuEcTBGbi\",\n  \"hash\": \"hq__Kru6PPKc9erztaxvcDNyUii6LmG9cXjMee2pcPQKwMz6ntq65AP6yNwsePvJ96sMFvZxb5uNkx\",\n  \"type\": \"\"\n}"
   },
   {
-    "signature": "async ContentObject({\n  \"libraryId\": \"ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\",\n  \"objectId\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\",\n  \"versionHash\": \"hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\"\n});",
-    "result": "{\n  \"id\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\",\n  \"hash\": \"hq__5j2vhZXC4ke2BZDHJj3Zcj3DqchhUm9r1XK5stKtbAttA5kEAeV65LDTap69JfpihM7HHUpiNm\",\n  \"type\": \"hq__AoYY7jhnmMYJSjGTWeXq3aJUhgHAS2463PYqdW5BVUVU5rNXmoo4bM5YgjV7ycP4MAG9hGhcJD\"\n}"
+    "signature": "async ContentObject({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"versionHash\": \"hq__GRJ2UmqEpyj4gH3D4mwmj2VeYPd7aDygYjTisvpLMWBSPmPhkTHRw6qrzFBWzkEmyM828hoc5n\"\n});",
+    "result": "{\n  \"id\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"hash\": \"hq__GRJ2UmqEpyj4gH3D4mwmj2VeYPd7aDygYjTisvpLMWBSPmPhkTHRw6qrzFBWzkEmyM828hoc5n\",\n  \"type\": \"hq__DAT3Za6brRzwqSHPVcr7WB3VRmBfp5jg3QeGDyd3AJYb7JrYAtT3XhGJ1CvwXpU4uXkW3c5NDF\"\n}"
   }
 ]

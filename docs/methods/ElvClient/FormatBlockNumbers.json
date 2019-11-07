@@ -1,30 +1,30 @@
 [
   {
     "signature": "async FormatBlockNumbers({\n  \"fromBlock\": 0,\n  \"count\": 1000\n});",
-    "result": "{\n  \"fromBlock\": 99030,\n  \"toBlock\": 100029\n}"
+    "result": "{\n  \"fromBlock\": 106384,\n  \"toBlock\": 107383\n}"
   },
   {
     "signature": "async FormatBlockNumbers({\n  \"count\": 5\n});",
-    "result": "{\n  \"fromBlock\": 100026,\n  \"toBlock\": 100030\n}"
+    "result": "{\n  \"fromBlock\": 107387,\n  \"toBlock\": 107391\n}"
   },
   {
     "signature": "async FormatBlockNumbers({\n  \"count\": 20\n});",
-    "result": "{\n  \"fromBlock\": 100011,\n  \"toBlock\": 100030\n}"
+    "result": "{\n  \"fromBlock\": 107372,\n  \"toBlock\": 107391\n}"
   },
   {
     "signature": "async FormatBlockNumbers({\n  \"count\": 0\n});",
-    "result": "{\n  \"fromBlock\": 100031,\n  \"toBlock\": 100030\n}"
+    "result": "{\n  \"fromBlock\": 107393,\n  \"toBlock\": 107392\n}"
   },
   {
-    "signature": "async FormatBlockNumbers({\n  \"fromBlock\": 100025,\n  \"count\": 10\n});",
-    "result": "{\n  \"fromBlock\": 100025,\n  \"toBlock\": 100030\n}"
+    "signature": "async FormatBlockNumbers({\n  \"fromBlock\": 107387,\n  \"count\": 10\n});",
+    "result": "{\n  \"fromBlock\": 107387,\n  \"toBlock\": 107392\n}"
   },
   {
-    "signature": "async FormatBlockNumbers({\n  \"fromBlock\": 100010,\n  \"toBlock\": 100020,\n  \"count\": 10\n});",
-    "result": "{\n  \"fromBlock\": 100010,\n  \"toBlock\": 100020\n}"
+    "signature": "async FormatBlockNumbers({\n  \"fromBlock\": 107372,\n  \"toBlock\": 107382,\n  \"count\": 10\n});",
+    "result": "{\n  \"fromBlock\": 107372,\n  \"toBlock\": 107382\n}"
   },
   {
     "signature": "async FormatBlockNumbers({\n  \"count\": 100\n});",
-    "result": "{\n  \"fromBlock\": 99931,\n  \"toBlock\": 100030\n}"
+    "result": "{\n  \"fromBlock\": 107293,\n  \"toBlock\": 107392\n}"
   }
 ]
