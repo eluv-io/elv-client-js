@@ -34,6 +34,8 @@ var UrlJoin = require("url-join");
 
 var Ethers = require("ethers");
 
+var mime = require("mime-types");
+
 var AuthorizationClient = require("./AuthorizationClient");
 
 var ElvWallet = require("./ElvWallet");
@@ -3414,13 +3416,16 @@ function () {
                   }
                 };
                 ops = filePaths.map(function (path) {
+                  var mimeType = mime.lookup(path);
+
                   if (copy) {
                     return {
                       op: copy ? "ingest-copy" : "add-reference",
                       path: path,
                       ingest: {
                         type: "key",
-                        path: path
+                        path: path,
+                        mime_type: mimeType
                       }
                     };
                   } else {
@@ -3429,7 +3434,8 @@ function () {
                       path: path,
                       reference: {
                         type: "key",
-                        path: path
+                        path: path,
+                        mime_type: mimeType
                       }
                     };
                   }
@@ -5580,9 +5586,9 @@ function () {
                 mezzanineMetadata = _context69.sent;
                 prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || []; // Retrieve all masters associated with this offering
 
-                masterVersionHashes = prepSpecs.map(function (spec) {
-                  return (spec.source_streams || []).map(function (stream) {
-                    return stream.master_hash;
+                masterVersionHashes = Object.keys(prepSpecs).map(function (spec) {
+                  return (prepSpecs[spec].source_streams || []).map(function (stream) {
+                    return stream.source_hash;
                   });
                 }).flat().filter(function (hash) {
                   return hash;

@@ -27,20 +27,20 @@
     "result": "\"public\""
   },
   {
-    "signature": " __GetCachedMetadata(\"accessed_content/hq__LWVjiSYLVzkF46Di2HeqErkcC9JAxbJWFtZHjt4nqhQz5Kb3uWpG9EbxCqdbQyJAEBenP3L2LF\");"
+    "signature": " __GetCachedMetadata(\"accessed_content/hq__AmJsoVSQ5caAc4yp61jVXh5LWqmpnbDzF9LdZ5B13k7QmWWZG7rYdg7RdyJso2TFH8KaB49JW5\");"
   },
   {
     "signature": " __GetCachedMetadata(\"collected_data\");"
   },
   {
-    "signature": " __GetCachedMetadata(\"accessed_content/hq__Ens8c97K4dctwZcVH5UJHxdKaGSepe1VXEp6poj3eLJ9jqazStayYELMqZJyUEiW17bnHCQCe9\");"
+    "signature": " __GetCachedMetadata(\"accessed_content/hq__FMEcSMuyucQ7zTKQF2AuX8xd2obfZnY7P8v959RyVKqgVJgqzmFR9igLoqL6ny194uRHiGtJwL\");"
   },
   {
     "signature": " __GetCachedMetadata(\"collected_data\");",
     "result": "{\n  \"boat\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 0.3,\n    \"occurrences\": 1\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
   },
   {
-    "signature": " __GetCachedMetadata(\"accessed_content/hq__KnZKUrRn4YfzHDGFGNw6isD6KkQe3pLbneAgZCRe6WFB2LeBz1a5X2LFvLLQBmUiUwTPccYm5g\");"
+    "signature": " __GetCachedMetadata(\"accessed_content/hq__AwxPa2z1izt9BYBXSueBXV7CMXLwfBcjijM9TGsJ9wsYn7RhGvzbwoC6pugFWULEx3EeyvnfxF\");"
   },
   {
     "signature": " __GetCachedMetadata(\"collected_data\");",
@@ -48,6 +48,6 @@
   },
   {
     "signature": " __GetCachedMetadata(\"collected_data\");",
-    "result": "{\n  \"boat\": {\n    \"aggregate\": 1.5,\n    \"occurrences\": 2\n  },\n  \"buoy\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 1,\n    \"occurrences\": 2\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  },\n  \"duck\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"mayhem\": {\n    \"occurrences\": 1,\n    \"aggregate\": 0.5\n  },\n  \"shark\": {\n    \"occurrences\": 1,\n    \"aggregate\": 0.8\n  }\n}"
+    "result": "{\n  \"boat\": {\n    \"aggregate\": 1.5,\n    \"occurrences\": 2\n  },\n  \"buoy\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 1,\n    \"occurrences\": 2\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  },\n  \"duck\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"mayhem\": {\n    \"aggregate\": 0.5,\n    \"occurrences\": 1\n  },\n  \"shark\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
   }
 ]

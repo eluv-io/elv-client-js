@@ -1,26 +1,26 @@
 [
   {
-    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\",\n  \"memberAddress\": \"0x8fa6a828624352163df8ed7c1faa745c1ab3939b\",\n  \"methodName\": \"grantAccess\",\n  \"eventName\": \"MemberAdded\"\n});",
-    "result": "\"0x2e369eaa5e0ec4425687913c72a438ebf114617a309a58c01af1a424296a5e25\""
+    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0xc467fa7894ffcd76b92165f38347824dd4fc761b\",\n  \"memberAddress\": \"0xe77b85f1434bbc0b9e2dc27b3849831774c628a8\",\n  \"methodName\": \"grantAccess\",\n  \"eventName\": \"MemberAdded\"\n});",
+    "result": "\"0x3a631566b36711e1b56d7a0cdcc79133c1c59aaacc9d5d0a672c0f5f75b1a5aa\""
   },
   {
-    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\",\n  \"memberAddress\": \"0xdbf299fb9646e863fdd27f6a1c6506e83250c1e8\",\n  \"methodName\": \"grantAccess\",\n  \"eventName\": \"MemberAdded\"\n});",
-    "result": "\"0x566313b395847e3960568480e88437716296a6a7e655177829910e881ce3e274\""
+    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0xc467fa7894ffcd76b92165f38347824dd4fc761b\",\n  \"memberAddress\": \"0x219b3bce4ee98adbb738911148117bbf1bd4bc1f\",\n  \"methodName\": \"grantAccess\",\n  \"eventName\": \"MemberAdded\"\n});",
+    "result": "\"0x138ba017e3dba66df2beabb482224cf4b4ee7f4f90343cbbbad3dc0bf02ff2f7\""
   },
   {
-    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\",\n  \"memberAddress\": \"8fa6a828624352163df8ed7c1faa745c1ab3939b\",\n  \"methodName\": \"grantManagerAccess\",\n  \"eventName\": \"ManagerAccessGranted\"\n});",
-    "result": "\"0x0c4fba4b63d40cc2ff2a980a5fb3f9af89df65b9ec26fa2130006e10741fb133\""
+    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0xc467fa7894ffcd76b92165f38347824dd4fc761b\",\n  \"memberAddress\": \"e77b85f1434bbc0b9e2dc27b3849831774c628a8\",\n  \"methodName\": \"grantManagerAccess\",\n  \"eventName\": \"ManagerAccessGranted\"\n});",
+    "result": "\"0x2ec64ec69ca8e46f586815f98c382ae7dd6cead2624fcce7c7ba0736e428f83a\""
   },
   {
-    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\",\n  \"memberAddress\": \"0xdbf299fb9646e863fdd27f6a1c6506e83250c1e8\",\n  \"methodName\": \"grantManagerAccess\",\n  \"eventName\": \"ManagerAccessGranted\"\n});",
-    "result": "\"0xa98040d0a590850634c02b5843d43a790e429616b407a54f7ff64e629628fd92\""
+    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0xc467fa7894ffcd76b92165f38347824dd4fc761b\",\n  \"memberAddress\": \"0x219b3bce4ee98adbb738911148117bbf1bd4bc1f\",\n  \"methodName\": \"grantManagerAccess\",\n  \"eventName\": \"ManagerAccessGranted\"\n});",
+    "result": "\"0x756ce3e70cab8594ac4d52f200bcc995a43b80df5b727cda007718fd1ca26996\""
   },
   {
-    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\",\n  \"memberAddress\": \"0x8fa6a828624352163df8ed7c1faa745c1ab3939b\",\n  \"methodName\": \"revokeAccess\",\n  \"eventName\": \"MemberRevoked\"\n});",
-    "result": "\"0x0874321b60f3da1ed2d01f5f9d9ceae8f6a5a77f6cf2f2ee9203b96f27f5a4cd\""
+    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0xc467fa7894ffcd76b92165f38347824dd4fc761b\",\n  \"memberAddress\": \"0xe77b85f1434bbc0b9e2dc27b3849831774c628a8\",\n  \"methodName\": \"revokeAccess\",\n  \"eventName\": \"MemberRevoked\"\n});",
+    "result": "\"0x15b5851717adc44a6644b200897c5ef980f719a56fb767e10fb0b326d9941a23\""
   },
   {
-    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0x173e15d3f1f8766fec9621584637ba1a14a3a1ee\",\n  \"memberAddress\": \"0x8fa6a828624352163df8ed7c1faa745c1ab3939b\",\n  \"methodName\": \"revokeManagerAccess\",\n  \"eventName\": \"ManagerAccessRevoked\"\n});",
-    "result": "\"0xe686aee30ec7a0eb1614c3c82305b24aab95b142e4fcc09d3104d5765c5142e5\""
+    "signature": "async AccessGroupMembershipMethod({\n  \"contractAddress\": \"0xc467fa7894ffcd76b92165f38347824dd4fc761b\",\n  \"memberAddress\": \"0xe77b85f1434bbc0b9e2dc27b3849831774c628a8\",\n  \"methodName\": \"revokeManagerAccess\",\n  \"eventName\": \"ManagerAccessRevoked\"\n});",
+    "result": "\"0x964a82db265426055b2f6e03e775df8e12380c3a48ca45ffa89df69f5546e28e\""
   }
 ]

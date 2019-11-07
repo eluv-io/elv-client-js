@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async DownloadFile({\n  \"libraryId\": \"ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\",\n  \"objectId\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\",\n  \"filePath\": \"testDirectory/File 1\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"filePath\": \"testDirectory/File 1\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   },
   {
-    "signature": "async DownloadFile({\n  \"libraryId\": \"ilibj7EQhpEXmLhVjynsCtGJ9Nxnx6X\",\n  \"objectId\": \"iq__3y1wycA5BSZHrHEvWHVeWr7xzZsF\",\n  \"filePath\": \"testDirectory/File 2\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"filePath\": \"testDirectory/File 2\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   }
 ]
