@@ -1,8 +1,7 @@
-require("elv-components-js/src/utils/LimitedMap");
-
 // NOTE: Querying Ethereum requires CORS enabled
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
 const Ethers = require("ethers");
+const LimitedMap = require("./LimitedMap");
 
 // -- Contract javascript files built using build/BuildContracts.js
 const FactoryContract = require("./contracts/BaseFactory");
@@ -506,8 +505,10 @@ class EthClient {
     }
 
     let blocks = {};
-    await contractLogs.limitedMap(
+
+    await LimitedMap(
       5,
+      contractLogs,
       async log => {
         const eventInterface = new Ethers.utils.Interface(abi);
         let parsedLog = {
@@ -573,8 +574,9 @@ class EthClient {
     });
 
     let output = [];
-    await [...Array(toBlock - fromBlock + 1).keys()].limitedMap(
+    await LimitedMap(
       3,
+      [...Array(toBlock - fromBlock + 1).keys()],
       async i => {
         const blockNumber = toBlock - i;
         let blockInfo = blocks[blockNumber];

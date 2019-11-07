@@ -1151,7 +1151,6 @@ describe("Test ElvClient", () => {
         let done = true;
         Object.keys(status).forEach(id => {
           const info = status[id];
-          console.log(info);
 
           if(!info.end) { done = false; }
         });
