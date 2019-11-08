@@ -105,7 +105,6 @@ const Create = async (
     }
 
     if(poster) {
-      const posterFilename = Path.basename(poster);
       const {write_token} = await client.EditContentObject({libraryId: mezLibraryId, objectId});
 
       if(s3Copy || s3Reference) {
@@ -115,7 +114,10 @@ const Create = async (
           libraryId: mezLibraryId,
           objectId,
           writeToken: write_token,
-          filePaths: [poster],
+          fileInfo: [{
+            path: Path.basename(poster),
+            source: poster
+          }],
           region,
           bucket,
           accessKey,
@@ -124,21 +126,18 @@ const Create = async (
         });
       } else {
         const data = fs.readFileSync(poster);
-        const fileInfo = [
-          {
-            path: posterFilename,
-            type: "file",
-            mimeType: mime.lookup(poster) || "image/*",
-            size: data.length,
-            data
-          }
-        ];
 
         await client.UploadFiles({
           libraryId: mezLibraryId,
           objectId,
           writeToken: write_token,
-          fileInfo
+          fileInfo: [{
+            path: Path.basename(poster),
+            type: "file",
+            mimeType: mime.lookup(poster) || "image/*",
+            size: data.length,
+            data
+          }]
         });
       }
 
@@ -148,7 +147,7 @@ const Create = async (
         writeToken: write_token,
         links: [
           {
-            target: posterFilename,
+            target: Path.basename(poster),
             path: "asset_metadata/components/poster"
           }
         ]

@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async CustomContractAddress({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\"\n});",
-    "result": "\"0x29c1000df23ea756bdfbe05e9cb6e0baffa36c5d\""
+    "signature": "async CustomContractAddress({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\"\n});",
+    "result": "\"0x5618ec2a71f680cbd00df4720ea7440303ff6074\""
   }
 ]
