@@ -14,6 +14,8 @@ const Test = async () => {
     });
 
     client.SetSigner({signer});
+
+    //console.log(await client.CallBitcodeMethod({libraryId: "ilib4CNaYcMsgtw7pYsA9G89kmLvXed8", objectId: "iq__36pXM8UBRA7vbujDpQTxFtmNzAw4", method: "image"}));
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));
