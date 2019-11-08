@@ -1844,26 +1844,22 @@ class ElvClient {
     };
 
     const ops = filePaths.map(path => {
-      const mimeType = mime.lookup(path);
-
       if(copy) {
         return {
-          op: copy ? "ingest-copy" : "add-reference",
+          op: "ingest-copy",
           path,
           ingest: {
             type: "key",
-            path,
-            mime_type: mimeType
+            path: path,
           }
         };
       } else {
         return {
-          op: copy ? "ingest-copy" : "add-reference",
+          op: "add-reference",
           path,
           reference: {
             type: "key",
-            path,
-            mime_type: mimeType
+            path: path,
           }
         };
       }
@@ -1906,8 +1902,8 @@ class ElvClient {
 
           callback({
             done,
-            uploadedFiles: progress.files.completed,
-            totalFiles: progress.files.total,
+            uploadedFiles: progress.completed,
+            totalFiles: progress.total,
           });
         }
       }

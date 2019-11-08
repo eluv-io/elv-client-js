@@ -60,7 +60,6 @@ if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
-const mime = require("mime-types");
 
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
@@ -1900,26 +1899,22 @@ class ElvClient {
     };
 
     const ops = filePaths.map(path => {
-      const mimeType = mime.lookup(path);
-
       if(copy) {
         return {
-          op: copy ? "ingest-copy" : "add-reference",
+          op: "ingest-copy",
           path,
           ingest: {
             type: "key",
-            path,
-            mime_type: mimeType
+            path: path,
           }
         };
       } else {
         return {
-          op: copy ? "ingest-copy" : "add-reference",
+          op: "add-reference",
           path,
           reference: {
             type: "key",
-            path,
-            mime_type: mimeType
+            path: path,
           }
         };
       }
@@ -1962,8 +1957,8 @@ class ElvClient {
 
           callback({
             done,
-            uploadedFiles: progress.files.completed,
-            totalFiles: progress.files.total,
+            uploadedFiles: progress.completed,
+            totalFiles: progress.total,
           });
         }
       }
