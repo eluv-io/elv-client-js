@@ -34,8 +34,6 @@ var UrlJoin = require("url-join");
 
 var Ethers = require("ethers");
 
-var mime = require("mime-types");
-
 var AuthorizationClient = require("./AuthorizationClient");
 
 var ElvWallet = require("./ElvWallet");
@@ -3416,26 +3414,22 @@ function () {
                   }
                 };
                 ops = filePaths.map(function (path) {
-                  var mimeType = mime.lookup(path);
-
                   if (copy) {
                     return {
-                      op: copy ? "ingest-copy" : "add-reference",
+                      op: "ingest-copy",
                       path: path,
                       ingest: {
                         type: "key",
-                        path: path,
-                        mime_type: mimeType
+                        path: path
                       }
                     };
                   } else {
                     return {
-                      op: copy ? "ingest-copy" : "add-reference",
+                      op: "add-reference",
                       path: path,
                       reference: {
                         type: "key",
-                        path: path,
-                        mime_type: mimeType
+                        path: path
                       }
                     };
                   }
@@ -3508,8 +3502,8 @@ function () {
                     _progress = status.add_reference.progress;
                     callback({
                       done: done,
-                      uploadedFiles: _progress.files.completed,
-                      totalFiles: _progress.files.total
+                      uploadedFiles: _progress.completed,
+                      totalFiles: _progress.total
                     });
                   }
                 }
