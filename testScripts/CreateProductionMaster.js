@@ -49,7 +49,12 @@ const Create = async (masterLibraryId, title, metadata, files, access, copy=fals
     await client.SetSigner({signer});
 
     let fileInfo;
-    if(!access) {
+    if(access) {
+      fileInfo = files.map(path => ({
+        path: Path.basename(path),
+        source: path,
+      }));
+    } else {
       fileInfo = files.map(path => {
         const data = fs.readFileSync(path);
         const mimeType = mime.lookup(path) || "video/mp4";
@@ -73,7 +78,6 @@ const Create = async (masterLibraryId, title, metadata, files, access, copy=fals
         description: "Production Master for " + title,
         metadata,
         fileInfo,
-        filePaths: files,
         access,
         copy,
         callback: progress => {

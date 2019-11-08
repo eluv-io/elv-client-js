@@ -3,6 +3,16 @@ const fs = require("fs");
 const isEqual = require("lodash.isequal");
 
 const Replacer = (name, value) => {
+  // Filter sensitive parameters
+  const filteredParameters = ["privatekey", "accesskey", "secret", "secret_access_key", "access_key_id"];
+  if(filteredParameters.includes(name.toLowerCase())) {
+    return "<filtered>";
+  }
+
+  if(typeof value === "function") {
+    return "function";
+  }
+
   if(!value || typeof value !== "object" || Array.isArray(value)) { return value; }
 
   if(Buffer.isBuffer(value) || (value.type === "Buffer" && value.data)) {

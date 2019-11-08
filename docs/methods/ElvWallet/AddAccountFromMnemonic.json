@@ -1,6 +1,6 @@
 [
   {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"garment vocal despair come robust depend produce exercise rib proof yellow claw\"\n});",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"butter series income traffic scrub useful lucky tent wave update bracket west\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

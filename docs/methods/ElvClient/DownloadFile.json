@@ -1,10 +1,14 @@
 [
   {
-    "signature": "async DownloadFile({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"filePath\": \"testDirectory/File 1\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"filePath\": \"testDirectory/File 1\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   },
   {
-    "signature": "async DownloadFile({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"filePath\": \"testDirectory/File 2\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"filePath\": \"testDirectory/File 2\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
+  },
+  {
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"filePath\": \"s3-copy\",\n  \"format\": \"arrayBuffer\"\n});",
+    "result": "<ArrayBuffer 97944174>"
   }
 ]

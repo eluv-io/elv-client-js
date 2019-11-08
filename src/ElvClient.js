@@ -4,7 +4,6 @@ if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
-const mime = require("mime-types");
 
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
@@ -1801,6 +1800,15 @@ class ElvClient {
   /**
    * Copy/reference files from S3 to a content object
    *
+   * Expected format of fileInfo:
+   *
+   [
+     {
+       path: string,
+       source: string
+     }
+   ]
+   *
    * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1808,7 +1816,7 @@ class ElvClient {
    * @param {string} writeToken - Write token of the draft
    * @param {string} region - AWS region to use
    * @param {string} bucket - AWS bucket to use
-   * @param {Array<string>} filePaths - List of files/directories to copy/reference
+   * @param {Array<Object>} fileInfo - List of files to reference/copy
    * @param {string} accessKey - AWS access key
    * @param {string} secret - AWS secret
    * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
@@ -1822,7 +1830,7 @@ class ElvClient {
     writeToken,
     region,
     bucket,
-    filePaths,
+    fileInfo,
     accessKey,
     secret,
     copy=false,
@@ -1843,23 +1851,23 @@ class ElvClient {
       }
     };
 
-    const ops = filePaths.map(path => {
+    const ops = fileInfo.map(info => {
       if(copy) {
         return {
           op: "ingest-copy",
-          path,
+          path: info.path,
           ingest: {
             type: "key",
-            path: path,
+            path: info.source,
           }
         };
       } else {
         return {
           op: "add-reference",
-          path,
+          path: info.path,
           reference: {
             type: "key",
-            path: path,
+            path: info.source,
           }
         };
       }
@@ -2594,10 +2602,9 @@ class ElvClient {
    * @param {string=} description - Description of the content
    * @param {string} contentTypeName - Name of the content type to use
    * @param {Object=} metadata - Additional metadata for the content object
-   * @param {Object=} fileInfo - (Local) Files to upload to (See UploadFiles method)
-   * @param {Array<string>} filePaths - (S3) List of files to copy/reference from bucket
+   * @param {Object=} fileInfo - Files to upload to (See UploadFiles/UploadFilesFromS3 method)
    * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
-   * @param {function=} callback - Progress callback for file upload (See UploadFiles or UploadFilesFromS3 method)
+   * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
    * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
    * - Format: {region, bucket, accessKey, secret}
    *
@@ -2611,7 +2618,6 @@ class ElvClient {
     metadata={},
     fileInfo,
     access,
-    filePaths=[],
     copy=false,
     callback
   }) {
@@ -2637,7 +2643,7 @@ class ElvClient {
         libraryId,
         objectId: id,
         writeToken: write_token,
-        filePaths,
+        fileInfo,
         region,
         bucket,
         accessKey,

@@ -1,0 +1,8 @@
+[
+  {
+    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"writeToken\": \"tqw_9z4SPjoWdPdKojej79EmHziAA5yfNtu2B\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-copy\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": true,\n  \"callback\": \"function\"\n});"
+  },
+  {
+    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"writeToken\": \"tqw_MWvgmcQ784FTsetwjMQzUf78pcCMVj6F6\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-reference\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": false,\n  \"callback\": \"function\"\n});"
+  }
+]

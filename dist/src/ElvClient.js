@@ -3370,6 +3370,15 @@ function () {
     /**
      * Copy/reference files from S3 to a content object
      *
+     * Expected format of fileInfo:
+     *
+     [
+       {
+         path: string,
+         source: string
+       }
+     ]
+     *
      * @methodGroup Parts and Files
      * @namedParams
      * @param {string} libraryId - ID of the library
@@ -3377,7 +3386,7 @@ function () {
      * @param {string} writeToken - Write token of the draft
      * @param {string} region - AWS region to use
      * @param {string} bucket - AWS bucket to use
-     * @param {Array<string>} filePaths - List of files/directories to copy/reference
+     * @param {Array<Object>} fileInfo - List of files to reference/copy
      * @param {string} accessKey - AWS access key
      * @param {string} secret - AWS secret
      * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
@@ -3392,13 +3401,13 @@ function () {
       var _UploadFilesFromS = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee44(_ref49) {
-        var libraryId, objectId, writeToken, region, bucket, filePaths, accessKey, secret, _ref49$copy, copy, callback, defaults, ops, _ref50, id, status, done, progress, _progress;
+        var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref49$copy, copy, callback, defaults, ops, _ref50, id, status, done, progress, _progress;
 
         return regeneratorRuntime.wrap(function _callee44$(_context44) {
           while (1) {
             switch (_context44.prev = _context44.next) {
               case 0:
-                libraryId = _ref49.libraryId, objectId = _ref49.objectId, writeToken = _ref49.writeToken, region = _ref49.region, bucket = _ref49.bucket, filePaths = _ref49.filePaths, accessKey = _ref49.accessKey, secret = _ref49.secret, _ref49$copy = _ref49.copy, copy = _ref49$copy === void 0 ? false : _ref49$copy, callback = _ref49.callback;
+                libraryId = _ref49.libraryId, objectId = _ref49.objectId, writeToken = _ref49.writeToken, region = _ref49.region, bucket = _ref49.bucket, fileInfo = _ref49.fileInfo, accessKey = _ref49.accessKey, secret = _ref49.secret, _ref49$copy = _ref49.copy, copy = _ref49$copy === void 0 ? false : _ref49$copy, callback = _ref49.callback;
                 defaults = {
                   access: {
                     protocol: "s3",
@@ -3413,23 +3422,23 @@ function () {
                     }
                   }
                 };
-                ops = filePaths.map(function (path) {
+                ops = fileInfo.map(function (info) {
                   if (copy) {
                     return {
                       op: "ingest-copy",
-                      path: path,
+                      path: info.path,
                       ingest: {
                         type: "key",
-                        path: path
+                        path: info.source
                       }
                     };
                   } else {
                     return {
                       op: "add-reference",
-                      path: path,
+                      path: info.path,
                       reference: {
                         type: "key",
-                        path: path
+                        path: info.source
                       }
                     };
                   }
@@ -5178,10 +5187,9 @@ function () {
      * @param {string=} description - Description of the content
      * @param {string} contentTypeName - Name of the content type to use
      * @param {Object=} metadata - Additional metadata for the content object
-     * @param {Object=} fileInfo - (Local) Files to upload to (See UploadFiles method)
-     * @param {Array<string>} filePaths - (S3) List of files to copy/reference from bucket
+     * @param {Object=} fileInfo - Files to upload to (See UploadFiles/UploadFilesFromS3 method)
      * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
-     * @param {function=} callback - Progress callback for file upload (See UploadFiles or UploadFilesFromS3 method)
+     * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
      * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
      * - Format: {region, bucket, accessKey, secret}
      *
@@ -5195,13 +5203,13 @@ function () {
       var _CreateProductionMaster = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee66(_ref73) {
-        var libraryId, name, description, _ref73$metadata, metadata, fileInfo, access, _ref73$filePaths, filePaths, _ref73$copy, copy, callback, contentType, _ref74, id, write_token, accessParameter, region, bucket, accessKey, secret, _ref75, logs, errors, warnings, finalizeResponse;
+        var libraryId, name, description, _ref73$metadata, metadata, fileInfo, access, _ref73$copy, copy, callback, contentType, _ref74, id, write_token, accessParameter, region, bucket, accessKey, secret, _ref75, logs, errors, warnings, finalizeResponse;
 
         return regeneratorRuntime.wrap(function _callee66$(_context66) {
           while (1) {
             switch (_context66.prev = _context66.next) {
               case 0:
-                libraryId = _ref73.libraryId, name = _ref73.name, description = _ref73.description, _ref73$metadata = _ref73.metadata, metadata = _ref73$metadata === void 0 ? {} : _ref73$metadata, fileInfo = _ref73.fileInfo, access = _ref73.access, _ref73$filePaths = _ref73.filePaths, filePaths = _ref73$filePaths === void 0 ? [] : _ref73$filePaths, _ref73$copy = _ref73.copy, copy = _ref73$copy === void 0 ? false : _ref73$copy, callback = _ref73.callback;
+                libraryId = _ref73.libraryId, name = _ref73.name, description = _ref73.description, _ref73$metadata = _ref73.metadata, metadata = _ref73$metadata === void 0 ? {} : _ref73$metadata, fileInfo = _ref73.fileInfo, access = _ref73.access, _ref73$copy = _ref73.copy, copy = _ref73$copy === void 0 ? false : _ref73$copy, callback = _ref73.callback;
                 _context66.next = 3;
                 return this.ContentType({
                   name: "Production Master"
@@ -5243,7 +5251,7 @@ function () {
                   libraryId: libraryId,
                   objectId: id,
                   writeToken: write_token,
-                  filePaths: filePaths,
+                  fileInfo: fileInfo,
                   region: region,
                   bucket: bucket,
                   accessKey: accessKey,

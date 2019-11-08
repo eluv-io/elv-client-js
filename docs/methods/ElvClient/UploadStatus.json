@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"writeToken\": \"tqw_9z4SPjoWdPdKojej79EmHziAA5yfNtu2B\",\n  \"uploadId\": \"iqfjVsoCsZEa2iqKDeAoG99Kmt\"\n});",
+    "result": "{\n  \"id\": \"iqfjVsoCsZEa2iqKDeAoG99Kmt\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"IN_PROGRESS\",\n  \"ingest_copy\": {\n    \"done\": true,\n    \"progress\": {\n      \"files\": {\n        \"total\": 1,\n        \"completed\": 1,\n        \"failed\": 0,\n        \"in_progress\": 0,\n        \"details\": {}\n      },\n      \"bytes\": {\n        \"total\": 97944174,\n        \"completed\": 97944174\n      }\n    }\n  }\n}"
+  },
+  {
+    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"writeToken\": \"tqw_MWvgmcQ784FTsetwjMQzUf78pcCMVj6F6\",\n  \"uploadId\": \"iqfjGckDd1hjNZdkT8UNKvyDoK\"\n});",
+    "result": "{\n  \"id\": \"iqfjGckDd1hjNZdkT8UNKvyDoK\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"COMPLETED\",\n  \"add_reference\": {\n    \"done\": true,\n    \"progress\": {\n      \"total\": 1,\n      \"completed\": 1\n    }\n  }\n}"
+  }
+]
