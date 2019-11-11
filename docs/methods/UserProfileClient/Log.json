@@ -1,15 +1,15 @@
 [
   {
-    "signature": " Log(\"Retrieving user wallet address for user 0xE065Ba1195BAfc44b8fC72F1C1f973f5deB2a4a8\");"
+    "signature": " Log(\"Retrieving user wallet address for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
   },
   {
-    "signature": " Log(\"Creating user wallet for user 0xE065Ba1195BAfc44b8fC72F1C1f973f5deB2a4a8\");"
+    "signature": " Log(\"Creating user wallet for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
   },
   {
-    "signature": " Log(\"Creating wallet object for user 0xE065Ba1195BAfc44b8fC72F1C1f973f5deB2a4a8\");"
+    "signature": " Log(\"Creating wallet object for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
   },
   {
-    "signature": " Log(\"Retrieving user wallet address for user 0xE065Ba1195BAfc44b8fC72F1C1f973f5deB2a4a8\");"
+    "signature": " Log(\"Retrieving user wallet address for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
   },
   {
     "signature": " Log(\"Merging user metadata at /\");"
@@ -30,13 +30,13 @@
     "signature": " Log(\"Accessing private user metadata at /\");"
   },
   {
-    "signature": " Log(\"Setting profile image for user 0xE065Ba1195BAfc44b8fC72F1C1f973f5deB2a4a8\");"
+    "signature": " Log(\"Setting profile image for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at image\");"
   },
   {
-    "signature": " Log(\"Setting profile image for user 0xE065Ba1195BAfc44b8fC72F1C1f973f5deB2a4a8\");"
+    "signature": " Log(\"Setting profile image for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at image\");"
@@ -48,10 +48,10 @@
     "signature": " Log(\"Accessing private user metadata at access_level\");"
   },
   {
-    "signature": " Log(\"Accessing private user metadata at accessed_content/hq__9rruxrccJb8HYc6kjv9tBYgRpLoRHfxmV88VQhGGRidDoXxbG1k2drhqQzLCzSJyfRmGnzpsQn\");"
+    "signature": " Log(\"Accessing private user metadata at accessed_content/hq__7wF7Sh5hdBweHqydhpqx414ifyVKWK8dj9Fozh68Gahg1xLPow9BNF7x5PEkanyMxHJsK2fn7F\");"
   },
   {
-    "signature": " Log(\"Accessing private user metadata at accessed_content/hq__BjJiN1AAuH6oecA4KAojPhzFtkgMcDi7gEEXHih7Dz69EqCPYNoSx1vuZ39LWzqHjsXF51Js67\");"
+    "signature": " Log(\"Accessing private user metadata at accessed_content/hq__7nSi12suUThRYbmbSox9Y46Yr2Yv6Wrpfcp2r2hhaYHVSyZYNnvrgVd3z1oiqgiCQ9YBnjPEAc\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at collected_data\");"

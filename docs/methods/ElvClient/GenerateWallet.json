@@ -1,6 +1,6 @@
 [
   {
     "signature": " GenerateWallet();",
-    "result": "{\n  \"provider\": {\n    \"ready\": \"<Promise>\",\n    \"_lastBlockNumber\": -2,\n    \"_balances\": {},\n    \"_events\": [],\n    \"_pollingInterval\": 4000,\n    \"_emitted\": {\n      \"block\": -2,\n      \"t:0x69ce58cbabd414055a2b9395ca620fbef9f81430d180dc2fc0e8f8647ad28027\": 114105\n    },\n    \"_fastQueryDate\": 1573253423335,\n    \"connection\": {\n      \"url\": \"https://host-35-233-145-232.test.contentfabric.io/eth/\"\n    },\n    \"_network\": {\n      \"chainId\": 955210,\n      \"name\": \"unknown\"\n    },\n    \"_fastBlockNumberPromise\": \"<Promise>\",\n    \"_fastBlockNumber\": 114115\n  },\n  \"signers\": {}\n}"
+    "result": "{\n  \"provider\": {\n    \"ready\": \"<Promise>\",\n    \"_lastBlockNumber\": -2,\n    \"_balances\": {},\n    \"_events\": [],\n    \"_pollingInterval\": 4000,\n    \"_emitted\": {\n      \"block\": -2\n    },\n    \"_fastQueryDate\": 1573512246861,\n    \"connection\": {\n      \"url\": \"https://host-35-233-145-232.test.contentfabric.io/eth/\"\n    },\n    \"_network\": {\n      \"chainId\": 955210,\n      \"name\": \"unknown\"\n    },\n    \"_fastBlockNumberPromise\": \"<Promise>\",\n    \"_fastBlockNumber\": 117015\n  },\n  \"signers\": {}\n}"
   }
 ]

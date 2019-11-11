@@ -994,6 +994,54 @@ describe("Test ElvClient", () => {
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
     });
 
+    test("Upload Files From S3 - Errors", async () => {
+      if(!(s3Access.accessKey && s3Access.bucket && s3Access.region && s3Access.secret)) {
+        throw Error("S3 info and credentials not specified");
+      }
+
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      try {
+        await client.UploadFilesFromS3({
+          libraryId,
+          objectId,
+          writeToken,
+          fileInfo: [{
+            path: "s3-reference",
+            source: "invalid-file"
+          }],
+          region: s3Access.region,
+          bucket: s3Access.bucket,
+          accessKey: s3Access.accessKey,
+          secret: s3Access.secret,
+          copy: true
+        });
+
+        expect(undefined).toBeDefined();
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
+
+      try {
+        await client.UploadFilesFromS3({
+          libraryId,
+          objectId,
+          writeToken,
+          fileInfo: [{
+            path: "s3-reference",
+            source: "invalid-file"
+          }],
+          region: s3Access.region,
+          bucket: s3Access.bucket,
+          accessKey: s3Access.accessKey,
+          secret: s3Access.secret,
+          copy: false
+        });
+
+        expect(undefined).toBeDefined();
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
+    });
+
     test("Download Files", async () => {
       const fileData1 = await client.DownloadFile({libraryId, objectId, filePath: "testDirectory/File 1", format: "arrayBuffer"});
       expect(new Uint8Array(fileData1).toString()).toEqual(new Uint8Array(testFile1).toString());
@@ -1283,6 +1331,8 @@ describe("Test ElvClient", () => {
 
       const writeToken = startResponse.writeToken;
 
+      const startTime = new Date().getTime();
+
       // eslint-disable-next-line no-constant-condition
       while(true) {
         const status = await client.ContentObjectMetadata({
@@ -1300,6 +1350,11 @@ describe("Test ElvClient", () => {
         });
 
         if(done) { break; }
+
+        if(new Date().getTime() - startTime > 60000) {
+          // If processing takes too long, start logging status for debugging
+          console.log(status);
+        }
 
         await new Promise(resolve => setTimeout(resolve, 10000));
       }

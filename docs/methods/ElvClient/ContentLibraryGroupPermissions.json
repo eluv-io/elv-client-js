@@ -1,26 +1,26 @@
 [
   {
-    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"permissions\": [\n    \"contributor\"\n  ]\n});",
+    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"permissions\": [\n    \"contributor\"\n  ]\n});",
     "result": "{}"
   },
   {
-    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"permissions\": [\n    \"reviewer\"\n  ]\n});",
+    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"permissions\": [\n    \"reviewer\"\n  ]\n});",
     "result": "{}"
   },
   {
-    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\"\n});",
-    "result": "{\n  \"0x0790e3a8c40797ed161076062caee73ce9dad89c\": [\n    \"contributor\",\n    \"reviewer\"\n  ]\n}"
+    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\"\n});",
+    "result": "{\n  \"0x90deadfd130900bf1db8d0ee7fd8f1894335987a\": [\n    \"contributor\",\n    \"reviewer\"\n  ]\n}"
   },
   {
-    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"permissions\": [\n    \"accessor\"\n  ]\n});",
+    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"permissions\": [\n    \"accessor\"\n  ]\n});",
     "result": "{}"
   },
   {
-    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"permissions\": [\n    \"reviewer\"\n  ]\n});",
-    "result": "{\n  \"0x0790e3a8c40797ed161076062caee73ce9dad89c\": [\n    \"reviewer\"\n  ]\n}"
+    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"permissions\": [\n    \"reviewer\"\n  ]\n});",
+    "result": "{\n  \"0x90deadfd130900bf1db8d0ee7fd8f1894335987a\": [\n    \"reviewer\"\n  ]\n}"
   },
   {
-    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\"\n});",
-    "result": "{\n  \"0x0790e3a8c40797ed161076062caee73ce9dad89c\": [\n    \"accessor\",\n    \"contributor\"\n  ]\n}"
+    "signature": "async ContentLibraryGroupPermissions({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\"\n});",
+    "result": "{\n  \"0x90deadfd130900bf1db8d0ee7fd8f1894335987a\": [\n    \"accessor\",\n    \"contributor\"\n  ]\n}"
   }
 ]

@@ -39,7 +39,7 @@
     "result": "<Set>"
   },
   {
-    "signature": " MakeClonable({\n  \"0\": 52,\n  \"1\": 100,\n  \"2\": 100,\n  \"3\": 97,\n  \"4\": 97,\n  \"5\": 97,\n  \"6\": 51,\n  \"7\": 101,\n  \"8\": 100,\n  \"9\": 55,\n  \"10\": 53,\n  \"11\": 53,\n  \"12\": 100,\n  \"13\": 98,\n  \"14\": 50,\n  \"15\": 53,\n  \"16\": 57,\n  \"17\": 52,\n  \"18\": 57,\n  \"19\": 50,\n  \"20\": 50,\n  \"21\": 97,\n  \"22\": 50,\n  \"23\": 101,\n  \"24\": 49,\n  \"25\": 52,\n  \"26\": 52,\n  \"27\": 99,\n  \"28\": 99,\n  \"29\": 51,\n  \"30\": 49,\n  \"31\": 57,\n  \"32\": 49,\n  \"33\": 97,\n  \"34\": 56,\n  \"35\": 55,\n  \"36\": 102,\n  \"37\": 53,\n  \"38\": 99,\n  \"39\": 49\n});",
+    "signature": " MakeClonable({\n  \"0\": 102,\n  \"1\": 52,\n  \"2\": 101,\n  \"3\": 48,\n  \"4\": 56,\n  \"5\": 102,\n  \"6\": 50,\n  \"7\": 51,\n  \"8\": 99,\n  \"9\": 50,\n  \"10\": 52,\n  \"11\": 99,\n  \"12\": 97,\n  \"13\": 99,\n  \"14\": 100,\n  \"15\": 102,\n  \"16\": 51,\n  \"17\": 56,\n  \"18\": 48,\n  \"19\": 53,\n  \"20\": 49,\n  \"21\": 52,\n  \"22\": 56,\n  \"23\": 101,\n  \"24\": 53,\n  \"25\": 48,\n  \"26\": 102,\n  \"27\": 57,\n  \"28\": 57,\n  \"29\": 50,\n  \"30\": 97,\n  \"31\": 55,\n  \"32\": 49,\n  \"33\": 100,\n  \"34\": 50,\n  \"35\": 49,\n  \"36\": 48,\n  \"37\": 56,\n  \"38\": 52,\n  \"39\": 50\n});",
     "result": "<ArrayBuffer 40>"
   },
   {
@@ -61,7 +61,7 @@
     "result": "\"Error\""
   },
   {
-    "signature": " MakeClonable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<Buffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"response\": \"<Response 0>\",\n  \"function\": \"function\",\n  \"error\": {}\n});",
+    "signature": " MakeClonable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<Buffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"response\": \"<Response 0>\",\n  \"function\": \"<function>\",\n  \"error\": {}\n});",
     "result": "{\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<ArrayBuffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"error\": \"Error\"\n}"
   }
 ]
