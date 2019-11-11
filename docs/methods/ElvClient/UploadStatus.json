@@ -1,10 +1,14 @@
 [
   {
-    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"writeToken\": \"tqw_9z4SPjoWdPdKojej79EmHziAA5yfNtu2B\",\n  \"uploadId\": \"iqfjVsoCsZEa2iqKDeAoG99Kmt\"\n});",
-    "result": "{\n  \"id\": \"iqfjVsoCsZEa2iqKDeAoG99Kmt\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"IN_PROGRESS\",\n  \"ingest_copy\": {\n    \"done\": true,\n    \"progress\": {\n      \"files\": {\n        \"total\": 1,\n        \"completed\": 1,\n        \"failed\": 0,\n        \"in_progress\": 0,\n        \"details\": {}\n      },\n      \"bytes\": {\n        \"total\": 97944174,\n        \"completed\": 97944174\n      }\n    }\n  }\n}"
+    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"objectId\": \"iq__3D7mZR7SFsiPjCN3tTgxQM5Yy9FX\",\n  \"writeToken\": \"tqw_KbRCTmNW2BYaEc6t2kSxTS48rWE4L26M1\",\n  \"uploadId\": \"iqfjEtLsHwyd5mQZeqYPNMCEsE\"\n});",
+    "result": "{\n  \"id\": \"iqfjEtLsHwyd5mQZeqYPNMCEsE\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"COMPLETED\",\n  \"ingest_copy\": {\n    \"done\": true,\n    \"progress\": {\n      \"files\": {\n        \"total\": 1,\n        \"completed\": 1,\n        \"failed\": 0,\n        \"in_progress\": 0,\n        \"details\": {}\n      },\n      \"bytes\": {\n        \"total\": 97944174,\n        \"completed\": 97944174\n      }\n    }\n  }\n}"
   },
   {
-    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib3Vz4qN3HfX1riFJuWG8BXzAgsY9U\",\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\",\n  \"writeToken\": \"tqw_MWvgmcQ784FTsetwjMQzUf78pcCMVj6F6\",\n  \"uploadId\": \"iqfjGckDd1hjNZdkT8UNKvyDoK\"\n});",
-    "result": "{\n  \"id\": \"iqfjGckDd1hjNZdkT8UNKvyDoK\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"COMPLETED\",\n  \"add_reference\": {\n    \"done\": true,\n    \"progress\": {\n      \"total\": 1,\n      \"completed\": 1\n    }\n  }\n}"
+    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"objectId\": \"iq__3D7mZR7SFsiPjCN3tTgxQM5Yy9FX\",\n  \"writeToken\": \"tqw_LFJkPGfDZycJoPLH8XcM3CPDbrV4gknV3\",\n  \"uploadId\": \"iqfj5KiSZxgaEecCuEWvAAY3f2\"\n});",
+    "result": "{\n  \"id\": \"iqfj5KiSZxgaEecCuEWvAAY3f2\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"COMPLETED\",\n  \"add_reference\": {\n    \"done\": true,\n    \"progress\": {\n      \"total\": 1,\n      \"completed\": 1\n    }\n  }\n}"
+  },
+  {
+    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"objectId\": \"iq__3D7mZR7SFsiPjCN3tTgxQM5Yy9FX\",\n  \"writeToken\": \"tqw_CYjBmBdFfJ8PLycTCeHT1NbhsXWT1hC9f\",\n  \"uploadId\": \"iqfjCGbqk1p52yXSSQuu82sfA5\"\n});",
+    "result": "{\n  \"id\": \"iqfjCGbqk1p52yXSSQuu82sfA5\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"FAILED\",\n  \"error\": \"op [ingest] kind [I/O error] builder [] download [] resolve [op [cloud resolver] kind [I/O error] cause [map[/eluvio-mez-test/invalid-file:op [resolve] kind [I/O error] cause:\\n\\top [cloudFile.StatObject] kind [item does not exist] path [/eluvio-mez-test/invalid-file] cause:\\n\\top [attributes] kind [item does not exist] bucket [eluvio-mez-test] key [invalid-file] message [Not Found] request_id [4D8347676AD24686] status_code [404] cause [NotFound: Not Found\\n\\tstatus code: 404, request id: 4D8347676AD24686, host id: 7FQG9QPIP6l4L0Qe9jLy0fSUKh9OA20JUGO4a1jhFlcutV0uGEyiDseg++x9hkO8LV02wWwblwg=]]]]\"\n}"
   }
 ]

@@ -27,20 +27,20 @@
     "result": "\"public\""
   },
   {
-    "signature": " __GetCachedMetadata(\"accessed_content/hq__59FCXFjajtaV1nuDjeHnWBEr2vVpwn92hA9aJ6D6Jcx8E74rejaJSbKBkaYodohHHQMirY1D2a\");"
+    "signature": " __GetCachedMetadata(\"accessed_content/hq__KYPnZoYX62oThbj7ZDjuDn8oXffg8J9BAd8fviekgooxs5RMXvDNMDTT2veZMyf5iXY7UgT3vk\");"
   },
   {
     "signature": " __GetCachedMetadata(\"collected_data\");"
   },
   {
-    "signature": " __GetCachedMetadata(\"accessed_content/hq__9rruxrccJb8HYc6kjv9tBYgRpLoRHfxmV88VQhGGRidDoXxbG1k2drhqQzLCzSJyfRmGnzpsQn\");"
+    "signature": " __GetCachedMetadata(\"accessed_content/hq__7wF7Sh5hdBweHqydhpqx414ifyVKWK8dj9Fozh68Gahg1xLPow9BNF7x5PEkanyMxHJsK2fn7F\");"
   },
   {
     "signature": " __GetCachedMetadata(\"collected_data\");",
     "result": "{\n  \"boat\": {\n    \"aggregate\": 0.6,\n    \"occurrences\": 1\n  },\n  \"cherry\": {\n    \"aggregate\": 0.3,\n    \"occurrences\": 1\n  },\n  \"chocolate\": {\n    \"aggregate\": 0.8,\n    \"occurrences\": 1\n  }\n}"
   },
   {
-    "signature": " __GetCachedMetadata(\"accessed_content/hq__BjJiN1AAuH6oecA4KAojPhzFtkgMcDi7gEEXHih7Dz69EqCPYNoSx1vuZ39LWzqHjsXF51Js67\");"
+    "signature": " __GetCachedMetadata(\"accessed_content/hq__7nSi12suUThRYbmbSox9Y46Yr2Yv6Wrpfcp2r2hhaYHVSyZYNnvrgVd3z1oiqgiCQ9YBnjPEAc\");"
   },
   {
     "signature": " __GetCachedMetadata(\"collected_data\");",

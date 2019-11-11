@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async AccessInfo({\n  \"objectId\": \"iq__YsfdkCFFVSCNCtpGc9RwD22LCt1\"\n});",
+    "signature": "async AccessInfo({\n  \"objectId\": \"iq__3D7mZR7SFsiPjCN3tTgxQM5Yy9FX\"\n});",
     "result": "{\n  \"visibilityCode\": 10,\n  \"visible\": true,\n  \"accessible\": true,\n  \"editable\": false,\n  \"hasAccess\": false,\n  \"accessCode\": 10,\n  \"accessCharge\": \"0.5\"\n}"
   }
 ]

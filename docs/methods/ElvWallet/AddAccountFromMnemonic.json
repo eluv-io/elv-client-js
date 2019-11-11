@@ -1,6 +1,6 @@
 [
   {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"butter series income traffic scrub useful lucky tent wave update bracket west\"\n});",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"pupil poet replace include when toss fury stuff rack vintage judge dust\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

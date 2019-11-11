@@ -10,7 +10,7 @@ const Replacer = (name, value) => {
   }
 
   if(typeof value === "function") {
-    return "function";
+    return "<function>";
   }
 
   if(!value || typeof value !== "object" || Array.isArray(value)) { return value; }
