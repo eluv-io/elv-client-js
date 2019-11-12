@@ -64,7 +64,10 @@ const Create = async (
   title,
   poster,
   metadata,
-  existingMezzId
+  existingMezzId,
+  s3Copy,
+  s3Reference,
+  wait=false
 ) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
@@ -167,18 +170,18 @@ const Create = async (
 
     Report(startResponse);
 
-    const writeToken = startResponse.writeToken;
+    console.log("\nLibrary ID", mezLibraryId);
+    console.log("Object ID", objectId);
+    console.log("Write Token:", startResponse.lro_draft.write_token);
+    console.log("Write Node:", startResponse.lro_draft.node, "\n");
 
-    console.log("\nProgress:");
+    if(!wait) { return; }
+
+    console.log("Progress:");
 
     // eslint-disable-next-line no-constant-condition
     while(true) {
-      const status = await client.ContentObjectMetadata({
-        libraryId: mezLibraryId,
-        objectId,
-        writeToken,
-        metadataSubtree: "lro_status"
-      });
+      const status = await client.LROStatus({libraryId: mezLibraryId, objectId});
 
       let done = true;
       const progress = Object.keys(status).map(id => {
@@ -201,7 +204,6 @@ const Create = async (
     const finalizeResponse = await client.FinalizeABRMezzanine({
       libraryId: mezLibraryId,
       objectId,
-      writeToken,
       offeringKey: productionMasterVariant
     });
 
@@ -216,7 +218,7 @@ const Create = async (
   }
 };
 
-let {library, masterHash, title, poster, existingMezzId, variant, metadata, s3Reference, s3Copy} = argv;
+let {library, masterHash, title, poster, existingMezzId, variant, metadata, wait, s3Reference, s3Copy} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -233,4 +235,4 @@ if(metadata) {
   }
 }
 
-Create(library, masterHash, variant, title, poster, metadata, existingMezzId, s3Copy, s3Reference);
+Create(library, masterHash, variant, title, poster, metadata, existingMezzId, s3Copy, s3Reference, wait);

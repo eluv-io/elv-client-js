@@ -326,6 +326,7 @@ class FrameClient {
       "LibraryContentTypes",
       "LinkUrl",
       "ListFiles",
+      "LROStatus",
       "MergeMetadata",
       "NodeId",
       "Nodes",

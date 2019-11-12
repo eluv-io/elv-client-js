@@ -2,9 +2,9 @@
 
 exports.ValidateLibrary = function (libraryId) {
   if (!libraryId) {
-    throw "Library ID not specified";
+    throw Error("Library ID not specified");
   } else if (!libraryId.toString().startsWith("ilib")) {
-    throw "Invalid library ID: ".concat(libraryId);
+    throw Error("Invalid library ID: ".concat(libraryId));
   }
 };
 
@@ -12,31 +12,31 @@ exports.ValidateObject = function (objectId) {
   if (!objectId) {
     throw "Object ID not specified";
   } else if (!objectId.toString().startsWith("iq__")) {
-    throw "Invalid object ID: ".concat(objectId);
+    throw Error("Invalid object ID: ".concat(objectId));
   }
 };
 
 exports.ValidateVersion = function (versionHash) {
   if (!versionHash) {
-    throw "Version hash not specified";
+    throw Error("Version hash not specified");
   } else if (!versionHash.toString().startsWith("hq__")) {
-    throw "Invalid version hash: ".concat(versionHash);
+    throw Error("Invalid version hash: ".concat(versionHash));
   }
 };
 
 exports.ValidateWriteToken = function (writeToken) {
   if (!writeToken) {
-    throw "Write token not specified";
+    throw Error("Write token not specified");
   } else if (!writeToken.toString().startsWith("tqw_")) {
-    throw "Invalid write token: ".concat(writeToken);
+    throw Error("Invalid write token: ".concat(writeToken));
   }
 };
 
 exports.ValidatePartHash = function (partHash) {
   if (!partHash) {
-    throw "Part hash not specified";
+    throw Error("Part hash not specified");
   } else if (!partHash.toString().startsWith("hqp_") && !partHash.toString().startsWith("hqpe")) {
-    throw "Invalid part hash: ".concat(partHash);
+    throw Error("Invalid part hash: ".concat(partHash));
   }
 };
 

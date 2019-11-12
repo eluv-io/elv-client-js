@@ -3028,12 +3028,28 @@ class ElvClient {
       ];
     }
 
-    const {write_token} = await this.EditContentObject({libraryId, objectId});
+    const processingDraft = await this.EditContentObject({libraryId, objectId});
+
+    const lroInfo = {
+      write_token: processingDraft.write_token,
+      node: this.HttpClient.BaseURI().toString()
+    };
+
+    // Update metadata with LRO version write token
+    const statusDraft = await this.EditContentObject({libraryId, objectId});
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: statusDraft.write_token,
+      metadataSubtree: "lro_draft",
+      metadata: lroInfo
+    });
+    await this.FinalizeContentObject({libraryId, objectId, writeToken: statusDraft.write_token});
 
     const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
       libraryId,
       objectId,
-      writeToken: write_token,
+      writeToken: processingDraft.write_token,
       headers,
       method: UrlJoin("media", "abr_mezzanine", "prep_start"),
       constant: false,
@@ -3044,12 +3060,59 @@ class ElvClient {
     });
 
     return {
-      writeToken: write_token,
+      lro_draft: lroInfo,
+      writeToken: processingDraft.write_token,
       data,
       logs: logs || [],
       warnings: warnings || [],
       errors: errors || []
     };
+  }
+
+  /**
+   * Retrieve status information for a long running operation (LRO) on the given object.
+   *
+   * @methodGroup Media
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   *
+   * @return {Promise<Object>} - LRO status
+   */
+  async LROStatus({libraryId, objectId}) {
+    ValidateParameters({libraryId, objectId});
+
+    const lroDraft = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "lro_draft"
+    });
+
+    if(!lroDraft || !lroDraft.write_token) {
+      throw Error("No LRO draft found for this mezzanine");
+    }
+
+    const httpClient = this.HttpClient;
+    let error, result;
+    try {
+      // Point directly to the node containing the draft
+      this.HttpClient = new HttpClient({uris: [lroDraft.node], debug: httpClient.debug});
+
+      result = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        writeToken: lroDraft.write_token,
+        metadataSubtree: "lro_status"
+      });
+    } catch(err) {
+      error = err;
+    } finally {
+      this.HttpClient = httpClient;
+    }
+
+    if(error) { throw error; }
+
+    return result;
   }
 
   /**
@@ -3064,52 +3127,77 @@ class ElvClient {
    *
    * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
    */
-  async FinalizeABRMezzanine({libraryId, objectId, writeToken, offeringKey="default"}) {
+  async FinalizeABRMezzanine({libraryId, objectId, offeringKey="default"}) {
     ValidateParameters({libraryId, objectId});
-    ValidateWriteToken(writeToken);
 
-    const mezzanineMetadata = await this.ContentObjectMetadata({
+    const lroDraft = await this.ContentObjectMetadata({
       libraryId,
       objectId,
-      writeToken,
-      metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
+      metadataSubtree: "lro_draft"
     });
 
-    const masterHash = mezzanineMetadata.default.prod_master_hash;
+    if(!lroDraft || !lroDraft.write_token) {
+      throw Error("No LRO draft found for this mezzanine");
+    }
 
-    // Authorization token for mezzanine and master
-    let authorizationTokens = [
-      await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
-      await this.authClient.AuthorizationToken({versionHash: masterHash})
-    ];
+    const httpClient = this.HttpClient;
+    let error, result;
+    try {
+      // Point directly to the node containing the draft
+      this.HttpClient = new HttpClient({uris: [lroDraft.node], debug: httpClient.debug});
 
-    const headers = {
-      Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
-    };
+      const mezzanineMetadata = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        writeToken: lroDraft.write_token,
+        metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
+      });
 
-    const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
-      objectId,
-      libraryId,
-      writeToken,
-      method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
-      headers,
-      constant: false
-    });
+      const masterHash = mezzanineMetadata.default.prod_master_hash;
 
-    const finalizeResponse = await this.FinalizeContentObject({
-      libraryId,
-      objectId: objectId,
-      writeToken,
-      awaitCommitConfirmation: false
-    });
+      // Authorization token for mezzanine and master
+      let authorizationTokens = [
+        await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
+        await this.authClient.AuthorizationToken({versionHash: masterHash})
+      ];
 
-    return {
-      data,
-      logs: logs || [],
-      warnings: warnings || [],
-      errors: errors || [],
-      ...finalizeResponse
-    };
+      const headers = {
+        Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+      };
+
+      const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
+        objectId,
+        libraryId,
+        writeToken: lroDraft.write_token,
+        method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
+        headers,
+        constant: false
+      });
+
+      const finalizeResponse = await this.FinalizeContentObject({
+        libraryId,
+        objectId: objectId,
+        writeToken: lroDraft.write_token,
+        awaitCommitConfirmation: false
+      });
+
+      result = {
+        data,
+        logs: logs || [],
+        warnings: warnings || [],
+        errors: errors || [],
+        ...finalizeResponse
+      };
+    } catch(err) {
+      error = err;
+    } finally {
+      // Ensure original http client is restored
+      this.HttpClient = httpClient;
+    }
+
+    if(error) { throw error; }
+
+    return result;
   }
 
   /* Content Object Access */

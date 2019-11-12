@@ -1329,18 +1329,16 @@ describe("Test ElvClient", () => {
         offeringKey: "default",
       });
 
-      const writeToken = startResponse.writeToken;
+      expect(startResponse).toBeDefined();
+      expect(startResponse.lro_draft).toBeDefined();
+      expect(startResponse.lro_draft.write_token).toBeDefined();
+      expect(startResponse.lro_draft.node).toBeDefined();
 
       const startTime = new Date().getTime();
 
       // eslint-disable-next-line no-constant-condition
       while(true) {
-        const status = await client.ContentObjectMetadata({
-          libraryId: mediaLibraryId,
-          objectId: mezzanineId,
-          writeToken,
-          metadataSubtree: "lro_status"
-        });
+        const status = await client.LROStatus({libraryId: mediaLibraryId, objectId: mezzanineId});
 
         let done = true;
         Object.keys(status).forEach(id => {
@@ -1362,7 +1360,6 @@ describe("Test ElvClient", () => {
       await client.FinalizeABRMezzanine({
         libraryId: mediaLibraryId,
         objectId: mezzanineId,
-        writeToken,
         offeringKey: "default"
       });
 
