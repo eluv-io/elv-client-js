@@ -5,6 +5,7 @@ if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
 const mime = require("mime-types");
+const path = require("path");
 
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
@@ -1843,23 +1844,23 @@ class ElvClient {
       }
     };
 
-    const ops = filePaths.map(path => {
+    const ops = filePaths.map(filePath => {
       if(copy) {
         return {
           op: "ingest-copy",
-          path,
+          path: path.basename(filePath),
           ingest: {
             type: "key",
-            path: path,
+            path: filePath,
           }
         };
       } else {
         return {
           op: "add-reference",
-          path,
+          path: path.basename(filePath),
           reference: {
             type: "key",
-            path: path,
+            path: filePath,
           }
         };
       }
