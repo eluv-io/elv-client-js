@@ -1,14 +1,14 @@
 [
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\"\n});",
     "result": "{\n  \"meta\": \"data\"\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\",\n  \"metadataSubtree\": \"image\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\",\n  \"metadataSubtree\": \"image\"\n});",
     "result": "\"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\""
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x35a05Cd35EEcf9990031B2a4D80C1D5E82ed7799\",\n  \"metadataSubtree\": \"image\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\",\n  \"metadataSubtree\": \"image\"\n});",
     "result": "\"hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM\""
   }
 ]

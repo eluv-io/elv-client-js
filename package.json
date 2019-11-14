@@ -89,6 +89,7 @@
     "minami": "^1.2.3",
     "pre-commit": "^1.2.2",
     "raw-loader": "^0.5.1",
+    "shell-quote": "^1.7.2",
     "solc": "0.4.24",
     "truffle": "^4.1.14",
     "truffle-contract": "^3.0.7",

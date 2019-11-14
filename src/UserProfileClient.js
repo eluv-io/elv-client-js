@@ -481,6 +481,13 @@ await client.userProfileClient.UserMetadata()
   }
 
   async __RecordTags({libraryId, objectId, versionHash}) {
+    const accessType = await this.client.AccessType({id: objectId});
+    if(accessType !== "object") { return; }
+
+    if(!versionHash && !libraryId) {
+      libraryId = await this.client.ContentObjectLibraryId({objectId});
+    }
+
     if(!versionHash) {
       versionHash = (await this.client.ContentObject({libraryId, objectId})).hash;
     }

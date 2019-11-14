@@ -1,0 +1,14 @@
+[
+  {
+    "signature": "async LROStatus({\n  \"libraryId\": \"ilib43HtXFiDvzMnTVKhPiVmPTfg7Hpb\",\n  \"objectId\": \"iq__qRVUqYeodSRyoMyLw5C7HFnKGQB\"\n});",
+    "result": "{\n  \"884ae92d-d026-4225-a8e4-8bc489b56c7f\": {\n    \"duration\": 443,\n    \"duration_ms\": 0,\n    \"progress\": {\n      \"percentage\": 0\n    },\n    \"run_state\": \"running\",\n    \"start\": \"2019-11-12T19:14:28Z\"\n  },\n  \"adc3d4ce-7b67-4a11-8808-270ce995fcac\": {\n    \"duration\": 497,\n    \"duration_ms\": 0,\n    \"progress\": {\n      \"percentage\": 0\n    },\n    \"run_state\": \"running\",\n    \"start\": \"2019-11-12T19:14:28Z\"\n  }\n}"
+  },
+  {
+    "signature": "async LROStatus({\n  \"libraryId\": \"ilib43HtXFiDvzMnTVKhPiVmPTfg7Hpb\",\n  \"objectId\": \"iq__qRVUqYeodSRyoMyLw5C7HFnKGQB\"\n});",
+    "result": "{\n  \"884ae92d-d026-4225-a8e4-8bc489b56c7f\": {\n    \"duration\": 443,\n    \"duration_ms\": 0,\n    \"progress\": {\n      \"percentage\": 0\n    },\n    \"run_state\": \"running\",\n    \"start\": \"2019-11-12T19:14:28Z\"\n  },\n  \"adc3d4ce-7b67-4a11-8808-270ce995fcac\": {\n    \"duration\": 14551186937,\n    \"duration_ms\": 14551,\n    \"end\": \"2019-11-12T19:14:43Z\",\n    \"progress\": {\n      \"percentage\": 100\n    },\n    \"run_state\": \"finished\",\n    \"start\": \"2019-11-12T19:14:28Z\"\n  }\n}"
+  },
+  {
+    "signature": "async LROStatus({\n  \"libraryId\": \"ilib43HtXFiDvzMnTVKhPiVmPTfg7Hpb\",\n  \"objectId\": \"iq__qRVUqYeodSRyoMyLw5C7HFnKGQB\"\n});",
+    "result": "{\n  \"884ae92d-d026-4225-a8e4-8bc489b56c7f\": {\n    \"duration\": 38601532888,\n    \"duration_ms\": 38601,\n    \"end\": \"2019-11-12T19:15:07Z\",\n    \"progress\": {\n      \"percentage\": 100\n    },\n    \"run_state\": \"finished\",\n    \"start\": \"2019-11-12T19:14:28Z\"\n  },\n  \"adc3d4ce-7b67-4a11-8808-270ce995fcac\": {\n    \"duration\": 14551186937,\n    \"duration_ms\": 14551,\n    \"end\": \"2019-11-12T19:14:43Z\",\n    \"progress\": {\n      \"percentage\": 100\n    },\n    \"run_state\": \"finished\",\n    \"start\": \"2019-11-12T19:14:28Z\"\n  }\n}"
+  }
+]

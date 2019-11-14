@@ -5,10 +5,10 @@
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"contentTypes\"\n});",
-    "result": "[\n  \"0xecc66E3d85dc7CaB6AB4b767D8b9a6aF57Ff868A\"\n]"
+    "result": "[\n  \"0xb31B7cBb76BF9C98AA0ad798A5E63Bc9A0D895ac\"\n]"
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"libraries\"\n});",
-    "result": "[\n  \"0x35045F962581C2FfD23b04be96d1458Bb0576941\"\n]"
+    "result": "[\n  \"0x961e167Ce1a4F65B27f55684DF7f4a97b36f159b\"\n]"
   }
 ]

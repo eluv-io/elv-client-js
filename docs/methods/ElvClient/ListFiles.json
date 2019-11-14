@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ListFiles({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\"\n});",
-    "result": "{\n  \".\": {\n    \"type\": \"directory\"\n  },\n  \"testDirectory\": {\n    \".\": {\n      \"type\": \"directory\"\n    },\n    \"File 1\": {\n      \".\": {\n        \"parts\": [\n          0\n        ],\n        \"size\": 100000\n      }\n    },\n    \"File 2\": {\n      \".\": {\n        \"parts\": [\n          1\n        ],\n        \"size\": 100000\n      }\n    }\n  }\n}"
+    "signature": "async ListFiles({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"objectId\": \"iq__3D7mZR7SFsiPjCN3tTgxQM5Yy9FX\"\n});",
+    "result": "{\n  \".\": {\n    \"type\": \"directory\"\n  },\n  \"s3-copy\": {\n    \".\": {\n      \"ingest\": {\n        \"etag\": \"5c689030274ecfd14a815c8672b9f723-12\",\n        \"path\": \"/eluvio-mez-test/ENTIRE_CREED_2min_.mp4\",\n        \"size\": 97944174,\n        \"type\": \"key\"\n      },\n      \"parts\": [\n        2,\n        3,\n        4\n      ],\n      \"size\": 97944174\n    }\n  },\n  \"s3-reference\": {\n    \".\": {\n      \"reference\": {\n        \"etag\": \"5c689030274ecfd14a815c8672b9f723-12\",\n        \"path\": \"/eluvio-mez-test/ENTIRE_CREED_2min_.mp4\",\n        \"size\": 97944174,\n        \"type\": \"key\"\n      },\n      \"size\": 97944174\n    }\n  },\n  \"testDirectory\": {\n    \".\": {\n      \"type\": \"directory\"\n    },\n    \"File 1\": {\n      \".\": {\n        \"parts\": [\n          0\n        ],\n        \"size\": 100000\n      }\n    },\n    \"File 2\": {\n      \".\": {\n        \"parts\": [\n          1\n        ],\n        \"size\": 100000\n      }\n    }\n  }\n}"
   }
 ]
