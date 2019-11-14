@@ -1,22 +1,18 @@
 [
   {
-    "signature": " AddAccount({\n  \"accountName\": \"test\",\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"test\",\n  \"privateKey\": \"<filtered>\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": " AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"0x063171e2801fd412ff5a02f79e03f1732981c39bab57a3de60fd48135008c3e3\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"<filtered>\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": " AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
+    "signature": " AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"<filtered>\"\n});",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": " AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"0xf1402b0aa53279c933a099639599c47a4a6ac8af3c09335e67ffae1109cec1dc\"\n});",
-    "result": "<Ethers#Wallet>"
-  },
-  {
-    "signature": " AddAccount({\n  \"privateKey\": \"0x395df67f0c2d2d9fe1ad08d1bc8b6627011959b79c53d7dd6a3536a33ab8a4fd\"\n});",
+    "signature": " AddAccount({\n  \"privateKey\": \"<filtered>\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

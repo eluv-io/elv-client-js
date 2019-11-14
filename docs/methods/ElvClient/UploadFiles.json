@@ -1,8 +1,8 @@
 [
   {
-    "signature": "async UploadFiles({\n  \"libraryId\": \"ilibjqi4GkYNuZQHS4VAcpZvJGZT4Cg\",\n  \"objectId\": \"iq__2wCkYwCgB77gniTPC1wEtTxW55R2\",\n  \"writeToken\": \"tqw_CucTuLqApqRWYUA5aRPM5cXnSVV9qqxzB\",\n  \"fileInfo\": [\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    }\n  ]\n});"
+    "signature": "async UploadFiles({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"objectId\": \"iq__3D7mZR7SFsiPjCN3tTgxQM5Yy9FX\",\n  \"writeToken\": \"tqw_D82nHJeATaoirUUZzMhTieyM7Ghgrvx6o\",\n  \"fileInfo\": [\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    }\n  ],\n  \"callback\": \"<function>\"\n});"
   },
   {
-    "signature": "async UploadFiles({\n  \"libraryId\": \"ilib3wBzK5LdVMJXfJDC2QzzyN3jytqs\",\n  \"objectId\": \"iq__3dXBZ3KQaWJfSZrpJaY1x6iQoejH\",\n  \"writeToken\": \"tqw_KUaWH2rPWW6gkP3fybaRjZqRCb3GvK1Q9\",\n  \"fileInfo\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"mime_type\": \"video/mp4\",\n      \"size\": 97944174,\n      \"type\": \"file\"\n    }\n  ]\n});"
+    "signature": "async UploadFiles({\n  \"libraryId\": \"ilib2xKLSTREbeKmtvNGymye7aBsPCJd\",\n  \"objectId\": \"iq__26gUWeQaKPn9XBrvyHDQi5wP1hwx\",\n  \"writeToken\": \"tqw_2MMCUS6SM5w1uhn3B8gYw5k6mkvmLfUZi\",\n  \"fileInfo\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"mime_type\": \"video/mp4\",\n      \"size\": 3738907,\n      \"type\": \"file\"\n    }\n  ]\n});"
   }
 ]

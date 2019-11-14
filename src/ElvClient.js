@@ -4,7 +4,6 @@ if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
 const Ethers = require("ethers");
-const mime = require("mime-types");
 
 const AuthorizationClient = require("./AuthorizationClient");
 const ElvWallet = require("./ElvWallet");
@@ -21,6 +20,16 @@ const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
+
+const {
+  ValidateLibrary,
+  ValidateObject,
+  ValidateVersion,
+  ValidateWriteToken,
+  ValidatePartHash,
+  ValidateAddress,
+  ValidateParameters
+} = require("./Validation");
 
 // Platform specific polyfills
 switch(Utils.Platform()) {
@@ -522,6 +531,8 @@ class ElvClient {
    * @returns {Promise<Object>}
    */
   async ContentLibrary({libraryId}) {
+    ValidateLibrary(libraryId);
+
     const path = UrlJoin("qlibs", libraryId);
 
     const library = await ResponseToJson(
@@ -548,6 +559,8 @@ class ElvClient {
    * @returns {Promise<string>} - The account address of the owner
    */
   async ContentLibraryOwner({libraryId}) {
+    ValidateLibrary(libraryId);
+
     return this.utils.FormatAddress(
       await this.ethClient.CallContractMethod({
         contractAddress: Utils.HashToAddress(libraryId),
@@ -658,6 +671,8 @@ class ElvClient {
    * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
    */
   async SetContentLibraryImage({libraryId, image}) {
+    ValidateLibrary(libraryId);
+
     const objectId = libraryId.replace("ilib", "iq__");
 
     return this.SetContentObjectImage({
@@ -679,6 +694,8 @@ class ElvClient {
    * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
    */
   async SetContentObjectImage({libraryId, objectId, image}) {
+    ValidateParameters({libraryId, objectId});
+
     const editResponse = await this.EditContentObject({
       libraryId,
       objectId
@@ -728,6 +745,8 @@ class ElvClient {
    * @param {string} libraryId - ID of the library to delete
    */
   async DeleteContentLibrary({libraryId}) {
+    ValidateLibrary(libraryId);
+
     let path = UrlJoin("qlibs", libraryId);
 
     const authorizationHeader = await this.authClient.AuthorizationHeader({libraryId, update: true});
@@ -763,6 +782,8 @@ class ElvClient {
    * @returns {Promise<string>} - Hash of the addContentType transaction
    */
   async AddLibraryContentType({libraryId, typeId, typeName, typeHash, customContractAddress}) {
+    ValidateLibrary(libraryId);
+
     this.Log(`Adding library content type to ${libraryId}: ${typeId || typeHash || typeName}`);
 
     if(typeHash) { typeId = this.utils.DecodeVersionHash(typeHash).objectId; }
@@ -802,6 +823,8 @@ class ElvClient {
    * @returns {Promise<string>} - Hash of the removeContentType transaction
    */
   async RemoveLibraryContentType({libraryId, typeId, typeName, typeHash}) {
+    ValidateLibrary(libraryId);
+
     this.Log(`Removing library content type from ${libraryId}: ${typeId || typeHash || typeName}`);
 
     if(typeHash) { typeId = this.utils.DecodeVersionHash(typeHash).objectId; }
@@ -841,6 +864,8 @@ class ElvClient {
    * @returns {Promise<Object>} - List of accepted content types - return format is equivalent to ContentTypes method
    */
   async LibraryContentTypes({libraryId}) {
+    ValidateLibrary(libraryId);
+
     this.Log(`Retrieving library content types for ${libraryId}`);
 
     const typesLength = (await this.ethClient.CallContractMethod({
@@ -1134,6 +1159,8 @@ class ElvClient {
    * @returns {Promise<Array<Object>>} - List of objects in library
    */
   async ContentObjects({libraryId, filterOptions={}}) {
+    ValidateLibrary(libraryId);
+
     this.Log(`Retrieving content objects from ${libraryId}`);
 
     let path = UrlJoin("qlibs", libraryId, "q");
@@ -1228,6 +1255,8 @@ class ElvClient {
    * @returns {Promise<Object>} - Description of created object
    */
   async ContentObject({libraryId, objectId, versionHash}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
     this.Log(`Retrieving content object: ${libraryId || ""} ${objectId || versionHash}`);
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -1253,6 +1282,8 @@ class ElvClient {
    * @returns {Promise<string>} - The account address of the owner
    */
   async ContentObjectOwner({objectId}) {
+    ValidateObject(objectId);
+
     this.Log(`Retrieving content object owner: ${objectId}`);
 
     return this.utils.FormatAddress(
@@ -1279,6 +1310,8 @@ class ElvClient {
    * @returns {Promise<string>} - Library ID of the object
    */
   async ContentObjectLibraryId({objectId, versionHash}) {
+    versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
     this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -1309,6 +1342,8 @@ class ElvClient {
    * @returns {Promise<Object | string>} - Metadata of the content object
    */
   async ContentObjectMetadata({libraryId, objectId, versionHash, writeToken, metadataSubtree="/", noAuth=true}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
     this.Log(
       `Retrieving content object metadata: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
        Subtree: ${metadataSubtree}`
@@ -1349,6 +1384,8 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing versions of the object
    */
   async ContentObjectVersions({libraryId, objectId, noAuth=false}) {
+    ValidateParameters({libraryId, objectId});
+
     this.Log(`Retrieving content object versions: ${libraryId || ""} ${objectId || versionHash}`);
 
     let path = UrlJoin("qid", objectId);
@@ -1385,6 +1422,9 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
    */
   async CreateContentObject({libraryId, objectId, options={}}) {
+    ValidateLibrary(libraryId);
+    if(objectId) { ValidateObject(objectId); }
+
     this.Log(`Creating content object: ${libraryId} ${objectId || ""}`);
 
     // Look up content type, if specified
@@ -1412,7 +1452,7 @@ class ElvClient {
       objectId = this.utils.AddressToObjectId(contractAddress);
       this.Log(`Contract deployed: ${contractAddress} ${objectId}`);
     } else {
-      this.Log(`Contract already deployed for contract type: ${this.authClient.AccessType(objectId)}`);
+      this.Log(`Contract already deployed for contract type: ${await this.AccessType({id: objectId})}`);
     }
 
     if(options.visibility) {
@@ -1458,6 +1498,9 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
    */
   async CopyContentObject({libraryId, originalVersionHash, options={}}) {
+    ValidateLibrary(libraryId);
+    ValidateVersion(originalVersionHash);
+
     options.copy_from = originalVersionHash;
 
     return await this.CreateContentObject({libraryId, options});
@@ -1478,6 +1521,8 @@ class ElvClient {
    * @returns {Promise<object>} - Response containing the object ID and write token of the draft
    */
   async EditContentObject({libraryId, objectId, options={}}) {
+    ValidateParameters({libraryId, objectId});
+
     this.Log(`Opening content draft: ${libraryId} ${objectId}`);
 
     if(!this.utils.EqualHash(libraryId, objectId)) {
@@ -1527,6 +1572,9 @@ class ElvClient {
    * Irrelevant if not publishing.
    */
   async FinalizeContentObject({libraryId, objectId, writeToken, publish=true, awaitCommitConfirmation=true}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     this.Log(`Finalizing content draft: ${libraryId} ${objectId} ${writeToken}`);
 
     let path = UrlJoin("q", writeToken);
@@ -1567,6 +1615,8 @@ class ElvClient {
    * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
    */
   async PublishContentVersion({objectId, versionHash, awaitCommitConfirmation=true}) {
+    versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
     this.Log(`Publishing: ${objectId || versionHash}`);
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -1597,6 +1647,8 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be deleted
    */
   async DeleteContentVersion({versionHash}) {
+    ValidateVersion(versionHash);
+
     this.Log(`Deleting content version: ${versionHash}`);
 
     const { objectId } = this.utils.DecodeVersionHash(versionHash);
@@ -1618,6 +1670,8 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    */
   async DeleteContentObject({libraryId, objectId}) {
+    ValidateParameters({libraryId, objectId});
+
     this.Log(`Deleting content version: ${libraryId} ${objectId}`);
 
     await this.CallContractMethodAndWait({
@@ -1644,6 +1698,9 @@ class ElvClient {
    * @param {string=} metadataSubtree - Subtree of the object metadata to modify
    */
   async MergeMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     this.Log(
       `Merging metadata: ${libraryId} ${objectId} ${writeToken}
       Subtree: ${metadataSubtree}`
@@ -1675,6 +1732,9 @@ class ElvClient {
    * @param {string=} metadataSubtree - Subtree of the object metadata to modify
    */
   async ReplaceMetadata({libraryId, objectId, writeToken, metadataSubtree="/", metadata={}}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     this.Log(
       `Replacing metadata: ${libraryId} ${objectId} ${writeToken}
       Subtree: ${metadataSubtree}`
@@ -1706,6 +1766,9 @@ class ElvClient {
    * - if not specified, all metadata will be deleted
    */
   async DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree="/"}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     this.Log(
       `Deleting metadata: ${libraryId} ${objectId} ${writeToken}
       Subtree: ${metadataSubtree}`
@@ -1734,6 +1797,8 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be used
    */
   async ListFiles({libraryId, objectId, versionHash}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path = UrlJoin("q", versionHash || objectId, "meta", "files");
@@ -1772,6 +1837,9 @@ class ElvClient {
     writeToken,
     links=[]
   }) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     await LimitedMap(
       5,
       links,
@@ -1801,6 +1869,15 @@ class ElvClient {
   /**
    * Copy/reference files from S3 to a content object
    *
+   * Expected format of fileInfo:
+   *
+   [
+     {
+       path: string,
+       source: string
+     }
+   ]
+   *
    * @methodGroup Parts and Files
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1808,7 +1885,7 @@ class ElvClient {
    * @param {string} writeToken - Write token of the draft
    * @param {string} region - AWS region to use
    * @param {string} bucket - AWS bucket to use
-   * @param {Array<string>} filePaths - List of files/directories to copy/reference
+   * @param {Array<Object>} fileInfo - List of files to reference/copy
    * @param {string} accessKey - AWS access key
    * @param {string} secret - AWS secret
    * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
@@ -1822,12 +1899,15 @@ class ElvClient {
     writeToken,
     region,
     bucket,
-    filePaths,
+    fileInfo,
     accessKey,
     secret,
     copy=false,
     callback
   }) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     const defaults = {
       access: {
         protocol: "s3",
@@ -1843,23 +1923,23 @@ class ElvClient {
       }
     };
 
-    const ops = filePaths.map(path => {
+    const ops = fileInfo.map(info => {
       if(copy) {
         return {
           op: "ingest-copy",
-          path,
+          path: info.path,
           ingest: {
             type: "key",
-            path: path,
+            path: info.source,
           }
         };
       } else {
         return {
           op: "add-reference",
-          path,
+          path: info.path,
           reference: {
             type: "key",
-            path: path,
+            path: info.source,
           }
         };
       }
@@ -1876,6 +1956,11 @@ class ElvClient {
 
       if(status.errors && status.errors.length > 1) {
         throw status.errors.join("\n");
+      } else if(status.error) {
+        this.Log(`S3 file upload failed:\n${JSON.stringify(status, null, 2)}`);
+        throw status.error;
+      } else if(status.status.toLowerCase() === "failed") {
+        throw "File upload failed";
       }
 
       let done = false;
@@ -1937,6 +2022,9 @@ class ElvClient {
    * - Format: {"filename1": {uploaded: number, total: number}, ...}
    */
   async UploadFiles({libraryId, objectId, writeToken, fileInfo, callback}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     this.Log(`Uploading files: ${libraryId} ${objectId} ${writeToken}`);
 
     // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
@@ -2037,6 +2125,9 @@ class ElvClient {
   }
 
   async CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults={}}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     this.Log(`Creating file upload job: ${libraryId} ${objectId} ${writeToken}`);
     this.Log(ops);
 
@@ -2061,6 +2152,9 @@ class ElvClient {
   }
 
   async UploadStatus({libraryId, objectId, writeToken, uploadId}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     let path = UrlJoin("q", writeToken, "file_jobs", uploadId);
 
     return ResponseToJson(
@@ -2074,6 +2168,9 @@ class ElvClient {
   }
 
   async UploadJobStatus({libraryId, objectId, writeToken, uploadId, jobId}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     let path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
 
     return ResponseToJson(
@@ -2087,6 +2184,9 @@ class ElvClient {
   }
 
   async UploadFileData({libraryId, objectId, writeToken, uploadId, jobId, fileData}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     const path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
 
     await ResponseToJson(
@@ -2105,6 +2205,9 @@ class ElvClient {
   }
 
   async FinalizeUploadJob({libraryId, objectId, writeToken}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     this.Log(`Finalizing upload job: ${libraryId} ${objectId} ${writeToken}`);
 
     const path = UrlJoin("q", writeToken, "files");
@@ -2129,6 +2232,9 @@ class ElvClient {
    * @param {Array<string>} filePaths - List of file paths to delete
    */
   async DeleteFiles({libraryId, objectId, writeToken, filePaths}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     this.Log(`Deleting Files: ${libraryId} ${objectId} ${writeToken}`);
     this.Log(filePaths);
 
@@ -2153,6 +2259,8 @@ class ElvClient {
    * @returns {Promise<ArrayBuffer>} - File data in the requested format
    */
   async DownloadFile({libraryId, objectId, versionHash, filePath, format="arrayBuffer"}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path = UrlJoin("q", versionHash || objectId, "files", filePath);
@@ -2181,6 +2289,8 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing list of parts of the object
    */
   async ContentParts({libraryId, objectId, versionHash}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
     this.Log(`Retrieving parts: ${libraryId} ${objectId || versionHash}`);
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -2211,6 +2321,9 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing information about the specified part
    */
   async ContentPart({libraryId, objectId, versionHash, partHash}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+    ValidatePartHash(partHash);
+
     this.Log(`Retrieving part: ${libraryId} ${objectId || versionHash} ${partHash}`);
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -2260,6 +2373,9 @@ class ElvClient {
     chunkSize=10000000,
     callback
   }) {
+    ValidateParameters({libraryId, objectId, versionHash});
+    ValidatePartHash(partHash);
+
     if(chunked && !callback) { throw Error("No callback specified for chunked part download"); }
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -2357,11 +2473,14 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
-   * @param {string} writeToken - Write token of the content object draft
+   * @param {string=} writeToken - Write token of the content object draft
    *
    * @return Promise<Object> - The encryption conk for the object
    */
   async EncryptionConk({libraryId, objectId, writeToken}) {
+    ValidateParameters({libraryId, objectId});
+    if(writeToken) { ValidateWriteToken(writeToken); }
+
     const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
 
     if(!this.utils.EqualAddress(owner, this.signer.address)) {
@@ -2381,7 +2500,8 @@ class ElvClient {
         await this.ContentObjectMetadata({
           libraryId,
           // Cap may only exist in draft
-          objectId: writeToken || objectId,
+          objectId,
+          writeToken,
           metadataSubtree: capKey
         });
 
@@ -2434,6 +2554,9 @@ class ElvClient {
    * @return {Promise<ArrayBuffer>}
    */
   async Encrypt({libraryId, objectId, writeToken, chunk}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
     const data = await Crypto.Encrypt(conk, chunk);
 
@@ -2454,6 +2577,9 @@ class ElvClient {
    * @returns {Promise<string>} - The part write token for the part draft
    */
   async CreatePart({libraryId, objectId, writeToken, encryption}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     const path = UrlJoin("q", writeToken, "parts");
 
     const openResponse = await ResponseToJson(
@@ -2485,6 +2611,9 @@ class ElvClient {
    * @returns {Promise<string>} - The part write token for the part draft
    */
   async UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk, encryption}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     if(encryption && encryption !== "none") {
       const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
       chunk = await Crypto.Encrypt(conk, chunk);
@@ -2517,6 +2646,9 @@ class ElvClient {
    * @returns {Promise<object>} - The finalize response for the new part
    */
   async FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     const path = UrlJoin("q", writeToken, "parts");
     return await ResponseToJson(
       await this.HttpClient.Request({
@@ -2549,6 +2681,9 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing information about the uploaded part
    */
   async UploadPart({libraryId, objectId, writeToken, data, encryption="none"}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
     const partWriteToken = await this.CreatePart({libraryId, objectId, writeToken, encryption});
 
     await this.UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk: data, encryption});
@@ -2569,6 +2704,10 @@ class ElvClient {
    * @param {string} partHash - Hash of the part to delete
    */
   async DeletePart({libraryId, objectId, writeToken, partHash}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+    ValidatePartHash(partHash);
+
     let path = UrlJoin("q", writeToken, "parts", partHash);
 
     await this.HttpClient.Request({
@@ -2594,10 +2733,9 @@ class ElvClient {
    * @param {string=} description - Description of the content
    * @param {string} contentTypeName - Name of the content type to use
    * @param {Object=} metadata - Additional metadata for the content object
-   * @param {Object=} fileInfo - (Local) Files to upload to (See UploadFiles method)
-   * @param {Array<string>} filePaths - (S3) List of files to copy/reference from bucket
+   * @param {Object=} fileInfo - Files to upload to (See UploadFiles/UploadFilesFromS3 method)
    * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
-   * @param {function=} callback - Progress callback for file upload (See UploadFiles or UploadFilesFromS3 method)
+   * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
    * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
    * - Format: {region, bucket, accessKey, secret}
    *
@@ -2611,10 +2749,11 @@ class ElvClient {
     metadata={},
     fileInfo,
     access,
-    filePaths=[],
     copy=false,
     callback
   }) {
+    ValidateLibrary(libraryId);
+
     const contentType = await this.ContentType({name: "Production Master"});
 
     if(!contentType) {
@@ -2637,7 +2776,7 @@ class ElvClient {
         libraryId,
         objectId: id,
         writeToken: write_token,
-        filePaths,
+        fileInfo,
         region,
         bucket,
         accessKey,
@@ -2731,10 +2870,13 @@ class ElvClient {
    * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
    */
   async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default"}) {
+    ValidateLibrary(libraryId);
+    ValidateVersion(masterVersionHash);
+
     const abrMezType = await this.ContentType({name: "ABR Master"});
 
     if(!abrMezType) {
-      throw Error("Unable to access ABR Mezzanine content type in library with ID=" + libraryId);
+      throw Error("Unable to access ABR Master content type in library with ID=" + libraryId);
     }
 
     if(!masterVersionHash) {
@@ -2831,6 +2973,8 @@ class ElvClient {
    * @return {Promise<Object>} - A write token for the mezzanine object, as well as any logs, warnings and errors from the job initialization
    */
   async StartABRMezzanineJobs({libraryId, objectId, offeringKey="default", access={}}) {
+    ValidateParameters({libraryId, objectId});
+
     const mezzanineMetadata = await this.ContentObjectMetadata({
       libraryId,
       objectId,
@@ -2884,12 +3028,28 @@ class ElvClient {
       ];
     }
 
-    const {write_token} = await this.EditContentObject({libraryId, objectId});
+    const processingDraft = await this.EditContentObject({libraryId, objectId});
+
+    const lroInfo = {
+      write_token: processingDraft.write_token,
+      node: this.HttpClient.BaseURI().toString()
+    };
+
+    // Update metadata with LRO version write token
+    const statusDraft = await this.EditContentObject({libraryId, objectId});
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken: statusDraft.write_token,
+      metadataSubtree: "lro_draft",
+      metadata: lroInfo
+    });
+    await this.FinalizeContentObject({libraryId, objectId, writeToken: statusDraft.write_token});
 
     const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
       libraryId,
       objectId,
-      writeToken: write_token,
+      writeToken: processingDraft.write_token,
       headers,
       method: UrlJoin("media", "abr_mezzanine", "prep_start"),
       constant: false,
@@ -2900,12 +3060,59 @@ class ElvClient {
     });
 
     return {
-      writeToken: write_token,
+      lro_draft: lroInfo,
+      writeToken: processingDraft.write_token,
       data,
       logs: logs || [],
       warnings: warnings || [],
       errors: errors || []
     };
+  }
+
+  /**
+   * Retrieve status information for a long running operation (LRO) on the given object.
+   *
+   * @methodGroup Media
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   *
+   * @return {Promise<Object>} - LRO status
+   */
+  async LROStatus({libraryId, objectId}) {
+    ValidateParameters({libraryId, objectId});
+
+    const lroDraft = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "lro_draft"
+    });
+
+    if(!lroDraft || !lroDraft.write_token) {
+      throw Error("No LRO draft found for this mezzanine");
+    }
+
+    const httpClient = this.HttpClient;
+    let error, result;
+    try {
+      // Point directly to the node containing the draft
+      this.HttpClient = new HttpClient({uris: [lroDraft.node], debug: httpClient.debug});
+
+      result = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        writeToken: lroDraft.write_token,
+        metadataSubtree: "lro_status"
+      });
+    } catch(err) {
+      error = err;
+    } finally {
+      this.HttpClient = httpClient;
+    }
+
+    if(error) { throw error; }
+
+    return result;
   }
 
   /**
@@ -2920,49 +3127,77 @@ class ElvClient {
    *
    * @return {Promise<Object>} - The finalize response for the mezzanine object, as well as any logs, warnings and errors from the finalization
    */
-  async FinalizeABRMezzanine({libraryId, objectId, writeToken, offeringKey="default"}) {
-    const mezzanineMetadata = await this.ContentObjectMetadata({
+  async FinalizeABRMezzanine({libraryId, objectId, offeringKey="default"}) {
+    ValidateParameters({libraryId, objectId});
+
+    const lroDraft = await this.ContentObjectMetadata({
       libraryId,
       objectId,
-      writeToken,
-      metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
+      metadataSubtree: "lro_draft"
     });
 
-    const masterHash = mezzanineMetadata.default.prod_master_hash;
+    if(!lroDraft || !lroDraft.write_token) {
+      throw Error("No LRO draft found for this mezzanine");
+    }
 
-    // Authorization token for mezzanine and master
-    let authorizationTokens = [
-      await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
-      await this.authClient.AuthorizationToken({versionHash: masterHash})
-    ];
+    const httpClient = this.HttpClient;
+    let error, result;
+    try {
+      // Point directly to the node containing the draft
+      this.HttpClient = new HttpClient({uris: [lroDraft.node], debug: httpClient.debug});
 
-    const headers = {
-      Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
-    };
+      const mezzanineMetadata = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        writeToken: lroDraft.write_token,
+        metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
+      });
 
-    const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
-      objectId,
-      libraryId,
-      writeToken,
-      method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
-      headers,
-      constant: false
-    });
+      const masterHash = mezzanineMetadata.default.prod_master_hash;
 
-    const finalizeResponse = await this.FinalizeContentObject({
-      libraryId,
-      objectId: objectId,
-      writeToken,
-      awaitCommitConfirmation: false
-    });
+      // Authorization token for mezzanine and master
+      let authorizationTokens = [
+        await this.authClient.AuthorizationToken({libraryId, objectId, update: true}),
+        await this.authClient.AuthorizationToken({versionHash: masterHash})
+      ];
 
-    return {
-      data,
-      logs: logs || [],
-      warnings: warnings || [],
-      errors: errors || [],
-      ...finalizeResponse
-    };
+      const headers = {
+        Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
+      };
+
+      const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
+        objectId,
+        libraryId,
+        writeToken: lroDraft.write_token,
+        method: UrlJoin("media", "abr_mezzanine", "offerings", offeringKey, "finalize"),
+        headers,
+        constant: false
+      });
+
+      const finalizeResponse = await this.FinalizeContentObject({
+        libraryId,
+        objectId: objectId,
+        writeToken: lroDraft.write_token,
+        awaitCommitConfirmation: false
+      });
+
+      result = {
+        data,
+        logs: logs || [],
+        warnings: warnings || [],
+        errors: errors || [],
+        ...finalizeResponse
+      };
+    } catch(err) {
+      error = err;
+    } finally {
+      // Ensure original http client is restored
+      this.HttpClient = httpClient;
+    }
+
+    if(error) { throw error; }
+
+    return result;
   }
 
   /* Content Object Access */
@@ -2976,6 +3211,8 @@ class ElvClient {
    * @param {number | string} accessCharge - The new access charge, in ether
    */
   async SetAccessCharge({objectId, accessCharge}) {
+    ValidateObject(objectId);
+
     this.Log(`Setting access charge: ${objectId} ${accessCharge}`);
 
     await this.ethClient.CallContractMethodAndWait({
@@ -2994,14 +3231,7 @@ class ElvClient {
    * @namedParams
    * @param {string} id - ID of the item
    *
-   * @return {Promise<string>} - Contract type of the item
-   * - space
-   * - library
-   * - type,
-   * - object
-   * - wallet
-   * - group
-   * - other
+   * @return {Promise<string>} - Contract type of the item - "space", "library", "type", "object", "wallet", "group", or "other"
    */
   async AccessType({id}) {
     return await this.authClient.AccessType(id);
@@ -3019,6 +3249,8 @@ class ElvClient {
    *
    * @return {Promise<Object>} - Info about the access charge and whether or not the object is accessible to the current user   */
   async AccessInfo({objectId, args}) {
+    ValidateObject(objectId);
+
     if(!args) {
       args = [
         0, // Access level
@@ -3074,6 +3306,8 @@ class ElvClient {
    * @return {Promise<Object>} - Resultant AccessRequest or UpdateRequest event
    */
   async AccessRequest({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     return await this.authClient.MakeAccessRequest({
@@ -3099,6 +3333,8 @@ class ElvClient {
    * @return {Promise<string>} - The cached transaction hash if present, otherwise undefined
    */
   async CachedAccessTransaction({libraryId, objectId, versionHash}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     const cacheResult = await this.authClient.MakeAccessRequest({
@@ -3126,6 +3362,8 @@ class ElvClient {
    * @return {Promise<string>} - The state channel token
    */
   async GenerateStateChannelToken({objectId, versionHash, noCache=false}) {
+    versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
     if(versionHash) {
       objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     } else if(!this.stateChannelAccess[objectId]) {
@@ -3155,6 +3393,8 @@ class ElvClient {
    * @param {number} percentComplete - Completion percentage of the content
    */
   async FinalizeStateChannelAccess({objectId, versionHash, percentComplete}) {
+    versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
     if(versionHash) {
       objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     } else {
@@ -3190,6 +3430,8 @@ class ElvClient {
    * @returns {Promise<Object>} - Transaction log of the AccessComplete event
    */
   async ContentObjectAccessComplete({objectId, score=100}) {
+    ValidateObject(objectId);
+
     if(score < 0 || score > 100) { throw Error("Invalid AccessComplete score: " + score); }
 
     return await this.authClient.AccessComplete({id: objectId, abi: ContentContract.abi, score});
@@ -3235,6 +3477,8 @@ class ElvClient {
   }
 
   AudienceData({objectId, versionHash, protocols=[], drms=[]}) {
+    versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
     this.Log(`Retrieving audience data: ${objectId}`);
 
     let data = {
@@ -3271,6 +3515,8 @@ class ElvClient {
    * @param {Array<string>} drms - Acceptable DRM formats
    */
   async PlayoutOptions({objectId, versionHash, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
+    versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
     protocols = protocols.map(p => p.toLowerCase());
     drms = drms.map(d => d.toLowerCase());
 
@@ -3359,6 +3605,8 @@ class ElvClient {
    * @param {Array<string>=} drms=[] - Acceptable DRM formats
    */
   async BitmovinPlayoutOptions({objectId, versionHash, protocols=["dash", "hls"], drms=[]}) {
+    versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
     if(!objectId) {
       objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     }
@@ -3433,6 +3681,9 @@ class ElvClient {
     constant=true,
     format="json"
   }) {
+    ValidateParameters({libraryId, objectId, versionHash});
+    if(!method) { throw "Bitcode method not specified"; }
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
@@ -3499,6 +3750,9 @@ class ElvClient {
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
   async Rep({libraryId, objectId, versionHash, rep, queryParams={}, channelAuth=false, noAuth=false, noCache=false}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+    if(!rep) { throw "Rep not specified"; }
+
     return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, channelAuth, noAuth, noCache});
   }
 
@@ -3519,6 +3773,9 @@ class ElvClient {
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
   async PublicRep({libraryId, objectId, versionHash, rep, queryParams={}}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+    if(!rep) { throw "Rep not specified"; }
+
     return this.FabricUrl({libraryId, objectId, versionHash, publicRep: rep, queryParams, noAuth: true});
   }
 
@@ -3556,6 +3813,10 @@ class ElvClient {
     noAuth=false,
     noCache=false
   }) {
+    if(objectId || versionHash) {
+      ValidateParameters({libraryId, objectId, versionHash});
+    }
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     this.Log(
@@ -3621,6 +3882,9 @@ class ElvClient {
    * @returns {Promise<string>} - URL to the specified file with authorization token
    */
   async FileUrl({libraryId, objectId, versionHash, filePath, queryParams={}, noCache=false}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+    if(!filePath) { throw "File path not specified"; }
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path;
@@ -3643,6 +3907,46 @@ class ElvClient {
   }
 
   /**
+   * Retrieve the version hash of the specified link's target. If the target is the same as the specified
+   * object, will return the latest version hash.
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string=} libraryId - ID of an library
+   * @param {string=} objectId - ID of an object
+   * @param {string=} versionHash - Hash of an object version
+   * @param {string} linkPath - Path to the content object link
+   *
+   * @returns {Promise<string>} - Version hash of the link's target
+   */
+  async LinkTarget({libraryId, objectId, versionHash, linkPath}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    const linkInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      metadataSubtree: UrlJoin(linkPath)
+    });
+
+    if(!linkInfo || !linkInfo["/"]) {
+      throw Error(`No valid link at ${linkPath}`);
+    }
+
+
+    const targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
+
+    if(targetHash) { return targetHash; }
+
+    // Link points to this object - get latest version
+    if(!libraryId) {
+      libraryId = await this.ContentObjectLibraryId({objectId});
+    }
+
+    return (await this.ContentObject({libraryId, objectId})).hash;
+  }
+
+  /**
    * Generate a URL to the specified file link with appropriate authentication
    *
    * @methodGroup URL Generation
@@ -3659,10 +3963,13 @@ class ElvClient {
    * @returns {Promise<string>} - URL to the specified file with authorization token
    */
   async LinkUrl({libraryId, objectId, versionHash, linkPath, mimeType, queryParams={}, noCache=false}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
+    if(!linkPath) { throw Error("Link path not specified"); }
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path;
-
     if(libraryId) {
       path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
     } else {
@@ -3671,21 +3978,13 @@ class ElvClient {
 
     let authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
 
-    const linkInfo = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      versionHash,
-      metadataSubtree: UrlJoin(linkPath)
-    });
-
-    if(linkInfo) {
-      const targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
-      if(targetHash) {
-        authorizationToken = [
-          authorizationToken,
-          await this.authClient.AuthorizationToken({versionHash: targetHash, noCache})
-        ];
-      }
+    // If link target is not current object, must also authenticate against target object
+    const targetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+    if(this.utils.DecodeVersionHash(targetHash).objectId !== objectId) {
+      authorizationToken = [
+        authorizationToken,
+        await this.authClient.AuthorizationToken({versionHash: targetHash, noCache})
+      ];
     }
 
     queryParams = {
@@ -3764,6 +4063,8 @@ class ElvClient {
    * @returns {Promise<string>} - The account address of the owner
    */
   async AccessGroupOwner({contractAddress}) {
+    ValidateAddress(contractAddress);
+
     this.Log(`Retrieving owner of access group ${contractAddress}`);
 
     return this.utils.FormatAddress(
@@ -3787,6 +4088,8 @@ class ElvClient {
    * @param {string} contractAddress - The address of the access group contract
    */
   async DeleteAccessGroup({contractAddress}) {
+    ValidateAddress(contractAddress);
+
     this.Log(`Deleting access group ${contractAddress}`);
 
     await this.CallContractMethodAndWait({
@@ -3807,6 +4110,8 @@ class ElvClient {
    * @return {Promise<Array<string>>} - List of member addresses
    */
   async AccessGroupMembers({contractAddress}) {
+    ValidateAddress(contractAddress);
+
     this.Log(`Retrieving members for group ${contractAddress}`);
 
     const length = (await this.CallContractMethod({
@@ -3839,6 +4144,8 @@ class ElvClient {
    * @return {Promise<Array<string>>} - List of manager addresses
    */
   async AccessGroupManagers({contractAddress}) {
+    ValidateAddress(contractAddress);
+
     this.Log(`Retrieving managers for group ${contractAddress}`);
 
     const length = (await this.CallContractMethod({
@@ -3862,6 +4169,9 @@ class ElvClient {
   }
 
   async AccessGroupMembershipMethod({contractAddress, memberAddress, methodName, eventName}) {
+    ValidateAddress(contractAddress);
+    ValidateAddress(memberAddress);
+
     // Ensure caller is the member being acted upon or a manager/owner of the group
     if(!this.utils.EqualAddress(this.signer.address, memberAddress)) {
       const isManager = await this.CallContractMethod({
@@ -3915,6 +4225,9 @@ class ElvClient {
    * @returns {Promise<string>} - The transaction hash of the call to the grantAccess method
    */
   async AddAccessGroupMember({contractAddress, memberAddress}) {
+    ValidateAddress(contractAddress);
+    ValidateAddress(memberAddress);
+
     return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
@@ -3935,6 +4248,9 @@ class ElvClient {
    * @returns {Promise<string>} - The transaction hash of the call to the revokeAccess method
    */
   async RemoveAccessGroupMember({contractAddress, memberAddress}) {
+    ValidateAddress(contractAddress);
+    ValidateAddress(memberAddress);
+
     return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
@@ -3955,6 +4271,9 @@ class ElvClient {
    * @returns {Promise<string>} - The transaction hash of the call to the grantManagerAccess method
    */
   async AddAccessGroupManager({contractAddress, memberAddress}) {
+    ValidateAddress(contractAddress);
+    ValidateAddress(memberAddress);
+
     return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
@@ -3975,6 +4294,9 @@ class ElvClient {
    * @returns {Promise<string>} - The transaction hash of the call to the revokeManagerAccess method
    */
   async RemoveAccessGroupManager({contractAddress, memberAddress}) {
+    ValidateAddress(contractAddress);
+    ValidateAddress(memberAddress);
+
     return await this.AccessGroupMembershipMethod({
       contractAddress,
       memberAddress,
@@ -3995,6 +4317,8 @@ class ElvClient {
    * - Example: { "0x0": ["accessor", "contributor"], ...}
    */
   async ContentLibraryGroupPermissions({libraryId, permissions=[]}) {
+    ValidateLibrary(libraryId);
+
     let libraryPermissions = {};
 
     if(!permissions || permissions.length === 0) {
@@ -4063,6 +4387,9 @@ class ElvClient {
    * @param {string} permission - The type of permission to add ("accessor", "contributor", "reviewer")
    */
   async AddContentLibraryGroup({libraryId, groupAddress, permission}) {
+    ValidateLibrary(libraryId);
+    ValidateAddress(groupAddress);
+
     groupAddress = this.utils.FormatAddress(groupAddress);
 
     if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
@@ -4105,6 +4432,9 @@ class ElvClient {
    * @param {string} permission - The type of permission to remove ("accessor", "contributor", "reviewer")
    */
   async RemoveContentLibraryGroup({libraryId, groupAddress, permission}) {
+    ValidateLibrary(libraryId);
+    ValidateAddress(groupAddress);
+
     if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
       throw Error(`Invalid group type: ${permission}`);
     }
@@ -4199,6 +4529,8 @@ class ElvClient {
    * @returns {Promise<Object>} - Response describing verification results
    */
   async VerifyContentObject({libraryId, objectId, versionHash}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
     return await ContentObjectVerification.VerifyContentObject({
       client: this,
       libraryId,
@@ -4222,6 +4554,9 @@ class ElvClient {
    * @returns {Promise<Object>} - Response containing proof information
    */
   async Proofs({libraryId, objectId, versionHash, partHash}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+    ValidatePartHash(partHash);
+
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path = UrlJoin("q", versionHash || objectId, "data", partHash, "proofs");
@@ -4250,6 +4585,9 @@ class ElvClient {
    * @returns {Promise<Format>} - Response containing the CBOR response in the specified format
    */
   async QParts({libraryId, objectId, partHash, format="blob"}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+    ValidatePartHash(partHash);
+
     let path = UrlJoin("qparts", partHash);
 
     return ResponseToFormat(
@@ -4275,6 +4613,8 @@ class ElvClient {
    * @return {Promise<string>} - Name of the contract
    */
   async ContractName({contractAddress}) {
+    ValidateAddress(contractAddress);
+
     return await this.ethClient.ContractName(contractAddress);
   }
 
@@ -4312,8 +4652,8 @@ class ElvClient {
   /**
    * Call the specified method on a deployed contract. This action will be performed by this client's signer.
    *
-   * NOTE: This method will only wait for the transaction to be created. If you want to wait for the transaction
-   * to be mined, use the CallContractMethodAndWait method.
+   * Use this method to call constant methods and contract attributes, as well as transaction-performing methods
+   * for which the transaction does not need to be awaited.
    *
    * @methodGroup Contracts
    * @namedParams
@@ -4328,6 +4668,8 @@ class ElvClient {
    * @returns {Promise<*>} - Response containing information about the transaction
    */
   async CallContractMethod({contractAddress, abi, methodName, methodArgs=[], value, overrides={}, formatArguments=true, cacheContract=true}) {
+    ValidateAddress(contractAddress);
+
     return await this.ethClient.CallContractMethod({
       contractAddress,
       abi,
@@ -4345,6 +4687,8 @@ class ElvClient {
    * Call the specified method on a deployed contract and wait for the transaction to be mined.
    * This action will be performed by this client's signer.
    *
+   * Use this method to call transaction-performing methods and wait for the transaction to complete.
+   *
    * @methodGroup Contracts
    * @namedParams
    * @param {string} contractAddress - Address of the contract to call the specified method on
@@ -4357,9 +4701,12 @@ class ElvClient {
    *
    * @see Utils.WeiToEther
    *
-   * @returns {Promise<*>} - The event object of this transaction
+   * @returns {Promise<*>} - The event object of this transaction. See the ExtractEventFromLogs method for parsing
+   * the resulting event(s)
    */
   async CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs, value, overrides={}, formatArguments=true}) {
+    ValidateAddress(contractAddress);
+
     return await this.ethClient.CallContractMethodAndWait({
       contractAddress,
       abi,
@@ -4429,6 +4776,9 @@ class ElvClient {
    * @returns {Promise<Object>} - Result transaction of calling the setCustomContract method on the content object contract
    */
   async SetCustomContentContract({libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, overrides={}}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateAddress(customContractAddress);
+
     customContractAddress = this.utils.FormatAddress(customContractAddress);
 
     this.Log(`Setting custom contract address: ${objectId} ${customContractAddress}`);
@@ -4466,12 +4816,19 @@ class ElvClient {
    *
    * @methodGroup Content Objects
    * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
    *
    * @returns {Promise<string> | undefined} - If the object has a custom contract, this will return the address of the custom contract
    */
-  async CustomContractAddress({libraryId, objectId}) {
+  async CustomContractAddress({libraryId, objectId, versionHash}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
+    if(versionHash) {
+      objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    }
+
     if(libraryId === this.contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId)) {
       // Content type or content library object - no custom contract
       return;
@@ -4533,6 +4890,8 @@ class ElvClient {
    * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
    */
   async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, count=1000, includeTransaction=false}) {
+    ValidateAddress(contractAddress);
+
     const blocks = await this.FormatBlockNumbers({fromBlock, toBlock, count});
 
     this.Log(`Querying contract events ${contractAddress} - Blocks ${blocks.fromBlock} to ${blocks.toBlock}`);
@@ -4548,6 +4907,8 @@ class ElvClient {
 
   // TODO: Not implemented in contracts
   async WithdrawContractFunds({contractAddress, abi, ether}) {
+    ValidateAddress(contractAddress);
+
     return await this.ethClient.CallContractMethodAndWait({
       contractAddress,
       abi,
@@ -4599,8 +4960,11 @@ class ElvClient {
    * @returns {Promise<string>} - Balance of the account, in ether (as string)
    */
   async GetBalance({address}) {
+    ValidateAddress(address);
+
     const balance = await this.ethClient.MakeProviderCall({methodName: "getBalance", args: [address]});
-    return await Ethers.utils.formatEther(balance);
+
+    return Ethers.utils.formatEther(balance);
   }
 
   /**
@@ -4614,6 +4978,8 @@ class ElvClient {
    * @returns {Promise<Object>} - The transaction receipt
    */
   async SendFunds({recipient, ether}) {
+    ValidateAddress(recipient);
+
     const transaction = await this.signer.sendTransaction({
       to: recipient,
       value: Ethers.utils.parseEther(ether.toString())

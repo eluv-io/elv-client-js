@@ -38,6 +38,7 @@ const testFileSize = 100000;
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
 let mediaLibraryId, masterHash, mezzanineId;
+let s3Access;
 
 let testFile1, testFile2, testFile3, testHash;
 let fileInfo = [];
@@ -58,6 +59,14 @@ describe("Test ElvClient", () => {
 
     await client.userProfileClient.WalletAddress();
     await accessClient.userProfileClient.WalletAddress();
+
+    s3Access = {
+      region: process.env.AWS_REGION,
+      bucket: process.env.AWS_BUCKET,
+      accessKey: process.env.AWS_KEY,
+      secret: process.env.AWS_SECRET,
+      testFile: process.env.AWS_TEST_FILE
+    };
 
     // Create required types
     const requiredContentTypes = ["ABR Master", "Library", "Production Master"];
@@ -848,14 +857,189 @@ describe("Test ElvClient", () => {
 
       const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
 
+      /* Example Callback
+        {
+          "testDirectory/File 1": {
+          "uploaded": 0,
+            "total": 100000
+        },
+          "testDirectory/File 2": {
+          "uploaded": 0,
+            "total": 100000
+        }
+      */
+      const callback = fileUploadStatus => {
+        expect(fileUploadStatus).toBeDefined();
+        expect(fileUploadStatus["testDirectory/File 1"]).toBeDefined();
+        expect(fileUploadStatus["testDirectory/File 2"]).toBeDefined();
+
+        expect(fileUploadStatus["testDirectory/File 1"].uploaded).toBeDefined();
+        expect(fileUploadStatus["testDirectory/File 1"].total).toBeDefined();
+
+        expect(fileUploadStatus["testDirectory/File 2"].uploaded).toBeDefined();
+        expect(fileUploadStatus["testDirectory/File 2"].total).toBeDefined();
+      };
+
       await client.UploadFiles({
         libraryId,
         objectId,
         writeToken,
-        fileInfo
+        fileInfo,
+        callback
       });
 
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Copy Files From S3", async () => {
+      if(!(s3Access.accessKey && s3Access.bucket && s3Access.region && s3Access.secret)) {
+        throw Error("S3 info and credentials not specified");
+      }
+
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      /* Example callback:
+        {
+          "done": true,
+          "uploaded": 97944174,
+          "total": 97944174,
+          "uploadedFiles": 1,
+          "totalFiles": 1,
+          "fileStatus": {
+            "/eluvio-mez-test/ENTIRE_CREED_2min_.mp4": {
+              "size": 97944174,
+              "written": 83757796,
+              "percent": 85.51585314303635
+            }
+          }
+        }
+      */
+      const callback = ({done, uploaded, total, uploadedFiles, totalFiles, fileStatus}) => {
+        expect(done).toBeDefined();
+        expect(uploaded).toBeDefined();
+        expect(total).toBeDefined();
+        expect(uploadedFiles).toBeDefined();
+        expect(totalFiles).toBeDefined();
+        expect(totalFiles).toEqual(1);
+
+        if(done) {
+          expect(uploaded).toEqual(total);
+          expect(uploadedFiles).toEqual(totalFiles);
+        } else {
+          expect(Object.keys(fileStatus).length).toEqual(1);
+        }
+      };
+
+      await client.UploadFilesFromS3({
+        libraryId,
+        objectId,
+        writeToken,
+        fileInfo: [{
+          path: "s3-copy",
+          source: s3Access.testFile
+        }],
+        region: s3Access.region,
+        bucket: s3Access.bucket,
+        accessKey: s3Access.accessKey,
+        secret: s3Access.secret,
+        copy: true,
+        callback
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Reference Files From S3", async () => {
+      if(!(s3Access.accessKey && s3Access.bucket && s3Access.region && s3Access.secret)) {
+        throw Error("S3 info and credentials not specified");
+      }
+
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      /* Example callback:
+        {
+          "done": true,
+          "uploadedFiles": 1,
+          "totalFiles": 1
+        }
+      */
+      const callback = ({done, uploadedFiles, totalFiles}) => {
+        expect(done).toBeDefined();
+        expect(uploadedFiles).toBeDefined();
+        expect(totalFiles).toBeDefined();
+
+        if(done) {
+          expect(uploadedFiles).toEqual(totalFiles);
+        } else {
+          expect(uploadedFiles).not.toEqual(totalFiles);
+        }
+      };
+
+      await client.UploadFilesFromS3({
+        libraryId,
+        objectId,
+        writeToken,
+        fileInfo: [{
+          path: "s3-reference",
+          source: s3Access.testFile
+        }],
+        region: s3Access.region,
+        bucket: s3Access.bucket,
+        accessKey: s3Access.accessKey,
+        secret: s3Access.secret,
+        copy: false,
+        callback
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Upload Files From S3 - Errors", async () => {
+      if(!(s3Access.accessKey && s3Access.bucket && s3Access.region && s3Access.secret)) {
+        throw Error("S3 info and credentials not specified");
+      }
+
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      try {
+        await client.UploadFilesFromS3({
+          libraryId,
+          objectId,
+          writeToken,
+          fileInfo: [{
+            path: "s3-reference",
+            source: "invalid-file"
+          }],
+          region: s3Access.region,
+          bucket: s3Access.bucket,
+          accessKey: s3Access.accessKey,
+          secret: s3Access.secret,
+          copy: true
+        });
+
+        expect(undefined).toBeDefined();
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
+
+      try {
+        await client.UploadFilesFromS3({
+          libraryId,
+          objectId,
+          writeToken,
+          fileInfo: [{
+            path: "s3-reference",
+            source: "invalid-file"
+          }],
+          region: s3Access.region,
+          bucket: s3Access.bucket,
+          accessKey: s3Access.accessKey,
+          secret: s3Access.secret,
+          copy: false
+        });
+
+        expect(undefined).toBeDefined();
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
     });
 
     test("Download Files", async () => {
@@ -867,11 +1051,19 @@ describe("Test ElvClient", () => {
       expect(new Uint8Array(fileData2).toString()).toEqual(new Uint8Array(testFile2).toString());
     });
 
+    test("Download S3 Files", async () => {
+      const s3CopyData = await client.DownloadFile({libraryId, objectId, filePath: "s3-copy", format: "arrayBuffer"});
+      expect(s3CopyData).toBeDefined();
+    });
+
     test("List Files", async () => {
       const files = await client.ListFiles({libraryId, objectId});
+
       expect(files.testDirectory).toBeDefined();
       expect(files.testDirectory["File 1"]).toBeDefined();
       expect(files.testDirectory["File 2"]).toBeDefined();
+      expect(files["s3-copy"]).toBeDefined();
+      expect(files["s3-reference"]).toBeDefined();
     });
 
     test("Create Local File Links", async () => {
@@ -1137,16 +1329,16 @@ describe("Test ElvClient", () => {
         offeringKey: "default",
       });
 
-      const writeToken = startResponse.writeToken;
+      expect(startResponse).toBeDefined();
+      expect(startResponse.lro_draft).toBeDefined();
+      expect(startResponse.lro_draft.write_token).toBeDefined();
+      expect(startResponse.lro_draft.node).toBeDefined();
+
+      const startTime = new Date().getTime();
 
       // eslint-disable-next-line no-constant-condition
       while(true) {
-        const status = await client.ContentObjectMetadata({
-          libraryId: mediaLibraryId,
-          objectId: mezzanineId,
-          writeToken,
-          metadataSubtree: "lro_status"
-        });
+        const status = await client.LROStatus({libraryId: mediaLibraryId, objectId: mezzanineId});
 
         let done = true;
         Object.keys(status).forEach(id => {
@@ -1157,13 +1349,17 @@ describe("Test ElvClient", () => {
 
         if(done) { break; }
 
+        if(new Date().getTime() - startTime > 60000) {
+          // If processing takes too long, start logging status for debugging
+          console.log(status);
+        }
+
         await new Promise(resolve => setTimeout(resolve, 10000));
       }
 
       await client.FinalizeABRMezzanine({
         libraryId: mediaLibraryId,
         objectId: mezzanineId,
-        writeToken,
         offeringKey: "default"
       });
 
@@ -1190,6 +1386,18 @@ describe("Test ElvClient", () => {
       });
 
       expect(bitmovinPlayoutOptions).toBeDefined();
+
+      const clearPlayoutOptions = await accessClient.PlayoutOptions({
+        objectId: mezzanineId,
+        protocols: ["hls", "dash"],
+        drms: []
+      });
+
+      console.log("HLS Playout:");
+      console.log(clearPlayoutOptions.hls.playoutUrl);
+
+      console.log("Dash Playout:");
+      console.log(clearPlayoutOptions.dash.playoutUrl);
     });
   });
 
