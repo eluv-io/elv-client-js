@@ -324,6 +324,7 @@ class FrameClient {
       "GenerateStateChannelToken",
       "GetBalance",
       "LibraryContentTypes",
+      "LinkData",
       "LinkTarget",
       "LinkUrl",
       "ListFiles",

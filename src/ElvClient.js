@@ -4001,6 +4001,26 @@ class ElvClient {
     });
   }
 
+  /**
+   * Retrieve the data at the specified link in the specified format
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string=} libraryId - ID of an library
+   * @param {string=} objectId - ID of an object
+   * @param {string=} versionHash - Hash of an object version
+   * @param {string} linkPath - Path to the content object link
+   * @param {string=} format=json - Format of the response
+   */
+  async LinkData({libraryId, objectId, versionHash, linkPath, format="json"}) {
+    const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, linkPath});
+
+    return ResponseToFormat(
+      format,
+      await this.HttpClient.Fetch(linkUrl)
+    );
+  }
+
   /* Access Groups */
 
   /**
