@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__4XD2HGu99Z4ad9go6XwY4WcjdcE2\"\n});",
+    "result": "\"wallet\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__22aSExu62hxykHtBG1QhS9fEKzMQ\"\n});",
+    "result": "\"object\""
+  }
+]

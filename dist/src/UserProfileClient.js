@@ -1169,61 +1169,90 @@ function () {
       var _RecordTags2 = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee15(_ref13) {
-        var libraryId, objectId, versionHash, seen, userLibraryId, userObjectId, editRequest, contentTags, userTags, formattedTags;
+        var libraryId, objectId, versionHash, accessType, seen, userLibraryId, userObjectId, editRequest, contentTags, userTags, formattedTags;
         return regeneratorRuntime.wrap(function _callee15$(_context15) {
           while (1) {
             switch (_context15.prev = _context15.next) {
               case 0:
                 libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash;
-
-                if (versionHash) {
-                  _context15.next = 5;
-                  break;
-                }
-
-                _context15.next = 4;
-                return this.client.ContentObject({
-                  libraryId: libraryId,
-                  objectId: objectId
+                _context15.next = 3;
+                return this.client.AccessType({
+                  id: objectId
                 });
 
-              case 4:
-                versionHash = _context15.sent.hash;
+              case 3:
+                accessType = _context15.sent;
 
-              case 5:
-                _context15.next = 7;
-                return this.UserMetadata({
-                  metadataSubtree: UrlJoin("accessed_content", versionHash)
-                });
-
-              case 7:
-                seen = _context15.sent;
-
-                if (!seen) {
-                  _context15.next = 10;
+                if (!(accessType !== "object")) {
+                  _context15.next = 6;
                   break;
                 }
 
                 return _context15.abrupt("return");
 
+              case 6:
+                if (!(!versionHash && !libraryId)) {
+                  _context15.next = 10;
+                  break;
+                }
+
+                _context15.next = 9;
+                return this.client.ContentObjectLibraryId({
+                  objectId: objectId
+                });
+
+              case 9:
+                libraryId = _context15.sent;
+
               case 10:
-                userLibraryId = this.client.contentSpaceLibraryId;
-                _context15.t0 = Utils;
-                _context15.next = 14;
-                return this.WalletAddress();
+                if (versionHash) {
+                  _context15.next = 14;
+                  break;
+                }
+
+                _context15.next = 13;
+                return this.client.ContentObject({
+                  libraryId: libraryId,
+                  objectId: objectId
+                });
+
+              case 13:
+                versionHash = _context15.sent.hash;
 
               case 14:
+                _context15.next = 16;
+                return this.UserMetadata({
+                  metadataSubtree: UrlJoin("accessed_content", versionHash)
+                });
+
+              case 16:
+                seen = _context15.sent;
+
+                if (!seen) {
+                  _context15.next = 19;
+                  break;
+                }
+
+                return _context15.abrupt("return");
+
+              case 19:
+                userLibraryId = this.client.contentSpaceLibraryId;
+                _context15.t0 = Utils;
+                _context15.next = 23;
+                return this.WalletAddress();
+
+              case 23:
                 _context15.t1 = _context15.sent;
                 userObjectId = _context15.t0.AddressToObjectId.call(_context15.t0, _context15.t1);
-                _context15.next = 18;
+                _context15.next = 27;
                 return this.client.EditContentObject({
                   libraryId: userLibraryId,
                   objectId: userObjectId
                 });
 
-              case 18:
+              case 27:
                 editRequest = _context15.sent;
-                _context15.next = 21;
+                _context15.next = 30;
                 return this.client.ReplaceMetadata({
                   libraryId: userLibraryId,
                   objectId: userObjectId,
@@ -1232,8 +1261,8 @@ function () {
                   metadata: Date.now()
                 });
 
-              case 21:
-                _context15.next = 23;
+              case 30:
+                _context15.next = 32;
                 return this.client.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -1241,18 +1270,18 @@ function () {
                   metadataSubtree: "video_tags"
                 });
 
-              case 23:
+              case 32:
                 contentTags = _context15.sent;
 
                 if (!(contentTags && contentTags.length > 0)) {
-                  _context15.next = 32;
+                  _context15.next = 41;
                   break;
                 }
 
-                _context15.next = 27;
+                _context15.next = 36;
                 return this.CollectedTags();
 
-              case 27:
+              case 36:
                 userTags = _context15.sent;
                 formattedTags = this.__FormatVideoTags(contentTags);
                 Object.keys(formattedTags).forEach(function (tag) {
@@ -1269,7 +1298,7 @@ function () {
                   }
                 }); // Update user tags
 
-                _context15.next = 32;
+                _context15.next = 41;
                 return this.client.ReplaceMetadata({
                   libraryId: userLibraryId,
                   objectId: userObjectId,
@@ -1278,15 +1307,15 @@ function () {
                   metadata: userTags
                 });
 
-              case 32:
-                _context15.next = 34;
+              case 41:
+                _context15.next = 43;
                 return this.client.FinalizeContentObject({
                   libraryId: userLibraryId,
                   objectId: userObjectId,
                   writeToken: editRequest.write_token
                 });
 
-              case 34:
+              case 43:
               case "end":
                 return _context15.stop();
             }
