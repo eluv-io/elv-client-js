@@ -1337,11 +1337,12 @@ class ElvClient {
    * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
    * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+   * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
    *
    * @returns {Promise<Object | string>} - Metadata of the content object
    */
-  async ContentObjectMetadata({libraryId, objectId, versionHash, writeToken, metadataSubtree="/", noAuth=true}) {
+  async ContentObjectMetadata({libraryId, objectId, versionHash, writeToken, metadataSubtree="/", resolveLinks=false, noAuth=true}) {
     ValidateParameters({libraryId, objectId, versionHash});
 
     this.Log(
@@ -1357,7 +1358,7 @@ class ElvClient {
       return await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
-          queryParams: {resolve: false},
+          queryParams: {resolve: resolveLinks},
           method: "GET",
           path: path
         })
@@ -3976,14 +3977,21 @@ class ElvClient {
       path = UrlJoin("q", versionHash, "meta", linkPath);
     }
 
-    let authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+    let authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth: true});
 
     // If link target is not current object, must also authenticate against target object
     const targetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
-    if(this.utils.DecodeVersionHash(targetHash).objectId !== objectId) {
+    const targetObjectId = this.utils.DecodeVersionHash(targetHash).objectId;
+    if(targetObjectId !== objectId) {
+      const targetLibraryId = await this.ContentObjectLibraryId({objectId: targetObjectId});
       authorizationToken = [
         authorizationToken,
-        await this.authClient.AuthorizationToken({versionHash: targetHash, noCache})
+        await this.authClient.AuthorizationToken({
+          libraryId: targetLibraryId,
+          objectId: targetObjectId,
+          noCache,
+          noAuth: true
+        })
       ];
     }
 
@@ -3999,6 +4007,26 @@ class ElvClient {
       path: path,
       queryParams
     });
+  }
+
+  /**
+   * Retrieve the data at the specified link in the specified format
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string=} libraryId - ID of an library
+   * @param {string=} objectId - ID of an object
+   * @param {string=} versionHash - Hash of an object version
+   * @param {string} linkPath - Path to the content object link
+   * @param {string=} format=json - Format of the response
+   */
+  async LinkData({libraryId, objectId, versionHash, linkPath, format="json"}) {
+    const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, linkPath});
+
+    return ResponseToFormat(
+      format,
+      await this.HttpClient.Fetch(linkUrl)
+    );
   }
 
   /* Access Groups */

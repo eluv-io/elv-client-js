@@ -14,7 +14,7 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 var URI = require("urijs");
 
-var Fetch = function Fetch(input) {
+var _Fetch = function Fetch(input) {
   var init = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
   if (typeof fetch === "undefined") {
@@ -63,6 +63,12 @@ function () {
       return new URI(this.uris[this.uriIndex]);
     }
   }, {
+    key: "Fetch",
+    value: function Fetch(url) {
+      var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      return _Fetch(url, params);
+    }
+  }, {
     key: "RequestHeaders",
     value: function RequestHeaders(bodyType) {
       var headers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -105,7 +111,7 @@ function () {
 
                 _context.prev = 4;
                 _context.next = 7;
-                return Fetch(uri.toString(), fetchParameters);
+                return this.Fetch(uri.toString(), fetchParameters);
 
               case 7:
                 response = _context.sent;
