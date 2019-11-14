@@ -3820,9 +3820,9 @@ class ElvClient {
     noAuth=false,
     noCache=false
   }) {
-    objectId || versionHash ?
-      ValidateParameters({libraryId, objectId, versionHash}) :
-      ValidateLibrary(libraryId);
+    if(objectId || versionHash) {
+      ValidateParameters({libraryId, objectId, versionHash});
+    }
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
