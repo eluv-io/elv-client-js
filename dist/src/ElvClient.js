@@ -2316,6 +2316,7 @@ function () {
      * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
      * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
      * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+     * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
      * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
      *
      * @returns {Promise<Object | string>} - Metadata of the content object
@@ -2327,13 +2328,13 @@ function () {
       var _ContentObjectMetadata = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee29(_ref33) {
-        var libraryId, objectId, versionHash, writeToken, _ref33$metadataSubtre, metadataSubtree, _ref33$noAuth, noAuth, path;
+        var libraryId, objectId, versionHash, writeToken, _ref33$metadataSubtre, metadataSubtree, _ref33$resolveLinks, resolveLinks, _ref33$noAuth, noAuth, path;
 
         return regeneratorRuntime.wrap(function _callee29$(_context29) {
           while (1) {
             switch (_context29.prev = _context29.next) {
               case 0:
-                libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, writeToken = _ref33.writeToken, _ref33$metadataSubtre = _ref33.metadataSubtree, metadataSubtree = _ref33$metadataSubtre === void 0 ? "/" : _ref33$metadataSubtre, _ref33$noAuth = _ref33.noAuth, noAuth = _ref33$noAuth === void 0 ? true : _ref33$noAuth;
+                libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, writeToken = _ref33.writeToken, _ref33$metadataSubtre = _ref33.metadataSubtree, metadataSubtree = _ref33$metadataSubtre === void 0 ? "/" : _ref33$metadataSubtre, _ref33$resolveLinks = _ref33.resolveLinks, resolveLinks = _ref33$resolveLinks === void 0 ? false : _ref33$resolveLinks, _ref33$noAuth = _ref33.noAuth, noAuth = _ref33$noAuth === void 0 ? true : _ref33$noAuth;
                 ValidateParameters({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -2360,7 +2361,7 @@ function () {
               case 10:
                 _context29.t2 = _context29.sent;
                 _context29.t3 = {
-                  resolve: false
+                  resolve: resolveLinks
                 };
                 _context29.t4 = path;
                 _context29.t5 = {
@@ -7711,7 +7712,7 @@ function () {
       var _LinkUrl = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee89(_ref102) {
-        var libraryId, objectId, versionHash, linkPath, mimeType, _ref102$queryParams, queryParams, _ref102$noCache, noCache, path, authorizationToken, targetHash;
+        var libraryId, objectId, versionHash, linkPath, mimeType, _ref102$queryParams, queryParams, _ref102$noCache, noCache, path, authorizationToken, targetHash, targetObjectId, targetLibraryId;
 
         return regeneratorRuntime.wrap(function _callee89$(_context89) {
           while (1) {
@@ -7746,7 +7747,8 @@ function () {
                 return this.authClient.AuthorizationToken({
                   libraryId: libraryId,
                   objectId: objectId,
-                  noCache: noCache
+                  noCache: noCache,
+                  noAuth: true
                 });
 
               case 8:
@@ -7761,24 +7763,34 @@ function () {
 
               case 11:
                 targetHash = _context89.sent;
+                targetObjectId = this.utils.DecodeVersionHash(targetHash).objectId;
 
-                if (!(this.utils.DecodeVersionHash(targetHash).objectId !== objectId)) {
-                  _context89.next = 18;
+                if (!(targetObjectId !== objectId)) {
+                  _context89.next = 22;
                   break;
                 }
 
-                _context89.t0 = authorizationToken;
                 _context89.next = 16;
-                return this.authClient.AuthorizationToken({
-                  versionHash: targetHash,
-                  noCache: noCache
+                return this.ContentObjectLibraryId({
+                  objectId: targetObjectId
                 });
 
               case 16:
+                targetLibraryId = _context89.sent;
+                _context89.t0 = authorizationToken;
+                _context89.next = 20;
+                return this.authClient.AuthorizationToken({
+                  libraryId: targetLibraryId,
+                  objectId: targetObjectId,
+                  noCache: noCache,
+                  noAuth: true
+                });
+
+              case 20:
                 _context89.t1 = _context89.sent;
                 authorizationToken = [_context89.t0, _context89.t1];
 
-              case 18:
+              case 22:
                 queryParams = _objectSpread({}, queryParams, {
                   resolve: true,
                   authorization: authorizationToken
@@ -7793,7 +7805,7 @@ function () {
                   queryParams: queryParams
                 }));
 
-              case 21:
+              case 25:
               case "end":
                 return _context89.stop();
             }
