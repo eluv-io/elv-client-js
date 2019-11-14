@@ -1452,7 +1452,7 @@ class ElvClient {
       objectId = this.utils.AddressToObjectId(contractAddress);
       this.Log(`Contract deployed: ${contractAddress} ${objectId}`);
     } else {
-      this.Log(`Contract already deployed for contract type: ${this.authClient.AccessType(objectId)}`);
+      this.Log(`Contract already deployed for contract type: ${await this.AccessType({id: objectId})}`);
     }
 
     if(options.visibility) {
@@ -2876,7 +2876,7 @@ class ElvClient {
     const abrMezType = await this.ContentType({name: "ABR Master"});
 
     if(!abrMezType) {
-      throw Error("Unable to access ABR Mezzanine content type in library with ID=" + libraryId);
+      throw Error("Unable to access ABR Master content type in library with ID=" + libraryId);
     }
 
     if(!masterVersionHash) {
@@ -3231,14 +3231,7 @@ class ElvClient {
    * @namedParams
    * @param {string} id - ID of the item
    *
-   * @return {Promise<string>} - Contract type of the item
-   * - space
-   * - library
-   * - type,
-   * - object
-   * - wallet
-   * - group
-   * - other
+   * @return {Promise<string>} - Contract type of the item - "space", "library", "type", "object", "wallet", "group", or "other"
    */
   async AccessType({id}) {
     return await this.authClient.AccessType(id);
@@ -3914,6 +3907,46 @@ class ElvClient {
   }
 
   /**
+   * Retrieve the version hash of the specified link's target. If the target is the same as the specified
+   * object, will return the latest version hash.
+   *
+   * @methodGroup URL Generation
+   * @namedParams
+   * @param {string=} libraryId - ID of an library
+   * @param {string=} objectId - ID of an object
+   * @param {string=} versionHash - Hash of an object version
+   * @param {string} linkPath - Path to the content object link
+   *
+   * @returns {Promise<string>} - Version hash of the link's target
+   */
+  async LinkTarget({libraryId, objectId, versionHash, linkPath}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    const linkInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      metadataSubtree: UrlJoin(linkPath)
+    });
+
+    if(!linkInfo || !linkInfo["/"]) {
+      throw Error(`No valid link at ${linkPath}`);
+    }
+
+
+    const targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
+
+    if(targetHash) { return targetHash; }
+
+    // Link points to this object - get latest version
+    if(!libraryId) {
+      libraryId = await this.ContentObjectLibraryId({objectId});
+    }
+
+    return (await this.ContentObject({libraryId, objectId})).hash;
+  }
+
+  /**
    * Generate a URL to the specified file link with appropriate authentication
    *
    * @methodGroup URL Generation
@@ -3931,12 +3964,12 @@ class ElvClient {
    */
   async LinkUrl({libraryId, objectId, versionHash, linkPath, mimeType, queryParams={}, noCache=false}) {
     ValidateParameters({libraryId, objectId, versionHash});
-    if(!linkPath) { throw "Link path not specified"; }
+
+    if(!linkPath) { throw Error("Link path not specified"); }
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     let path;
-
     if(libraryId) {
       path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
     } else {
@@ -3945,21 +3978,13 @@ class ElvClient {
 
     let authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
 
-    const linkInfo = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      versionHash,
-      metadataSubtree: UrlJoin(linkPath)
-    });
-
-    if(linkInfo) {
-      const targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
-      if(targetHash) {
-        authorizationToken = [
-          authorizationToken,
-          await this.authClient.AuthorizationToken({versionHash: targetHash, noCache})
-        ];
-      }
+    // If link target is not current object, must also authenticate against target object
+    const targetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+    if(this.utils.DecodeVersionHash(targetHash).objectId !== objectId) {
+      authorizationToken = [
+        authorizationToken,
+        await this.authClient.AuthorizationToken({versionHash: targetHash, noCache})
+      ];
     }
 
     queryParams = {

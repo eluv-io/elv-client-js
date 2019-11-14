@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async LinkTarget({\n  \"libraryId\": \"ilib2UfL3N3NDK4iaZTPu6dx4x29mR7m\",\n  \"objectId\": \"iq__22aSExu62hxykHtBG1QhS9fEKzMQ\",\n  \"linkPath\": \"myLink\"\n});",
+    "result": "\"hq__DseTrohkWGA58QHfyFdBCyW9i5sTuiiXZwhHJMzVGNsj6891VHgeERFACfrW3ovQPyYeYBqZN2\""
+  },
+  {
+    "signature": "async LinkTarget({\n  \"libraryId\": \"ilib2UfL3N3NDK4iaZTPu6dx4x29mR7m\",\n  \"objectId\": \"iq__22aSExu62hxykHtBG1QhS9fEKzMQ\",\n  \"linkPath\": \"links/myLink2\"\n});",
+    "result": "\"hq__DseTrohkWGA58QHfyFdBCyW9i5sTuiiXZwhHJMzVGNsj6891VHgeERFACfrW3ovQPyYeYBqZN2\""
+  }
+]
