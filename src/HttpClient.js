@@ -33,6 +33,10 @@ class HttpClient {
     return new URI(this.uris[this.uriIndex]);
   }
 
+  Fetch(url, params={}) {
+    return Fetch(url, params);
+  }
+
   RequestHeaders(bodyType, headers={}) {
     headers["Accept"] = "application/json";
     if(bodyType === "JSON") {
@@ -76,7 +80,7 @@ class HttpClient {
 
     try {
       response =
-        await Fetch(
+        await this.Fetch(
           uri.toString(),
           fetchParameters
         );

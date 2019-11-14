@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async LinkData({\n  \"libraryId\": \"ilib2LvHjZsdDbiYq2maBpBSFamsXL4t\",\n  \"objectId\": \"iq__2uPk2Ljb9qgkynEYd8DU7SQddvTv\",\n  \"linkPath\": \"myLink\",\n  \"format\": \"arrayBuffer\"\n});",
+    "result": "<ArrayBuffer 100000>"
+  },
+  {
+    "signature": "async LinkData({\n  \"libraryId\": \"ilib2LvHjZsdDbiYq2maBpBSFamsXL4t\",\n  \"objectId\": \"iq__2uPk2Ljb9qgkynEYd8DU7SQddvTv\",\n  \"linkPath\": \"links/myLink2\",\n  \"format\": \"arrayBuffer\"\n});",
+    "result": "<ArrayBuffer 100000>"
+  }
+]
