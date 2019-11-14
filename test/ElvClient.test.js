@@ -1115,6 +1115,28 @@ describe("Test ElvClient", () => {
       const data2 = await (await Fetch(link2)).arrayBuffer();
       expect(new Uint8Array(data2).toString()).toEqual(new Uint8Array(testFile2).toString());
     });
+
+    test("Fetch link data", async () => {
+      const data1 = await client.LinkData({
+        libraryId,
+        objectId,
+        linkPath: "myLink",
+        format: "arrayBuffer"
+      });
+
+      expect(data1).toBeDefined();
+      expect(new Uint8Array(data1).toString()).toEqual(new Uint8Array(testFile1).toString());
+
+      const data2 = await client.LinkData({
+        libraryId,
+        objectId,
+        linkPath: "links/myLink2",
+        format: "arrayBuffer"
+      });
+
+      expect(data2).toBeDefined();
+      expect(new Uint8Array(data2).toString()).toEqual(new Uint8Array(testFile2).toString());
+    });
   });
 
   describe("Media", () => {
