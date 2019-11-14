@@ -7435,11 +7435,14 @@ function () {
             switch (_context86.prev = _context86.next) {
               case 0:
                 libraryId = _ref99.libraryId, objectId = _ref99.objectId, versionHash = _ref99.versionHash, partHash = _ref99.partHash, rep = _ref99.rep, publicRep = _ref99.publicRep, call = _ref99.call, _ref99$queryParams = _ref99.queryParams, queryParams = _ref99$queryParams === void 0 ? {} : _ref99$queryParams, _ref99$channelAuth = _ref99.channelAuth, channelAuth = _ref99$channelAuth === void 0 ? false : _ref99$channelAuth, _ref99$noAuth = _ref99.noAuth, noAuth = _ref99$noAuth === void 0 ? false : _ref99$noAuth, _ref99$noCache = _ref99.noCache, noCache = _ref99$noCache === void 0 ? false : _ref99$noCache;
-                objectId || versionHash ? ValidateParameters({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  versionHash: versionHash
-                }) : ValidateLibrary(libraryId);
+
+                if (objectId || versionHash) {
+                  ValidateParameters({
+                    libraryId: libraryId,
+                    objectId: objectId,
+                    versionHash: versionHash
+                  });
+                }
 
                 if (versionHash) {
                   objectId = this.utils.DecodeVersionHash(versionHash).objectId;
