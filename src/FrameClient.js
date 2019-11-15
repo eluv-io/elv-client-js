@@ -355,6 +355,7 @@ class FrameClient {
       "UploadFileData",
       "UploadFiles",
       "UploadFilesFromS3",
+      "UploadFileFromStream",
       "UploadJobStatus",
       "UploadPart",
       "UploadPartChunk",
