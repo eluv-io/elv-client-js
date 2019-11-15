@@ -1868,6 +1868,141 @@ class ElvClient {
   }
 
   /**
+   * Upload a file to a content object from a Node.js file stream
+   *
+   * Expected format of fileInfo:
+   *
+     {
+        path: string,
+        mime_type: string,
+        size: number,
+        stream: Stream
+      }
+   *
+   *
+   * @methodGroup Parts and Files
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Array<object>} fileInfo - Info about the file to upload, including its size, type, and stream
+   * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
+   * - Format: {"filename1": {uploaded: number, total: number}, ...}
+   */
+  async UploadFileFromStream({libraryId, objectId, writeToken, fileInfo, callback}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
+    this.Log(`Uploading files from stream: ${libraryId} ${objectId} ${writeToken}`);
+
+    const concurrentUploads = 5;
+
+    let progress = {
+      [fileInfo.path]: {
+        uploaded: 0,
+        total: fileInfo.size
+      }
+    };
+
+    fileInfo.path = fileInfo.path.replace(/^\/+/, "");
+    fileInfo.type = "file";
+
+    const stream = fileInfo.stream;
+    delete fileInfo.stream;
+
+    this.Log(fileInfo);
+
+    if(callback) {
+      callback(progress);
+    }
+
+    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops: [fileInfo]});
+
+    this.Log(`Upload ID: ${id}`);
+    this.Log(jobs);
+
+    let jobInfo = await LimitedMap(
+      5,
+      jobs,
+      async jobId => await this.UploadJobStatus({
+        libraryId,
+        objectId,
+        writeToken,
+        uploadId: id,
+        jobId
+      })
+    );
+
+    // Ensure jobs are sorted in order of upload
+    jobInfo = jobInfo.sort((a, b) => a.files[0].off < b.files[0].off ? -1 : 1);
+
+    let currentUploads = 0;
+    let currentJob = jobInfo.shift();
+    let currentData = Buffer.from("");
+    let currentReader = 0;
+    let readerIndex = 0;
+    await new Promise(async resolve => {
+      stream.on("data", async chunk => {
+        // Wait until all previous data has been handled
+        let reader = readerIndex;
+        readerIndex += 1;
+        while(reader !== currentReader) {
+          await new Promise(r => setTimeout(r, 250));
+        }
+
+        const neededBytes = currentJob.files[0].len - currentData.length;
+
+        currentData = Buffer.concat([currentData, chunk.slice(0, neededBytes)]);
+
+        if(currentData.length >= currentJob.files[0].len) {
+          while(currentUploads > concurrentUploads) {
+            await new Promise(r => setTimeout(r, 250));
+          }
+
+          let fileData = currentData;
+          new Promise(async r => {
+            currentUploads += 1;
+            await this.UploadFileData({
+              libraryId,
+              objectId,
+              writeToken,
+              uploadId: id,
+              jobId: currentJob.id,
+              fileData
+            });
+            currentUploads -= 1;
+
+            if(callback) {
+              progress = {
+                [fileInfo.path]: {
+                  ...progress[fileInfo.path],
+                  uploaded: progress[fileInfo.path].uploaded + fileData.length
+                }
+              };
+
+              callback(progress);
+            }
+
+            r();
+          });
+
+          if(jobInfo.length === 0) {
+            while(currentUploads > 0) {
+              await new Promise(r => setTimeout(r, 500));
+            }
+            resolve();
+          }
+
+          currentJob = jobInfo.shift();
+          currentData = chunk.slice(neededBytes);
+        }
+
+        currentReader += 1;
+      });
+    });
+  }
+
+  /**
    * Copy/reference files from S3 to a content object
    *
    * Expected format of fileInfo:
@@ -1908,6 +2043,8 @@ class ElvClient {
   }) {
     ValidateParameters({libraryId, objectId});
     ValidateWriteToken(writeToken);
+
+    this.Log(`Uploading files from S3: ${libraryId} ${objectId} ${writeToken}`);
 
     const defaults = {
       access: {
@@ -2735,6 +2872,7 @@ class ElvClient {
    * @param {string} contentTypeName - Name of the content type to use
    * @param {Object=} metadata - Additional metadata for the content object
    * @param {Object=} fileInfo - Files to upload to (See UploadFiles/UploadFilesFromS3 method)
+   * @param {Object=} fileInfo - Files to upload via node.js stream (See UploadFileFromStream method)
    * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
    * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
    * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
@@ -2749,6 +2887,7 @@ class ElvClient {
     description,
     metadata={},
     fileInfo,
+    streamInfo,
     access,
     copy=false,
     callback
@@ -2769,48 +2908,62 @@ class ElvClient {
     });
 
     let accessParameter;
-    if(access) {
-      // S3 Upload
-      const {region, bucket, accessKey, secret} = access;
+    if(fileInfo) {
+      if(access) {
+        // S3 Upload
+        const {region, bucket, accessKey, secret} = access;
 
-      await this.UploadFilesFromS3({
-        libraryId,
-        objectId: id,
-        writeToken: write_token,
-        fileInfo,
-        region,
-        bucket,
-        accessKey,
-        secret,
-        copy,
-        callback
-      });
+        await this.UploadFilesFromS3({
+          libraryId,
+          objectId: id,
+          writeToken: write_token,
+          fileInfo,
+          region,
+          bucket,
+          accessKey,
+          secret,
+          copy,
+          callback
+        });
 
-      accessParameter = [
-        {
-          path_matchers: [".*"],
-          remote_access: {
-            protocol: "s3",
-            platform: "aws",
-            path: bucket + "/",
-            storage_endpoint: {
-              region
-            },
-            cloud_credentials: {
-              access_key_id: accessKey,
-              secret_access_key: secret
+        accessParameter = [
+          {
+            path_matchers: [".*"],
+            remote_access: {
+              protocol: "s3",
+              platform: "aws",
+              path: bucket + "/",
+              storage_endpoint: {
+                region
+              },
+              cloud_credentials: {
+                access_key_id: accessKey,
+                secret_access_key: secret
+              }
             }
           }
-        }
-      ];
-    } else {
-      await this.UploadFiles({
-        libraryId,
-        objectId: id,
-        writeToken: write_token,
-        fileInfo,
-        callback
-      });
+        ];
+      } else {
+        await this.UploadFiles({
+          libraryId,
+          objectId: id,
+          writeToken: write_token,
+          fileInfo,
+          callback
+        });
+      }
+    }
+
+    if(streamInfo) {
+      for(let i = 0; i < streamInfo.length; i++) {
+        await this.UploadFileFromStream({
+          libraryId,
+          objectId: id,
+          writeToken: write_token,
+          fileInfo: streamInfo[i],
+          callback
+        });
+      }
     }
 
     const { logs, errors, warnings } = await this.CallBitcodeMethod({
