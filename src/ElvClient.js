@@ -1955,10 +1955,12 @@ class ElvClient {
         currentData = Buffer.concat([currentData, chunk.slice(0, neededBytes)]);
 
         if(currentData.length >= currentJob.files[0].len) {
+          // Wait for ongoing uploads to complete before starting another
           while(currentUploads > concurrentUploads) {
             await new Promise(r => setTimeout(r, 250));
           }
 
+          // Upload file data, but don't wait for it to complete
           let fileData = currentData;
           new Promise(async r => {
             currentUploads += 1;
@@ -1987,14 +1989,16 @@ class ElvClient {
           });
 
           if(jobInfo.length === 0) {
+            // Wait for uploads to complete and resolve promise
             while(currentUploads > 0) {
               await new Promise(r => setTimeout(r, 500));
             }
             resolve();
+          } else {
+            // Pull next job and grab remaining bytes
+            currentJob = jobInfo.shift();
+            currentData = chunk.slice(neededBytes);
           }
-
-          currentJob = jobInfo.shift();
-          currentData = chunk.slice(neededBytes);
         }
 
         currentReader += 1;
@@ -3138,10 +3142,12 @@ class ElvClient {
     const prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || [];
 
     // Retrieve all masters associated with this offering
-    const masterVersionHashes = Object.keys(prepSpecs).map(spec =>
+    let masterVersionHashes = Object.keys(prepSpecs).map(spec =>
       (prepSpecs[spec].source_streams || []).map(stream => stream.source_hash)
-    )
-      .flat()
+    );
+
+    // Flatten and filter
+    masterVersionHashes = [].concat.apply([], masterVersionHashes)
       .filter(hash => hash)
       .filter((v, i, a) => a.indexOf(v) === i);
 
@@ -3658,6 +3664,10 @@ class ElvClient {
   /**
    * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
    *
+   * The root level playoutOptions[protocol].playoutUrl and playoutOptions[protocol].drms will contain playout
+   * information that satisfies the specified DRM requirements (if possible), while playoutOptions[protocol].playoutMethods
+   * will contain all available playout options for this content.
+   *
    * If only objectId is specified, latest version will be played. To retrieve playout options for
    * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
    *
@@ -3709,6 +3719,26 @@ class ElvClient {
       const drm = option.properties.drm;
       const licenseServers = option.properties.license_servers;
 
+      playoutMap[protocol] = {
+        ...(playoutMap[protocol] || {}),
+        playoutMethods: {
+          ...((playoutMap[protocol] || {}).playoutMethods || {}),
+          [drm || "clear"]: {
+            playoutUrl: await this.Rep({
+              libraryId,
+              objectId,
+              versionHash,
+              rep: UrlJoin("playout", "default", option.uri),
+              channelAuth: true,
+              queryParams: hlsjsProfile && protocol === "hls" ? {player_profile: "hls-js"} : {}
+            }),
+            drms: {
+              [drm]: drm ? {licenseServers} : undefined
+            }
+          }
+        }
+      };
+
       // Exclude any options that do not satisfy the specified protocols and/or DRMs
       const protocolMatch = protocols.includes(protocol);
       const drmMatch = drms.includes(drm) || (drms.length === 0 && !drm);
@@ -3716,27 +3746,8 @@ class ElvClient {
         continue;
       }
 
-      if(!playoutMap[protocol]) {
-        playoutMap[protocol] = {
-          playoutUrl: await this.Rep({
-            libraryId,
-            objectId,
-            versionHash,
-            rep: UrlJoin("playout", "default", option.uri),
-            channelAuth: true,
-            queryParams: hlsjsProfile && protocol === "hls" ? { player_profile: "hls-js" } : {}
-          }),
-        };
-      }
-
-      if(drm) {
-        playoutMap[protocol].drms = {
-          ...(playoutMap[protocol].drms || {}),
-          [drm]: {
-            licenseServers
-          }
-        };
-      }
+      playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
+      playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
     }
 
     this.Log(playoutMap);

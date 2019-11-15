@@ -3630,7 +3630,7 @@ function () {
                                         currentData = Buffer.concat([currentData, chunk.slice(0, neededBytes)]);
 
                                         if (!(currentData.length >= currentJob.files[0].len)) {
-                                          _context46.next = 26;
+                                          _context46.next = 28;
                                           break;
                                         }
 
@@ -3650,6 +3650,7 @@ function () {
                                         break;
 
                                       case 15:
+                                        // Upload file data, but don't wait for it to complete
                                         fileData = currentData;
                                         new Promise(
                                         /*#__PURE__*/
@@ -3698,7 +3699,7 @@ function () {
                                         }());
 
                                         if (!(jobInfo.length === 0)) {
-                                          _context46.next = 24;
+                                          _context46.next = 26;
                                           break;
                                         }
 
@@ -3719,15 +3720,18 @@ function () {
 
                                       case 23:
                                         resolve();
+                                        _context46.next = 28;
+                                        break;
 
-                                      case 24:
+                                      case 26:
+                                        // Pull next job and grab remaining bytes
                                         currentJob = jobInfo.shift();
                                         currentData = chunk.slice(neededBytes);
 
-                                      case 26:
+                                      case 28:
                                         currentReader += 1;
 
-                                      case 27:
+                                      case 29:
                                       case "end":
                                         return _context46.stop();
                                     }
@@ -6153,13 +6157,15 @@ function () {
                   return (prepSpecs[spec].source_streams || []).map(function (stream) {
                     return stream.source_hash;
                   });
-                }).flat().filter(function (hash) {
+                }); // Flatten and filter
+
+                masterVersionHashes = [].concat.apply([], masterVersionHashes).filter(function (hash) {
                   return hash;
                 }).filter(function (v, i, a) {
                   return a.indexOf(v) === i;
                 }); // Retrieve authorization tokens for all masters and the mezzanine
 
-                _context74.next = 9;
+                _context74.next = 10;
                 return Promise.all(masterVersionHashes.map(
                 /*#__PURE__*/
                 function () {
@@ -6191,16 +6197,16 @@ function () {
                   };
                 }()));
 
-              case 9:
+              case 10:
                 authorizationTokens = _context74.sent;
-                _context74.next = 12;
+                _context74.next = 13;
                 return this.authClient.AuthorizationToken({
                   libraryId: libraryId,
                   objectId: objectId,
                   update: true
                 });
 
-              case 12:
+              case 13:
                 _context74.t0 = _context74.sent;
                 _context74.t1 = _toConsumableArray(authorizationTokens);
                 authorizationTokens = [_context74.t0].concat(_context74.t1);
@@ -6229,28 +6235,28 @@ function () {
                   }];
                 }
 
-                _context74.next = 19;
+                _context74.next = 20;
                 return this.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 19:
+              case 20:
                 processingDraft = _context74.sent;
                 lroInfo = {
                   write_token: processingDraft.write_token,
                   node: this.HttpClient.BaseURI().toString()
                 }; // Update metadata with LRO version write token
 
-                _context74.next = 23;
+                _context74.next = 24;
                 return this.EditContentObject({
                   libraryId: libraryId,
                   objectId: objectId
                 });
 
-              case 23:
+              case 24:
                 statusDraft = _context74.sent;
-                _context74.next = 26;
+                _context74.next = 27;
                 return this.ReplaceMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -6259,16 +6265,16 @@ function () {
                   metadata: lroInfo
                 });
 
-              case 26:
-                _context74.next = 28;
+              case 27:
+                _context74.next = 29;
                 return this.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: statusDraft.write_token
                 });
 
-              case 28:
-                _context74.next = 30;
+              case 29:
+                _context74.next = 31;
                 return this.CallBitcodeMethod({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -6282,7 +6288,7 @@ function () {
                   }
                 });
 
-              case 30:
+              case 31:
                 _ref87 = _context74.sent;
                 data = _ref87.data;
                 errors = _ref87.errors;
@@ -6297,7 +6303,7 @@ function () {
                   errors: errors || []
                 });
 
-              case 36:
+              case 37:
               case "end":
                 return _context74.stop();
             }
@@ -7221,6 +7227,10 @@ function () {
     /**
      * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
      *
+     * The root level playoutOptions[protocol].playoutUrl and playoutOptions[protocol].drms will contain playout
+     * information that satisfies the specified DRM requirements (if possible), while playoutOptions[protocol].playoutMethods
+     * will contain all available playout options for this content.
+     *
      * If only objectId is specified, latest version will be played. To retrieve playout options for
      * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
      *
@@ -7318,32 +7328,24 @@ function () {
 
               case 29:
                 if (!(i < playoutOptions.length)) {
-                  _context86.next = 47;
+                  _context86.next = 61;
                   break;
                 }
 
                 option = playoutOptions[i];
                 protocol = option.properties.protocol;
                 drm = option.properties.drm;
-                licenseServers = option.properties.license_servers; // Exclude any options that do not satisfy the specified protocols and/or DRMs
-
-                protocolMatch = protocols.includes(protocol);
-                drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
-
-                if (!(!protocolMatch || !drmMatch)) {
-                  _context86.next = 38;
-                  break;
-                }
-
-                return _context86.abrupt("continue", 44);
-
-              case 38:
-                if (playoutMap[protocol]) {
-                  _context86.next = 43;
-                  break;
-                }
-
-                _context86.next = 41;
+                licenseServers = option.properties.license_servers;
+                _context86.t8 = _objectSpread;
+                _context86.t9 = {};
+                _context86.t10 = playoutMap[protocol] || {};
+                _context86.t11 = _objectSpread;
+                _context86.t12 = {};
+                _context86.t13 = (playoutMap[protocol] || {}).playoutMethods || {};
+                _context86.t14 = _defineProperty;
+                _context86.t15 = {};
+                _context86.t16 = drm || "clear";
+                _context86.next = 45;
                 return this.Rep({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -7355,29 +7357,46 @@ function () {
                   } : {}
                 });
 
-              case 41:
-                _context86.t8 = _context86.sent;
-                playoutMap[protocol] = {
-                  playoutUrl: _context86.t8
+              case 45:
+                _context86.t17 = _context86.sent;
+                _context86.t18 = _defineProperty({}, drm, drm ? {
+                  licenseServers: licenseServers
+                } : undefined);
+                _context86.t19 = {
+                  playoutUrl: _context86.t17,
+                  drms: _context86.t18
                 };
+                _context86.t20 = (0, _context86.t14)(_context86.t15, _context86.t16, _context86.t19);
+                _context86.t21 = (0, _context86.t11)(_context86.t12, _context86.t13, _context86.t20);
+                _context86.t22 = {
+                  playoutMethods: _context86.t21
+                };
+                playoutMap[protocol] = (0, _context86.t8)(_context86.t9, _context86.t10, _context86.t22);
+                // Exclude any options that do not satisfy the specified protocols and/or DRMs
+                protocolMatch = protocols.includes(protocol);
+                drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
 
-              case 43:
-                if (drm) {
-                  playoutMap[protocol].drms = _objectSpread({}, playoutMap[protocol].drms || {}, _defineProperty({}, drm, {
-                    licenseServers: licenseServers
-                  }));
+                if (!(!protocolMatch || !drmMatch)) {
+                  _context86.next = 56;
+                  break;
                 }
 
-              case 44:
+                return _context86.abrupt("continue", 58);
+
+              case 56:
+                playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
+                playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
+
+              case 58:
                 i++;
                 _context86.next = 29;
                 break;
 
-              case 47:
+              case 61:
                 this.Log(playoutMap);
                 return _context86.abrupt("return", playoutMap);
 
-              case 49:
+              case 63:
               case "end":
                 return _context86.stop();
             }
