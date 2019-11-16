@@ -4832,7 +4832,7 @@ function () {
                 }
 
                 encrypted = partHash.startsWith("hqpe");
-                encryption = encrypted ? "cgck" : "none";
+                encryption = encrypted ? "cgck" : undefined;
                 path = UrlJoin("q", versionHash || objectId, "data", partHash);
                 _context63.next = 11;
                 return this.authClient.AuthorizationHeader({
