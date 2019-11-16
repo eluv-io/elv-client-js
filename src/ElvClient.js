@@ -2523,7 +2523,7 @@ class ElvClient {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     const encrypted = partHash.startsWith("hqpe");
-    const encryption = encrypted ? "cgck" : "none";
+    const encryption = encrypted ? "cgck" : undefined;
     const path = UrlJoin("q", versionHash || objectId, "data", partHash);
 
     let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
