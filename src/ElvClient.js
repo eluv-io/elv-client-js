@@ -1814,14 +1814,16 @@ class ElvClient {
   }
 
   /**
-   * Create links
+   * Create links to files, metadata and/or representations of this or or other
+   * content objects.
    *
    * Expected format of links:
    *
    [
      {
         path: string (path to link)
-        target: string (path to target file),
+        target: string (path to target),
+        type: string ("file", "meta", "rep" - default "file")
         targetHash: string (optional, for cross-object links)
       }
    ]
@@ -1846,12 +1848,13 @@ class ElvClient {
       links,
       async info => {
         const path = info.path.replace(/^(\/|\.)+/, "");
+        const type = (info.type || "file") === "file" ? "files" : info.type;
 
         let target = info.target.replace(/^(\/|\.)+/, "");
         if(info.targetHash) {
-          target = `/qfab/${info.targetHash}/files/${target}`;
+          target = `/qfab/${info.targetHash}/${type}/${target}`;
         } else {
-          target = `./files/${target}`;
+          target = `./${type}/${target}`;
         }
 
         await this.ReplaceMetadata({

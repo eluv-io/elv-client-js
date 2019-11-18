@@ -407,6 +407,16 @@ describe("Test ElvClient", () => {
         },
         toDelete: {
           delete: "me"
+        },
+        toLink: {
+          meta: {
+            data: {
+              some: "meta",
+              data: {
+                to: "show"
+              }
+            }
+          }
         }
       };
 
@@ -447,6 +457,16 @@ describe("Test ElvClient", () => {
         },
         toDelete: {
           delete: "me"
+        },
+        toLink: {
+          meta: {
+            data: {
+              some: "meta",
+              data: {
+                to: "show"
+              }
+            }
+          }
         }
       });
 
@@ -501,6 +521,16 @@ describe("Test ElvClient", () => {
         },
         toReplace: {
           new: "metadata"
+        },
+        toLink: {
+          meta: {
+            data: {
+              some: "meta",
+              data: {
+                to: "show"
+              }
+            }
+          }
         }
       });
 
@@ -1081,6 +1111,11 @@ describe("Test ElvClient", () => {
           {
             target: "testDirectory/File 2",
             path: "links/myLink2"
+          },
+          {
+            target: "toLink/meta/data",
+            path: "links/metadataLink",
+            type: "meta"
           }
         ]
       });
@@ -1136,6 +1171,23 @@ describe("Test ElvClient", () => {
 
       expect(data2).toBeDefined();
       expect(new Uint8Array(data2).toString()).toEqual(new Uint8Array(testFile2).toString());
+
+      const data3 = await client.LinkData({
+        libraryId,
+        objectId,
+        linkPath: "links/metadataLink",
+        format: "json"
+      });
+
+      const expected = {
+        some: "meta",
+        data: {
+          to: "show"
+        }
+      };
+
+      expect(data3).toBeDefined();
+      expect(data3).toEqual(expected);
     });
   });
 
