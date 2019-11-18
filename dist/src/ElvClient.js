@@ -3366,14 +3366,16 @@ function () {
       return ListFiles;
     }()
     /**
-     * Create links
+     * Create links to files, metadata and/or representations of this or or other
+     * content objects.
      *
      * Expected format of links:
      *
      [
        {
           path: string (path to link)
-          target: string (path to target file),
+          target: string (path to target),
+          type: string ("file", "meta", "rep" - default "file")
           targetHash: string (optional, for cross-object links)
         }
      ]
@@ -3412,21 +3414,22 @@ function () {
                   var _ref48 = _asyncToGenerator(
                   /*#__PURE__*/
                   regeneratorRuntime.mark(function _callee42(info) {
-                    var path, target;
+                    var path, type, target;
                     return regeneratorRuntime.wrap(function _callee42$(_context42) {
                       while (1) {
                         switch (_context42.prev = _context42.next) {
                           case 0:
                             path = info.path.replace(/^(\/|\.)+/, "");
+                            type = (info.type || "file") === "file" ? "files" : info.type;
                             target = info.target.replace(/^(\/|\.)+/, "");
 
                             if (info.targetHash) {
-                              target = "/qfab/".concat(info.targetHash, "/files/").concat(target);
+                              target = "/qfab/".concat(info.targetHash, "/").concat(type, "/").concat(target);
                             } else {
-                              target = "./files/".concat(target);
+                              target = "./".concat(type, "/").concat(target);
                             }
 
-                            _context42.next = 5;
+                            _context42.next = 6;
                             return _this4.ReplaceMetadata({
                               libraryId: libraryId,
                               objectId: objectId,
@@ -3437,7 +3440,7 @@ function () {
                               }
                             });
 
-                          case 5:
+                          case 6:
                           case "end":
                             return _context42.stop();
                         }
