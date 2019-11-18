@@ -248,6 +248,7 @@ class ElvClient {
     this.encryptionConks = {};
     this.reencryptionConks = {};
     this.stateChannelAccess = {};
+    this.objectLibraryIds = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
     this.ethClient = new EthClient({uris: this.ethereumURIs, debug: this.debug});
@@ -1312,17 +1313,21 @@ class ElvClient {
   async ContentObjectLibraryId({objectId, versionHash}) {
     versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
-    this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
-
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-    return Utils.AddressToLibraryId(
-      await this.CallContractMethod({
-        contractAddress: Utils.HashToAddress(objectId),
-        abi: ContentContract.abi,
-        methodName: "libraryAddress"
-      })
-    );
+    if(!this.objectLibraryIds[objectId]) {
+      this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
+
+      this.objectLibraryIds[objectId] = Utils.AddressToLibraryId(
+        await this.CallContractMethod({
+          contractAddress: Utils.HashToAddress(objectId),
+          abi: ContentContract.abi,
+          methodName: "libraryAddress"
+        })
+      );
+    }
+
+    return this.objectLibraryIds[objectId];
   }
 
   /**
@@ -3735,9 +3740,7 @@ class ElvClient {
               channelAuth: true,
               queryParams: hlsjsProfile && protocol === "hls" ? {player_profile: "hls-js"} : {}
             }),
-            drms: {
-              [drm]: drm ? {licenseServers} : undefined
-            }
+            drms: drm ? {[drm]: {licenseServers}} : undefined
           }
         }
       };
@@ -3780,6 +3783,9 @@ class ElvClient {
     }
 
     const playoutOptions = await this.PlayoutOptions({objectId, versionHash, protocols, drms, hlsjsProfile: false});
+
+    delete playoutOptions.playoutMethods;
+
     let config = {
       drm: {}
     };
