@@ -19,36 +19,35 @@ const { ElvClient } = require("../src/ElvClient.js")
 const PRINT_DEBUG = false
 
 const hlsStream = {
-  originUrl: "http://yourhlsplaylist",
+  ingestType: "hls", // default: hls
+  maxDurationSec: 600, // 10m, default: 2h
+  originUrl: "http://yourhlsplaylist", // required for hls
+  sourceTimescale: 90000, // required
   txParams: {
+    "duration_ts": 2700000, // 30s, required for hls
+    "enc_height": 720, // required
+    "enc_width": 1280, // required
+    "force_keyint": 50,
+    "format": "fmp4", // default: fmp4
+    "seg_duration_ts": 2700000, // 30s @ 25 fps, required
     "video_bitrate": 8000000, // 8 Mbps
-    "seg_duration_ts": 180000, // 2 s
-    "seg_duration_fr": 50,
-    "enc_height": 1080,
-    "enc_width": 1920,
-    "duration_ts": 2700000, // 30 s
-    "format": "fmp4"
   },
-  sourceTimescale: 90000,
-  maxDurationSec: 600,
-  ingestType: "hls"
 }
 
 const udpTsStream = {
+  ingestType: "udp",
+  maxDurationSec: 600,
+  sourceTimescale: 90000,
   txParams: {
-    "video_bitrate": 20000000, // 20 Mbps
-    "seg_duration_ts": 180000, // 2 s
-    "seg_duration_fr": 120,
+    "duration_ts": -1, 
     "enc_height": 720,
     "enc_width": 1280,
-    "duration_ts": -1, 
-    "seg_duration": "30.03",
-    "format": "fmp4-segment"
+    "force_keyint": 120,
+    "format": "fmp4-segment",
+    "seg_duration_ts": 2702700, // 30s @ 60000/1001 fps
+    "video_bitrate": 20000000, // 20 Mbps
   },
-  sourceTimescale: 90000,
-  maxDurationSec: 600,
-  ingestType: "udp",
-  udpPort: 21001
+  udpPort: 21001 // required for udp
 }
 
 const streamParams = udpTsStream
