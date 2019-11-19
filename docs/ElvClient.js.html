@@ -1386,6 +1386,64 @@ class ElvClient {
     return this.objectLibraryIds[objectId];
   }
 
+  async ProduceMetadataLinks({
+    libraryId,
+    objectId,
+    versionHash,
+    path="/",
+    metadata,
+    noAuth=true
+  }) {
+    // Primitive
+    if(typeof metadata !== "object") { return metadata; }
+
+    // Array
+    if(Array.isArray(metadata)) {
+      return await LimitedMap(
+        5,
+        metadata,
+        async (entry, i) => await this.ProduceMetadataLinks({
+          libraryId,
+          objectId,
+          versionHash,
+          path: UrlJoin(path, i.toString()),
+          metadata: entry,
+          noAuth
+        })
+      );
+    }
+
+    // Object
+    if(metadata["/"] &amp;&amp;
+      (metadata["/"].match(/\.\/(rep|files)\/.+/) ||
+        metadata["/"].match(/^\/?qfab\/([\w]+)\/?(rep|files)\/.+/)))
+    {
+      // Is file or rep link - produce a url
+      return {
+        ...metadata,
+        url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path})
+      };
+    }
+
+    let result = {};
+    await LimitedMap(
+      5,
+      Object.keys(metadata),
+      async key => {
+        result[key] = await this.ProduceMetadataLinks({
+          libraryId,
+          objectId,
+          versionHash,
+          path: UrlJoin(path, key),
+          metadata: metadata[key],
+          noAuth
+        });
+      }
+    );
+
+    return result;
+  }
+
   /**
    * Get the metadata of a content object
    *
@@ -1399,11 +1457,22 @@ class ElvClient {
    * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+   * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
+   * full URL
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
    *
    * @returns {Promise&lt;Object | string>} - Metadata of the content object
    */
-  async ContentObjectMetadata({libraryId, objectId, versionHash, writeToken, metadataSubtree="/", resolveLinks=false, noAuth=true}) {
+  async ContentObjectMetadata({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    metadataSubtree="/",
+    resolveLinks=false,
+    produceLinkUrls=false,
+    noAuth=true
+  }) {
     ValidateParameters({libraryId, objectId, versionHash});
 
     this.Log(
@@ -1415,8 +1484,9 @@ class ElvClient {
 
     let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
 
+    let metadata;
     try {
-      return await ResponseToJson(
+      metadata = await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
           queryParams: {resolve: resolveLinks},
@@ -1429,8 +1499,19 @@ class ElvClient {
         throw error;
       }
 
-      return metadataSubtree === "/" ? {} : undefined;
+      metadata = metadataSubtree === "/" ? {} : undefined;
     }
+
+    if(!produceLinkUrls) { return metadata; }
+
+    return await this.ProduceMetadataLinks({
+      libraryId,
+      objectId,
+      versionHash,
+      path: metadataSubtree,
+      metadata,
+      noAuth
+    });
   }
 
   /**
@@ -1904,31 +1985,28 @@ class ElvClient {
     ValidateParameters({libraryId, objectId});
     ValidateWriteToken(writeToken);
 
-    await LimitedMap(
-      5,
-      links,
-      async info => {
-        const path = info.path.replace(/^(\/|\.)+/, "");
-        const type = (info.type || "file") === "file" ? "files" : info.type;
+    for(let i = 0; i &lt; links.length; i++) {
+      const info = links[i];
+      const path = info.path.replace(/^(\/|\.)+/, "");
+      const type = (info.type || "file") === "file" ? "files" : info.type;
 
-        let target = info.target.replace(/^(\/|\.)+/, "");
-        if(info.targetHash) {
-          target = `/qfab/${info.targetHash}/${type}/${target}`;
-        } else {
-          target = `./${type}/${target}`;
-        }
-
-        await this.ReplaceMetadata({
-          libraryId,
-          objectId,
-          writeToken,
-          metadataSubtree: path,
-          metadata: {
-            "/": target
-          }
-        });
+      let target = info.target.replace(/^(\/|\.)+/, "");
+      if(info.targetHash) {
+        target = `/qfab/${info.targetHash}/${type}/${target}`;
+      } else {
+        target = `./${type}/${target}`;
       }
-    );
+
+      await this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: path,
+        metadata: {
+          "/": target
+        }
+      });
+    }
   }
 
   /**

@@ -1189,6 +1189,54 @@ describe("Test ElvClient", () => {
       expect(data3).toBeDefined();
       expect(data3).toEqual(expected);
     });
+
+    test("Get Metadata With Link URLs", async () => {
+      const metadata = await client.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        resolveLinks: true,
+        produceLinkUrls: true
+      });
+
+      expect(metadata).toBeDefined();
+
+      expect(metadata.myLink).toBeDefined();
+      expect(metadata.myLink["/"]).toBeDefined();
+      expect(metadata.myLink.url).toBeDefined();
+
+      expect(metadata.links).toBeDefined();
+      expect(metadata.links.myLink2).toBeDefined();
+      expect(metadata.links.myLink2["/"]).toBeDefined();
+      expect(metadata.links.myLink2.url).toBeDefined();
+
+      expect(metadata.links).toBeDefined();
+      expect(metadata.links.metadataLink).toEqual({
+        some: "meta",
+        data: {
+          to: "show"
+        }
+      });
+
+      const subMetadata = await client.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: "links",
+        resolveLinks: true,
+        produceLinkUrls: true
+      });
+
+      expect(subMetadata).toBeDefined();
+      expect(subMetadata.myLink2).toBeDefined();
+      expect(subMetadata.myLink2["/"]).toBeDefined();
+      expect(subMetadata.myLink2.url).toBeDefined();
+
+      expect(subMetadata.metadataLink).toEqual({
+        some: "meta",
+        data: {
+          to: "show"
+        }
+      });
+    });
   });
 
   describe("Media", () => {
