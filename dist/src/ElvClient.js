@@ -7998,7 +7998,8 @@ function () {
                   libraryId: libraryId,
                   objectId: objectId,
                   versionHash: versionHash,
-                  metadataSubtree: UrlJoin(linkPath)
+                  metadataSubtree: UrlJoin(linkPath),
+                  resolveLinks: false
                 });
 
               case 4:
@@ -8082,7 +8083,7 @@ function () {
       var _LinkUrl = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee94(_ref109) {
-        var libraryId, objectId, versionHash, linkPath, mimeType, _ref109$queryParams, queryParams, _ref109$noCache, noCache, path, authorizationToken, targetHash, targetObjectId, targetLibraryId;
+        var libraryId, objectId, versionHash, linkPath, mimeType, _ref109$queryParams, queryParams, _ref109$noCache, noCache, path;
 
         return regeneratorRuntime.wrap(function _callee94$(_context94) {
           while (1) {
@@ -8113,58 +8114,24 @@ function () {
                   path = UrlJoin("q", versionHash, "meta", linkPath);
                 }
 
-                _context94.next = 8;
+                _context94.t0 = _objectSpread;
+                _context94.t1 = {};
+                _context94.t2 = queryParams;
+                _context94.next = 11;
                 return this.authClient.AuthorizationToken({
                   libraryId: libraryId,
                   objectId: objectId,
                   noCache: noCache,
                   noAuth: true
-                });
-
-              case 8:
-                authorizationToken = _context94.sent;
-                _context94.next = 11;
-                return this.LinkTarget({
-                  libraryId: libraryId,
-                  objectId: objectId,
-                  versionHash: versionHash,
-                  linkPath: linkPath
                 });
 
               case 11:
-                targetHash = _context94.sent;
-                targetObjectId = this.utils.DecodeVersionHash(targetHash).objectId;
-
-                if (!(targetObjectId !== objectId)) {
-                  _context94.next = 22;
-                  break;
-                }
-
-                _context94.next = 16;
-                return this.ContentObjectLibraryId({
-                  objectId: targetObjectId
-                });
-
-              case 16:
-                targetLibraryId = _context94.sent;
-                _context94.t0 = authorizationToken;
-                _context94.next = 20;
-                return this.authClient.AuthorizationToken({
-                  libraryId: targetLibraryId,
-                  objectId: targetObjectId,
-                  noCache: noCache,
-                  noAuth: true
-                });
-
-              case 20:
-                _context94.t1 = _context94.sent;
-                authorizationToken = [_context94.t0, _context94.t1];
-
-              case 22:
-                queryParams = _objectSpread({}, queryParams, {
+                _context94.t3 = _context94.sent;
+                _context94.t4 = {
                   resolve: true,
-                  authorization: authorizationToken
-                });
+                  authorization: _context94.t3
+                };
+                queryParams = (0, _context94.t0)(_context94.t1, _context94.t2, _context94.t4);
 
                 if (mimeType) {
                   queryParams["header-accept"] = mimeType;
@@ -8175,7 +8142,7 @@ function () {
                   queryParams: queryParams
                 }));
 
-              case 25:
+              case 16:
               case "end":
                 return _context94.stop();
             }
