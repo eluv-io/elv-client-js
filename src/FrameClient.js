@@ -333,6 +333,7 @@ class FrameClient {
       "NodeId",
       "Nodes",
       "PlayoutOptions",
+      "ProduceMetadataLinks",
       "Proofs",
       "PublicRep",
       "PublishContentVersion",
