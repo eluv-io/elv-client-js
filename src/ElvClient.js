@@ -248,6 +248,7 @@ class ElvClient {
     this.encryptionConks = {};
     this.reencryptionConks = {};
     this.stateChannelAccess = {};
+    this.objectLibraryIds = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
     this.ethClient = new EthClient({uris: this.ethereumURIs, debug: this.debug});
@@ -1312,17 +1313,79 @@ class ElvClient {
   async ContentObjectLibraryId({objectId, versionHash}) {
     versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
-    this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
-
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-    return Utils.AddressToLibraryId(
-      await this.CallContractMethod({
-        contractAddress: Utils.HashToAddress(objectId),
-        abi: ContentContract.abi,
-        methodName: "libraryAddress"
-      })
+    if(!this.objectLibraryIds[objectId]) {
+      this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
+
+      this.objectLibraryIds[objectId] = Utils.AddressToLibraryId(
+        await this.CallContractMethod({
+          contractAddress: Utils.HashToAddress(objectId),
+          abi: ContentContract.abi,
+          methodName: "libraryAddress"
+        })
+      );
+    }
+
+    return this.objectLibraryIds[objectId];
+  }
+
+  async ProduceMetadataLinks({
+    libraryId,
+    objectId,
+    versionHash,
+    path="/",
+    metadata,
+    noAuth=true
+  }) {
+    // Primitive
+    if(typeof metadata !== "object") { return metadata; }
+
+    // Array
+    if(Array.isArray(metadata)) {
+      return await LimitedMap(
+        5,
+        metadata,
+        async (entry, i) => await this.ProduceMetadataLinks({
+          libraryId,
+          objectId,
+          versionHash,
+          path: UrlJoin(path, i.toString()),
+          metadata: entry,
+          noAuth
+        })
+      );
+    }
+
+    // Object
+    if(metadata["/"] &&
+      (metadata["/"].match(/\.\/(rep|files)\/.+/) ||
+        metadata["/"].match(/^\/?qfab\/([\w]+)\/?(rep|files)\/.+/)))
+    {
+      // Is file or rep link - produce a url
+      return {
+        ...metadata,
+        url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path})
+      };
+    }
+
+    let result = {};
+    await LimitedMap(
+      5,
+      Object.keys(metadata),
+      async key => {
+        result[key] = await this.ProduceMetadataLinks({
+          libraryId,
+          objectId,
+          versionHash,
+          path: UrlJoin(path, key),
+          metadata: metadata[key],
+          noAuth
+        });
+      }
     );
+
+    return result;
   }
 
   /**
@@ -1338,11 +1401,22 @@ class ElvClient {
    * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+   * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
+   * full URL
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
    *
    * @returns {Promise<Object | string>} - Metadata of the content object
    */
-  async ContentObjectMetadata({libraryId, objectId, versionHash, writeToken, metadataSubtree="/", resolveLinks=false, noAuth=true}) {
+  async ContentObjectMetadata({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    metadataSubtree="/",
+    resolveLinks=false,
+    produceLinkUrls=false,
+    noAuth=true
+  }) {
     ValidateParameters({libraryId, objectId, versionHash});
 
     this.Log(
@@ -1354,8 +1428,9 @@ class ElvClient {
 
     let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
 
+    let metadata;
     try {
-      return await ResponseToJson(
+      metadata = await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
           queryParams: {resolve: resolveLinks},
@@ -1368,8 +1443,19 @@ class ElvClient {
         throw error;
       }
 
-      return metadataSubtree === "/" ? {} : undefined;
+      metadata = metadataSubtree === "/" ? {} : undefined;
     }
+
+    if(!produceLinkUrls) { return metadata; }
+
+    return await this.ProduceMetadataLinks({
+      libraryId,
+      objectId,
+      versionHash,
+      path: metadataSubtree,
+      metadata,
+      noAuth
+    });
   }
 
   /**
@@ -1814,14 +1900,16 @@ class ElvClient {
   }
 
   /**
-   * Create links
+   * Create links to files, metadata and/or representations of this or or other
+   * content objects.
    *
    * Expected format of links:
    *
    [
      {
         path: string (path to link)
-        target: string (path to target file),
+        target: string (path to target),
+        type: string ("file", "meta", "rep" - default "file")
         targetHash: string (optional, for cross-object links)
       }
    ]
@@ -1841,30 +1929,167 @@ class ElvClient {
     ValidateParameters({libraryId, objectId});
     ValidateWriteToken(writeToken);
 
-    await LimitedMap(
-      5,
-      links,
-      async info => {
-        const path = info.path.replace(/^(\/|\.)+/, "");
+    for(let i = 0; i < links.length; i++) {
+      const info = links[i];
+      const path = info.path.replace(/^(\/|\.)+/, "");
+      const type = (info.type || "file") === "file" ? "files" : info.type;
 
-        let target = info.target.replace(/^(\/|\.)+/, "");
-        if(info.targetHash) {
-          target = `/qfab/${info.targetHash}/files/${target}`;
-        } else {
-          target = `./files/${target}`;
+      let target = info.target.replace(/^(\/|\.)+/, "");
+      if(info.targetHash) {
+        target = `/qfab/${info.targetHash}/${type}/${target}`;
+      } else {
+        target = `./${type}/${target}`;
+      }
+
+      await this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: path,
+        metadata: {
+          "/": target
+        }
+      });
+    }
+  }
+
+  /**
+   * Upload a file to a content object from a Node.js file stream
+   *
+   * Expected format of fileInfo:
+   *
+     {
+        path: string,
+        mime_type: string,
+        size: number,
+        stream: Stream
+      }
+   *
+   *
+   * @methodGroup Parts and Files
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Array<object>} fileInfo - Info about the file to upload, including its size, type, and stream
+   * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
+   * - Format: {"filename1": {uploaded: number, total: number}, ...}
+   */
+  async UploadFileFromStream({libraryId, objectId, writeToken, fileInfo, callback}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
+    this.Log(`Uploading files from stream: ${libraryId} ${objectId} ${writeToken}`);
+
+    const concurrentUploads = 5;
+
+    let progress = {
+      [fileInfo.path]: {
+        uploaded: 0,
+        total: fileInfo.size
+      }
+    };
+
+    fileInfo.path = fileInfo.path.replace(/^\/+/, "");
+    fileInfo.type = "file";
+
+    const stream = fileInfo.stream;
+    delete fileInfo.stream;
+
+    this.Log(fileInfo);
+
+    if(callback) {
+      callback(progress);
+    }
+
+    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops: [fileInfo]});
+
+    this.Log(`Upload ID: ${id}`);
+    this.Log(jobs);
+
+    let jobInfo = await LimitedMap(
+      5,
+      jobs,
+      async jobId => await this.UploadJobStatus({
+        libraryId,
+        objectId,
+        writeToken,
+        uploadId: id,
+        jobId
+      })
+    );
+
+    // Ensure jobs are sorted in order of upload
+    jobInfo = jobInfo.sort((a, b) => a.files[0].off < b.files[0].off ? -1 : 1);
+
+    let currentUploads = 0;
+    let currentJob = jobInfo.shift();
+    let currentData = Buffer.from("");
+    let currentReader = 0;
+    let readerIndex = 0;
+    await new Promise(async resolve => {
+      stream.on("data", async chunk => {
+        // Wait until all previous data has been handled
+        let reader = readerIndex;
+        readerIndex += 1;
+        while(reader !== currentReader) {
+          await new Promise(r => setTimeout(r, 250));
         }
 
-        await this.ReplaceMetadata({
-          libraryId,
-          objectId,
-          writeToken,
-          metadataSubtree: path,
-          metadata: {
-            "/": target
+        const neededBytes = currentJob.files[0].len - currentData.length;
+
+        currentData = Buffer.concat([currentData, chunk.slice(0, neededBytes)]);
+
+        if(currentData.length >= currentJob.files[0].len) {
+          // Wait for ongoing uploads to complete before starting another
+          while(currentUploads > concurrentUploads) {
+            await new Promise(r => setTimeout(r, 250));
           }
-        });
-      }
-    );
+
+          // Upload file data, but don't wait for it to complete
+          let fileData = currentData;
+          new Promise(async r => {
+            currentUploads += 1;
+            await this.UploadFileData({
+              libraryId,
+              objectId,
+              writeToken,
+              uploadId: id,
+              jobId: currentJob.id,
+              fileData
+            });
+            currentUploads -= 1;
+
+            if(callback) {
+              progress = {
+                [fileInfo.path]: {
+                  ...progress[fileInfo.path],
+                  uploaded: progress[fileInfo.path].uploaded + fileData.length
+                }
+              };
+
+              callback(progress);
+            }
+
+            r();
+          });
+
+          if(jobInfo.length === 0) {
+            // Wait for uploads to complete and resolve promise
+            while(currentUploads > 0) {
+              await new Promise(r => setTimeout(r, 500));
+            }
+            resolve();
+          } else {
+            // Pull next job and grab remaining bytes
+            currentJob = jobInfo.shift();
+            currentData = chunk.slice(neededBytes);
+          }
+        }
+
+        currentReader += 1;
+      });
+    });
   }
 
   /**
@@ -1908,6 +2133,8 @@ class ElvClient {
   }) {
     ValidateParameters({libraryId, objectId});
     ValidateWriteToken(writeToken);
+
+    this.Log(`Uploading files from S3: ${libraryId} ${objectId} ${writeToken}`);
 
     const defaults = {
       access: {
@@ -2382,7 +2609,7 @@ class ElvClient {
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     const encrypted = partHash.startsWith("hqpe");
-    const encryption = encrypted ? "cgck" : "none";
+    const encryption = encrypted ? "cgck" : undefined;
     const path = UrlJoin("q", versionHash || objectId, "data", partHash);
 
     let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
@@ -2735,6 +2962,7 @@ class ElvClient {
    * @param {string} contentTypeName - Name of the content type to use
    * @param {Object=} metadata - Additional metadata for the content object
    * @param {Object=} fileInfo - Files to upload to (See UploadFiles/UploadFilesFromS3 method)
+   * @param {Object=} fileInfo - Files to upload via node.js stream (See UploadFileFromStream method)
    * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
    * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
    * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
@@ -2749,6 +2977,7 @@ class ElvClient {
     description,
     metadata={},
     fileInfo,
+    streamInfo,
     access,
     copy=false,
     callback
@@ -2769,48 +2998,62 @@ class ElvClient {
     });
 
     let accessParameter;
-    if(access) {
-      // S3 Upload
-      const {region, bucket, accessKey, secret} = access;
+    if(fileInfo) {
+      if(access) {
+        // S3 Upload
+        const {region, bucket, accessKey, secret} = access;
 
-      await this.UploadFilesFromS3({
-        libraryId,
-        objectId: id,
-        writeToken: write_token,
-        fileInfo,
-        region,
-        bucket,
-        accessKey,
-        secret,
-        copy,
-        callback
-      });
+        await this.UploadFilesFromS3({
+          libraryId,
+          objectId: id,
+          writeToken: write_token,
+          fileInfo,
+          region,
+          bucket,
+          accessKey,
+          secret,
+          copy,
+          callback
+        });
 
-      accessParameter = [
-        {
-          path_matchers: [".*"],
-          remote_access: {
-            protocol: "s3",
-            platform: "aws",
-            path: bucket + "/",
-            storage_endpoint: {
-              region
-            },
-            cloud_credentials: {
-              access_key_id: accessKey,
-              secret_access_key: secret
+        accessParameter = [
+          {
+            path_matchers: [".*"],
+            remote_access: {
+              protocol: "s3",
+              platform: "aws",
+              path: bucket + "/",
+              storage_endpoint: {
+                region
+              },
+              cloud_credentials: {
+                access_key_id: accessKey,
+                secret_access_key: secret
+              }
             }
           }
-        }
-      ];
-    } else {
-      await this.UploadFiles({
-        libraryId,
-        objectId: id,
-        writeToken: write_token,
-        fileInfo,
-        callback
-      });
+        ];
+      } else {
+        await this.UploadFiles({
+          libraryId,
+          objectId: id,
+          writeToken: write_token,
+          fileInfo,
+          callback
+        });
+      }
+    }
+
+    if(streamInfo) {
+      for(let i = 0; i < streamInfo.length; i++) {
+        await this.UploadFileFromStream({
+          libraryId,
+          objectId: id,
+          writeToken: write_token,
+          fileInfo: streamInfo[i],
+          callback
+        });
+      }
     }
 
     const { logs, errors, warnings } = await this.CallBitcodeMethod({
@@ -2985,10 +3228,12 @@ class ElvClient {
     const prepSpecs = mezzanineMetadata[offeringKey].mez_prep_specs || [];
 
     // Retrieve all masters associated with this offering
-    const masterVersionHashes = Object.keys(prepSpecs).map(spec =>
+    let masterVersionHashes = Object.keys(prepSpecs).map(spec =>
       (prepSpecs[spec].source_streams || []).map(stream => stream.source_hash)
-    )
-      .flat()
+    );
+
+    // Flatten and filter
+    masterVersionHashes = [].concat.apply([], masterVersionHashes)
       .filter(hash => hash)
       .filter((v, i, a) => a.indexOf(v) === i);
 
@@ -3505,6 +3750,10 @@ class ElvClient {
   /**
    * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
    *
+   * The root level playoutOptions[protocol].playoutUrl and playoutOptions[protocol].drms will contain playout
+   * information that satisfies the specified DRM requirements (if possible), while playoutOptions[protocol].playoutMethods
+   * will contain all available playout options for this content.
+   *
    * If only objectId is specified, latest version will be played. To retrieve playout options for
    * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
    *
@@ -3556,6 +3805,24 @@ class ElvClient {
       const drm = option.properties.drm;
       const licenseServers = option.properties.license_servers;
 
+      playoutMap[protocol] = {
+        ...(playoutMap[protocol] || {}),
+        playoutMethods: {
+          ...((playoutMap[protocol] || {}).playoutMethods || {}),
+          [drm || "clear"]: {
+            playoutUrl: await this.Rep({
+              libraryId,
+              objectId,
+              versionHash,
+              rep: UrlJoin("playout", "default", option.uri),
+              channelAuth: true,
+              queryParams: hlsjsProfile && protocol === "hls" ? {player_profile: "hls-js"} : {}
+            }),
+            drms: drm ? {[drm]: {licenseServers}} : undefined
+          }
+        }
+      };
+
       // Exclude any options that do not satisfy the specified protocols and/or DRMs
       const protocolMatch = protocols.includes(protocol);
       const drmMatch = drms.includes(drm) || (drms.length === 0 && !drm);
@@ -3563,27 +3830,8 @@ class ElvClient {
         continue;
       }
 
-      if(!playoutMap[protocol]) {
-        playoutMap[protocol] = {
-          playoutUrl: await this.Rep({
-            libraryId,
-            objectId,
-            versionHash,
-            rep: UrlJoin("playout", "default", option.uri),
-            channelAuth: true,
-            queryParams: hlsjsProfile && protocol === "hls" ? { player_profile: "hls-js" } : {}
-          }),
-        };
-      }
-
-      if(drm) {
-        playoutMap[protocol].drms = {
-          ...(playoutMap[protocol].drms || {}),
-          [drm]: {
-            licenseServers
-          }
-        };
-      }
+      playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
+      playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
     }
 
     this.Log(playoutMap);
@@ -3613,6 +3861,9 @@ class ElvClient {
     }
 
     const playoutOptions = await this.PlayoutOptions({objectId, versionHash, protocols, drms, hlsjsProfile: false});
+
+    delete playoutOptions.playoutMethods;
+
     let config = {
       drm: {}
     };
@@ -3927,13 +4178,13 @@ class ElvClient {
       libraryId,
       objectId,
       versionHash,
-      metadataSubtree: UrlJoin(linkPath)
+      metadataSubtree: UrlJoin(linkPath),
+      resolveLinks: false
     });
 
     if(!linkInfo || !linkInfo["/"]) {
       throw Error(`No valid link at ${linkPath}`);
     }
-
 
     const targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
 
@@ -3977,28 +4228,10 @@ class ElvClient {
       path = UrlJoin("q", versionHash, "meta", linkPath);
     }
 
-    let authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth: true});
-
-    // If link target is not current object, must also authenticate against target object
-    const targetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
-    const targetObjectId = this.utils.DecodeVersionHash(targetHash).objectId;
-    if(targetObjectId !== objectId) {
-      const targetLibraryId = await this.ContentObjectLibraryId({objectId: targetObjectId});
-      authorizationToken = [
-        authorizationToken,
-        await this.authClient.AuthorizationToken({
-          libraryId: targetLibraryId,
-          objectId: targetObjectId,
-          noCache,
-          noAuth: true
-        })
-      ];
-    }
-
     queryParams = {
       ...queryParams,
       resolve: true,
-      authorization: authorizationToken
+      authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth: true})
     };
 
     if(mimeType) { queryParams["header-accept"] = mimeType; }

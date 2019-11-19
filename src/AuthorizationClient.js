@@ -128,7 +128,7 @@ class AuthorizationClient {
 
     // Generate AFGH public key if encryption is specified
     let publicKey;
-    if(encryption && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
+    if(encryption && encryption !== "none" && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId, abi: ContentContract.abi});
       if(!Utils.EqualAddress(owner, this.client.signer.address)) {
         const cap = await this.ReEncryptionConk({libraryId, objectId});

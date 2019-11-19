@@ -48,23 +48,24 @@ const Create = async (masterLibraryId, title, metadata, files, access, copy=fals
     });
     await client.SetSigner({signer});
 
-    let fileInfo;
+    let fileInfo, streamInfo;
     if(access) {
       fileInfo = files.map(path => ({
         path: Path.basename(path),
         source: path,
       }));
     } else {
-      fileInfo = files.map(path => {
-        const data = fs.readFileSync(path);
+      streamInfo = files.map(path => {
+        const stats = fs.statSync(path);
+        const stream = fs.createReadStream(path, {highWaterMark: 5 * 1024 * 1024});
         const mimeType = mime.lookup(path) || "video/mp4";
 
         return {
           path: Path.basename(path),
           type: "file",
           mime_type: mimeType,
-          size: data.length,
-          data
+          size: stats.size,
+          stream
         };
       });
     }
@@ -78,6 +79,7 @@ const Create = async (masterLibraryId, title, metadata, files, access, copy=fals
         description: "Production Master for " + title,
         metadata,
         fileInfo,
+        streamInfo,
         access,
         copy,
         callback: progress => {

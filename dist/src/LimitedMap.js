@@ -100,7 +100,7 @@ function () {
 
                         _context2.prev = 5;
                         _context2.next = 8;
-                        return f(array[index]);
+                        return f(array[index], index);
 
                       case 8:
                         results[index] = _context2.sent;
