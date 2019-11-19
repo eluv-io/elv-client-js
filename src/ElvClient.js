@@ -4100,13 +4100,13 @@ class ElvClient {
       libraryId,
       objectId,
       versionHash,
-      metadataSubtree: UrlJoin(linkPath)
+      metadataSubtree: UrlJoin(linkPath),
+      resolveLinks: false
     });
 
     if(!linkInfo || !linkInfo["/"]) {
       throw Error(`No valid link at ${linkPath}`);
     }
-
 
     const targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
 
@@ -4150,28 +4150,10 @@ class ElvClient {
       path = UrlJoin("q", versionHash, "meta", linkPath);
     }
 
-    let authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth: true});
-
-    // If link target is not current object, must also authenticate against target object
-    const targetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
-    const targetObjectId = this.utils.DecodeVersionHash(targetHash).objectId;
-    if(targetObjectId !== objectId) {
-      const targetLibraryId = await this.ContentObjectLibraryId({objectId: targetObjectId});
-      authorizationToken = [
-        authorizationToken,
-        await this.authClient.AuthorizationToken({
-          libraryId: targetLibraryId,
-          objectId: targetObjectId,
-          noCache,
-          noAuth: true
-        })
-      ];
-    }
-
     queryParams = {
       ...queryParams,
       resolve: true,
-      authorization: authorizationToken
+      authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth: true})
     };
 
     if(mimeType) { queryParams["header-accept"] = mimeType; }
