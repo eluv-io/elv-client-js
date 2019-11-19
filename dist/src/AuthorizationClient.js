@@ -243,7 +243,7 @@ function () {
                 } // Generate AFGH public key if encryption is specified
 
 
-                _context3.t0 = encryption && objectId;
+                _context3.t0 = encryption && encryption !== "none" && objectId;
 
                 if (!_context3.t0) {
                   _context3.next = 9;

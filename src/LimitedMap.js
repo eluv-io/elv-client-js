@@ -24,7 +24,7 @@ const LimitedMap = async (limit, array, f) => {
 
       while(index < array.length) {
         try {
-          results[index] = await f(array[index]);
+          results[index] = await f(array[index], index);
         } catch(error) {
           reject(error);
         }

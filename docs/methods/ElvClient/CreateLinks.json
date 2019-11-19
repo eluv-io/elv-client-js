@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib36JSC6JrbtuFA3cBx97J76tduvMY\",\n  \"objectId\": \"iq__3D7mZR7SFsiPjCN3tTgxQM5Yy9FX\",\n  \"writeToken\": \"tqw_HGdwQYNvQTE9YuWCA2AMCUoYRXze8KHB7\",\n  \"links\": [\n    {\n      \"target\": \"testDirectory/File 1\",\n      \"path\": \"myLink\"\n    },\n    {\n      \"target\": \"testDirectory/File 2\",\n      \"path\": \"links/myLink2\"\n    }\n  ]\n});"
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib3myHhCmBfk9yPZjmLCsdsFpaRF2W\",\n  \"objectId\": \"iq__Pyehvu8CsL3HcgAicbmjp3nS2d2\",\n  \"writeToken\": \"tqw_EhpE8SjnXmvwSyCQ4z4NagHwB3tzPLGPf\",\n  \"links\": [\n    {\n      \"target\": \"testDirectory/File 1\",\n      \"path\": \"myLink\"\n    },\n    {\n      \"target\": \"testDirectory/File 2\",\n      \"path\": \"links/myLink2\"\n    },\n    {\n      \"target\": \"toLink/meta/data\",\n      \"path\": \"links/metadataLink\",\n      \"type\": \"meta\"\n    }\n  ]\n});"
   }
 ]
