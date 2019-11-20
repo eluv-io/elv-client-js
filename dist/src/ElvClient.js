@@ -2329,7 +2329,7 @@ function () {
               case 0:
                 libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, _ref33$path = _ref33.path, path = _ref33$path === void 0 ? "/" : _ref33$path, metadata = _ref33.metadata, _ref33$noAuth = _ref33.noAuth, noAuth = _ref33$noAuth === void 0 ? true : _ref33$noAuth;
 
-                if (!(_typeof(metadata) !== "object")) {
+                if (!(!metadata || _typeof(metadata) !== "object")) {
                   _context31.next = 3;
                   break;
                 }
