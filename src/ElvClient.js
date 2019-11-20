@@ -1339,7 +1339,7 @@ class ElvClient {
     noAuth=true
   }) {
     // Primitive
-    if(typeof metadata !== "object") { return metadata; }
+    if(!metadata || typeof metadata !== "object") { return metadata; }
 
     // Array
     if(Array.isArray(metadata)) {
