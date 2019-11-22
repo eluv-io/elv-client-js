@@ -2780,7 +2780,7 @@ class ElvClient {
     if(!this.encryptionConks[objectId]) {
       const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
-      const existingCap =
+      const existingUserCap =
         await this.ContentObjectMetadata({
           libraryId,
           // Cap may only exist in draft
@@ -2789,23 +2789,32 @@ class ElvClient {
           metadataSubtree: capKey
         });
 
-      if(existingCap) {
-        this.encryptionConks[objectId] = await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey);
+      if(existingUserCap) {
+        this.encryptionConks[objectId] = await Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
       } else {
         this.encryptionConks[objectId] = await Crypto.GeneratePrimaryConk();
 
         // If write token is specified, add it to the metadata
         if(writeToken) {
-          const kmsAddress = await this.authClient.KMSAddress({objectId});
-          const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
-          const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
-
           let metadata = {};
-
           metadata[capKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
 
           try {
-            metadata[kmsCapKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+            const kmsAddress = await this.authClient.KMSAddress({objectId});
+            const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
+            const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+            const existingKMSCap =
+              await this.ContentObjectMetadata({
+                libraryId,
+                // Cap may only exist in draft
+                objectId,
+                writeToken,
+                metadataSubtree: kmsCapKey
+              });
+
+            if(!existingKMSCap) {
+              metadata[kmsCapKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+            }
           } catch(error) {
             // eslint-disable-next-line no-console
             console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
