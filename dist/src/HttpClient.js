@@ -63,12 +63,6 @@ function () {
       return new URI(this.uris[this.uriIndex]);
     }
   }, {
-    key: "Fetch",
-    value: function Fetch(url) {
-      var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      return _Fetch(url, params);
-    }
-  }, {
     key: "RequestHeaders",
     value: function RequestHeaders(bodyType) {
       var headers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -111,7 +105,7 @@ function () {
 
                 _context.prev = 4;
                 _context.next = 7;
-                return this.Fetch(uri.toString(), fetchParameters);
+                return HttpClient.Fetch(uri.toString(), fetchParameters);
 
               case 7:
                 response = _context.sent;
@@ -228,6 +222,12 @@ function () {
           _ref3$queryParams = _ref3.queryParams,
           queryParams = _ref3$queryParams === void 0 ? {} : _ref3$queryParams;
       return this.BaseURI().path(path).query(queryParams).hash("").toString();
+    }
+  }], [{
+    key: "Fetch",
+    value: function Fetch(url) {
+      var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+      return _Fetch(url, params);
     }
   }]);
 

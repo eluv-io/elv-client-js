@@ -3,6 +3,7 @@ require("@babel/polyfill");
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
+const URI = require("urijs");
 const Ethers = require("ethers");
 
 const AuthorizationClient = require("./AuthorizationClient");
@@ -164,13 +165,14 @@ class ElvClient {
     region
   }) {
     try {
-      const httpClient = new HttpClient({uris: [configUrl]});
+      const uri = new URI(configUrl);
+
+      if(region) {
+        uri.addSearch("region", region);
+      }
+
       const fabricInfo = await ResponseToJson(
-        httpClient.Request({
-          method: "GET",
-          path: "/config",
-          queryParams: region ? {elvgeo: region} : ""
-        })
+        HttpClient.Fetch(uri.toString())
       );
 
       // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
@@ -2468,7 +2470,7 @@ class ElvClient {
 
     const ops = filePaths.map(path => ({op: "del", path}));
 
-    await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo: ops});
+    await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops});
   }
 
   /**
@@ -4267,7 +4269,7 @@ class ElvClient {
 
     return ResponseToFormat(
       format,
-      await this.HttpClient.Fetch(linkUrl)
+      await HttpClient.Fetch(linkUrl)
     );
   }
 
