@@ -32,6 +32,8 @@ if (typeof Buffer === "undefined") {
 
 var UrlJoin = require("url-join");
 
+var URI = require("urijs");
+
 var Ethers = require("ethers");
 
 var AuthorizationClient = require("./AuthorizationClient");
@@ -4703,7 +4705,7 @@ function () {
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: writeToken,
-                  fileInfo: ops
+                  ops: ops
                 });
 
               case 8:
@@ -8376,7 +8378,7 @@ function () {
                 _context97.t0 = ResponseToFormat;
                 _context97.t1 = format;
                 _context97.next = 8;
-                return this.HttpClient.Fetch(linkUrl);
+                return HttpClient.Fetch(linkUrl);
 
               case 8:
                 _context97.t2 = _context97.sent;
@@ -10631,26 +10633,23 @@ function () {
       var _Configuration = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee133(_ref150) {
-        var configUrl, region, httpClient, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
+        var configUrl, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
         return regeneratorRuntime.wrap(function _callee133$(_context133) {
           while (1) {
             switch (_context133.prev = _context133.next) {
               case 0:
                 configUrl = _ref150.configUrl, region = _ref150.region;
                 _context133.prev = 1;
-                httpClient = new HttpClient({
-                  uris: [configUrl]
-                });
-                _context133.next = 5;
-                return ResponseToJson(httpClient.Request({
-                  method: "GET",
-                  path: "/config",
-                  queryParams: region ? {
-                    elvgeo: region
-                  } : ""
-                }));
+                uri = new URI(configUrl);
 
-              case 5:
+                if (region) {
+                  uri.addSearch("region", region);
+                }
+
+                _context133.next = 6;
+                return ResponseToJson(HttpClient.Fetch(uri.toString()));
+
+              case 6:
                 fabricInfo = _context133.sent;
 
                 // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
@@ -10677,8 +10676,8 @@ function () {
                   ethereumURIs: ethereumURIs
                 });
 
-              case 14:
-                _context133.prev = 14;
+              case 15:
+                _context133.prev = 15;
                 _context133.t0 = _context133["catch"](1);
                 // eslint-disable-next-line no-console
                 console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
@@ -10686,12 +10685,12 @@ function () {
                 console.error(_context133.t0);
                 throw _context133.t0;
 
-              case 19:
+              case 20:
               case "end":
                 return _context133.stop();
             }
           }
-        }, _callee133, null, [[1, 14]]);
+        }, _callee133, null, [[1, 15]]);
       }));
 
       function Configuration(_x132) {
