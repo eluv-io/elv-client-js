@@ -5261,7 +5261,8 @@ function () {
       var _EncryptionConk = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee66(_ref74) {
-        var libraryId, objectId, writeToken, owner, capKey, existingCap, kmsAddress, kmsPublicKey, kmsCapKey, metadata;
+        var libraryId, objectId, writeToken, owner, capKey, existingUserCap, metadata, kmsAddress, _kmsPublicKey, kmsCapKey, existingKMSCap;
+
         return regeneratorRuntime.wrap(function _callee66$(_context66) {
           while (1) {
             switch (_context66.prev = _context66.next) {
@@ -5309,7 +5310,7 @@ function () {
 
               case 12:
                 if (this.encryptionConks[objectId]) {
-                  _context66.next = 49;
+                  _context66.next = 53;
                   break;
                 }
 
@@ -5324,19 +5325,19 @@ function () {
                 });
 
               case 16:
-                existingCap = _context66.sent;
+                existingUserCap = _context66.sent;
 
-                if (!existingCap) {
+                if (!existingUserCap) {
                   _context66.next = 23;
                   break;
                 }
 
                 _context66.next = 20;
-                return Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey);
+                return Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
 
               case 20:
                 this.encryptionConks[objectId] = _context66.sent;
-                _context66.next = 49;
+                _context66.next = 53;
                 break;
 
               case 23:
@@ -5347,48 +5348,67 @@ function () {
                 this.encryptionConks[objectId] = _context66.sent;
 
                 if (!writeToken) {
-                  _context66.next = 49;
+                  _context66.next = 53;
                   break;
                 }
 
-                _context66.next = 29;
+                metadata = {};
+                _context66.next = 30;
+                return Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
+
+              case 30:
+                metadata[capKey] = _context66.sent;
+                _context66.prev = 31;
+                _context66.next = 34;
                 return this.authClient.KMSAddress({
                   objectId: objectId
                 });
 
-              case 29:
+              case 34:
                 kmsAddress = _context66.sent;
-                _context66.next = 32;
+                _context66.next = 37;
                 return this.authClient.KMSInfo({
                   objectId: objectId
                 });
 
-              case 32:
-                kmsPublicKey = _context66.sent.publicKey;
-                kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
-                metadata = {};
-                _context66.next = 37;
-                return Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
-
               case 37:
-                metadata[capKey] = _context66.sent;
-                _context66.prev = 38;
+                _kmsPublicKey = _context66.sent.publicKey;
+                kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
                 _context66.next = 41;
-                return Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+                return this.ContentObjectMetadata({
+                  libraryId: libraryId,
+                  // Cap may only exist in draft
+                  objectId: objectId,
+                  writeToken: writeToken,
+                  metadataSubtree: kmsCapKey
+                });
 
               case 41:
+                existingKMSCap = _context66.sent;
+
+                if (existingKMSCap) {
+                  _context66.next = 46;
+                  break;
+                }
+
+                _context66.next = 45;
+                return Crypto.EncryptConk(this.encryptionConks[objectId], _kmsPublicKey);
+
+              case 45:
                 metadata[kmsCapKey] = _context66.sent;
-                _context66.next = 47;
+
+              case 46:
+                _context66.next = 51;
                 break;
 
-              case 44:
-                _context66.prev = 44;
-                _context66.t0 = _context66["catch"](38);
+              case 48:
+                _context66.prev = 48;
+                _context66.t0 = _context66["catch"](31);
                 // eslint-disable-next-line no-console
                 console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
 
-              case 47:
-                _context66.next = 49;
+              case 51:
+                _context66.next = 53;
                 return this.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -5396,15 +5416,15 @@ function () {
                   metadata: metadata
                 });
 
-              case 49:
+              case 53:
                 return _context66.abrupt("return", this.encryptionConks[objectId]);
 
-              case 50:
+              case 54:
               case "end":
                 return _context66.stop();
             }
           }
-        }, _callee66, this, [[38, 44]]);
+        }, _callee66, this, [[31, 48]]);
       }));
 
       function EncryptionConk(_x65) {
