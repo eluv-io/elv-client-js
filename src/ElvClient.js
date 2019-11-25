@@ -3120,11 +3120,13 @@ class ElvClient {
    * @param {string=} description - Description for mezzanine content object
    * @param {Object=} metadata - Additional metadata for mezzanine content object
    * @param {string} masterVersionHash - The version hash of the production master content object
-   * @param {string=} variant - What variant of the master content object to use
+   * @param {string=} variant=default - What variant of the master content object to use
+   * @param {string=} offeringKey=default - The key of the offering to create
+   * @param {Object=} abrProfile - Custom ABR profile. If not specified, the profile of the mezzanine library will be used
    *
    * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
    */
-  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default"}) {
+  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default", offeringKey="default"}) {
     ValidateLibrary(libraryId);
     ValidateVersion(masterVersionHash);
 
@@ -3161,12 +3163,32 @@ class ElvClient {
     };
 
     const body = {
-      offering_key: variant,
+      offering_key: offeringKey,
       variant_key: variant,
       prod_master_hash: masterVersionHash
     };
 
-    if(abrProfile) { body.abr_profile = abrProfile; }
+    let storeClear = false;
+    if(abrProfile) {
+      body.abr_profile = abrProfile;
+      storeClear = abrProfile.store_clear;
+    } else {
+      // Retrieve ABR profile from library to check store clear
+      storeClear = await this.ContentObjectMetadata({
+        libraryId,
+        objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
+        metadataSubtree: "store_clear"
+      });
+    }
+
+    if(!storeClear) {
+      // If files are encrypted, generate encryption conks
+      await this.EncryptionConk({
+        libraryId,
+        objectId: id,
+        writeToken: write_token
+      });
+    }
 
     const {logs, errors, warnings} = await this.CallBitcodeMethod({
       libraryId,
@@ -3289,7 +3311,8 @@ class ElvClient {
 
     const lroInfo = {
       write_token: processingDraft.write_token,
-      node: this.HttpClient.BaseURI().toString()
+      node: this.HttpClient.BaseURI().toString(),
+      offering: offeringKey
     };
 
     // Update metadata with LRO version write token
@@ -3298,7 +3321,7 @@ class ElvClient {
       libraryId,
       objectId,
       writeToken: statusDraft.write_token,
-      metadataSubtree: "lro_draft",
+      metadataSubtree: `lro_draft_${offeringKey}`,
       metadata: lroInfo
     });
     await this.FinalizeContentObject({libraryId, objectId, writeToken: statusDraft.write_token});
@@ -3333,20 +3356,32 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
+   * @param {string=} offeringKey=default - Offering key of the mezzanine
    *
    * @return {Promise<Object>} - LRO status
    */
-  async LROStatus({libraryId, objectId}) {
+  async LROStatus({libraryId, objectId, offeringKey="default"}) {
     ValidateParameters({libraryId, objectId});
 
     const lroDraft = await this.ContentObjectMetadata({
       libraryId,
       objectId,
-      metadataSubtree: "lro_draft"
+      metadataSubtree: `lro_draft_${offeringKey}`
     });
 
     if(!lroDraft || !lroDraft.write_token) {
-      throw Error("No LRO draft found for this mezzanine");
+      // Write token not present - check if mezz has already been finalized
+      const ready = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: UrlJoin("abr_mezzanine", "offerings", offeringKey, "ready")
+      });
+
+      if(ready) {
+        throw Error(`Mezzanine already finalized for offering '${offeringKey}'`);
+      } else {
+        throw Error("No LRO draft found for this mezzanine");
+      }
     }
 
     const httpClient = this.HttpClient;
@@ -3390,7 +3425,7 @@ class ElvClient {
     const lroDraft = await this.ContentObjectMetadata({
       libraryId,
       objectId,
-      metadataSubtree: "lro_draft"
+      metadataSubtree: `lro_draft_${offeringKey}`
     });
 
     if(!lroDraft || !lroDraft.write_token) {

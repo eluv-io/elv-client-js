@@ -10,8 +10,8 @@ const argv = yargs
     description: "If specified, will finalize the mezzanine if completed",
     type: "boolean"
   })
-  .option("variant", {
-    description: "Variant of the mezzanine",
+  .option("offeringKey", {
+    description: "Offering key of the mezzanine",
     default: "default"
   })
   .demandOption(
@@ -23,7 +23,7 @@ const argv = yargs
 const ClientConfiguration = require("../TestConfiguration.json");
 
 
-const Status = async (objectId, variant="default", finalize) => {
+const Status = async (objectId, offeringKey="default", finalize) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
@@ -38,7 +38,7 @@ const Status = async (objectId, variant="default", finalize) => {
 
     const libraryId = await client.ContentObjectLibraryId({objectId});
 
-    const status = await client.LROStatus({libraryId, objectId});
+    const status = await client.LROStatus({libraryId, objectId, offeringKey: offeringKey});
 
     if(finalize) {
       if(!Object.values(status).every(job => job.run_state === "finished")) {
@@ -48,7 +48,7 @@ const Status = async (objectId, variant="default", finalize) => {
         return;
       }
 
-      const finalizeResponse = await client.FinalizeABRMezzanine({libraryId, objectId, offeringKey: variant});
+      const finalizeResponse = await client.FinalizeABRMezzanine({libraryId, objectId, offeringKey});
 
       console.log("\nABR mezzanine object finalized:");
       console.log("\tObject ID:", objectId);
@@ -62,7 +62,7 @@ const Status = async (objectId, variant="default", finalize) => {
   }
 };
 
-let {objectId, variant, finalize} = argv;
+let {objectId, offeringKey, finalize} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -70,4 +70,4 @@ if(!privateKey) {
   return;
 }
 
-Status(objectId, variant, finalize);
+Status(objectId, offeringKey, finalize);
