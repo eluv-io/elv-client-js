@@ -196,6 +196,10 @@ const Create = async ({
 
         if(!info.end) { done = false; }
 
+        if(done && info.run_state !== "finished") {
+          throw Error(`LRO ${id} failed with status ${info.run_state}`);
+        }
+
         return `${id}: ${parseFloat(info.progress.percentage || 0).toFixed(1)}%`;
       });
 
