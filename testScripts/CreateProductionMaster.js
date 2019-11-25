@@ -28,19 +28,23 @@ const argv = yargs
     type: "boolean",
     description: "If specified, files will be referenced from an S3 bucket instead of the local system"
   })
+  .option("elv-geo", {
+    type: "string",
+    description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
+  })
   .demandOption(
     ["library", "title", "files"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateProductionMaster.js --library <master-library-id> --title <title> --metadata '<metadata-json>' --files <file1> (<file2>...) (--s3-copy || --s3-reference)\n"
   )
   .argv;
 
-
 const ClientConfiguration = require("../TestConfiguration.json");
 
-const Create = async (masterLibraryId, title, metadata, files, access, copy=false) => {
+const Create = async (elvGeo, masterLibraryId, title, metadata, files, access, copy=false) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
-      configUrl: ClientConfiguration["config-url"]
+      configUrl: ClientConfiguration["config-url"],
+      region: elvGeo
     });
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
@@ -121,7 +125,7 @@ const Create = async (masterLibraryId, title, metadata, files, access, copy=fals
   }
 };
 
-let {library, title, metadata, files, s3Reference, s3Copy} = argv;
+let {library, title, metadata, files, s3Reference, s3Copy, elvGeo} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -154,4 +158,4 @@ if(metadata) {
   }
 }
 
-Create(library, title, metadata, files, access, s3Copy && !s3Reference);
+Create(elvGeo, library, title, metadata, files, access, s3Copy && !s3Reference);
