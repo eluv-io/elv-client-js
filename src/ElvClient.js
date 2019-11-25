@@ -168,7 +168,7 @@ class ElvClient {
       const uri = new URI(configUrl);
 
       if(region) {
-        uri.addSearch("region", region);
+        uri.addSearch("elvgeo", region);
       }
 
       const fabricInfo = await ResponseToJson(

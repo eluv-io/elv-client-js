@@ -10698,7 +10698,7 @@ function () {
                 uri = new URI(configUrl);
 
                 if (region) {
-                  uri.addSearch("region", region);
+                  uri.addSearch("elvgeo", region);
                 }
 
                 _context133.next = 6;

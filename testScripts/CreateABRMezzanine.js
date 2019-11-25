@@ -26,7 +26,7 @@ const argv = yargs
     description: "Variant of the mezzanine",
     default: "default"
   })
-  .option("offeringKey", {
+  .option("offering-key", {
     description: "Offering key for the new mezzanine",
     default: "default"
   })
@@ -41,9 +41,13 @@ const argv = yargs
     type: "boolean",
     description: "If specified, poster file will be referenced from an S3 bucket instead of the local system"
   })
+  .option("elv-geo", {
+    type: "string",
+    description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
+  })
   .demandOption(
     ["library", "title", "masterHash"],
-    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> --poster <path-to-poster-image> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--s3-copy || --s3-reference)\n"
+    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> --poster <path-to-poster-image> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--s3-copy || --s3-reference) (--elv-geo eu-west)\n"
   )
   .argv;
 
@@ -72,13 +76,14 @@ const Create = async ({
   existingMezzId,
   s3Copy,
   s3Reference,
+  elvGeo,
   wait=false
 }) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
-      configUrl: ClientConfiguration["config-url"]
+      configUrl: ClientConfiguration["config-url"],
+      region: elvGeo
     });
-
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       privateKey: process.env.PRIVATE_KEY
@@ -240,7 +245,8 @@ let {
   metadata,
   wait,
   s3Reference,
-  s3Copy
+  s3Copy,
+  elvGeo
 } = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
@@ -269,5 +275,6 @@ Create({
   existingMezzId,
   s3Copy,
   s3Reference,
+  elvGeo,
   wait
 });
