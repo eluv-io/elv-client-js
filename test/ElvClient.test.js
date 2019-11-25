@@ -118,15 +118,8 @@ describe("Test ElvClient", () => {
       expect(bootstrapClient.ethereumURIs).toBeDefined();
       expect(bootstrapClient.ethereumURIs.length).toBeGreaterThan(0);
 
-      const fabricURIs = bootstrapClient.fabricURIs;
-
       await bootstrapClient.UseRegion({region: "na-west-south"});
-
-      expect(bootstrapClient.fabricURIs[0]).not.toEqual(fabricURIs[0]);
-
       await bootstrapClient.UseRegion({region: "eu-west"});
-
-      expect(bootstrapClient.fabricURIs[0]).toEqual(fabricURIs[0]);
     });
   });
 
@@ -1247,6 +1240,7 @@ describe("Test ElvClient", () => {
         name: "Test Media Library",
         metadata: {
           "abr_profile": {
+            "store_clear": true,
             "ladder_specs": {
               "{\"media_type\":\"audio\",\"channels\":2}": {
                 "rung_specs": [

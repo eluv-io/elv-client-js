@@ -6121,7 +6121,9 @@ function () {
      * @param {string=} description - Description for mezzanine content object
      * @param {Object=} metadata - Additional metadata for mezzanine content object
      * @param {string} masterVersionHash - The version hash of the production master content object
-     * @param {string=} variant - What variant of the master content object to use
+     * @param {string=} variant=default - What variant of the master content object to use
+     * @param {string=} offeringKey=default - The key of the offering to create
+     * @param {Object=} abrProfile - Custom ABR profile. If not specified, the profile of the mezzanine library will be used
      *
      * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
      */
@@ -6132,13 +6134,13 @@ function () {
       var _CreateABRMezzanine = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee74(_ref84) {
-        var libraryId, name, description, _ref84$metadata, metadata, masterVersionHash, abrProfile, _ref84$variant, variant, abrMezType, _ref85, id, write_token, masterName, authorizationTokens, headers, body, _ref86, logs, errors, warnings, finalizeResponse;
+        var libraryId, name, description, _ref84$metadata, metadata, masterVersionHash, abrProfile, _ref84$variant, variant, _ref84$offeringKey, offeringKey, abrMezType, _ref85, id, write_token, masterName, authorizationTokens, headers, body, storeClear, _ref86, logs, errors, warnings, finalizeResponse;
 
         return regeneratorRuntime.wrap(function _callee74$(_context74) {
           while (1) {
             switch (_context74.prev = _context74.next) {
               case 0:
-                libraryId = _ref84.libraryId, name = _ref84.name, description = _ref84.description, _ref84$metadata = _ref84.metadata, metadata = _ref84$metadata === void 0 ? {} : _ref84$metadata, masterVersionHash = _ref84.masterVersionHash, abrProfile = _ref84.abrProfile, _ref84$variant = _ref84.variant, variant = _ref84$variant === void 0 ? "default" : _ref84$variant;
+                libraryId = _ref84.libraryId, name = _ref84.name, description = _ref84.description, _ref84$metadata = _ref84.metadata, metadata = _ref84$metadata === void 0 ? {} : _ref84$metadata, masterVersionHash = _ref84.masterVersionHash, abrProfile = _ref84.abrProfile, _ref84$variant = _ref84.variant, variant = _ref84$variant === void 0 ? "default" : _ref84$variant, _ref84$offeringKey = _ref84.offeringKey, offeringKey = _ref84$offeringKey === void 0 ? "default" : _ref84$offeringKey;
                 ValidateLibrary(libraryId);
                 ValidateVersion(masterVersionHash);
                 _context74.next = 5;
@@ -6228,16 +6230,48 @@ function () {
                   }).join(",")
                 };
                 body = {
-                  offering_key: variant,
+                  offering_key: offeringKey,
                   variant_key: variant,
                   prod_master_hash: masterVersionHash
                 };
+                storeClear = false;
 
-                if (abrProfile) {
-                  body.abr_profile = abrProfile;
+                if (!abrProfile) {
+                  _context74.next = 42;
+                  break;
                 }
 
-                _context74.next = 39;
+                body.abr_profile = abrProfile;
+                storeClear = abrProfile.store_clear;
+                _context74.next = 45;
+                break;
+
+              case 42:
+                _context74.next = 44;
+                return this.ContentObjectMetadata({
+                  libraryId: libraryId,
+                  objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
+                  metadataSubtree: "store_clear"
+                });
+
+              case 44:
+                storeClear = _context74.sent;
+
+              case 45:
+                if (storeClear) {
+                  _context74.next = 48;
+                  break;
+                }
+
+                _context74.next = 48;
+                return this.EncryptionConk({
+                  libraryId: libraryId,
+                  objectId: id,
+                  writeToken: write_token
+                });
+
+              case 48:
+                _context74.next = 50;
                 return this.CallBitcodeMethod({
                   libraryId: libraryId,
                   objectId: id,
@@ -6248,12 +6282,12 @@ function () {
                   constant: false
                 });
 
-              case 39:
+              case 50:
                 _ref86 = _context74.sent;
                 logs = _ref86.logs;
                 errors = _ref86.errors;
                 warnings = _ref86.warnings;
-                _context74.next = 45;
+                _context74.next = 56;
                 return this.MergeMetadata({
                   libraryId: libraryId,
                   objectId: id,
@@ -6275,15 +6309,15 @@ function () {
                   }, metadata || {})
                 });
 
-              case 45:
-                _context74.next = 47;
+              case 56:
+                _context74.next = 58;
                 return this.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: id,
                   writeToken: write_token
                 });
 
-              case 47:
+              case 58:
                 finalizeResponse = _context74.sent;
                 return _context74.abrupt("return", _objectSpread({
                   logs: logs || [],
@@ -6291,7 +6325,7 @@ function () {
                   errors: errors || []
                 }, finalizeResponse));
 
-              case 49:
+              case 60:
               case "end":
                 return _context74.stop();
             }
@@ -6441,7 +6475,8 @@ function () {
                 processingDraft = _context76.sent;
                 lroInfo = {
                   write_token: processingDraft.write_token,
-                  node: this.HttpClient.BaseURI().toString()
+                  node: this.HttpClient.BaseURI().toString(),
+                  offering: offeringKey
                 }; // Update metadata with LRO version write token
 
                 _context76.next = 24;
@@ -6457,7 +6492,7 @@ function () {
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: statusDraft.write_token,
-                  metadataSubtree: "lro_draft",
+                  metadataSubtree: "lro_draft_".concat(offeringKey),
                   metadata: lroInfo
                 });
 
@@ -6520,6 +6555,7 @@ function () {
      * @namedParams
      * @param {string} libraryId - ID of the library
      * @param {string} objectId - ID of the object
+     * @param {string=} offeringKey=default - Offering key of the mezzanine
      *
      * @return {Promise<Object>} - LRO status
      */
@@ -6530,12 +6566,13 @@ function () {
       var _LROStatus = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee77(_ref90) {
-        var libraryId, objectId, lroDraft, httpClient, error, result;
+        var libraryId, objectId, _ref90$offeringKey, offeringKey, lroDraft, ready, httpClient, error, result;
+
         return regeneratorRuntime.wrap(function _callee77$(_context77) {
           while (1) {
             switch (_context77.prev = _context77.next) {
               case 0:
-                libraryId = _ref90.libraryId, objectId = _ref90.objectId;
+                libraryId = _ref90.libraryId, objectId = _ref90.objectId, _ref90$offeringKey = _ref90.offeringKey, offeringKey = _ref90$offeringKey === void 0 ? "default" : _ref90$offeringKey;
                 ValidateParameters({
                   libraryId: libraryId,
                   objectId: objectId
@@ -6544,28 +6581,46 @@ function () {
                 return this.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
-                  metadataSubtree: "lro_draft"
+                  metadataSubtree: "lro_draft_".concat(offeringKey)
                 });
 
               case 4:
                 lroDraft = _context77.sent;
 
                 if (!(!lroDraft || !lroDraft.write_token)) {
-                  _context77.next = 7;
+                  _context77.next = 14;
                   break;
                 }
 
+                _context77.next = 8;
+                return this.ContentObjectMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  metadataSubtree: UrlJoin("abr_mezzanine", "offerings", offeringKey, "ready")
+                });
+
+              case 8:
+                ready = _context77.sent;
+
+                if (!ready) {
+                  _context77.next = 13;
+                  break;
+                }
+
+                throw Error("Mezzanine already finalized for offering '".concat(offeringKey, "'"));
+
+              case 13:
                 throw Error("No LRO draft found for this mezzanine");
 
-              case 7:
+              case 14:
                 httpClient = this.HttpClient;
-                _context77.prev = 8;
+                _context77.prev = 15;
                 // Point directly to the node containing the draft
                 this.HttpClient = new HttpClient({
                   uris: [lroDraft.node],
                   debug: httpClient.debug
                 });
-                _context77.next = 12;
+                _context77.next = 19;
                 return this.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -6573,38 +6628,38 @@ function () {
                   metadataSubtree: "lro_status"
                 });
 
-              case 12:
+              case 19:
                 result = _context77.sent;
-                _context77.next = 18;
+                _context77.next = 25;
                 break;
 
-              case 15:
-                _context77.prev = 15;
-                _context77.t0 = _context77["catch"](8);
+              case 22:
+                _context77.prev = 22;
+                _context77.t0 = _context77["catch"](15);
                 error = _context77.t0;
 
-              case 18:
-                _context77.prev = 18;
+              case 25:
+                _context77.prev = 25;
                 this.HttpClient = httpClient;
-                return _context77.finish(18);
+                return _context77.finish(25);
 
-              case 21:
+              case 28:
                 if (!error) {
-                  _context77.next = 23;
+                  _context77.next = 30;
                   break;
                 }
 
                 throw error;
 
-              case 23:
+              case 30:
                 return _context77.abrupt("return", result);
 
-              case 24:
+              case 31:
               case "end":
                 return _context77.stop();
             }
           }
-        }, _callee77, this, [[8, 15, 18, 21]]);
+        }, _callee77, this, [[15, 22, 25, 28]]);
       }));
 
       function LROStatus(_x76) {
@@ -6647,7 +6702,7 @@ function () {
                 return this.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
-                  metadataSubtree: "lro_draft"
+                  metadataSubtree: "lro_draft_".concat(offeringKey)
                 });
 
               case 4:
