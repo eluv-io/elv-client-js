@@ -7489,6 +7489,7 @@ function () {
      * @namedParams
      * @param {string=} objectId - Id of the content
      * @param {string=} versionHash - Version hash of the content
+     * @param {string=} linkPath - If playing from a link, the path to the link
      * @param {Array<string>} protocols - Acceptable playout protocols
      * @param {Array<string>} drms - Acceptable DRM formats
      */
@@ -7499,13 +7500,13 @@ function () {
       var _PlayoutOptions = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee88(_ref102) {
-        var objectId, versionHash, _ref102$protocols, protocols, _ref102$drms, drms, _ref102$hlsjsProfile, hlsjsProfile, libraryId, path, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
+        var objectId, versionHash, linkPath, _ref102$protocols, protocols, _ref102$drms, drms, _ref102$hlsjsProfile, hlsjsProfile, libraryId, path, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
 
         return regeneratorRuntime.wrap(function _callee88$(_context88) {
           while (1) {
             switch (_context88.prev = _context88.next) {
               case 0:
-                objectId = _ref102.objectId, versionHash = _ref102.versionHash, _ref102$protocols = _ref102.protocols, protocols = _ref102$protocols === void 0 ? ["dash", "hls"] : _ref102$protocols, _ref102$drms = _ref102.drms, drms = _ref102$drms === void 0 ? [] : _ref102$drms, _ref102$hlsjsProfile = _ref102.hlsjsProfile, hlsjsProfile = _ref102$hlsjsProfile === void 0 ? true : _ref102$hlsjsProfile;
+                objectId = _ref102.objectId, versionHash = _ref102.versionHash, linkPath = _ref102.linkPath, _ref102$protocols = _ref102.protocols, protocols = _ref102$protocols === void 0 ? ["dash", "hls"] : _ref102$protocols, _ref102$drms = _ref102.drms, drms = _ref102$drms === void 0 ? [] : _ref102$drms, _ref102$hlsjsProfile = _ref102.hlsjsProfile, hlsjsProfile = _ref102$hlsjsProfile === void 0 ? true : _ref102$hlsjsProfile;
                 versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
                 protocols = protocols.map(function (p) {
                   return p.toLowerCase();
@@ -7542,7 +7543,12 @@ function () {
                 versionHash = _context88.sent.versions[0].hash;
 
               case 12:
-                path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+                if (linkPath) {
+                  path = UrlJoin("q", versionHash, "meta", linkPath);
+                } else {
+                  path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+                }
+
                 audienceData = this.AudienceData({
                   objectId: objectId,
                   versionHash: versionHash,
@@ -7561,25 +7567,29 @@ function () {
 
               case 19:
                 _context88.t3 = _context88.sent;
-                _context88.t4 = path;
-                _context88.t5 = {
+                _context88.t4 = linkPath ? {
+                  resolve: true
+                } : {};
+                _context88.t5 = path;
+                _context88.t6 = {
                   headers: _context88.t3,
+                  queryParams: _context88.t4,
                   method: "GET",
-                  path: _context88.t4
+                  path: _context88.t5
                 };
-                _context88.t6 = _context88.t2.Request.call(_context88.t2, _context88.t5);
-                _context88.next = 25;
-                return (0, _context88.t1)(_context88.t6);
+                _context88.t7 = _context88.t2.Request.call(_context88.t2, _context88.t6);
+                _context88.next = 26;
+                return (0, _context88.t1)(_context88.t7);
 
-              case 25:
-                _context88.t7 = _context88.sent;
-                playoutOptions = _context88.t0.values.call(_context88.t0, _context88.t7);
+              case 26:
+                _context88.t8 = _context88.sent;
+                playoutOptions = _context88.t0.values.call(_context88.t0, _context88.t8);
                 playoutMap = {};
                 i = 0;
 
-              case 29:
+              case 30:
                 if (!(i < playoutOptions.length)) {
-                  _context88.next = 61;
+                  _context88.next = 62;
                   break;
                 }
 
@@ -7587,16 +7597,16 @@ function () {
                 protocol = option.properties.protocol;
                 drm = option.properties.drm;
                 licenseServers = option.properties.license_servers;
-                _context88.t8 = _objectSpread;
-                _context88.t9 = {};
-                _context88.t10 = playoutMap[protocol] || {};
-                _context88.t11 = _objectSpread;
-                _context88.t12 = {};
-                _context88.t13 = (playoutMap[protocol] || {}).playoutMethods || {};
-                _context88.t14 = _defineProperty;
-                _context88.t15 = {};
-                _context88.t16 = drm || "clear";
-                _context88.next = 45;
+                _context88.t9 = _objectSpread;
+                _context88.t10 = {};
+                _context88.t11 = playoutMap[protocol] || {};
+                _context88.t12 = _objectSpread;
+                _context88.t13 = {};
+                _context88.t14 = (playoutMap[protocol] || {}).playoutMethods || {};
+                _context88.t15 = _defineProperty;
+                _context88.t16 = {};
+                _context88.t17 = drm || "clear";
+                _context88.next = 46;
                 return this.Rep({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -7608,46 +7618,46 @@ function () {
                   } : {}
                 });
 
-              case 45:
-                _context88.t17 = _context88.sent;
-                _context88.t18 = drm ? _defineProperty({}, drm, {
+              case 46:
+                _context88.t18 = _context88.sent;
+                _context88.t19 = drm ? _defineProperty({}, drm, {
                   licenseServers: licenseServers
                 }) : undefined;
-                _context88.t19 = {
-                  playoutUrl: _context88.t17,
-                  drms: _context88.t18
+                _context88.t20 = {
+                  playoutUrl: _context88.t18,
+                  drms: _context88.t19
                 };
-                _context88.t20 = (0, _context88.t14)(_context88.t15, _context88.t16, _context88.t19);
-                _context88.t21 = (0, _context88.t11)(_context88.t12, _context88.t13, _context88.t20);
-                _context88.t22 = {
-                  playoutMethods: _context88.t21
+                _context88.t21 = (0, _context88.t15)(_context88.t16, _context88.t17, _context88.t20);
+                _context88.t22 = (0, _context88.t12)(_context88.t13, _context88.t14, _context88.t21);
+                _context88.t23 = {
+                  playoutMethods: _context88.t22
                 };
-                playoutMap[protocol] = (0, _context88.t8)(_context88.t9, _context88.t10, _context88.t22);
+                playoutMap[protocol] = (0, _context88.t9)(_context88.t10, _context88.t11, _context88.t23);
                 // Exclude any options that do not satisfy the specified protocols and/or DRMs
                 protocolMatch = protocols.includes(protocol);
                 drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
 
                 if (!(!protocolMatch || !drmMatch)) {
-                  _context88.next = 56;
+                  _context88.next = 57;
                   break;
                 }
 
-                return _context88.abrupt("continue", 58);
+                return _context88.abrupt("continue", 59);
 
-              case 56:
+              case 57:
                 playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
                 playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
 
-              case 58:
+              case 59:
                 i++;
-                _context88.next = 29;
+                _context88.next = 30;
                 break;
 
-              case 61:
+              case 62:
                 this.Log(playoutMap);
                 return _context88.abrupt("return", playoutMap);
 
-              case 63:
+              case 64:
               case "end":
                 return _context88.stop();
             }
@@ -7672,6 +7682,7 @@ function () {
      * @namedParams
      * @param {string=} objectId - Id of the content
      * @param {string} versionHash - Version hash of the content
+     * @param {string=} linkPath - If playing from a link, the path to the link
      * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
      * @param {Array<string>=} drms=[] - Acceptable DRM formats
      */
@@ -7684,13 +7695,13 @@ function () {
       regeneratorRuntime.mark(function _callee89(_ref104) {
         var _this8 = this;
 
-        var objectId, versionHash, _ref104$protocols, protocols, _ref104$drms, drms, playoutOptions, config;
+        var objectId, versionHash, linkPath, _ref104$protocols, protocols, _ref104$drms, drms, playoutOptions, config;
 
         return regeneratorRuntime.wrap(function _callee89$(_context89) {
           while (1) {
             switch (_context89.prev = _context89.next) {
               case 0:
-                objectId = _ref104.objectId, versionHash = _ref104.versionHash, _ref104$protocols = _ref104.protocols, protocols = _ref104$protocols === void 0 ? ["dash", "hls"] : _ref104$protocols, _ref104$drms = _ref104.drms, drms = _ref104$drms === void 0 ? [] : _ref104$drms;
+                objectId = _ref104.objectId, versionHash = _ref104.versionHash, linkPath = _ref104.linkPath, _ref104$protocols = _ref104.protocols, protocols = _ref104$protocols === void 0 ? ["dash", "hls"] : _ref104$protocols, _ref104$drms = _ref104.drms, drms = _ref104$drms === void 0 ? [] : _ref104$drms;
                 versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
                 if (!objectId) {
@@ -7701,6 +7712,7 @@ function () {
                 return this.PlayoutOptions({
                   objectId: objectId,
                   versionHash: versionHash,
+                  linkPath: linkPath,
                   protocols: protocols,
                   drms: drms,
                   hlsjsProfile: false

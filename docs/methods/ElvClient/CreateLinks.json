@@ -1,5 +1,8 @@
 [
   {
-    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib3myHhCmBfk9yPZjmLCsdsFpaRF2W\",\n  \"objectId\": \"iq__Pyehvu8CsL3HcgAicbmjp3nS2d2\",\n  \"writeToken\": \"tqw_EhpE8SjnXmvwSyCQ4z4NagHwB3tzPLGPf\",\n  \"links\": [\n    {\n      \"target\": \"testDirectory/File 1\",\n      \"path\": \"myLink\"\n    },\n    {\n      \"target\": \"testDirectory/File 2\",\n      \"path\": \"links/myLink2\"\n    },\n    {\n      \"target\": \"toLink/meta/data\",\n      \"path\": \"links/metadataLink\",\n      \"type\": \"meta\"\n    }\n  ]\n});"
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib3nWDSrFpw4EP3BeBwaqKRaQUkE2q\",\n  \"objectId\": \"iq__dEDFKZPjwQJxAH4EKNjKWJPF11q\",\n  \"writeToken\": \"tqw_Mdvh2xxgfkQE4wLmpsXNbZK1q29duMpBn\",\n  \"links\": [\n    {\n      \"target\": \"testDirectory/File 1\",\n      \"path\": \"myLink\"\n    },\n    {\n      \"target\": \"testDirectory/File 2\",\n      \"path\": \"links/myLink2\"\n    },\n    {\n      \"target\": \"toLink/meta/data\",\n      \"path\": \"links/metadataLink\",\n      \"type\": \"meta\"\n    }\n  ]\n});"
+  },
+  {
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib3wgPp6TdciXPBpgJ9VoefMxwtKUx\",\n  \"objectId\": \"iq__2fYexi7S3bPSN9vSK1PgCo5RNzjs\",\n  \"writeToken\": \"tqw_ASoE9x8C31YB8iQmV1VVv1DJLN59Vbib3\",\n  \"links\": [\n    {\n      \"type\": \"rep\",\n      \"path\": \"videoLink/default\",\n      \"target\": \"playout/default/options.json\"\n    }\n  ]\n});"
   }
 ]
