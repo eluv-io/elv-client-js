@@ -3,6 +3,7 @@ require("@babel/polyfill");
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
+const URI = require("urijs");
 const Ethers = require("ethers");
 
 const AuthorizationClient = require("./AuthorizationClient");
@@ -164,13 +165,14 @@ class ElvClient {
     region
   }) {
     try {
-      const httpClient = new HttpClient({uris: [configUrl]});
+      const uri = new URI(configUrl);
+
+      if(region) {
+        uri.addSearch("elvgeo", region);
+      }
+
       const fabricInfo = await ResponseToJson(
-        httpClient.Request({
-          method: "GET",
-          path: "/config",
-          queryParams: region ? {elvgeo: region} : ""
-        })
+        HttpClient.Fetch(uri.toString())
       );
 
       // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
@@ -1339,7 +1341,7 @@ class ElvClient {
     noAuth=true
   }) {
     // Primitive
-    if(typeof metadata !== "object") { return metadata; }
+    if(!metadata || typeof metadata !== "object") { return metadata; }
 
     // Array
     if(Array.isArray(metadata)) {
@@ -2468,7 +2470,7 @@ class ElvClient {
 
     const ops = filePaths.map(path => ({op: "del", path}));
 
-    await this.CreateFileUploadJob({libraryId, objectId, writeToken, fileInfo: ops});
+    await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops});
   }
 
   /**
@@ -2724,7 +2726,7 @@ class ElvClient {
     if(!this.encryptionConks[objectId]) {
       const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
-      const existingCap =
+      const existingUserCap =
         await this.ContentObjectMetadata({
           libraryId,
           // Cap may only exist in draft
@@ -2733,23 +2735,32 @@ class ElvClient {
           metadataSubtree: capKey
         });
 
-      if(existingCap) {
-        this.encryptionConks[objectId] = await Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey);
+      if(existingUserCap) {
+        this.encryptionConks[objectId] = await Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
       } else {
         this.encryptionConks[objectId] = await Crypto.GeneratePrimaryConk();
 
         // If write token is specified, add it to the metadata
         if(writeToken) {
-          const kmsAddress = await this.authClient.KMSAddress({objectId});
-          const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
-          const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
-
           let metadata = {};
-
           metadata[capKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
 
           try {
-            metadata[kmsCapKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+            const kmsAddress = await this.authClient.KMSAddress({objectId});
+            const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
+            const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+            const existingKMSCap =
+              await this.ContentObjectMetadata({
+                libraryId,
+                // Cap may only exist in draft
+                objectId,
+                writeToken,
+                metadataSubtree: kmsCapKey
+              });
+
+            if(!existingKMSCap) {
+              metadata[kmsCapKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+            }
           } catch(error) {
             // eslint-disable-next-line no-console
             console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
@@ -3109,11 +3120,13 @@ class ElvClient {
    * @param {string=} description - Description for mezzanine content object
    * @param {Object=} metadata - Additional metadata for mezzanine content object
    * @param {string} masterVersionHash - The version hash of the production master content object
-   * @param {string=} variant - What variant of the master content object to use
+   * @param {string=} variant=default - What variant of the master content object to use
+   * @param {string=} offeringKey=default - The key of the offering to create
+   * @param {Object=} abrProfile - Custom ABR profile. If not specified, the profile of the mezzanine library will be used
    *
    * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
    */
-  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default"}) {
+  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default", offeringKey="default"}) {
     ValidateLibrary(libraryId);
     ValidateVersion(masterVersionHash);
 
@@ -3150,12 +3163,32 @@ class ElvClient {
     };
 
     const body = {
-      offering_key: variant,
+      offering_key: offeringKey,
       variant_key: variant,
       prod_master_hash: masterVersionHash
     };
 
-    if(abrProfile) { body.abr_profile = abrProfile; }
+    let storeClear = false;
+    if(abrProfile) {
+      body.abr_profile = abrProfile;
+      storeClear = abrProfile.store_clear;
+    } else {
+      // Retrieve ABR profile from library to check store clear
+      storeClear = await this.ContentObjectMetadata({
+        libraryId,
+        objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
+        metadataSubtree: "store_clear"
+      });
+    }
+
+    if(!storeClear) {
+      // If files are encrypted, generate encryption conks
+      await this.EncryptionConk({
+        libraryId,
+        objectId: id,
+        writeToken: write_token
+      });
+    }
 
     const {logs, errors, warnings} = await this.CallBitcodeMethod({
       libraryId,
@@ -3278,7 +3311,8 @@ class ElvClient {
 
     const lroInfo = {
       write_token: processingDraft.write_token,
-      node: this.HttpClient.BaseURI().toString()
+      node: this.HttpClient.BaseURI().toString(),
+      offering: offeringKey
     };
 
     // Update metadata with LRO version write token
@@ -3287,7 +3321,7 @@ class ElvClient {
       libraryId,
       objectId,
       writeToken: statusDraft.write_token,
-      metadataSubtree: "lro_draft",
+      metadataSubtree: `lro_draft_${offeringKey}`,
       metadata: lroInfo
     });
     await this.FinalizeContentObject({libraryId, objectId, writeToken: statusDraft.write_token});
@@ -3322,20 +3356,32 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
+   * @param {string=} offeringKey=default - Offering key of the mezzanine
    *
    * @return {Promise<Object>} - LRO status
    */
-  async LROStatus({libraryId, objectId}) {
+  async LROStatus({libraryId, objectId, offeringKey="default"}) {
     ValidateParameters({libraryId, objectId});
 
     const lroDraft = await this.ContentObjectMetadata({
       libraryId,
       objectId,
-      metadataSubtree: "lro_draft"
+      metadataSubtree: `lro_draft_${offeringKey}`
     });
 
     if(!lroDraft || !lroDraft.write_token) {
-      throw Error("No LRO draft found for this mezzanine");
+      // Write token not present - check if mezz has already been finalized
+      const ready = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: UrlJoin("abr_mezzanine", "offerings", offeringKey, "ready")
+      });
+
+      if(ready) {
+        throw Error(`Mezzanine already finalized for offering '${offeringKey}'`);
+      } else {
+        throw Error("No LRO draft found for this mezzanine");
+      }
     }
 
     const httpClient = this.HttpClient;
@@ -3379,7 +3425,7 @@ class ElvClient {
     const lroDraft = await this.ContentObjectMetadata({
       libraryId,
       objectId,
-      metadataSubtree: "lro_draft"
+      metadataSubtree: `lro_draft_${offeringKey}`
     });
 
     if(!lroDraft || !lroDraft.write_token) {
@@ -3761,10 +3807,11 @@ class ElvClient {
    * @namedParams
    * @param {string=} objectId - Id of the content
    * @param {string=} versionHash - Version hash of the content
+   * @param {string=} linkPath - If playing from a link, the path to the link
    * @param {Array<string>} protocols - Acceptable playout protocols
    * @param {Array<string>} drms - Acceptable DRM formats
    */
-  async PlayoutOptions({objectId, versionHash, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
+  async PlayoutOptions({objectId, versionHash, linkPath, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
     versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
     protocols = protocols.map(p => p.toLowerCase());
@@ -3775,12 +3822,16 @@ class ElvClient {
     }
 
     const libraryId = await this.ContentObjectLibraryId({objectId});
-
     if(!versionHash) {
       versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
     }
 
-    let path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+    let path;
+    if(linkPath) {
+      path = UrlJoin("q", versionHash, "meta", linkPath);
+    } else {
+      path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+    }
 
     const audienceData = this.AudienceData({objectId, versionHash, protocols, drms});
 
@@ -3792,6 +3843,7 @@ class ElvClient {
             channelAuth: true,
             audienceData
           }),
+          queryParams: linkPath ? { resolve: true } : {},
           method: "GET",
           path: path
         })
@@ -3850,17 +3902,25 @@ class ElvClient {
    * @namedParams
    * @param {string=} objectId - Id of the content
    * @param {string} versionHash - Version hash of the content
+   * @param {string=} linkPath - If playing from a link, the path to the link
    * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
    * @param {Array<string>=} drms=[] - Acceptable DRM formats
    */
-  async BitmovinPlayoutOptions({objectId, versionHash, protocols=["dash", "hls"], drms=[]}) {
+  async BitmovinPlayoutOptions({objectId, versionHash, linkPath, protocols=["dash", "hls"], drms=[]}) {
     versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
     if(!objectId) {
       objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     }
 
-    const playoutOptions = await this.PlayoutOptions({objectId, versionHash, protocols, drms, hlsjsProfile: false});
+    const playoutOptions = await this.PlayoutOptions({
+      objectId,
+      versionHash,
+      linkPath,
+      protocols,
+      drms,
+      hlsjsProfile: false
+    });
 
     delete playoutOptions.playoutMethods;
 
@@ -4258,7 +4318,7 @@ class ElvClient {
 
     return ResponseToFormat(
       format,
-      await this.HttpClient.Fetch(linkUrl)
+      await HttpClient.Fetch(linkUrl)
     );
   }
 

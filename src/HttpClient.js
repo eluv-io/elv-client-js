@@ -33,7 +33,7 @@ class HttpClient {
     return new URI(this.uris[this.uriIndex]);
   }
 
-  Fetch(url, params={}) {
+  static Fetch(url, params={}) {
     return Fetch(url, params);
   }
 
@@ -80,7 +80,7 @@ class HttpClient {
 
     try {
       response =
-        await this.Fetch(
+        await HttpClient.Fetch(
           uri.toString(),
           fetchParameters
         );
