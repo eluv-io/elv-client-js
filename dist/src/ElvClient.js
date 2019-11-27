@@ -32,6 +32,8 @@ if (typeof Buffer === "undefined") {
 
 var UrlJoin = require("url-join");
 
+var URI = require("urijs");
+
 var Ethers = require("ethers");
 
 var AuthorizationClient = require("./AuthorizationClient");
@@ -2329,7 +2331,7 @@ function () {
               case 0:
                 libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, _ref33$path = _ref33.path, path = _ref33$path === void 0 ? "/" : _ref33$path, metadata = _ref33.metadata, _ref33$noAuth = _ref33.noAuth, noAuth = _ref33$noAuth === void 0 ? true : _ref33$noAuth;
 
-                if (!(_typeof(metadata) !== "object")) {
+                if (!(!metadata || _typeof(metadata) !== "object")) {
                   _context31.next = 3;
                   break;
                 }
@@ -4703,7 +4705,7 @@ function () {
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: writeToken,
-                  fileInfo: ops
+                  ops: ops
                 });
 
               case 8:
@@ -5261,7 +5263,8 @@ function () {
       var _EncryptionConk = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee66(_ref74) {
-        var libraryId, objectId, writeToken, owner, capKey, existingCap, kmsAddress, kmsPublicKey, kmsCapKey, metadata;
+        var libraryId, objectId, writeToken, owner, capKey, existingUserCap, metadata, kmsAddress, _kmsPublicKey, kmsCapKey, existingKMSCap;
+
         return regeneratorRuntime.wrap(function _callee66$(_context66) {
           while (1) {
             switch (_context66.prev = _context66.next) {
@@ -5309,7 +5312,7 @@ function () {
 
               case 12:
                 if (this.encryptionConks[objectId]) {
-                  _context66.next = 49;
+                  _context66.next = 53;
                   break;
                 }
 
@@ -5324,19 +5327,19 @@ function () {
                 });
 
               case 16:
-                existingCap = _context66.sent;
+                existingUserCap = _context66.sent;
 
-                if (!existingCap) {
+                if (!existingUserCap) {
                   _context66.next = 23;
                   break;
                 }
 
                 _context66.next = 20;
-                return Crypto.DecryptCap(existingCap, this.signer.signingKey.privateKey);
+                return Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
 
               case 20:
                 this.encryptionConks[objectId] = _context66.sent;
-                _context66.next = 49;
+                _context66.next = 53;
                 break;
 
               case 23:
@@ -5347,48 +5350,67 @@ function () {
                 this.encryptionConks[objectId] = _context66.sent;
 
                 if (!writeToken) {
-                  _context66.next = 49;
+                  _context66.next = 53;
                   break;
                 }
 
-                _context66.next = 29;
+                metadata = {};
+                _context66.next = 30;
+                return Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
+
+              case 30:
+                metadata[capKey] = _context66.sent;
+                _context66.prev = 31;
+                _context66.next = 34;
                 return this.authClient.KMSAddress({
                   objectId: objectId
                 });
 
-              case 29:
+              case 34:
                 kmsAddress = _context66.sent;
-                _context66.next = 32;
+                _context66.next = 37;
                 return this.authClient.KMSInfo({
                   objectId: objectId
                 });
 
-              case 32:
-                kmsPublicKey = _context66.sent.publicKey;
-                kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
-                metadata = {};
-                _context66.next = 37;
-                return Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
-
               case 37:
-                metadata[capKey] = _context66.sent;
-                _context66.prev = 38;
+                _kmsPublicKey = _context66.sent.publicKey;
+                kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
                 _context66.next = 41;
-                return Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+                return this.ContentObjectMetadata({
+                  libraryId: libraryId,
+                  // Cap may only exist in draft
+                  objectId: objectId,
+                  writeToken: writeToken,
+                  metadataSubtree: kmsCapKey
+                });
 
               case 41:
+                existingKMSCap = _context66.sent;
+
+                if (existingKMSCap) {
+                  _context66.next = 46;
+                  break;
+                }
+
+                _context66.next = 45;
+                return Crypto.EncryptConk(this.encryptionConks[objectId], _kmsPublicKey);
+
+              case 45:
                 metadata[kmsCapKey] = _context66.sent;
-                _context66.next = 47;
+
+              case 46:
+                _context66.next = 51;
                 break;
 
-              case 44:
-                _context66.prev = 44;
-                _context66.t0 = _context66["catch"](38);
+              case 48:
+                _context66.prev = 48;
+                _context66.t0 = _context66["catch"](31);
                 // eslint-disable-next-line no-console
                 console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
 
-              case 47:
-                _context66.next = 49;
+              case 51:
+                _context66.next = 53;
                 return this.MergeMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -5396,15 +5418,15 @@ function () {
                   metadata: metadata
                 });
 
-              case 49:
+              case 53:
                 return _context66.abrupt("return", this.encryptionConks[objectId]);
 
-              case 50:
+              case 54:
               case "end":
                 return _context66.stop();
             }
           }
-        }, _callee66, this, [[38, 44]]);
+        }, _callee66, this, [[31, 48]]);
       }));
 
       function EncryptionConk(_x65) {
@@ -6099,7 +6121,9 @@ function () {
      * @param {string=} description - Description for mezzanine content object
      * @param {Object=} metadata - Additional metadata for mezzanine content object
      * @param {string} masterVersionHash - The version hash of the production master content object
-     * @param {string=} variant - What variant of the master content object to use
+     * @param {string=} variant=default - What variant of the master content object to use
+     * @param {string=} offeringKey=default - The key of the offering to create
+     * @param {Object=} abrProfile - Custom ABR profile. If not specified, the profile of the mezzanine library will be used
      *
      * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
      */
@@ -6110,13 +6134,13 @@ function () {
       var _CreateABRMezzanine = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee74(_ref84) {
-        var libraryId, name, description, _ref84$metadata, metadata, masterVersionHash, abrProfile, _ref84$variant, variant, abrMezType, _ref85, id, write_token, masterName, authorizationTokens, headers, body, _ref86, logs, errors, warnings, finalizeResponse;
+        var libraryId, name, description, _ref84$metadata, metadata, masterVersionHash, abrProfile, _ref84$variant, variant, _ref84$offeringKey, offeringKey, abrMezType, _ref85, id, write_token, masterName, authorizationTokens, headers, body, storeClear, _ref86, logs, errors, warnings, finalizeResponse;
 
         return regeneratorRuntime.wrap(function _callee74$(_context74) {
           while (1) {
             switch (_context74.prev = _context74.next) {
               case 0:
-                libraryId = _ref84.libraryId, name = _ref84.name, description = _ref84.description, _ref84$metadata = _ref84.metadata, metadata = _ref84$metadata === void 0 ? {} : _ref84$metadata, masterVersionHash = _ref84.masterVersionHash, abrProfile = _ref84.abrProfile, _ref84$variant = _ref84.variant, variant = _ref84$variant === void 0 ? "default" : _ref84$variant;
+                libraryId = _ref84.libraryId, name = _ref84.name, description = _ref84.description, _ref84$metadata = _ref84.metadata, metadata = _ref84$metadata === void 0 ? {} : _ref84$metadata, masterVersionHash = _ref84.masterVersionHash, abrProfile = _ref84.abrProfile, _ref84$variant = _ref84.variant, variant = _ref84$variant === void 0 ? "default" : _ref84$variant, _ref84$offeringKey = _ref84.offeringKey, offeringKey = _ref84$offeringKey === void 0 ? "default" : _ref84$offeringKey;
                 ValidateLibrary(libraryId);
                 ValidateVersion(masterVersionHash);
                 _context74.next = 5;
@@ -6206,16 +6230,48 @@ function () {
                   }).join(",")
                 };
                 body = {
-                  offering_key: variant,
+                  offering_key: offeringKey,
                   variant_key: variant,
                   prod_master_hash: masterVersionHash
                 };
+                storeClear = false;
 
-                if (abrProfile) {
-                  body.abr_profile = abrProfile;
+                if (!abrProfile) {
+                  _context74.next = 42;
+                  break;
                 }
 
-                _context74.next = 39;
+                body.abr_profile = abrProfile;
+                storeClear = abrProfile.store_clear;
+                _context74.next = 45;
+                break;
+
+              case 42:
+                _context74.next = 44;
+                return this.ContentObjectMetadata({
+                  libraryId: libraryId,
+                  objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
+                  metadataSubtree: "store_clear"
+                });
+
+              case 44:
+                storeClear = _context74.sent;
+
+              case 45:
+                if (storeClear) {
+                  _context74.next = 48;
+                  break;
+                }
+
+                _context74.next = 48;
+                return this.EncryptionConk({
+                  libraryId: libraryId,
+                  objectId: id,
+                  writeToken: write_token
+                });
+
+              case 48:
+                _context74.next = 50;
                 return this.CallBitcodeMethod({
                   libraryId: libraryId,
                   objectId: id,
@@ -6226,12 +6282,12 @@ function () {
                   constant: false
                 });
 
-              case 39:
+              case 50:
                 _ref86 = _context74.sent;
                 logs = _ref86.logs;
                 errors = _ref86.errors;
                 warnings = _ref86.warnings;
-                _context74.next = 45;
+                _context74.next = 56;
                 return this.MergeMetadata({
                   libraryId: libraryId,
                   objectId: id,
@@ -6253,15 +6309,15 @@ function () {
                   }, metadata || {})
                 });
 
-              case 45:
-                _context74.next = 47;
+              case 56:
+                _context74.next = 58;
                 return this.FinalizeContentObject({
                   libraryId: libraryId,
                   objectId: id,
                   writeToken: write_token
                 });
 
-              case 47:
+              case 58:
                 finalizeResponse = _context74.sent;
                 return _context74.abrupt("return", _objectSpread({
                   logs: logs || [],
@@ -6269,7 +6325,7 @@ function () {
                   errors: errors || []
                 }, finalizeResponse));
 
-              case 49:
+              case 60:
               case "end":
                 return _context74.stop();
             }
@@ -6419,7 +6475,8 @@ function () {
                 processingDraft = _context76.sent;
                 lroInfo = {
                   write_token: processingDraft.write_token,
-                  node: this.HttpClient.BaseURI().toString()
+                  node: this.HttpClient.BaseURI().toString(),
+                  offering: offeringKey
                 }; // Update metadata with LRO version write token
 
                 _context76.next = 24;
@@ -6435,7 +6492,7 @@ function () {
                   libraryId: libraryId,
                   objectId: objectId,
                   writeToken: statusDraft.write_token,
-                  metadataSubtree: "lro_draft",
+                  metadataSubtree: "lro_draft_".concat(offeringKey),
                   metadata: lroInfo
                 });
 
@@ -6498,6 +6555,7 @@ function () {
      * @namedParams
      * @param {string} libraryId - ID of the library
      * @param {string} objectId - ID of the object
+     * @param {string=} offeringKey=default - Offering key of the mezzanine
      *
      * @return {Promise<Object>} - LRO status
      */
@@ -6508,12 +6566,13 @@ function () {
       var _LROStatus = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee77(_ref90) {
-        var libraryId, objectId, lroDraft, httpClient, error, result;
+        var libraryId, objectId, _ref90$offeringKey, offeringKey, lroDraft, ready, httpClient, error, result;
+
         return regeneratorRuntime.wrap(function _callee77$(_context77) {
           while (1) {
             switch (_context77.prev = _context77.next) {
               case 0:
-                libraryId = _ref90.libraryId, objectId = _ref90.objectId;
+                libraryId = _ref90.libraryId, objectId = _ref90.objectId, _ref90$offeringKey = _ref90.offeringKey, offeringKey = _ref90$offeringKey === void 0 ? "default" : _ref90$offeringKey;
                 ValidateParameters({
                   libraryId: libraryId,
                   objectId: objectId
@@ -6522,28 +6581,46 @@ function () {
                 return this.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
-                  metadataSubtree: "lro_draft"
+                  metadataSubtree: "lro_draft_".concat(offeringKey)
                 });
 
               case 4:
                 lroDraft = _context77.sent;
 
                 if (!(!lroDraft || !lroDraft.write_token)) {
-                  _context77.next = 7;
+                  _context77.next = 14;
                   break;
                 }
 
+                _context77.next = 8;
+                return this.ContentObjectMetadata({
+                  libraryId: libraryId,
+                  objectId: objectId,
+                  metadataSubtree: UrlJoin("abr_mezzanine", "offerings", offeringKey, "ready")
+                });
+
+              case 8:
+                ready = _context77.sent;
+
+                if (!ready) {
+                  _context77.next = 13;
+                  break;
+                }
+
+                throw Error("Mezzanine already finalized for offering '".concat(offeringKey, "'"));
+
+              case 13:
                 throw Error("No LRO draft found for this mezzanine");
 
-              case 7:
+              case 14:
                 httpClient = this.HttpClient;
-                _context77.prev = 8;
+                _context77.prev = 15;
                 // Point directly to the node containing the draft
                 this.HttpClient = new HttpClient({
                   uris: [lroDraft.node],
                   debug: httpClient.debug
                 });
-                _context77.next = 12;
+                _context77.next = 19;
                 return this.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -6551,38 +6628,38 @@ function () {
                   metadataSubtree: "lro_status"
                 });
 
-              case 12:
+              case 19:
                 result = _context77.sent;
-                _context77.next = 18;
+                _context77.next = 25;
                 break;
 
-              case 15:
-                _context77.prev = 15;
-                _context77.t0 = _context77["catch"](8);
+              case 22:
+                _context77.prev = 22;
+                _context77.t0 = _context77["catch"](15);
                 error = _context77.t0;
 
-              case 18:
-                _context77.prev = 18;
+              case 25:
+                _context77.prev = 25;
                 this.HttpClient = httpClient;
-                return _context77.finish(18);
+                return _context77.finish(25);
 
-              case 21:
+              case 28:
                 if (!error) {
-                  _context77.next = 23;
+                  _context77.next = 30;
                   break;
                 }
 
                 throw error;
 
-              case 23:
+              case 30:
                 return _context77.abrupt("return", result);
 
-              case 24:
+              case 31:
               case "end":
                 return _context77.stop();
             }
           }
-        }, _callee77, this, [[8, 15, 18, 21]]);
+        }, _callee77, this, [[15, 22, 25, 28]]);
       }));
 
       function LROStatus(_x76) {
@@ -6625,7 +6702,7 @@ function () {
                 return this.ContentObjectMetadata({
                   libraryId: libraryId,
                   objectId: objectId,
-                  metadataSubtree: "lro_draft"
+                  metadataSubtree: "lro_draft_".concat(offeringKey)
                 });
 
               case 4:
@@ -7412,6 +7489,7 @@ function () {
      * @namedParams
      * @param {string=} objectId - Id of the content
      * @param {string=} versionHash - Version hash of the content
+     * @param {string=} linkPath - If playing from a link, the path to the link
      * @param {Array<string>} protocols - Acceptable playout protocols
      * @param {Array<string>} drms - Acceptable DRM formats
      */
@@ -7422,13 +7500,13 @@ function () {
       var _PlayoutOptions = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee88(_ref102) {
-        var objectId, versionHash, _ref102$protocols, protocols, _ref102$drms, drms, _ref102$hlsjsProfile, hlsjsProfile, libraryId, path, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
+        var objectId, versionHash, linkPath, _ref102$protocols, protocols, _ref102$drms, drms, _ref102$hlsjsProfile, hlsjsProfile, libraryId, path, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
 
         return regeneratorRuntime.wrap(function _callee88$(_context88) {
           while (1) {
             switch (_context88.prev = _context88.next) {
               case 0:
-                objectId = _ref102.objectId, versionHash = _ref102.versionHash, _ref102$protocols = _ref102.protocols, protocols = _ref102$protocols === void 0 ? ["dash", "hls"] : _ref102$protocols, _ref102$drms = _ref102.drms, drms = _ref102$drms === void 0 ? [] : _ref102$drms, _ref102$hlsjsProfile = _ref102.hlsjsProfile, hlsjsProfile = _ref102$hlsjsProfile === void 0 ? true : _ref102$hlsjsProfile;
+                objectId = _ref102.objectId, versionHash = _ref102.versionHash, linkPath = _ref102.linkPath, _ref102$protocols = _ref102.protocols, protocols = _ref102$protocols === void 0 ? ["dash", "hls"] : _ref102$protocols, _ref102$drms = _ref102.drms, drms = _ref102$drms === void 0 ? [] : _ref102$drms, _ref102$hlsjsProfile = _ref102.hlsjsProfile, hlsjsProfile = _ref102$hlsjsProfile === void 0 ? true : _ref102$hlsjsProfile;
                 versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
                 protocols = protocols.map(function (p) {
                   return p.toLowerCase();
@@ -7465,7 +7543,12 @@ function () {
                 versionHash = _context88.sent.versions[0].hash;
 
               case 12:
-                path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+                if (linkPath) {
+                  path = UrlJoin("q", versionHash, "meta", linkPath);
+                } else {
+                  path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+                }
+
                 audienceData = this.AudienceData({
                   objectId: objectId,
                   versionHash: versionHash,
@@ -7484,25 +7567,29 @@ function () {
 
               case 19:
                 _context88.t3 = _context88.sent;
-                _context88.t4 = path;
-                _context88.t5 = {
+                _context88.t4 = linkPath ? {
+                  resolve: true
+                } : {};
+                _context88.t5 = path;
+                _context88.t6 = {
                   headers: _context88.t3,
+                  queryParams: _context88.t4,
                   method: "GET",
-                  path: _context88.t4
+                  path: _context88.t5
                 };
-                _context88.t6 = _context88.t2.Request.call(_context88.t2, _context88.t5);
-                _context88.next = 25;
-                return (0, _context88.t1)(_context88.t6);
+                _context88.t7 = _context88.t2.Request.call(_context88.t2, _context88.t6);
+                _context88.next = 26;
+                return (0, _context88.t1)(_context88.t7);
 
-              case 25:
-                _context88.t7 = _context88.sent;
-                playoutOptions = _context88.t0.values.call(_context88.t0, _context88.t7);
+              case 26:
+                _context88.t8 = _context88.sent;
+                playoutOptions = _context88.t0.values.call(_context88.t0, _context88.t8);
                 playoutMap = {};
                 i = 0;
 
-              case 29:
+              case 30:
                 if (!(i < playoutOptions.length)) {
-                  _context88.next = 61;
+                  _context88.next = 62;
                   break;
                 }
 
@@ -7510,16 +7597,16 @@ function () {
                 protocol = option.properties.protocol;
                 drm = option.properties.drm;
                 licenseServers = option.properties.license_servers;
-                _context88.t8 = _objectSpread;
-                _context88.t9 = {};
-                _context88.t10 = playoutMap[protocol] || {};
-                _context88.t11 = _objectSpread;
-                _context88.t12 = {};
-                _context88.t13 = (playoutMap[protocol] || {}).playoutMethods || {};
-                _context88.t14 = _defineProperty;
-                _context88.t15 = {};
-                _context88.t16 = drm || "clear";
-                _context88.next = 45;
+                _context88.t9 = _objectSpread;
+                _context88.t10 = {};
+                _context88.t11 = playoutMap[protocol] || {};
+                _context88.t12 = _objectSpread;
+                _context88.t13 = {};
+                _context88.t14 = (playoutMap[protocol] || {}).playoutMethods || {};
+                _context88.t15 = _defineProperty;
+                _context88.t16 = {};
+                _context88.t17 = drm || "clear";
+                _context88.next = 46;
                 return this.Rep({
                   libraryId: libraryId,
                   objectId: objectId,
@@ -7531,46 +7618,46 @@ function () {
                   } : {}
                 });
 
-              case 45:
-                _context88.t17 = _context88.sent;
-                _context88.t18 = drm ? _defineProperty({}, drm, {
+              case 46:
+                _context88.t18 = _context88.sent;
+                _context88.t19 = drm ? _defineProperty({}, drm, {
                   licenseServers: licenseServers
                 }) : undefined;
-                _context88.t19 = {
-                  playoutUrl: _context88.t17,
-                  drms: _context88.t18
+                _context88.t20 = {
+                  playoutUrl: _context88.t18,
+                  drms: _context88.t19
                 };
-                _context88.t20 = (0, _context88.t14)(_context88.t15, _context88.t16, _context88.t19);
-                _context88.t21 = (0, _context88.t11)(_context88.t12, _context88.t13, _context88.t20);
-                _context88.t22 = {
-                  playoutMethods: _context88.t21
+                _context88.t21 = (0, _context88.t15)(_context88.t16, _context88.t17, _context88.t20);
+                _context88.t22 = (0, _context88.t12)(_context88.t13, _context88.t14, _context88.t21);
+                _context88.t23 = {
+                  playoutMethods: _context88.t22
                 };
-                playoutMap[protocol] = (0, _context88.t8)(_context88.t9, _context88.t10, _context88.t22);
+                playoutMap[protocol] = (0, _context88.t9)(_context88.t10, _context88.t11, _context88.t23);
                 // Exclude any options that do not satisfy the specified protocols and/or DRMs
                 protocolMatch = protocols.includes(protocol);
                 drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
 
                 if (!(!protocolMatch || !drmMatch)) {
-                  _context88.next = 56;
+                  _context88.next = 57;
                   break;
                 }
 
-                return _context88.abrupt("continue", 58);
+                return _context88.abrupt("continue", 59);
 
-              case 56:
+              case 57:
                 playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
                 playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
 
-              case 58:
+              case 59:
                 i++;
-                _context88.next = 29;
+                _context88.next = 30;
                 break;
 
-              case 61:
+              case 62:
                 this.Log(playoutMap);
                 return _context88.abrupt("return", playoutMap);
 
-              case 63:
+              case 64:
               case "end":
                 return _context88.stop();
             }
@@ -7595,6 +7682,7 @@ function () {
      * @namedParams
      * @param {string=} objectId - Id of the content
      * @param {string} versionHash - Version hash of the content
+     * @param {string=} linkPath - If playing from a link, the path to the link
      * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
      * @param {Array<string>=} drms=[] - Acceptable DRM formats
      */
@@ -7607,13 +7695,13 @@ function () {
       regeneratorRuntime.mark(function _callee89(_ref104) {
         var _this8 = this;
 
-        var objectId, versionHash, _ref104$protocols, protocols, _ref104$drms, drms, playoutOptions, config;
+        var objectId, versionHash, linkPath, _ref104$protocols, protocols, _ref104$drms, drms, playoutOptions, config;
 
         return regeneratorRuntime.wrap(function _callee89$(_context89) {
           while (1) {
             switch (_context89.prev = _context89.next) {
               case 0:
-                objectId = _ref104.objectId, versionHash = _ref104.versionHash, _ref104$protocols = _ref104.protocols, protocols = _ref104$protocols === void 0 ? ["dash", "hls"] : _ref104$protocols, _ref104$drms = _ref104.drms, drms = _ref104$drms === void 0 ? [] : _ref104$drms;
+                objectId = _ref104.objectId, versionHash = _ref104.versionHash, linkPath = _ref104.linkPath, _ref104$protocols = _ref104.protocols, protocols = _ref104$protocols === void 0 ? ["dash", "hls"] : _ref104$protocols, _ref104$drms = _ref104.drms, drms = _ref104$drms === void 0 ? [] : _ref104$drms;
                 versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
                 if (!objectId) {
@@ -7624,6 +7712,7 @@ function () {
                 return this.PlayoutOptions({
                   objectId: objectId,
                   versionHash: versionHash,
+                  linkPath: linkPath,
                   protocols: protocols,
                   drms: drms,
                   hlsjsProfile: false
@@ -8356,7 +8445,7 @@ function () {
                 _context97.t0 = ResponseToFormat;
                 _context97.t1 = format;
                 _context97.next = 8;
-                return this.HttpClient.Fetch(linkUrl);
+                return HttpClient.Fetch(linkUrl);
 
               case 8:
                 _context97.t2 = _context97.sent;
@@ -10611,26 +10700,23 @@ function () {
       var _Configuration = _asyncToGenerator(
       /*#__PURE__*/
       regeneratorRuntime.mark(function _callee133(_ref150) {
-        var configUrl, region, httpClient, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
+        var configUrl, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
         return regeneratorRuntime.wrap(function _callee133$(_context133) {
           while (1) {
             switch (_context133.prev = _context133.next) {
               case 0:
                 configUrl = _ref150.configUrl, region = _ref150.region;
                 _context133.prev = 1;
-                httpClient = new HttpClient({
-                  uris: [configUrl]
-                });
-                _context133.next = 5;
-                return ResponseToJson(httpClient.Request({
-                  method: "GET",
-                  path: "/config",
-                  queryParams: region ? {
-                    elvgeo: region
-                  } : ""
-                }));
+                uri = new URI(configUrl);
 
-              case 5:
+                if (region) {
+                  uri.addSearch("elvgeo", region);
+                }
+
+                _context133.next = 6;
+                return ResponseToJson(HttpClient.Fetch(uri.toString()));
+
+              case 6:
                 fabricInfo = _context133.sent;
 
                 // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
@@ -10657,8 +10743,8 @@ function () {
                   ethereumURIs: ethereumURIs
                 });
 
-              case 14:
-                _context133.prev = 14;
+              case 15:
+                _context133.prev = 15;
                 _context133.t0 = _context133["catch"](1);
                 // eslint-disable-next-line no-console
                 console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
@@ -10666,12 +10752,12 @@ function () {
                 console.error(_context133.t0);
                 throw _context133.t0;
 
-              case 19:
+              case 20:
               case "end":
                 return _context133.stop();
             }
           }
-        }, _callee133, null, [[1, 14]]);
+        }, _callee133, null, [[1, 15]]);
       }));
 
       function Configuration(_x132) {

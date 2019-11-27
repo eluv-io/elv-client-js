@@ -26,6 +26,10 @@ const argv = yargs
     description: "Variant of the mezzanine",
     default: "default"
   })
+  .option("offering-key", {
+    description: "Offering key for the new mezzanine",
+    default: "default"
+  })
   .option("existingMezzId", {
     description: "If re-running the mezzanine process, the ID of an existing mezzanine object"
   })
@@ -37,9 +41,13 @@ const argv = yargs
     type: "boolean",
     description: "If specified, poster file will be referenced from an S3 bucket instead of the local system"
   })
+  .option("elv-geo", {
+    type: "string",
+    description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
+  })
   .demandOption(
     ["library", "title", "masterHash"],
-    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> --poster <path-to-poster-image> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--s3-copy || --s3-reference)\n"
+    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> --poster <path-to-poster-image> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--s3-copy || --s3-reference) (--elv-geo eu-west)\n"
   )
   .argv;
 
@@ -57,23 +65,25 @@ const Report = response => {
   }
 };
 
-const Create = async (
-  mezLibraryId,
-  productionMasterHash,
-  productionMasterVariant="default",
+const Create = async ({
+  library,
+  masterHash,
+  variant,
+  offeringKey,
   title,
   poster,
   metadata,
   existingMezzId,
   s3Copy,
   s3Reference,
+  elvGeo,
   wait=false
-) => {
+}) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
-      configUrl: ClientConfiguration["config-url"]
+      configUrl: ClientConfiguration["config-url"],
+      region: elvGeo
     });
-
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
       privateKey: process.env.PRIVATE_KEY
@@ -95,9 +105,10 @@ const Create = async (
       console.log("\nCreating ABR Mezzanine...");
       const createResponse = await client.CreateABRMezzanine({
         name: title,
-        libraryId: mezLibraryId,
-        masterVersionHash: productionMasterHash,
-        variant: productionMasterVariant,
+        libraryId: library,
+        masterVersionHash: masterHash,
+        variant,
+        offeringKey: offeringKey,
         metadata,
         access
       });
@@ -108,13 +119,13 @@ const Create = async (
     }
 
     if(poster) {
-      const {write_token} = await client.EditContentObject({libraryId: mezLibraryId, objectId});
+      const {write_token} = await client.EditContentObject({libraryId: library, objectId});
 
       if(s3Copy || s3Reference) {
         const {region, bucket, accessKey, secret} = access;
 
         await client.UploadFilesFromS3({
-          libraryId: mezLibraryId,
+          libraryId: library,
           objectId,
           writeToken: write_token,
           fileInfo: [{
@@ -131,7 +142,7 @@ const Create = async (
         const data = fs.readFileSync(poster);
 
         await client.UploadFiles({
-          libraryId: mezLibraryId,
+          libraryId: library,
           objectId,
           writeToken: write_token,
           fileInfo: [{
@@ -145,7 +156,7 @@ const Create = async (
       }
 
       await client.CreateLinks({
-        libraryId: mezLibraryId,
+        libraryId: library,
         objectId,
         writeToken: write_token,
         links: [
@@ -156,22 +167,23 @@ const Create = async (
         ]
       });
 
-      await client.FinalizeContentObject({libraryId: mezLibraryId, objectId, writeToken: write_token});
+      await client.FinalizeContentObject({libraryId: library, objectId, writeToken: write_token});
     }
 
     console.log("Starting Mezzanine Job(s)");
 
     const startResponse = await client.StartABRMezzanineJobs({
-      libraryId: mezLibraryId,
+      libraryId: library,
       objectId,
-      offeringKey: productionMasterVariant,
+      offeringKey,
       access
     });
 
     Report(startResponse);
 
-    console.log("\nLibrary ID", mezLibraryId);
+    console.log("\nLibrary ID", library);
     console.log("Object ID", objectId);
+    console.log("Offering:", offeringKey);
     console.log("Write Token:", startResponse.lro_draft.write_token);
     console.log("Write Node:", startResponse.lro_draft.node, "\n");
 
@@ -181,13 +193,17 @@ const Create = async (
 
     // eslint-disable-next-line no-constant-condition
     while(true) {
-      const status = await client.LROStatus({libraryId: mezLibraryId, objectId});
+      const status = await client.LROStatus({libraryId: library, objectId, offeringKey});
 
       let done = true;
       const progress = Object.keys(status).map(id => {
         const info = status[id];
 
         if(!info.end) { done = false; }
+
+        if(done && info.run_state !== "finished") {
+          throw Error(`LRO ${id} failed with status ${info.run_state}`);
+        }
 
         return `${id}: ${parseFloat(info.progress.percentage || 0).toFixed(1)}%`;
       });
@@ -202,9 +218,9 @@ const Create = async (
     }
 
     const finalizeResponse = await client.FinalizeABRMezzanine({
-      libraryId: mezLibraryId,
+      libraryId: library,
       objectId,
-      offeringKey: productionMasterVariant
+      offeringKey: offeringKey
     });
 
     Report(finalizeResponse);
@@ -218,7 +234,20 @@ const Create = async (
   }
 };
 
-let {library, masterHash, title, poster, existingMezzId, variant, metadata, wait, s3Reference, s3Copy} = argv;
+let {
+  library,
+  masterHash,
+  title,
+  poster,
+  existingMezzId,
+  variant,
+  offeringKey,
+  metadata,
+  wait,
+  s3Reference,
+  s3Copy,
+  elvGeo
+} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -235,4 +264,17 @@ if(metadata) {
   }
 }
 
-Create(library, masterHash, variant, title, poster, metadata, existingMezzId, s3Copy, s3Reference, wait);
+Create({
+  library,
+  masterHash,
+  variant,
+  offeringKey,
+  title,
+  poster,
+  metadata,
+  existingMezzId,
+  s3Copy,
+  s3Reference,
+  elvGeo,
+  wait
+});
