@@ -3807,10 +3807,11 @@ class ElvClient {
    * @namedParams
    * @param {string=} objectId - Id of the content
    * @param {string=} versionHash - Version hash of the content
+   * @param {string=} linkPath - If playing from a link, the path to the link
    * @param {Array<string>} protocols - Acceptable playout protocols
    * @param {Array<string>} drms - Acceptable DRM formats
    */
-  async PlayoutOptions({objectId, versionHash, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
+  async PlayoutOptions({objectId, versionHash, linkPath, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
     versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
     protocols = protocols.map(p => p.toLowerCase());
@@ -3821,12 +3822,16 @@ class ElvClient {
     }
 
     const libraryId = await this.ContentObjectLibraryId({objectId});
-
     if(!versionHash) {
       versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
     }
 
-    let path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+    let path;
+    if(linkPath) {
+      path = UrlJoin("q", versionHash, "meta", linkPath);
+    } else {
+      path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+    }
 
     const audienceData = this.AudienceData({objectId, versionHash, protocols, drms});
 
@@ -3838,6 +3843,7 @@ class ElvClient {
             channelAuth: true,
             audienceData
           }),
+          queryParams: linkPath ? { resolve: true } : {},
           method: "GET",
           path: path
         })
@@ -3896,17 +3902,25 @@ class ElvClient {
    * @namedParams
    * @param {string=} objectId - Id of the content
    * @param {string} versionHash - Version hash of the content
+   * @param {string=} linkPath - If playing from a link, the path to the link
    * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
    * @param {Array<string>=} drms=[] - Acceptable DRM formats
    */
-  async BitmovinPlayoutOptions({objectId, versionHash, protocols=["dash", "hls"], drms=[]}) {
+  async BitmovinPlayoutOptions({objectId, versionHash, linkPath, protocols=["dash", "hls"], drms=[]}) {
     versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
     if(!objectId) {
       objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     }
 
-    const playoutOptions = await this.PlayoutOptions({objectId, versionHash, protocols, drms, hlsjsProfile: false});
+    const playoutOptions = await this.PlayoutOptions({
+      objectId,
+      versionHash,
+      linkPath,
+      protocols,
+      drms,
+      hlsjsProfile: false
+    });
 
     delete playoutOptions.playoutMethods;
 
