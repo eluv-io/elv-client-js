@@ -3363,11 +3363,17 @@ class ElvClient {
   async LROStatus({libraryId, objectId, offeringKey="default"}) {
     ValidateParameters({libraryId, objectId});
 
-    const lroDraft = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      metadataSubtree: `lro_draft_${offeringKey}`
-    });
+    const lroDraft =
+      await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: `lro_draft_${offeringKey}`
+      }) ||
+      await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        metadataSubtree: "lro_draft"
+      });
 
     if(!lroDraft || !lroDraft.write_token) {
       // Write token not present - check if mezz has already been finalized
@@ -3810,8 +3816,17 @@ class ElvClient {
    * @param {string=} linkPath - If playing from a link, the path to the link
    * @param {Array<string>} protocols - Acceptable playout protocols
    * @param {Array<string>} drms - Acceptable DRM formats
+   * @param {string=} offering=default - The offering to play
    */
-  async PlayoutOptions({objectId, versionHash, linkPath, protocols=["dash", "hls"], drms=[], hlsjsProfile=true}) {
+  async PlayoutOptions({
+    objectId,
+    versionHash,
+    linkPath,
+    protocols=["dash", "hls"],
+    offering="default",
+    drms=[],
+    hlsjsProfile=true
+  }) {
     versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
     protocols = protocols.map(p => p.toLowerCase());
@@ -3826,14 +3841,32 @@ class ElvClient {
       versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
     }
 
-    let path;
+    let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
     if(linkPath) {
+      const linkInfo = await this.ContentObjectMetadata({
+        objectId,
+        versionHash,
+        metadataSubtree: linkPath
+      });
+
+      if(!linkInfo || !linkInfo.container) {
+        throw Error(`Invalid link path: ${linkPath}`);
+      }
+
+      linkTargetHash = linkInfo.container;
+      linkTargetId = this.utils.DecodeVersionHash(linkInfo.container).objectId;
+      linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
       path = UrlJoin("q", versionHash, "meta", linkPath);
     } else {
-      path = UrlJoin("q", versionHash, "rep", "playout", "default", "options.json");
+      path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
     }
 
-    const audienceData = this.AudienceData({objectId, versionHash, protocols, drms});
+    const audienceData = this.AudienceData({
+      objectId: linkTargetId || objectId,
+      versionHash: linkTargetHash || versionHash,
+      protocols,
+      drms
+    });
 
     const playoutOptions = Object.values(
       await ResponseToJson(
@@ -3857,16 +3890,17 @@ class ElvClient {
       const drm = option.properties.drm;
       const licenseServers = option.properties.license_servers;
 
+      // Create full playout URLs for this protocol / drm combo
       playoutMap[protocol] = {
         ...(playoutMap[protocol] || {}),
         playoutMethods: {
           ...((playoutMap[protocol] || {}).playoutMethods || {}),
           [drm || "clear"]: {
             playoutUrl: await this.Rep({
-              libraryId,
-              objectId,
-              versionHash,
-              rep: UrlJoin("playout", "default", option.uri),
+              libraryId: linkTargetLibraryId || libraryId,
+              objectId: linkTargetId || objectId,
+              versionHash: linkTargetHash || versionHash,
+              rep: UrlJoin("playout", offering, option.uri),
               channelAuth: true,
               queryParams: hlsjsProfile && protocol === "hls" ? {player_profile: "hls-js"} : {}
             }),
@@ -3882,6 +3916,7 @@ class ElvClient {
         continue;
       }
 
+      // This protocol / DRM satisfies the specifications
       playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
       playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
     }
@@ -3905,8 +3940,16 @@ class ElvClient {
    * @param {string=} linkPath - If playing from a link, the path to the link
    * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
    * @param {Array<string>=} drms=[] - Acceptable DRM formats
+   * @param {string=} offering=default - The offering to play
    */
-  async BitmovinPlayoutOptions({objectId, versionHash, linkPath, protocols=["dash", "hls"], drms=[]}) {
+  async BitmovinPlayoutOptions({
+    objectId,
+    versionHash,
+    linkPath,
+    protocols=["dash", "hls"],
+    drms=[],
+    offering="default"
+  }) {
     versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
     if(!objectId) {
@@ -3919,6 +3962,7 @@ class ElvClient {
       linkPath,
       protocols,
       drms,
+      offering,
       hlsjsProfile: false
     });
 

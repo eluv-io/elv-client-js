@@ -37,7 +37,7 @@ const testFileSize = 100000;
 
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
-let mediaLibraryId, masterHash, mezzanineId;
+let mediaLibraryId, masterHash, mezzanineId, mezzanineHash;
 let s3Access;
 
 let testFile1, testFile2, testFile3, testHash;
@@ -1473,11 +1473,18 @@ describe("Test ElvClient", () => {
         await new Promise(resolve => setTimeout(resolve, 10000));
       }
 
-      await client.FinalizeABRMezzanine({
+      const finalizeResponse = await client.FinalizeABRMezzanine({
         libraryId: mediaLibraryId,
         objectId: mezzanineId,
         offeringKey: "default"
       });
+
+      mezzanineHash = finalizeResponse.hash;
+
+      console.log(client.signer.signingKey.privateKey);
+      console.log(
+        mediaLibraryId, mezzanineId, mezzanineHash
+      );
 
       await new Promise(resolve => setTimeout(resolve, 5000));
     });
@@ -1491,9 +1498,11 @@ describe("Test ElvClient", () => {
 
       expect(playoutOptions.dash).toBeDefined();
       expect(playoutOptions.dash.playoutUrl).toBeDefined();
+      expect(playoutOptions.dash.playoutMethods.clear).toBeDefined();
 
       expect(playoutOptions.hls).toBeDefined();
       expect(playoutOptions.hls.playoutUrl).toBeDefined();
+      expect(playoutOptions.hls.playoutMethods.clear).toBeDefined();
 
       const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
         objectId: mezzanineId,
@@ -1516,7 +1525,7 @@ describe("Test ElvClient", () => {
       console.log(clearPlayoutOptions.dash.playoutUrl);
     });
 
-    test("Playout Options From Link", async () => {
+    test("Playout Options From Self Link", async () => {
       try {
         // Create a link to default playout
         const {write_token} = await client.EditContentObject({
@@ -1550,9 +1559,11 @@ describe("Test ElvClient", () => {
 
         expect(playoutOptions.dash).toBeDefined();
         expect(playoutOptions.dash.playoutUrl).toBeDefined();
+        expect(playoutOptions.dash.playoutMethods.clear).toBeDefined();
 
         expect(playoutOptions.hls).toBeDefined();
         expect(playoutOptions.hls.playoutUrl).toBeDefined();
+        expect(playoutOptions.hls.playoutMethods.clear).toBeDefined();
 
         const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
           versionHash: hash,
@@ -1562,6 +1573,67 @@ describe("Test ElvClient", () => {
         });
 
         expect(bitmovinPlayoutOptions).toBeDefined();
+      } catch(error) {
+        console.error("ERROR:");
+        console.error(JSON.stringify(error, null, 2));
+        throw error;
+      }
+    });
+
+    test.skip("Playout Options From External Link", async () => {
+      try {
+        // Create a link to default playout
+        const {id, write_token} = await client.CreateContentObject({
+          libraryId: mediaLibraryId
+        });
+
+        await client.CreateLinks({
+          libraryId: mediaLibraryId,
+          objectId: id,
+          writeToken: write_token,
+          links: [{
+            type: "rep",
+            path: "external/videoLink/default",
+            target: "playout/default/options.json",
+            targetHash: mezzanineHash
+          }]
+        });
+        const {hash} = await client.FinalizeContentObject({
+          libraryId: mediaLibraryId,
+          objectId: id,
+          writeToken: write_token
+        });
+
+        // Produce playout options from link
+        const playoutOptions = await accessClient.PlayoutOptions({
+          versionHash: hash,
+          linkPath: "external/videoLink/default",
+          protocols: ["hls", "dash"],
+          drms: ["widevine", "aes-128"]
+        });
+
+        expect(playoutOptions.dash).toBeDefined();
+        expect(playoutOptions.dash.playoutUrl).toBeDefined();
+        expect(playoutOptions.dash.playoutMethods.clear).toBeDefined();
+
+        expect(playoutOptions.hls).toBeDefined();
+        expect(playoutOptions.hls.playoutUrl).toBeDefined();
+        expect(playoutOptions.hls.playoutMethods.clear).toBeDefined();
+
+        const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
+          versionHash: hash,
+          linkPath: "external/videoLink/default",
+          protocols: ["hls", "dash"],
+          drms: ["widevine", "aes-128"]
+        });
+
+        expect(bitmovinPlayoutOptions).toBeDefined();
+
+        console.log("HLS Playout from external link:");
+        console.log(playoutOptions.hls.playoutMethods.clear.playoutUrl);
+
+        console.log("Dash Playout from external link:");
+        console.log(clearPlayoutOptions.dash.playoutMethods.clear.playoutUrl);
       } catch(error) {
         console.error("ERROR:");
         console.error(JSON.stringify(error, null, 2));
