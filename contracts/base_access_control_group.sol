@@ -2,10 +2,11 @@ pragma solidity 0.4.24;
 
 //import "./ownable.sol";
 import {BaseFactory} from "./base_content_space.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import {Editable} from "./editable.sol";
 import {Container} from "./container.sol";
+import {UserSpace} from "./user_space.sol";
+import {NodeSpace} from "./node_space.sol";
 
 
 /* -- Revision history --
@@ -62,8 +63,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             managersNum++;
         }
         emit ManagerAccessGranted(manager);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(manager);
+        address walletAddress = UserSpace(contentSpace).getUserWallet(manager);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_TENTATIVE());
     }
@@ -82,8 +82,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             }
         }
         emit ManagerAccessRevoked(manager);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(manager);
+        address walletAddress = UserSpace(contentSpace).getUserWallet(manager);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_EDIT(), userWallet.ACCESS_NONE());
     }
@@ -93,8 +92,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     }
 
     function hasAccessRight(address candidate, bool mgr) public view returns (bool) {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(candidate);
+        address walletAddress = UserSpace(contentSpace).getUserWallet(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         if (mgr==true) {
              return userWallet.checkAccessGroupRights(address(this), userWallet.TYPE_EDIT());
@@ -124,12 +122,9 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
 
         emit MemberAdded(candidate);
 
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(candidate);
+        address walletAddress = UserSpace(contentSpace).getUserWallet(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
-        //emit dbg_setAccessGroupRights(walletAddress, userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
-        //emit dbg_setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_TENTATIVE());
     }
 
     function revokeAccess(address candidate) public {
@@ -146,8 +141,7 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
             }
         }
         emit MemberRevoked(candidate);
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(candidate);
+        address walletAddress = UserSpace(contentSpace).getUserWallet(candidate);
         AccessIndexor userWallet = AccessIndexor(walletAddress);
         userWallet.setAccessGroupRights(address(this), userWallet.TYPE_ACCESS(), userWallet.ACCESS_NONE());
     }
@@ -157,8 +151,8 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     }
 
     function canConfirm() public view returns (bool) {
-        BaseContentSpace bcs = BaseContentSpace(contentSpace);
-        return bcs.canNodePublish(msg.sender);
+        NodeSpace ns = NodeSpace(contentSpace);
+        return ns.canNodePublish(msg.sender);
     }
 
 }

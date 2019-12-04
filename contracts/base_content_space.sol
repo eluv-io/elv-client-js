@@ -3,6 +3,7 @@ pragma solidity 0.4.24;
 import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
 import {Editable} from "./editable.sol";
+import "./base_space_interfaces.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContentType} from "./base_content_type.sol";
 import {BaseLibrary} from "./base_library.sol";
@@ -30,10 +31,9 @@ BaseContentSpace20190605144600ML: Implements canConfirm to overloads default fro
 BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 */
 
+contract BaseContentSpace is MetaObject, Accessible, Container, UserSpaceImpl, NodeSpaceImpl, KmsSpace, FactorySpace {
 
-contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeSpace {
-
-    bytes32 public version ="BaseContentSpace20190801140400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20191203120000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -53,6 +53,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     event CreateGroup(address groupAddress);
     event CreateContent(address contentAddress);
     event CreateAccessWallet(address wallet);
+    event BindUserWallet(address wallet, address userAddr);
 
     event EngageAccountLibrary(address accountAddress);
     event SetFactory(address factory);
@@ -173,15 +174,16 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
 
     //This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
-    function createUserWallet(address user) private returns (address) {
-        require(userWallets[user] == 0x0);
+    function createUserWallet(address _user) private returns (address) {
+        require(userWallets[_user] == 0x0);
         address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-        if (user != tx.origin) {
+        if (_user != tx.origin) {
             BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
-            wallet.transferOwnership(user);
+            wallet.transferOwnership(_user);
         }
         emit CreateAccessWallet(walletAddress);
-        userWallets[user] = walletAddress;
+        emit BindUserWallet(walletAddress, _user);
+        userWallets[_user] = walletAddress;
         return walletAddress;
     }
 
@@ -208,7 +210,6 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
     }
     */
 
-    // TODO kmsAddr => kmsID
     function getKMSID(address _kmsAddr) public view returns (string){
         return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
     }
@@ -255,7 +256,7 @@ contract BaseContentSpace is MetaObject, Accessible, Container, UserSpace, NodeS
         return output;
     }
 
-    function getKMSInfo(string _kmsID, bytes prefix) public view returns (string, string) {
+    function getKMSInfo(string _kmsID, bytes prefix) external view returns (string, string) {
         bytes[] memory locators = kmsMapping[_kmsID];
         string memory publicKey = kmsPublicKeys[_kmsID];
 
