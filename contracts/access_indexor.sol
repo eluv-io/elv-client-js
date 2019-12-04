@@ -10,12 +10,13 @@ AccessIndexor20190528194200ML: Removes contentSpace is field as it is now inheri
 AccessIndexor20190605162000ML: Adds cleanUp functions to remove references to dead objects
 AccessIndexor20190722214200ML: Fix false positive for group-based rights when object owner match group owner
 AccessIndexor20190801141000ML: Adds method to provide ACCESS right to the caller object
+AccessIndexor20191113202400ML: Ensures accessor has at least access right to a group to benefit from group rights
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20190801141000ML";
+    bytes32 public version = "AccessIndexor20191113202400ML";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
     //event dbUint8(string label, uint8 value);
@@ -196,6 +197,7 @@ contract AccessIndexor is Ownable {
         if (index_type == CATEGORY_CONTENT_TYPE) {
             return checkRawRights(contentTypes, obj, access_type);
         }
+        return false;
     }
 
     function checkRawRights(AccessIndex storage index, address obj, uint8 access_type) private view returns(bool) {
@@ -216,7 +218,7 @@ contract AccessIndexor is Ownable {
             address group;
             for (uint i = 0; i < accessGroups.length; i++) {
                 group = accessGroups.list[i];
-                if (group != 0x0) {
+                if ((group != 0x0) && (accessGroups.rights[group] >= 10)) { //needs to be at least a member, seeing is not enough
                     groupObj = AccessIndexor(group);
                     if (groupObj.checkDirectRights(index_type, obj, access_type) == true) {
                         return true;
