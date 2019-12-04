@@ -30,7 +30,7 @@ contract Editable is Ownable {
     uint[] public versionTimestamp;
 
     string public pendingHash;
-    bool commitPending;
+    bool public commitPending;
 
     function migrate(string _objectHash, string _versionHashesConcat) internal onlyOwner {
 
@@ -66,6 +66,12 @@ contract Editable is Ownable {
     // overridden in BaseContent to return library
     function parentAddress() public view returns (address) {
         return contentSpace;
+    }
+
+    function clearPending() public {
+        require(canCommit());
+        pendingHash = "";
+        commitPending = false;
     }
 
     function commit(string _objectHash) public {

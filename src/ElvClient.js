@@ -3849,11 +3849,16 @@ class ElvClient {
         metadataSubtree: linkPath
       });
 
-      if(!linkInfo || !linkInfo.container) {
+      if(!linkInfo || !linkInfo["/"]) {
         throw Error(`Invalid link path: ${linkPath}`);
       }
 
-      linkTargetHash = linkInfo.container;
+      linkTargetHash = linkInfo["."] ? linkInfo["."].container : linkInfo.container;
+
+      if(!linkTargetHash) {
+        throw Error(`Link missing container attribute: ${linkPath}`);
+      }
+
       linkTargetId = this.utils.DecodeVersionHash(linkInfo.container).objectId;
       linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
       path = UrlJoin("q", versionHash, "meta", linkPath);

@@ -7563,7 +7563,7 @@ function () {
 
               case 12:
                 if (!linkPath) {
-                  _context88.next = 26;
+                  _context88.next = 28;
                   break;
                 }
 
@@ -7577,7 +7577,7 @@ function () {
               case 15:
                 linkInfo = _context88.sent;
 
-                if (!(!linkInfo || !linkInfo.container)) {
+                if (!(!linkInfo || !linkInfo["/"])) {
                   _context88.next = 18;
                   break;
                 }
@@ -7585,23 +7585,32 @@ function () {
                 throw Error("Invalid link path: ".concat(linkPath));
 
               case 18:
-                linkTargetHash = linkInfo.container;
+                linkTargetHash = linkInfo["."] ? linkInfo["."].container : linkInfo.container;
+
+                if (linkTargetHash) {
+                  _context88.next = 21;
+                  break;
+                }
+
+                throw Error("Link missing container attribute: ".concat(linkPath));
+
+              case 21:
                 linkTargetId = this.utils.DecodeVersionHash(linkInfo.container).objectId;
-                _context88.next = 22;
+                _context88.next = 24;
                 return this.ContentObjectLibraryId({
                   objectId: linkTargetId
                 });
 
-              case 22:
+              case 24:
                 linkTargetLibraryId = _context88.sent;
                 path = UrlJoin("q", versionHash, "meta", linkPath);
-                _context88.next = 27;
+                _context88.next = 29;
                 break;
 
-              case 26:
+              case 28:
                 path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
 
-              case 27:
+              case 29:
                 audienceData = this.AudienceData({
                   objectId: linkTargetId || objectId,
                   versionHash: linkTargetHash || versionHash,
@@ -7611,14 +7620,14 @@ function () {
                 _context88.t0 = Object;
                 _context88.t1 = ResponseToJson;
                 _context88.t2 = this.HttpClient;
-                _context88.next = 33;
+                _context88.next = 35;
                 return this.authClient.AuthorizationHeader({
                   objectId: objectId,
                   channelAuth: true,
                   audienceData: audienceData
                 });
 
-              case 33:
+              case 35:
                 _context88.t3 = _context88.sent;
                 _context88.t4 = linkPath ? {
                   resolve: true
@@ -7631,18 +7640,18 @@ function () {
                   path: _context88.t5
                 };
                 _context88.t7 = _context88.t2.Request.call(_context88.t2, _context88.t6);
-                _context88.next = 40;
+                _context88.next = 42;
                 return (0, _context88.t1)(_context88.t7);
 
-              case 40:
+              case 42:
                 _context88.t8 = _context88.sent;
                 playoutOptions = _context88.t0.values.call(_context88.t0, _context88.t8);
                 playoutMap = {};
                 i = 0;
 
-              case 44:
+              case 46:
                 if (!(i < playoutOptions.length)) {
-                  _context88.next = 76;
+                  _context88.next = 78;
                   break;
                 }
 
@@ -7660,7 +7669,7 @@ function () {
                 _context88.t15 = _defineProperty;
                 _context88.t16 = {};
                 _context88.t17 = drm || "clear";
-                _context88.next = 60;
+                _context88.next = 62;
                 return this.Rep({
                   libraryId: linkTargetLibraryId || libraryId,
                   objectId: linkTargetId || objectId,
@@ -7672,7 +7681,7 @@ function () {
                   } : {}
                 });
 
-              case 60:
+              case 62:
                 _context88.t18 = _context88.sent;
                 _context88.t19 = drm ? _defineProperty({}, drm, {
                   licenseServers: licenseServers
@@ -7692,27 +7701,27 @@ function () {
                 drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
 
                 if (!(!protocolMatch || !drmMatch)) {
-                  _context88.next = 71;
+                  _context88.next = 73;
                   break;
                 }
 
-                return _context88.abrupt("continue", 73);
+                return _context88.abrupt("continue", 75);
 
-              case 71:
+              case 73:
                 // This protocol / DRM satisfies the specifications
                 playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
                 playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
 
-              case 73:
+              case 75:
                 i++;
-                _context88.next = 44;
+                _context88.next = 46;
                 break;
 
-              case 76:
+              case 78:
                 this.Log(playoutMap);
                 return _context88.abrupt("return", playoutMap);
 
-              case 78:
+              case 80:
               case "end":
                 return _context88.stop();
             }

@@ -320,6 +320,7 @@ LvRecording20191029123400ML: Adds timestamps to all events, adds programId repor
 LvRecording20191029150500ML: Adds score to playback events
 LvRecording20191031162800ML: Adds originator to playback events in case of state channel originated transactions
 LvRecording20191031174500ML: Adds playback ID and reporting of program details
+LvRecording20191031204100ML: Bug fix in runAccess
 */
 
 
@@ -328,7 +329,7 @@ LvRecording20191031174500ML: Adds playback ID and reporting of program details
 
 contract LvRecording is Content {
 
-    bytes32 public version ="LvRecording20191031174500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="LvRecording20191031204100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint public startTime;
     uint public endTime;
@@ -407,8 +408,6 @@ contract LvRecording is Content {
                 stream.logRecordingPlaybackStarted(requestID, tx.origin, now);
             } else {
                 playbackId = playbackId + 1;
-                uint256[] playbacks;
-
                 if (playbacksLength < playbacks.length) {
                     playbacks[playbacksLength] = playbackId;
                 } else {
