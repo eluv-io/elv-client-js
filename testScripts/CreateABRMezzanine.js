@@ -4,6 +4,7 @@ const { ElvClient } = require("../src/ElvClient");
 const readline = require("readline");
 const Path = require("path");
 const mime = require("mime-types");
+const fs = require("fs");
 
 const yargs = require("yargs");
 const argv = yargs
@@ -32,6 +33,9 @@ const argv = yargs
   })
   .option("existingMezzId", {
     description: "If re-running the mezzanine process, the ID of an existing mezzanine object"
+  })
+  .option("abr-profile", {
+    description: "Path to JSON file containing alternative ABR profile"
   })
   .option("s3-copy", {
     type: "boolean",
@@ -74,6 +78,7 @@ const Create = async ({
   poster,
   metadata,
   existingMezzId,
+  abrProfile,
   s3Copy,
   s3Reference,
   elvGeo,
@@ -98,25 +103,22 @@ const Create = async ({
       secret: process.env.AWS_SECRET
     };
 
-    let objectId;
-    if(existingMezzId) {
-      objectId = existingMezzId;
-    } else {
-      console.log("\nCreating ABR Mezzanine...");
-      const createResponse = await client.CreateABRMezzanine({
-        name: title,
-        libraryId: library,
-        masterVersionHash: masterHash,
-        variant,
-        offeringKey: offeringKey,
-        metadata,
-        access
-      });
+    console.log("\nCreating ABR Mezzanine...");
+    const createResponse = await client.CreateABRMezzanine({
+      name: title,
+      libraryId: library,
+      objectId: existingMezzId,
+      masterVersionHash: masterHash,
+      variant,
+      offeringKey: offeringKey,
+      metadata,
+      abrProfile,
+      access
+    });
 
-      Report(createResponse);
+    Report(createResponse);
 
-      objectId = createResponse.id;
-    }
+    const objectId = createResponse.id;
 
     if(poster) {
       const {write_token} = await client.EditContentObject({libraryId: library, objectId});
@@ -240,6 +242,7 @@ let {
   title,
   poster,
   existingMezzId,
+  abrProfile,
   variant,
   offeringKey,
   metadata,
@@ -264,6 +267,10 @@ if(metadata) {
   }
 }
 
+if(abrProfile) {
+  abrProfile = JSON.parse(fs.readFileSync(abrProfile));
+}
+
 Create({
   library,
   masterHash,
@@ -273,6 +280,7 @@ Create({
   poster,
   metadata,
   existingMezzId,
+  abrProfile,
   s3Copy,
   s3Reference,
   elvGeo,
