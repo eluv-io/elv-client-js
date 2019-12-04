@@ -1670,22 +1670,16 @@ class ElvClient {
 
     this.Log(`Opening content draft: ${libraryId} ${objectId}`);
 
-    if(!this.utils.EqualHash(libraryId, objectId)) {
-      // Don't allow changing of content type in this method
-      delete options.type;
-    } else {
-      // Unless modifying the content library object
-      if(options.type) {
-        if(options.type.startsWith("hq__")) {
-          // Type hash specified
-          options.type = (await this.ContentType({versionHash: options.type})).hash;
-        } else if(options.type.startsWith("iq__")) {
-          // Type ID specified
-          options.type = (await this.ContentType({typeId: options.type})).hash;
-        } else {
-          // Type name specified
-          options.type = (await this.ContentType({name: options.type})).hash;
-        }
+    if(options.type) {
+      if(options.type.startsWith("hq__")) {
+        // Type hash specified
+        options.type = (await this.ContentType({versionHash: options.type})).hash;
+      } else if(options.type.startsWith("iq__")) {
+        // Type ID specified
+        options.type = (await this.ContentType({typeId: options.type})).hash;
+      } else {
+        // Type name specified
+        options.type = (await this.ContentType({name: options.type})).hash;
       }
     }
 
@@ -3172,6 +3166,7 @@ class ElvClient {
    * @methodGroup Media
    * @namedParams
    * @param {string} libraryId - ID of the mezzanine library
+   * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
    * @param {string} name - Name for mezzanine content object
    * @param {string=} description - Description for mezzanine content object
    * @param {Object=} metadata - Additional metadata for mezzanine content object
@@ -3182,7 +3177,7 @@ class ElvClient {
    *
    * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
    */
-  async CreateABRMezzanine({libraryId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default", offeringKey="default"}) {
+  async CreateABRMezzanine({libraryId, objectId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default", offeringKey="default"}) {
     ValidateLibrary(libraryId);
     ValidateVersion(masterVersionHash);
 
@@ -3196,12 +3191,31 @@ class ElvClient {
       throw Error("Master version hash not specified");
     }
 
-    const {id, write_token} = await this.CreateContentObject({
-      libraryId,
-      options: {
-        type: abrMezType.hash
-      }
-    });
+    let id, write_token;
+    if(objectId) {
+      // Edit existing
+      const editResponse = await this.EditContentObject({
+        libraryId,
+        objectId,
+        options: {
+          type: abrMezType.hash
+        }
+      });
+
+      id = editResponse.id;
+      write_token = editResponse.write_token;
+    } else {
+      // Create new
+      const createResponse = await this.CreateContentObject({
+        libraryId,
+        options: {
+          type: abrMezType.hash
+        }
+      });
+
+      id = createResponse.id;
+      write_token = createResponse.write_token;
+    }
 
     const masterName = await this.ContentObjectMetadata({
       versionHash: masterVersionHash,
