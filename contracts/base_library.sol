@@ -4,10 +4,9 @@ import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
+import {FactorySpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./meta_object.sol";
-
 
 /* -- Revision history --
 BaseLibrary20190221101700ML: First versioned released
@@ -65,7 +64,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
             return true;
         }
 
-        address userWallet = BaseContentSpace(contentSpace).userWallets(tx.origin);
+        address userWallet = UserSpace(contentSpace).getUserWallet(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT()) == true) {
@@ -285,7 +284,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function createContent(address content_type) public  returns (address) {
-        address content = BaseContentSpace(contentSpace).createContent(address(this), content_type);
+        address content = FactorySpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type, contentSpace);
         return content;
     }
@@ -305,8 +304,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(stakeholder);
+        address walletAddress = UserSpace(contentSpace).getUserWallet(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

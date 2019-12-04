@@ -39,9 +39,9 @@ contract Editable is Ownable {
         if (bytes(_versionHashesConcat).length == 0)
             return;
 
-        var s = _versionHashesConcat.toSlice();
-        var delim = ":".toSlice();
-        var hashes = new string[](s.count(delim) + 1);
+        strings.slice memory s = _versionHashesConcat.toSlice();
+        strings.slice memory delim = ":".toSlice();
+        string[] memory hashes = new string[](s.count(delim) + 1);
         for(uint i = 0; i < hashes.length; i++) {
             hashes[i] = s.split(delim).toString();
         }

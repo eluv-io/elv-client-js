@@ -702,6 +702,23 @@ var topics = {
     }],
     "contract": "BaseContentSpace"
   },
+  "0x05e3f3adaf96d565bb326088a1d8e0d78497549df2c99a8ab681e5fbc7a9b3f2": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "wallet",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "userAddr",
+        "type": "address"
+      }],
+      "name": "BindUserWallet",
+      "type": "event"
+    }],
+    "contract": "BaseContentSpace"
+  },
   "0x53ce35a7383a3ea3f695bdf0f87d7e5485ba816b382673e849bfdd24e7f5e3ca": {
     "abi": [{
       "anonymous": false,
