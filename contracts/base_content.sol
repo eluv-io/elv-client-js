@@ -4,8 +4,8 @@ import {Ownable} from "./ownable.sol";
 import {Editable} from "./editable.sol";
 import {Content} from "./content.sol";
 import {Container} from "./container.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
+import "./user_space.sol";
 
 /* -- Revision history --
 BaseContent20190221101600ML: First versioned released
@@ -195,11 +195,11 @@ contract BaseContent is Editable {
     }
 
     function getKMSInfo(bytes prefix) public view returns (string, string) {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        if (addressKMS == 0x0 || contentSpaceObj.checkKMSAddr(addressKMS) == 0) {
+        KmsSpace kmsSpaceObj = KmsSpace(contentSpace);
+        if (addressKMS == 0x0 || kmsSpaceObj.checkKMSAddr(addressKMS) == 0) {
             return ("", "");
         }
-        return contentSpaceObj.getKMSInfo(contentSpaceObj.getKMSID(addressKMS), prefix);
+        return kmsSpaceObj.getKMSInfo(kmsSpaceObj.getKMSID(addressKMS), prefix);
     }
 
     //Owner can change this, unless the contract they are already set it prevent them to do so.
@@ -234,8 +234,8 @@ contract BaseContent is Editable {
         if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
             return (0, 0, accessCharge);
         }
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address userWallet = contentSpaceObj.userWallets(tx.origin);
+        UserSpace userSpaceObj = UserSpace(contentSpace);
+        address userWallet = userSpaceObj.getUserWallet(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {
@@ -287,8 +287,8 @@ contract BaseContent is Editable {
         (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo( level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
-            BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-            address userWallet = contentSpaceObj.userWallets(tx.origin);
+            UserSpace userSpaceObj = UserSpace(contentSpace);
+            address userWallet = userSpaceObj.getUserWallet(tx.origin);
             if (userWallet != 0x0) {
                 AccessIndexor wallet = AccessIndexor(userWallet);
                 if (visibilityCode == 255) { //No custom calculations
@@ -317,8 +317,8 @@ contract BaseContent is Editable {
     }
 
     function canEdit() public view returns (bool) {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(tx.origin);
+        UserSpace userSpaceObj = UserSpace(contentSpace);
+        address walletAddress = userSpaceObj.getUserWallet(tx.origin);
         AccessIndexor wallet = AccessIndexor(walletAddress);
         return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
     }
@@ -548,15 +548,13 @@ contract BaseContent is Editable {
     }
 
     function setPaidRights() private {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.getAccessWallet();
+        address walletAddress = UserSpace(contentSpace).getUserWallet(msg.sender);
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        BaseContentSpace contentSpaceObj = BaseContentSpace(contentSpace);
-        address walletAddress = contentSpaceObj.userWallets(stakeholder);
+        address walletAddress = UserSpace(contentSpace).getUserWallet(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

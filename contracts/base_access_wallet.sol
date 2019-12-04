@@ -4,7 +4,7 @@ import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
 import {BaseContent} from "./base_content.sol";
-import {BaseContentSpace} from "./base_content_space.sol";
+import {KmsSpace} from "./user_space.sol";
 import "./access_indexor.sol";
 import "./transactable.sol";
 
@@ -130,7 +130,7 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     external
     returns (bool) {
 
-        BaseContentSpace spc = BaseContentSpace(contentSpace);
+        KmsSpace spc = KmsSpace(contentSpace);
         require(msg.sender == contentSpace || spc.checkKMSAddr(msg.sender) > 0);
         require(spc.checkKMSAddr(_guarantor) > 0);
 

@@ -2,7 +2,7 @@ pragma solidity 0.4.24;
 
 import "./ownable.sol";
 import "./node.sol";
-
+import "./base_space_interfaces.sol";
 
 /**
  * NodeSpace
@@ -13,8 +13,7 @@ import "./node.sol";
 NodeSpace20190528170100ML: First versioned released
 */
 
-
-contract NodeSpace is Ownable {
+contract NodeSpaceImpl is Ownable {
 
     bytes32 public version ="NodeSpace20190528170100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 

@@ -262,7 +262,7 @@ contract AccessIndexor is Ownable {
         bool isIndexorManager = hasManagerAccess(tx.origin);
         bool isObjRightHolder = false;
         UserSpace space = UserSpace(contentSpace);
-        address walletAddress = space.userWallets(tx.origin);
+        address walletAddress = space.getUserWallet(tx.origin);
         /*
         if  (walletAddress == 0x0) {
             Ownable instance = Ownable(obj);
