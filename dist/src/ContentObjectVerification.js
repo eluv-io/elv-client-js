@@ -1,9 +1,5 @@
 "use strict";
 
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
-
 var CBOR = require("cbor");
 
 var SJCL = require("sjcl");
@@ -15,163 +11,153 @@ var DeepEqual = require("deep-equal");
 var Utils = require("./Utils");
 
 var ContentObjectVerification = {
-  VerifyContentObject: function () {
-    var _VerifyContentObject = _asyncToGenerator(
-    /*#__PURE__*/
-    regeneratorRuntime.mark(function _callee(_ref) {
-      var client, libraryId, objectId, versionHash, response, partHash, qpartsResponse, partVerification, qmdHash, metadataPartHash, metadataPartResponse, metadataVerification, metadata, qstructHash, structPartHash, structPartResponse, structVerification;
-      return regeneratorRuntime.wrap(function _callee$(_context) {
-        while (1) {
-          switch (_context.prev = _context.next) {
-            case 0:
-              client = _ref.client, libraryId = _ref.libraryId, objectId = _ref.objectId, versionHash = _ref.versionHash;
-              response = {
-                hash: versionHash
+  VerifyContentObject: function VerifyContentObject(_ref) {
+    var client, libraryId, objectId, versionHash, response, partHash, qpartsResponse, partVerification, qmdHash, metadataPartHash, metadataPartResponse, metadataVerification, metadata, qstructHash, structPartHash, structPartResponse, structVerification;
+    return regeneratorRuntime.async(function VerifyContentObject$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            client = _ref.client, libraryId = _ref.libraryId, objectId = _ref.objectId, versionHash = _ref.versionHash;
+            response = {
+              hash: versionHash
+            };
+            partHash = Utils.DecodeVersionHash(versionHash).partHash;
+            _context.next = 5;
+            return regeneratorRuntime.awrap(client.QParts({
+              libraryId: libraryId,
+              objectId: objectId,
+              partHash: partHash,
+              format: "arrayBuffer"
+            }).then(function (response) {
+              return Buffer.from(response);
+            }));
+
+          case 5:
+            qpartsResponse = _context.sent;
+            partVerification = ContentObjectVerification._VerifyPart({
+              partHash: partHash,
+              qpartsResponse: qpartsResponse
+            });
+
+            if (partVerification.valid) {
+              response.qref = {
+                valid: true
               };
-              partHash = Utils.DecodeVersionHash(versionHash).partHash;
-              _context.next = 5;
-              return client.QParts({
-                libraryId: libraryId,
-                objectId: objectId,
-                partHash: partHash,
-                format: "arrayBuffer"
-              }).then(function (response) {
-                return Buffer.from(response);
-              });
+            } else {
+              response.qref = {
+                valid: false,
+                error: partVerification.error.message
+              };
+            }
 
-            case 5:
-              qpartsResponse = _context.sent;
-              partVerification = ContentObjectVerification._VerifyPart({
-                partHash: partHash,
-                qpartsResponse: qpartsResponse
-              });
+            response.qref.hash = partHash;
 
-              if (partVerification.valid) {
-                response.qref = {
-                  valid: true
-                };
-              } else {
-                response.qref = {
-                  valid: false,
-                  error: partVerification.error.message
-                };
-              }
+            if (!response.qref.valid) {
+              _context.next = 32;
+              break;
+            }
 
-              response.qref.hash = partHash;
+            // Validate Metadata
+            qmdHash = partVerification.cbor.QmdHash.value;
+            metadataPartHash = "hqp_" + MultiHash.toB58String(qmdHash.slice(1, qmdHash.length));
+            _context.next = 14;
+            return regeneratorRuntime.awrap(client.QParts({
+              libraryId: libraryId,
+              objectId: objectId,
+              partHash: metadataPartHash,
+              format: "arrayBuffer"
+            }).then(function (response) {
+              return Buffer.from(response);
+            }));
 
-              if (!response.qref.valid) {
-                _context.next = 32;
-                break;
-              }
+          case 14:
+            metadataPartResponse = _context.sent;
+            metadataVerification = ContentObjectVerification._VerifyPart({
+              partHash: metadataPartHash,
+              qpartsResponse: metadataPartResponse
+            });
 
-              // Validate Metadata
-              qmdHash = partVerification.cbor.QmdHash.value;
-              metadataPartHash = "hqp_" + MultiHash.toB58String(qmdHash.slice(1, qmdHash.length));
-              _context.next = 14;
-              return client.QParts({
-                libraryId: libraryId,
-                objectId: objectId,
-                partHash: metadataPartHash,
-                format: "arrayBuffer"
-              }).then(function (response) {
-                return Buffer.from(response);
-              });
+            if (metadataVerification.valid) {
+              response.qmd = {
+                valid: true
+              };
+            } else {
+              response.qmd = {
+                valid: false,
+                error: metadataVerification.error.message
+              };
+            }
 
-            case 14:
-              metadataPartResponse = _context.sent;
-              metadataVerification = ContentObjectVerification._VerifyPart({
-                partHash: metadataPartHash,
-                qpartsResponse: metadataPartResponse
-              });
+            response.qmd.hash = metadataPartHash;
 
-              if (metadataVerification.valid) {
-                response.qmd = {
-                  valid: true
-                };
-              } else {
-                response.qmd = {
-                  valid: false,
-                  error: metadataVerification.error.message
-                };
-              }
+            if (!(response.qmd.valid && libraryId)) {
+              _context.next = 23;
+              break;
+            }
 
-              response.qmd.hash = metadataPartHash;
+            _context.next = 21;
+            return regeneratorRuntime.awrap(client.ContentObjectMetadata({
+              libraryId: libraryId,
+              objectId: objectId,
+              versionHash: partHash.replace("hqp_", "hq__")
+            }));
 
-              if (!(response.qmd.valid && libraryId)) {
-                _context.next = 23;
-                break;
-              }
+          case 21:
+            metadata = _context.sent;
+            response.qmd.check = ContentObjectVerification._VerifyMetadata({
+              metadataCbor: metadataVerification.cbor,
+              metadata: metadata
+            });
 
-              _context.next = 21;
-              return client.ContentObjectMetadata({
-                libraryId: libraryId,
-                objectId: objectId,
-                versionHash: partHash.replace("hqp_", "hq__")
-              });
+          case 23:
+            // Validate Qstruct
+            qstructHash = partVerification.cbor.QstructHash.value;
+            structPartHash = "hqp_" + MultiHash.toB58String(qstructHash.slice(1, qstructHash.length));
+            _context.next = 27;
+            return regeneratorRuntime.awrap(client.QParts({
+              libraryId: libraryId,
+              objectId: objectId,
+              partHash: structPartHash,
+              format: "arrayBuffer"
+            }).then(function (response) {
+              return Buffer.from(response);
+            }));
 
-            case 21:
-              metadata = _context.sent;
-              response.qmd.check = ContentObjectVerification._VerifyMetadata({
-                metadataCbor: metadataVerification.cbor,
-                metadata: metadata
-              });
+          case 27:
+            structPartResponse = _context.sent;
+            structVerification = ContentObjectVerification._VerifyPart({
+              partHash: structPartHash,
+              qpartsResponse: structPartResponse
+            });
 
-            case 23:
-              // Validate Qstruct
-              qstructHash = partVerification.cbor.QstructHash.value;
-              structPartHash = "hqp_" + MultiHash.toB58String(qstructHash.slice(1, qstructHash.length));
-              _context.next = 27;
-              return client.QParts({
-                libraryId: libraryId,
-                objectId: objectId,
-                partHash: structPartHash,
-                format: "arrayBuffer"
-              }).then(function (response) {
-                return Buffer.from(response);
-              });
+            if (structVerification.valid) {
+              response.qstruct = {
+                valid: true
+              };
+            } else {
+              response.qstruct = {
+                valid: false,
+                error: structVerification.error.message
+              };
+            }
 
-            case 27:
-              structPartResponse = _context.sent;
-              structVerification = ContentObjectVerification._VerifyPart({
-                partHash: structPartHash,
-                qpartsResponse: structPartResponse
-              });
+            response.qstruct.hash = structPartHash;
 
-              if (structVerification.valid) {
-                response.qstruct = {
-                  valid: true
-                };
-              } else {
-                response.qstruct = {
-                  valid: false,
-                  error: structVerification.error.message
-                };
-              }
+            if (response.qstruct.valid) {
+              response.qstruct.parts = ContentObjectVerification._FormatQStruct(structVerification.cbor.Parts);
+            }
 
-              response.qstruct.hash = structPartHash;
+          case 32:
+            response.valid = response.qref.valid && response.qmd.valid && response.qstruct.valid && (!response.qmd.check || response.qmd.check.valid);
+            return _context.abrupt("return", response);
 
-              if (response.qstruct.valid) {
-                response.qstruct.parts = ContentObjectVerification._FormatQStruct(structVerification.cbor.Parts);
-              }
-
-            case 32:
-              response.valid = response.qref.valid && response.qmd.valid && response.qstruct.valid && (!response.qmd.check || response.qmd.check.valid);
-              return _context.abrupt("return", response);
-
-            case 34:
-            case "end":
-              return _context.stop();
-          }
+          case 34:
+          case "end":
+            return _context.stop();
         }
-      }, _callee);
-    }));
-
-    function VerifyContentObject(_x) {
-      return _VerifyContentObject.apply(this, arguments);
-    }
-
-    return VerifyContentObject;
-  }(),
+      }
+    });
+  },
   // Content verification methods //
   _FormatQStruct: function _FormatQStruct(structParts) {
     if (!structParts) {

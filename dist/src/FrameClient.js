@@ -1,12 +1,10 @@
 "use strict";
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { Promise.resolve(value).then(_next, _throw); } }
-
-function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -76,47 +74,37 @@ function () {
       var _loop = function _loop() {
         var methodName = _step.value;
 
-        _this[methodName] =
-        /*#__PURE__*/
-        function () {
-          var _ref2 = _asyncToGenerator(
-          /*#__PURE__*/
-          regeneratorRuntime.mark(function _callee(args) {
-            var callback;
-            return regeneratorRuntime.wrap(function _callee$(_context) {
-              while (1) {
-                switch (_context.prev = _context.next) {
-                  case 0:
-                    callback = args && args.callback;
+        _this[methodName] = function _callee(args) {
+          var callback;
+          return regeneratorRuntime.async(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  callback = args && args.callback;
 
-                    if (callback) {
-                      delete args.callback;
-                    }
+                  if (callback) {
+                    delete args.callback;
+                  }
 
-                    _context.next = 4;
-                    return _this.SendMessage({
-                      options: {
-                        calledMethod: methodName,
-                        args: _this.utils.MakeClonable(args)
-                      },
-                      callback: callback
-                    });
+                  _context.next = 4;
+                  return regeneratorRuntime.awrap(_this.SendMessage({
+                    options: {
+                      calledMethod: methodName,
+                      args: _this.utils.MakeClonable(args)
+                    },
+                    callback: callback
+                  }));
 
-                  case 4:
-                    return _context.abrupt("return", _context.sent);
+                case 4:
+                  return _context.abrupt("return", _context.sent);
 
-                  case 5:
-                  case "end":
-                    return _context.stop();
-                }
+                case 5:
+                case "end":
+                  return _context.stop();
               }
-            }, _callee);
-          }));
-
-          return function (_x) {
-            return _ref2.apply(this, arguments);
-          };
-        }();
+            }
+          });
+        };
       };
 
       for (var _iterator = this.AllowedMethods()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
@@ -147,49 +135,39 @@ function () {
       var _loop2 = function _loop2() {
         var methodName = _step2.value;
 
-        _this.userProfileClient[methodName] =
-        /*#__PURE__*/
-        function () {
-          var _ref3 = _asyncToGenerator(
-          /*#__PURE__*/
-          regeneratorRuntime.mark(function _callee2(args) {
-            var callback;
-            return regeneratorRuntime.wrap(function _callee2$(_context2) {
-              while (1) {
-                switch (_context2.prev = _context2.next) {
-                  case 0:
-                    callback = args && args.callback;
+        _this.userProfileClient[methodName] = function _callee2(args) {
+          var callback;
+          return regeneratorRuntime.async(function _callee2$(_context2) {
+            while (1) {
+              switch (_context2.prev = _context2.next) {
+                case 0:
+                  callback = args && args.callback;
 
-                    if (callback) {
-                      delete args.callback;
-                    }
+                  if (callback) {
+                    delete args.callback;
+                  }
 
-                    _context2.next = 4;
-                    return _this.SendMessage({
-                      options: {
-                        module: "userProfileClient",
-                        calledMethod: methodName,
-                        args: _this.utils.MakeClonable(args),
-                        prompted: FrameClient.PromptedMethods().includes(methodName)
-                      },
-                      callback: callback
-                    });
+                  _context2.next = 4;
+                  return regeneratorRuntime.awrap(_this.SendMessage({
+                    options: {
+                      module: "userProfileClient",
+                      calledMethod: methodName,
+                      args: _this.utils.MakeClonable(args),
+                      prompted: FrameClient.PromptedMethods().includes(methodName)
+                    },
+                    callback: callback
+                  }));
 
-                  case 4:
-                    return _context2.abrupt("return", _context2.sent);
+                case 4:
+                  return _context2.abrupt("return", _context2.sent);
 
-                  case 5:
-                  case "end":
-                    return _context2.stop();
-                }
+                case 5:
+                case "end":
+                  return _context2.stop();
               }
-            }, _callee2);
-          }));
-
-          return function (_x2) {
-            return _ref3.apply(this, arguments);
-          };
-        }();
+            }
+          });
+        };
       };
 
       for (var _iterator2 = this.AllowedUserProfileMethods()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
@@ -222,257 +200,218 @@ function () {
 
   _createClass(FrameClient, [{
     key: "PassRequest",
-    value: function () {
-      var _PassRequest = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee3(_ref4) {
-        var request, Respond, response, callback;
-        return regeneratorRuntime.wrap(function _callee3$(_context3) {
-          while (1) {
-            switch (_context3.prev = _context3.next) {
-              case 0:
-                request = _ref4.request, Respond = _ref4.Respond;
-                _context3.prev = 1;
+    value: function PassRequest(_ref2) {
+      var request, Respond, response, callback;
+      return regeneratorRuntime.async(function PassRequest$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              request = _ref2.request, Respond = _ref2.Respond;
+              _context3.prev = 1;
 
-                if (request.callbackId) {
-                  callback = function callback(result) {
-                    return Respond({
-                      type: "ElvFrameResponse",
-                      requestId: request.callbackId,
-                      response: result
-                    });
-                  };
-                }
+              if (request.callbackId) {
+                callback = function callback(result) {
+                  return Respond({
+                    type: "ElvFrameResponse",
+                    requestId: request.callbackId,
+                    response: result
+                  });
+                };
+              }
 
-                _context3.next = 5;
-                return this.SendMessage({
-                  options: request,
-                  callback: callback
-                });
+              _context3.next = 5;
+              return regeneratorRuntime.awrap(this.SendMessage({
+                options: request,
+                callback: callback
+              }));
 
-              case 5:
-                response = _context3.sent;
-                _context3.next = 11;
-                break;
+            case 5:
+              response = _context3.sent;
+              _context3.next = 11;
+              break;
 
-              case 8:
-                _context3.prev = 8;
-                _context3.t0 = _context3["catch"](1);
-                response = JSON.parse(JSON.stringify(_context3.t0));
+            case 8:
+              _context3.prev = 8;
+              _context3.t0 = _context3["catch"](1);
+              response = JSON.parse(JSON.stringify(_context3.t0));
 
-              case 11:
-                return _context3.abrupt("return", {
-                  type: "ElvFrameResponse",
-                  requestId: request.requestId,
-                  response: response
-                });
+            case 11:
+              return _context3.abrupt("return", {
+                type: "ElvFrameResponse",
+                requestId: request.requestId,
+                response: response
+              });
 
-              case 12:
-              case "end":
-                return _context3.stop();
-            }
+            case 12:
+            case "end":
+              return _context3.stop();
           }
-        }, _callee3, this, [[1, 8]]);
-      }));
-
-      function PassRequest(_x3) {
-        return _PassRequest.apply(this, arguments);
-      }
-
-      return PassRequest;
-    }()
+        }
+      }, null, this, [[1, 8]]);
+    }
   }, {
     key: "SendMessage",
-    value: function () {
-      var _SendMessage = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee4(_ref5) {
-        var _ref5$options, options, callback, _ref5$noResponse, noResponse, requestId, callbackId, operation, isFileOperation, timeout;
+    value: function SendMessage(_ref3) {
+      var _ref3$options, options, callback, _ref3$noResponse, noResponse, requestId, callbackId, operation, isFileOperation, timeout;
 
-        return regeneratorRuntime.wrap(function _callee4$(_context4) {
-          while (1) {
-            switch (_context4.prev = _context4.next) {
-              case 0:
-                _ref5$options = _ref5.options, options = _ref5$options === void 0 ? {} : _ref5$options, callback = _ref5.callback, _ref5$noResponse = _ref5.noResponse, noResponse = _ref5$noResponse === void 0 ? false : _ref5$noResponse;
-                requestId = Id.next();
+      return regeneratorRuntime.async(function SendMessage$(_context4) {
+        while (1) {
+          switch (_context4.prev = _context4.next) {
+            case 0:
+              _ref3$options = _ref3.options, options = _ref3$options === void 0 ? {} : _ref3$options, callback = _ref3.callback, _ref3$noResponse = _ref3.noResponse, noResponse = _ref3$noResponse === void 0 ? false : _ref3$noResponse;
+              requestId = Id.next();
 
-                if (callback) {
-                  callbackId = Id.next();
-                }
+              if (callback) {
+                callbackId = Id.next();
+              }
 
-                this.target.postMessage(_objectSpread({}, options, {
-                  type: "ElvFrameRequest",
-                  requestId: requestId,
-                  callbackId: callbackId
-                }), "*"); // No timeout for prompted methods
+              this.target.postMessage(_objectSpread({}, options, {
+                type: "ElvFrameRequest",
+                requestId: requestId,
+                callbackId: callbackId
+              }), "*"); // No timeout for prompted methods
 
-                if (noResponse) {
-                  _context4.next = 11;
-                  break;
-                }
+              if (noResponse) {
+                _context4.next = 11;
+                break;
+              }
 
-                operation = options.calledMethod || options.operation;
-                isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
-                timeout = options.prompted || isFileOperation ? 0 : this.timeout;
-                _context4.next = 10;
-                return this.AwaitMessage(requestId, timeout, callback, callbackId, operation);
+              operation = options.calledMethod || options.operation;
+              isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
+              timeout = options.prompted || isFileOperation ? 0 : this.timeout;
+              _context4.next = 10;
+              return regeneratorRuntime.awrap(this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
 
-              case 10:
-                return _context4.abrupt("return", _context4.sent);
+            case 10:
+              return _context4.abrupt("return", _context4.sent);
 
-              case 11:
-              case "end":
-                return _context4.stop();
-            }
+            case 11:
+            case "end":
+              return _context4.stop();
           }
-        }, _callee4, this);
-      }));
-
-      function SendMessage(_x4) {
-        return _SendMessage.apply(this, arguments);
-      }
-
-      return SendMessage;
-    }()
+        }
+      }, null, this);
+    }
   }, {
     key: "AwaitMessage",
-    value: function () {
-      var _AwaitMessage = _asyncToGenerator(
-      /*#__PURE__*/
-      regeneratorRuntime.mark(function _callee6(requestId, timeout, callback, callbackId, operation) {
-        return regeneratorRuntime.wrap(function _callee6$(_context6) {
-          while (1) {
-            switch (_context6.prev = _context6.next) {
-              case 0:
-                _context6.next = 2;
-                return new Promise(function (resolve, reject) {
-                  var methodListener; // Initialize or reset timeout
-
-                  var timeoutId;
-
-                  var touchTimeout = function touchTimeout() {
-                    if (timeoutId) {
-                      clearTimeout(timeoutId);
-                    }
-
-                    if (timeout > 0) {
-                      timeoutId = setTimeout(function () {
-                        reject("Request ".concat(requestId, " timed out (").concat(operation, ")"));
-                        window.removeEventListener("message", methodListener);
-
-                        if (callbackListener) {
-                          window.removeEventListener("message", callbackListener);
-                        }
-                      }, timeout * 1000);
-                    }
-                  }; // Set up callback listener
+    value: function AwaitMessage(requestId, timeout, callback, callbackId, operation) {
+      return regeneratorRuntime.async(function AwaitMessage$(_context6) {
+        while (1) {
+          switch (_context6.prev = _context6.next) {
+            case 0:
+              _context6.next = 2;
+              return regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
+                var _methodListener; // Initialize or reset timeout
 
 
-                  var callbackListener;
+                var timeoutId;
 
-                  if (callbackId) {
-                    callbackListener = function callbackListener(event) {
-                      try {
-                        touchTimeout();
-                        var message = event.data;
+                var touchTimeout = function touchTimeout() {
+                  if (timeoutId) {
+                    clearTimeout(timeoutId);
+                  }
 
-                        if (message.type !== "ElvFrameResponse" || message.requestId !== callbackId) {
-                          return;
-                        }
+                  if (timeout > 0) {
+                    timeoutId = setTimeout(function () {
+                      reject("Request ".concat(requestId, " timed out (").concat(operation, ")"));
+                      window.removeEventListener("message", _methodListener);
 
-                        callback(message.response);
-                      } catch (error) {
-                        // eslint-disable-next-line no-console
-                        console.error(error);
+                      if (callbackListener) {
+                        window.removeEventListener("message", callbackListener);
                       }
-                    };
+                    }, timeout * 1000);
+                  }
+                }; // Set up callback listener
 
-                    window.addEventListener("message", callbackListener);
-                  } // Set up final method response listener
+
+                var callbackListener;
+
+                if (callbackId) {
+                  callbackListener = function callbackListener(event) {
+                    try {
+                      touchTimeout();
+                      var message = event.data;
+
+                      if (message.type !== "ElvFrameResponse" || message.requestId !== callbackId) {
+                        return;
+                      }
+
+                      callback(message.response);
+                    } catch (error) {
+                      // eslint-disable-next-line no-console
+                      console.error(error);
+                    }
+                  };
+
+                  window.addEventListener("message", callbackListener);
+                } // Set up final method response listener
 
 
-                  methodListener =
-                  /*#__PURE__*/
-                  function () {
-                    var _ref6 = _asyncToGenerator(
-                    /*#__PURE__*/
-                    regeneratorRuntime.mark(function _callee5(event) {
-                      var message;
-                      return regeneratorRuntime.wrap(function _callee5$(_context5) {
-                        while (1) {
-                          switch (_context5.prev = _context5.next) {
-                            case 0:
-                              _context5.prev = 0;
-                              message = event.data;
+                _methodListener = function methodListener(event) {
+                  var message;
+                  return regeneratorRuntime.async(function methodListener$(_context5) {
+                    while (1) {
+                      switch (_context5.prev = _context5.next) {
+                        case 0:
+                          _context5.prev = 0;
+                          message = event.data;
 
-                              if (!(message.type !== "ElvFrameResponse" || message.requestId !== requestId)) {
-                                _context5.next = 4;
-                                break;
-                              }
-
-                              return _context5.abrupt("return");
-
-                            case 4:
-                              if (message.error) {
-                                reject(message.error);
-                              } else {
-                                resolve(message.response);
-                              }
-
-                              window.removeEventListener("message", methodListener);
-
-                              if (callbackListener) {
-                                window.removeEventListener("message", callbackListener);
-                              }
-
-                              _context5.next = 14;
-                              break;
-
-                            case 9:
-                              _context5.prev = 9;
-                              _context5.t0 = _context5["catch"](0);
-                              reject(_context5.t0);
-                              window.removeEventListener("message", methodListener);
-
-                              if (callbackListener) {
-                                window.removeEventListener("message", callbackListener);
-                              }
-
-                            case 14:
-                            case "end":
-                              return _context5.stop();
+                          if (!(message.type !== "ElvFrameResponse" || message.requestId !== requestId)) {
+                            _context5.next = 4;
+                            break;
                           }
-                        }
-                      }, _callee5, null, [[0, 9]]);
-                    }));
 
-                    return function methodListener(_x10) {
-                      return _ref6.apply(this, arguments);
-                    };
-                  }(); // Start the timeout
+                          return _context5.abrupt("return");
+
+                        case 4:
+                          if (message.error) {
+                            reject(message.error);
+                          } else {
+                            resolve(message.response);
+                          }
+
+                          window.removeEventListener("message", _methodListener);
+
+                          if (callbackListener) {
+                            window.removeEventListener("message", callbackListener);
+                          }
+
+                          _context5.next = 14;
+                          break;
+
+                        case 9:
+                          _context5.prev = 9;
+                          _context5.t0 = _context5["catch"](0);
+                          reject(_context5.t0);
+                          window.removeEventListener("message", _methodListener);
+
+                          if (callbackListener) {
+                            window.removeEventListener("message", callbackListener);
+                          }
+
+                        case 14:
+                        case "end":
+                          return _context5.stop();
+                      }
+                    }
+                  }, null, null, [[0, 9]]);
+                }; // Start the timeout
 
 
-                  touchTimeout();
-                  window.addEventListener("message", methodListener);
-                });
+                touchTimeout();
+                window.addEventListener("message", _methodListener);
+              }));
 
-              case 2:
-                return _context6.abrupt("return", _context6.sent);
+            case 2:
+              return _context6.abrupt("return", _context6.sent);
 
-              case 3:
-              case "end":
-                return _context6.stop();
-            }
+            case 3:
+            case "end":
+              return _context6.stop();
           }
-        }, _callee6);
-      }));
-
-      function AwaitMessage(_x5, _x6, _x7, _x8, _x9) {
-        return _AwaitMessage.apply(this, arguments);
-      }
-
-      return AwaitMessage;
-    }() // List of methods that may require a prompt - these should have an unlimited timeout period
+        }
+      });
+    } // List of methods that may require a prompt - these should have an unlimited timeout period
 
   }, {
     key: "AllowedMethods",
