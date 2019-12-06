@@ -1240,6 +1240,7 @@ describe("Test ElvClient", () => {
         name: "Test Media Library",
         metadata: {
           "abr_profile": {
+            "drm_optional": true,
             "store_clear": true,
             "ladder_specs": {
               "{\"media_type\":\"audio\",\"channels\":2}": {
