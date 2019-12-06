@@ -1339,6 +1339,7 @@ describe("Test ElvClient", () => {
                   "type": "ProtoDash"
                 }
               },
+              /*
               "dash-widevine": {
                 "drm": {
                   "type": "DrmWidevine",
@@ -1360,6 +1361,7 @@ describe("Test ElvClient", () => {
                   "type": "ProtoHls"
                 }
               },
+              */
               "hls-clear": {
                 "drm": null,
                 "protocol": {
