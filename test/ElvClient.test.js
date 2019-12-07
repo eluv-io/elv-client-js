@@ -1496,7 +1496,7 @@ describe("Test ElvClient", () => {
       const playoutOptions = await accessClient.PlayoutOptions({
         objectId: mezzanineId,
         protocols: ["hls", "dash"],
-        drms: ["widevine", "aes-128"]
+        drms: []
       });
 
       expect(playoutOptions.dash).toBeDefined();
@@ -1510,7 +1510,7 @@ describe("Test ElvClient", () => {
       const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
         objectId: mezzanineId,
         protocols: ["hls", "dash"],
-        drms: ["widevine", "aes-128"]
+        drms: []
       });
 
       expect(bitmovinPlayoutOptions).toBeDefined();
@@ -1557,7 +1557,7 @@ describe("Test ElvClient", () => {
           versionHash: hash,
           linkPath: "videoLink/default",
           protocols: ["hls", "dash"],
-          drms: ["widevine", "aes-128"]
+          drms: []
         });
 
         expect(playoutOptions.dash).toBeDefined();
@@ -1572,7 +1572,7 @@ describe("Test ElvClient", () => {
           versionHash: hash,
           linkPath: "videoLink/default",
           protocols: ["hls", "dash"],
-          drms: ["widevine", "aes-128"]
+          drms: []
         });
 
         expect(bitmovinPlayoutOptions).toBeDefined();
@@ -1597,7 +1597,7 @@ describe("Test ElvClient", () => {
           links: [{
             type: "rep",
             path: "external/videoLink/default",
-            target: "playout/default/options.json",
+            target: "playout/default",
             targetHash: mezzanineHash
           }]
         });
@@ -1612,7 +1612,7 @@ describe("Test ElvClient", () => {
           versionHash: hash,
           linkPath: "external/videoLink/default",
           protocols: ["hls", "dash"],
-          drms: ["widevine", "aes-128"]
+          drms: []
         });
 
         expect(playoutOptions.dash).toBeDefined();
@@ -1627,7 +1627,7 @@ describe("Test ElvClient", () => {
           versionHash: hash,
           linkPath: "external/videoLink/default",
           protocols: ["hls", "dash"],
-          drms: ["widevine", "aes-128"]
+          drms: []
         });
 
         expect(bitmovinPlayoutOptions).toBeDefined();
