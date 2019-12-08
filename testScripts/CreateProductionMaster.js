@@ -14,7 +14,7 @@ const argv = yargs
     description: "Title for the master"
   })
   .option("metadata", {
-    description: "Metadata JSON string to include in the object metadata"
+    description: "Metadata JSON string to include in the object metadata or file path prefixed with '@'"
   })
   .option("files", {
     type: "array",
@@ -146,6 +146,10 @@ if(s3Reference || s3Copy) {
     console.error("Missing required S3 environment variables: AWS_REGION AWS_BUCKET AWS_KEY AWS_SECRET");
     return;
   }
+}
+
+if (metadata.startsWith("@")) {
+  metadata = fs.readFileSync(metadata.substring(1))
 }
 
 if(metadata) {
