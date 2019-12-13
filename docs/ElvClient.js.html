@@ -3913,23 +3913,8 @@ class ElvClient {
 
     let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
     if(linkPath) {
-      const linkInfo = await this.ContentObjectMetadata({
-        objectId,
-        versionHash,
-        metadataSubtree: linkPath
-      });
-
-      if(!linkInfo || !linkInfo["/"]) {
-        throw Error(`Invalid link path: ${linkPath}`);
-      }
-
-      linkTargetHash = linkInfo["."] ? linkInfo["."].container : linkInfo.container;
-
-      if(!linkTargetHash) {
-        throw Error(`Link missing container attribute: ${linkPath}`);
-      }
-
-      linkTargetId = this.utils.DecodeVersionHash(linkInfo.container).objectId;
+      linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+      linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
       linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
       path = UrlJoin("q", versionHash, "meta", linkPath);
     } else {
@@ -4339,7 +4324,7 @@ class ElvClient {
 
   /**
    * Retrieve the version hash of the specified link's target. If the target is the same as the specified
-   * object, will return the latest version hash.
+   * object and versionHash is not specified, will return the latest version hash.
    *
    * @methodGroup URL Generation
    * @namedParams
@@ -4367,7 +4352,11 @@ class ElvClient {
 
     const targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
 
-    if(targetHash) { return targetHash; }
+    if(targetHash) {
+      return targetHash;
+    } else if(versionHash) {
+      return versionHash;
+    }
 
     // Link points to this object - get latest version
     if(!libraryId) {

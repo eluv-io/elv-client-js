@@ -6696,7 +6696,7 @@ function () {
   }, {
     key: "PlayoutOptions",
     value: function PlayoutOptions(_ref87) {
-      var objectId, versionHash, linkPath, _ref87$protocols, protocols, _ref87$offering, offering, _ref87$drms, drms, _ref87$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, linkInfo, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
+      var objectId, versionHash, linkPath, _ref87$protocols, protocols, _ref87$offering, offering, _ref87$drms, drms, _ref87$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
 
       return regeneratorRuntime.async(function PlayoutOptions$(_context88) {
         while (1) {
@@ -6740,54 +6740,36 @@ function () {
 
             case 12:
               if (!linkPath) {
-                _context88.next = 28;
+                _context88.next = 23;
                 break;
               }
 
               _context88.next = 15;
-              return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+              return regeneratorRuntime.awrap(this.LinkTarget({
+                libraryId: libraryId,
                 objectId: objectId,
                 versionHash: versionHash,
-                metadataSubtree: linkPath
+                linkPath: linkPath
               }));
 
             case 15:
-              linkInfo = _context88.sent;
-
-              if (!(!linkInfo || !linkInfo["/"])) {
-                _context88.next = 18;
-                break;
-              }
-
-              throw Error("Invalid link path: ".concat(linkPath));
-
-            case 18:
-              linkTargetHash = linkInfo["."] ? linkInfo["."].container : linkInfo.container;
-
-              if (linkTargetHash) {
-                _context88.next = 21;
-                break;
-              }
-
-              throw Error("Link missing container attribute: ".concat(linkPath));
-
-            case 21:
-              linkTargetId = this.utils.DecodeVersionHash(linkInfo.container).objectId;
-              _context88.next = 24;
+              linkTargetHash = _context88.sent;
+              linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+              _context88.next = 19;
               return regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: linkTargetId
               }));
 
-            case 24:
+            case 19:
               linkTargetLibraryId = _context88.sent;
               path = UrlJoin("q", versionHash, "meta", linkPath);
-              _context88.next = 29;
+              _context88.next = 24;
               break;
 
-            case 28:
+            case 23:
               path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
 
-            case 29:
+            case 24:
               audienceData = this.AudienceData({
                 objectId: linkTargetId || objectId,
                 versionHash: linkTargetHash || versionHash,
@@ -6798,14 +6780,14 @@ function () {
               _context88.t1 = regeneratorRuntime;
               _context88.t2 = ResponseToJson;
               _context88.t3 = this.HttpClient;
-              _context88.next = 36;
+              _context88.next = 31;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
                 objectId: objectId,
                 channelAuth: true,
                 audienceData: audienceData
               }));
 
-            case 36:
+            case 31:
               _context88.t4 = _context88.sent;
               _context88.t5 = linkPath ? {
                 resolve: true
@@ -6819,18 +6801,18 @@ function () {
               };
               _context88.t8 = _context88.t3.Request.call(_context88.t3, _context88.t7);
               _context88.t9 = (0, _context88.t2)(_context88.t8);
-              _context88.next = 44;
+              _context88.next = 39;
               return _context88.t1.awrap.call(_context88.t1, _context88.t9);
 
-            case 44:
+            case 39:
               _context88.t10 = _context88.sent;
               playoutOptions = _context88.t0.values.call(_context88.t0, _context88.t10);
               playoutMap = {};
               i = 0;
 
-            case 48:
+            case 43:
               if (!(i < playoutOptions.length)) {
-                _context88.next = 80;
+                _context88.next = 75;
                 break;
               }
 
@@ -6848,7 +6830,7 @@ function () {
               _context88.t17 = _defineProperty;
               _context88.t18 = {};
               _context88.t19 = drm || "clear";
-              _context88.next = 64;
+              _context88.next = 59;
               return regeneratorRuntime.awrap(this.Rep({
                 libraryId: linkTargetLibraryId || libraryId,
                 objectId: linkTargetId || objectId,
@@ -6860,7 +6842,7 @@ function () {
                 } : {}
               }));
 
-            case 64:
+            case 59:
               _context88.t20 = _context88.sent;
               _context88.t21 = drm ? _defineProperty({}, drm, {
                 licenseServers: licenseServers
@@ -6880,27 +6862,27 @@ function () {
               drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
 
               if (!(!protocolMatch || !drmMatch)) {
-                _context88.next = 75;
+                _context88.next = 70;
                 break;
               }
 
-              return _context88.abrupt("continue", 77);
+              return _context88.abrupt("continue", 72);
 
-            case 75:
+            case 70:
               // This protocol / DRM satisfies the specifications
               playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
               playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
 
-            case 77:
+            case 72:
               i++;
-              _context88.next = 48;
+              _context88.next = 43;
               break;
 
-            case 80:
+            case 75:
               this.Log(playoutMap);
               return _context88.abrupt("return", playoutMap);
 
-            case 82:
+            case 77:
             case "end":
               return _context88.stop();
           }
@@ -7393,7 +7375,7 @@ function () {
     }
     /**
      * Retrieve the version hash of the specified link's target. If the target is the same as the specified
-     * object, will return the latest version hash.
+     * object and versionHash is not specified, will return the latest version hash.
      *
      * @methodGroup URL Generation
      * @namedParams
@@ -7442,37 +7424,45 @@ function () {
               targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
 
               if (!targetHash) {
-                _context95.next = 10;
+                _context95.next = 12;
                 break;
               }
 
               return _context95.abrupt("return", targetHash);
 
-            case 10:
-              if (libraryId) {
+            case 12:
+              if (!versionHash) {
                 _context95.next = 14;
                 break;
               }
 
-              _context95.next = 13;
+              return _context95.abrupt("return", versionHash);
+
+            case 14:
+              if (libraryId) {
+                _context95.next = 18;
+                break;
+              }
+
+              _context95.next = 17;
               return regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
-            case 13:
+            case 17:
               libraryId = _context95.sent;
 
-            case 14:
-              _context95.next = 16;
+            case 18:
+              _context95.next = 20;
               return regeneratorRuntime.awrap(this.ContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
-            case 16:
+            case 20:
               return _context95.abrupt("return", _context95.sent.hash);
 
-            case 17:
+            case 21:
             case "end":
               return _context95.stop();
           }
