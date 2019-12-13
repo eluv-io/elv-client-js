@@ -7421,48 +7421,53 @@ function () {
               throw Error("No valid link at ".concat(linkPath));
 
             case 7:
+              /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
               targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
 
               if (!targetHash) {
-                _context95.next = 12;
+                targetHash = linkInfo["."].container;
+              }
+
+              if (!targetHash) {
+                _context95.next = 13;
                 break;
               }
 
               return _context95.abrupt("return", targetHash);
 
-            case 12:
+            case 13:
               if (!versionHash) {
-                _context95.next = 14;
+                _context95.next = 15;
                 break;
               }
 
               return _context95.abrupt("return", versionHash);
 
-            case 14:
+            case 15:
               if (libraryId) {
-                _context95.next = 18;
+                _context95.next = 19;
                 break;
               }
 
-              _context95.next = 17;
+              _context95.next = 18;
               return regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
-            case 17:
+            case 18:
               libraryId = _context95.sent;
 
-            case 18:
-              _context95.next = 20;
+            case 19:
+              _context95.next = 21;
               return regeneratorRuntime.awrap(this.ContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
-            case 20:
+            case 21:
               return _context95.abrupt("return", _context95.sent.hash);
 
-            case 21:
+            case 22:
             case "end":
               return _context95.stop();
           }
