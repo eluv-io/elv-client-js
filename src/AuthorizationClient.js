@@ -616,10 +616,16 @@ class AuthorizationClient {
       metadataSubtree: kmsCapId
     });
 
+    const paramTypes = ["string", "string", "string", "string", "string"];
+    let params = [this.client.contentSpaceId, libraryId, objectId, kmsCap, ""];
+
+    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+    params[5] = await this.Sign(packedHash);
+
     return await this.MakeKMSCall({
       objectId,
-      methodName: "elv_getSymmetricKey",
-      params: [this.client.contentSpaceId, libraryId, objectId, kmsCap]
+      methodName: "elv_getSymmetricKeyAuth",
+      params
     });
   }
 
