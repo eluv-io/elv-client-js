@@ -14,7 +14,7 @@ const argv = yargs
     description: "Title for the master"
   })
   .option("metadata", {
-    description: "Metadata JSON string to include in the object metadata"
+    description: "Metadata JSON string to include in the object metadata or file path prefixed with '@'"
   })
   .option("files", {
     type: "array",
@@ -149,6 +149,10 @@ if(s3Reference || s3Copy) {
 }
 
 if(metadata) {
+  if(metadata.startsWith("@")) {
+    metadata = fs.readFileSync(metadata.substring(1));
+  }
+
   try {
     metadata = JSON.parse(metadata);
   } catch(error) {
