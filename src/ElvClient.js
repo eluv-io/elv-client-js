@@ -4295,8 +4295,8 @@ class ElvClient {
     }
 
     /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
-    var targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
-    if (!targetHash) {
+    let targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
+    if(!targetHash) {
       targetHash = linkInfo["."].container;
     }
 
