@@ -26,53 +26,58 @@ const argv = yargs
 const ClientConfiguration = require("../TestConfiguration.json");
 
 const Publish = async ({privateKey, typeName, typeId, app, role}) => {
-  const client = await ElvClient.FromConfigurationUrl({
-    configUrl: ClientConfiguration["config-url"]
-  });
-  let wallet = client.GenerateWallet();
-  let signer = wallet.AddAccount({privateKey});
+  try {
+    const client = await ElvClient.FromConfigurationUrl({
+      configUrl: ClientConfiguration["config-url"]
+    });
+    let wallet = client.GenerateWallet();
+    let signer = wallet.AddAccount({privateKey});
 
-  await client.SetSigner({signer});
+    await client.SetSigner({signer});
 
-  const appData = fs.readFileSync(app);
+    const appData = fs.readFileSync(app);
 
-  if(!typeId) {
-    typeId = (await client.ContentType({name: typeName})).id;
+    if(!typeId) {
+      typeId = (await client.ContentType({name: typeName})).id;
+    }
+
+    const writeToken = (await client.EditContentObject({
+      libraryId: client.contentSpaceLibraryId,
+      objectId: typeId
+    })).write_token;
+
+    const fileInfo = [{
+      path: `${role}App/index.html`,
+      type: "file",
+      mime_type: "text/html",
+      size: appData.length,
+      data: appData
+    }];
+
+    await client.UploadFiles({
+      libraryId: client.contentSpaceLibraryId,
+      objectId: typeId,
+      writeToken,
+      fileInfo
+    });
+
+    await client.ReplaceMetadata({
+      libraryId: client.contentSpaceLibraryId,
+      objectId: typeId,
+      writeToken,
+      metadataSubtree: `eluv.${role}App`,
+      metadata: `${role}App/index.html`
+    });
+
+    await client.FinalizeContentObject({
+      libraryId: client.contentSpaceLibraryId,
+      objectId: typeId,
+      writeToken
+    });
+  } catch(error) {
+    console.error("Failed to update:");
+    console.error(error);
   }
-
-  const writeToken = (await client.EditContentObject({
-    libraryId: client.contentSpaceLibraryId,
-    objectId: typeId
-  })).write_token;
-
-  const fileInfo = [{
-    path: `${role}App/index.html`,
-    type: "file",
-    mime_type: "text/html",
-    size: appData.length,
-    data: appData
-  }];
-
-  await client.UploadFiles({
-    libraryId: client.contentSpaceLibraryId,
-    objectId: typeId,
-    writeToken,
-    fileInfo
-  });
-
-  await client.ReplaceMetadata({
-    libraryId: client.contentSpaceLibraryId,
-    objectId: typeId,
-    writeToken,
-    metadataSubtree: `eluv.${role}App`,
-    metadata: `${role}App/index.html`
-  });
-
-  await client.FinalizeContentObject({
-    libraryId: client.contentSpaceLibraryId,
-    objectId: typeId,
-    writeToken
-  });
 };
 
 let {typeName, typeId, app, role} = argv;
