@@ -45,6 +45,35 @@ const Crypto = {
     }
   },
 
+  EncryptedSize: (clearSize) => {
+    const clearBlockSize = 1000000;
+
+    const blocks = Math.floor(clearSize / clearBlockSize);
+
+    let encryptedBlockSize = Crypto.EncryptedBlockSize(clearBlockSize);
+
+    let encryptedFileSize = blocks * encryptedBlockSize;
+    if(clearSize % clearBlockSize !== 0) {
+      encryptedFileSize += Crypto.EncryptedBlockSize(clearSize % clearBlockSize);
+    }
+
+    return encryptedFileSize;
+  },
+
+  EncryptedBlockSize: (clearSize) => {
+    const primaryEncBlockOverhead = 129;
+    const MODBYTES_384_58 = 48;
+    const clearElementByteSize = 12 * (MODBYTES_384_58 - 1);
+    const encElementByteSize = 12 * MODBYTES_384_58;
+    let encryptedBlockSize = Math.floor((clearSize / clearElementByteSize)) * encElementByteSize;
+
+    if(clearSize % clearElementByteSize !== 0) {
+      encryptedBlockSize += encElementByteSize;
+    }
+
+    return encryptedBlockSize + primaryEncBlockOverhead;
+  },
+
   async EncryptConk(conk, publicKey) {
     const elvCrypto = await Crypto.ElvCrypto();
     publicKey = new Uint8Array(Buffer.from(publicKey.replace("0x", ""), "hex"));
@@ -144,28 +173,55 @@ const Crypto = {
    * Encrypt data with headers
    *
    * @namedParams
-   * @param {ArrayBuffer | Buffer} data - Data to encrypt
    * @param {Object} cap - Encryption "capsule" containing keys
+   * @param {ArrayBuffer | Buffer} data - Data to encrypt
    *
-   * @returns {Promise<Buffer>} - Encrypted data
+   * @returns {Promise<Buffer>} - Decrypted data
    */
   Encrypt: async (cap, data) => {
-    // Convert Blob to ArrayBuffer if necessary
-    if(!Buffer.isBuffer(data) && !(data instanceof ArrayBuffer)) {
-      data = Buffer.from(await new Response(data).arrayBuffer());
-    }
-
-    const elvCrypto = await Crypto.ElvCrypto();
-
-    const { context } = await Crypto.EncryptionContext(cap);
+    const stream = await Crypto.OpenEncryptionStream(cap);
 
     const dataArray = new Uint8Array(data);
-    const encryptedData = elvCrypto.encryptPrimaryH(context, dataArray);
-    const encryptedDataBuffer = Buffer.from(encryptedData);
 
-    context.free();
+    for(let i = 0; i < data.length; i += 1000000) {
+      const end = Math.min(data.length, i + 1000000);
+      stream.write(dataArray.slice(i, end));
+    }
 
-    return encryptedDataBuffer;
+    stream.end();
+
+    let encryptedChunks = [];
+    await new Promise((resolve, reject) => {
+      stream
+        .on("data", chunk => {
+          encryptedChunks.push(chunk);
+        })
+        .on("finish", () => {
+          resolve();
+        })
+        .on("error", (e) => {
+          reject(e);
+        });
+    });
+
+    return Buffer.concat(encryptedChunks);
+  },
+
+  OpenEncryptionStream: async (cap) => {
+    const elvCrypto = await Crypto.ElvCrypto();
+    const {context} = await Crypto.EncryptionContext(cap);
+
+    const stream = new Stream.PassThrough();
+    const cipher = elvCrypto.createCipher(context);
+
+    return stream
+      .pipe(cipher)
+      .on("finish", () => {
+        context.free();
+      })
+      .on("error", (e) => {
+        throw Error(e);
+      });
   },
 
   /**
@@ -173,14 +229,20 @@ const Crypto = {
    *
    * @namedParams
    * @param {Object} cap - Encryption "capsule" containing keys
-   * @param {ArrayBuffer | Buffer} encryptedData - Data to encrypt
+   * @param {ArrayBuffer | Buffer} encryptedData - Data to decrypt
    *
    * @returns {Promise<Buffer>} - Decrypted data
    */
   Decrypt: async (cap, encryptedData) => {
     const stream = await Crypto.OpenDecryptionStream(cap);
 
-    stream.end(new Uint8Array(encryptedData));
+    const dataArray = new Uint8Array(encryptedData);
+    for(let i = 0; i < dataArray.length; i += 1000000) {
+      const end = Math.min(dataArray.length, i + 1000000);
+      stream.write(dataArray.slice(i, end));
+    }
+
+    stream.end();
 
     let decryptedChunks = [];
     await new Promise((resolve, reject) => {
