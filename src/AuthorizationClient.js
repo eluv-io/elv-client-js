@@ -617,7 +617,7 @@ class AuthorizationClient {
     });
 
     const paramTypes = ["string", "string", "string", "string", "string"];
-    let params = [this.client.contentSpaceId, libraryId, objectId, kmsCap, ""];
+    let params = [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""];
 
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
     params[5] = await this.Sign(packedHash);

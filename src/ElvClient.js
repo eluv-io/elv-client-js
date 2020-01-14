@@ -2242,20 +2242,35 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the draft
    * @param {Array<object>} fileInfo - List of files to upload, including their size, type, and contents
+   * @param {string} encryption="none" - Encryption for uploaded files - cgck | none
    * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
    * - Format: {"filename1": {uploaded: number, total: number}, ...}
    */
-  async UploadFiles({libraryId, objectId, writeToken, fileInfo, callback}) {
+  async UploadFiles({libraryId, objectId, writeToken, fileInfo, encryption="none", callback}) {
     ValidateParameters({libraryId, objectId});
     ValidateWriteToken(writeToken);
 
     this.Log(`Uploading files: ${libraryId} ${objectId} ${writeToken}`);
 
+    let conk;
+    if(encryption === "cgck") {
+      conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+    }
+
     // Extract file data into easily accessible hash while removing the data from the fileinfo for upload job creation
     let progress = {};
     let fileDataMap = {};
-    fileInfo = fileInfo.map(entry => {
+
+    for(let i = 0; i < fileInfo.length; i++) {
+      const entry = fileInfo[i];
+
       entry.path = entry.path.replace(/^\/+/, "");
+
+      if(encryption === "cgck") {
+        entry.encryption = {
+          scheme: "cgck"
+        };
+      }
 
       fileDataMap[entry.path] = entry.data;
 
@@ -2267,8 +2282,8 @@ class ElvClient {
         total: entry.size
       };
 
-      return entry;
-    });
+      fileInfo[i] = entry;
+    }
 
     this.Log(fileInfo);
 
@@ -2276,79 +2291,121 @@ class ElvClient {
       callback(progress);
     }
 
-    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops: fileInfo});
+    const {id, jobs} = await this.CreateFileUploadJob({
+      libraryId,
+      objectId,
+      writeToken,
+      ops: fileInfo,
+      encryption
+    });
 
     this.Log(`Upload ID: ${id}`);
     this.Log(jobs);
 
-    const jobInfo = await LimitedMap(
-      5,
-      jobs,
-      async jobId => await this.UploadJobStatus({
-        libraryId,
-        objectId,
-        writeToken,
-        uploadId: id,
-        jobId
-      })
-    );
+    // How far encryption can get ahead of upload
+    const bufferSize = 100 * 1024 * 1024;
 
-    let concurrentUploads = 1;
-    if(jobInfo.length > 1) {
-      // Upload first chunk to estimate bandwidth
-      const firstJob = jobInfo[0];
-      const firstChunk = firstJob.files.shift();
-      const fileData = fileDataMap[firstChunk.path].slice(firstChunk.off, firstChunk.off + firstChunk.len);
+    let jobSpecs = [];
+    let prepared = 0;
+    let uploaded = 0;
 
-      const start = new Date().getTime();
-      await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId: firstJob.id, fileData});
-      const elapsed = (new Date().getTime() - start) / 1000;
-      const mbps = firstChunk.len / elapsed / 1000000;
+    // Insert the data to upload into the job spec, encrypting if necessary
+    const PrepareJobs = async () => {
+      for(let j = 0; j < jobs.length; j++) {
+        while(prepared - uploaded > bufferSize) {
+          // Wait for more data to be uploaded
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
 
-      if(callback) {
-        progress[firstChunk.path] = {
-          ...progress[firstChunk.path],
-          uploaded: progress[firstChunk.path].uploaded + firstChunk.len
-        };
+        // Retrieve job info
+        const jobId = jobs[j];
+        let job = await this.UploadJobStatus({
+          libraryId,
+          objectId,
+          writeToken,
+          uploadId: id,
+          jobId
+        });
 
-        callback(progress);
+        for(let f = 0; f < job.files.length; f++) {
+          const fileInfo = job.files[f];
+          let data = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+
+          if(encryption === "cgck") {
+            data = await Crypto.Encrypt(conk, data);
+          }
+
+          job.files[f].data = data;
+
+          prepared += fileInfo.len;
+        }
+
+        jobSpecs[j] = job;
+
+        // Wait for a bit to let upload start
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    };
+
+    const UploadJob = async (jobId, j)  => {
+      while(!jobSpecs[j]) {
+        // Wait for more jobs to be prepared
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // Determine upload concurrency for rest of data based on estimated bandwidth
-      concurrentUploads = Math.min(5, Math.max(1, Math.floor(mbps / 8)));
+      const jobSpec = jobSpecs[j];
+      const files = jobSpec.files;
 
-      this.Log(`Calculated speed: ${mbps} Mbps`);
-      this.Log(`Proceeding with ${concurrentUploads} concurrent upload(s)`);
+      // Upload each item
+      for(let f = 0; f < files.length; f++) {
+        const fileInfo = files[f];
+
+        await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId, fileData: fileInfo.data});
+
+        delete jobSpecs[j].files[f].data;
+        uploaded += fileInfo.len;
+
+        if(callback) {
+          progress[fileInfo.path] = {
+            ...progress[fileInfo.path],
+            uploaded: progress[fileInfo.path].uploaded + fileInfo.len
+          };
+
+          callback(progress);
+        }
+      }
+    };
+
+    // Preparing jobs is done asyncronously
+    PrepareJobs();
+
+    // Upload the first several chunks in sequence, to determine average upload rate
+    const rateTestJobs = Math.min(3, jobs.length);
+    let rates = [];
+    for(let j = 0; j < rateTestJobs; j++) {
+      const start = new Date().getTime();
+      await UploadJob(jobs[j], j);
+      const elapsed = (new Date().getTime() - start) / 1000;
+      const size = jobSpecs[j].files.map(file => file.len).reduce((length, total) => length + total, 0);
+      rates.push(size / elapsed / (1024 * 1024));
     }
 
+    const averageRate = rates.reduce((mbps, total) => mbps + total, 0) / rateTestJobs;
+
+    // Upload remaining jobs in parallel
+    const concurrentUploads = Math.ceil(averageRate / 2);
     await LimitedMap(
       concurrentUploads,
-      jobInfo,
-      async job  => {
-        const jobId = job.id;
-        const files = job.files;
+      jobs,
+      async (jobId, j)  => {
+        if(j < rateTestJobs) { return; }
 
-        // Upload each item
-        for(let i = 0; i < files.length; i++) {
-          const fileInfo = files[i];
-          const fileData = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
-
-          await this.UploadFileData({libraryId, objectId, writeToken, uploadId: id, jobId, fileData});
-
-          if(callback) {
-            progress[fileInfo.path] = {
-              ...progress[fileInfo.path],
-              uploaded: progress[fileInfo.path].uploaded + fileInfo.len
-            };
-
-            callback(progress);
-          }
-        }
+        await UploadJob(jobId, j);
       }
     );
   }
 
-  async CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults={}}) {
+  async CreateFileUploadJob({libraryId, objectId, writeToken, ops, defaults={}, encryption="none"}) {
     ValidateParameters({libraryId, objectId});
     ValidateWriteToken(writeToken);
 
@@ -2356,6 +2413,10 @@ class ElvClient {
     this.Log(ops);
 
     let path = UrlJoin("q", writeToken, "file_jobs");
+
+    if(encryption === "cgck") {
+      defaults.encryption = { scheme: "cgck" };
+    }
 
     const body = {
       seq: 0,
@@ -2366,7 +2427,7 @@ class ElvClient {
 
     return ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true, encryption}),
         method: "POST",
         path: path,
         body,
@@ -2487,16 +2548,33 @@ class ElvClient {
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
+    const fileInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      metadataSubtree: UrlJoin("files", filePath)
+    });
+
     let path = UrlJoin("q", versionHash || objectId, "files", filePath);
 
-    return ResponseToFormat(
-      format,
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
-        method: "GET",
-        path: path
-      })
-    );
+    let data = await this.HttpClient.Request({
+      headers: {
+        ...(await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash})),
+        Accept: "*/*"
+      },
+      method: "GET",
+      path: path
+    });
+
+    if(fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck") {
+      const conk = await this.EncryptionConk({libraryId, objectId});
+
+      data = await Crypto.Decrypt(conk, await data.arrayBuffer());
+
+      return await ResponseToFormat(format, new Response(data));
+    } else {
+      return await ResponseToFormat(format, data);
+    }
   }
 
   /* Parts */
@@ -2782,16 +2860,38 @@ class ElvClient {
    * @param {string} libraryId - ID of the library
    * @param {string} objectId - ID of the object
    * @param {string} writeToken - Write token of the content object draft
-   * @param {Promise<(ArrayBuffer | Buffer)>} chunk - The data to encrypt
+   * @param {ArrayBuffer | Buffer} chunk - The data to encrypt
    *
    * @return {Promise<ArrayBuffer>}
    */
   async Encrypt({libraryId, objectId, writeToken, chunk}) {
     ValidateParameters({libraryId, objectId});
-    ValidateWriteToken(writeToken);
 
     const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
     const data = await Crypto.Encrypt(conk, chunk);
+
+    // Convert to ArrayBuffer
+    return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+  }
+
+  /**
+   * Decrypt the specified chunk for the specified object or draft
+   *
+   * @methodGroup Encryption
+   *
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the content object draft
+   * @param {ArrayBuffer | Buffer} chunk - The data to decrypt
+   *
+   * @return {Promise<ArrayBuffer>}
+   */
+  async Decrypt({libraryId, objectId, writeToken, chunk}) {
+    ValidateParameters({libraryId, objectId});
+
+    const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+    const data = await Crypto.Decrypt(conk, chunk);
 
     // Convert to ArrayBuffer
     return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);

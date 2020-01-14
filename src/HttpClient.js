@@ -38,7 +38,10 @@ class HttpClient {
   }
 
   RequestHeaders(bodyType, headers={}) {
-    headers["Accept"] = "application/json";
+    if(!headers.Accept) {
+      headers["Accept"] = "application/json";
+    }
+
     if(bodyType === "JSON") {
       headers["Content-type"] = "application/json";
     } else {
