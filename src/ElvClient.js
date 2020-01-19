@@ -32,6 +32,7 @@ const {
   ValidateParameters
 } = require("./Validation");
 
+let fs;
 // Platform specific polyfills
 switch(Utils.Platform()) {
   case Utils.PLATFORM_REACT_NATIVE:
@@ -43,6 +44,7 @@ switch(Utils.Platform()) {
     // Define Response in node
     // eslint-disable-next-line no-global-assign
     global.Response = (require("node-fetch")).Response;
+    fs = require("fs");
     break;
 }
 
@@ -2231,7 +2233,7 @@ class ElvClient {
         path: string,
         mime_type: string,
         size: number,
-        data: File | ArrayBuffer | Buffer
+        data: File | ArrayBuffer | Buffer | File Descriptor (Node)
       }
    ]
    *
@@ -2262,7 +2264,7 @@ class ElvClient {
     let fileDataMap = {};
 
     for(let i = 0; i < fileInfo.length; i++) {
-      const entry = fileInfo[i];
+      let entry = fileInfo[i];
 
       entry.path = entry.path.replace(/^\/+/, "");
 
@@ -2329,7 +2331,16 @@ class ElvClient {
 
         for(let f = 0; f < job.files.length; f++) {
           const fileInfo = job.files[f];
-          let data = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+
+          let data;
+          if(typeof fileDataMap[fileInfo.path] === "number") {
+            // File descriptor - Read data from file
+            data = Buffer.alloc(fileInfo.len);
+            fs.readSync(fileDataMap[fileInfo.path], data, 0, fileInfo.len, fileInfo.off);
+          } else {
+            // Full data - Slice requested chunk
+            data = fileDataMap[fileInfo.path].slice(fileInfo.off, fileInfo.off + fileInfo.len);
+          }
 
           if(encryption === "cgck") {
             data = await Crypto.Encrypt(conk, data);
@@ -2393,7 +2404,7 @@ class ElvClient {
     const averageRate = rates.reduce((mbps, total) => mbps + total, 0) / rateTestJobs;
 
     // Upload remaining jobs in parallel
-    const concurrentUploads = Math.ceil(averageRate / 2);
+    const concurrentUploads = Math.min(5, Math.ceil(averageRate / 2));
     await LimitedMap(
       concurrentUploads,
       jobs,
