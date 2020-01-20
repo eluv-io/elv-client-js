@@ -20,6 +20,10 @@ const argv = yargs
     type: "array",
     description: "List of files to upload to the master object"
   })
+  .option("encrypt", {
+    type: "boolean",
+    description: "If specified, files will be encrypted (local files only)"
+  })
   .option("s3-copy", {
     type: "boolean",
     description: "If specified, files will be pulled from an S3 bucket instead of the local system"
@@ -40,7 +44,16 @@ const argv = yargs
 
 const ClientConfiguration = require("../TestConfiguration.json");
 
-const Create = async (elvGeo, masterLibraryId, title, metadata, files, access, copy=false) => {
+const Create = async ({
+  elvGeo,
+  libraryId,
+  title,
+  metadata,
+  files,
+  encrypt=false,
+  access,
+  copy=false
+}) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"],
@@ -52,24 +65,26 @@ const Create = async (elvGeo, masterLibraryId, title, metadata, files, access, c
     });
     await client.SetSigner({signer});
 
-    let fileInfo, streamInfo;
+    let fileInfo;
+    let fileHandles=[];
     if(access) {
       fileInfo = files.map(path => ({
         path: Path.basename(path),
         source: path,
       }));
     } else {
-      streamInfo = files.map(path => {
-        const stats = fs.statSync(path);
-        const stream = fs.createReadStream(path, {highWaterMark: 5 * 1024 * 1024});
+      fileInfo = files.map(path => {
+        const fileDescriptor = fs.openSync(path);
+        fileHandles.push(fileDescriptor);
+        const size = fs.fstatSync(fileDescriptor).size;
         const mimeType = mime.lookup(path) || "video/mp4";
 
         return {
           path: Path.basename(path),
           type: "file",
           mime_type: mimeType,
-          size: stats.size,
-          stream
+          size: size,
+          data: fileDescriptor
         };
       });
     }
@@ -78,12 +93,12 @@ const Create = async (elvGeo, masterLibraryId, title, metadata, files, access, c
 
     try {
       const {errors, warnings, id, hash} = await client.CreateProductionMaster({
-        libraryId: masterLibraryId,
+        libraryId,
         name: title,
         description: "Production Master for " + title,
         metadata,
         fileInfo,
-        streamInfo,
+        encrypt,
         access,
         copy,
         callback: progress => {
@@ -101,6 +116,9 @@ const Create = async (elvGeo, masterLibraryId, title, metadata, files, access, c
           }
         }
       });
+
+      // Close file handles
+      fileHandles.forEach(descriptor => fs.closeSync(descriptor));
 
       console.log("\nProduction master object created:");
       console.log("\tObject ID:", id);
@@ -125,7 +143,7 @@ const Create = async (elvGeo, masterLibraryId, title, metadata, files, access, c
   }
 };
 
-let {library, title, metadata, files, s3Reference, s3Copy, elvGeo} = argv;
+let {library, title, metadata, files, encrypt, s3Reference, s3Copy, elvGeo} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -162,4 +180,13 @@ if(metadata) {
   }
 }
 
-Create(elvGeo, library, title, metadata, files, access, s3Copy && !s3Reference);
+Create({
+  elvGeo,
+  libraryId: library,
+  title,
+  metadata,
+  files,
+  encrypt,
+  access,
+  copy: s3Copy && !s3Reference
+});
