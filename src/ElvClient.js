@@ -2429,24 +2429,82 @@ class ElvClient {
 
     let path = UrlJoin("q", versionHash || objectId, "files", filePath);
 
-    let data = await this.HttpClient.Request({
-      headers: {
-        ...(await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash})),
-        Accept: "*/*"
-      },
-      method: "GET",
-      path: path
-    });
+    const encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
+    const chunkSize = 5000000;
+    const bufferSize = chunkSize * 5;
+    const fileSize = fileInfo["."].size;
+    const totalChunks = Math.ceil(fileSize / chunkSize);
+    let outputChunks = [];
 
-    if(fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck") {
-      const conk = await this.EncryptionConk({libraryId, objectId});
+    let downloaded = 0;
+    let decrypted = 0;
 
-      data = await Crypto.Decrypt(conk, await data.arrayBuffer());
-
-      return await ResponseToFormat(format, new Response(data));
-    } else {
-      return await ResponseToFormat(format, data);
+    let conk, decryptionStream, decryptionPromise;
+    if(encrypted) {
+      // Set up decryption stream
+      conk = await this.EncryptionConk({libraryId, objectId});
+      decryptionStream = await Crypto.OpenDecryptionStream(conk);
+      decryptionPromise = new Promise((resolve, reject) => {
+        decryptionStream
+          .on("data", (chunk) => {
+            outputChunks.push(chunk);
+            decrypted += chunk.length;
+          })
+          .on("finish", () => {
+            resolve();
+          })
+          .on("error", (e) => {
+            reject(e);
+          });
+      });
     }
+
+    let nextChunk = 0;
+    await LimitedMap(
+      3,
+      [...Array(totalChunks)],
+      async (_, i) => {
+        const startByte = i * chunkSize;
+        const endByte = Math.min((i + 1) * chunkSize, fileSize);
+
+        while(encrypted && downloaded - decrypted > bufferSize) {
+          // Don't allow download to get too far ahead of decryption
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        const chunk = await (await this.HttpClient.Request({
+          headers: {
+            ...(await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash})),
+            Accept: "*/*",
+            Range: `bytes=${startByte}-${endByte - 1}`
+          },
+          method: "GET",
+          path: path
+        })).buffer();
+
+        downloaded += chunk.length;
+
+        if(decryptionStream) {
+          while(nextChunk !== i) {
+            // Chunks must be written to decryption stream in order
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+
+          decryptionStream.write(chunk);
+
+          nextChunk += 1;
+        } else {
+          outputChunks[i] = chunk;
+        }
+      }
+    );
+
+    if(decryptionStream) {
+      decryptionStream.end();
+      await decryptionPromise;
+    }
+
+    return await ResponseToFormat(format, new Response(Buffer.concat(outputChunks)));
   }
 
   /* Parts */
@@ -3152,7 +3210,7 @@ class ElvClient {
       storeClear = await this.ContentObjectMetadata({
         libraryId,
         objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
-        metadataSubtree: "store_clear"
+        metadataSubtree: "abr_profile/store_clear"
       });
     }
 
