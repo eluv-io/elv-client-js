@@ -62,7 +62,10 @@ function () {
     key: "RequestHeaders",
     value: function RequestHeaders(bodyType) {
       var headers = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-      headers["Accept"] = "application/json";
+
+      if (!headers.Accept) {
+        headers["Accept"] = "application/json";
+      }
 
       if (bodyType === "JSON") {
         headers["Content-type"] = "application/json";

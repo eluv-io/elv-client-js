@@ -1076,7 +1076,7 @@ function () {
   }, {
     key: "KMSSymmetricKey",
     value: function KMSSymmetricKey(_ref17) {
-      var libraryId, objectId, kmsAddress, kmsCapId, kmsCap;
+      var libraryId, objectId, kmsAddress, kmsCapId, kmsCap, paramTypes, params, packedHash;
       return regeneratorRuntime.async(function KMSSymmetricKey$(_context16) {
         while (1) {
           switch (_context16.prev = _context16.next) {
@@ -1106,17 +1106,25 @@ function () {
 
             case 8:
               kmsCap = _context16.sent;
-              _context16.next = 11;
+              paramTypes = ["string", "string", "string", "string", "string"];
+              params = [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""];
+              packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+              _context16.next = 14;
+              return regeneratorRuntime.awrap(this.Sign(packedHash));
+
+            case 14:
+              params[5] = _context16.sent;
+              _context16.next = 17;
               return regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
-                methodName: "elv_getSymmetricKey",
-                params: [this.client.contentSpaceId, libraryId, objectId, kmsCap]
+                methodName: "elv_getSymmetricKeyAuth",
+                params: params
               }));
 
-            case 11:
+            case 17:
               return _context16.abrupt("return", _context16.sent);
 
-            case 12:
+            case 18:
             case "end":
               return _context16.stop();
           }

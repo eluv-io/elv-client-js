@@ -1952,145 +1952,6 @@ class ElvClient {
   }
 
   /**
-   * Upload a file to a content object from a Node.js file stream
-   *
-   * Expected format of fileInfo:
-   *
-     {
-        path: string,
-        mime_type: string,
-        size: number,
-        stream: Stream
-      }
-   *
-   *
-   * @methodGroup Parts and Files
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
-   * @param {string} writeToken - Write token of the draft
-   * @param {Array<object>} fileInfo - Info about the file to upload, including its size, type, and stream
-   * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
-   * - Format: {"filename1": {uploaded: number, total: number}, ...}
-   */
-  async UploadFileFromStream({libraryId, objectId, writeToken, fileInfo, callback}) {
-    ValidateParameters({libraryId, objectId});
-    ValidateWriteToken(writeToken);
-
-    this.Log(`Uploading files from stream: ${libraryId} ${objectId} ${writeToken}`);
-
-    const concurrentUploads = 5;
-
-    let progress = {
-      [fileInfo.path]: {
-        uploaded: 0,
-        total: fileInfo.size
-      }
-    };
-
-    fileInfo.path = fileInfo.path.replace(/^\/+/, "");
-    fileInfo.type = "file";
-
-    const stream = fileInfo.stream;
-    delete fileInfo.stream;
-
-    this.Log(fileInfo);
-
-    if(callback) {
-      callback(progress);
-    }
-
-    const {id, jobs} = await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops: [fileInfo]});
-
-    this.Log(`Upload ID: ${id}`);
-    this.Log(jobs);
-
-    let jobInfo = await LimitedMap(
-      5,
-      jobs,
-      async jobId => await this.UploadJobStatus({
-        libraryId,
-        objectId,
-        writeToken,
-        uploadId: id,
-        jobId
-      })
-    );
-
-    // Ensure jobs are sorted in order of upload
-    jobInfo = jobInfo.sort((a, b) => a.files[0].off < b.files[0].off ? -1 : 1);
-
-    let currentUploads = 0;
-    let currentJob = jobInfo.shift();
-    let currentData = Buffer.from("");
-    let currentReader = 0;
-    let readerIndex = 0;
-    await new Promise(async resolve => {
-      stream.on("data", async chunk => {
-        // Wait until all previous data has been handled
-        let reader = readerIndex;
-        readerIndex += 1;
-        while(reader !== currentReader) {
-          await new Promise(r => setTimeout(r, 250));
-        }
-
-        const neededBytes = currentJob.files[0].len - currentData.length;
-
-        currentData = Buffer.concat([currentData, chunk.slice(0, neededBytes)]);
-
-        if(currentData.length >= currentJob.files[0].len) {
-          // Wait for ongoing uploads to complete before starting another
-          while(currentUploads > concurrentUploads) {
-            await new Promise(r => setTimeout(r, 250));
-          }
-
-          // Upload file data, but don't wait for it to complete
-          let fileData = currentData;
-          new Promise(async r => {
-            currentUploads += 1;
-            await this.UploadFileData({
-              libraryId,
-              objectId,
-              writeToken,
-              uploadId: id,
-              jobId: currentJob.id,
-              fileData
-            });
-            currentUploads -= 1;
-
-            if(callback) {
-              progress = {
-                [fileInfo.path]: {
-                  ...progress[fileInfo.path],
-                  uploaded: progress[fileInfo.path].uploaded + fileData.length
-                }
-              };
-
-              callback(progress);
-            }
-
-            r();
-          });
-
-          if(jobInfo.length === 0) {
-            // Wait for uploads to complete and resolve promise
-            while(currentUploads > 0) {
-              await new Promise(r => setTimeout(r, 500));
-            }
-            resolve();
-          } else {
-            // Pull next job and grab remaining bytes
-            currentJob = jobInfo.shift();
-            currentData = chunk.slice(neededBytes);
-          }
-        }
-
-        currentReader += 1;
-      });
-    });
-  }
-
-  /**
    * Copy/reference files from S3 to a content object
    *
    * Expected format of fileInfo:
@@ -3077,8 +2938,8 @@ class ElvClient {
    * @param {string=} description - Description of the content
    * @param {string} contentTypeName - Name of the content type to use
    * @param {Object=} metadata - Additional metadata for the content object
-   * @param {Object=} fileInfo - Files to upload to (See UploadFiles/UploadFilesFromS3 method)
-   * @param {Object=} fileInfo - Files to upload via node.js stream (See UploadFileFromStream method)
+   * @param {Object=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
+   * @param {boolean=} encrypt=false - (Local files only) - If specified, files will be encrypted
    * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
    * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
    * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
@@ -3093,7 +2954,7 @@ class ElvClient {
     description,
     metadata={},
     fileInfo,
-    streamInfo,
+    encrypt=false,
     access,
     copy=false,
     callback
@@ -3155,19 +3016,8 @@ class ElvClient {
           objectId: id,
           writeToken: write_token,
           fileInfo,
-          callback
-        });
-      }
-    }
-
-    if(streamInfo) {
-      for(let i = 0; i < streamInfo.length; i++) {
-        await this.UploadFileFromStream({
-          libraryId,
-          objectId: id,
-          writeToken: write_token,
-          fileInfo: streamInfo[i],
-          callback
+          callback,
+          encryption: encrypt ? "cgck" : "none"
         });
       }
     }

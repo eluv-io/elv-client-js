@@ -77,6 +77,31 @@ var Crypto = {
       }
     }, null, null, [[0, 8]]);
   },
+  EncryptedSize: function EncryptedSize(clearSize) {
+    var clearBlockSize = 1000000;
+    var blocks = Math.floor(clearSize / clearBlockSize);
+    var encryptedBlockSize = Crypto.EncryptedBlockSize(clearBlockSize);
+    var encryptedFileSize = blocks * encryptedBlockSize;
+
+    if (clearSize % clearBlockSize !== 0) {
+      encryptedFileSize += Crypto.EncryptedBlockSize(clearSize % clearBlockSize);
+    }
+
+    return encryptedFileSize;
+  },
+  EncryptedBlockSize: function EncryptedBlockSize(clearSize) {
+    var primaryEncBlockOverhead = 129;
+    var MODBYTES_384_58 = 48;
+    var clearElementByteSize = 12 * (MODBYTES_384_58 - 1);
+    var encElementByteSize = 12 * MODBYTES_384_58;
+    var encryptedBlockSize = Math.floor(clearSize / clearElementByteSize) * encElementByteSize;
+
+    if (clearSize % clearElementByteSize !== 0) {
+      encryptedBlockSize += encElementByteSize;
+    }
+
+    return encryptedBlockSize + primaryEncBlockOverhead;
+  },
   EncryptConk: function EncryptConk(conk, publicKey) {
     var elvCrypto, _ref, data, ephemeralKey, tag, cap;
 
@@ -239,52 +264,81 @@ var Crypto = {
    * Encrypt data with headers
    *
    * @namedParams
-   * @param {ArrayBuffer | Buffer} data - Data to encrypt
    * @param {Object} cap - Encryption "capsule" containing keys
+   * @param {ArrayBuffer | Buffer} data - Data to encrypt
    *
-   * @returns {Promise<Buffer>} - Encrypted data
+   * @returns {Promise<Buffer>} - Decrypted data
    */
   Encrypt: function Encrypt(cap, data) {
-    var elvCrypto, _ref2, context, dataArray, encryptedData, encryptedDataBuffer;
-
+    var stream, dataArray, i, end, encryptedChunks;
     return regeneratorRuntime.async(function Encrypt$(_context7) {
       while (1) {
         switch (_context7.prev = _context7.next) {
           case 0:
-            if (!(!Buffer.isBuffer(data) && !(data instanceof ArrayBuffer))) {
-              _context7.next = 6;
-              break;
+            _context7.next = 2;
+            return regeneratorRuntime.awrap(Crypto.OpenEncryptionStream(cap));
+
+          case 2:
+            stream = _context7.sent;
+            dataArray = new Uint8Array(data);
+
+            for (i = 0; i < data.length; i += 1000000) {
+              end = Math.min(data.length, i + 1000000);
+              stream.write(dataArray.slice(i, end));
             }
 
-            _context7.t0 = Buffer;
-            _context7.next = 4;
-            return regeneratorRuntime.awrap(new Response(data).arrayBuffer());
+            stream.end();
+            encryptedChunks = [];
+            _context7.next = 9;
+            return regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
+              stream.on("data", function (chunk) {
+                encryptedChunks.push(chunk);
+              }).on("finish", function () {
+                resolve();
+              }).on("error", function (e) {
+                reject(e);
+              });
+            }));
 
-          case 4:
-            _context7.t1 = _context7.sent;
-            data = _context7.t0.from.call(_context7.t0, _context7.t1);
+          case 9:
+            return _context7.abrupt("return", Buffer.concat(encryptedChunks));
 
-          case 6:
-            _context7.next = 8;
-            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
-
-          case 8:
-            elvCrypto = _context7.sent;
-            _context7.next = 11;
-            return regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
-
-          case 11:
-            _ref2 = _context7.sent;
-            context = _ref2.context;
-            dataArray = new Uint8Array(data);
-            encryptedData = elvCrypto.encryptPrimaryH(context, dataArray);
-            encryptedDataBuffer = Buffer.from(encryptedData);
-            context.free();
-            return _context7.abrupt("return", encryptedDataBuffer);
-
-          case 18:
+          case 10:
           case "end":
             return _context7.stop();
+        }
+      }
+    });
+  },
+  OpenEncryptionStream: function OpenEncryptionStream(cap) {
+    var elvCrypto, _ref2, context, stream, cipher;
+
+    return regeneratorRuntime.async(function OpenEncryptionStream$(_context8) {
+      while (1) {
+        switch (_context8.prev = _context8.next) {
+          case 0:
+            _context8.next = 2;
+            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
+
+          case 2:
+            elvCrypto = _context8.sent;
+            _context8.next = 5;
+            return regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
+
+          case 5:
+            _ref2 = _context8.sent;
+            context = _ref2.context;
+            stream = new Stream.PassThrough();
+            cipher = elvCrypto.createCipher(context);
+            return _context8.abrupt("return", stream.pipe(cipher).on("finish", function () {
+              context.free();
+            }).on("error", function (e) {
+              throw Error(e);
+            }));
+
+          case 10:
+          case "end":
+            return _context8.stop();
         }
       }
     });
@@ -295,24 +349,31 @@ var Crypto = {
    *
    * @namedParams
    * @param {Object} cap - Encryption "capsule" containing keys
-   * @param {ArrayBuffer | Buffer} encryptedData - Data to encrypt
+   * @param {ArrayBuffer | Buffer} encryptedData - Data to decrypt
    *
    * @returns {Promise<Buffer>} - Decrypted data
    */
   Decrypt: function Decrypt(cap, encryptedData) {
-    var stream, decryptedChunks;
-    return regeneratorRuntime.async(function Decrypt$(_context8) {
+    var stream, dataArray, i, end, decryptedChunks;
+    return regeneratorRuntime.async(function Decrypt$(_context9) {
       while (1) {
-        switch (_context8.prev = _context8.next) {
+        switch (_context9.prev = _context9.next) {
           case 0:
-            _context8.next = 2;
+            _context9.next = 2;
             return regeneratorRuntime.awrap(Crypto.OpenDecryptionStream(cap));
 
           case 2:
-            stream = _context8.sent;
-            stream.end(new Uint8Array(encryptedData));
+            stream = _context9.sent;
+            dataArray = new Uint8Array(encryptedData);
+
+            for (i = 0; i < dataArray.length; i += 1000000) {
+              end = Math.min(dataArray.length, i + 1000000);
+              stream.write(dataArray.slice(i, end));
+            }
+
+            stream.end();
             decryptedChunks = [];
-            _context8.next = 7;
+            _context9.next = 9;
             return regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
               stream.on("data", function (chunk) {
                 decryptedChunks.push(chunk);
@@ -323,12 +384,12 @@ var Crypto = {
               });
             }));
 
-          case 7:
-            return _context8.abrupt("return", Buffer.concat(decryptedChunks));
+          case 9:
+            return _context9.abrupt("return", Buffer.concat(decryptedChunks));
 
-          case 8:
+          case 10:
           case "end":
-            return _context8.stop();
+            return _context9.stop();
         }
       }
     });
@@ -336,25 +397,25 @@ var Crypto = {
   OpenDecryptionStream: function OpenDecryptionStream(cap) {
     var elvCrypto, _ref3, context, type, stream, decipher;
 
-    return regeneratorRuntime.async(function OpenDecryptionStream$(_context9) {
+    return regeneratorRuntime.async(function OpenDecryptionStream$(_context10) {
       while (1) {
-        switch (_context9.prev = _context9.next) {
+        switch (_context10.prev = _context10.next) {
           case 0:
-            _context9.next = 2;
+            _context10.next = 2;
             return regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
           case 2:
-            elvCrypto = _context9.sent;
-            _context9.next = 5;
+            elvCrypto = _context10.sent;
+            _context10.next = 5;
             return regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
 
           case 5:
-            _ref3 = _context9.sent;
+            _ref3 = _context10.sent;
             context = _ref3.context;
             type = _ref3.type;
             stream = new Stream.PassThrough();
             decipher = elvCrypto.createDecipher(type, context);
-            return _context9.abrupt("return", stream.pipe(decipher).on("finish", function () {
+            return _context10.abrupt("return", stream.pipe(decipher).on("finish", function () {
               context.free();
             }).on("error", function (e) {
               throw Error(e);
@@ -362,7 +423,7 @@ var Crypto = {
 
           case 11:
           case "end":
-            return _context9.stop();
+            return _context10.stop();
         }
       }
     });
