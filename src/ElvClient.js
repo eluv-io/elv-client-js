@@ -466,6 +466,15 @@ class ElvClient {
     return this.signer ? this.utils.FormatAddress(this.signer.address) : "";
   }
 
+  SetOauthToken({token, groupId}) {
+    this.oauthToken = token;
+    this.oauthGroupId = groupId;
+
+    const wallet = this.GenerateWallet();
+    const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+    this.SetSigner({signer});
+  }
+
   /* Content Spaces */
 
   /**
@@ -3695,7 +3704,7 @@ class ElvClient {
   }
 
   /**
-   * Generate a state channel token
+   * Generate a state channel token.
    *
    * @methodGroup Access Requests
    * @namedParams
@@ -3720,9 +3729,18 @@ class ElvClient {
 
     const audienceData = this.AudienceData({objectId, versionHash});
 
+    let oauthParams;
+    if(this.oauthToken) {
+      oauthParams = {
+        token: this.oauthToken,
+        groupId: this.oauthGroupId
+      };
+    }
+
     return await this.authClient.AuthorizationToken({
       objectId,
       channelAuth: true,
+      oauthParams,
       audienceData,
       noCache
     });
@@ -3905,12 +3923,21 @@ class ElvClient {
       drms
     });
 
+    let oauthParams;
+    if(this.oauthToken) {
+      oauthParams = {
+        token: this.oauthToken,
+        groupId: this.oauthGroupId
+      };
+    }
+
     const playoutOptions = Object.values(
       await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({
             objectId,
             channelAuth: true,
+            oauthParams,
             audienceData
           }),
           queryParams: linkPath ? { resolve: true } : {},
