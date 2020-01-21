@@ -2412,10 +2412,12 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} filePath - Path to the file to download
    * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
+   * @param {function=} callback - If specified, will be periodically called with current download status
+   * - Signature: ({bytesFinished, bytesTotal}) => {}
    *
    * @returns {Promise<ArrayBuffer>} - File data in the requested format
    */
-  async DownloadFile({libraryId, objectId, versionHash, filePath, format="arrayBuffer"}) {
+  async DownloadFile({libraryId, objectId, versionHash, filePath, format="arrayBuffer", callback}) {
     ValidateParameters({libraryId, objectId, versionHash});
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -2439,6 +2441,10 @@ class ElvClient {
     let downloaded = 0;
     let decrypted = 0;
 
+    if(callback) {
+      callback({bytesFinished: 0, bytesTotal: fileSize});
+    }
+
     let conk, decryptionStream, decryptionPromise;
     if(encrypted) {
       // Set up decryption stream
@@ -2449,6 +2455,10 @@ class ElvClient {
           .on("data", (chunk) => {
             outputChunks.push(chunk);
             decrypted += chunk.length;
+
+            if(callback) {
+              callback({bytesFinished: decrypted, bytesTotal: fileSize});
+            }
           })
           .on("finish", () => {
             resolve();
@@ -2472,7 +2482,7 @@ class ElvClient {
           await new Promise(resolve => setTimeout(resolve, 500));
         }
 
-        const chunk = await (await this.HttpClient.Request({
+        const chunk = Buffer.from(await (await this.HttpClient.Request({
           headers: {
             ...(await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash})),
             Accept: "*/*",
@@ -2480,7 +2490,7 @@ class ElvClient {
           },
           method: "GET",
           path: path
-        })).buffer();
+        })).arrayBuffer());
 
         downloaded += chunk.length;
 
@@ -2495,6 +2505,10 @@ class ElvClient {
           nextChunk += 1;
         } else {
           outputChunks[i] = chunk;
+
+          if(callback) {
+            callback({bytesFinished: downloaded, bytesTotal: fileSize});
+          }
         }
       }
     );

@@ -4049,6 +4049,8 @@ function () {
      * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
      * @param {string} filePath - Path to the file to download
      * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
+     * @param {function=} callback - If specified, will be periodically called with current download status
+     * - Signature: ({bytesFinished, bytesTotal}) => {}
      *
      * @returns {Promise<ArrayBuffer>} - File data in the requested format
      */
@@ -4058,13 +4060,13 @@ function () {
     value: function DownloadFile(_ref55) {
       var _this6 = this;
 
-      var libraryId, objectId, versionHash, filePath, _ref55$format, format, fileInfo, path, encrypted, chunkSize, bufferSize, fileSize, totalChunks, outputChunks, downloaded, decrypted, conk, decryptionStream, decryptionPromise, nextChunk;
+      var libraryId, objectId, versionHash, filePath, _ref55$format, format, callback, fileInfo, path, encrypted, chunkSize, bufferSize, fileSize, totalChunks, outputChunks, downloaded, decrypted, conk, decryptionStream, decryptionPromise, nextChunk;
 
       return regeneratorRuntime.async(function DownloadFile$(_context58) {
         while (1) {
           switch (_context58.prev = _context58.next) {
             case 0:
-              libraryId = _ref55.libraryId, objectId = _ref55.objectId, versionHash = _ref55.versionHash, filePath = _ref55.filePath, _ref55$format = _ref55.format, format = _ref55$format === void 0 ? "arrayBuffer" : _ref55$format;
+              libraryId = _ref55.libraryId, objectId = _ref55.objectId, versionHash = _ref55.versionHash, filePath = _ref55.filePath, _ref55$format = _ref55.format, format = _ref55$format === void 0 ? "arrayBuffer" : _ref55$format, callback = _ref55.callback;
               ValidateParameters({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -4095,28 +4097,42 @@ function () {
               downloaded = 0;
               decrypted = 0;
 
+              if (callback) {
+                callback({
+                  bytesFinished: 0,
+                  bytesTotal: fileSize
+                });
+              }
+
               if (!encrypted) {
-                _context58.next = 23;
+                _context58.next = 24;
                 break;
               }
 
-              _context58.next = 18;
+              _context58.next = 19;
               return regeneratorRuntime.awrap(this.EncryptionConk({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
-            case 18:
+            case 19:
               conk = _context58.sent;
-              _context58.next = 21;
+              _context58.next = 22;
               return regeneratorRuntime.awrap(Crypto.OpenDecryptionStream(conk));
 
-            case 21:
+            case 22:
               decryptionStream = _context58.sent;
               decryptionPromise = new Promise(function (resolve, reject) {
                 decryptionStream.on("data", function (chunk) {
                   outputChunks.push(chunk);
                   decrypted += chunk.length;
+
+                  if (callback) {
+                    callback({
+                      bytesFinished: decrypted,
+                      bytesTotal: fileSize
+                    });
+                  }
                 }).on("finish", function () {
                   resolve();
                 }).on("error", function (e) {
@@ -4124,9 +4140,9 @@ function () {
                 });
               });
 
-            case 23:
+            case 24:
               nextChunk = 0;
-              _context58.next = 26;
+              _context58.next = 27;
               return regeneratorRuntime.awrap(LimitedMap(3, _toConsumableArray(Array(totalChunks)), function _callee6(_, i) {
                 var startByte, endByte, chunk;
                 return regeneratorRuntime.async(function _callee6$(_context57) {
@@ -4152,74 +4168,83 @@ function () {
                         break;
 
                       case 7:
-                        _context57.t0 = regeneratorRuntime;
+                        _context57.t0 = Buffer;
                         _context57.t1 = regeneratorRuntime;
-                        _context57.t2 = _this6.HttpClient;
-                        _context57.t3 = _objectSpread;
-                        _context57.t4 = {};
-                        _context57.next = 14;
+                        _context57.t2 = regeneratorRuntime;
+                        _context57.t3 = _this6.HttpClient;
+                        _context57.t4 = _objectSpread;
+                        _context57.t5 = {};
+                        _context57.next = 15;
                         return regeneratorRuntime.awrap(_this6.authClient.AuthorizationHeader({
                           libraryId: libraryId,
                           objectId: objectId,
                           versionHash: versionHash
                         }));
 
-                      case 14:
-                        _context57.t5 = _context57.sent;
-                        _context57.t6 = {
+                      case 15:
+                        _context57.t6 = _context57.sent;
+                        _context57.t7 = {
                           Accept: "*/*",
                           Range: "bytes=".concat(startByte, "-").concat(endByte - 1)
                         };
-                        _context57.t7 = (0, _context57.t3)(_context57.t4, _context57.t5, _context57.t6);
-                        _context57.t8 = path;
-                        _context57.t9 = {
-                          headers: _context57.t7,
+                        _context57.t8 = (0, _context57.t4)(_context57.t5, _context57.t6, _context57.t7);
+                        _context57.t9 = path;
+                        _context57.t10 = {
+                          headers: _context57.t8,
                           method: "GET",
-                          path: _context57.t8
+                          path: _context57.t9
                         };
-                        _context57.t10 = _context57.t2.Request.call(_context57.t2, _context57.t9);
-                        _context57.next = 22;
-                        return _context57.t1.awrap.call(_context57.t1, _context57.t10);
+                        _context57.t11 = _context57.t3.Request.call(_context57.t3, _context57.t10);
+                        _context57.next = 23;
+                        return _context57.t2.awrap.call(_context57.t2, _context57.t11);
 
-                      case 22:
-                        _context57.t11 = _context57.sent.buffer();
-                        _context57.next = 25;
-                        return _context57.t0.awrap.call(_context57.t0, _context57.t11);
+                      case 23:
+                        _context57.t12 = _context57.sent.arrayBuffer();
+                        _context57.next = 26;
+                        return _context57.t1.awrap.call(_context57.t1, _context57.t12);
 
-                      case 25:
-                        chunk = _context57.sent;
+                      case 26:
+                        _context57.t13 = _context57.sent;
+                        chunk = _context57.t0.from.call(_context57.t0, _context57.t13);
                         downloaded += chunk.length;
 
                         if (!decryptionStream) {
-                          _context57.next = 37;
+                          _context57.next = 39;
                           break;
                         }
 
-                      case 28:
+                      case 30:
                         if (!(nextChunk !== i)) {
-                          _context57.next = 33;
+                          _context57.next = 35;
                           break;
                         }
 
-                        _context57.next = 31;
+                        _context57.next = 33;
                         return regeneratorRuntime.awrap(new Promise(function (resolve) {
                           return setTimeout(resolve, 500);
                         }));
 
-                      case 31:
-                        _context57.next = 28;
+                      case 33:
+                        _context57.next = 30;
                         break;
 
-                      case 33:
+                      case 35:
                         decryptionStream.write(chunk);
                         nextChunk += 1;
-                        _context57.next = 38;
+                        _context57.next = 41;
                         break;
 
-                      case 37:
+                      case 39:
                         outputChunks[i] = chunk;
 
-                      case 38:
+                        if (callback) {
+                          callback({
+                            bytesFinished: downloaded,
+                            bytesTotal: fileSize
+                          });
+                        }
+
+                      case 41:
                       case "end":
                         return _context57.stop();
                     }
@@ -4227,24 +4252,24 @@ function () {
                 });
               }));
 
-            case 26:
+            case 27:
               if (!decryptionStream) {
-                _context58.next = 30;
+                _context58.next = 31;
                 break;
               }
 
               decryptionStream.end();
-              _context58.next = 30;
+              _context58.next = 31;
               return regeneratorRuntime.awrap(decryptionPromise);
 
-            case 30:
-              _context58.next = 32;
+            case 31:
+              _context58.next = 33;
               return regeneratorRuntime.awrap(ResponseToFormat(format, new Response(Buffer.concat(outputChunks))));
 
-            case 32:
+            case 33:
               return _context58.abrupt("return", _context58.sent);
 
-            case 33:
+            case 34:
             case "end":
               return _context58.stop();
           }
