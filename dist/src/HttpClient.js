@@ -69,7 +69,7 @@ function () {
 
       if (bodyType === "JSON") {
         headers["Content-type"] = "application/json";
-      } else {
+      } else if (bodyType === "BINARY") {
         headers["Content-type"] = "application/octet-stream";
       }
 

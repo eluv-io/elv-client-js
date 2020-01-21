@@ -1,7 +1,9 @@
+const HttpClient = require("./HttpClient");
 const Ethers = require("ethers");
 const Id = require("./Id");
 const Crypto = require("./Crypto");
 const Utils = require("./Utils");
+const UrlJoin = require("url-join");
 
 // -- Contract javascript files built using build/BuildContracts.js
 const SpaceContract = require("./contracts/BaseContentSpace");
@@ -89,6 +91,7 @@ class AuthorizationClient {
     audienceData,
     update=false,
     channelAuth=false,
+    oauthParams,
     noCache=false,
     noAuth=false
   }) {
@@ -102,7 +105,7 @@ class AuthorizationClient {
 
       let authorizationToken;
       if(channelAuth) {
-        authorizationToken = await this.GenerateChannelContentToken({objectId, audienceData});
+        authorizationToken = await this.GenerateChannelContentToken({objectId, audienceData, oauthParams});
       } else {
         authorizationToken = await this.GenerateAuthorizationToken({
           libraryId,
@@ -313,7 +316,15 @@ class AuthorizationClient {
     return event;
   }
 
-  async GenerateChannelContentToken({objectId, audienceData, value=0}) {
+  async GenerateChannelContentToken({objectId, audienceData, oauthParams, value=0}) {
+    if(oauthParams) {
+      return await this.GenerateOauthChannelToken({
+        objectId,
+        token: oauthParams.token,
+        groupId: oauthParams.groupId
+      });
+    }
+
     if(!this.noCache && this.channelContentTokens[objectId]) {
       return this.channelContentTokens[objectId];
     }
@@ -396,6 +407,39 @@ class AuthorizationClient {
     this.channelContentTokens[objectId] = undefined;
 
     return result;
+  }
+
+  async GenerateOauthChannelToken({objectId, versionHash, groupId, token}) {
+    if(versionHash) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    if(!this.noCache && this.channelContentTokens[objectId]) {
+      return this.channelContentTokens[objectId];
+    }
+
+    const kmsUrls = (await this.KMSInfo({objectId, versionHash})).urls;
+
+    const kmsHttpClient = new HttpClient({
+      uris: [kmsUrls[0]],
+      debug: this.debug
+    });
+
+    const fabricToken = await (await kmsHttpClient.Request({
+      method: "GET",
+      path: UrlJoin("ks", "jwt", "grp", groupId),
+      queryParams: { qId: objectId },
+      bodyType: "NONE",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })).text();
+
+    if(!this.noCache) {
+      this.channelContentTokens[objectId] = fabricToken;
+    }
+    
+    return fabricToken;
   }
 
   CacheTransaction({accessType, address, publicKey, update, transactionHash}) {
