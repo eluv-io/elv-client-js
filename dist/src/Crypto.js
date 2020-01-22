@@ -280,16 +280,31 @@ var Crypto = {
 
           case 2:
             stream = _context7.sent;
+
+            if (!(!Buffer.isBuffer(data) && !(data instanceof ArrayBuffer))) {
+              _context7.next = 9;
+              break;
+            }
+
+            _context7.t0 = Buffer;
+            _context7.next = 7;
+            return regeneratorRuntime.awrap(new Response(data).arrayBuffer());
+
+          case 7:
+            _context7.t1 = _context7.sent;
+            data = _context7.t0.from.call(_context7.t0, _context7.t1);
+
+          case 9:
             dataArray = new Uint8Array(data);
 
-            for (i = 0; i < data.length; i += 1000000) {
-              end = Math.min(data.length, i + 1000000);
+            for (i = 0; i < dataArray.length; i += 1000000) {
+              end = Math.min(dataArray.length, i + 1000000);
               stream.write(dataArray.slice(i, end));
             }
 
             stream.end();
             encryptedChunks = [];
-            _context7.next = 9;
+            _context7.next = 15;
             return regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
               stream.on("data", function (chunk) {
                 encryptedChunks.push(chunk);
@@ -300,10 +315,10 @@ var Crypto = {
               });
             }));
 
-          case 9:
+          case 15:
             return _context7.abrupt("return", Buffer.concat(encryptedChunks));
 
-          case 10:
+          case 16:
           case "end":
             return _context7.stop();
         }

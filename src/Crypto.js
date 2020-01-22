@@ -181,10 +181,15 @@ const Crypto = {
   Encrypt: async (cap, data) => {
     const stream = await Crypto.OpenEncryptionStream(cap);
 
+    // Convert Blob to ArrayBuffer if necessary
+    if(!Buffer.isBuffer(data) && !(data instanceof ArrayBuffer)) {
+      data = Buffer.from(await new Response(data).arrayBuffer());
+    }
+
     const dataArray = new Uint8Array(data);
 
-    for(let i = 0; i < data.length; i += 1000000) {
-      const end = Math.min(data.length, i + 1000000);
+    for(let i = 0; i < dataArray.length; i += 1000000) {
+      const end = Math.min(dataArray.length, i + 1000000);
       stream.write(dataArray.slice(i, end));
     }
 
