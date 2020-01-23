@@ -91,7 +91,7 @@ class AuthorizationClient {
     audienceData,
     update=false,
     channelAuth=false,
-    oauthParams,
+    oauthToken,
     noCache=false,
     noAuth=false
   }) {
@@ -105,7 +105,7 @@ class AuthorizationClient {
 
       let authorizationToken;
       if(channelAuth) {
-        authorizationToken = await this.GenerateChannelContentToken({objectId, audienceData, oauthParams});
+        authorizationToken = await this.GenerateChannelContentToken({objectId, audienceData, oauthToken});
       } else {
         authorizationToken = await this.GenerateAuthorizationToken({
           libraryId,
@@ -316,12 +316,11 @@ class AuthorizationClient {
     return event;
   }
 
-  async GenerateChannelContentToken({objectId, audienceData, oauthParams, value=0}) {
-    if(oauthParams) {
+  async GenerateChannelContentToken({objectId, audienceData, oauthToken, value=0}) {
+    if(oauthToken) {
       return await this.GenerateOauthChannelToken({
         objectId,
-        token: oauthParams.token,
-        groupId: oauthParams.groupId
+        token: oauthToken,
       });
     }
 
@@ -409,7 +408,7 @@ class AuthorizationClient {
     return result;
   }
 
-  async GenerateOauthChannelToken({objectId, versionHash, groupId, token}) {
+  async GenerateOauthChannelToken({objectId, versionHash, token}) {
     if(versionHash) {
       objectId = Utils.DecodeVersionHash(versionHash).objectId;
     }
@@ -427,8 +426,7 @@ class AuthorizationClient {
 
     const fabricToken = await (await kmsHttpClient.Request({
       method: "GET",
-      path: UrlJoin("ks", "jwt", "grp", groupId),
-      queryParams: { qId: objectId },
+      path: UrlJoin("ks", "jwt", "q", objectId),
       bodyType: "NONE",
       headers: {
         Authorization: `Bearer ${token}`
@@ -438,7 +436,7 @@ class AuthorizationClient {
     if(!this.noCache) {
       this.channelContentTokens[objectId] = fabricToken;
     }
-    
+
     return fabricToken;
   }
 

@@ -591,10 +591,8 @@ function () {
   }, {
     key: "SetOauthToken",
     value: function SetOauthToken(_ref9) {
-      var token = _ref9.token,
-          groupId = _ref9.groupId;
+      var token = _ref9.token;
       this.oauthToken = token;
-      this.oauthGroupId = groupId;
       var wallet = this.GenerateWallet();
       var signer = wallet.AddAccountFromMnemonic({
         mnemonic: wallet.GenerateMnemonic()
@@ -6499,7 +6497,7 @@ function () {
   }, {
     key: "GenerateStateChannelToken",
     value: function GenerateStateChannelToken(_ref83) {
-      var objectId, versionHash, _ref83$noCache, noCache, _libraryId, audienceData, oauthParams;
+      var objectId, versionHash, _ref83$noCache, noCache, _libraryId, audienceData;
 
       return regeneratorRuntime.async(function GenerateStateChannelToken$(_context82) {
         while (1) {
@@ -6546,27 +6544,19 @@ function () {
                 objectId: objectId,
                 versionHash: versionHash
               });
-
-              if (this.oauthToken) {
-                oauthParams = {
-                  token: this.oauthToken,
-                  groupId: this.oauthGroupId
-                };
-              }
-
-              _context82.next = 18;
+              _context82.next = 17;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 objectId: objectId,
                 channelAuth: true,
-                oauthParams: oauthParams,
+                oauthToken: this.oauthToken,
                 audienceData: audienceData,
                 noCache: noCache
               }));
 
-            case 18:
+            case 17:
               return _context82.abrupt("return", _context82.sent);
 
-            case 19:
+            case 18:
             case "end":
               return _context82.stop();
           }
@@ -6822,7 +6812,7 @@ function () {
   }, {
     key: "PlayoutOptions",
     value: function PlayoutOptions(_ref87) {
-      var objectId, versionHash, linkPath, _ref87$protocols, protocols, _ref87$offering, offering, _ref87$drms, drms, _ref87$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, oauthParams, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
+      var objectId, versionHash, linkPath, _ref87$protocols, protocols, _ref87$offering, offering, _ref87$drms, drms, _ref87$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
 
       return regeneratorRuntime.async(function PlayoutOptions$(_context86) {
         while (1) {
@@ -6902,27 +6892,19 @@ function () {
                 protocols: protocols,
                 drms: drms
               });
-
-              if (this.oauthToken) {
-                oauthParams = {
-                  token: this.oauthToken,
-                  groupId: this.oauthGroupId
-                };
-              }
-
               _context86.t0 = Object;
               _context86.t1 = regeneratorRuntime;
               _context86.t2 = ResponseToJson;
               _context86.t3 = this.HttpClient;
-              _context86.next = 32;
+              _context86.next = 31;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
                 objectId: objectId,
                 channelAuth: true,
-                oauthParams: oauthParams,
+                oauthToken: this.oauthToken,
                 audienceData: audienceData
               }));
 
-            case 32:
+            case 31:
               _context86.t4 = _context86.sent;
               _context86.t5 = linkPath ? {
                 resolve: true
@@ -6936,18 +6918,18 @@ function () {
               };
               _context86.t8 = _context86.t3.Request.call(_context86.t3, _context86.t7);
               _context86.t9 = (0, _context86.t2)(_context86.t8);
-              _context86.next = 40;
+              _context86.next = 39;
               return _context86.t1.awrap.call(_context86.t1, _context86.t9);
 
-            case 40:
+            case 39:
               _context86.t10 = _context86.sent;
               playoutOptions = _context86.t0.values.call(_context86.t0, _context86.t10);
               playoutMap = {};
               i = 0;
 
-            case 44:
+            case 43:
               if (!(i < playoutOptions.length)) {
-                _context86.next = 76;
+                _context86.next = 75;
                 break;
               }
 
@@ -6965,7 +6947,7 @@ function () {
               _context86.t17 = _defineProperty;
               _context86.t18 = {};
               _context86.t19 = drm || "clear";
-              _context86.next = 60;
+              _context86.next = 59;
               return regeneratorRuntime.awrap(this.Rep({
                 libraryId: linkTargetLibraryId || libraryId,
                 objectId: linkTargetId || objectId,
@@ -6977,7 +6959,7 @@ function () {
                 } : {}
               }));
 
-            case 60:
+            case 59:
               _context86.t20 = _context86.sent;
               _context86.t21 = drm ? _defineProperty({}, drm, {
                 licenseServers: licenseServers
@@ -6997,27 +6979,27 @@ function () {
               drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
 
               if (!(!protocolMatch || !drmMatch)) {
-                _context86.next = 71;
+                _context86.next = 70;
                 break;
               }
 
-              return _context86.abrupt("continue", 73);
+              return _context86.abrupt("continue", 72);
 
-            case 71:
+            case 70:
               // This protocol / DRM satisfies the specifications
               playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
               playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
 
-            case 73:
+            case 72:
               i++;
-              _context86.next = 44;
+              _context86.next = 43;
               break;
 
-            case 76:
+            case 75:
               this.Log(playoutMap);
               return _context86.abrupt("return", playoutMap);
 
-            case 78:
+            case 77:
             case "end":
               return _context86.stop();
           }

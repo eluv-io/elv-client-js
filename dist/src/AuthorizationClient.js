@@ -138,13 +138,13 @@ function () {
   }, {
     key: "AuthorizationToken",
     value: function AuthorizationToken(_ref2) {
-      var libraryId, objectId, versionHash, partHash, encryption, audienceData, _ref2$update, update, _ref2$channelAuth, channelAuth, oauthParams, _ref2$noCache, noCache, _ref2$noAuth, noAuth, initialNoCache, authorizationToken;
+      var libraryId, objectId, versionHash, partHash, encryption, audienceData, _ref2$update, update, _ref2$channelAuth, channelAuth, oauthToken, _ref2$noCache, noCache, _ref2$noAuth, noAuth, initialNoCache, authorizationToken;
 
       return regeneratorRuntime.async(function AuthorizationToken$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
-              libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, encryption = _ref2.encryption, audienceData = _ref2.audienceData, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, oauthParams = _ref2.oauthParams, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
+              libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, encryption = _ref2.encryption, audienceData = _ref2.audienceData, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, oauthToken = _ref2.oauthToken, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
               initialNoCache = this.noCache;
               _context2.prev = 2;
 
@@ -162,7 +162,7 @@ function () {
               return regeneratorRuntime.awrap(this.GenerateChannelContentToken({
                 objectId: objectId,
                 audienceData: audienceData,
-                oauthParams: oauthParams
+                oauthToken: oauthToken
               }));
 
             case 7:
@@ -619,15 +619,15 @@ function () {
   }, {
     key: "GenerateChannelContentToken",
     value: function GenerateChannelContentToken(_ref8) {
-      var objectId, audienceData, oauthParams, _ref8$value, value, nonce, paramTypes, params, packedHash, stateChannelApi, payload, signature, multiSig, token;
+      var objectId, audienceData, oauthToken, _ref8$value, value, nonce, paramTypes, params, packedHash, stateChannelApi, payload, signature, multiSig, token;
 
       return regeneratorRuntime.async(function GenerateChannelContentToken$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              objectId = _ref8.objectId, audienceData = _ref8.audienceData, oauthParams = _ref8.oauthParams, _ref8$value = _ref8.value, value = _ref8$value === void 0 ? 0 : _ref8$value;
+              objectId = _ref8.objectId, audienceData = _ref8.audienceData, oauthToken = _ref8.oauthToken, _ref8$value = _ref8.value, value = _ref8$value === void 0 ? 0 : _ref8$value;
 
-              if (!oauthParams) {
+              if (!oauthToken) {
                 _context7.next = 5;
                 break;
               }
@@ -635,8 +635,7 @@ function () {
               _context7.next = 4;
               return regeneratorRuntime.awrap(this.GenerateOauthChannelToken({
                 objectId: objectId,
-                token: oauthParams.token,
-                groupId: oauthParams.groupId
+                token: oauthToken
               }));
 
             case 4:
@@ -741,12 +740,12 @@ function () {
   }, {
     key: "GenerateOauthChannelToken",
     value: function GenerateOauthChannelToken(_ref10) {
-      var objectId, versionHash, groupId, token, kmsUrls, kmsHttpClient, fabricToken;
+      var objectId, versionHash, token, kmsUrls, kmsHttpClient, fabricToken;
       return regeneratorRuntime.async(function GenerateOauthChannelToken$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
-              objectId = _ref10.objectId, versionHash = _ref10.versionHash, groupId = _ref10.groupId, token = _ref10.token;
+              objectId = _ref10.objectId, versionHash = _ref10.versionHash, token = _ref10.token;
 
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
@@ -776,10 +775,7 @@ function () {
               _context9.next = 11;
               return regeneratorRuntime.awrap(kmsHttpClient.Request({
                 method: "GET",
-                path: UrlJoin("ks", "jwt", "grp", groupId),
-                queryParams: {
-                  qId: objectId
-                },
+                path: UrlJoin("ks", "jwt", "q", objectId),
                 bodyType: "NONE",
                 headers: {
                   Authorization: "Bearer ".concat(token)
