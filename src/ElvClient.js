@@ -466,9 +466,8 @@ class ElvClient {
     return this.signer ? this.utils.FormatAddress(this.signer.address) : "";
   }
 
-  SetOauthToken({token, groupId}) {
+  SetOauthToken({token}) {
     this.oauthToken = token;
-    this.oauthGroupId = groupId;
 
     const wallet = this.GenerateWallet();
     const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
@@ -3729,18 +3728,10 @@ class ElvClient {
 
     const audienceData = this.AudienceData({objectId, versionHash});
 
-    let oauthParams;
-    if(this.oauthToken) {
-      oauthParams = {
-        token: this.oauthToken,
-        groupId: this.oauthGroupId
-      };
-    }
-
     return await this.authClient.AuthorizationToken({
       objectId,
       channelAuth: true,
-      oauthParams,
+      oauthToken: this.oauthToken,
       audienceData,
       noCache
     });
@@ -3923,21 +3914,13 @@ class ElvClient {
       drms
     });
 
-    let oauthParams;
-    if(this.oauthToken) {
-      oauthParams = {
-        token: this.oauthToken,
-        groupId: this.oauthGroupId
-      };
-    }
-
     const playoutOptions = Object.values(
       await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({
             objectId,
             channelAuth: true,
-            oauthParams,
+            oauthToken: this.oauthToken,
             audienceData
           }),
           queryParams: linkPath ? { resolve: true } : {},
