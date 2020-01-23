@@ -6812,7 +6812,7 @@ function () {
   }, {
     key: "PlayoutOptions",
     value: function PlayoutOptions(_ref87) {
-      var objectId, versionHash, linkPath, _ref87$protocols, protocols, _ref87$offering, offering, _ref87$drms, drms, _ref87$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, playoutOptions, playoutMap, i, option, protocol, drm, licenseServers, protocolMatch, drmMatch;
+      var objectId, versionHash, linkPath, _ref87$protocols, protocols, _ref87$offering, offering, _ref87$drms, drms, _ref87$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
 
       return regeneratorRuntime.async(function PlayoutOptions$(_context86) {
         while (1) {
@@ -6891,115 +6891,115 @@ function () {
                 versionHash: linkTargetHash || versionHash,
                 protocols: protocols,
                 drms: drms
-              });
-              _context86.t0 = Object;
-              _context86.t1 = regeneratorRuntime;
-              _context86.t2 = ResponseToJson;
-              _context86.t3 = this.HttpClient;
-              _context86.next = 31;
-              return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+              }); // Add authorization token to playout URLs
+
+              _context86.next = 27;
+              return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 objectId: objectId,
                 channelAuth: true,
                 oauthToken: this.oauthToken,
                 audienceData: audienceData
               }));
 
-            case 31:
-              _context86.t4 = _context86.sent;
-              _context86.t5 = linkPath ? {
-                resolve: true
-              } : {};
-              _context86.t6 = path;
-              _context86.t7 = {
-                headers: _context86.t4,
-                queryParams: _context86.t5,
-                method: "GET",
-                path: _context86.t6
+            case 27:
+              _context86.t0 = _context86.sent;
+              queryParams = {
+                authorization: _context86.t0
               };
-              _context86.t8 = _context86.t3.Request.call(_context86.t3, _context86.t7);
-              _context86.t9 = (0, _context86.t2)(_context86.t8);
-              _context86.next = 39;
-              return _context86.t1.awrap.call(_context86.t1, _context86.t9);
 
-            case 39:
-              _context86.t10 = _context86.sent;
-              playoutOptions = _context86.t0.values.call(_context86.t0, _context86.t10);
+              if (linkPath) {
+                queryParams.resolve = true;
+              }
+
+              _context86.t1 = Object;
+              _context86.next = 33;
+              return regeneratorRuntime.awrap(ResponseToJson(this.HttpClient.Request({
+                path: path,
+                method: "GET",
+                queryParams: queryParams
+              })));
+
+            case 33:
+              _context86.t2 = _context86.sent;
+              playoutOptions = _context86.t1.values.call(_context86.t1, _context86.t2);
               playoutMap = {};
               i = 0;
 
-            case 43:
+            case 37:
               if (!(i < playoutOptions.length)) {
-                _context86.next = 75;
+                _context86.next = 70;
                 break;
               }
 
               option = playoutOptions[i];
               protocol = option.properties.protocol;
-              drm = option.properties.drm;
+              drm = option.properties.drm; // Remove authorization parameter from playout path - it's re-added by Rep
+
+              playoutPath = option.uri.split("?")[0];
               licenseServers = option.properties.license_servers; // Create full playout URLs for this protocol / drm combo
 
-              _context86.t11 = _objectSpread;
-              _context86.t12 = {};
-              _context86.t13 = playoutMap[protocol] || {};
-              _context86.t14 = _objectSpread;
-              _context86.t15 = {};
-              _context86.t16 = (playoutMap[protocol] || {}).playoutMethods || {};
-              _context86.t17 = _defineProperty;
-              _context86.t18 = {};
-              _context86.t19 = drm || "clear";
-              _context86.next = 59;
+              _context86.t3 = _objectSpread;
+              _context86.t4 = {};
+              _context86.t5 = playoutMap[protocol] || {};
+              _context86.t6 = _objectSpread;
+              _context86.t7 = {};
+              _context86.t8 = (playoutMap[protocol] || {}).playoutMethods || {};
+              _context86.t9 = _defineProperty;
+              _context86.t10 = {};
+              _context86.t11 = drm || "clear";
+              _context86.next = 54;
               return regeneratorRuntime.awrap(this.Rep({
                 libraryId: linkTargetLibraryId || libraryId,
                 objectId: linkTargetId || objectId,
                 versionHash: linkTargetHash || versionHash,
-                rep: UrlJoin("playout", offering, option.uri),
+                rep: UrlJoin("playout", offering, playoutPath),
                 channelAuth: true,
                 queryParams: hlsjsProfile && protocol === "hls" ? {
                   player_profile: "hls-js"
                 } : {}
               }));
 
-            case 59:
-              _context86.t20 = _context86.sent;
-              _context86.t21 = drm ? _defineProperty({}, drm, {
+            case 54:
+              _context86.t12 = _context86.sent;
+              _context86.t13 = drm ? _defineProperty({}, drm, {
                 licenseServers: licenseServers
               }) : undefined;
-              _context86.t22 = {
-                playoutUrl: _context86.t20,
-                drms: _context86.t21
+              _context86.t14 = {
+                playoutUrl: _context86.t12,
+                drms: _context86.t13
               };
-              _context86.t23 = (0, _context86.t17)(_context86.t18, _context86.t19, _context86.t22);
-              _context86.t24 = (0, _context86.t14)(_context86.t15, _context86.t16, _context86.t23);
-              _context86.t25 = {
-                playoutMethods: _context86.t24
+              _context86.t15 = (0, _context86.t9)(_context86.t10, _context86.t11, _context86.t14);
+              _context86.t16 = (0, _context86.t6)(_context86.t7, _context86.t8, _context86.t15);
+              _context86.t17 = {
+                playoutMethods: _context86.t16
               };
-              playoutMap[protocol] = (0, _context86.t11)(_context86.t12, _context86.t13, _context86.t25);
+              playoutMap[protocol] = (0, _context86.t3)(_context86.t4, _context86.t5, _context86.t17);
               // Exclude any options that do not satisfy the specified protocols and/or DRMs
               protocolMatch = protocols.includes(protocol);
               drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
 
               if (!(!protocolMatch || !drmMatch)) {
-                _context86.next = 70;
+                _context86.next = 65;
                 break;
               }
 
-              return _context86.abrupt("continue", 72);
+              return _context86.abrupt("continue", 67);
 
-            case 70:
+            case 65:
               // This protocol / DRM satisfies the specifications
               playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
               playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
 
-            case 72:
+            case 67:
               i++;
-              _context86.next = 43;
+              _context86.next = 37;
               break;
 
-            case 75:
+            case 70:
               this.Log(playoutMap);
               return _context86.abrupt("return", playoutMap);
 
-            case 77:
+            case 72:
             case "end":
               return _context86.stop();
           }

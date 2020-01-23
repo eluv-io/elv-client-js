@@ -3914,18 +3914,26 @@ class ElvClient {
       drms
     });
 
+    // Add authorization token to playout URLs
+    let queryParams = {
+      authorization: await this.authClient.AuthorizationToken({
+        objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+        audienceData
+      })
+    };
+
+    if(linkPath) {
+      queryParams.resolve = true;
+    }
+
     const playoutOptions = Object.values(
       await ResponseToJson(
         this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({
-            objectId,
-            channelAuth: true,
-            oauthToken: this.oauthToken,
-            audienceData
-          }),
-          queryParams: linkPath ? { resolve: true } : {},
+          path: path,
           method: "GET",
-          path: path
+          queryParams
         })
       )
     );
@@ -3935,6 +3943,8 @@ class ElvClient {
       const option = playoutOptions[i];
       const protocol = option.properties.protocol;
       const drm = option.properties.drm;
+      // Remove authorization parameter from playout path - it's re-added by Rep
+      const playoutPath = option.uri.split("?")[0];
       const licenseServers = option.properties.license_servers;
 
       // Create full playout URLs for this protocol / drm combo
@@ -3947,7 +3957,7 @@ class ElvClient {
               libraryId: linkTargetLibraryId || libraryId,
               objectId: linkTargetId || objectId,
               versionHash: linkTargetHash || versionHash,
-              rep: UrlJoin("playout", offering, option.uri),
+              rep: UrlJoin("playout", offering, playoutPath),
               channelAuth: true,
               queryParams: hlsjsProfile && protocol === "hls" ? {player_profile: "hls-js"} : {}
             }),
