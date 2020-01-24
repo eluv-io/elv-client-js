@@ -74,6 +74,8 @@ const Publish = async ({privateKey, typeName, typeId, app, role}) => {
       objectId: typeId,
       writeToken
     });
+
+    console.log("Successfully updated app");
   } catch(error) {
     console.error("Failed to update:");
     console.error(error);
