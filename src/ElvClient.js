@@ -21,8 +21,10 @@ const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
+const AccessIndexorContract = require("./contracts/AccessIndexor");
 
 const {
+  ValidatePresence,
   ValidateLibrary,
   ValidateObject,
   ValidateVersion,
@@ -4892,6 +4894,143 @@ class ElvClient {
       abi: LibraryContract.abi,
       event,
       eventName: `${permission}GroupRemoved`
+    });
+  }
+
+  /**
+   * List all of the groups with permissions on the specified object.
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} objectId - The ID of the object
+   *
+   * @return {Promise<Object>} - Object mapping group addresses to permissions, as an array
+   * - Example: { "0x0": ["see", "access"], ...}
+   */
+  async ContentObjectGroupPermissions({objectId}) {
+    ValidateObject(objectId);
+
+    this.Log(`Retrieving group permissions for object ${objectId}`);
+
+    const contractAddress = this.utils.HashToAddress(objectId);
+
+    // Access indexor only available on access groups, so must ask each access group
+    // we belong to about this object
+
+    const groupAddresses = await this.Collection({collectionType: "accessGroups"});
+
+    const groupPermissions = {};
+    await Promise.all(
+      groupAddresses.map(async groupAddress => {
+        let permission = await this.CallContractMethod({
+          contractAddress: groupAddress,
+          abi: AccessIndexorContract.abi,
+          methodName: "getContentObjectRights",
+          methodArgs: [contractAddress]
+        });
+
+        if(permission === 0) { return; }
+
+        let permissions = [];
+
+        if(permission >= 100) {
+          permissions.push("manage");
+        }
+
+        if(permission % 100 >= 10) {
+          permissions.push("access");
+        }
+
+        if(permission % 10 > 0) {
+          permissions.push("see");
+        }
+
+        groupPermissions[groupAddress] = permissions;
+      })
+    );
+
+    return groupPermissions;
+  }
+
+  /**
+   * Add a permission on the specified group for the specified object
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} objectId - The ID of the object
+   * @param {string} groupAddress - The address of the group
+   * @param {string} permission - The type of permission to add ("see", "access", "manage")
+   */
+  async AddContentObjectGroupPermission({objectId, groupAddress, permission}) {
+    ValidatePresence("permission", permission);
+    ValidateObject(objectId);
+    ValidateAddress(groupAddress);
+
+    permission = permission.toLowerCase();
+    groupAddress = this.utils.FormatAddress(groupAddress);
+
+    if(!["see", "access", "manage"].includes(permission)) {
+      throw Error(`Invalid permission type: ${permission}`);
+    }
+
+    this.Log(`Adding ${permission} permission to group ${groupAddress} for ${objectId}`);
+
+    const event = await this.CallContractMethodAndWait({
+      contractAddress: groupAddress,
+      abi: AccessIndexorContract.abi,
+      methodName: "setContentObjectRights",
+      methodArgs: [
+        this.utils.HashToAddress(objectId),
+        permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
+        permission === "none" ? 0 : 2
+      ]
+    });
+
+    await this.ExtractEventFromLogs({
+      abi: AccessIndexorContract.abi,
+      event,
+      eventName: "RightsChanged"
+    });
+  }
+
+  /**
+   * Remove a permission on the specified group for the specified object
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} objectId - The ID of the object
+   * @param {string} groupAddress - The address of the group
+   * @param {string} permission - The type of permission to remove ("see", "access", "manage")
+   */
+  async RemoveContentObjectGroupPermission({objectId, groupAddress, permission}) {
+    ValidatePresence("permission", permission);
+    ValidateObject(objectId);
+    ValidateAddress(groupAddress);
+
+    permission = permission.toLowerCase();
+    groupAddress = this.utils.FormatAddress(groupAddress);
+
+    if(!["see", "access", "manage"].includes(permission)) {
+      throw Error(`Invalid permission type: ${permission}`);
+    }
+
+    this.Log(`Removing ${permission} permission from group ${groupAddress} for ${objectId}`);
+
+    const event = await this.CallContractMethodAndWait({
+      contractAddress: groupAddress,
+      abi: AccessIndexorContract.abi,
+      methodName: "setContentObjectRights",
+      methodArgs: [
+        this.utils.HashToAddress(objectId),
+        permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
+        0
+      ]
+    });
+
+    await this.ExtractEventFromLogs({
+      abi: AccessIndexorContract.abi,
+      event,
+      eventName: "RightsChanged"
     });
   }
 

@@ -1,5 +1,11 @@
 "use strict";
 
+exports.ValidatePresence = function (name, thing) {
+  if (!thing) {
+    throw Error("".concat(name, " not specified"));
+  }
+};
+
 exports.ValidateLibrary = function (libraryId) {
   if (!libraryId) {
     throw Error("Library ID not specified");

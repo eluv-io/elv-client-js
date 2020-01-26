@@ -1,3 +1,9 @@
+exports.ValidatePresence = (name, thing) => {
+  if(!thing) {
+    throw Error(`${name} not specified`);
+  }
+};
+
 exports.ValidateLibrary = (libraryId) => {
   if(!libraryId) {
     throw Error("Library ID not specified");
