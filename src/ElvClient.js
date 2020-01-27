@@ -4923,6 +4923,8 @@ class ElvClient {
     const groupPermissions = {};
     await Promise.all(
       groupAddresses.map(async groupAddress => {
+        groupAddress = this.utils.FormatAddress(groupAddress);
+
         let permission = await this.CallContractMethod({
           contractAddress: groupAddress,
           abi: AccessIndexorContract.abi,

@@ -8569,7 +8569,8 @@ function () {
                   while (1) {
                     switch (_context113.prev = _context113.next) {
                       case 0:
-                        _context113.next = 2;
+                        groupAddress = _this12.utils.FormatAddress(groupAddress);
+                        _context113.next = 3;
                         return regeneratorRuntime.awrap(_this12.CallContractMethod({
                           contractAddress: groupAddress,
                           abi: AccessIndexorContract.abi,
@@ -8577,17 +8578,17 @@ function () {
                           methodArgs: [contractAddress]
                         }));
 
-                      case 2:
+                      case 3:
                         permission = _context113.sent;
 
                         if (!(permission === 0)) {
-                          _context113.next = 5;
+                          _context113.next = 6;
                           break;
                         }
 
                         return _context113.abrupt("return");
 
-                      case 5:
+                      case 6:
                         permissions = [];
 
                         if (permission >= 100) {
@@ -8604,7 +8605,7 @@ function () {
 
                         groupPermissions[groupAddress] = permissions;
 
-                      case 10:
+                      case 11:
                       case "end":
                         return _context113.stop();
                     }
