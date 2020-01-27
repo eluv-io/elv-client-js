@@ -2576,6 +2576,7 @@ function () {
      * @param {string} objectId - ID of the object
      * @param {object=} options -
      * meta: New metadata for the object - will be merged into existing metadata if specified
+     * type: New type for the object - Object ID, version hash or name of type
      *
      * @returns {Promise<object>} - Response containing the object ID and write token of the draft
      */
