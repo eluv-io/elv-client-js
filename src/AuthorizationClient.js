@@ -419,6 +419,10 @@ class AuthorizationClient {
 
     const kmsUrls = (await this.KMSInfo({objectId, versionHash})).urls;
 
+    if(!kmsUrls || !kmsUrls[0]) {
+      throw Error(`No KMS info set for ${versionHash || objectId}`);
+    }
+
     const kmsHttpClient = new HttpClient({
       uris: [kmsUrls[0]],
       debug: this.debug
