@@ -1415,6 +1415,18 @@ class ElvClient {
    * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+   * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
+
+      Example:
+       {
+          "resolved-link": {
+            ".": {
+              "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
+            },
+            ...
+          }
+       }
+   
    * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
    * full URL
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -1428,6 +1440,7 @@ class ElvClient {
     writeToken,
     metadataSubtree="/",
     resolveLinks=false,
+    resolveIncludeSource=false,
     produceLinkUrls=false,
     noAuth=true
   }) {
@@ -1447,7 +1460,10 @@ class ElvClient {
       metadata = await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
-          queryParams: {resolve: resolveLinks},
+          queryParams: {
+            resolve: resolveLinks,
+            resolve_include_source: resolveIncludeSource
+          },
           method: "GET",
           path: path
         })

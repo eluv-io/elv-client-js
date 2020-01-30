@@ -2191,6 +2191,17 @@ function () {
      * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
      * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
      * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+     * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
+         Example:
+         {
+            "resolved-link": {
+              ".": {
+                "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
+              },
+              ...
+            }
+         }
+     
      * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
      * full URL
      * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -2201,13 +2212,13 @@ function () {
   }, {
     key: "ContentObjectMetadata",
     value: function ContentObjectMetadata(_ref31) {
-      var libraryId, objectId, versionHash, writeToken, _ref31$metadataSubtre, metadataSubtree, _ref31$resolveLinks, resolveLinks, _ref31$produceLinkUrl, produceLinkUrls, _ref31$noAuth, noAuth, path, metadata;
+      var libraryId, objectId, versionHash, writeToken, _ref31$metadataSubtre, metadataSubtree, _ref31$resolveLinks, resolveLinks, _ref31$resolveInclude, resolveIncludeSource, _ref31$produceLinkUrl, produceLinkUrls, _ref31$noAuth, noAuth, path, metadata;
 
       return regeneratorRuntime.async(function ContentObjectMetadata$(_context32) {
         while (1) {
           switch (_context32.prev = _context32.next) {
             case 0:
-              libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, _ref31$metadataSubtre = _ref31.metadataSubtree, metadataSubtree = _ref31$metadataSubtre === void 0 ? "/" : _ref31$metadataSubtre, _ref31$resolveLinks = _ref31.resolveLinks, resolveLinks = _ref31$resolveLinks === void 0 ? false : _ref31$resolveLinks, _ref31$produceLinkUrl = _ref31.produceLinkUrls, produceLinkUrls = _ref31$produceLinkUrl === void 0 ? false : _ref31$produceLinkUrl, _ref31$noAuth = _ref31.noAuth, noAuth = _ref31$noAuth === void 0 ? true : _ref31$noAuth;
+              libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, _ref31$metadataSubtre = _ref31.metadataSubtree, metadataSubtree = _ref31$metadataSubtre === void 0 ? "/" : _ref31$metadataSubtre, _ref31$resolveLinks = _ref31.resolveLinks, resolveLinks = _ref31$resolveLinks === void 0 ? false : _ref31$resolveLinks, _ref31$resolveInclude = _ref31.resolveIncludeSource, resolveIncludeSource = _ref31$resolveInclude === void 0 ? false : _ref31$resolveInclude, _ref31$produceLinkUrl = _ref31.produceLinkUrls, produceLinkUrls = _ref31$produceLinkUrl === void 0 ? false : _ref31$produceLinkUrl, _ref31$noAuth = _ref31.noAuth, noAuth = _ref31$noAuth === void 0 ? true : _ref31$noAuth;
               ValidateParameters({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -2235,7 +2246,8 @@ function () {
             case 11:
               _context32.t3 = _context32.sent;
               _context32.t4 = {
-                resolve: resolveLinks
+                resolve: resolveLinks,
+                resolve_include_source: resolveIncludeSource
               };
               _context32.t5 = path;
               _context32.t6 = {

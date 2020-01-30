@@ -767,12 +767,21 @@ function () {
 
             case 6:
               kmsUrls = _context9.sent.urls;
+
+              if (!(!kmsUrls || !kmsUrls[0])) {
+                _context9.next = 9;
+                break;
+              }
+
+              throw Error("No KMS info set for ".concat(versionHash || objectId));
+
+            case 9:
               kmsHttpClient = new HttpClient({
                 uris: [kmsUrls[0]],
                 debug: this.debug
               });
               _context9.t0 = regeneratorRuntime;
-              _context9.next = 11;
+              _context9.next = 13;
               return regeneratorRuntime.awrap(kmsHttpClient.Request({
                 method: "GET",
                 path: UrlJoin("ks", "jwt", "q", objectId),
@@ -782,12 +791,12 @@ function () {
                 }
               }));
 
-            case 11:
+            case 13:
               _context9.t1 = _context9.sent.text();
-              _context9.next = 14;
+              _context9.next = 16;
               return _context9.t0.awrap.call(_context9.t0, _context9.t1);
 
-            case 14:
+            case 16:
               fabricToken = _context9.sent;
 
               if (!this.noCache) {
@@ -796,7 +805,7 @@ function () {
 
               return _context9.abrupt("return", fabricToken);
 
-            case 17:
+            case 19:
             case "end":
               return _context9.stop();
           }
