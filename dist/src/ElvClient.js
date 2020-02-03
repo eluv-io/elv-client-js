@@ -4622,48 +4622,54 @@ function () {
                   while (1) {
                     switch (_context62.prev = _context62.next) {
                       case 0:
+                        if (!chunked) {
+                          _context62.next = 13;
+                          break;
+                        }
+
                         if (!(format !== "buffer")) {
-                          _context62.next = 9;
+                          _context62.next = 10;
                           break;
                         }
 
                         arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
 
                         if (!(format === "arraybuffer")) {
-                          _context62.next = 6;
+                          _context62.next = 7;
                           break;
                         }
 
                         chunk = arrayBuffer;
-                        _context62.next = 9;
+                        _context62.next = 10;
                         break;
 
-                      case 6:
-                        _context62.next = 8;
+                      case 7:
+                        _context62.next = 9;
                         return regeneratorRuntime.awrap(ResponseToFormat(format, new Response(arrayBuffer)));
 
-                      case 8:
+                      case 9:
                         chunk = _context62.sent;
 
-                      case 9:
-                        if (chunked) {
+                      case 10:
+                        callback({
+                          bytesFinished: bytesFinished,
+                          bytesTotal: bytesTotal,
+                          chunk: chunk
+                        });
+                        _context62.next = 15;
+                        break;
+
+                      case 13:
+                        if (callback) {
                           callback({
                             bytesFinished: bytesFinished,
-                            bytesTotal: bytesTotal,
-                            chunk: chunk
+                            bytesTotal: bytesTotal
                           });
-                        } else {
-                          if (callback) {
-                            callback({
-                              bytesFinished: bytesFinished,
-                              bytesTotal: bytesTotal
-                            });
-                          }
-
-                          outputChunks.push(chunk);
                         }
 
-                      case 10:
+                        outputChunks.push(chunk);
+
+                      case 15:
                       case "end":
                         return _context62.stop();
                     }
