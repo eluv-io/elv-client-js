@@ -2764,21 +2764,21 @@ class ElvClient {
     // Set up decryption stream
     const stream = await Crypto.OpenDecryptionStream(conk);
     stream.on("data", async chunk => {
-      // Turn buffer into desired format, if necessary
-      if(format !== "buffer") {
-        const arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
-
-        if(format === "arraybuffer") {
-          chunk = arrayBuffer;
-        } else {
-          chunk = await ResponseToFormat(
-            format,
-            new Response(arrayBuffer)
-          );
-        }
-      }
-
       if(chunked) {
+        // Turn buffer into desired format, if necessary
+        if(format !== "buffer") {
+          const arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
+
+          if(format === "arraybuffer") {
+            chunk = arrayBuffer;
+          } else {
+            chunk = await ResponseToFormat(
+              format,
+              new Response(arrayBuffer)
+            );
+          }
+        }
+
         callback({
           bytesFinished,
           bytesTotal,
