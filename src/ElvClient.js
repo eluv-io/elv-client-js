@@ -1426,7 +1426,7 @@ class ElvClient {
             ...
           }
        }
-   
+
    * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
    * full URL
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -2438,14 +2438,29 @@ class ElvClient {
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} filePath - Path to the file to download
-   * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
-   * @param {function=} callback - If specified, will be periodically called with current download status
+   * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer" | "buffer)
+   * @param {boolean=} chunked=false - If specified, file will be downloaded and decrypted in chunks. The
+   * specified callback will be invoked on completion of each chunk. This is recommended for large files.
+   * @param {number=} chunkSize=1000000 - Size of file chunks to request for download
+   * - NOTE: If the file is encrypted, the size of the chunks returned via the callback function will not be affected by this value
+   * @param {function=} callback - If specified, will be periodically called with current download status - Required if `chunked` is true
    * - Signature: ({bytesFinished, bytesTotal}) => {}
+   * - Signature (chunked): ({bytesFinished, bytesTotal, chunk}) => {}
    *
-   * @returns {Promise<ArrayBuffer>} - File data in the requested format
+   * @returns {Promise<ArrayBuffer> | undefined} - No return if chunked is specified, file data in the requested format otherwise
    */
-  async DownloadFile({libraryId, objectId, versionHash, filePath, format="arrayBuffer", callback}) {
+  async DownloadFile({
+    libraryId,
+    objectId,
+    versionHash,
+    filePath,
+    format="arrayBuffer",
+    chunked=false,
+    chunkSize=1000000,
+    callback
+  }) {
     ValidateParameters({libraryId, objectId, versionHash});
+    ValidatePresence("filePath", filePath);
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
@@ -2456,96 +2471,41 @@ class ElvClient {
       metadataSubtree: UrlJoin("files", filePath)
     });
 
-    let path = UrlJoin("q", versionHash || objectId, "files", filePath);
-
     const encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
-    const chunkSize = 5000000;
-    const bufferSize = chunkSize * 5;
-    const fileSize = fileInfo["."].size;
-    const totalChunks = Math.ceil(fileSize / chunkSize);
-    let outputChunks = [];
+    const encryption = encrypted ? "cgck" : undefined;
+    const path = UrlJoin("q", versionHash || objectId, "files", filePath);
 
-    let downloaded = 0;
-    let decrypted = 0;
+    const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
+    headers.Accept = "*/*";
 
-    if(callback) {
-      callback({bytesFinished: 0, bytesTotal: fileSize});
+    // If not owner, indicate re-encryption
+    if(!this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId}))) {
+      headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
     }
 
-    let conk, decryptionStream, decryptionPromise;
-    if(encrypted) {
-      // Set up decryption stream
-      conk = await this.EncryptionConk({libraryId, objectId});
-      decryptionStream = await Crypto.OpenDecryptionStream(conk);
-      decryptionPromise = new Promise((resolve, reject) => {
-        decryptionStream
-          .on("data", (chunk) => {
-            outputChunks.push(chunk);
-            decrypted += chunk.length;
+    const bytesTotal = fileInfo["."].size;
 
-            if(callback) {
-              callback({bytesFinished: decrypted, bytesTotal: fileSize});
-            }
-          })
-          .on("finish", () => {
-            resolve();
-          })
-          .on("error", (e) => {
-            reject(e);
-          });
+    if(encrypted) {
+      return await this.DownloadEncrypted({
+        conk: await this.EncryptionConk({libraryId, objectId}),
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked
+      });
+    } else {
+      return await this.Download({
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked,
+        chunkSize
       });
     }
-
-    let nextChunk = 0;
-    await LimitedMap(
-      3,
-      [...Array(totalChunks)],
-      async (_, i) => {
-        const startByte = i * chunkSize;
-        const endByte = Math.min((i + 1) * chunkSize, fileSize);
-
-        while(encrypted && downloaded - decrypted > bufferSize) {
-          // Don't allow download to get too far ahead of decryption
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-
-        const chunk = Buffer.from(await (await this.HttpClient.Request({
-          headers: {
-            ...(await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash})),
-            Accept: "*/*",
-            Range: `bytes=${startByte}-${endByte - 1}`
-          },
-          method: "GET",
-          path: path
-        })).arrayBuffer());
-
-        downloaded += chunk.length;
-
-        if(decryptionStream) {
-          while(nextChunk !== i) {
-            // Chunks must be written to decryption stream in order
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-
-          decryptionStream.write(chunk);
-
-          nextChunk += 1;
-        } else {
-          outputChunks[i] = chunk;
-
-          if(callback) {
-            callback({bytesFinished: downloaded, bytesTotal: fileSize});
-          }
-        }
-      }
-    );
-
-    if(decryptionStream) {
-      decryptionStream.end();
-      await decryptionPromise;
-    }
-
-    return await ResponseToFormat(format, new Response(Buffer.concat(outputChunks)));
   }
 
   /* Parts */
@@ -2622,19 +2582,17 @@ class ElvClient {
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} partHash - Hash of the part to download
-   * @param {string=} format="arrayBuffer" - Format in which to return the data
+   * @param {string=} format="arrayBuffer" - Format in which to return the data ("blob" | "arraybuffer" | "buffer)
    * @param {boolean=} chunked=false - If specified, part will be downloaded and decrypted in chunks. The
    * specified callback will be invoked on completion of each chunk. This is recommended for large files,
    * especially if they are encrypted.
-   * @param {number=} chunkSize=1000000 - If doing chunked download, size of each chunk to fetch
-   * @param {function=} callback - Will be called on completion of each chunk
-   * - Signature: ({bytesFinished, bytesTotal, chunk}) => {}
+   * @param {number=} chunkSize=1000000 - Size of file chunks to request for download
+   * - NOTE: If the file is encrypted, the size of the chunks returned via the callback function will not be affected by this value
+   * @param {function=} callback - If specified, will be periodically called with current download status - Required if `chunked` is true
+   * - Signature: ({bytesFinished, bytesTotal}) => {}
+   * - Signature (chunked): ({bytesFinished, bytesTotal, chunk}) => {}
    *
-   * Note: If the part is encrypted, bytesFinished/bytesTotal will not exactly match the size of the data
-   * received. These values correspond to the size of the encrypted data - when decrypted, the part will be
-   * slightly smaller.
-   *
-   * @returns {Promise<ArrayBuffer>} - Part data in the specified format
+   * @returns {Promise<ArrayBuffer> | undefined} - No return if chunked is specified, part data in the requested format otherwise
    */
   async DownloadPart({
     libraryId,
@@ -2649,8 +2607,6 @@ class ElvClient {
     ValidateParameters({libraryId, objectId, versionHash});
     ValidatePartHash(partHash);
 
-    if(chunked && !callback) { throw Error("No callback specified for chunked part download"); }
-
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     const encrypted = partHash.startsWith("hqpe");
@@ -2659,80 +2615,151 @@ class ElvClient {
 
     let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
 
-    let conk;
+    const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
+
     if(encrypted) {
-      conk = await this.EncryptionConk({libraryId, objectId});
+      return await this.DownloadEncrypted({
+        conk: await this.EncryptionConk({libraryId, objectId}),
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked
+      });
+    } else {
+      return await this.Download({
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked,
+        chunkSize
+      });
+    }
+  }
+
+  async Download({
+    downloadPath,
+    headers,
+    bytesTotal,
+    chunked=false,
+    chunkSize=2000000,
+    callback,
+    format="arrayBuffer"
+  }) {
+    if(chunked && !callback) { throw Error("No callback specified for chunked download"); }
+
+    // Non-chunked file is still downloaded in parts, but assembled into a full file by the client
+    // instead of being returned in chunks via callback
+    let outputChunks;
+    if(!chunked) {
+      outputChunks = [];
+    }
+
+    // Download file in chunks
+    let bytesFinished = 0;
+    const totalChunks = Math.ceil(bytesTotal / chunkSize);
+    for(let i = 0; i < totalChunks; i++) {
+      headers["Range"] = `bytes=${bytesFinished}-${bytesFinished + chunkSize - 1}`;
+      const response = await this.HttpClient.Request({path: downloadPath, headers, method: "GET"});
+
+      bytesFinished = Math.min(bytesFinished + chunkSize, bytesTotal);
+
+      if(chunked) {
+        callback({bytesFinished, bytesTotal, chunk: await ResponseToFormat(format, response)});
+      } else {
+        if(callback) {
+          callback({bytesFinished, bytesTotal});
+        }
+
+        outputChunks.push(
+          Buffer.from(await response.arrayBuffer())
+        );
+      }
     }
 
     if(!chunked) {
-      // Download and decrypt entire part
-      const response = await this.HttpClient.Request({headers, method: "GET", path: path});
-
-      let data = await response.arrayBuffer();
-      if(encrypted) {
-        data = await Crypto.Decrypt(conk, data);
-      }
-
       return await ResponseToFormat(
         format,
-        new Response(data)
+        new Response(Buffer.concat(outputChunks))
       );
     }
+  }
 
-    // Download part in chunks
-    const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
+  async DownloadEncrypted({
+    conk,
+    downloadPath,
+    bytesTotal,
+    headers,
+    callback,
+    format="arrayBuffer",
+    chunked=false,
+    chunkSize=1000000,
+  }) {
+    if(chunked && !callback) { throw Error("No callback specified for chunked download"); }
+
     let bytesFinished = 0;
+    format = format.toLowerCase();
 
-    let stream;
-    if(encrypted) {
-      // Set up decryption stream
-      stream = await Crypto.OpenDecryptionStream(conk);
+    let outputChunks = [];
 
-      stream = stream.on("data", async chunk => {
-        // Turn buffer into desired format, if necessary
-        if(format !== "buffer") {
-          const arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
+    // Set up decryption stream
+    const stream = await Crypto.OpenDecryptionStream(conk);
+    stream.on("data", async chunk => {
+      // Turn buffer into desired format, if necessary
+      if(format !== "buffer") {
+        const arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
 
-          if(format === "arrayBuffer") {
-            chunk = arrayBuffer;
-          } else {
-            chunk = await ResponseToFormat(
-              format,
-              new Response(arrayBuffer)
-            );
-          }
+        if(format === "arraybuffer") {
+          chunk = arrayBuffer;
+        } else {
+          chunk = await ResponseToFormat(
+            format,
+            new Response(arrayBuffer)
+          );
         }
+      }
 
+      if(chunked) {
         callback({
           bytesFinished,
           bytesTotal,
           chunk
         });
-      });
-    }
+      } else {
+        if(callback) {
+          callback({
+            bytesFinished,
+            bytesTotal
+          });
+        }
+
+        outputChunks.push(chunk);
+      }
+    });
 
     const totalChunks = Math.ceil(bytesTotal / chunkSize);
     for(let i = 0; i < totalChunks; i++) {
       headers["Range"] = `bytes=${bytesFinished}-${bytesFinished + chunkSize - 1}`;
-      const response = await this.HttpClient.Request({headers, method: "GET", path: path});
+      const response = await this.HttpClient.Request({headers, method: "GET", path: downloadPath});
 
       bytesFinished = Math.min(bytesFinished + chunkSize, bytesTotal);
 
-      if(encrypted) {
-        stream.write(new Uint8Array(await response.arrayBuffer()));
-      } else {
-        callback({bytesFinished, bytesTotal, chunk: await ResponseToFormat(format, response)});
-      }
+      stream.write(new Uint8Array(await response.arrayBuffer()));
     }
 
-    if(stream) {
-      // Wait for decryption to complete
-      stream.end();
-      await new Promise(resolve =>
-        stream.on("finish", () => {
-          resolve();
-        })
-      );
+    // Wait for decryption to complete
+    stream.end();
+    await new Promise(resolve =>
+      stream.on("finish", () => {
+        resolve();
+      })
+    );
+
+    if(!chunked) {
+      return await ResponseToFormat(format, new Response(Buffer.concat(outputChunks)));
     }
   }
 
