@@ -292,6 +292,7 @@ class FrameClient {
       "CreateContentObject",
       "CreateContentSpace",
       "CreateContentType",
+      "CreateFileDirectories",
       "CreateFileUploadJob",
       "CreateLinks",
       "CreatePart",
