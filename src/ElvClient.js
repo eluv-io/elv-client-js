@@ -2406,6 +2406,28 @@ class ElvClient {
   }
 
   /**
+   * Create the specified directories on the specified object
+   *
+   * @methodGroup Parts and Files
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Array<string>} filePaths - List of file paths to create
+   */
+  async CreateFileDirectories({libraryId, objectId, writeToken, filePaths}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
+    this.Log(`Creating Directories: ${libraryId} ${objectId} ${writeToken}`);
+    this.Log(filePaths);
+
+    const ops = filePaths.map(path => ({op: "add", type: "directory", path}));
+
+    await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops});
+  }
+
+  /**
    * Delete the specified list of files/directories
    *
    * @methodGroup Parts and Files
@@ -2437,6 +2459,7 @@ class ElvClient {
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string=} writeToken - Write token for the draft from which to download the file
    * @param {string} filePath - Path to the file to download
    * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer" | "buffer)
    * @param {boolean=} chunked=false - If specified, file will be downloaded and decrypted in chunks. The
@@ -2453,6 +2476,7 @@ class ElvClient {
     libraryId,
     objectId,
     versionHash,
+    writeToken,
     filePath,
     format="arrayBuffer",
     chunked=false,
@@ -2468,12 +2492,13 @@ class ElvClient {
       libraryId,
       objectId,
       versionHash,
+      writeToken,
       metadataSubtree: UrlJoin("files", filePath)
     });
 
     const encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
     const encryption = encrypted ? "cgck" : undefined;
-    const path = UrlJoin("q", versionHash || objectId, "files", filePath);
+    const path = UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
 
     const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
     headers.Accept = "*/*";
@@ -2581,6 +2606,7 @@ class ElvClient {
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string=} writeToken - Write token for the draft from which to download the part
    * @param {string} partHash - Hash of the part to download
    * @param {string=} format="arrayBuffer" - Format in which to return the data ("blob" | "arraybuffer" | "buffer)
    * @param {boolean=} chunked=false - If specified, part will be downloaded and decrypted in chunks. The
@@ -2598,6 +2624,7 @@ class ElvClient {
     libraryId,
     objectId,
     versionHash,
+    writeToken,
     partHash,
     format="arrayBuffer",
     chunked=false,
@@ -2611,7 +2638,7 @@ class ElvClient {
 
     const encrypted = partHash.startsWith("hqpe");
     const encryption = encrypted ? "cgck" : undefined;
-    const path = UrlJoin("q", versionHash || objectId, "data", partHash);
+    const path = UrlJoin("q", writeToken || versionHash || objectId, "data", partHash);
 
     let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
 
@@ -4246,6 +4273,7 @@ class ElvClient {
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
    * @param {string=} versionHash - Hash of an object version
+   * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
    * @param {string=} partHash - Hash of a part - Requires object ID
    * @param {string=} rep - Rep parameter of the url
    * @param {string=} publicRep - Public rep parameter of the url
@@ -4263,6 +4291,7 @@ class ElvClient {
     libraryId,
     objectId,
     versionHash,
+    writeToken,
     partHash,
     rep,
     publicRep,
@@ -4283,6 +4312,7 @@ class ElvClient {
       libraryId: ${libraryId}
       objectId: ${objectId}
       versionHash: ${versionHash}
+      writeToken: ${writeToken}
       partHash: ${partHash}
       rep: ${rep}
       publicRep: ${publicRep}
@@ -4303,7 +4333,7 @@ class ElvClient {
       path = UrlJoin(path, "qlibs", libraryId);
 
       if(objectId || versionHash) {
-        path = UrlJoin(path, "q", versionHash || objectId);
+        path = UrlJoin(path, "q", writeToken || versionHash || objectId);
       }
     } else if(versionHash) {
       path = UrlJoin("q", versionHash);
@@ -4333,6 +4363,7 @@ class ElvClient {
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
    * @param {string=} versionHash - Hash of an object version
+   * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
    * @param {string} filePath - Path to the content object file
    * @param {Object=} queryParams - Query params to add to the URL
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -4340,7 +4371,7 @@ class ElvClient {
    *
    * @returns {Promise<string>} - URL to the specified file with authorization token
    */
-  async FileUrl({libraryId, objectId, versionHash, filePath, queryParams={}, noCache=false}) {
+  async FileUrl({libraryId, objectId, versionHash, writeToken, filePath, queryParams={}, noCache=false}) {
     ValidateParameters({libraryId, objectId, versionHash});
     if(!filePath) { throw "File path not specified"; }
 
@@ -4349,7 +4380,7 @@ class ElvClient {
     let path;
 
     if(libraryId) {
-      path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "files", filePath);
+      path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "files", filePath);
     } else {
       path = UrlJoin("q", versionHash, "files", filePath);
     }
