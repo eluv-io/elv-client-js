@@ -309,6 +309,8 @@ class FrameClient {
       "DeleteMetadata",
       "DeletePart",
       "DeployContract",
+      "Download",
+      "DownloadEncrypted",
       "DownloadFile",
       "DownloadPart",
       "EditContentObject",

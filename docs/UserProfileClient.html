@@ -331,7 +331,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line352">line 352</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line381">line 381</a>
         </li>
       </ul>
     </dd>
@@ -542,7 +542,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line467">line 467</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line496">line 496</a>
         </li>
       </ul>
     </dd>
@@ -723,7 +723,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line329">line 329</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line358">line 358</a>
         </li>
       </ul>
     </dd>
@@ -964,7 +964,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line288">line 288</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line317">line 317</a>
         </li>
       </ul>
     </dd>
@@ -987,7 +987,7 @@ await client.userProfileClient.UserMetadata()</pre>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="PublicUserMetadata">
-      <span class="type-signature">async </span>PublicUserMetadata<span class="signature">({<div class="block-param">address<span class="signature-attributes">optional</span>,</div><div class="block-param">metadataSubtree<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;(Object|string)></span>
+      <span class="type-signature">async </span>PublicUserMetadata<span class="signature">({<div class="block-param">address<span class="signature-attributes">optional</span>,</div><div class="block-param">metadataSubtree<span class="signature-attributes">optional</span>,</div><div class="block-param">resolveLinks<span class="signature-attributes">optional</span>,</div><div class="block-param">resolveIncludeSource<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;(Object|string)></span>
     </h4>
   </span>
 
@@ -1026,6 +1026,8 @@ await client.userProfileClient.UserMetadata()</pre>
       
 
       
+        <th>Default</th>
+      
 
       <th class="last">Description</th>
     </tr>
@@ -1063,6 +1065,10 @@ await client.userProfileClient.UserMetadata()</pre>
           </td>
         
 
+        
+          <td class="default">
+            
+          </td>
         
 
         <td class="description last">
@@ -1103,9 +1109,112 @@ await client.userProfileClient.UserMetadata()</pre>
         
 
         
+          <td class="default">
+            
+          </td>
+        
 
         <td class="description last">
           <p>Subtree of the metadata to retrieve</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>resolveLinks</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              false
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>If specified, links in the metadata will be resolved</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>resolveIncludeSource</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              false
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>If specified, resolved links will include the hash of the link at the root of the metadata</p>
+<pre><code> Example:
+   {
+      &quot;resolved-link&quot;: {
+        &quot;.&quot;: {
+          &quot;source&quot;: &quot;hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a&quot;
+        },
+        ...
+      }
+   }</code></pre>
           
         </td>
       </tr>
@@ -1202,7 +1311,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line226">line 226</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line239">line 239</a>
         </li>
       </ul>
     </dd>
@@ -1431,7 +1540,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line309">line 309</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line338">line 338</a>
         </li>
       </ul>
     </dd>
@@ -1592,7 +1701,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line364">line 364</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line393">line 393</a>
         </li>
       </ul>
     </dd>
@@ -1768,7 +1877,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line419">line 419</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line448">line 448</a>
         </li>
       </ul>
     </dd>
@@ -1791,7 +1900,7 @@ await client.userProfileClient.UserMetadata()</pre>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="UserMetadata">
-      <span class="type-signature">async </span>UserMetadata<span class="signature">({<div class="block-param">metadataSubtree<span class="signature-attributes">optional</span>,</div><div class="block-param">noCache<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;(Object|string)></span>
+      <span class="type-signature">async </span>UserMetadata<span class="signature">({<div class="block-param">metadataSubtree<span class="signature-attributes">optional</span>,</div><div class="block-param">noCache<span class="signature-attributes">optional</span>,</div><div class="block-param">resolveLinks<span class="signature-attributes">optional</span>,</div><div class="block-param">resolveIncludeSource<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;(Object|string)></span>
     </h4>
   </span>
 
@@ -1943,6 +2052,105 @@ await client.userProfileClient.UserMetadata()</pre>
 
         <td class="description last">
           <p>If specified, it will always query for metadata instead of returning from the cache</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>resolveLinks</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              false
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>If specified, links in the metadata will be resolved</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>resolveIncludeSource</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              false
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>If specified, resolved links will include the hash of the link at the root of the metadata</p>
+<pre><code> Example:
+   {
+      &quot;resolved-link&quot;: {
+        &quot;.&quot;: {
+          &quot;source&quot;: &quot;hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a&quot;
+        },
+        ...
+      }
+   }</code></pre>
           
         </td>
       </tr>
@@ -2201,7 +2409,7 @@ await client.userProfileClient.UserMetadata()</pre>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line256">line 256</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line283">line 283</a>
         </li>
       </ul>
     </dd>
@@ -2396,7 +2604,7 @@ browser caching when the image is updated</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line385">line 385</a>
+          <a href="UserProfileClient.js.html">UserProfileClient.js</a>, <a href="UserProfileClient.js.html#line414">line 414</a>
         </li>
       </ul>
     </dd>
