@@ -488,7 +488,7 @@ function () {
               createMethodCall = _context5.sent;
               this.Log("Awaiting transaction completion: ".concat(createMethodCall.hash)); // Poll for transaction completion
 
-              interval = 250;
+              interval = 500;
               elapsed = 0;
 
             case 8:

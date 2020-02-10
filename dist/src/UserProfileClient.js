@@ -354,6 +354,18 @@ function () {
      * @namedParams
      * @param {string=} address - The address of the user
      * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
+     * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+     * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
+        Example:
+         {
+            "resolved-link": {
+              ".": {
+                "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
+              },
+              ...
+            }
+         }
+     *
      *
      * @return {Promise<Object|string>}
      */
@@ -361,13 +373,13 @@ function () {
   }, {
     key: "PublicUserMetadata",
     value: function PublicUserMetadata(_ref3) {
-      var address, _ref3$metadataSubtree, metadataSubtree, walletAddress, libraryId, objectId;
+      var address, _ref3$metadataSubtree, metadataSubtree, _ref3$resolveLinks, resolveLinks, _ref3$resolveIncludeS, resolveIncludeSource, walletAddress, libraryId, objectId;
 
       return regeneratorRuntime.async(function PublicUserMetadata$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              address = _ref3.address, _ref3$metadataSubtree = _ref3.metadataSubtree, metadataSubtree = _ref3$metadataSubtree === void 0 ? "/" : _ref3$metadataSubtree;
+              address = _ref3.address, _ref3$metadataSubtree = _ref3.metadataSubtree, metadataSubtree = _ref3$metadataSubtree === void 0 ? "/" : _ref3$metadataSubtree, _ref3$resolveLinks = _ref3.resolveLinks, resolveLinks = _ref3$resolveLinks === void 0 ? false : _ref3$resolveLinks, _ref3$resolveIncludeS = _ref3.resolveIncludeSource, resolveIncludeSource = _ref3$resolveIncludeS === void 0 ? false : _ref3$resolveIncludeS;
               _context4.next = 3;
               return regeneratorRuntime.awrap(this.UserWalletAddress({
                 address: address
@@ -391,7 +403,9 @@ function () {
               return regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
-                metadataSubtree: metadataSubtree
+                metadataSubtree: metadataSubtree,
+                resolveLinks: resolveLinks,
+                resolveIncludeSource: resolveIncludeSource
               }));
 
             case 11:
@@ -414,6 +428,17 @@ function () {
      * @namedParams
      * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
      * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
+     * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+     * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
+        Example:
+         {
+            "resolved-link": {
+              ".": {
+                "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
+              },
+              ...
+            }
+         }
      *
      * @return {Promise<Object|string>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
      */
@@ -424,6 +449,10 @@ function () {
       var _ref4,
           _ref4$metadataSubtree,
           metadataSubtree,
+          _ref4$resolveLinks,
+          resolveLinks,
+          _ref4$resolveIncludeS,
+          resolveIncludeSource,
           _ref4$noCache,
           noCache,
           libraryId,
@@ -435,7 +464,7 @@ function () {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              _ref4 = _args5.length > 0 && _args5[0] !== undefined ? _args5[0] : {}, _ref4$metadataSubtree = _ref4.metadataSubtree, metadataSubtree = _ref4$metadataSubtree === void 0 ? "/" : _ref4$metadataSubtree, _ref4$noCache = _ref4.noCache, noCache = _ref4$noCache === void 0 ? false : _ref4$noCache;
+              _ref4 = _args5.length > 0 && _args5[0] !== undefined ? _args5[0] : {}, _ref4$metadataSubtree = _ref4.metadataSubtree, metadataSubtree = _ref4$metadataSubtree === void 0 ? "/" : _ref4$metadataSubtree, _ref4$resolveLinks = _ref4.resolveLinks, resolveLinks = _ref4$resolveLinks === void 0 ? false : _ref4$resolveLinks, _ref4$resolveIncludeS = _ref4.resolveIncludeSource, resolveIncludeSource = _ref4$resolveIncludeS === void 0 ? false : _ref4$resolveIncludeS, _ref4$noCache = _ref4.noCache, noCache = _ref4$noCache === void 0 ? false : _ref4$noCache;
 
               if (!(!noCache && this.cachedPrivateMetadata)) {
                 _context5.next = 3;
@@ -464,7 +493,9 @@ function () {
               return regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
-                metadataSubtree: metadataSubtree
+                metadataSubtree: metadataSubtree,
+                resolveLinks: resolveLinks,
+                resolveIncludeSource: resolveIncludeSource
               }));
 
             case 13:
