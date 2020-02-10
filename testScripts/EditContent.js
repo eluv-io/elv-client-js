@@ -32,6 +32,10 @@ const argv = yargs
     type: "boolean",
     description: "If specified, files will be referenced from an S3 bucket instead of the local system"
   })
+  .option("type", {
+    type: "string",
+    description: "New type for this object (object ID, version hash or name of type)"
+  })
   .demandOption(
     ["objectId"],
     "\nUsage: PRIVATE_KEY=<private-key> node EditContent --objectId <object-id> --replaceMetadata <subtree> '<metadata-json>' ..."
@@ -41,7 +45,17 @@ const argv = yargs
 const ClientConfiguration = require("../TestConfiguration.json");
 
 
-const EditContent = async ({objectId, replaceMetadata, mergeMetadata, deleteMetadata, files, access, s3Reference, s3Copy}) => {
+const EditContent = async ({
+  objectId,
+  replaceMetadata,
+  mergeMetadata,
+  deleteMetadata,
+  files,
+  access,
+  s3Reference,
+  s3Copy,
+  type
+}) => {
   const client = await ElvClient.FromConfigurationUrl({
     configUrl: ClientConfiguration["config-url"]
   });
@@ -58,7 +72,10 @@ const EditContent = async ({objectId, replaceMetadata, mergeMetadata, deleteMeta
 
     const {write_token} = await client.EditContentObject({
       libraryId,
-      objectId
+      objectId,
+      options: {
+        type
+      }
     });
 
     while(replaceMetadata && replaceMetadata.length > 0) {
@@ -182,7 +199,7 @@ const EditContent = async ({objectId, replaceMetadata, mergeMetadata, deleteMeta
   }
 };
 
-let {objectId, replaceMetadata, mergeMetadata, deleteMetadata, files, s3Reference, s3Copy} = argv;
+let {objectId, replaceMetadata, mergeMetadata, deleteMetadata, files, s3Reference, s3Copy, type} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -213,5 +230,6 @@ EditContent({
   files,
   access,
   s3Reference,
-  s3Copy
+  s3Copy,
+  type
 });

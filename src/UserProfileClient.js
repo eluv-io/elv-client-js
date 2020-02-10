@@ -220,10 +220,23 @@ await client.userProfileClient.UserMetadata()
    * @namedParams
    * @param {string=} address - The address of the user
    * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
+   * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+   * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
+
+     Example:
+       {
+          "resolved-link": {
+            ".": {
+              "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
+            },
+            ...
+          }
+       }
+   *
    *
    * @return {Promise<Object|string>}
    */
-  async PublicUserMetadata({address, metadataSubtree="/"}) {
+  async PublicUserMetadata({address, metadataSubtree="/", resolveLinks=false, resolveIncludeSource=false}) {
     const walletAddress = await this.UserWalletAddress({address});
 
     if(!walletAddress) { return; }
@@ -236,7 +249,9 @@ await client.userProfileClient.UserMetadata()
     return await this.client.ContentObjectMetadata({
       libraryId,
       objectId,
-      metadataSubtree
+      metadataSubtree,
+      resolveLinks,
+      resolveIncludeSource
     });
   }
 
@@ -250,10 +265,22 @@ await client.userProfileClient.UserMetadata()
    * @namedParams
    * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
    * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
+   * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+   * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
+
+     Example:
+       {
+          "resolved-link": {
+            ".": {
+              "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
+            },
+            ...
+          }
+       }
    *
    * @return {Promise<Object|string>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
    */
-  async UserMetadata({metadataSubtree="/", noCache=false}={}) {
+  async UserMetadata({metadataSubtree="/", resolveLinks=false, resolveIncludeSource=false, noCache=false}={}) {
     if(!noCache && this.cachedPrivateMetadata) {
       return this.__GetCachedMetadata(metadataSubtree);
     }
@@ -268,7 +295,9 @@ await client.userProfileClient.UserMetadata()
       return await this.client.ContentObjectMetadata({
         libraryId,
         objectId,
-        metadataSubtree
+        metadataSubtree,
+        resolveLinks,
+        resolveIncludeSource
       });
     }
 

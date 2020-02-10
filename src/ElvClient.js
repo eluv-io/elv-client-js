@@ -21,8 +21,10 @@ const LibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
 const ContentTypeContract = require("./contracts/BaseContentType");
 const AccessGroupContract = require("./contracts/BaseAccessControlGroup");
+const AccessIndexorContract = require("./contracts/AccessIndexor");
 
 const {
+  ValidatePresence,
   ValidateLibrary,
   ValidateObject,
   ValidateVersion,
@@ -432,7 +434,7 @@ class ElvClient {
    */
   SetSigner({signer}) {
     signer.connect(this.ethClient.Provider());
-    signer.provider.pollingInterval = 250;
+    signer.provider.pollingInterval = 500;
     this.signer = signer;
 
     this.InitializeClients();
@@ -450,7 +452,7 @@ class ElvClient {
    */
   async SetSignerFromWeb3Provider({provider}) {
     let ethProvider = new Ethers.providers.Web3Provider(provider);
-    ethProvider.pollingInterval = 250;
+    ethProvider.pollingInterval = 500;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
     await this.InitializeClients();
@@ -466,9 +468,8 @@ class ElvClient {
     return this.signer ? this.utils.FormatAddress(this.signer.address) : "";
   }
 
-  SetOauthToken({token, groupId}) {
+  SetOauthToken({token}) {
     this.oauthToken = token;
-    this.oauthGroupId = groupId;
 
     const wallet = this.GenerateWallet();
     const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
@@ -1414,6 +1415,18 @@ class ElvClient {
    * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
    * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+   * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
+
+      Example:
+       {
+          "resolved-link": {
+            ".": {
+              "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
+            },
+            ...
+          }
+       }
+
    * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
    * full URL
    * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -1427,6 +1440,7 @@ class ElvClient {
     writeToken,
     metadataSubtree="/",
     resolveLinks=false,
+    resolveIncludeSource=false,
     produceLinkUrls=false,
     noAuth=true
   }) {
@@ -1446,7 +1460,10 @@ class ElvClient {
       metadata = await ResponseToJson(
         this.HttpClient.Request({
           headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
-          queryParams: {resolve: resolveLinks},
+          queryParams: {
+            resolve: resolveLinks,
+            resolve_include_source: resolveIncludeSource
+          },
           method: "GET",
           path: path
         })
@@ -1617,6 +1634,7 @@ class ElvClient {
    * @param {string} objectId - ID of the object
    * @param {object=} options -
    * meta: New metadata for the object - will be merged into existing metadata if specified
+   * type: New type for the object - Object ID, version hash or name of type
    *
    * @returns {Promise<object>} - Response containing the object ID and write token of the draft
    */
@@ -2388,6 +2406,28 @@ class ElvClient {
   }
 
   /**
+   * Create the specified directories on the specified object
+   *
+   * @methodGroup Parts and Files
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Array<string>} filePaths - List of file paths to create
+   */
+  async CreateFileDirectories({libraryId, objectId, writeToken, filePaths}) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
+    this.Log(`Creating Directories: ${libraryId} ${objectId} ${writeToken}`);
+    this.Log(filePaths);
+
+    const ops = filePaths.map(path => ({op: "add", type: "directory", path}));
+
+    await this.CreateFileUploadJob({libraryId, objectId, writeToken, ops});
+  }
+
+  /**
    * Delete the specified list of files/directories
    *
    * @methodGroup Parts and Files
@@ -2419,15 +2459,32 @@ class ElvClient {
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string=} writeToken - Write token for the draft from which to download the file
    * @param {string} filePath - Path to the file to download
-   * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer")
-   * @param {function=} callback - If specified, will be periodically called with current download status
+   * @param {string=} format="blob" - Format in which to return the data ("blob" | "arraybuffer" | "buffer)
+   * @param {boolean=} chunked=false - If specified, file will be downloaded and decrypted in chunks. The
+   * specified callback will be invoked on completion of each chunk. This is recommended for large files.
+   * @param {number=} chunkSize=1000000 - Size of file chunks to request for download
+   * - NOTE: If the file is encrypted, the size of the chunks returned via the callback function will not be affected by this value
+   * @param {function=} callback - If specified, will be periodically called with current download status - Required if `chunked` is true
    * - Signature: ({bytesFinished, bytesTotal}) => {}
+   * - Signature (chunked): ({bytesFinished, bytesTotal, chunk}) => {}
    *
-   * @returns {Promise<ArrayBuffer>} - File data in the requested format
+   * @returns {Promise<ArrayBuffer> | undefined} - No return if chunked is specified, file data in the requested format otherwise
    */
-  async DownloadFile({libraryId, objectId, versionHash, filePath, format="arrayBuffer", callback}) {
+  async DownloadFile({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    filePath,
+    format="arrayBuffer",
+    chunked=false,
+    chunkSize=1000000,
+    callback
+  }) {
     ValidateParameters({libraryId, objectId, versionHash});
+    ValidatePresence("filePath", filePath);
 
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
@@ -2435,99 +2492,45 @@ class ElvClient {
       libraryId,
       objectId,
       versionHash,
+      writeToken,
       metadataSubtree: UrlJoin("files", filePath)
     });
 
-    let path = UrlJoin("q", versionHash || objectId, "files", filePath);
-
     const encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
-    const chunkSize = 5000000;
-    const bufferSize = chunkSize * 5;
-    const fileSize = fileInfo["."].size;
-    const totalChunks = Math.ceil(fileSize / chunkSize);
-    let outputChunks = [];
+    const encryption = encrypted ? "cgck" : undefined;
+    const path = UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
 
-    let downloaded = 0;
-    let decrypted = 0;
+    const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
+    headers.Accept = "*/*";
 
-    if(callback) {
-      callback({bytesFinished: 0, bytesTotal: fileSize});
+    // If not owner, indicate re-encryption
+    if(!this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId}))) {
+      headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
     }
 
-    let conk, decryptionStream, decryptionPromise;
-    if(encrypted) {
-      // Set up decryption stream
-      conk = await this.EncryptionConk({libraryId, objectId});
-      decryptionStream = await Crypto.OpenDecryptionStream(conk);
-      decryptionPromise = new Promise((resolve, reject) => {
-        decryptionStream
-          .on("data", (chunk) => {
-            outputChunks.push(chunk);
-            decrypted += chunk.length;
+    const bytesTotal = fileInfo["."].size;
 
-            if(callback) {
-              callback({bytesFinished: decrypted, bytesTotal: fileSize});
-            }
-          })
-          .on("finish", () => {
-            resolve();
-          })
-          .on("error", (e) => {
-            reject(e);
-          });
+    if(encrypted) {
+      return await this.DownloadEncrypted({
+        conk: await this.EncryptionConk({libraryId, objectId}),
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked
+      });
+    } else {
+      return await this.Download({
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked,
+        chunkSize
       });
     }
-
-    let nextChunk = 0;
-    await LimitedMap(
-      3,
-      [...Array(totalChunks)],
-      async (_, i) => {
-        const startByte = i * chunkSize;
-        const endByte = Math.min((i + 1) * chunkSize, fileSize);
-
-        while(encrypted && downloaded - decrypted > bufferSize) {
-          // Don't allow download to get too far ahead of decryption
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-
-        const chunk = Buffer.from(await (await this.HttpClient.Request({
-          headers: {
-            ...(await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash})),
-            Accept: "*/*",
-            Range: `bytes=${startByte}-${endByte - 1}`
-          },
-          method: "GET",
-          path: path
-        })).arrayBuffer());
-
-        downloaded += chunk.length;
-
-        if(decryptionStream) {
-          while(nextChunk !== i) {
-            // Chunks must be written to decryption stream in order
-            await new Promise(resolve => setTimeout(resolve, 500));
-          }
-
-          decryptionStream.write(chunk);
-
-          nextChunk += 1;
-        } else {
-          outputChunks[i] = chunk;
-
-          if(callback) {
-            callback({bytesFinished: downloaded, bytesTotal: fileSize});
-          }
-        }
-      }
-    );
-
-    if(decryptionStream) {
-      decryptionStream.end();
-      await decryptionPromise;
-    }
-
-    return await ResponseToFormat(format, new Response(Buffer.concat(outputChunks)));
   }
 
   /* Parts */
@@ -2603,25 +2606,25 @@ class ElvClient {
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+   * @param {string=} writeToken - Write token for the draft from which to download the part
    * @param {string} partHash - Hash of the part to download
-   * @param {string=} format="arrayBuffer" - Format in which to return the data
+   * @param {string=} format="arrayBuffer" - Format in which to return the data ("blob" | "arraybuffer" | "buffer)
    * @param {boolean=} chunked=false - If specified, part will be downloaded and decrypted in chunks. The
    * specified callback will be invoked on completion of each chunk. This is recommended for large files,
    * especially if they are encrypted.
-   * @param {number=} chunkSize=1000000 - If doing chunked download, size of each chunk to fetch
-   * @param {function=} callback - Will be called on completion of each chunk
-   * - Signature: ({bytesFinished, bytesTotal, chunk}) => {}
+   * @param {number=} chunkSize=1000000 - Size of file chunks to request for download
+   * - NOTE: If the file is encrypted, the size of the chunks returned via the callback function will not be affected by this value
+   * @param {function=} callback - If specified, will be periodically called with current download status - Required if `chunked` is true
+   * - Signature: ({bytesFinished, bytesTotal}) => {}
+   * - Signature (chunked): ({bytesFinished, bytesTotal, chunk}) => {}
    *
-   * Note: If the part is encrypted, bytesFinished/bytesTotal will not exactly match the size of the data
-   * received. These values correspond to the size of the encrypted data - when decrypted, the part will be
-   * slightly smaller.
-   *
-   * @returns {Promise<ArrayBuffer>} - Part data in the specified format
+   * @returns {Promise<ArrayBuffer> | undefined} - No return if chunked is specified, part data in the requested format otherwise
    */
   async DownloadPart({
     libraryId,
     objectId,
     versionHash,
+    writeToken,
     partHash,
     format="arrayBuffer",
     chunked=false,
@@ -2631,51 +2634,113 @@ class ElvClient {
     ValidateParameters({libraryId, objectId, versionHash});
     ValidatePartHash(partHash);
 
-    if(chunked && !callback) { throw Error("No callback specified for chunked part download"); }
-
     if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
     const encrypted = partHash.startsWith("hqpe");
     const encryption = encrypted ? "cgck" : undefined;
-    const path = UrlJoin("q", versionHash || objectId, "data", partHash);
+    const path = UrlJoin("q", writeToken || versionHash || objectId, "data", partHash);
 
     let headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
 
-    let conk;
+    const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
+
     if(encrypted) {
-      conk = await this.EncryptionConk({libraryId, objectId});
+      return await this.DownloadEncrypted({
+        conk: await this.EncryptionConk({libraryId, objectId}),
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked
+      });
+    } else {
+      return await this.Download({
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked,
+        chunkSize
+      });
+    }
+  }
+
+  async Download({
+    downloadPath,
+    headers,
+    bytesTotal,
+    chunked=false,
+    chunkSize=2000000,
+    callback,
+    format="arrayBuffer"
+  }) {
+    if(chunked && !callback) { throw Error("No callback specified for chunked download"); }
+
+    // Non-chunked file is still downloaded in parts, but assembled into a full file by the client
+    // instead of being returned in chunks via callback
+    let outputChunks;
+    if(!chunked) {
+      outputChunks = [];
+    }
+
+    // Download file in chunks
+    let bytesFinished = 0;
+    const totalChunks = Math.ceil(bytesTotal / chunkSize);
+    for(let i = 0; i < totalChunks; i++) {
+      headers["Range"] = `bytes=${bytesFinished}-${bytesFinished + chunkSize - 1}`;
+      const response = await this.HttpClient.Request({path: downloadPath, headers, method: "GET"});
+
+      bytesFinished = Math.min(bytesFinished + chunkSize, bytesTotal);
+
+      if(chunked) {
+        callback({bytesFinished, bytesTotal, chunk: await ResponseToFormat(format, response)});
+      } else {
+        if(callback) {
+          callback({bytesFinished, bytesTotal});
+        }
+
+        outputChunks.push(
+          Buffer.from(await response.arrayBuffer())
+        );
+      }
     }
 
     if(!chunked) {
-      // Download and decrypt entire part
-      const response = await this.HttpClient.Request({headers, method: "GET", path: path});
-
-      let data = await response.arrayBuffer();
-      if(encrypted) {
-        data = await Crypto.Decrypt(conk, data);
-      }
-
       return await ResponseToFormat(
         format,
-        new Response(data)
+        new Response(Buffer.concat(outputChunks))
       );
     }
+  }
 
-    // Download part in chunks
-    const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
+  async DownloadEncrypted({
+    conk,
+    downloadPath,
+    bytesTotal,
+    headers,
+    callback,
+    format="arrayBuffer",
+    chunked=false,
+    chunkSize=1000000,
+  }) {
+    if(chunked && !callback) { throw Error("No callback specified for chunked download"); }
+
     let bytesFinished = 0;
+    format = format.toLowerCase();
 
-    let stream;
-    if(encrypted) {
-      // Set up decryption stream
-      stream = await Crypto.OpenDecryptionStream(conk);
+    let outputChunks = [];
 
-      stream = stream.on("data", async chunk => {
+    // Set up decryption stream
+    const stream = await Crypto.OpenDecryptionStream(conk);
+    stream.on("data", async chunk => {
+      if(chunked) {
         // Turn buffer into desired format, if necessary
         if(format !== "buffer") {
           const arrayBuffer = chunk.buffer.slice(chunk.byteOffset, chunk.byteOffset + chunk.byteLength);
 
-          if(format === "arrayBuffer") {
+          if(format === "arraybuffer") {
             chunk = arrayBuffer;
           } else {
             chunk = await ResponseToFormat(
@@ -2690,31 +2755,38 @@ class ElvClient {
           bytesTotal,
           chunk
         });
-      });
-    }
+      } else {
+        if(callback) {
+          callback({
+            bytesFinished,
+            bytesTotal
+          });
+        }
+
+        outputChunks.push(chunk);
+      }
+    });
 
     const totalChunks = Math.ceil(bytesTotal / chunkSize);
     for(let i = 0; i < totalChunks; i++) {
       headers["Range"] = `bytes=${bytesFinished}-${bytesFinished + chunkSize - 1}`;
-      const response = await this.HttpClient.Request({headers, method: "GET", path: path});
+      const response = await this.HttpClient.Request({headers, method: "GET", path: downloadPath});
 
       bytesFinished = Math.min(bytesFinished + chunkSize, bytesTotal);
 
-      if(encrypted) {
-        stream.write(new Uint8Array(await response.arrayBuffer()));
-      } else {
-        callback({bytesFinished, bytesTotal, chunk: await ResponseToFormat(format, response)});
-      }
+      stream.write(new Uint8Array(await response.arrayBuffer()));
     }
 
-    if(stream) {
-      // Wait for decryption to complete
-      stream.end();
-      await new Promise(resolve =>
-        stream.on("finish", () => {
-          resolve();
-        })
-      );
+    // Wait for decryption to complete
+    stream.end();
+    await new Promise(resolve =>
+      stream.on("finish", () => {
+        resolve();
+      })
+    );
+
+    if(!chunked) {
+      return await ResponseToFormat(format, new Response(Buffer.concat(outputChunks)));
     }
   }
 
@@ -3729,18 +3801,10 @@ class ElvClient {
 
     const audienceData = this.AudienceData({objectId, versionHash});
 
-    let oauthParams;
-    if(this.oauthToken) {
-      oauthParams = {
-        token: this.oauthToken,
-        groupId: this.oauthGroupId
-      };
-    }
-
     return await this.authClient.AuthorizationToken({
       objectId,
       channelAuth: true,
-      oauthParams,
+      oauthToken: this.oauthToken,
       audienceData,
       noCache
     });
@@ -3923,26 +3987,26 @@ class ElvClient {
       drms
     });
 
-    let oauthParams;
-    if(this.oauthToken) {
-      oauthParams = {
-        token: this.oauthToken,
-        groupId: this.oauthGroupId
-      };
+    // Add authorization token to playout URLs
+    let queryParams = {
+      authorization: await this.authClient.AuthorizationToken({
+        objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+        audienceData
+      })
+    };
+
+    if(linkPath) {
+      queryParams.resolve = true;
     }
 
     const playoutOptions = Object.values(
       await ResponseToJson(
         this.HttpClient.Request({
-          headers: await this.authClient.AuthorizationHeader({
-            objectId,
-            channelAuth: true,
-            oauthParams,
-            audienceData
-          }),
-          queryParams: linkPath ? { resolve: true } : {},
+          path: path,
           method: "GET",
-          path: path
+          queryParams
         })
       )
     );
@@ -3952,6 +4016,8 @@ class ElvClient {
       const option = playoutOptions[i];
       const protocol = option.properties.protocol;
       const drm = option.properties.drm;
+      // Remove authorization parameter from playout path - it's re-added by Rep
+      const playoutPath = option.uri.split("?")[0];
       const licenseServers = option.properties.license_servers;
 
       // Create full playout URLs for this protocol / drm combo
@@ -3964,7 +4030,7 @@ class ElvClient {
               libraryId: linkTargetLibraryId || libraryId,
               objectId: linkTargetId || objectId,
               versionHash: linkTargetHash || versionHash,
-              rep: UrlJoin("playout", offering, option.uri),
+              rep: UrlJoin("playout", offering, playoutPath),
               channelAuth: true,
               queryParams: hlsjsProfile && protocol === "hls" ? {player_profile: "hls-js"} : {}
             }),
@@ -4207,6 +4273,7 @@ class ElvClient {
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
    * @param {string=} versionHash - Hash of an object version
+   * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
    * @param {string=} partHash - Hash of a part - Requires object ID
    * @param {string=} rep - Rep parameter of the url
    * @param {string=} publicRep - Public rep parameter of the url
@@ -4224,6 +4291,7 @@ class ElvClient {
     libraryId,
     objectId,
     versionHash,
+    writeToken,
     partHash,
     rep,
     publicRep,
@@ -4244,6 +4312,7 @@ class ElvClient {
       libraryId: ${libraryId}
       objectId: ${objectId}
       versionHash: ${versionHash}
+      writeToken: ${writeToken}
       partHash: ${partHash}
       rep: ${rep}
       publicRep: ${publicRep}
@@ -4264,7 +4333,7 @@ class ElvClient {
       path = UrlJoin(path, "qlibs", libraryId);
 
       if(objectId || versionHash) {
-        path = UrlJoin(path, "q", versionHash || objectId);
+        path = UrlJoin(path, "q", writeToken || versionHash || objectId);
       }
     } else if(versionHash) {
       path = UrlJoin("q", versionHash);
@@ -4294,6 +4363,7 @@ class ElvClient {
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
    * @param {string=} versionHash - Hash of an object version
+   * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
    * @param {string} filePath - Path to the content object file
    * @param {Object=} queryParams - Query params to add to the URL
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
@@ -4301,7 +4371,7 @@ class ElvClient {
    *
    * @returns {Promise<string>} - URL to the specified file with authorization token
    */
-  async FileUrl({libraryId, objectId, versionHash, filePath, queryParams={}, noCache=false}) {
+  async FileUrl({libraryId, objectId, versionHash, writeToken, filePath, queryParams={}, noCache=false}) {
     ValidateParameters({libraryId, objectId, versionHash});
     if(!filePath) { throw "File path not specified"; }
 
@@ -4310,7 +4380,7 @@ class ElvClient {
     let path;
 
     if(libraryId) {
-      path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "files", filePath);
+      path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "files", filePath);
     } else {
       path = UrlJoin("q", versionHash, "files", filePath);
     }
@@ -4899,6 +4969,145 @@ class ElvClient {
       abi: LibraryContract.abi,
       event,
       eventName: `${permission}GroupRemoved`
+    });
+  }
+
+  /**
+   * List all of the groups with permissions on the specified object.
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} objectId - The ID of the object
+   *
+   * @return {Promise<Object>} - Object mapping group addresses to permissions, as an array
+   * - Example: { "0x0": ["see", "access"], ...}
+   */
+  async ContentObjectGroupPermissions({objectId}) {
+    ValidateObject(objectId);
+
+    this.Log(`Retrieving group permissions for object ${objectId}`);
+
+    const contractAddress = this.utils.HashToAddress(objectId);
+
+    // Access indexor only available on access groups, so must ask each access group
+    // we belong to about this object
+
+    const groupAddresses = await this.Collection({collectionType: "accessGroups"});
+
+    const groupPermissions = {};
+    await Promise.all(
+      groupAddresses.map(async groupAddress => {
+        groupAddress = this.utils.FormatAddress(groupAddress);
+
+        let permission = await this.CallContractMethod({
+          contractAddress: groupAddress,
+          abi: AccessIndexorContract.abi,
+          methodName: "getContentObjectRights",
+          methodArgs: [contractAddress]
+        });
+
+        if(permission === 0) { return; }
+
+        let permissions = [];
+
+        if(permission >= 100) {
+          permissions.push("manage");
+        }
+
+        if(permission % 100 >= 10) {
+          permissions.push("access");
+        }
+
+        if(permission % 10 > 0) {
+          permissions.push("see");
+        }
+
+        groupPermissions[groupAddress] = permissions;
+      })
+    );
+
+    return groupPermissions;
+  }
+
+  /**
+   * Add a permission on the specified group for the specified object
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} objectId - The ID of the object
+   * @param {string} groupAddress - The address of the group
+   * @param {string} permission - The type of permission to add ("see", "access", "manage")
+   */
+  async AddContentObjectGroupPermission({objectId, groupAddress, permission}) {
+    ValidatePresence("permission", permission);
+    ValidateObject(objectId);
+    ValidateAddress(groupAddress);
+
+    permission = permission.toLowerCase();
+    groupAddress = this.utils.FormatAddress(groupAddress);
+
+    if(!["see", "access", "manage"].includes(permission)) {
+      throw Error(`Invalid permission type: ${permission}`);
+    }
+
+    this.Log(`Adding ${permission} permission to group ${groupAddress} for ${objectId}`);
+
+    const event = await this.CallContractMethodAndWait({
+      contractAddress: groupAddress,
+      abi: AccessIndexorContract.abi,
+      methodName: "setContentObjectRights",
+      methodArgs: [
+        this.utils.HashToAddress(objectId),
+        permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
+        permission === "none" ? 0 : 2
+      ]
+    });
+
+    await this.ExtractEventFromLogs({
+      abi: AccessIndexorContract.abi,
+      event,
+      eventName: "RightsChanged"
+    });
+  }
+
+  /**
+   * Remove a permission on the specified group for the specified object
+   *
+   * @methodGroup Access Groups
+   * @namedParams
+   * @param {string} objectId - The ID of the object
+   * @param {string} groupAddress - The address of the group
+   * @param {string} permission - The type of permission to remove ("see", "access", "manage")
+   */
+  async RemoveContentObjectGroupPermission({objectId, groupAddress, permission}) {
+    ValidatePresence("permission", permission);
+    ValidateObject(objectId);
+    ValidateAddress(groupAddress);
+
+    permission = permission.toLowerCase();
+    groupAddress = this.utils.FormatAddress(groupAddress);
+
+    if(!["see", "access", "manage"].includes(permission)) {
+      throw Error(`Invalid permission type: ${permission}`);
+    }
+
+    this.Log(`Removing ${permission} permission from group ${groupAddress} for ${objectId}`);
+
+    const event = await this.CallContractMethodAndWait({
+      contractAddress: groupAddress,
+      abi: AccessIndexorContract.abi,
+      methodName: "setContentObjectRights",
+      methodArgs: [
+        this.utils.HashToAddress(objectId),
+        permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
+        0
+      ]
+    });
+
+    await this.ExtractEventFromLogs({
+      abi: AccessIndexorContract.abi,
+      event,
+      eventName: "RightsChanged"
     });
   }
 
