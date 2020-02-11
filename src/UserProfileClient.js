@@ -166,8 +166,7 @@ await client.userProfileClient.UserMetadata()
             await this.client.FinalizeContentObject({
               libraryId,
               objectId,
-              writeToken: createResponse.write_token,
-              awaitCommitConfirmation: false
+              writeToken: createResponse.write_token
             });
           }
         }
