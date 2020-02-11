@@ -280,8 +280,7 @@ function () {
                           return regeneratorRuntime.awrap(_this.client.FinalizeContentObject({
                             libraryId: libraryId,
                             objectId: objectId,
-                            writeToken: createResponse.write_token,
-                            awaitCommitConfirmation: false
+                            writeToken: createResponse.write_token
                           }));
 
                         case 29:

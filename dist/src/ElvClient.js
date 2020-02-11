@@ -5445,6 +5445,7 @@ function () {
      * @methodGroup Media
      * @namedParams
      * @param {string} libraryId - ID of the library
+     * @param {string=} type - ID or version hash of the content type for this master
      * @param {string} name - Name of the content
      * @param {string=} description - Description of the content
      * @param {string} contentTypeName - Name of the content type to use
@@ -5463,56 +5464,40 @@ function () {
   }, {
     key: "CreateProductionMaster",
     value: function CreateProductionMaster(_ref71) {
-      var libraryId, name, description, _ref71$metadata, metadata, fileInfo, _ref71$encrypt, encrypt, access, _ref71$copy, copy, callback, contentType, _ref72, id, write_token, accessParameter, region, bucket, accessKey, secret, _ref73, logs, errors, warnings, finalizeResponse;
+      var libraryId, type, name, description, _ref71$metadata, metadata, fileInfo, _ref71$encrypt, encrypt, access, _ref71$copy, copy, callback, _ref72, id, write_token, accessParameter, region, bucket, accessKey, secret, _ref73, logs, errors, warnings, finalizeResponse;
 
       return regeneratorRuntime.async(function CreateProductionMaster$(_context73) {
         while (1) {
           switch (_context73.prev = _context73.next) {
             case 0:
-              libraryId = _ref71.libraryId, name = _ref71.name, description = _ref71.description, _ref71$metadata = _ref71.metadata, metadata = _ref71$metadata === void 0 ? {} : _ref71$metadata, fileInfo = _ref71.fileInfo, _ref71$encrypt = _ref71.encrypt, encrypt = _ref71$encrypt === void 0 ? false : _ref71$encrypt, access = _ref71.access, _ref71$copy = _ref71.copy, copy = _ref71$copy === void 0 ? false : _ref71$copy, callback = _ref71.callback;
+              libraryId = _ref71.libraryId, type = _ref71.type, name = _ref71.name, description = _ref71.description, _ref71$metadata = _ref71.metadata, metadata = _ref71$metadata === void 0 ? {} : _ref71$metadata, fileInfo = _ref71.fileInfo, _ref71$encrypt = _ref71.encrypt, encrypt = _ref71$encrypt === void 0 ? false : _ref71$encrypt, access = _ref71.access, _ref71$copy = _ref71.copy, copy = _ref71$copy === void 0 ? false : _ref71$copy, callback = _ref71.callback;
               ValidateLibrary(libraryId);
               _context73.next = 4;
-              return regeneratorRuntime.awrap(this.ContentType({
-                name: "Production Master"
+              return regeneratorRuntime.awrap(this.CreateContentObject({
+                libraryId: libraryId,
+                options: type ? {
+                  type: type
+                } : {}
               }));
 
             case 4:
-              contentType = _context73.sent;
-
-              if (contentType) {
-                _context73.next = 7;
-                break;
-              }
-
-              throw "Unable to access content type 'Production Master' to create production master";
-
-            case 7:
-              _context73.next = 9;
-              return regeneratorRuntime.awrap(this.CreateContentObject({
-                libraryId: libraryId,
-                options: {
-                  type: contentType.hash
-                }
-              }));
-
-            case 9:
               _ref72 = _context73.sent;
               id = _ref72.id;
               write_token = _ref72.write_token;
 
               if (!fileInfo) {
-                _context73.next = 22;
+                _context73.next = 17;
                 break;
               }
 
               if (!access) {
-                _context73.next = 20;
+                _context73.next = 15;
                 break;
               }
 
               // S3 Upload
               region = access.region, bucket = access.bucket, accessKey = access.accessKey, secret = access.secret;
-              _context73.next = 17;
+              _context73.next = 12;
               return regeneratorRuntime.awrap(this.UploadFilesFromS3({
                 libraryId: libraryId,
                 objectId: id,
@@ -5526,7 +5511,7 @@ function () {
                 callback: callback
               }));
 
-            case 17:
+            case 12:
               accessParameter = [{
                 path_matchers: [".*"],
                 remote_access: {
@@ -5542,11 +5527,11 @@ function () {
                   }
                 }
               }];
-              _context73.next = 22;
+              _context73.next = 17;
               break;
 
-            case 20:
-              _context73.next = 22;
+            case 15:
+              _context73.next = 17;
               return regeneratorRuntime.awrap(this.UploadFiles({
                 libraryId: libraryId,
                 objectId: id,
@@ -5556,8 +5541,8 @@ function () {
                 encryption: encrypt ? "cgck" : "none"
               }));
 
-            case 22:
-              _context73.next = 24;
+            case 17:
+              _context73.next = 19;
               return regeneratorRuntime.awrap(this.CallBitcodeMethod({
                 libraryId: libraryId,
                 objectId: id,
@@ -5569,12 +5554,12 @@ function () {
                 constant: false
               }));
 
-            case 24:
+            case 19:
               _ref73 = _context73.sent;
               logs = _ref73.logs;
               errors = _ref73.errors;
               warnings = _ref73.warnings;
-              _context73.next = 30;
+              _context73.next = 25;
               return regeneratorRuntime.awrap(this.MergeMetadata({
                 libraryId: libraryId,
                 objectId: id,
@@ -5591,8 +5576,8 @@ function () {
                 }, metadata || {})
               }));
 
-            case 30:
-              _context73.next = 32;
+            case 25:
+              _context73.next = 27;
               return regeneratorRuntime.awrap(this.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: id,
@@ -5600,7 +5585,7 @@ function () {
                 awaitCommitConfirmation: false
               }));
 
-            case 32:
+            case 27:
               finalizeResponse = _context73.sent;
               return _context73.abrupt("return", _objectSpread({
                 errors: errors || [],
@@ -5608,7 +5593,7 @@ function () {
                 warnings: warnings || []
               }, finalizeResponse));
 
-            case 34:
+            case 29:
             case "end":
               return _context73.stop();
           }
@@ -5622,6 +5607,7 @@ function () {
      * @namedParams
      * @param {string} libraryId - ID of the mezzanine library
      * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
+     * @param {string=} type - ID or version hash of the content type for the mezzanine
      * @param {string} name - Name for mezzanine content object
      * @param {string=} description - Description for mezzanine content object
      * @param {Object=} metadata - Additional metadata for mezzanine content object
@@ -5636,116 +5622,102 @@ function () {
   }, {
     key: "CreateABRMezzanine",
     value: function CreateABRMezzanine(_ref74) {
-      var libraryId, objectId, name, description, _ref74$metadata, metadata, masterVersionHash, abrProfile, _ref74$variant, variant, _ref74$offeringKey, offeringKey, abrMezType, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _ref75, logs, errors, warnings, finalizeResponse;
+      var libraryId, objectId, type, name, description, metadata, masterVersionHash, abrProfile, _ref74$variant, variant, _ref74$offeringKey, offeringKey, existingMez, options, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _ref75, logs, errors, warnings, finalizeResponse;
 
       return regeneratorRuntime.async(function CreateABRMezzanine$(_context74) {
         while (1) {
           switch (_context74.prev = _context74.next) {
             case 0:
-              libraryId = _ref74.libraryId, objectId = _ref74.objectId, name = _ref74.name, description = _ref74.description, _ref74$metadata = _ref74.metadata, metadata = _ref74$metadata === void 0 ? {} : _ref74$metadata, masterVersionHash = _ref74.masterVersionHash, abrProfile = _ref74.abrProfile, _ref74$variant = _ref74.variant, variant = _ref74$variant === void 0 ? "default" : _ref74$variant, _ref74$offeringKey = _ref74.offeringKey, offeringKey = _ref74$offeringKey === void 0 ? "default" : _ref74$offeringKey;
+              libraryId = _ref74.libraryId, objectId = _ref74.objectId, type = _ref74.type, name = _ref74.name, description = _ref74.description, metadata = _ref74.metadata, masterVersionHash = _ref74.masterVersionHash, abrProfile = _ref74.abrProfile, _ref74$variant = _ref74.variant, variant = _ref74$variant === void 0 ? "default" : _ref74$variant, _ref74$offeringKey = _ref74.offeringKey, offeringKey = _ref74$offeringKey === void 0 ? "default" : _ref74$offeringKey;
               ValidateLibrary(libraryId);
               ValidateVersion(masterVersionHash);
-              _context74.next = 5;
-              return regeneratorRuntime.awrap(this.ContentType({
-                name: "ABR Master"
-              }));
 
-            case 5:
-              abrMezType = _context74.sent;
-
-              if (abrMezType) {
-                _context74.next = 8;
-                break;
-              }
-
-              throw Error("Unable to access ABR Master content type in library with ID=" + libraryId);
-
-            case 8:
               if (masterVersionHash) {
-                _context74.next = 10;
+                _context74.next = 5;
                 break;
               }
 
               throw Error("Master version hash not specified");
 
-            case 10:
-              if (!objectId) {
-                _context74.next = 18;
+            case 5:
+              existingMez = !!objectId;
+              options = type ? {
+                type: type
+              } : {};
+
+              if (!existingMez) {
+                _context74.next = 15;
                 break;
               }
 
-              _context74.next = 13;
+              _context74.next = 10;
               return regeneratorRuntime.awrap(this.EditContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                options: {
-                  type: abrMezType.hash
-                }
+                options: options
               }));
 
-            case 13:
+            case 10:
               editResponse = _context74.sent;
               id = editResponse.id;
               write_token = editResponse.write_token;
-              _context74.next = 23;
+              _context74.next = 20;
               break;
 
-            case 18:
-              _context74.next = 20;
+            case 15:
+              _context74.next = 17;
               return regeneratorRuntime.awrap(this.CreateContentObject({
                 libraryId: libraryId,
-                options: {
-                  type: abrMezType.hash
-                }
+                options: options
               }));
 
-            case 20:
+            case 17:
               createResponse = _context74.sent;
               id = createResponse.id;
               write_token = createResponse.write_token;
 
-            case 23:
-              _context74.next = 25;
+            case 20:
+              _context74.next = 22;
               return regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 versionHash: masterVersionHash,
                 metadataSubtree: "public/name"
               }));
 
-            case 25:
+            case 22:
               masterName = _context74.sent;
               // Include authorization for library, master, and mezzanine
               authorizationTokens = [];
               _context74.t0 = authorizationTokens;
-              _context74.next = 30;
+              _context74.next = 27;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 libraryId: libraryId,
                 objectId: id,
                 update: true
               }));
 
-            case 30:
+            case 27:
               _context74.t1 = _context74.sent;
 
               _context74.t0.push.call(_context74.t0, _context74.t1);
 
               _context74.t2 = authorizationTokens;
-              _context74.next = 35;
+              _context74.next = 32;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 libraryId: libraryId
               }));
 
-            case 35:
+            case 32:
               _context74.t3 = _context74.sent;
 
               _context74.t2.push.call(_context74.t2, _context74.t3);
 
               _context74.t4 = authorizationTokens;
-              _context74.next = 40;
+              _context74.next = 37;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 versionHash: masterVersionHash
               }));
 
-            case 40:
+            case 37:
               _context74.t5 = _context74.sent;
 
               _context74.t4.push.call(_context74.t4, _context74.t5);
@@ -5763,41 +5735,41 @@ function () {
               storeClear = false;
 
               if (!abrProfile) {
-                _context74.next = 50;
+                _context74.next = 47;
                 break;
               }
 
               body.abr_profile = abrProfile;
               storeClear = abrProfile.store_clear;
-              _context74.next = 53;
+              _context74.next = 50;
               break;
 
-            case 50:
-              _context74.next = 52;
+            case 47:
+              _context74.next = 49;
               return regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
                 metadataSubtree: "abr_profile/store_clear"
               }));
 
-            case 52:
+            case 49:
               storeClear = _context74.sent;
 
-            case 53:
+            case 50:
               if (storeClear) {
-                _context74.next = 56;
+                _context74.next = 53;
                 break;
               }
 
-              _context74.next = 56;
+              _context74.next = 53;
               return regeneratorRuntime.awrap(this.EncryptionConk({
                 libraryId: libraryId,
                 objectId: id,
                 writeToken: write_token
               }));
 
-            case 56:
-              _context74.next = 58;
+            case 53:
+              _context74.next = 55;
               return regeneratorRuntime.awrap(this.CallBitcodeMethod({
                 libraryId: libraryId,
                 objectId: id,
@@ -5808,31 +5780,38 @@ function () {
                 constant: false
               }));
 
-            case 58:
+            case 55:
               _ref75 = _context74.sent;
               logs = _ref75.logs;
               errors = _ref75.errors;
               warnings = _ref75.warnings;
+              metadata = _objectSpread({
+                master: {
+                  name: masterName,
+                  id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
+                  hash: masterVersionHash,
+                  variant: variant
+                },
+                "public": {},
+                elv_created_at: new Date().getTime()
+              }, metadata || {});
+
+              if (name || !existingMez) {
+                metadata.name = name || "".concat(masterName, " Mezzanine");
+                metadata["public"].name = name || "".concat(masterName, " Mezzanine");
+              }
+
+              if (description || !existingMez) {
+                metadata.description = description || "";
+                metadata["public"].description = description || "";
+              }
+
               _context74.next = 64;
               return regeneratorRuntime.awrap(this.MergeMetadata({
                 libraryId: libraryId,
                 objectId: id,
                 writeToken: write_token,
-                metadata: _objectSpread({
-                  master: {
-                    name: masterName,
-                    id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
-                    hash: masterVersionHash,
-                    variant: variant
-                  },
-                  name: name || "".concat(masterName, " Mezzanine"),
-                  description: description,
-                  "public": {
-                    name: name || "".concat(masterName, " Mezzanine"),
-                    description: description || ""
-                  },
-                  elv_created_at: new Date().getTime()
-                }, metadata || {})
+                metadata: metadata
               }));
 
             case 64:
