@@ -286,7 +286,7 @@ class EthClient {
     this.Log(`Awaiting transaction completion: ${createMethodCall.hash}`);
 
     // Poll for transaction completion
-    const interval = 500;
+    const interval = 250;
     let elapsed = 0;
     let methodEvent;
 

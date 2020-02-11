@@ -434,7 +434,7 @@ class ElvClient {
    */
   SetSigner({signer}) {
     signer.connect(this.ethClient.Provider());
-    signer.provider.pollingInterval = 500;
+    signer.provider.pollingInterval = 250;
     this.signer = signer;
 
     this.InitializeClients();
@@ -452,7 +452,7 @@ class ElvClient {
    */
   async SetSignerFromWeb3Provider({provider}) {
     let ethProvider = new Ethers.providers.Web3Provider(provider);
-    ethProvider.pollingInterval = 500;
+    ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
     await this.InitializeClients();

@@ -537,7 +537,7 @@ function () {
     value: function SetSigner(_ref7) {
       var signer = _ref7.signer;
       signer.connect(this.ethClient.Provider());
-      signer.provider.pollingInterval = 500;
+      signer.provider.pollingInterval = 250;
       this.signer = signer;
       this.InitializeClients();
     }
@@ -562,7 +562,7 @@ function () {
             case 0:
               provider = _ref8.provider;
               ethProvider = new Ethers.providers.Web3Provider(provider);
-              ethProvider.pollingInterval = 500;
+              ethProvider.pollingInterval = 250;
               this.signer = ethProvider.getSigner();
               _context6.next = 6;
               return regeneratorRuntime.awrap(this.signer.getAddress());

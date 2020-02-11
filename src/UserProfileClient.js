@@ -166,7 +166,8 @@ await client.userProfileClient.UserMetadata()
             await this.client.FinalizeContentObject({
               libraryId,
               objectId,
-              writeToken: createResponse.write_token
+              writeToken: createResponse.write_token,
+              awaitCommitConfirmation: false
             });
           }
         }
@@ -573,7 +574,12 @@ await client.userProfileClient.UserMetadata()
       });
     }
 
-    await this.client.FinalizeContentObject({libraryId: userLibraryId, objectId: userObjectId, writeToken: editRequest.write_token});
+    await this.client.FinalizeContentObject({
+      libraryId: userLibraryId,
+      objectId: userObjectId,
+      writeToken: editRequest.write_token,
+      awaitCommitConfirmation: false
+    });
   }
 
   /*

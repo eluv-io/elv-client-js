@@ -280,7 +280,8 @@ function () {
                           return regeneratorRuntime.awrap(_this.client.FinalizeContentObject({
                             libraryId: libraryId,
                             objectId: objectId,
-                            writeToken: createResponse.write_token
+                            writeToken: createResponse.write_token,
+                            awaitCommitConfirmation: false
                           }));
 
                         case 29:
@@ -1196,7 +1197,8 @@ function () {
               return regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: userLibraryId,
                 objectId: userObjectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                awaitCommitConfirmation: false
               }));
 
             case 43:
