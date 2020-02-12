@@ -103,20 +103,6 @@ const Create = async ({
       }
 
       type = abrMasterType.id;
-    } else {
-      if(type.startsWith("hq__")) {
-        type = await client.ContentType({versionHash: type});
-      } else if(type.startsWith("iq__")) {
-        type = await client.ContentType({typeId: type});
-      } else {
-        type = await client.ContentType({name: type});
-      }
-
-      if(!type) {
-        throw Error(`Unable to find content type '${type}'`);
-      }
-
-      type = type.id;
     }
 
     try {

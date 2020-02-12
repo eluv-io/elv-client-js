@@ -1586,7 +1586,7 @@ class ElvClient {
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
-   * @param {objectId=} objectId - ID of the object (if contract already exists)
+   * @param {string=} objectId - ID of the object (if contract already exists)
    * @param {Object=} options -
    * type: Version hash of the content type to associate with the object
    *
@@ -1605,13 +1605,17 @@ class ElvClient {
     if(options.type) {
       this.Log(`Type specified: ${options.type}`);
 
-      let type;
-      if(!options.type.startsWith("hq__")) {
-        // Type name specified
-        type = await this.ContentType({name: options.type});
+      let type = options.type;
+      if(type.startsWith("hq__")) {
+        type = await this.ContentType({versionHash: type});
+      } else if(type.startsWith("iq__")) {
+        type = await this.ContentType({typeId: type});
       } else {
-        // Type hash specified
-        type = await this.ContentType({versionHash: options.type});
+        type = await this.ContentType({name: type});
+      }
+
+      if(!type) {
+        throw Error(`Unable to find content type '${options.type}'`);
       }
 
       typeId = type.id;

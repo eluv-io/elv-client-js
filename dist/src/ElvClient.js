@@ -2378,7 +2378,7 @@ function () {
      * @methodGroup Content Objects
      * @namedParams
      * @param {string} libraryId - ID of the library
-     * @param {objectId=} objectId - ID of the object (if contract already exists)
+     * @param {string=} objectId - ID of the object (if contract already exists)
      * @param {Object=} options -
      * type: Version hash of the content type to associate with the object
      *
@@ -2406,83 +2406,108 @@ function () {
               this.Log("Creating content object: ".concat(libraryId, " ").concat(objectId || "")); // Look up content type, if specified
 
               if (!options.type) {
-                _context34.next = 17;
+                _context34.next = 26;
                 break;
               }
 
               this.Log("Type specified: ".concat(options.type));
+              type = options.type;
 
-              if (options.type.startsWith("hq__")) {
-                _context34.next = 12;
+              if (!type.startsWith("hq__")) {
+                _context34.next = 13;
                 break;
               }
 
-              _context34.next = 9;
+              _context34.next = 10;
               return regeneratorRuntime.awrap(this.ContentType({
-                name: options.type
+                versionHash: type
               }));
 
-            case 9:
+            case 10:
               type = _context34.sent;
-              _context34.next = 15;
+              _context34.next = 22;
               break;
 
-            case 12:
-              _context34.next = 14;
+            case 13:
+              if (!type.startsWith("iq__")) {
+                _context34.next = 19;
+                break;
+              }
+
+              _context34.next = 16;
               return regeneratorRuntime.awrap(this.ContentType({
-                versionHash: options.type
+                typeId: type
               }));
 
-            case 14:
+            case 16:
+              type = _context34.sent;
+              _context34.next = 22;
+              break;
+
+            case 19:
+              _context34.next = 21;
+              return regeneratorRuntime.awrap(this.ContentType({
+                name: type
+              }));
+
+            case 21:
               type = _context34.sent;
 
-            case 15:
+            case 22:
+              if (type) {
+                _context34.next = 24;
+                break;
+              }
+
+              throw Error("Unable to find content type '".concat(options.type, "'"));
+
+            case 24:
               typeId = type.id;
               options.type = type.hash;
 
-            case 17:
+            case 26:
               if (objectId) {
-                _context34.next = 27;
+                _context34.next = 36;
                 break;
               }
 
               this.Log("Deploying contract...");
-              _context34.next = 21;
+              _context34.next = 30;
               return regeneratorRuntime.awrap(this.authClient.CreateContentObject({
                 libraryId: libraryId,
                 typeId: typeId
               }));
 
-            case 21:
+            case 30:
               _ref34 = _context34.sent;
               contractAddress = _ref34.contractAddress;
               objectId = this.utils.AddressToObjectId(contractAddress);
               this.Log("Contract deployed: ".concat(contractAddress, " ").concat(objectId));
-              _context34.next = 34;
+              _context34.next = 43;
               break;
 
-            case 27:
+            case 36:
               _context34.t0 = this;
               _context34.t1 = "Contract already deployed for contract type: ";
-              _context34.next = 31;
+              _context34.next = 40;
               return regeneratorRuntime.awrap(this.AccessType({
                 id: objectId
               }));
 
-            case 31:
+            case 40:
               _context34.t2 = _context34.sent;
               _context34.t3 = _context34.t1.concat.call(_context34.t1, _context34.t2);
 
               _context34.t0.Log.call(_context34.t0, _context34.t3);
 
-            case 34:
+            case 43:
               if (!options.visibility) {
-                _context34.next = 38;
+                _context34.next = 47;
                 break;
               }
 
               this.Log("Setting visibility to ".concat(options.visibility));
-              _context34.next = 38;
+              _context34.next = 47;
               return regeneratorRuntime.awrap(this.CallContractMethod({
                 abi: ContentContract.abi,
                 contractAddress: this.utils.HashToAddress(objectId),
@@ -2490,19 +2515,19 @@ function () {
                 methodArgs: [options.visibility]
               }));
 
-            case 38:
+            case 47:
               path = UrlJoin("qid", objectId);
               _context34.t4 = regeneratorRuntime;
               _context34.t5 = ResponseToJson;
               _context34.t6 = this.HttpClient;
-              _context34.next = 44;
+              _context34.next = 53;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
                 libraryId: libraryId,
                 objectId: objectId,
                 update: true
               }));
 
-            case 44:
+            case 53:
               _context34.t7 = _context34.sent;
               _context34.t8 = path;
               _context34.t9 = options;
@@ -2515,13 +2540,13 @@ function () {
               };
               _context34.t11 = _context34.t6.Request.call(_context34.t6, _context34.t10);
               _context34.t12 = (0, _context34.t5)(_context34.t11);
-              _context34.next = 52;
+              _context34.next = 61;
               return _context34.t4.awrap.call(_context34.t4, _context34.t12);
 
-            case 52:
+            case 61:
               return _context34.abrupt("return", _context34.sent);
 
-            case 53:
+            case 62:
             case "end":
               return _context34.stop();
           }
