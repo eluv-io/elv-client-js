@@ -147,7 +147,7 @@ describe("Test UserProfileClient", () => {
     expect(unchangedAccessLevel.toLowerCase()).toEqual("public");
   });
 
-  test("Content Tagging", async () => {
+  test.skip("Content Tagging", async () => {
     const testTags = [
       [
         { "score": 0.3, "tag": "cherry" },
