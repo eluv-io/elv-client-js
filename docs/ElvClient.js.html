@@ -4169,6 +4169,12 @@ class ElvClient {
       drm: {}
     };
 
+    const authToken = await this.authClient.AuthorizationToken({
+      objectId,
+      channelAuth: true,
+      oauthToken: this.oauthToken
+    });
+
     Object.keys(playoutOptions).forEach(protocol => {
       const option = playoutOptions[protocol];
       config[protocol] = option.playoutUrl;
@@ -4192,7 +4198,7 @@ class ElvClient {
             config.drm[drm] = {
               LA_URL: licenseUrl,
               headers: {
-                Authorization: `Bearer ${this.authClient.channelContentTokens[objectId]}`
+                Authorization: `Bearer ${authToken}`
               }
             };
           }

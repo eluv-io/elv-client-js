@@ -309,45 +309,6 @@ function () {
         }
       }, null, this);
     }
-  }, {
-    key: "__InvalidateCache",
-    value: function __InvalidateCache() {
-      this.cachedPrivateMetadata = undefined;
-    }
-  }, {
-    key: "__CacheMetadata",
-    value: function __CacheMetadata(metadata) {
-      this.cachedPrivateMetadata = metadata;
-    }
-  }, {
-    key: "__GetCachedMetadata",
-    value: function __GetCachedMetadata(subtree) {
-      subtree = subtree.replace(/\/*/, "");
-
-      if (!subtree) {
-        return this.cachedPrivateMetadata;
-      }
-
-      var pointer = this.cachedPrivateMetadata || {};
-      subtree = subtree.replace(/\/*/, "");
-      var keys = subtree.split("/");
-
-      for (var i = 0; i < keys.length - 1; i++) {
-        var key = keys[i];
-
-        if (!pointer || !pointer.hasOwnProperty(key)) {
-          return undefined;
-        }
-
-        pointer = pointer[key];
-      }
-
-      var lastKey = keys[keys.length - 1];
-
-      if (pointer && pointer.hasOwnProperty(lastKey)) {
-        return pointer[lastKey];
-      }
-    }
     /**
      * Access the specified user's public profile metadata
      *
@@ -427,7 +388,6 @@ function () {
      *
      * @namedParams
      * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
-     * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
      * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
      * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
         Example:
@@ -453,43 +413,25 @@ function () {
           resolveLinks,
           _ref4$resolveIncludeS,
           resolveIncludeSource,
-          _ref4$noCache,
-          noCache,
           libraryId,
           objectId,
-          metadata,
           _args5 = arguments;
 
       return regeneratorRuntime.async(function UserMetadata$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              _ref4 = _args5.length > 0 && _args5[0] !== undefined ? _args5[0] : {}, _ref4$metadataSubtree = _ref4.metadataSubtree, metadataSubtree = _ref4$metadataSubtree === void 0 ? "/" : _ref4$metadataSubtree, _ref4$resolveLinks = _ref4.resolveLinks, resolveLinks = _ref4$resolveLinks === void 0 ? false : _ref4$resolveLinks, _ref4$resolveIncludeS = _ref4.resolveIncludeSource, resolveIncludeSource = _ref4$resolveIncludeS === void 0 ? false : _ref4$resolveIncludeS, _ref4$noCache = _ref4.noCache, noCache = _ref4$noCache === void 0 ? false : _ref4$noCache;
-
-              if (!(!noCache && this.cachedPrivateMetadata)) {
-                _context5.next = 3;
-                break;
-              }
-
-              return _context5.abrupt("return", this.__GetCachedMetadata(metadataSubtree));
-
-            case 3:
+              _ref4 = _args5.length > 0 && _args5[0] !== undefined ? _args5[0] : {}, _ref4$metadataSubtree = _ref4.metadataSubtree, metadataSubtree = _ref4$metadataSubtree === void 0 ? "/" : _ref4$metadataSubtree, _ref4$resolveLinks = _ref4.resolveLinks, resolveLinks = _ref4$resolveLinks === void 0 ? false : _ref4$resolveLinks, _ref4$resolveIncludeS = _ref4.resolveIncludeSource, resolveIncludeSource = _ref4$resolveIncludeS === void 0 ? false : _ref4$resolveIncludeS;
               this.Log("Accessing private user metadata at ".concat(metadataSubtree));
               libraryId = this.client.contentSpaceLibraryId;
               _context5.t0 = Utils;
-              _context5.next = 8;
+              _context5.next = 6;
               return regeneratorRuntime.awrap(this.WalletAddress());
 
-            case 8:
+            case 6:
               _context5.t1 = _context5.sent;
               objectId = _context5.t0.AddressToObjectId.call(_context5.t0, _context5.t1);
-
-              if (!noCache) {
-                _context5.next = 14;
-                break;
-              }
-
-              _context5.next = 13;
+              _context5.next = 10;
               return regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -498,24 +440,10 @@ function () {
                 resolveIncludeSource: resolveIncludeSource
               }));
 
-            case 13:
+            case 10:
               return _context5.abrupt("return", _context5.sent);
 
-            case 14:
-              _context5.next = 16;
-              return regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
-                libraryId: libraryId,
-                objectId: objectId
-              }));
-
-            case 16:
-              metadata = _context5.sent;
-
-              this.__CacheMetadata(metadata);
-
-              return _context5.abrupt("return", this.__GetCachedMetadata(metadataSubtree));
-
-            case 19:
+            case 11:
             case "end":
               return _context5.stop();
           }
@@ -575,9 +503,6 @@ function () {
               }));
 
             case 15:
-              this.__InvalidateCache();
-
-            case 16:
             case "end":
               return _context6.stop();
           }
@@ -637,9 +562,6 @@ function () {
               }));
 
             case 15:
-              this.__InvalidateCache();
-
-            case 16:
             case "end":
               return _context7.stop();
           }
@@ -697,9 +619,6 @@ function () {
               }));
 
             case 15:
-              this.__InvalidateCache();
-
-            case 16:
             case "end":
               return _context8.stop();
           }
@@ -961,9 +880,6 @@ function () {
               }));
 
             case 20:
-              this.__InvalidateCache();
-
-            case 21:
             case "end":
               return _context12.stop();
           }
@@ -1041,9 +957,6 @@ function () {
               console.error(_context14.t0);
 
             case 9:
-              this.__InvalidateCache();
-
-            case 10:
             case "end":
               return _context14.stop();
           }
@@ -1273,7 +1186,7 @@ function () {
   }, {
     key: "FrameAllowedMethods",
     value: function FrameAllowedMethods() {
-      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "Log", "MetadataMethods", "PromptedMethods", "RecordTags", "SetAccessLevel", "SetUserProfileImage", "__CacheMetadata", "__GetCachedMetadata", "__InvalidateCache", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
+      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "Log", "MetadataMethods", "PromptedMethods", "RecordTags", "SetAccessLevel", "SetUserProfileImage", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return !forbiddenMethods.includes(method);
       });
