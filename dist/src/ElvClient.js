@@ -6903,8 +6903,8 @@ function () {
      * @param {string=} objectId - Id of the content
      * @param {string=} versionHash - Version hash of the content
      * @param {string=} linkPath - If playing from a link, the path to the link
-     * @param {Array<string>} protocols - Acceptable playout protocols
-     * @param {Array<string>} drms - Acceptable DRM formats
+     * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+     * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
      * @param {string=} offering=default - The offering to play
      */
 
@@ -7075,7 +7075,7 @@ function () {
               playoutMap[protocol] = (0, _context88.t3)(_context88.t4, _context88.t5, _context88.t17);
               // Exclude any options that do not satisfy the specified protocols and/or DRMs
               protocolMatch = protocols.includes(protocol);
-              drmMatch = drms.includes(drm) || drms.length === 0 && !drm;
+              drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
               if (!(!protocolMatch || !drmMatch)) {
                 _context88.next = 65;
@@ -7117,8 +7117,8 @@ function () {
      * @param {string=} objectId - Id of the content
      * @param {string} versionHash - Version hash of the content
      * @param {string=} linkPath - If playing from a link, the path to the link
-     * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
-     * @param {Array<string>=} drms=[] - Acceptable DRM formats
+     * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+     * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
      * @param {string=} offering=default - The offering to play
      */
 
