@@ -14,6 +14,9 @@ const argv = yargs
   .option("masterHash", {
     description: "Version hash of the master object"
   })
+  .option("type", {
+    description: "Name, object ID, or version hash of the type for the mezzanine"
+  })
   .option("title", {
     description: "Title for the mezzanine"
   })
@@ -50,7 +53,7 @@ const argv = yargs
     description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
   })
   .demandOption(
-    ["library", "title", "masterHash"],
+    ["library", "masterHash"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> --poster <path-to-poster-image> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--s3-copy || --s3-reference) (--elv-geo eu-west)\n"
   )
   .argv;
@@ -72,6 +75,7 @@ const Report = response => {
 const Create = async ({
   library,
   masterHash,
+  type,
   variant,
   offeringKey,
   title,
@@ -103,11 +107,22 @@ const Create = async ({
       secret: process.env.AWS_SECRET
     };
 
+    if(!type && !existingMezzId) {
+      const abrMasterType = await client.ContentType({name: "ABR Master"});
+
+      if(!abrMasterType) {
+        throw Error("Unable to find content type 'ABR Master'");
+      }
+
+      type = abrMasterType.id;
+    }
+
     console.log("\nCreating ABR Mezzanine...");
     const createResponse = await client.CreateABRMezzanine({
       name: title,
       libraryId: library,
       objectId: existingMezzId,
+      type,
       masterVersionHash: masterHash,
       variant,
       offeringKey: offeringKey,
@@ -239,6 +254,7 @@ const Create = async ({
 let {
   library,
   masterHash,
+  type,
   title,
   poster,
   existingMezzId,
@@ -274,6 +290,7 @@ if(abrProfile) {
 Create({
   library,
   masterHash,
+  type,
   variant,
   offeringKey,
   title,

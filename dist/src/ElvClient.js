@@ -537,7 +537,7 @@ function () {
     value: function SetSigner(_ref7) {
       var signer = _ref7.signer;
       signer.connect(this.ethClient.Provider());
-      signer.provider.pollingInterval = 500;
+      signer.provider.pollingInterval = 250;
       this.signer = signer;
       this.InitializeClients();
     }
@@ -562,7 +562,7 @@ function () {
             case 0:
               provider = _ref8.provider;
               ethProvider = new Ethers.providers.Web3Provider(provider);
-              ethProvider.pollingInterval = 500;
+              ethProvider.pollingInterval = 250;
               this.signer = ethProvider.getSigner();
               _context6.next = 6;
               return regeneratorRuntime.awrap(this.signer.getAddress());
@@ -2378,7 +2378,7 @@ function () {
      * @methodGroup Content Objects
      * @namedParams
      * @param {string} libraryId - ID of the library
-     * @param {objectId=} objectId - ID of the object (if contract already exists)
+     * @param {string=} objectId - ID of the object (if contract already exists)
      * @param {Object=} options -
      * type: Version hash of the content type to associate with the object
      *
@@ -2406,83 +2406,108 @@ function () {
               this.Log("Creating content object: ".concat(libraryId, " ").concat(objectId || "")); // Look up content type, if specified
 
               if (!options.type) {
-                _context34.next = 17;
+                _context34.next = 26;
                 break;
               }
 
               this.Log("Type specified: ".concat(options.type));
+              type = options.type;
 
-              if (options.type.startsWith("hq__")) {
-                _context34.next = 12;
+              if (!type.startsWith("hq__")) {
+                _context34.next = 13;
                 break;
               }
 
-              _context34.next = 9;
+              _context34.next = 10;
               return regeneratorRuntime.awrap(this.ContentType({
-                name: options.type
+                versionHash: type
               }));
 
-            case 9:
+            case 10:
               type = _context34.sent;
-              _context34.next = 15;
+              _context34.next = 22;
               break;
 
-            case 12:
-              _context34.next = 14;
+            case 13:
+              if (!type.startsWith("iq__")) {
+                _context34.next = 19;
+                break;
+              }
+
+              _context34.next = 16;
               return regeneratorRuntime.awrap(this.ContentType({
-                versionHash: options.type
+                typeId: type
               }));
 
-            case 14:
+            case 16:
+              type = _context34.sent;
+              _context34.next = 22;
+              break;
+
+            case 19:
+              _context34.next = 21;
+              return regeneratorRuntime.awrap(this.ContentType({
+                name: type
+              }));
+
+            case 21:
               type = _context34.sent;
 
-            case 15:
+            case 22:
+              if (type) {
+                _context34.next = 24;
+                break;
+              }
+
+              throw Error("Unable to find content type '".concat(options.type, "'"));
+
+            case 24:
               typeId = type.id;
               options.type = type.hash;
 
-            case 17:
+            case 26:
               if (objectId) {
-                _context34.next = 27;
+                _context34.next = 36;
                 break;
               }
 
               this.Log("Deploying contract...");
-              _context34.next = 21;
+              _context34.next = 30;
               return regeneratorRuntime.awrap(this.authClient.CreateContentObject({
                 libraryId: libraryId,
                 typeId: typeId
               }));
 
-            case 21:
+            case 30:
               _ref34 = _context34.sent;
               contractAddress = _ref34.contractAddress;
               objectId = this.utils.AddressToObjectId(contractAddress);
               this.Log("Contract deployed: ".concat(contractAddress, " ").concat(objectId));
-              _context34.next = 34;
+              _context34.next = 43;
               break;
 
-            case 27:
+            case 36:
               _context34.t0 = this;
               _context34.t1 = "Contract already deployed for contract type: ";
-              _context34.next = 31;
+              _context34.next = 40;
               return regeneratorRuntime.awrap(this.AccessType({
                 id: objectId
               }));
 
-            case 31:
+            case 40:
               _context34.t2 = _context34.sent;
               _context34.t3 = _context34.t1.concat.call(_context34.t1, _context34.t2);
 
               _context34.t0.Log.call(_context34.t0, _context34.t3);
 
-            case 34:
+            case 43:
               if (!options.visibility) {
-                _context34.next = 38;
+                _context34.next = 47;
                 break;
               }
 
               this.Log("Setting visibility to ".concat(options.visibility));
-              _context34.next = 38;
+              _context34.next = 47;
               return regeneratorRuntime.awrap(this.CallContractMethod({
                 abi: ContentContract.abi,
                 contractAddress: this.utils.HashToAddress(objectId),
@@ -2490,19 +2515,19 @@ function () {
                 methodArgs: [options.visibility]
               }));
 
-            case 38:
+            case 47:
               path = UrlJoin("qid", objectId);
               _context34.t4 = regeneratorRuntime;
               _context34.t5 = ResponseToJson;
               _context34.t6 = this.HttpClient;
-              _context34.next = 44;
+              _context34.next = 53;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
                 libraryId: libraryId,
                 objectId: objectId,
                 update: true
               }));
 
-            case 44:
+            case 53:
               _context34.t7 = _context34.sent;
               _context34.t8 = path;
               _context34.t9 = options;
@@ -2515,13 +2540,13 @@ function () {
               };
               _context34.t11 = _context34.t6.Request.call(_context34.t6, _context34.t10);
               _context34.t12 = (0, _context34.t5)(_context34.t11);
-              _context34.next = 52;
+              _context34.next = 61;
               return _context34.t4.awrap.call(_context34.t4, _context34.t12);
 
-            case 52:
+            case 61:
               return _context34.abrupt("return", _context34.sent);
 
-            case 53:
+            case 62:
             case "end":
               return _context34.stop();
           }
@@ -5445,6 +5470,7 @@ function () {
      * @methodGroup Media
      * @namedParams
      * @param {string} libraryId - ID of the library
+     * @param {string=} type - ID or version hash of the content type for this master
      * @param {string} name - Name of the content
      * @param {string=} description - Description of the content
      * @param {string} contentTypeName - Name of the content type to use
@@ -5463,56 +5489,40 @@ function () {
   }, {
     key: "CreateProductionMaster",
     value: function CreateProductionMaster(_ref71) {
-      var libraryId, name, description, _ref71$metadata, metadata, fileInfo, _ref71$encrypt, encrypt, access, _ref71$copy, copy, callback, contentType, _ref72, id, write_token, accessParameter, region, bucket, accessKey, secret, _ref73, logs, errors, warnings, finalizeResponse;
+      var libraryId, type, name, description, _ref71$metadata, metadata, fileInfo, _ref71$encrypt, encrypt, access, _ref71$copy, copy, callback, _ref72, id, write_token, accessParameter, region, bucket, accessKey, secret, _ref73, logs, errors, warnings, finalizeResponse;
 
       return regeneratorRuntime.async(function CreateProductionMaster$(_context73) {
         while (1) {
           switch (_context73.prev = _context73.next) {
             case 0:
-              libraryId = _ref71.libraryId, name = _ref71.name, description = _ref71.description, _ref71$metadata = _ref71.metadata, metadata = _ref71$metadata === void 0 ? {} : _ref71$metadata, fileInfo = _ref71.fileInfo, _ref71$encrypt = _ref71.encrypt, encrypt = _ref71$encrypt === void 0 ? false : _ref71$encrypt, access = _ref71.access, _ref71$copy = _ref71.copy, copy = _ref71$copy === void 0 ? false : _ref71$copy, callback = _ref71.callback;
+              libraryId = _ref71.libraryId, type = _ref71.type, name = _ref71.name, description = _ref71.description, _ref71$metadata = _ref71.metadata, metadata = _ref71$metadata === void 0 ? {} : _ref71$metadata, fileInfo = _ref71.fileInfo, _ref71$encrypt = _ref71.encrypt, encrypt = _ref71$encrypt === void 0 ? false : _ref71$encrypt, access = _ref71.access, _ref71$copy = _ref71.copy, copy = _ref71$copy === void 0 ? false : _ref71$copy, callback = _ref71.callback;
               ValidateLibrary(libraryId);
               _context73.next = 4;
-              return regeneratorRuntime.awrap(this.ContentType({
-                name: "Production Master"
+              return regeneratorRuntime.awrap(this.CreateContentObject({
+                libraryId: libraryId,
+                options: type ? {
+                  type: type
+                } : {}
               }));
 
             case 4:
-              contentType = _context73.sent;
-
-              if (contentType) {
-                _context73.next = 7;
-                break;
-              }
-
-              throw "Unable to access content type 'Production Master' to create production master";
-
-            case 7:
-              _context73.next = 9;
-              return regeneratorRuntime.awrap(this.CreateContentObject({
-                libraryId: libraryId,
-                options: {
-                  type: contentType.hash
-                }
-              }));
-
-            case 9:
               _ref72 = _context73.sent;
               id = _ref72.id;
               write_token = _ref72.write_token;
 
               if (!fileInfo) {
-                _context73.next = 22;
+                _context73.next = 17;
                 break;
               }
 
               if (!access) {
-                _context73.next = 20;
+                _context73.next = 15;
                 break;
               }
 
               // S3 Upload
               region = access.region, bucket = access.bucket, accessKey = access.accessKey, secret = access.secret;
-              _context73.next = 17;
+              _context73.next = 12;
               return regeneratorRuntime.awrap(this.UploadFilesFromS3({
                 libraryId: libraryId,
                 objectId: id,
@@ -5526,7 +5536,7 @@ function () {
                 callback: callback
               }));
 
-            case 17:
+            case 12:
               accessParameter = [{
                 path_matchers: [".*"],
                 remote_access: {
@@ -5542,11 +5552,11 @@ function () {
                   }
                 }
               }];
-              _context73.next = 22;
+              _context73.next = 17;
               break;
 
-            case 20:
-              _context73.next = 22;
+            case 15:
+              _context73.next = 17;
               return regeneratorRuntime.awrap(this.UploadFiles({
                 libraryId: libraryId,
                 objectId: id,
@@ -5556,8 +5566,8 @@ function () {
                 encryption: encrypt ? "cgck" : "none"
               }));
 
-            case 22:
-              _context73.next = 24;
+            case 17:
+              _context73.next = 19;
               return regeneratorRuntime.awrap(this.CallBitcodeMethod({
                 libraryId: libraryId,
                 objectId: id,
@@ -5569,12 +5579,12 @@ function () {
                 constant: false
               }));
 
-            case 24:
+            case 19:
               _ref73 = _context73.sent;
               logs = _ref73.logs;
               errors = _ref73.errors;
               warnings = _ref73.warnings;
-              _context73.next = 30;
+              _context73.next = 25;
               return regeneratorRuntime.awrap(this.MergeMetadata({
                 libraryId: libraryId,
                 objectId: id,
@@ -5591,8 +5601,8 @@ function () {
                 }, metadata || {})
               }));
 
-            case 30:
-              _context73.next = 32;
+            case 25:
+              _context73.next = 27;
               return regeneratorRuntime.awrap(this.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: id,
@@ -5600,7 +5610,7 @@ function () {
                 awaitCommitConfirmation: false
               }));
 
-            case 32:
+            case 27:
               finalizeResponse = _context73.sent;
               return _context73.abrupt("return", _objectSpread({
                 errors: errors || [],
@@ -5608,7 +5618,7 @@ function () {
                 warnings: warnings || []
               }, finalizeResponse));
 
-            case 34:
+            case 29:
             case "end":
               return _context73.stop();
           }
@@ -5622,6 +5632,7 @@ function () {
      * @namedParams
      * @param {string} libraryId - ID of the mezzanine library
      * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
+     * @param {string=} type - ID or version hash of the content type for the mezzanine
      * @param {string} name - Name for mezzanine content object
      * @param {string=} description - Description for mezzanine content object
      * @param {Object=} metadata - Additional metadata for mezzanine content object
@@ -5636,116 +5647,102 @@ function () {
   }, {
     key: "CreateABRMezzanine",
     value: function CreateABRMezzanine(_ref74) {
-      var libraryId, objectId, name, description, _ref74$metadata, metadata, masterVersionHash, abrProfile, _ref74$variant, variant, _ref74$offeringKey, offeringKey, abrMezType, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _ref75, logs, errors, warnings, finalizeResponse;
+      var libraryId, objectId, type, name, description, metadata, masterVersionHash, abrProfile, _ref74$variant, variant, _ref74$offeringKey, offeringKey, existingMez, options, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _ref75, logs, errors, warnings, finalizeResponse;
 
       return regeneratorRuntime.async(function CreateABRMezzanine$(_context74) {
         while (1) {
           switch (_context74.prev = _context74.next) {
             case 0:
-              libraryId = _ref74.libraryId, objectId = _ref74.objectId, name = _ref74.name, description = _ref74.description, _ref74$metadata = _ref74.metadata, metadata = _ref74$metadata === void 0 ? {} : _ref74$metadata, masterVersionHash = _ref74.masterVersionHash, abrProfile = _ref74.abrProfile, _ref74$variant = _ref74.variant, variant = _ref74$variant === void 0 ? "default" : _ref74$variant, _ref74$offeringKey = _ref74.offeringKey, offeringKey = _ref74$offeringKey === void 0 ? "default" : _ref74$offeringKey;
+              libraryId = _ref74.libraryId, objectId = _ref74.objectId, type = _ref74.type, name = _ref74.name, description = _ref74.description, metadata = _ref74.metadata, masterVersionHash = _ref74.masterVersionHash, abrProfile = _ref74.abrProfile, _ref74$variant = _ref74.variant, variant = _ref74$variant === void 0 ? "default" : _ref74$variant, _ref74$offeringKey = _ref74.offeringKey, offeringKey = _ref74$offeringKey === void 0 ? "default" : _ref74$offeringKey;
               ValidateLibrary(libraryId);
               ValidateVersion(masterVersionHash);
-              _context74.next = 5;
-              return regeneratorRuntime.awrap(this.ContentType({
-                name: "ABR Master"
-              }));
 
-            case 5:
-              abrMezType = _context74.sent;
-
-              if (abrMezType) {
-                _context74.next = 8;
-                break;
-              }
-
-              throw Error("Unable to access ABR Master content type in library with ID=" + libraryId);
-
-            case 8:
               if (masterVersionHash) {
-                _context74.next = 10;
+                _context74.next = 5;
                 break;
               }
 
               throw Error("Master version hash not specified");
 
-            case 10:
-              if (!objectId) {
-                _context74.next = 18;
+            case 5:
+              existingMez = !!objectId;
+              options = type ? {
+                type: type
+              } : {};
+
+              if (!existingMez) {
+                _context74.next = 15;
                 break;
               }
 
-              _context74.next = 13;
+              _context74.next = 10;
               return regeneratorRuntime.awrap(this.EditContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                options: {
-                  type: abrMezType.hash
-                }
+                options: options
               }));
 
-            case 13:
+            case 10:
               editResponse = _context74.sent;
               id = editResponse.id;
               write_token = editResponse.write_token;
-              _context74.next = 23;
+              _context74.next = 20;
               break;
 
-            case 18:
-              _context74.next = 20;
+            case 15:
+              _context74.next = 17;
               return regeneratorRuntime.awrap(this.CreateContentObject({
                 libraryId: libraryId,
-                options: {
-                  type: abrMezType.hash
-                }
+                options: options
               }));
 
-            case 20:
+            case 17:
               createResponse = _context74.sent;
               id = createResponse.id;
               write_token = createResponse.write_token;
 
-            case 23:
-              _context74.next = 25;
+            case 20:
+              _context74.next = 22;
               return regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 versionHash: masterVersionHash,
                 metadataSubtree: "public/name"
               }));
 
-            case 25:
+            case 22:
               masterName = _context74.sent;
               // Include authorization for library, master, and mezzanine
               authorizationTokens = [];
               _context74.t0 = authorizationTokens;
-              _context74.next = 30;
+              _context74.next = 27;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 libraryId: libraryId,
                 objectId: id,
                 update: true
               }));
 
-            case 30:
+            case 27:
               _context74.t1 = _context74.sent;
 
               _context74.t0.push.call(_context74.t0, _context74.t1);
 
               _context74.t2 = authorizationTokens;
-              _context74.next = 35;
+              _context74.next = 32;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 libraryId: libraryId
               }));
 
-            case 35:
+            case 32:
               _context74.t3 = _context74.sent;
 
               _context74.t2.push.call(_context74.t2, _context74.t3);
 
               _context74.t4 = authorizationTokens;
-              _context74.next = 40;
+              _context74.next = 37;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 versionHash: masterVersionHash
               }));
 
-            case 40:
+            case 37:
               _context74.t5 = _context74.sent;
 
               _context74.t4.push.call(_context74.t4, _context74.t5);
@@ -5763,41 +5760,41 @@ function () {
               storeClear = false;
 
               if (!abrProfile) {
-                _context74.next = 50;
+                _context74.next = 47;
                 break;
               }
 
               body.abr_profile = abrProfile;
               storeClear = abrProfile.store_clear;
-              _context74.next = 53;
+              _context74.next = 50;
               break;
 
-            case 50:
-              _context74.next = 52;
+            case 47:
+              _context74.next = 49;
               return regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
                 metadataSubtree: "abr_profile/store_clear"
               }));
 
-            case 52:
+            case 49:
               storeClear = _context74.sent;
 
-            case 53:
+            case 50:
               if (storeClear) {
-                _context74.next = 56;
+                _context74.next = 53;
                 break;
               }
 
-              _context74.next = 56;
+              _context74.next = 53;
               return regeneratorRuntime.awrap(this.EncryptionConk({
                 libraryId: libraryId,
                 objectId: id,
                 writeToken: write_token
               }));
 
-            case 56:
-              _context74.next = 58;
+            case 53:
+              _context74.next = 55;
               return regeneratorRuntime.awrap(this.CallBitcodeMethod({
                 libraryId: libraryId,
                 objectId: id,
@@ -5808,31 +5805,38 @@ function () {
                 constant: false
               }));
 
-            case 58:
+            case 55:
               _ref75 = _context74.sent;
               logs = _ref75.logs;
               errors = _ref75.errors;
               warnings = _ref75.warnings;
+              metadata = _objectSpread({
+                master: {
+                  name: masterName,
+                  id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
+                  hash: masterVersionHash,
+                  variant: variant
+                },
+                "public": {},
+                elv_created_at: new Date().getTime()
+              }, metadata || {});
+
+              if (name || !existingMez) {
+                metadata.name = name || "".concat(masterName, " Mezzanine");
+                metadata["public"].name = name || "".concat(masterName, " Mezzanine");
+              }
+
+              if (description || !existingMez) {
+                metadata.description = description || "";
+                metadata["public"].description = description || "";
+              }
+
               _context74.next = 64;
               return regeneratorRuntime.awrap(this.MergeMetadata({
                 libraryId: libraryId,
                 objectId: id,
                 writeToken: write_token,
-                metadata: _objectSpread({
-                  master: {
-                    name: masterName,
-                    id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
-                    hash: masterVersionHash,
-                    variant: variant
-                  },
-                  name: name || "".concat(masterName, " Mezzanine"),
-                  description: description,
-                  "public": {
-                    name: name || "".concat(masterName, " Mezzanine"),
-                    description: description || ""
-                  },
-                  elv_created_at: new Date().getTime()
-                }, metadata || {})
+                metadata: metadata
               }));
 
             case 64:
@@ -7121,9 +7125,7 @@ function () {
   }, {
     key: "BitmovinPlayoutOptions",
     value: function BitmovinPlayoutOptions(_ref92) {
-      var _this7 = this;
-
-      var objectId, versionHash, linkPath, _ref92$protocols, protocols, _ref92$drms, drms, _ref92$offering, offering, playoutOptions, config;
+      var objectId, versionHash, linkPath, _ref92$protocols, protocols, _ref92$drms, drms, _ref92$offering, offering, playoutOptions, config, authToken;
 
       return regeneratorRuntime.async(function BitmovinPlayoutOptions$(_context89) {
         while (1) {
@@ -7153,6 +7155,15 @@ function () {
               config = {
                 drm: {}
               };
+              _context89.next = 10;
+              return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+                objectId: objectId,
+                channelAuth: true,
+                oauthToken: this.oauthToken
+              }));
+
+            case 10:
+              authToken = _context89.sent;
               Object.keys(playoutOptions).forEach(function (protocol) {
                 var option = playoutOptions[protocol];
                 config[protocol] = option.playoutUrl;
@@ -7184,7 +7195,7 @@ function () {
                       config.drm[drm] = {
                         LA_URL: licenseUrl,
                         headers: {
-                          Authorization: "Bearer ".concat(_this7.authClient.channelContentTokens[objectId])
+                          Authorization: "Bearer ".concat(authToken)
                         }
                       };
                     }
@@ -7193,7 +7204,7 @@ function () {
               });
               return _context89.abrupt("return", config);
 
-            case 10:
+            case 13:
             case "end":
               return _context89.stop();
           }
@@ -7989,7 +8000,7 @@ function () {
   }, {
     key: "AccessGroupMembers",
     value: function AccessGroupMembers(_ref105) {
-      var _this8 = this;
+      var _this7 = this;
 
       var contractAddress, length;
       return regeneratorRuntime.async(function AccessGroupMembers$(_context102) {
@@ -8014,9 +8025,9 @@ function () {
                   while (1) {
                     switch (_context101.prev = _context101.next) {
                       case 0:
-                        _context101.t0 = _this8.utils;
+                        _context101.t0 = _this7.utils;
                         _context101.next = 3;
-                        return regeneratorRuntime.awrap(_this8.CallContractMethod({
+                        return regeneratorRuntime.awrap(_this7.CallContractMethod({
                           contractAddress: contractAddress,
                           abi: AccessGroupContract.abi,
                           methodName: "membersList",
@@ -8058,7 +8069,7 @@ function () {
   }, {
     key: "AccessGroupManagers",
     value: function AccessGroupManagers(_ref106) {
-      var _this9 = this;
+      var _this8 = this;
 
       var contractAddress, length;
       return regeneratorRuntime.async(function AccessGroupManagers$(_context104) {
@@ -8083,9 +8094,9 @@ function () {
                   while (1) {
                     switch (_context103.prev = _context103.next) {
                       case 0:
-                        _context103.t0 = _this9.utils;
+                        _context103.t0 = _this8.utils;
                         _context103.next = 3;
-                        return regeneratorRuntime.awrap(_this9.CallContractMethod({
+                        return regeneratorRuntime.awrap(_this8.CallContractMethod({
                           contractAddress: contractAddress,
                           abi: AccessGroupContract.abi,
                           methodName: "managersList",
@@ -8368,7 +8379,7 @@ function () {
   }, {
     key: "ContentLibraryGroupPermissions",
     value: function ContentLibraryGroupPermissions(_ref112) {
-      var _this10 = this;
+      var _this9 = this;
 
       var libraryId, _ref112$permissions, permissions, libraryPermissions;
 
@@ -8404,8 +8415,8 @@ function () {
                     switch (_context111.prev = _context111.next) {
                       case 0:
                         _context111.next = 2;
-                        return regeneratorRuntime.awrap(_this10.CallContractMethod({
-                          contractAddress: _this10.utils.HashToAddress(libraryId),
+                        return regeneratorRuntime.awrap(_this9.CallContractMethod({
+                          contractAddress: _this9.utils.HashToAddress(libraryId),
                           abi: LibraryContract.abi,
                           methodName: type + "GroupsLength"
                         }));
@@ -8420,10 +8431,10 @@ function () {
                               switch (_context110.prev = _context110.next) {
                                 case 0:
                                   _context110.prev = 0;
-                                  _context110.t0 = _this10.utils;
+                                  _context110.t0 = _this9.utils;
                                   _context110.next = 4;
-                                  return regeneratorRuntime.awrap(_this10.CallContractMethod({
-                                    contractAddress: _this10.utils.HashToAddress(libraryId),
+                                  return regeneratorRuntime.awrap(_this9.CallContractMethod({
+                                    contractAddress: _this9.utils.HashToAddress(libraryId),
                                     abi: LibraryContract.abi,
                                     methodName: type + "Groups",
                                     methodArgs: [i]
@@ -8634,7 +8645,7 @@ function () {
   }, {
     key: "ContentObjectGroupPermissions",
     value: function ContentObjectGroupPermissions(_ref115) {
-      var _this11 = this;
+      var _this10 = this;
 
       var objectId, contractAddress, groupAddresses, groupPermissions;
       return regeneratorRuntime.async(function ContentObjectGroupPermissions$(_context116) {
@@ -8662,9 +8673,9 @@ function () {
                   while (1) {
                     switch (_context115.prev = _context115.next) {
                       case 0:
-                        groupAddress = _this11.utils.FormatAddress(groupAddress);
+                        groupAddress = _this10.utils.FormatAddress(groupAddress);
                         _context115.next = 3;
-                        return regeneratorRuntime.awrap(_this11.CallContractMethod({
+                        return regeneratorRuntime.awrap(_this10.CallContractMethod({
                           contractAddress: groupAddress,
                           abi: AccessIndexorContract.abi,
                           methodName: "getContentObjectRights",
@@ -9817,7 +9828,7 @@ function () {
   }, {
     key: "CallFromFrameMessage",
     value: function CallFromFrameMessage(message, Respond) {
-      var _this12 = this;
+      var _this11 = this;
 
       var callback, method, methodResults, responseError;
       return regeneratorRuntime.async(function CallFromFrameMessage$(_context136) {
@@ -9834,7 +9845,7 @@ function () {
             case 2:
               if (message.callbackId) {
                 callback = function callback(result) {
-                  Respond(_this12.utils.MakeClonable({
+                  Respond(_this11.utils.MakeClonable({
                     type: "ElvFrameResponse",
                     requestId: message.callbackId,
                     response: result

@@ -466,17 +466,12 @@ function () {
                     return true;
                   }
                 });
-              }
+              } //this.RecordTags({accessType, libraryId, objectId, versionHash});
 
-              this.RecordTags({
-                accessType: accessType,
-                libraryId: libraryId,
-                objectId: objectId,
-                versionHash: versionHash
-              });
+
               return _context4.abrupt("return", accessRequest);
 
-            case 40:
+            case 39:
             case "end":
               return _context4.stop();
           }

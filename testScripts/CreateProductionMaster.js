@@ -10,6 +10,9 @@ const argv = yargs
   .option("library", {
     description: "ID of the library in which to create the master"
   })
+  .option("type", {
+    description: "Name, object ID, or version hash of the type for the mezzanine"
+  })
   .option("title", {
     description: "Title for the master"
   })
@@ -47,6 +50,7 @@ const ClientConfiguration = require("../TestConfiguration.json");
 const Create = async ({
   elvGeo,
   libraryId,
+  type,
   title,
   metadata,
   files,
@@ -91,9 +95,20 @@ const Create = async ({
 
     console.log("\nCreating Production Master");
 
+    if(!type) {
+      const abrMasterType = await client.ContentType({name: "Production Master"});
+
+      if(!abrMasterType) {
+        throw Error("Unable to find content type 'Production Master'");
+      }
+
+      type = abrMasterType.id;
+    }
+
     try {
       const {errors, warnings, id, hash} = await client.CreateProductionMaster({
         libraryId,
+        type,
         name: title,
         description: "Production Master for " + title,
         metadata,
@@ -143,7 +158,7 @@ const Create = async ({
   }
 };
 
-let {library, title, metadata, files, encrypt, s3Reference, s3Copy, elvGeo} = argv;
+let {library, type, title, metadata, files, encrypt, s3Reference, s3Copy, elvGeo} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -183,6 +198,7 @@ if(metadata) {
 Create({
   elvGeo,
   libraryId: library,
+  type,
   title,
   metadata,
   files,
