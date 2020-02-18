@@ -1339,29 +1339,6 @@ describe("Test ElvClient", () => {
                   "type": "ProtoDash"
                 }
               },
-              /*
-              "dash-widevine": {
-                "drm": {
-                  "type": "DrmWidevine",
-                  "license_servers": [],
-                  "enc_scheme_name": "cenc",
-                  "content_id": ""
-                },
-                "protocol": {
-                  "type": "ProtoDash",
-                  "min_buffer_length": 2
-                }
-              },
-              "hls-aes128": {
-                "drm": {
-                  "type": "DrmAes128",
-                  "enc_scheme_name": "aes-128"
-                },
-                "protocol": {
-                  "type": "ProtoHls"
-                }
-              },
-              */
               "hls-clear": {
                 "drm": null,
                 "protocol": {
@@ -1394,6 +1371,7 @@ describe("Test ElvClient", () => {
 
       const {id, hash} = await client.CreateProductionMaster({
         libraryId: mediaLibraryId,
+        type: "Production Master",
         name: "Production Master Test",
         description: "Production Master Test Description",
         metadata: {test: "master"},
@@ -1419,6 +1397,7 @@ describe("Test ElvClient", () => {
       const {id, hash} = await client.CreateABRMezzanine({
         libraryId: mediaLibraryId,
         masterVersionHash: masterHash,
+        type: "ABR Master",
         name: "Mezzanine Test",
         description: "Mezzanine Test Description",
         metadata: {test: "mezzanine"}
@@ -1713,7 +1692,7 @@ describe("Test ElvClient", () => {
       expect(events[0]).toBeDefined();
     });
 
-    test("Custom Content Object Contract", async () => {
+    test.skip("Custom Content Object Contract", async () => {
       const {contractAddress} = await client.DeployContract({
         abi: CustomContract.abi,
         bytecode: CustomContract.bytecode,

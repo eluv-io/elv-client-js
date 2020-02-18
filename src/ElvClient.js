@@ -434,7 +434,7 @@ class ElvClient {
    */
   SetSigner({signer}) {
     signer.connect(this.ethClient.Provider());
-    signer.provider.pollingInterval = 500;
+    signer.provider.pollingInterval = 250;
     this.signer = signer;
 
     this.InitializeClients();
@@ -452,7 +452,7 @@ class ElvClient {
    */
   async SetSignerFromWeb3Provider({provider}) {
     let ethProvider = new Ethers.providers.Web3Provider(provider);
-    ethProvider.pollingInterval = 500;
+    ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
     await this.InitializeClients();
@@ -1530,7 +1530,7 @@ class ElvClient {
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
-   * @param {objectId=} objectId - ID of the object (if contract already exists)
+   * @param {string=} objectId - ID of the object (if contract already exists)
    * @param {Object=} options -
    * type: Version hash of the content type to associate with the object
    *
@@ -1549,13 +1549,17 @@ class ElvClient {
     if(options.type) {
       this.Log(`Type specified: ${options.type}`);
 
-      let type;
-      if(!options.type.startsWith("hq__")) {
-        // Type name specified
-        type = await this.ContentType({name: options.type});
+      let type = options.type;
+      if(type.startsWith("hq__")) {
+        type = await this.ContentType({versionHash: type});
+      } else if(type.startsWith("iq__")) {
+        type = await this.ContentType({typeId: type});
       } else {
-        // Type hash specified
-        type = await this.ContentType({versionHash: options.type});
+        type = await this.ContentType({name: type});
+      }
+
+      if(!type) {
+        throw Error(`Unable to find content type '${options.type}'`);
       }
 
       typeId = type.id;
@@ -3087,6 +3091,7 @@ class ElvClient {
    * @methodGroup Media
    * @namedParams
    * @param {string} libraryId - ID of the library
+   * @param {string=} type - ID or version hash of the content type for this master
    * @param {string} name - Name of the content
    * @param {string=} description - Description of the content
    * @param {string} contentTypeName - Name of the content type to use
@@ -3103,6 +3108,7 @@ class ElvClient {
    */
   async CreateProductionMaster({
     libraryId,
+    type,
     name,
     description,
     metadata={},
@@ -3114,17 +3120,9 @@ class ElvClient {
   }) {
     ValidateLibrary(libraryId);
 
-    const contentType = await this.ContentType({name: "Production Master"});
-
-    if(!contentType) {
-      throw "Unable to access content type 'Production Master' to create production master";
-    }
-
     const {id, write_token} = await this.CreateContentObject({
       libraryId,
-      options: {
-        type: contentType.hash
-      }
+      options: type ? { type } : {}
     });
 
     let accessParameter;
@@ -3225,6 +3223,7 @@ class ElvClient {
    * @namedParams
    * @param {string} libraryId - ID of the mezzanine library
    * @param {string=} objectId - ID of existing object (if not specified, new object will be created)
+   * @param {string=} type - ID or version hash of the content type for the mezzanine
    * @param {string} name - Name for mezzanine content object
    * @param {string=} description - Description for mezzanine content object
    * @param {Object=} metadata - Additional metadata for mezzanine content object
@@ -3235,29 +3234,36 @@ class ElvClient {
    *
    * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the mezzanine initialization
    */
-  async CreateABRMezzanine({libraryId, objectId, name, description, metadata={}, masterVersionHash, abrProfile, variant="default", offeringKey="default"}) {
+  async CreateABRMezzanine({
+    libraryId,
+    objectId,
+    type,
+    name,
+    description,
+    metadata,
+    masterVersionHash,
+    abrProfile,
+    variant="default",
+    offeringKey="default"
+  }) {
     ValidateLibrary(libraryId);
     ValidateVersion(masterVersionHash);
-
-    const abrMezType = await this.ContentType({name: "ABR Master"});
-
-    if(!abrMezType) {
-      throw Error("Unable to access ABR Master content type in library with ID=" + libraryId);
-    }
 
     if(!masterVersionHash) {
       throw Error("Master version hash not specified");
     }
 
+    const existingMez = !!objectId;
+
+    let options = type ? { type } : {};
+
     let id, write_token;
-    if(objectId) {
+    if(existingMez) {
       // Edit existing
       const editResponse = await this.EditContentObject({
         libraryId,
         objectId,
-        options: {
-          type: abrMezType.hash
-        }
+        options
       });
 
       id = editResponse.id;
@@ -3266,9 +3272,7 @@ class ElvClient {
       // Create new
       const createResponse = await this.CreateContentObject({
         libraryId,
-        options: {
-          type: abrMezType.hash
-        }
+        options
       });
 
       id = createResponse.id;
@@ -3328,26 +3332,33 @@ class ElvClient {
       constant: false
     });
 
+    metadata = {
+      master: {
+        name: masterName,
+        id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
+        hash: masterVersionHash,
+        variant
+      },
+      public: {},
+      elv_created_at: new Date().getTime(),
+      ...(metadata || {})
+    };
+
+    if(name || !existingMez) {
+      metadata.name = name || `${masterName} Mezzanine`;
+      metadata.public.name = name || `${masterName} Mezzanine`;
+    }
+
+    if(description || !existingMez) {
+      metadata.description = description || "";
+      metadata.public.description = description || "";
+    }
+
     await this.MergeMetadata({
       libraryId,
       objectId: id,
       writeToken: write_token,
-      metadata: {
-        master: {
-          name: masterName,
-          id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
-          hash: masterVersionHash,
-          variant
-        },
-        name: name || `${masterName} Mezzanine`,
-        description,
-        public: {
-          name: name || `${masterName} Mezzanine`,
-          description: description || ""
-        },
-        elv_created_at: new Date().getTime(),
-        ...(metadata || {})
-      }
+      metadata
     });
 
     const finalizeResponse = await this.FinalizeContentObject({
@@ -4102,6 +4113,12 @@ class ElvClient {
       drm: {}
     };
 
+    const authToken = await this.authClient.AuthorizationToken({
+      objectId,
+      channelAuth: true,
+      oauthToken: this.oauthToken
+    });
+
     Object.keys(playoutOptions).forEach(protocol => {
       const option = playoutOptions[protocol];
       config[protocol] = option.playoutUrl;
@@ -4125,7 +4142,7 @@ class ElvClient {
             config.drm[drm] = {
               LA_URL: licenseUrl,
               headers: {
-                Authorization: `Bearer ${this.authClient.channelContentTokens[objectId]}`
+                Authorization: `Bearer ${authToken}`
               }
             };
           }
