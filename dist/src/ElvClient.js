@@ -7125,9 +7125,7 @@ function () {
   }, {
     key: "BitmovinPlayoutOptions",
     value: function BitmovinPlayoutOptions(_ref92) {
-      var _this7 = this;
-
-      var objectId, versionHash, linkPath, _ref92$protocols, protocols, _ref92$drms, drms, _ref92$offering, offering, playoutOptions, config;
+      var objectId, versionHash, linkPath, _ref92$protocols, protocols, _ref92$drms, drms, _ref92$offering, offering, playoutOptions, config, authToken;
 
       return regeneratorRuntime.async(function BitmovinPlayoutOptions$(_context89) {
         while (1) {
@@ -7157,6 +7155,15 @@ function () {
               config = {
                 drm: {}
               };
+              _context89.next = 10;
+              return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+                objectId: objectId,
+                channelAuth: true,
+                oauthToken: this.oauthToken
+              }));
+
+            case 10:
+              authToken = _context89.sent;
               Object.keys(playoutOptions).forEach(function (protocol) {
                 var option = playoutOptions[protocol];
                 config[protocol] = option.playoutUrl;
@@ -7188,7 +7195,7 @@ function () {
                       config.drm[drm] = {
                         LA_URL: licenseUrl,
                         headers: {
-                          Authorization: "Bearer ".concat(_this7.authClient.channelContentTokens[objectId])
+                          Authorization: "Bearer ".concat(authToken)
                         }
                       };
                     }
@@ -7197,7 +7204,7 @@ function () {
               });
               return _context89.abrupt("return", config);
 
-            case 10:
+            case 13:
             case "end":
               return _context89.stop();
           }
@@ -7993,7 +8000,7 @@ function () {
   }, {
     key: "AccessGroupMembers",
     value: function AccessGroupMembers(_ref105) {
-      var _this8 = this;
+      var _this7 = this;
 
       var contractAddress, length;
       return regeneratorRuntime.async(function AccessGroupMembers$(_context102) {
@@ -8018,9 +8025,9 @@ function () {
                   while (1) {
                     switch (_context101.prev = _context101.next) {
                       case 0:
-                        _context101.t0 = _this8.utils;
+                        _context101.t0 = _this7.utils;
                         _context101.next = 3;
-                        return regeneratorRuntime.awrap(_this8.CallContractMethod({
+                        return regeneratorRuntime.awrap(_this7.CallContractMethod({
                           contractAddress: contractAddress,
                           abi: AccessGroupContract.abi,
                           methodName: "membersList",
@@ -8062,7 +8069,7 @@ function () {
   }, {
     key: "AccessGroupManagers",
     value: function AccessGroupManagers(_ref106) {
-      var _this9 = this;
+      var _this8 = this;
 
       var contractAddress, length;
       return regeneratorRuntime.async(function AccessGroupManagers$(_context104) {
@@ -8087,9 +8094,9 @@ function () {
                   while (1) {
                     switch (_context103.prev = _context103.next) {
                       case 0:
-                        _context103.t0 = _this9.utils;
+                        _context103.t0 = _this8.utils;
                         _context103.next = 3;
-                        return regeneratorRuntime.awrap(_this9.CallContractMethod({
+                        return regeneratorRuntime.awrap(_this8.CallContractMethod({
                           contractAddress: contractAddress,
                           abi: AccessGroupContract.abi,
                           methodName: "managersList",
@@ -8372,7 +8379,7 @@ function () {
   }, {
     key: "ContentLibraryGroupPermissions",
     value: function ContentLibraryGroupPermissions(_ref112) {
-      var _this10 = this;
+      var _this9 = this;
 
       var libraryId, _ref112$permissions, permissions, libraryPermissions;
 
@@ -8408,8 +8415,8 @@ function () {
                     switch (_context111.prev = _context111.next) {
                       case 0:
                         _context111.next = 2;
-                        return regeneratorRuntime.awrap(_this10.CallContractMethod({
-                          contractAddress: _this10.utils.HashToAddress(libraryId),
+                        return regeneratorRuntime.awrap(_this9.CallContractMethod({
+                          contractAddress: _this9.utils.HashToAddress(libraryId),
                           abi: LibraryContract.abi,
                           methodName: type + "GroupsLength"
                         }));
@@ -8424,10 +8431,10 @@ function () {
                               switch (_context110.prev = _context110.next) {
                                 case 0:
                                   _context110.prev = 0;
-                                  _context110.t0 = _this10.utils;
+                                  _context110.t0 = _this9.utils;
                                   _context110.next = 4;
-                                  return regeneratorRuntime.awrap(_this10.CallContractMethod({
-                                    contractAddress: _this10.utils.HashToAddress(libraryId),
+                                  return regeneratorRuntime.awrap(_this9.CallContractMethod({
+                                    contractAddress: _this9.utils.HashToAddress(libraryId),
                                     abi: LibraryContract.abi,
                                     methodName: type + "Groups",
                                     methodArgs: [i]
@@ -8638,7 +8645,7 @@ function () {
   }, {
     key: "ContentObjectGroupPermissions",
     value: function ContentObjectGroupPermissions(_ref115) {
-      var _this11 = this;
+      var _this10 = this;
 
       var objectId, contractAddress, groupAddresses, groupPermissions;
       return regeneratorRuntime.async(function ContentObjectGroupPermissions$(_context116) {
@@ -8666,9 +8673,9 @@ function () {
                   while (1) {
                     switch (_context115.prev = _context115.next) {
                       case 0:
-                        groupAddress = _this11.utils.FormatAddress(groupAddress);
+                        groupAddress = _this10.utils.FormatAddress(groupAddress);
                         _context115.next = 3;
-                        return regeneratorRuntime.awrap(_this11.CallContractMethod({
+                        return regeneratorRuntime.awrap(_this10.CallContractMethod({
                           contractAddress: groupAddress,
                           abi: AccessIndexorContract.abi,
                           methodName: "getContentObjectRights",
@@ -9821,7 +9828,7 @@ function () {
   }, {
     key: "CallFromFrameMessage",
     value: function CallFromFrameMessage(message, Respond) {
-      var _this12 = this;
+      var _this11 = this;
 
       var callback, method, methodResults, responseError;
       return regeneratorRuntime.async(function CallFromFrameMessage$(_context136) {
@@ -9838,7 +9845,7 @@ function () {
             case 2:
               if (message.callbackId) {
                 callback = function callback(result) {
-                  Respond(_this12.utils.MakeClonable({
+                  Respond(_this11.utils.MakeClonable({
                     type: "ElvFrameResponse",
                     requestId: message.callbackId,
                     response: result

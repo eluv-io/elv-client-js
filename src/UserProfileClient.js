@@ -181,39 +181,6 @@ await client.userProfileClient.UserMetadata()
     return this.walletAddress;
   }
 
-  __InvalidateCache() {
-    this.cachedPrivateMetadata = undefined;
-  }
-
-  __CacheMetadata(metadata) {
-    this.cachedPrivateMetadata = metadata;
-  }
-
-  __GetCachedMetadata(subtree) {
-    subtree = subtree.replace(/\/*/, "");
-
-    if(!subtree) { return this.cachedPrivateMetadata; }
-
-    let pointer = this.cachedPrivateMetadata || {};
-
-    subtree = subtree.replace(/\/*/, "");
-
-    const keys = subtree.split("/");
-    for(let i = 0; i < keys.length - 1; i++) {
-      const key = keys[i];
-      if(!pointer || !pointer.hasOwnProperty(key)) {
-        return undefined;
-      }
-
-      pointer = pointer[key];
-    }
-
-    const lastKey = keys[keys.length - 1];
-    if(pointer && pointer.hasOwnProperty(lastKey)) {
-      return pointer[lastKey];
-    }
-  }
-
   /**
    * Access the specified user's public profile metadata
    *
@@ -264,7 +231,6 @@ await client.userProfileClient.UserMetadata()
    *
    * @namedParams
    * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
-   * @param {boolean=} noCache=false - If specified, it will always query for metadata instead of returning from the cache
    * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
    * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -280,31 +246,19 @@ await client.userProfileClient.UserMetadata()
    *
    * @return {Promise<Object|string>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
    */
-  async UserMetadata({metadataSubtree="/", resolveLinks=false, resolveIncludeSource=false, noCache=false}={}) {
-    if(!noCache && this.cachedPrivateMetadata) {
-      return this.__GetCachedMetadata(metadataSubtree);
-    }
-
+  async UserMetadata({metadataSubtree="/", resolveLinks=false, resolveIncludeSource=false}={}) {
     this.Log(`Accessing private user metadata at ${metadataSubtree}`);
 
     const libraryId = this.client.contentSpaceLibraryId;
     const objectId = Utils.AddressToObjectId(await this.WalletAddress());
 
-    // If caching not enabled, make direct query to object
-    if(noCache) {
-      return await this.client.ContentObjectMetadata({
-        libraryId,
-        objectId,
-        metadataSubtree,
-        resolveLinks,
-        resolveIncludeSource
-      });
-    }
-
-    // If caching is enabled, just get all the metadata and store it.
-    const metadata = await this.client.ContentObjectMetadata({libraryId, objectId});
-    this.__CacheMetadata(metadata);
-    return this.__GetCachedMetadata(metadataSubtree);
+    return await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree,
+      resolveLinks,
+      resolveIncludeSource
+    });
   }
 
   /**
@@ -324,8 +278,6 @@ await client.userProfileClient.UserMetadata()
 
     await this.client.MergeMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
-
-    this.__InvalidateCache();
   }
 
   /**
@@ -345,8 +297,6 @@ await client.userProfileClient.UserMetadata()
 
     await this.client.ReplaceMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
-
-    this.__InvalidateCache();
   }
 
   /**
@@ -365,8 +315,6 @@ await client.userProfileClient.UserMetadata()
 
     await this.client.DeleteMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree});
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
-
-    this.__InvalidateCache();
   }
 
   /**
@@ -480,8 +428,6 @@ await client.userProfileClient.UserMetadata()
     });
 
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
-
-    this.__InvalidateCache();
   }
 
   /**
@@ -505,8 +451,6 @@ await client.userProfileClient.UserMetadata()
       // eslint-disable-next-line no-console
       console.error(error);
     }
-
-    this.__InvalidateCache();
   }
 
   async __RecordTags({libraryId, objectId, versionHash}) {
@@ -654,9 +598,6 @@ await client.userProfileClient.UserMetadata()
       "RecordTags",
       "SetAccessLevel",
       "SetUserProfileImage",
-      "__CacheMetadata",
-      "__GetCachedMetadata",
-      "__InvalidateCache",
       "__IsLibraryCreated",
       "__TouchLibrary",
       "__FormatVideoTags",
