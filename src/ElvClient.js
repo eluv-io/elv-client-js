@@ -3954,8 +3954,8 @@ class ElvClient {
    * @param {string=} objectId - Id of the content
    * @param {string=} versionHash - Version hash of the content
    * @param {string=} linkPath - If playing from a link, the path to the link
-   * @param {Array<string>} protocols - Acceptable playout protocols
-   * @param {Array<string>} drms - Acceptable DRM formats
+   * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+   * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
    * @param {string=} offering=default - The offering to play
    */
   async PlayoutOptions({
@@ -4052,7 +4052,7 @@ class ElvClient {
 
       // Exclude any options that do not satisfy the specified protocols and/or DRMs
       const protocolMatch = protocols.includes(protocol);
-      const drmMatch = drms.includes(drm) || (drms.length === 0 && !drm);
+      const drmMatch = drms.includes(drm || "clear") || (drms.length === 0 && !drm);
       if(!protocolMatch || !drmMatch) {
         continue;
       }
@@ -4079,8 +4079,8 @@ class ElvClient {
    * @param {string=} objectId - Id of the content
    * @param {string} versionHash - Version hash of the content
    * @param {string=} linkPath - If playing from a link, the path to the link
-   * @param {Array<string>=} protocols=["dash", "hls"] - Acceptable playout protocols
-   * @param {Array<string>=} drms=[] - Acceptable DRM formats
+   * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+   * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
    * @param {string=} offering=default - The offering to play
    */
   async BitmovinPlayoutOptions({
