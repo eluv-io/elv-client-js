@@ -3884,7 +3884,7 @@ class ElvClient {
    * @return {Promise<Array<string>>}
    */
   async AvailableDRMs() {
-    const availableDRMs = ["aes-128"];
+    const availableDRMs = ["clear", "aes-128"];
 
     if(!window) {
       return availableDRMs;
@@ -4057,9 +4057,11 @@ class ElvClient {
         continue;
       }
 
-      // This protocol / DRM satisfies the specifications
-      playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
-      playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
+      // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
+      if(!playoutMap[protocol].playoutUrl || (drm && drm !== "clear")) {
+        playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
+        playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
+      }
     }
 
     this.Log(playoutMap);
