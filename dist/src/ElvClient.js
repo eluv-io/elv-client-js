@@ -6808,7 +6808,7 @@ function () {
         while (1) {
           switch (_context87.prev = _context87.next) {
             case 0:
-              availableDRMs = ["aes-128"];
+              availableDRMs = ["clear", "aes-128"];
 
               if (window) {
                 _context87.next = 3;
@@ -7026,7 +7026,7 @@ function () {
 
             case 37:
               if (!(i < playoutOptions.length)) {
-                _context88.next = 70;
+                _context88.next = 69;
                 break;
               }
 
@@ -7082,23 +7082,25 @@ function () {
                 break;
               }
 
-              return _context88.abrupt("continue", 67);
+              return _context88.abrupt("continue", 66);
 
             case 65:
-              // This protocol / DRM satisfies the specifications
-              playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
-              playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
+              // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
+              if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
+                playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
+                playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
+              }
 
-            case 67:
+            case 66:
               i++;
               _context88.next = 37;
               break;
 
-            case 70:
+            case 69:
               this.Log(playoutMap);
               return _context88.abrupt("return", playoutMap);
 
-            case 72:
+            case 71:
             case "end":
               return _context88.stop();
           }
