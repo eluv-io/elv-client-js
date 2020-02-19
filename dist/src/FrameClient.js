@@ -201,7 +201,7 @@ function () {
   _createClass(FrameClient, [{
     key: "PassRequest",
     value: function PassRequest(_ref2) {
-      var request, Respond, response, callback;
+      var request, Respond, response, error, callback;
       return regeneratorRuntime.async(function PassRequest$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
@@ -233,13 +233,14 @@ function () {
             case 8:
               _context3.prev = 8;
               _context3.t0 = _context3["catch"](1);
-              response = JSON.parse(JSON.stringify(_context3.t0));
+              error = _context3.t0;
 
             case 11:
               return _context3.abrupt("return", {
                 type: "ElvFrameResponse",
                 requestId: request.requestId,
-                response: response
+                response: response,
+                error: error
               });
 
             case 12:
@@ -271,21 +272,24 @@ function () {
                 callbackId: callbackId
               }), "*"); // No timeout for prompted methods
 
-              if (noResponse) {
-                _context4.next = 11;
+              if (!noResponse) {
+                _context4.next = 6;
                 break;
               }
 
+              return _context4.abrupt("return");
+
+            case 6:
               operation = options.calledMethod || options.operation;
               isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
               timeout = options.prompted || isFileOperation ? 0 : this.timeout;
-              _context4.next = 10;
+              _context4.next = 11;
               return regeneratorRuntime.awrap(this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
 
-            case 10:
+            case 11:
               return _context4.abrupt("return", _context4.sent);
 
-            case 11:
+            case 12:
             case "end":
               return _context4.stop();
           }
