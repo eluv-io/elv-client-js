@@ -4385,17 +4385,52 @@ class ElvClient {
 
     let path = UrlJoin("q", versionHash || objectId, "links");
 
-    return await ResponseToJson(
-      this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
-        queryParams: {
-          auto_update: autoUpdate,
-          select
-        },
-        method: "GET",
-        path: path
-      })
-    );
+    try {
+      return await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
+          queryParams: {
+            auto_update: autoUpdate,
+            select
+          },
+          method: "GET",
+          path: path
+        })
+      );
+    } catch(error) {
+      // If a cycle is present, do some work to present useful information about it
+      let errorInfo;
+      try {
+        const cycles = error.body.errors[0].cause.cause.cause.cycle;
+
+        if(!cycles || cycles.length === 0) { throw error; }
+
+        let info = {};
+        await Promise.all(
+          cycles.map(async cycleHash => {
+            if(info[cycleHash]) { return; }
+
+            const cycleId = (this.utils.DecodeVersionHash(cycleHash)).objectId;
+            const name = (
+              await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "public/asset_metadata/display_title"}) ||
+              await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "public/name"}) ||
+              await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "name"}) ||
+              cycleId
+            );
+
+            info[cycleHash] = { name, objectId: cycleId };
+          })
+        );
+
+        errorInfo = cycles.map(cycleHash => `${info[cycleHash].name} (${info[cycleHash].objectId})`);
+      } catch(e) {
+        throw error;
+      }
+
+      throw new Error(
+        `Cycle found in links: ${errorInfo.join(" -> ")}`
+      );
+    }
   }
 
   /**
@@ -4417,7 +4452,7 @@ class ElvClient {
 
     let total;
     let completed = 0;
-    
+
     // eslint-disable-next-line no-constant-condition
     while(1) {
       const graph = await this.ContentObjectGraph({
@@ -4447,11 +4482,13 @@ class ElvClient {
       const currentLibraryId = await this.ContentObjectLibraryId({versionHash: currentHash});
       const currentObjectId = (this.utils.DecodeVersionHash(currentHash)).objectId;
 
-      callback({
-        completed,
-        total,
-        action: `Updating ${name} (${currentObjectId})...`
-      });
+      if(callback) {
+        callback({
+          completed,
+          total,
+          action: `Updating ${name} (${currentObjectId})...`
+        });
+      }
 
       this.Log(`Updating links for ${name} (${currentObjectId} / ${currentHash})`);
 
@@ -4472,11 +4509,18 @@ class ElvClient {
         })
       );
 
-      await this.FinalizeContentObject({
+      const { hash } = await this.FinalizeContentObject({
         libraryId: currentLibraryId,
         objectId: currentObjectId,
         writeToken: write_token
       });
+
+      // If root object was specified by hash and updated, update hash
+      if(currentHash === versionHash) {
+        versionHash = hash;
+      }
+
+      completed += 1;
     }
   }
 
