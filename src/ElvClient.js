@@ -1516,6 +1516,28 @@ class ElvClient {
     );
   }
 
+  /**
+   * Retrieve the version hash of the latest version of the specified object
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   *
+   * @returns {Promise<string>} - The latest version hash of the object
+   */
+  async LatestVersionHash({objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    ValidateObject(objectId);
+
+    return await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "objectHash"
+    });
+  }
+
   /* Content object creation, modification, deletion */
 
   /**

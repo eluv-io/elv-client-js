@@ -331,6 +331,7 @@ class FrameClient {
       "FormatContractArguments",
       "GenerateStateChannelToken",
       "GetBalance",
+      "LatestVersionHash",
       "LibraryContentTypes",
       "LinkData",
       "LinkTarget",
