@@ -179,7 +179,8 @@ const Create = async ({
         links: [
           {
             target: Path.basename(poster),
-            path: "asset_metadata/components/poster"
+            path: "asset_metadata/components/poster",
+            type: "file"
           }
         ]
       });

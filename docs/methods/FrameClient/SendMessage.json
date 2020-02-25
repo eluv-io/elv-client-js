@@ -5,15 +5,15 @@
   },
   {
     "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"CreateContentLibrary\",\n    \"args\": {\n      \"name\": \"test library\"\n    }\n  }\n});",
-    "result": "\"ilib38CLDTP6dgZtk1VNhGatC92jnqKx\""
+    "result": "\"ilib3zmrtwc1GizTukZwDAK4zAUdXPDw\""
   },
   {
-    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"ContentLibrary\",\n    \"args\": {\n      \"libraryId\": \"ilib38CLDTP6dgZtk1VNhGatC92jnqKx\"\n    }\n  }\n});",
-    "result": "{\n  \"id\": \"ilib38CLDTP6dgZtk1VNhGatC92jnqKx\",\n  \"qid\": \"iq__38CLDTP6dgZtk1VNhGatC92jnqKx\",\n  \"meta\": {}\n}"
+    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"ContentLibrary\",\n    \"args\": {\n      \"libraryId\": \"ilib3zmrtwc1GizTukZwDAK4zAUdXPDw\"\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"ilib3zmrtwc1GizTukZwDAK4zAUdXPDw\",\n  \"qid\": \"iq__3zmrtwc1GizTukZwDAK4zAUdXPDw\",\n  \"meta\": {}\n}"
   },
   {
     "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"CurrentAccountAddress\"\n  }\n});",
-    "result": "\"0x5fa639a851742b0a7b0af9c1f744844f829b399a\""
+    "result": "\"0xa6ade447c0bfd0a2b8b8ba72833dc0869cc33e8c\""
   },
   {
     "signature": "async SendMessage({\n  \"options\": {\n    \"module\": \"userProfileClient\",\n    \"calledMethod\": \"AccessLevel\",\n    \"prompted\": false\n  }\n});",
@@ -21,28 +21,28 @@
   },
   {
     "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"ContentLibraries\",\n    \"args\": {},\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 123\n  }\n});",
-    "result": "[\n  \"ilib38CLDTP6dgZtk1VNhGatC92jnqKx\"\n]"
+    "result": "[\n  \"ilib3zmrtwc1GizTukZwDAK4zAUdXPDw\"\n]"
   },
   {
     "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"CreateContentLibrary\",\n    \"args\": {\n      \"name\": \"test frame client\"\n    }\n  }\n});",
-    "result": "\"ilib3W9PvtUZnZaL93BaPmqaCg47Ak76\""
+    "result": "\"ilib3k794vzrqkUk1c3u8uYDraLQychr\""
   },
   {
-    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"CreateContentObject\",\n    \"args\": {\n      \"libraryId\": \"ilib3W9PvtUZnZaL93BaPmqaCg47Ak76\"\n    }\n  }\n});",
-    "result": "{\n  \"id\": \"iq__4CtoT97XxtXevENRhpHJWbyog18z\",\n  \"write_token\": \"tqw_LAwV9TuL1JTD3aQ2yLrtTcutqtiRrpFrx\",\n  \"type\": \"\"\n}"
+    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"CreateContentObject\",\n    \"args\": {\n      \"libraryId\": \"ilib3k794vzrqkUk1c3u8uYDraLQychr\"\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__q8V4fRVWw6i6PEfDFvREEgDm7Lo\",\n  \"write_token\": \"tqw_D5Fai8YrF6pKthzqQUf6kUrpUkvaZNY6j\",\n  \"type\": \"\"\n}"
   },
   {
-    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"UploadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib3W9PvtUZnZaL93BaPmqaCg47Ak76\",\n      \"objectId\": \"iq__4CtoT97XxtXevENRhpHJWbyog18z\",\n      \"writeToken\": \"tqw_LAwV9TuL1JTD3aQ2yLrtTcutqtiRrpFrx\",\n      \"data\": \"<ArrayBuffer 100000>\",\n      \"chunkSize\": 10000\n    }\n  }\n});",
-    "result": "{\n  \"content\": {\n    \"id\": \"iq__4CtoT97XxtXevENRhpHJWbyog18z\",\n    \"write_token\": \"tqw_LAwV9TuL1JTD3aQ2yLrtTcutqtiRrpFrx\",\n    \"type\": \"\"\n  },\n  \"part\": {\n    \"hash\": \"hqp_8ycwHDZq9fJ43qCqj2AF8rYrcpBjK3eMi4B4qdmRMZUVxcDj\",\n    \"size\": 100000\n  }\n}"
+    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"UploadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib3k794vzrqkUk1c3u8uYDraLQychr\",\n      \"objectId\": \"iq__q8V4fRVWw6i6PEfDFvREEgDm7Lo\",\n      \"writeToken\": \"tqw_D5Fai8YrF6pKthzqQUf6kUrpUkvaZNY6j\",\n      \"data\": \"<ArrayBuffer 100000>\",\n      \"chunkSize\": 10000\n    }\n  }\n});",
+    "result": "{\n  \"content\": {\n    \"id\": \"iq__q8V4fRVWw6i6PEfDFvREEgDm7Lo\",\n    \"write_token\": \"tqw_D5Fai8YrF6pKthzqQUf6kUrpUkvaZNY6j\",\n    \"type\": \"\"\n  },\n  \"part\": {\n    \"hash\": \"hqp_N7zuuQJxx7a7z5LkQz9w6xnAqqut62yKW91YGyibSHq7ZBk1\",\n    \"size\": 100000\n  }\n}"
   },
   {
-    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"FinalizeContentObject\",\n    \"args\": {\n      \"libraryId\": \"ilib3W9PvtUZnZaL93BaPmqaCg47Ak76\",\n      \"objectId\": \"iq__4CtoT97XxtXevENRhpHJWbyog18z\",\n      \"writeToken\": \"tqw_LAwV9TuL1JTD3aQ2yLrtTcutqtiRrpFrx\"\n    }\n  }\n});",
-    "result": "{\n  \"id\": \"iq__4CtoT97XxtXevENRhpHJWbyog18z\",\n  \"hash\": \"hq__4tnd6HWNEZ9ss1EcN1BhPc7hVWjVQywyQgMnwXoDoBWGGY9Uv9CFHF1kydvgvvmudiEAbhqqmG\",\n  \"write_token\": \"tqw_LAwV9TuL1JTD3aQ2yLrtTcutqtiRrpFrx\",\n  \"type\": \"\"\n}"
+    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"FinalizeContentObject\",\n    \"args\": {\n      \"libraryId\": \"ilib3k794vzrqkUk1c3u8uYDraLQychr\",\n      \"objectId\": \"iq__q8V4fRVWw6i6PEfDFvREEgDm7Lo\",\n      \"writeToken\": \"tqw_D5Fai8YrF6pKthzqQUf6kUrpUkvaZNY6j\"\n    }\n  }\n});",
+    "result": "{\n  \"id\": \"iq__q8V4fRVWw6i6PEfDFvREEgDm7Lo\",\n  \"hash\": \"hq__F8Cd6HfAdQVYDej7TojWXhvr4t91MQkc52mXRvc7zwfAtNURXkQ7djpeE9PyK5CDSLamXFkcFd\",\n  \"write_token\": \"tqw_D5Fai8YrF6pKthzqQUf6kUrpUkvaZNY6j\",\n  \"type\": \"\"\n}"
   },
   {
-    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"DownloadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib3W9PvtUZnZaL93BaPmqaCg47Ak76\",\n      \"objectId\": \"iq__4CtoT97XxtXevENRhpHJWbyog18z\",\n      \"partHash\": \"hqp_8ycwHDZq9fJ43qCqj2AF8rYrcpBjK3eMi4B4qdmRMZUVxcDj\",\n      \"chunked\": true,\n      \"chunkSize\": 10000,\n      \"callback\": \"<function>\"\n    }\n  },\n  \"callback\": \"<function>\"\n});"
+    "signature": "async SendMessage({\n  \"options\": {\n    \"calledMethod\": \"DownloadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib3k794vzrqkUk1c3u8uYDraLQychr\",\n      \"objectId\": \"iq__q8V4fRVWw6i6PEfDFvREEgDm7Lo\",\n      \"partHash\": \"hqp_N7zuuQJxx7a7z5LkQz9w6xnAqqut62yKW91YGyibSHq7ZBk1\",\n      \"chunked\": true,\n      \"chunkSize\": 10000,\n      \"callback\": \"<function>\"\n    }\n  },\n  \"callback\": \"<function>\"\n});"
   },
   {
-    "signature": "async SendMessage({\n  \"options\": {\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 1234,\n    \"calledMethod\": \"DownloadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib3W9PvtUZnZaL93BaPmqaCg47Ak76\",\n      \"objectId\": \"iq__4CtoT97XxtXevENRhpHJWbyog18z\",\n      \"partHash\": \"hqp_8ycwHDZq9fJ43qCqj2AF8rYrcpBjK3eMi4B4qdmRMZUVxcDj\",\n      \"chunked\": true,\n      \"chunkSize\": 10000,\n      \"callback\": \"<function>\"\n    },\n    \"callbackId\": 321\n  },\n  \"callback\": \"<function>\"\n});"
+    "signature": "async SendMessage({\n  \"options\": {\n    \"type\": \"ElvFrameRequest\",\n    \"requestId\": 1234,\n    \"calledMethod\": \"DownloadPart\",\n    \"args\": {\n      \"libraryId\": \"ilib3k794vzrqkUk1c3u8uYDraLQychr\",\n      \"objectId\": \"iq__q8V4fRVWw6i6PEfDFvREEgDm7Lo\",\n      \"partHash\": \"hqp_N7zuuQJxx7a7z5LkQz9w6xnAqqut62yKW91YGyibSHq7ZBk1\",\n      \"chunked\": true,\n      \"chunkSize\": 10000,\n      \"callback\": \"<function>\"\n    },\n    \"callbackId\": 321\n  },\n  \"callback\": \"<function>\"\n});"
   }
 ]

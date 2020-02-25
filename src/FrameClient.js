@@ -85,7 +85,7 @@ class FrameClient {
    * @returns {object} - The resultant ElvFrameResponse
    */
   async PassRequest({request, Respond}) {
-    let response;
+    let response, error;
     try {
       let callback;
       if(request.callbackId) {
@@ -97,14 +97,15 @@ class FrameClient {
       }
 
       response = await this.SendMessage({options: request, callback});
-    } catch(error) {
-      response = JSON.parse(JSON.stringify(error));
+    } catch(e) {
+      error = e;
     }
 
     return {
       type: "ElvFrameResponse",
       requestId: request.requestId,
-      response
+      response,
+      error
     };
   }
 
@@ -122,12 +123,12 @@ class FrameClient {
     }, "*");
 
     // No timeout for prompted methods
-    if(!noResponse) {
-      const operation = options.calledMethod || options.operation;
-      const isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
-      const timeout = options.prompted || isFileOperation ? 0 : this.timeout;
-      return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
-    }
+    if(noResponse) { return; }
+
+    const operation = options.calledMethod || options.operation;
+    const isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
+    const timeout = options.prompted || isFileOperation ? 0 : this.timeout;
+    return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
   }
 
   async AwaitMessage(requestId, timeout, callback, callbackId, operation) {
@@ -271,6 +272,7 @@ class FrameClient {
       "ContentLibraryOwner",
       "ContentObject",
       "ContentObjectAccessComplete",
+      "ContentObjectGraph",
       "ContentObjectGroupPermissions",
       "ContentObjectLibraryId",
       "ContentObjectMetadata",
@@ -290,7 +292,6 @@ class FrameClient {
       "CreateAccessGroup",
       "CreateContentLibrary",
       "CreateContentObject",
-      "CreateContentSpace",
       "CreateContentType",
       "CreateFileDirectories",
       "CreateFileUploadJob",
@@ -329,6 +330,7 @@ class FrameClient {
       "FormatContractArguments",
       "GenerateStateChannelToken",
       "GetBalance",
+      "LatestVersionHash",
       "LibraryContentTypes",
       "LinkData",
       "LinkTarget",
@@ -361,6 +363,7 @@ class FrameClient {
       "SetNodes",
       "SetOauthToken",
       "StartABRMezzanineJobs",
+      "UpdateContentObjectGraph",
       "UploadFileData",
       "UploadFiles",
       "UploadFilesFromS3",
