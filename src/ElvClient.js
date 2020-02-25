@@ -504,21 +504,6 @@ class ElvClient {
     return this.contentSpaceId;
   }
 
-  /**
-   * Deploy a new content space contract
-   *
-   * @methodGroup Content Space
-   * @namedParams
-   * @param {String} name - Name of the content space
-   *
-   * @returns {Promise<string>} - Content space ID of the created content space
-   */
-  async CreateContentSpace({name}) {
-    const contentSpaceAddress = await this.ethClient.DeployContentSpaceContract({name, signer: this.signer});
-
-    return Utils.AddressToSpaceId(contentSpaceAddress);
-  }
-
   /* Libraries */
 
   /**
@@ -3772,8 +3757,7 @@ class ElvClient {
     if(versionHash) {
       objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     } else if(!this.stateChannelAccess[objectId]) {
-      const libraryId = await this.ContentObjectLibraryId({objectId});
-      versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
+      versionHash = await this.LatestVersionHash({objectId});
     }
 
     this.stateChannelAccess[objectId] = versionHash;
@@ -3807,8 +3791,7 @@ class ElvClient {
       if(this.stateChannelAccess[objectId]) {
         versionHash = this.stateChannelAccess[objectId];
       } else {
-        const libraryId = await this.ContentObjectLibraryId({objectId});
-        versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
+        versionHash = await this.LatestVersionHash({objectId});
       }
     }
 
@@ -4454,7 +4437,9 @@ class ElvClient {
   }
 
   /**
-   * Recursively update all auto_update links in the specified object
+   * Recursively update all auto_update links in the specified object.
+   *
+   * Note: Links will not be updated unless they are specifically marked as auto_update
    *
    * @param {string=} libraryId - ID of the library
    * @param {string=} objectId - ID of the object
@@ -4550,14 +4535,17 @@ class ElvClient {
    *
    * Expected format of links:
    *
-   [
-   {
-        path: string (path to link)
-        target: string (path to target),
-        type: string ("file", "meta", "rep" - default "file")
-        targetHash: string (optional, for cross-object links)
-      }
-   ]
+
+       [
+         {
+            path: string (metadata path for the link)
+            target: string (path to link target),
+            type: string ("file", "meta" | "metadata", "rep" - default "metadata")
+            targetHash: string (optional, for cross-object links),
+            autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method)
+          }
+       ]
+
    * @methodGroup Links
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -4577,7 +4565,9 @@ class ElvClient {
     for(let i = 0; i < links.length; i++) {
       const info = links[i];
       const path = info.path.replace(/^(\/|\.)+/, "");
-      const type = (info.type || "file") === "file" ? "files" : info.type;
+
+      let type = (info.type || "file") === "file" ? "files" : info.type;
+      if(type === "metadata") { type = "meta"; }
 
       let target = info.target.replace(/^(\/|\.)+/, "");
       if(info.targetHash) {
@@ -4586,14 +4576,20 @@ class ElvClient {
         target = `./${type}/${target}`;
       }
 
+      let link = {
+        "/": target
+      };
+
+      if(info.autoUpdate) {
+        link["."] = { auto_update: { tag: "latest"} };
+      }
+
       await this.ReplaceMetadata({
         libraryId,
         objectId,
         writeToken,
         metadataSubtree: path,
-        metadata: {
-          "/": target
-        }
+        metadata: link
       });
     }
   }
@@ -4719,15 +4715,16 @@ class ElvClient {
    *
    * @methodGroup Access Groups
    * @namedParams
-   * @param {string} name - Name of the access group
+   * @param {string=} name - Name of the access group
    * @param {string=} description - Description for the access group
    * @param {object=} meta - Metadata for the access group
    *
    * @returns {Promise<string>} - Contract address of created access group
    */
-  async CreateAccessGroup({name, description, metadata={}}) {
+  async CreateAccessGroup({name, description, metadata={}}={}) {
     this.Log(`Creating access group: ${name || ""} ${description || ""}`);
-    const { contractAddress } = await this.authClient.CreateAccessGroup();
+    let { contractAddress } = await this.authClient.CreateAccessGroup();
+    contractAddress = this.utils.FormatAddress(contractAddress);
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
 
@@ -5182,7 +5179,7 @@ class ElvClient {
    * @param {string} objectId - The ID of the object
    *
    * @return {Promise<Object>} - Object mapping group addresses to permissions, as an array
-   * - Example: { "0x0": ["see", "access"], ...}
+   * - Example: { "0x0": ["see", "access", "manage"], ...}
    */
   async ContentObjectGroupPermissions({objectId}) {
     ValidateObject(objectId);
