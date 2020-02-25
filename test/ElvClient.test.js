@@ -228,7 +228,10 @@ describe("Test ElvClient", () => {
       // Ensure unique name for later lookup
       typeName = "Test Content Type " + testHash;
 
-      typeId = await client.CreateContentType({name: typeName});
+      typeId = await client.CreateContentType({
+        name: typeName,
+        bitcode: testFile1
+      });
     });
 
     test("List Content Types", async () => {
@@ -633,6 +636,10 @@ describe("Test ElvClient", () => {
 
       const versions = await client.ContentObjectVersions({libraryId, objectId});
       expect(versions).toBeDefined();
+
+      const latestVersionHash = await client.LatestVersionHash({objectId});
+      expect(latestVersionHash).toBeDefined();
+      expect(latestVersionHash).toEqual(versionHash);
     });
 
     test("Get Content Object By Version Hash", async () => {
@@ -674,6 +681,97 @@ describe("Test ElvClient", () => {
         ...originalMetadata,
         copy: "metadata"
       });
+    });
+  });
+
+  describe("Content Object Group Permissions", () => {
+    let groupObjectId;
+    beforeAll(async () => {
+      const {id, write_token} = await client.CreateContentObject({libraryId});
+      await client.FinalizeContentObject({libraryId, objectId: id, writeToken: write_token});
+
+      groupObjectId = id;
+    });
+
+    test("Content Object Group Permissions", async () => {
+      const initialPermissions = await client.ContentObjectGroupPermissions({objectId: groupObjectId});
+
+      expect(initialPermissions).toBeDefined();
+      expect(Object.keys(initialPermissions).length).toEqual(0);
+
+      const groupAddress = await client.CreateAccessGroup({name: "Test Object Permissions"});
+
+      await client.AddContentObjectGroupPermission({
+        objectId: groupObjectId,
+        groupAddress,
+        permission: "see"
+      });
+
+      await client.AddContentObjectGroupPermission({
+        objectId: groupObjectId,
+        groupAddress,
+        permission: "access"
+      });
+
+      await client.AddContentObjectGroupPermission({
+        objectId: groupObjectId,
+        groupAddress,
+        permission: "manage"
+      });
+
+      const fullPermissions = await client.ContentObjectGroupPermissions({objectId: groupObjectId});
+
+      expect(fullPermissions).toBeDefined();
+      expect(Object.keys(fullPermissions).length).toEqual(1);
+      expect(fullPermissions[groupAddress]).toBeDefined();
+      expect(fullPermissions[groupAddress].sort()).toEqual(["access", "manage", "see"]);
+
+      await client.RemoveContentObjectGroupPermission({
+        objectId: groupObjectId,
+        groupAddress,
+        permission: "manage"
+      });
+
+      const reducedPermissions = await client.ContentObjectGroupPermissions({objectId: groupObjectId});
+
+      expect(reducedPermissions).toBeDefined();
+      expect(Object.keys(reducedPermissions).length).toEqual(1);
+      expect(reducedPermissions[groupAddress]).toBeDefined();
+      expect(reducedPermissions[groupAddress].sort()).toEqual(["access", "see"]);
+
+      await client.RemoveContentObjectGroupPermission({
+        objectId: groupObjectId,
+        groupAddress,
+        permission: "access"
+      });
+
+      await client.RemoveContentObjectGroupPermission({
+        objectId: groupObjectId,
+        groupAddress,
+        permission: "see"
+      });
+
+      const noPermissions = await client.ContentObjectGroupPermissions({objectId: groupObjectId});
+
+      expect(noPermissions).toBeDefined();
+      expect(Object.keys(noPermissions).length).toEqual(0);
+    });
+  });
+
+  describe("Encryption", () => {
+    beforeAll(async () => {
+      // Ensure encryption conk is set
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+      await client.EncryptionConk({libraryId, objectId, writeToken});
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
+    test("Encrypt and Decrypt", async () => {
+      const encrypted = await client.Encrypt({libraryId, objectId, chunk: testFile1});
+      const decrypted = new Uint8Array(await client.Decrypt({libraryId, objectId, chunk: encrypted}));
+
+      expect(decrypted.byteLength).toEqual(testFileSize);
+      expect(decrypted.toString()).toEqual(new Uint8Array(testFile1).toString());
     });
   });
 
@@ -1079,6 +1177,23 @@ describe("Test ElvClient", () => {
       expect(s3CopyData).toBeDefined();
     });
 
+    test("Create File Directories", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      await client.CreateFileDirectories({
+        libraryId,
+        objectId,
+        writeToken,
+        filePaths: [
+          "new-directory-1",
+          "new-directory-2",
+          "new-directory-3",
+        ]
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
     test("List Files", async () => {
       const files = await client.ListFiles({libraryId, objectId});
 
@@ -1087,6 +1202,9 @@ describe("Test ElvClient", () => {
       expect(files.testDirectory["File 2"]).toBeDefined();
       expect(files["s3-copy"]).toBeDefined();
       expect(files["s3-reference"]).toBeDefined();
+      expect(files["new-directory-1"]).toBeDefined();
+      expect(files["new-directory-2"]).toBeDefined();
+      expect(files["new-directory-3"]).toBeDefined();
     });
 
     test("Create Local File Links", async () => {
@@ -1099,11 +1217,13 @@ describe("Test ElvClient", () => {
         links: [
           {
             target: "testDirectory/File 1",
-            path: "myLink"
+            path: "myLink",
+            type: "file"
           },
           {
             target: "testDirectory/File 2",
-            path: "links/myLink2"
+            path: "links/myLink2",
+            type: "file"
           },
           {
             target: "toLink/meta/data",
@@ -1229,6 +1349,32 @@ describe("Test ElvClient", () => {
           to: "show"
         }
       });
+    });
+
+    test("Delete Files", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      await client.DeleteFiles({
+        libraryId,
+        objectId,
+        writeToken,
+        filePaths: [
+          "new-directory-1",
+          "new-directory-2",
+          "testDirectory/File 2"
+        ]
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+
+      const files = await client.ListFiles({libraryId, objectId});
+
+      expect(files.testDirectory).toBeDefined();
+      expect(files.testDirectory["File 1"]).toBeDefined();
+      expect(files.testDirectory["File 2"]).not.toBeDefined();
+      expect(files["new-directory-1"]).not.toBeDefined();
+      expect(files["new-directory-2"]).not.toBeDefined();
+      expect(files["new-directory-3"]).toBeDefined();
     });
   });
 
@@ -1561,66 +1707,113 @@ describe("Test ElvClient", () => {
         throw error;
       }
     });
+  });
 
-    test.skip("Playout Options From External Link", async () => {
-      try {
-        // Create a link to default playout
-        const {id, write_token} = await client.CreateContentObject({
-          libraryId: mediaLibraryId
-        });
+  describe("Content Object Link Graph", () => {
+    let targetId;
 
-        await client.CreateLinks({
-          libraryId: mediaLibraryId,
-          objectId: id,
-          writeToken: write_token,
-          links: [{
-            type: "rep",
-            path: "external/videoLink/default",
-            target: "playout/default",
-            targetHash: mezzanineHash
-          }]
-        });
-        const {hash} = await client.FinalizeContentObject({
-          libraryId: mediaLibraryId,
-          objectId: id,
-          writeToken: write_token
-        });
+    beforeAll(async () => {
+      const {id, write_token} = await client.CreateContentObject({
+        libraryId
+      });
 
-        // Produce playout options from link
-        const playoutOptions = await accessClient.PlayoutOptions({
-          versionHash: hash,
-          linkPath: "external/videoLink/default",
-          protocols: ["hls", "dash"],
-          drms: []
-        });
+      await client.ReplaceMetadata({
+        libraryId,
+        objectId: id,
+        writeToken: write_token,
+        metadata: {
+          public: {
+            asset_metadata: {
+              link: {
+                target: "content"
+              }
+            }
+          }
+        }
+      });
 
-        expect(playoutOptions.dash).toBeDefined();
-        expect(playoutOptions.dash.playoutUrl).toBeDefined();
-        expect(playoutOptions.dash.playoutMethods.clear).toBeDefined();
+      await client.FinalizeContentObject({
+        libraryId,
+        objectId: id,
+        writeToken: write_token
+      });
 
-        expect(playoutOptions.hls).toBeDefined();
-        expect(playoutOptions.hls.playoutUrl).toBeDefined();
-        expect(playoutOptions.hls.playoutMethods.clear).toBeDefined();
+      targetId = id;
+    });
 
-        const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
-          versionHash: hash,
-          linkPath: "external/videoLink/default",
-          protocols: ["hls", "dash"],
-          drms: []
-        });
+    test("View Graph", async () => {
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
 
-        expect(bitmovinPlayoutOptions).toBeDefined();
+      await client.CreateLinks({
+        libraryId,
+        objectId,
+        writeToken,
+        links: [{
+          path: "/test/link",
+          targetHash: await client.LatestVersionHash({objectId: targetId}),
+          target: "/public/asset_metadata",
+          type: "metadata",
+          autoUpdate: true
+        }]
+      });
 
-        console.log("HLS Playout from external link:");
-        console.log(playoutOptions.hls.playoutMethods.clear.playoutUrl);
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
 
-        console.log("Dash Playout from external link:");
-        console.log(clearPlayoutOptions.dash.playoutMethods.clear.playoutUrl);
-      } catch(error) {
-        console.error("ERROR:");
-        console.error(JSON.stringify(error, null, 2));
-        throw error;
-      }
+      const linkContent = await client.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        resolveLinks: true,
+        metadataSubtree: "/test/link"
+      });
+
+      expect(linkContent).toBeDefined();
+      expect(linkContent).toEqual({link: { target: "content" }});
+
+      const graphInfo = await client.ContentObjectGraph({
+        libraryId,
+        objectId,
+        autoUpdate: true
+      });
+
+      expect(graphInfo).toBeDefined();
+      expect(Object.keys(graphInfo.auto_updates).length).toEqual(0);
+    });
+
+    test("Update Graph", async () => {
+      // Update link target
+      const writeToken = (await client.EditContentObject({libraryId, objectId: targetId})).write_token;
+      await client.FinalizeContentObject({libraryId, objectId: targetId, writeToken});
+
+      // Expect graph to report available updates
+      const graphInfo = await client.ContentObjectGraph({
+        libraryId,
+        objectId,
+        autoUpdate: true
+      });
+
+      expect(graphInfo).toBeDefined();
+      expect(Object.keys(graphInfo.auto_updates).length).not.toEqual(0);
+
+      // Update graph and expect root object to have been updated
+      const latestHash = await client.LatestVersionHash({objectId});
+
+      const callback = jest.fn();
+      await client.UpdateContentObjectGraph({libraryId, objectId, callback});
+
+      expect(callback).toHaveBeenCalled();
+
+      const newLatestHash = await client.LatestVersionHash({objectId});
+
+      expect(newLatestHash).not.toEqual(latestHash);
+
+      const newGraphInfo = await client.ContentObjectGraph({
+        libraryId,
+        objectId,
+        autoUpdate: true
+      });
+
+      expect(newGraphInfo).toBeDefined();
+      expect(Object.keys(newGraphInfo.auto_updates).length).toEqual(0);
     });
   });
 
@@ -1678,6 +1871,27 @@ describe("Test ElvClient", () => {
       const accessComplete = await client.ContentObjectAccessComplete({objectId, score: 90});
       expect(accessComplete).toBeDefined();
       expect(accessComplete.transactionHash).toBeDefined();
+    });
+
+    test("State Channel Access", async () => {
+      const token = await client.GenerateStateChannelToken({objectId});
+
+      expect(token).toBeDefined();
+
+      const decodedToken = JSON.parse(client.utils.FromB64(token.split(".")[0]));
+      expect(decodedToken).toBeDefined();
+      expect(client.utils.FormatAddress(decodedToken.addr))
+        .toEqual(client.utils.FormatAddress(client.signer.address));
+      expect(decodedToken.qid).toEqual(objectId);
+
+      expect(client.stateChannelAccess[objectId]).toBeDefined();
+
+      await client.FinalizeStateChannelAccess({
+        objectId,
+        percentComplete: 100
+      });
+
+      expect(client.stateChannelAccess[objectId]).not.toBeDefined();
     });
   });
 

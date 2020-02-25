@@ -1,21 +1,24 @@
 [
   {
-    "signature": " Log(\"Retrieving user wallet address for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
+    "signature": " Log(\"Retrieving user wallet address for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
   },
   {
-    "signature": " Log(\"Creating user wallet for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
+    "signature": " Log(\"Creating user wallet for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
   },
   {
-    "signature": " Log(\"Creating wallet object for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
+    "signature": " Log(\"Creating wallet object for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
   },
   {
-    "signature": " Log(\"Retrieving user wallet address for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
+    "signature": " Log(\"Retrieving user wallet address for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
   },
   {
     "signature": " Log(\"Merging user metadata at /\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at /\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at toMerge\");"
   },
   {
     "signature": " Log(\"Merging user metadata at toMerge\");"
@@ -30,16 +33,19 @@
     "signature": " Log(\"Accessing private user metadata at /\");"
   },
   {
-    "signature": " Log(\"Setting profile image for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
+    "signature": " Log(\"Setting profile image for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at image\");"
   },
   {
-    "signature": " Log(\"Setting profile image for user 0x22c98BBb1b130374DaBB67C519a5186DC3E8f7D7\");"
+    "signature": " Log(\"Setting profile image for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at image\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at access_level\");"
   },
   {
     "signature": " Log(\"Replacing user metadata at access_level\");"
@@ -48,12 +54,6 @@
     "signature": " Log(\"Accessing private user metadata at access_level\");"
   },
   {
-    "signature": " Log(\"Accessing private user metadata at accessed_content/hq__7wF7Sh5hdBweHqydhpqx414ifyVKWK8dj9Fozh68Gahg1xLPow9BNF7x5PEkanyMxHJsK2fn7F\");"
-  },
-  {
-    "signature": " Log(\"Accessing private user metadata at accessed_content/hq__7nSi12suUThRYbmbSox9Y46Yr2Yv6Wrpfcp2r2hhaYHVSyZYNnvrgVd3z1oiqgiCQ9YBnjPEAc\");"
-  },
-  {
-    "signature": " Log(\"Accessing private user metadata at collected_data\");"
+    "signature": " Log(\"Accessing private user metadata at access_level\");"
   }
 ]
