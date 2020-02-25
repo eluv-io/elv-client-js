@@ -6902,28 +6902,12 @@ function () {
             case 7:
               libraryId = _context88.sent;
 
-              if (versionHash) {
-                _context88.next = 12;
+              if (!linkPath) {
+                _context88.next = 19;
                 break;
               }
 
               _context88.next = 11;
-              return regeneratorRuntime.awrap(this.ContentObjectVersions({
-                libraryId: libraryId,
-                objectId: objectId,
-                noAuth: true
-              }));
-
-            case 11:
-              versionHash = _context88.sent.versions[0].hash;
-
-            case 12:
-              if (!linkPath) {
-                _context88.next = 23;
-                break;
-              }
-
-              _context88.next = 15;
               return regeneratorRuntime.awrap(this.LinkTarget({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -6931,66 +6915,88 @@ function () {
                 linkPath: linkPath
               }));
 
-            case 15:
+            case 11:
               linkTargetHash = _context88.sent;
               linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
-              _context88.next = 19;
+              _context88.next = 15;
               return regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: linkTargetId
               }));
 
-            case 19:
+            case 15:
               linkTargetLibraryId = _context88.sent;
-              path = UrlJoin("q", versionHash, "meta", linkPath);
-              _context88.next = 24;
+              path = UrlJoin("q", versionHash || objectId, "meta", linkPath);
+              _context88.next = 20;
               break;
 
-            case 23:
-              path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
+            case 19:
+              path = UrlJoin("q", versionHash || objectId, "rep", "playout", offering, "options.json");
 
-            case 24:
-              audienceData = this.AudienceData({
-                objectId: linkTargetId || objectId,
-                versionHash: linkTargetHash || versionHash,
-                protocols: protocols,
-                drms: drms
-              }); // Add authorization token to playout URLs
+            case 20:
+              _context88.t0 = this;
+              _context88.t1 = linkTargetId || objectId;
+              _context88.t2 = linkTargetHash || versionHash;
 
-              _context88.next = 27;
+              if (_context88.t2) {
+                _context88.next = 27;
+                break;
+              }
+
+              _context88.next = 26;
+              return regeneratorRuntime.awrap(this.LatestVersionHash({
+                objectId: objectId
+              }));
+
+            case 26:
+              _context88.t2 = _context88.sent;
+
+            case 27:
+              _context88.t3 = _context88.t2;
+              _context88.t4 = protocols;
+              _context88.t5 = drms;
+              _context88.t6 = {
+                objectId: _context88.t1,
+                versionHash: _context88.t3,
+                protocols: _context88.t4,
+                drms: _context88.t5
+              };
+              audienceData = _context88.t0.AudienceData.call(_context88.t0, _context88.t6);
+              _context88.next = 34;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+                libraryId: libraryId,
                 objectId: objectId,
                 channelAuth: true,
                 oauthToken: this.oauthToken,
                 audienceData: audienceData
               }));
 
-            case 27:
-              _context88.t0 = _context88.sent;
+            case 34:
+              _context88.t7 = _context88.sent;
               queryParams = {
-                authorization: _context88.t0
+                authorization: _context88.t7
               };
 
               if (linkPath) {
                 queryParams.resolve = true;
               }
 
-              _context88.t1 = Object;
-              _context88.next = 33;
+              _context88.t8 = Object;
+              _context88.next = 40;
               return regeneratorRuntime.awrap(ResponseToJson(this.HttpClient.Request({
                 path: path,
                 method: "GET",
                 queryParams: queryParams
               })));
 
-            case 33:
-              _context88.t2 = _context88.sent;
-              playoutOptions = _context88.t1.values.call(_context88.t1, _context88.t2);
+            case 40:
+              _context88.t9 = _context88.sent;
+              playoutOptions = _context88.t8.values.call(_context88.t8, _context88.t9);
               playoutMap = {};
               i = 0;
 
-            case 37:
+            case 44:
               if (!(i < playoutOptions.length)) {
-                _context88.next = 69;
+                _context88.next = 76;
                 break;
               }
 
@@ -7001,16 +7007,16 @@ function () {
               playoutPath = option.uri.split("?")[0];
               licenseServers = option.properties.license_servers; // Create full playout URLs for this protocol / drm combo
 
-              _context88.t3 = _objectSpread;
-              _context88.t4 = {};
-              _context88.t5 = playoutMap[protocol] || {};
-              _context88.t6 = _objectSpread;
-              _context88.t7 = {};
-              _context88.t8 = (playoutMap[protocol] || {}).playoutMethods || {};
-              _context88.t9 = _defineProperty;
-              _context88.t10 = {};
-              _context88.t11 = drm || "clear";
-              _context88.next = 54;
+              _context88.t10 = _objectSpread;
+              _context88.t11 = {};
+              _context88.t12 = playoutMap[protocol] || {};
+              _context88.t13 = _objectSpread;
+              _context88.t14 = {};
+              _context88.t15 = (playoutMap[protocol] || {}).playoutMethods || {};
+              _context88.t16 = _defineProperty;
+              _context88.t17 = {};
+              _context88.t18 = drm || "clear";
+              _context88.next = 61;
               return regeneratorRuntime.awrap(this.Rep({
                 libraryId: linkTargetLibraryId || libraryId,
                 objectId: linkTargetId || objectId,
@@ -7022,49 +7028,49 @@ function () {
                 } : {}
               }));
 
-            case 54:
-              _context88.t12 = _context88.sent;
-              _context88.t13 = drm ? _defineProperty({}, drm, {
+            case 61:
+              _context88.t19 = _context88.sent;
+              _context88.t20 = drm ? _defineProperty({}, drm, {
                 licenseServers: licenseServers
               }) : undefined;
-              _context88.t14 = {
-                playoutUrl: _context88.t12,
-                drms: _context88.t13
+              _context88.t21 = {
+                playoutUrl: _context88.t19,
+                drms: _context88.t20
               };
-              _context88.t15 = (0, _context88.t9)(_context88.t10, _context88.t11, _context88.t14);
-              _context88.t16 = (0, _context88.t6)(_context88.t7, _context88.t8, _context88.t15);
-              _context88.t17 = {
-                playoutMethods: _context88.t16
+              _context88.t22 = (0, _context88.t16)(_context88.t17, _context88.t18, _context88.t21);
+              _context88.t23 = (0, _context88.t13)(_context88.t14, _context88.t15, _context88.t22);
+              _context88.t24 = {
+                playoutMethods: _context88.t23
               };
-              playoutMap[protocol] = (0, _context88.t3)(_context88.t4, _context88.t5, _context88.t17);
+              playoutMap[protocol] = (0, _context88.t10)(_context88.t11, _context88.t12, _context88.t24);
               // Exclude any options that do not satisfy the specified protocols and/or DRMs
               protocolMatch = protocols.includes(protocol);
               drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
               if (!(!protocolMatch || !drmMatch)) {
-                _context88.next = 65;
+                _context88.next = 72;
                 break;
               }
 
-              return _context88.abrupt("continue", 66);
+              return _context88.abrupt("continue", 73);
 
-            case 65:
+            case 72:
               // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
               if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
                 playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
                 playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
               }
 
-            case 66:
+            case 73:
               i++;
-              _context88.next = 37;
+              _context88.next = 44;
               break;
 
-            case 69:
+            case 76:
               this.Log(playoutMap);
               return _context88.abrupt("return", playoutMap);
 
-            case 71:
+            case 78:
             case "end":
               return _context88.stop();
           }
