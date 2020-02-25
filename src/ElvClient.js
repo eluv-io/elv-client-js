@@ -504,21 +504,6 @@ class ElvClient {
     return this.contentSpaceId;
   }
 
-  /**
-   * Deploy a new content space contract
-   *
-   * @methodGroup Content Space
-   * @namedParams
-   * @param {String} name - Name of the content space
-   *
-   * @returns {Promise<string>} - Content space ID of the created content space
-   */
-  async CreateContentSpace({name}) {
-    const contentSpaceAddress = await this.ethClient.DeployContentSpaceContract({name, signer: this.signer});
-
-    return Utils.AddressToSpaceId(contentSpaceAddress);
-  }
-
   /* Libraries */
 
   /**
@@ -1516,6 +1501,28 @@ class ElvClient {
     );
   }
 
+  /**
+   * Retrieve the version hash of the latest version of the specified object
+   *
+   * @methodGroup Content Objects
+   * @namedParams
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object
+   *
+   * @returns {Promise<string>} - The latest version hash of the object
+   */
+  async LatestVersionHash({objectId, versionHash}) {
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    ValidateObject(objectId);
+
+    return await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "objectHash"
+    });
+  }
+
   /* Content object creation, modification, deletion */
 
   /**
@@ -1926,60 +1933,6 @@ class ElvClient {
         path: path,
       })
     );
-  }
-
-  /**
-   * Create links to files, metadata and/or representations of this or or other
-   * content objects.
-   *
-   * Expected format of links:
-   *
-   [
-     {
-        path: string (path to link)
-        target: string (path to target),
-        type: string ("file", "meta", "rep" - default "file")
-        targetHash: string (optional, for cross-object links)
-      }
-   ]
-   * @methodGroup Parts and Files
-   * @namedParams
-   * @param {string} libraryId - ID of the library
-   * @param {string} objectId - ID of the object
-   * @param {string} writeToken - Write token of the draft
-   * @param {Array<Object>} links - Link specifications
-   */
-  async CreateLinks({
-    libraryId,
-    objectId,
-    writeToken,
-    links=[]
-  }) {
-    ValidateParameters({libraryId, objectId});
-    ValidateWriteToken(writeToken);
-
-    for(let i = 0; i < links.length; i++) {
-      const info = links[i];
-      const path = info.path.replace(/^(\/|\.)+/, "");
-      const type = (info.type || "file") === "file" ? "files" : info.type;
-
-      let target = info.target.replace(/^(\/|\.)+/, "");
-      if(info.targetHash) {
-        target = `/qfab/${info.targetHash}/${type}/${target}`;
-      } else {
-        target = `./${type}/${target}`;
-      }
-
-      await this.ReplaceMetadata({
-        libraryId,
-        objectId,
-        writeToken,
-        metadataSubtree: path,
-        metadata: {
-          "/": target
-        }
-      });
-    }
   }
 
   /**
@@ -3804,8 +3757,7 @@ class ElvClient {
     if(versionHash) {
       objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     } else if(!this.stateChannelAccess[objectId]) {
-      const libraryId = await this.ContentObjectLibraryId({objectId});
-      versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
+      versionHash = await this.LatestVersionHash({objectId});
     }
 
     this.stateChannelAccess[objectId] = versionHash;
@@ -3839,8 +3791,7 @@ class ElvClient {
       if(this.stateChannelAccess[objectId]) {
         versionHash = this.stateChannelAccess[objectId];
       } else {
-        const libraryId = await this.ContentObjectLibraryId({objectId});
-        versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
+        versionHash = await this.LatestVersionHash({objectId});
       }
     }
 
@@ -3977,23 +3928,20 @@ class ElvClient {
     }
 
     const libraryId = await this.ContentObjectLibraryId({objectId});
-    if(!versionHash) {
-      versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
-    }
 
     let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
     if(linkPath) {
       linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
       linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
       linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
-      path = UrlJoin("q", versionHash, "meta", linkPath);
+      path = UrlJoin("q", versionHash || objectId, "meta", linkPath);
     } else {
-      path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
+      path = UrlJoin("q", versionHash || objectId, "rep", "playout", offering, "options.json");
     }
 
     const audienceData = this.AudienceData({
       objectId: linkTargetId || objectId,
-      versionHash: linkTargetHash || versionHash,
+      versionHash: linkTargetHash || versionHash || await this.LatestVersionHash({objectId}),
       protocols,
       drms
     });
@@ -4001,6 +3949,7 @@ class ElvClient {
     // Add authorization token to playout URLs
     let queryParams = {
       authorization: await this.authClient.AuthorizationToken({
+        libraryId,
         objectId,
         channelAuth: true,
         oauthToken: this.oauthToken,
@@ -4416,10 +4365,240 @@ class ElvClient {
   }
 
   /**
+   * Get a specific content object in the library
+   *
+   * @see /qlibs/:qlibid/q/:qhit
+   *
+   * @methodGroup Links
+   * @namedParams
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+   * @param {boolean=} autoUpdate=false - If true, lists only links marked as auto-update links
+   * @param {(string | Array<string>)=} select - Limit metadata fields return in link details
+   *
+   * @returns {Promise<Object>} - Description of created object
+   */
+  async ContentObjectGraph({libraryId, objectId, versionHash, autoUpdate=false, select}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
+    this.Log(`Retrieving content object graph: ${libraryId || ""} ${objectId || versionHash}`);
+
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    let path = UrlJoin("q", versionHash || objectId, "links");
+
+    try {
+      return await ResponseToJson(
+        this.HttpClient.Request({
+          headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
+          queryParams: {
+            auto_update: autoUpdate,
+            select
+          },
+          method: "GET",
+          path: path
+        })
+      );
+    } catch(error) {
+      // If a cycle is present, do some work to present useful information about it
+      let errorInfo;
+      try {
+        const cycles = error.body.errors[0].cause.cause.cause.cycle;
+
+        if(!cycles || cycles.length === 0) { throw error; }
+
+        let info = {};
+        await Promise.all(
+          cycles.map(async cycleHash => {
+            if(info[cycleHash]) { return; }
+
+            const cycleId = (this.utils.DecodeVersionHash(cycleHash)).objectId;
+            const name = (
+              await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "public/asset_metadata/display_title"}) ||
+              await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "public/name"}) ||
+              await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "name"}) ||
+              cycleId
+            );
+
+            info[cycleHash] = { name, objectId: cycleId };
+          })
+        );
+
+        errorInfo = cycles.map(cycleHash => `${info[cycleHash].name} (${info[cycleHash].objectId})`);
+      } catch(e) {
+        throw error;
+      }
+
+      throw new Error(
+        `Cycle found in links: ${errorInfo.join(" -> ")}`
+      );
+    }
+  }
+
+  /**
+   * Recursively update all auto_update links in the specified object.
+   *
+   * Note: Links will not be updated unless they are specifically marked as auto_update
+   *
+   * @param {string=} libraryId - ID of the library
+   * @param {string=} objectId - ID of the object
+   * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+   * @param {function=} callback - If specified, the callback will be called each time an object is updated with
+   * current progress as well as information about the last update (action)
+   * - Format: {completed: number, total: number, action: string}
+   */
+  async UpdateContentObjectGraph({libraryId, objectId, versionHash, callback}) {
+    ValidateParameters({libraryId, objectId, versionHash});
+
+    this.Log(`Updating content object graph: ${libraryId || ""} ${objectId || versionHash}`);
+
+    if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+    let total;
+    let completed = 0;
+
+    // eslint-disable-next-line no-constant-condition
+    while(1) {
+      const graph = await this.ContentObjectGraph({
+        libraryId,
+        objectId,
+        versionHash,
+        autoUpdate: true,
+        select: ["name", "public/name", "public/asset_metadata/display_title"]
+      });
+
+      if(Object.keys(graph.auto_updates).length === 0) {
+        this.Log("No more updates required");
+        return;
+      }
+
+      if(!total) {
+        total = graph.auto_updates.order.length;
+      }
+
+      const currentHash = graph.auto_updates.order[0];
+      const links = graph.auto_updates.links[currentHash];
+
+      const details = graph.details[currentHash].meta;
+      const name = (details.public && details.public.asset_metadata && details.public.asset_metadata.display_title) ||
+        (details.public && details.public.name) || details.name || versionHash || objectId;
+
+      const currentLibraryId = await this.ContentObjectLibraryId({versionHash: currentHash});
+      const currentObjectId = (this.utils.DecodeVersionHash(currentHash)).objectId;
+
+      if(callback) {
+        callback({
+          completed,
+          total,
+          action: `Updating ${name} (${currentObjectId})...`
+        });
+      }
+
+      this.Log(`Updating links for ${name} (${currentObjectId} / ${currentHash})`);
+
+      const {write_token} = await this.EditContentObject({
+        libraryId: currentLibraryId,
+        objectId: currentObjectId
+      });
+
+      await Promise.all(
+        links.map(async ({path, updated}) => {
+          await this.ReplaceMetadata({
+            libraryId: currentLibraryId,
+            objectId: currentObjectId,
+            writeToken: write_token,
+            metadataSubtree: path,
+            metadata: updated
+          });
+        })
+      );
+
+      const { hash } = await this.FinalizeContentObject({
+        libraryId: currentLibraryId,
+        objectId: currentObjectId,
+        writeToken: write_token
+      });
+
+      // If root object was specified by hash and updated, update hash
+      if(currentHash === versionHash) {
+        versionHash = hash;
+      }
+
+      completed += 1;
+    }
+  }
+
+  /**
+   * Create links to files, metadata and/or representations of this or or other
+   * content objects.
+   *
+   * Expected format of links:
+   *
+
+       [
+         {
+            path: string (metadata path for the link)
+            target: string (path to link target),
+            type: string ("file", "meta" | "metadata", "rep" - default "metadata")
+            targetHash: string (optional, for cross-object links),
+            autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method)
+          }
+       ]
+
+   * @methodGroup Links
+   * @namedParams
+   * @param {string} libraryId - ID of the library
+   * @param {string} objectId - ID of the object
+   * @param {string} writeToken - Write token of the draft
+   * @param {Array<Object>} links - Link specifications
+   */
+  async CreateLinks({
+    libraryId,
+    objectId,
+    writeToken,
+    links=[]
+  }) {
+    ValidateParameters({libraryId, objectId});
+    ValidateWriteToken(writeToken);
+
+    for(let i = 0; i < links.length; i++) {
+      const info = links[i];
+      const path = info.path.replace(/^(\/|\.)+/, "");
+
+      let type = (info.type || "file") === "file" ? "files" : info.type;
+      if(type === "metadata") { type = "meta"; }
+
+      let target = info.target.replace(/^(\/|\.)+/, "");
+      if(info.targetHash) {
+        target = `/qfab/${info.targetHash}/${type}/${target}`;
+      } else {
+        target = `./${type}/${target}`;
+      }
+
+      let link = {
+        "/": target
+      };
+
+      if(info.autoUpdate) {
+        link["."] = { auto_update: { tag: "latest"} };
+      }
+
+      await this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: path,
+        metadata: link
+      });
+    }
+  }
+
+  /**
    * Retrieve the version hash of the specified link's target. If the target is the same as the specified
    * object and versionHash is not specified, will return the latest version hash.
    *
-   * @methodGroup URL Generation
+   * @methodGroup Links
    * @namedParams
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
@@ -4466,7 +4645,7 @@ class ElvClient {
   /**
    * Generate a URL to the specified file link with appropriate authentication
    *
-   * @methodGroup URL Generation
+   * @methodGroup Links
    * @namedParams
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
@@ -4510,7 +4689,7 @@ class ElvClient {
   /**
    * Retrieve the data at the specified link in the specified format
    *
-   * @methodGroup URL Generation
+   * @methodGroup Links
    * @namedParams
    * @param {string=} libraryId - ID of an library
    * @param {string=} objectId - ID of an object
@@ -4536,15 +4715,16 @@ class ElvClient {
    *
    * @methodGroup Access Groups
    * @namedParams
-   * @param {string} name - Name of the access group
+   * @param {string=} name - Name of the access group
    * @param {string=} description - Description for the access group
    * @param {object=} meta - Metadata for the access group
    *
    * @returns {Promise<string>} - Contract address of created access group
    */
-  async CreateAccessGroup({name, description, metadata={}}) {
+  async CreateAccessGroup({name, description, metadata={}}={}) {
     this.Log(`Creating access group: ${name || ""} ${description || ""}`);
-    const { contractAddress } = await this.authClient.CreateAccessGroup();
+    let { contractAddress } = await this.authClient.CreateAccessGroup();
+    contractAddress = this.utils.FormatAddress(contractAddress);
 
     const objectId = this.utils.AddressToObjectId(contractAddress);
 
@@ -4999,7 +5179,7 @@ class ElvClient {
    * @param {string} objectId - The ID of the object
    *
    * @return {Promise<Object>} - Object mapping group addresses to permissions, as an array
-   * - Example: { "0x0": ["see", "access"], ...}
+   * - Example: { "0x0": ["see", "access", "manage"], ...}
    */
   async ContentObjectGroupPermissions({objectId}) {
     ValidateObject(objectId);

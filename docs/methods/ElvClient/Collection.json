@@ -5,10 +5,18 @@
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"contentTypes\"\n});",
-    "result": "[\n  \"0xb31B7cBb76BF9C98AA0ad798A5E63Bc9A0D895ac\"\n]"
+    "result": "[\n  \"0x58Aec1cCEfE8a931B01D45073cdA650E696c44BC\"\n]"
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"libraries\"\n});",
-    "result": "[\n  \"0x961e167Ce1a4F65B27f55684DF7f4a97b36f159b\"\n]"
+    "result": "[\n  \"0x946a0db9b39aDF71EE9450cbf2AC2D8245301c42\"\n]"
+  },
+  {
+    "signature": "async Collection({\n  \"collectionType\": \"accessGroups\"\n});",
+    "result": "[]"
+  },
+  {
+    "signature": "async Collection({\n  \"collectionType\": \"accessGroups\"\n});",
+    "result": "[\n  \"0xb6c8ca97F8044272413E6d61C1BE0C403e0f440B\"\n]"
   }
 ]

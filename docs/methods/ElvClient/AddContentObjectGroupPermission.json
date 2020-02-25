@@ -1,0 +1,11 @@
+[
+  {
+    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__2bxcxdyu2BgNZR9SLr2m8QZdFM6b\",\n  \"groupAddress\": \"0xb6c8ca97f8044272413e6d61c1be0c403e0f440b\",\n  \"permission\": \"see\"\n});"
+  },
+  {
+    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__2bxcxdyu2BgNZR9SLr2m8QZdFM6b\",\n  \"groupAddress\": \"0xb6c8ca97f8044272413e6d61c1be0c403e0f440b\",\n  \"permission\": \"access\"\n});"
+  },
+  {
+    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__2bxcxdyu2BgNZR9SLr2m8QZdFM6b\",\n  \"groupAddress\": \"0xb6c8ca97f8044272413e6d61c1be0c403e0f440b\",\n  \"permission\": \"manage\"\n});"
+  }
+]
