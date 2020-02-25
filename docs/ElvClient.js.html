@@ -4001,23 +4001,20 @@ class ElvClient {
     }
 
     const libraryId = await this.ContentObjectLibraryId({objectId});
-    if(!versionHash) {
-      versionHash = (await this.ContentObjectVersions({libraryId, objectId, noAuth: true})).versions[0].hash;
-    }
 
     let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
     if(linkPath) {
       linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
       linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
       linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
-      path = UrlJoin("q", versionHash, "meta", linkPath);
+      path = UrlJoin("q", versionHash || objectId, "meta", linkPath);
     } else {
-      path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
+      path = UrlJoin("q", versionHash || objectId, "rep", "playout", offering, "options.json");
     }
 
     const audienceData = this.AudienceData({
       objectId: linkTargetId || objectId,
-      versionHash: linkTargetHash || versionHash,
+      versionHash: linkTargetHash || versionHash || await this.LatestVersionHash({objectId}),
       protocols,
       drms
     });
@@ -4025,6 +4022,7 @@ class ElvClient {
     // Add authorization token to playout URLs
     let queryParams = {
       authorization: await this.authClient.AuthorizationToken({
+        libraryId,
         objectId,
         channelAuth: true,
         oauthToken: this.oauthToken,
