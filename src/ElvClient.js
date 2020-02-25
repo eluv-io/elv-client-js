@@ -523,7 +523,6 @@ class ElvClient {
    * Returns information about the content library
    *
    * @methodGroup Content Libraries
-   * @see GET /qlibs/:qlibid
    *
    * @namedParams
    * @param {string} libraryId
@@ -582,7 +581,6 @@ class ElvClient {
    * create in the fabric.
    *
    * @methodGroup Content Libraries
-   * @see PUT /qlibs/:qlibid
    *
    * @namedParams
    * @param {string} name - Library name
@@ -739,7 +737,6 @@ class ElvClient {
    * Delete the specified content library
    *
    * @methodGroup Content Libraries
-   * @see DELETE /qlibs/:qlibid
    *
    * @namedParams
    * @param {string} libraryId - ID of the library to delete
@@ -1137,8 +1134,6 @@ class ElvClient {
   /**
    * List content objects in the specified library
    *
-   * @see /qlibs/:qlibid/q
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1243,8 +1238,6 @@ class ElvClient {
 
   /**
    * Get a specific content object in the library
-   *
-   * @see /qlibs/:qlibid/q/:qhit
    *
    * @methodGroup Content Objects
    * @namedParams
@@ -1390,8 +1383,6 @@ class ElvClient {
   /**
    * Get the metadata of a content object
    *
-   * @see /qlibs/:qlibid/q/:qhit/meta
-   *
    * @methodGroup Metadata
    * @namedParams
    * @param {string=} libraryId - ID of the library
@@ -1476,8 +1467,6 @@ class ElvClient {
   /**
    * List the versions of a content object
    *
-   * @see /qlibs/:qlibid/qid/:objectid
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1531,8 +1520,6 @@ class ElvClient {
    * A new content object contract is deployed from
    * the content library, and that contract ID is used to determine the object ID to
    * create in the fabric.
-   *
-   * @see PUT /qlibs/:qlibid/q/:objectid
    *
    * @methodGroup Content Objects
    * @namedParams
@@ -1637,8 +1624,6 @@ class ElvClient {
   /**
    * Create a new content object draft from an existing object.
    *
-   * @see POST /qlibs/:qlibid/qid/:objectid
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1682,8 +1667,6 @@ class ElvClient {
 
   /**
    * Finalize content draft
-   *
-   * @see POST /qlibs/:qlibid/q/:write_token
    *
    * @methodGroup Content Objects
    * @namedParams
@@ -1810,8 +1793,6 @@ class ElvClient {
   /**
    * Merge specified metadata into existing content object metadata
    *
-   * @see POST /qlibs/:qlibid/q/:write_token/meta
-   *
    * @methodGroup Metadata
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1844,8 +1825,6 @@ class ElvClient {
   /**
    * Replace content object metadata with specified metadata
    *
-   * @see PUT /qlibs/:qlibid/q/:write_token/meta
-   *
    * @methodGroup Metadata
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1877,8 +1856,6 @@ class ElvClient {
 
   /**
    * Delete content object metadata of specified subtree
-   *
-   * @see DELETE /qlibs/:qlibid/q/:write_token/meta
    *
    * @methodGroup Metadata
    * @namedParams
@@ -2408,8 +2385,6 @@ class ElvClient {
 
   /**
    * Download a file from a content object
-   *
-   * @see GET /qlibs/:qlibid/q/:qhit/files/:filePath
    *
    * @methodGroup Parts and Files
    * @namedParams
@@ -3008,8 +2983,6 @@ class ElvClient {
 
   /**
    * Delete the specified part from a content draft
-   *
-   * @see DELETE /qlibs/:qlibid/q/:write_token/parts/:qparthash
    *
    * @methodGroup Parts and Files
    * @namedParams
@@ -4199,7 +4172,7 @@ class ElvClient {
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
    * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
    *
-   * @see FabricUrl for creating arbitrary fabric URLs
+   * @see <a href="#FabricUrl">FabricUrl</a> for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
@@ -4222,7 +4195,8 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
-   * @see FabricUrl for creating arbitrary fabric URLs
+   *
+   * @see <a href="#FabricUrl">FabricUrl</a> for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
@@ -4366,8 +4340,6 @@ class ElvClient {
 
   /**
    * Get a specific content object in the library
-   *
-   * @see /qlibs/:qlibid/q/:qhit
    *
    * @methodGroup Links
    * @namedParams
@@ -5387,8 +5359,6 @@ class ElvClient {
   /**
    * Get the proofs associated with a given part
    *
-   * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash/proofs
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string=} libraryId - ID of the library
@@ -5417,8 +5387,6 @@ class ElvClient {
 
   /**
    * Get part info in CBOR format
-   *
-   * @see GET /qparts/:qparthash
    *
    * @methodGroup Content Objects
    * @namedParams
