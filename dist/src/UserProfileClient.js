@@ -91,56 +91,155 @@ function () {
     this.debug = debug;
     this.userWalletAddresses = {};
   }
-  /**
-   * Get the user wallet address for the specified user, if it exists
-   *
-   * @namedParams
-   * @param {string} address - The address of the user
-   *
-   * @return {Promise<string>} - The wallet address of the specified user, if it exists
-   */
-
 
   _createClass(UserProfileClient, [{
-    key: "UserWalletAddress",
-    value: function UserWalletAddress(_ref2) {
-      var address, walletAddress;
-      return regeneratorRuntime.async(function UserWalletAddress$(_context) {
+    key: "CreateWallet",
+    value: function CreateWallet() {
+      var balance, walletCreationEvent, libraryId, objectId, createResponse;
+      return regeneratorRuntime.async(function CreateWallet$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              address = _ref2.address;
-
-              if (this.userWalletAddresses[address]) {
-                _context.next = 7;
+              if (!this.creatingWallet) {
+                _context.next = 6;
                 break;
               }
 
-              this.Log("Retrieving user wallet address for user ".concat(address));
-              _context.next = 5;
-              return regeneratorRuntime.awrap(this.client.CallContractMethod({
-                abi: SpaceContract.abi,
-                contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-                methodName: "userWallets",
-                methodArgs: [address]
-              }));
-
-            case 5:
-              walletAddress = _context.sent;
-
-              if (!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
-                this.userWalletAddresses[address] = walletAddress;
+            case 1:
+              if (!this.creatingWallet) {
+                _context.next = 6;
+                break;
               }
 
-            case 7:
-              return _context.abrupt("return", this.userWalletAddresses[address]);
+              _context.next = 4;
+              return regeneratorRuntime.awrap(new Promise(function (resolve) {
+                return setTimeout(resolve, 500);
+              }));
 
-            case 8:
+            case 4:
+              _context.next = 1;
+              break;
+
+            case 6:
+              this.creatingWallet = true;
+              _context.prev = 7;
+
+              if (!(!this.walletAddress || Utils.EqualAddress(this.walletAddress, Utils.nullAddress))) {
+                _context.next = 20;
+                break;
+              }
+
+              this.Log("Creating user wallet for user ".concat(this.client.signer.address)); // Don't attempt to create a user wallet if user has no funds
+
+              _context.next = 12;
+              return regeneratorRuntime.awrap(this.client.GetBalance({
+                address: this.client.signer.address
+              }));
+
+            case 12:
+              balance = _context.sent;
+
+              if (!(balance < 0.1)) {
+                _context.next = 15;
+                break;
+              }
+
+              return _context.abrupt("return", undefined);
+
+            case 15:
+              _context.next = 17;
+              return regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
+                contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+                abi: SpaceContract.abi,
+                methodName: "createAccessWallet",
+                methodArgs: []
+              }));
+
+            case 17:
+              walletCreationEvent = _context.sent;
+              this.walletAddress = this.client.ExtractValueFromEvent({
+                abi: SpaceContract.abi,
+                event: walletCreationEvent,
+                eventName: "CreateAccessWallet",
+                eventValue: "wallet"
+              });
+              this.userWalletAddresses[Utils.FormatAddress(this.client.signer.address)] = this.walletAddress;
+
+            case 20:
+              // Check if wallet object is created
+              libraryId = this.client.contentSpaceLibraryId;
+              objectId = Utils.AddressToObjectId(this.walletAddress);
+              _context.prev = 22;
+              _context.next = 25;
+              return regeneratorRuntime.awrap(this.client.ContentObject({
+                libraryId: libraryId,
+                objectId: objectId
+              }));
+
+            case 25:
+              _context.next = 38;
+              break;
+
+            case 27:
+              _context.prev = 27;
+              _context.t0 = _context["catch"](22);
+
+              if (!(_context.t0.status === 404)) {
+                _context.next = 38;
+                break;
+              }
+
+              this.Log("Creating wallet object for user ".concat(this.client.signer.address));
+              _context.next = 33;
+              return regeneratorRuntime.awrap(this.client.CreateContentObject({
+                libraryId: libraryId,
+                objectId: objectId
+              }));
+
+            case 33:
+              createResponse = _context.sent;
+              _context.next = 36;
+              return regeneratorRuntime.awrap(this.client.ReplaceMetadata({
+                libraryId: libraryId,
+                objectId: objectId,
+                writeToken: createResponse.write_token,
+                metadata: {
+                  "bitcode_flags": "abrmaster",
+                  "bitcode_format": "builtin"
+                }
+              }));
+
+            case 36:
+              _context.next = 38;
+              return regeneratorRuntime.awrap(this.client.FinalizeContentObject({
+                libraryId: libraryId,
+                objectId: objectId,
+                writeToken: createResponse.write_token
+              }));
+
+            case 38:
+              _context.next = 44;
+              break;
+
+            case 40:
+              _context.prev = 40;
+              _context.t1 = _context["catch"](7);
+              // eslint-disable-next-line no-console
+              console.error("Failed to create wallet contract:"); // eslint-disable-next-line no-console
+
+              console.error(_context.t1);
+
+            case 44:
+              _context.prev = 44;
+              this.creatingWallet = false;
+              return _context.finish(44);
+
+            case 47:
             case "end":
               return _context.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[7, 40, 44, 47], [22, 27]]);
     }
     /**
      * Get the contract address of the current user's BaseAccessWallet contract
@@ -151,158 +250,108 @@ function () {
   }, {
     key: "WalletAddress",
     value: function WalletAddress() {
-      var _this = this;
-
-      return regeneratorRuntime.async(function WalletAddress$(_context3) {
+      var walletAddress;
+      return regeneratorRuntime.async(function WalletAddress$(_context2) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
               if (!this.walletAddress) {
-                _context3.next = 2;
+                _context2.next = 2;
                 break;
               }
 
-              return _context3.abrupt("return", this.walletAddress);
+              return _context2.abrupt("return", this.walletAddress);
 
             case 2:
-              if (!this.walletCreationPromise) {
+              _context2.next = 4;
+              return regeneratorRuntime.awrap(this.client.CallContractMethod({
+                abi: SpaceContract.abi,
+                contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+                methodName: "userWallets",
+                methodArgs: [this.client.signer.address]
+              }));
+
+            case 4:
+              walletAddress = _context2.sent;
+
+              if (!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
+                this.walletAddress = walletAddress;
+              }
+
+              if (this.walletAddress) {
+                _context2.next = 9;
+                break;
+              }
+
+              _context2.next = 9;
+              return regeneratorRuntime.awrap(this.CreateWallet());
+
+            case 9:
+              return _context2.abrupt("return", this.walletAddress);
+
+            case 10:
+            case "end":
+              return _context2.stop();
+          }
+        }
+      }, null, this);
+    }
+    /**
+     * Get the user wallet address for the specified user, if it exists
+     *
+     * @namedParams
+     * @param {string} address - The address of the user
+     *
+     * @return {Promise<string>} - The wallet address of the specified user, if it exists
+     */
+
+  }, {
+    key: "UserWalletAddress",
+    value: function UserWalletAddress(_ref2) {
+      var address, walletAddress;
+      return regeneratorRuntime.async(function UserWalletAddress$(_context3) {
+        while (1) {
+          switch (_context3.prev = _context3.next) {
+            case 0:
+              address = _ref2.address;
+
+              if (!Utils.EqualAddress(address, this.client.signer.address)) {
                 _context3.next = 5;
                 break;
               }
 
-              _context3.next = 5;
-              return regeneratorRuntime.awrap(this.walletCreationPromise);
+              _context3.next = 4;
+              return regeneratorRuntime.awrap(this.WalletAddress());
+
+            case 4:
+              return _context3.abrupt("return", _context3.sent);
 
             case 5:
-              _context3.next = 7;
-              return regeneratorRuntime.awrap(this.UserWalletAddress({
-                address: this.client.signer.address
-              }));
-
-            case 7:
-              this.walletAddress = _context3.sent;
-
-              if (!this.walletAddress) {
-                this.Log("Creating user wallet for user ".concat(this.client.signer.address)); // Make promise available so any other calls will wait
-
-                this.walletCreationPromise = new Promise(function _callee(resolve) {
-                  var balance, walletCreationEvent, libraryId, objectId, createResponse;
-                  return regeneratorRuntime.async(function _callee$(_context2) {
-                    while (1) {
-                      switch (_context2.prev = _context2.next) {
-                        case 0:
-                          if (!(!_this.walletAddress || _this.walletAddress === Utils.nullAddress)) {
-                            _context2.next = 11;
-                            break;
-                          }
-
-                          _context2.next = 3;
-                          return regeneratorRuntime.awrap(_this.client.GetBalance({
-                            address: _this.client.signer.address
-                          }));
-
-                        case 3:
-                          balance = _context2.sent;
-
-                          if (!(balance < 0.1)) {
-                            _context2.next = 6;
-                            break;
-                          }
-
-                          return _context2.abrupt("return", undefined);
-
-                        case 6:
-                          _context2.next = 8;
-                          return regeneratorRuntime.awrap(_this.client.CallContractMethodAndWait({
-                            contractAddress: Utils.HashToAddress(_this.client.contentSpaceId),
-                            abi: SpaceContract.abi,
-                            methodName: "createAccessWallet",
-                            methodArgs: []
-                          }));
-
-                        case 8:
-                          walletCreationEvent = _context2.sent;
-                          _this.walletAddress = _this.client.ExtractValueFromEvent({
-                            abi: SpaceContract.abi,
-                            event: walletCreationEvent,
-                            eventName: "CreateAccessWallet",
-                            eventValue: "wallet"
-                          });
-                          _this.userWalletAddresses[Utils.FormatAddress(_this.client.signer.address)] = _this.walletAddress;
-
-                        case 11:
-                          // Ensure wallet object is created
-                          libraryId = _this.client.contentSpaceLibraryId;
-                          objectId = Utils.AddressToObjectId(_this.walletAddress);
-                          _context2.prev = 13;
-                          _context2.next = 16;
-                          return regeneratorRuntime.awrap(_this.client.ContentObject({
-                            libraryId: libraryId,
-                            objectId: objectId
-                          }));
-
-                        case 16:
-                          _context2.next = 29;
-                          break;
-
-                        case 18:
-                          _context2.prev = 18;
-                          _context2.t0 = _context2["catch"](13);
-
-                          if (!(_context2.t0.status === 404)) {
-                            _context2.next = 29;
-                            break;
-                          }
-
-                          _this.Log("Creating wallet object for user ".concat(_this.client.signer.address));
-
-                          _context2.next = 24;
-                          return regeneratorRuntime.awrap(_this.client.CreateContentObject({
-                            libraryId: libraryId,
-                            objectId: objectId
-                          }));
-
-                        case 24:
-                          createResponse = _context2.sent;
-                          _context2.next = 27;
-                          return regeneratorRuntime.awrap(_this.client.ReplaceMetadata({
-                            libraryId: libraryId,
-                            objectId: objectId,
-                            writeToken: createResponse.write_token,
-                            metadata: {
-                              "bitcode_flags": "abrmaster",
-                              "bitcode_format": "builtin"
-                            }
-                          }));
-
-                        case 27:
-                          _context2.next = 29;
-                          return regeneratorRuntime.awrap(_this.client.FinalizeContentObject({
-                            libraryId: libraryId,
-                            objectId: objectId,
-                            writeToken: createResponse.write_token
-                          }));
-
-                        case 29:
-                          resolve();
-
-                        case 30:
-                        case "end":
-                          return _context2.stop();
-                      }
-                    }
-                  }, null, null, [[13, 18]]);
-                });
+              if (this.userWalletAddresses[address]) {
+                _context3.next = 11;
+                break;
               }
 
-              _context3.next = 11;
-              return regeneratorRuntime.awrap(this.walletCreationPromise);
+              this.Log("Retrieving user wallet address for user ".concat(address));
+              _context3.next = 9;
+              return regeneratorRuntime.awrap(this.client.CallContractMethod({
+                abi: SpaceContract.abi,
+                contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+                methodName: "userWallets",
+                methodArgs: [address]
+              }));
+
+            case 9:
+              walletAddress = _context3.sent;
+
+              if (!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
+                this.userWalletAddresses[address] = walletAddress;
+              }
 
             case 11:
-              this.walletCreationPromise = undefined;
-              return _context3.abrupt("return", this.walletAddress);
+              return _context3.abrupt("return", this.userWalletAddresses[address]);
 
-            case 13:
+            case 12:
             case "end":
               return _context3.stop();
           }

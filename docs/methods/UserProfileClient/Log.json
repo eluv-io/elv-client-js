@@ -1,15 +1,9 @@
 [
   {
-    "signature": " Log(\"Retrieving user wallet address for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
+    "signature": " Log(\"Creating user wallet for user 0x429637C3469EC33cA37Db9D305E719dbd7b6EAf9\");"
   },
   {
-    "signature": " Log(\"Creating user wallet for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
-  },
-  {
-    "signature": " Log(\"Creating wallet object for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
-  },
-  {
-    "signature": " Log(\"Retrieving user wallet address for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
+    "signature": " Log(\"Creating wallet object for user 0x429637C3469EC33cA37Db9D305E719dbd7b6EAf9\");"
   },
   {
     "signature": " Log(\"Merging user metadata at /\");"
@@ -33,13 +27,13 @@
     "signature": " Log(\"Accessing private user metadata at /\");"
   },
   {
-    "signature": " Log(\"Setting profile image for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
+    "signature": " Log(\"Setting profile image for user 0x429637C3469EC33cA37Db9D305E719dbd7b6EAf9\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at image\");"
   },
   {
-    "signature": " Log(\"Setting profile image for user 0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\");"
+    "signature": " Log(\"Setting profile image for user 0x429637C3469EC33cA37Db9D305E719dbd7b6EAf9\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at image\");"

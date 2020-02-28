@@ -69,6 +69,107 @@ await client.userProfileClient.UserMetadata()
     this.userWalletAddresses = {};
   }
 
+  async CreateWallet() {
+    if(this.creatingWallet) {
+      while(this.creatingWallet) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    this.creatingWallet = true;
+
+    try {
+      // Check if wallet contract exists
+      if(!this.walletAddress || Utils.EqualAddress(this.walletAddress, Utils.nullAddress)) {
+        this.Log(`Creating user wallet for user ${this.client.signer.address}`);
+
+        // Don't attempt to create a user wallet if user has no funds
+        const balance = await this.client.GetBalance({address: this.client.signer.address});
+        if(balance < 0.1) {
+          return undefined;
+        }
+
+        const walletCreationEvent = await this.client.CallContractMethodAndWait({
+          contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+          abi: SpaceContract.abi,
+          methodName: "createAccessWallet",
+          methodArgs: []
+        });
+
+        this.walletAddress = this.client.ExtractValueFromEvent({
+          abi: SpaceContract.abi,
+          event: walletCreationEvent,
+          eventName: "CreateAccessWallet",
+          eventValue: "wallet"
+        });
+
+        this.userWalletAddresses[Utils.FormatAddress(this.client.signer.address)] = this.walletAddress;
+      }
+
+      // Check if wallet object is created
+      const libraryId = this.client.contentSpaceLibraryId;
+      const objectId = Utils.AddressToObjectId(this.walletAddress);
+
+      try {
+        await this.client.ContentObject({libraryId, objectId});
+      } catch(error) {
+        if(error.status === 404) {
+          this.Log(`Creating wallet object for user ${this.client.signer.address}`);
+          const createResponse = await this.client.CreateContentObject({libraryId, objectId});
+
+          await this.client.ReplaceMetadata({
+            libraryId,
+            objectId,
+            writeToken: createResponse.write_token,
+            metadata: {
+              "bitcode_flags": "abrmaster",
+              "bitcode_format": "builtin"
+            }
+          });
+
+          await this.client.FinalizeContentObject({
+            libraryId,
+            objectId,
+            writeToken: createResponse.write_token
+          });
+        }
+      }
+    } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to create wallet contract:");
+      // eslint-disable-next-line no-console
+      console.error(error);
+    } finally {
+      this.creatingWallet = false;
+    }
+  }
+
+  /**
+   * Get the contract address of the current user's BaseAccessWallet contract
+   *
+   * @return {Promise<string>} - The contract address of the current user's wallet contract
+   */
+  async WalletAddress() {
+    if(this.walletAddress) { return this.walletAddress; }
+
+    const walletAddress = await this.client.CallContractMethod({
+      abi: SpaceContract.abi,
+      contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+      methodName: "userWallets",
+      methodArgs: [this.client.signer.address]
+    });
+
+    if(!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
+      this.walletAddress = walletAddress;
+    }
+
+    if(!this.walletAddress) {
+      await this.CreateWallet();
+    }
+
+    return this.walletAddress;
+  }
+
   /**
    * Get the user wallet address for the specified user, if it exists
    *
@@ -78,6 +179,10 @@ await client.userProfileClient.UserMetadata()
    * @return {Promise<string>} - The wallet address of the specified user, if it exists
    */
   async UserWalletAddress({address}) {
+    if(Utils.EqualAddress(address, this.client.signer.address)) {
+      return await this.WalletAddress();
+    }
+
     if(!this.userWalletAddresses[address]) {
       this.Log(`Retrieving user wallet address for user ${address}`);
 
@@ -95,90 +200,6 @@ await client.userProfileClient.UserMetadata()
     }
 
     return this.userWalletAddresses[address];
-  }
-
-  /**
-   * Get the contract address of the current user's BaseAccessWallet contract
-   *
-   * @return {Promise<string>} - The contract address of the current user's wallet contract
-   */
-  async WalletAddress() {
-    if(this.walletAddress) { return this.walletAddress; }
-
-    if(this.walletCreationPromise) {
-      await this.walletCreationPromise;
-    }
-
-    this.walletAddress = await this.UserWalletAddress({address: this.client.signer.address});
-
-    if(!this.walletAddress) {
-      this.Log(`Creating user wallet for user ${this.client.signer.address}`);
-
-      // Make promise available so any other calls will wait
-      this.walletCreationPromise = new Promise(async resolve => {
-        // No wallet contract for the current user - create one
-        if(!this.walletAddress || this.walletAddress === Utils.nullAddress) {
-          // Don't attempt to create a user wallet if user has no funds
-          const balance = await this.client.GetBalance({address: this.client.signer.address});
-          if(balance < 0.1) {
-            return undefined;
-          }
-
-          const walletCreationEvent = await this.client.CallContractMethodAndWait({
-            contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-            abi: SpaceContract.abi,
-            methodName: "createAccessWallet",
-            methodArgs: []
-          });
-
-          this.walletAddress = this.client.ExtractValueFromEvent({
-            abi: SpaceContract.abi,
-            event: walletCreationEvent,
-            eventName: "CreateAccessWallet",
-            eventValue: "wallet"
-          });
-
-          this.userWalletAddresses[Utils.FormatAddress(this.client.signer.address)] = this.walletAddress;
-        }
-
-        // Ensure wallet object is created
-        const libraryId = this.client.contentSpaceLibraryId;
-        const objectId = Utils.AddressToObjectId(this.walletAddress);
-
-        try {
-          await this.client.ContentObject({libraryId, objectId});
-        } catch(error) {
-          if(error.status === 404) {
-            this.Log(`Creating wallet object for user ${this.client.signer.address}`);
-
-            const createResponse = await this.client.CreateContentObject({libraryId, objectId});
-
-            await this.client.ReplaceMetadata({
-              libraryId,
-              objectId,
-              writeToken: createResponse.write_token,
-              metadata: {
-                "bitcode_flags": "abrmaster",
-                "bitcode_format": "builtin"
-              }
-            });
-
-            await this.client.FinalizeContentObject({
-              libraryId,
-              objectId,
-              writeToken: createResponse.write_token
-            });
-          }
-        }
-
-        resolve();
-      });
-    }
-
-    await this.walletCreationPromise;
-    this.walletCreationPromise = undefined;
-
-    return this.walletAddress;
   }
 
   /**

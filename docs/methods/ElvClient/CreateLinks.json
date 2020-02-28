@@ -1,11 +1,11 @@
 [
   {
-    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib34vcL4BA88L6sDsHU83Zh4gqekBB\",\n  \"objectId\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n  \"writeToken\": \"tqw_5RMo8DzWjuKYaRRpGMw3gzCW14Qz3eUaE\",\n  \"links\": [\n    {\n      \"target\": \"testDirectory/File 1\",\n      \"path\": \"myLink\",\n      \"type\": \"file\"\n    },\n    {\n      \"target\": \"testDirectory/File 2\",\n      \"path\": \"links/myLink2\",\n      \"type\": \"file\"\n    },\n    {\n      \"target\": \"toLink/meta/data\",\n      \"path\": \"links/metadataLink\",\n      \"type\": \"meta\"\n    }\n  ]\n});"
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib4Yky3ZytxYu4j3kt4VyTJHXctuCu\",\n  \"objectId\": \"iq__mHPFBmpembVaAady2tGZyDFjfM4\",\n  \"writeToken\": \"tqw_CdGvPhBSoGHNhffsKJ53HEy86RcVxLy8z\",\n  \"links\": [\n    {\n      \"target\": \"testDirectory/File 1\",\n      \"path\": \"myLink\",\n      \"type\": \"file\"\n    },\n    {\n      \"target\": \"testDirectory/File 2\",\n      \"path\": \"links/myLink2\",\n      \"type\": \"file\"\n    },\n    {\n      \"target\": \"toLink/meta/data\",\n      \"path\": \"links/metadataLink\",\n      \"type\": \"meta\"\n    }\n  ]\n});"
   },
   {
-    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib4RUwwkMRAD1ATi8dCcYR6fbuRxSU\",\n  \"objectId\": \"iq__484umiJ5DR1Exo1y5cyHrhiEkb7J\",\n  \"writeToken\": \"tqw_G8415DFax3yUJf66VgnX93wB7unoN2hfu\",\n  \"links\": [\n    {\n      \"type\": \"rep\",\n      \"path\": \"videoLink/default\",\n      \"target\": \"playout/default/options.json\"\n    }\n  ]\n});"
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilibb8tMgmqtprjbPbaURmifp4S8Gqy\",\n  \"objectId\": \"iq__NKMvbgxJ6qVpoGbhLvhXSpVjPaz\",\n  \"writeToken\": \"tqw_88umJc5Nt8j3exzXeqRgyNh5VTCKDge8z\",\n  \"links\": [\n    {\n      \"type\": \"rep\",\n      \"path\": \"videoLink/default\",\n      \"target\": \"playout/default/options.json\"\n    }\n  ]\n});"
   },
   {
-    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib34vcL4BA88L6sDsHU83Zh4gqekBB\",\n  \"objectId\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n  \"writeToken\": \"tqw_8DN9q9YYm4nLJtzHZeWnfpqa6gvj7x7Nx\",\n  \"links\": [\n    {\n      \"path\": \"/test/link\",\n      \"targetHash\": \"hq__D3ziTSXHyYYbNzeWeKtED2Yx4fzQ3RMPZ1Gikcu6NseL6CfvgwkGh8CJwmDMtQs3UJsCcoZ54K\",\n      \"target\": \"/public/asset_metadata\",\n      \"type\": \"metadata\",\n      \"autoUpdate\": true\n    }\n  ]\n});"
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib4Yky3ZytxYu4j3kt4VyTJHXctuCu\",\n  \"objectId\": \"iq__mHPFBmpembVaAady2tGZyDFjfM4\",\n  \"writeToken\": \"tqw_JXyEhpsa7Jvc8tqsefUbuEzWuXLb6mNZB\",\n  \"links\": [\n    {\n      \"path\": \"/test/link\",\n      \"targetHash\": \"hq__KrzvL9ydh6Gw2nBEKwyXTBSiwTsw7th6vKR6hz6QnFW5RhCtP1RxrSr8UvyXVpBcqWpE7smCvg\",\n      \"target\": \"/public/asset_metadata\",\n      \"type\": \"metadata\",\n      \"autoUpdate\": true\n    }\n  ]\n});"
   }
 ]

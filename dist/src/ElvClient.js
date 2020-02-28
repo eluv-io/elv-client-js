@@ -1,13 +1,5 @@
 "use strict";
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
-
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -49,8 +41,6 @@ var Utils = require("./Utils");
 
 var Crypto = require("./Crypto");
 
-var LimitedMap = require("./LimitedMap");
-
 var SpaceContract = require("./contracts/BaseContentSpace");
 
 var LibraryContract = require("./contracts/BaseLibrary");
@@ -59,119 +49,13 @@ var ContentContract = require("./contracts/BaseContent");
 
 var ContentTypeContract = require("./contracts/BaseContentType");
 
-var AccessGroupContract = require("./contracts/BaseAccessControlGroup");
-
-var AccessIndexorContract = require("./contracts/AccessIndexor");
-
 var _require = require("./Validation"),
-    ValidatePresence = _require.ValidatePresence,
     ValidateLibrary = _require.ValidateLibrary,
     ValidateObject = _require.ValidateObject,
     ValidateVersion = _require.ValidateVersion,
     ValidateWriteToken = _require.ValidateWriteToken,
     ValidatePartHash = _require.ValidatePartHash,
-    ValidateAddress = _require.ValidateAddress,
     ValidateParameters = _require.ValidateParameters;
-
-var fs; // Platform specific polyfills
-
-switch (Utils.Platform()) {
-  case Utils.PLATFORM_REACT_NATIVE:
-    // React native polyfills
-    // Polyfill for string.normalized
-    require("unorm");
-
-    break;
-
-  case Utils.PLATFORM_NODE:
-    // Define Response in node
-    // eslint-disable-next-line no-global-assign
-    global.Response = require("node-fetch").Response;
-    fs = require("fs");
-    break;
-}
-
-var ResponseToJson = function ResponseToJson(response) {
-  return regeneratorRuntime.async(function ResponseToJson$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          return _context.abrupt("return", ResponseToFormat("json", response));
-
-        case 1:
-        case "end":
-          return _context.stop();
-      }
-    }
-  });
-};
-
-var ResponseToFormat = function ResponseToFormat(format, response) {
-  return regeneratorRuntime.async(function ResponseToFormat$(_context2) {
-    while (1) {
-      switch (_context2.prev = _context2.next) {
-        case 0:
-          _context2.next = 2;
-          return regeneratorRuntime.awrap(response);
-
-        case 2:
-          response = _context2.sent;
-          _context2.t0 = format.toLowerCase();
-          _context2.next = _context2.t0 === "json" ? 6 : _context2.t0 === "text" ? 9 : _context2.t0 === "blob" ? 12 : _context2.t0 === "arraybuffer" ? 15 : _context2.t0 === "formdata" ? 18 : _context2.t0 === "buffer" ? 21 : 24;
-          break;
-
-        case 6:
-          _context2.next = 8;
-          return regeneratorRuntime.awrap(response.json());
-
-        case 8:
-          return _context2.abrupt("return", _context2.sent);
-
-        case 9:
-          _context2.next = 11;
-          return regeneratorRuntime.awrap(response.text());
-
-        case 11:
-          return _context2.abrupt("return", _context2.sent);
-
-        case 12:
-          _context2.next = 14;
-          return regeneratorRuntime.awrap(response.blob());
-
-        case 14:
-          return _context2.abrupt("return", _context2.sent);
-
-        case 15:
-          _context2.next = 17;
-          return regeneratorRuntime.awrap(response.arrayBuffer());
-
-        case 17:
-          return _context2.abrupt("return", _context2.sent);
-
-        case 18:
-          _context2.next = 20;
-          return regeneratorRuntime.awrap(response.formData());
-
-        case 20:
-          return _context2.abrupt("return", _context2.sent);
-
-        case 21:
-          _context2.next = 23;
-          return regeneratorRuntime.awrap(response.buffer());
-
-        case 23:
-          return _context2.abrupt("return", _context2.sent);
-
-        case 24:
-          return _context2.abrupt("return", response);
-
-        case 25:
-        case "end":
-          return _context2.stop();
-      }
-    }
-  });
-};
 
 var ElvClient =
 /*#__PURE__*/
@@ -322,28 +206,28 @@ function () {
     value: function UseRegion(_ref2) {
       var region, _ref3, fabricURIs, ethereumURIs;
 
-      return regeneratorRuntime.async(function UseRegion$(_context3) {
+      return regeneratorRuntime.async(function UseRegion$(_context) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context.prev = _context.next) {
             case 0:
               region = _ref2.region;
 
               if (this.configUrl) {
-                _context3.next = 3;
+                _context.next = 3;
                 break;
               }
 
               throw Error("Unable to change region: Configuration URL not set");
 
             case 3:
-              _context3.next = 5;
+              _context.next = 5;
               return regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: this.configUrl,
                 region: region
               }));
 
             case 5:
-              _ref3 = _context3.sent;
+              _ref3 = _context.sent;
               fabricURIs = _ref3.fabricURIs;
               ethereumURIs = _ref3.ethereumURIs;
               this.fabricURIs = fabricURIs;
@@ -352,14 +236,14 @@ function () {
               this.HttpClient.uriIndex = 0;
               this.ethClient.ethereumURIs = ethereumURIs;
               this.ethClient.ethereumURIIndex = 0;
-              return _context3.abrupt("return", {
+              return _context.abrupt("return", {
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs
               });
 
             case 15:
             case "end":
-              return _context3.stop();
+              return _context.stop();
           }
         }
       }, null, this);
@@ -377,29 +261,29 @@ function () {
   }, {
     key: "ResetRegion",
     value: function ResetRegion() {
-      return regeneratorRuntime.async(function ResetRegion$(_context4) {
+      return regeneratorRuntime.async(function ResetRegion$(_context2) {
         while (1) {
-          switch (_context4.prev = _context4.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
               if (this.configUrl) {
-                _context4.next = 2;
+                _context2.next = 2;
                 break;
               }
 
               throw Error("Unable to change region: Configuration URL not set");
 
             case 2:
-              _context4.next = 4;
+              _context2.next = 4;
               return regeneratorRuntime.awrap(this.UseRegion({
                 region: ""
               }));
 
             case 4:
-              return _context4.abrupt("return", _context4.sent);
+              return _context2.abrupt("return", _context2.sent);
 
             case 5:
             case "end":
-              return _context4.stop();
+              return _context2.stop();
           }
         }
       }, null, this);
@@ -422,25 +306,25 @@ function () {
     value: function NodeId(_ref4) {
       var region, _ref5, nodeId;
 
-      return regeneratorRuntime.async(function NodeId$(_context5) {
+      return regeneratorRuntime.async(function NodeId$(_context3) {
         while (1) {
-          switch (_context5.prev = _context5.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
               region = _ref4.region;
-              _context5.next = 3;
+              _context3.next = 3;
               return regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: this.configUrl,
                 region: region
               }));
 
             case 3:
-              _ref5 = _context5.sent;
+              _ref5 = _context3.sent;
               nodeId = _ref5.nodeId;
-              return _context5.abrupt("return", nodeId);
+              return _context3.abrupt("return", nodeId);
 
             case 6:
             case "end":
-              return _context5.stop();
+              return _context3.stop();
           }
         }
       }, null, this);
@@ -558,25 +442,25 @@ function () {
     key: "SetSignerFromWeb3Provider",
     value: function SetSignerFromWeb3Provider(_ref8) {
       var provider, ethProvider;
-      return regeneratorRuntime.async(function SetSignerFromWeb3Provider$(_context6) {
+      return regeneratorRuntime.async(function SetSignerFromWeb3Provider$(_context4) {
         while (1) {
-          switch (_context6.prev = _context6.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
               provider = _ref8.provider;
               ethProvider = new Ethers.providers.Web3Provider(provider);
               ethProvider.pollingInterval = 250;
               this.signer = ethProvider.getSigner();
-              _context6.next = 6;
+              _context4.next = 6;
               return regeneratorRuntime.awrap(this.signer.getAddress());
 
             case 6:
-              this.signer.address = _context6.sent;
-              _context6.next = 9;
+              this.signer.address = _context4.sent;
+              _context4.next = 9;
               return regeneratorRuntime.awrap(this.InitializeClients());
 
             case 9:
             case "end":
-              return _context6.stop();
+              return _context4.stop();
           }
         }
       }, null, this);
@@ -3146,16 +3030,19 @@ function () {
         }
       }, null, this);
     }
-    /* Files */
-
     /**
-     * List the file information about this object
+     * Retrieve the encryption conk for the specified object. If one has not yet been created
+     * and a writeToken has been specified, this method will create a new conk and
+     * save it to the draft metadata
      *
-     * @methodGroup Parts and Files
+     * @methodGroup Encryption
+     *
      * @namedParams
-     * @param {string=} libraryId - ID of the library
-     * @param {string=} objectId - ID of the object
-     * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be used
+     * @param {string} libraryId - ID of the library
+     * @param {string} objectId - ID of the object
+     * @param {string=} writeToken - Write token of the content object draft
+     *
+     * @return Promise<Object> - The encryption conk for the object
      */
 
   }, {
@@ -3166,15 +3053,14 @@ function () {
         while (1) {
           switch (_context45.prev = _context45.next) {
             case 0:
-              libraryId = _ref44.libraryId, objectId = _ref44.objectId, versionHash = _ref44.versionHash;
+              libraryId = _ref44.libraryId, objectId = _ref44.objectId, writeToken = _ref44.writeToken;
               ValidateParameters({
                 libraryId: libraryId,
-                objectId: objectId,
-                versionHash: versionHash
+                objectId: objectId
               });
 
-              if (versionHash) {
-                objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+              if (writeToken) {
+                ValidateWriteToken(writeToken);
               }
 
               path = UrlJoin("q", versionHash || objectId, "meta", "files");
@@ -3233,10 +3119,10 @@ function () {
      * - Arguments (reference): { done: boolean, uploadedFiles: number, totalFiles: number }
      */
 
-  }, {
-    key: "UploadFilesFromS3",
-    value: function UploadFilesFromS3(_ref45) {
-      var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref45$copy, copy, callback, defaults, ops, _ref46, id, status, done, progress, _progress;
+              if (this.reencryptionConks[objectId]) {
+                _context42.next = 11;
+                break;
+              }
 
       return regeneratorRuntime.async(function UploadFilesFromS3$(_context46) {
         while (1) {
@@ -3313,9 +3199,10 @@ function () {
               _context46.next = 15;
               return regeneratorRuntime.awrap(this.UploadStatus({
                 libraryId: libraryId,
+                // Cap may only exist in draft
                 objectId: objectId,
                 writeToken: writeToken,
-                uploadId: id
+                metadataSubtree: capKey
               }));
 
             case 15:
@@ -3326,7 +3213,8 @@ function () {
                 break;
               }
 
-              throw status.errors.join("\n");
+              _context42.next = 20;
+              return regeneratorRuntime.awrap(Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
             case 20:
               if (!status.error) {
@@ -3334,8 +3222,9 @@ function () {
                 break;
               }
 
-              this.Log("S3 file upload failed:\n".concat(JSON.stringify(status, null, 2)));
-              throw status.error;
+            case 23:
+              _context42.next = 25;
+              return regeneratorRuntime.awrap(Crypto.GeneratePrimaryConk());
 
             case 25:
               if (!(status.status.toLowerCase() === "failed")) {
@@ -3343,37 +3232,39 @@ function () {
                 break;
               }
 
-              throw "File upload failed";
+              metadata = {};
+              _context42.next = 30;
+              return regeneratorRuntime.awrap(Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
 
-            case 27:
-              done = false;
+            case 30:
+              metadata[capKey] = _context42.sent;
+              _context42.prev = 31;
+              _context42.next = 34;
+              return regeneratorRuntime.awrap(this.authClient.KMSAddress({
+                objectId: objectId
+              }));
 
-              if (copy) {
-                done = status.ingest_copy.done;
+            case 34:
+              kmsAddress = _context42.sent;
+              _context42.next = 37;
+              return regeneratorRuntime.awrap(this.authClient.KMSInfo({
+                objectId: objectId
+              }));
 
-                if (callback) {
-                  progress = status.ingest_copy.progress;
-                  callback({
-                    done: done,
-                    uploaded: progress.bytes.completed,
-                    total: progress.bytes.total,
-                    uploadedFiles: progress.files.completed,
-                    totalFiles: progress.files.total,
-                    fileStatus: progress.files.details
-                  });
-                }
-              } else {
-                done = status.add_reference.done;
+            case 37:
+              _kmsPublicKey = _context42.sent.publicKey;
+              kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
+              _context42.next = 41;
+              return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+                libraryId: libraryId,
+                // Cap may only exist in draft
+                objectId: objectId,
+                writeToken: writeToken,
+                metadataSubtree: kmsCapKey
+              }));
 
-                if (callback) {
-                  _progress = status.add_reference.progress;
-                  callback({
-                    done: done,
-                    uploadedFiles: _progress.completed,
-                    totalFiles: _progress.total
-                  });
-                }
-              }
+            case 41:
+              existingKMSCap = _context42.sent;
 
               if (!done) {
                 _context46.next = 31;
@@ -3386,37 +3277,43 @@ function () {
               _context46.next = 10;
               break;
 
-            case 33:
+            case 48:
+              _context42.prev = 48;
+              _context42.t0 = _context42["catch"](31);
+              // eslint-disable-next-line no-console
+              console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
+
+            case 51:
+              _context42.next = 53;
+              return regeneratorRuntime.awrap(this.MergeMetadata({
+                libraryId: libraryId,
+                objectId: objectId,
+                writeToken: writeToken,
+                metadata: metadata
+              }));
+
+            case 53:
+              return _context42.abrupt("return", this.encryptionConks[objectId]);
+
+            case 54:
             case "end":
               return _context46.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[31, 48]]);
     }
     /**
-     * Upload files to a content object.
+     * Encrypt the specified chunk for the specified object or draft
      *
-     * Expected format of fileInfo:
+     * @methodGroup Encryption
      *
-     [
-       {
-          path: string,
-          mime_type: string,
-          size: number,
-          data: File | ArrayBuffer | Buffer | File Descriptor (Node)
-        }
-     ]
-     *
-     *
-     * @methodGroup Parts and Files
      * @namedParams
      * @param {string} libraryId - ID of the library
      * @param {string} objectId - ID of the object
-     * @param {string} writeToken - Write token of the draft
-     * @param {Array<object>} fileInfo - List of files to upload, including their size, type, and contents
-     * @param {string} encryption="none" - Encryption for uploaded files - cgck | none
-     * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
-     * - Format: {"filename1": {uploaded: number, total: number}, ...}
+     * @param {string} writeToken - Write token of the content object draft
+     * @param {ArrayBuffer | Buffer} chunk - The data to encrypt
+     *
+     * @return {Promise<ArrayBuffer>}
      */
 
   }, {
@@ -3430,7 +3327,7 @@ function () {
         while (1) {
           switch (_context50.prev = _context50.next) {
             case 0:
-              libraryId = _ref47.libraryId, objectId = _ref47.objectId, writeToken = _ref47.writeToken, fileInfo = _ref47.fileInfo, _ref47$encryption = _ref47.encryption, encryption = _ref47$encryption === void 0 ? "none" : _ref47$encryption, callback = _ref47.callback;
+              libraryId = _ref45.libraryId, objectId = _ref45.objectId, writeToken = _ref45.writeToken, chunk = _ref45.chunk;
               ValidateParameters({
                 libraryId: libraryId,
                 objectId: objectId
@@ -3478,19 +3375,36 @@ function () {
                 fileInfo[i] = entry;
               }
 
-              this.Log(fileInfo);
+            case 7:
+              data = _context43.sent;
+              return _context43.abrupt("return", data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
 
-              if (callback) {
-                callback(progress);
-              }
+            case 9:
+            case "end":
+              return _context43.stop();
+          }
+        }
+      }, null, this);
+    }
+    /**
+     * Decrypt the specified chunk for the specified object or draft
+     *
+     * @methodGroup Encryption
+     *
+     * @namedParams
+     * @param {string} libraryId - ID of the library
+     * @param {string} objectId - ID of the object
+     * @param {string} writeToken - Write token of the content object draft
+     * @param {ArrayBuffer | Buffer} chunk - The data to decrypt
+     *
+     * @return {Promise<ArrayBuffer>}
+     */
 
               _context50.next = 15;
               return regeneratorRuntime.awrap(this.CreateFileUploadJob({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: writeToken,
-                ops: fileInfo,
-                encryption: encryption
+                writeToken: writeToken
               }));
 
             case 15:
@@ -3505,8 +3419,9 @@ function () {
               prepared = 0;
               uploaded = 0; // Insert the data to upload into the job spec, encrypting if necessary
 
-              PrepareJobs = function PrepareJobs() {
-                var j, jobId, job, f, _fileInfo, data;
+            case 7:
+              data = _context44.sent;
+              return _context44.abrupt("return", data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
 
                 return regeneratorRuntime.async(function PrepareJobs$(_context47) {
                   while (1) {
@@ -8243,21 +8158,17 @@ function () {
         }
       }, null, this);
     }
-    /* Access Groups */
-
     /**
-     * Create a access group
+     * Retrieve info about the access charge and permissions for the specified object.
      *
-     * A new access group contract is deployed from the content space
+     * Note: Access charge is specified in ether
      *
-     * @methodGroup Access Groups
+     * @methodGroup Access Requests
      * @namedParams
-     * @param {string=} name - Name of the access group
-     * @param {string=} description - Description for the access group
-     * @param {object=} meta - Metadata for the access group
+     * @param {string} objectId - ID of the object
+     * @param {object=} args - Arguments to the getAccessInfo method - See the base content contract
      *
-     * @returns {Promise<string>} - Contract address of created access group
-     */
+     * @return {Promise<Object>} - Info about the access charge and whether or not the object is accessible to the current user   */
 
   }, {
     key: "CreateAccessGroup",
@@ -8353,10 +8264,10 @@ function () {
               _context105.t0 = this.utils;
               _context105.next = 6;
               return regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
-                contractAddress: contractAddress,
-                abi: AccessGroupContract.abi,
-                methodName: "owner",
-                methodArgs: [],
+                contractAddress: Utils.HashToAddress(objectId),
+                abi: ContentContract.abi,
+                methodName: "getAccessInfo",
+                methodArgs: args,
                 signer: this.signer
               }));
 
@@ -8364,7 +8275,7 @@ function () {
               _context105.t1 = _context105.sent;
               return _context105.abrupt("return", _context105.t0.FormatAddress.call(_context105.t0, _context105.t1));
 
-            case 8:
+            case 9:
             case "end":
               return _context105.stop();
           }
@@ -8372,9 +8283,14 @@ function () {
       }, null, this);
     }
     /**
-     * Delete an access group
+     * Make an explicit call to accessRequest or updateRequest of the appropriate contract. Unless noCache is specified on
+     * this method or on the client, the resultant transaction hash of this method will be cached for all subsequent
+     * access to this contract.
      *
-     * Calls the kill method on the specified access group's contract
+     * Note: Access and update requests are handled automatically by ElvClient. Use this method only if you need to make
+     * an explicit call. For example, if you need to specify custom arguments to access a content object, you can call
+     * this method explicitly with those arguments. Since the result is cached (by default), all subsequent calls to
+     * that content object will be authorized with that AccessRequest transaction.
      *
      * @methodGroup Access Groups
      * @namedParams
@@ -8410,17 +8326,22 @@ function () {
     /**
      * Get a list of addresses of members of the specified group
      *
-     * @methodGroup AccessGroups
+     * @methodGroup Access Requests
      * @namedParams
-     * @param contractAddress - The address of the access group contract
+     * @param {string=} libraryId - ID of the library
+     * @param {string=} objectId - ID of the object
+     * @param {string=} versionHash - Version hash of the object
+     * @param {Array=} args=[] - Custom arguments to the accessRequest or updateRequest methods
+     * @param {boolean=} update=false - If true, will call updateRequest instead of accessRequest
+     * @param {boolean=} noCache=false - If true, the resultant transaction hash will not be cached for future use
      *
-     * @return {Promise<Array<string>>} - List of member addresses
+     * @return {Promise<Object>} - Resultant AccessRequest or UpdateRequest event
      */
 
   }, {
-    key: "AccessGroupMembers",
-    value: function AccessGroupMembers(_ref110) {
-      var _this9 = this;
+    key: "AccessRequest",
+    value: function AccessRequest(_ref50) {
+      var libraryId, objectId, versionHash, _ref50$args, args, _ref50$update, update, _ref50$noCache, noCache;
 
       var contractAddress, length;
       return regeneratorRuntime.async(function AccessGroupMembers$(_context108) {
@@ -8469,7 +8390,7 @@ function () {
             case 8:
               return _context108.abrupt("return", _context108.sent);
 
-            case 9:
+            case 6:
             case "end":
               return _context108.stop();
           }
@@ -8477,19 +8398,22 @@ function () {
       }, null, this);
     }
     /**
-     * Get a list of addresses of managers of the specified group
+     * Generate a state channel token.
      *
-     * @methodGroup AccessGroups
+     * @methodGroup Access Requests
      * @namedParams
-     * @param contractAddress - The address of the access group contract
+     * @param {string=} objectId - ID of the object
+     * @param {string=} versionHash - Version hash of the object
+     * @param {boolean=} noCache=false - If specified, a new state channel token will be generated
+     * regardless whether or not one has been previously cached
      *
-     * @return {Promise<Array<string>>} - List of manager addresses
+     * @return {Promise<string>} - The state channel token
      */
 
   }, {
-    key: "AccessGroupManagers",
-    value: function AccessGroupManagers(_ref111) {
-      var _this10 = this;
+    key: "GenerateStateChannelToken",
+    value: function GenerateStateChannelToken(_ref51) {
+      var objectId, versionHash, _ref51$noCache, noCache, audienceData;
 
       var contractAddress, length;
       return regeneratorRuntime.async(function AccessGroupManagers$(_context110) {
@@ -8538,13 +8462,23 @@ function () {
             case 8:
               return _context110.abrupt("return", _context110.sent);
 
-            case 9:
+            case 15:
             case "end":
               return _context110.stop();
           }
         }
       }, null, this);
     }
+    /**
+     * Finalize state channel access
+     *
+     * @methodGroup Access Requests
+     * @namedParams
+     * @param {string=} objectId - ID of the object
+     * @param {string=} versionHash - Version hash of the object
+     * @param {number} percentComplete - Completion percentage of the content
+     */
+
   }, {
     key: "AccessGroupMembershipMethod",
     value: function AccessGroupMembershipMethod(_ref112) {
@@ -8553,9 +8487,8 @@ function () {
         while (1) {
           switch (_context111.prev = _context111.next) {
             case 0:
-              contractAddress = _ref112.contractAddress, memberAddress = _ref112.memberAddress, methodName = _ref112.methodName, eventName = _ref112.eventName;
-              ValidateAddress(contractAddress);
-              ValidateAddress(memberAddress); // Ensure caller is the member being acted upon or a manager/owner of the group
+              objectId = _ref52.objectId, versionHash = _ref52.versionHash, percentComplete = _ref52.percentComplete;
+              versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
               if (this.utils.EqualAddress(this.signer.address, memberAddress)) {
                 _context111.next = 9;
@@ -8578,7 +8511,9 @@ function () {
                 break;
               }
 
-              throw Error("Manager access required");
+              versionHash = this.stateChannelAccess[objectId];
+              _context50.next = 13;
+              break;
 
             case 9:
               this.Log("Calling ".concat(methodName, " on group ").concat(contractAddress, " for user ").concat(memberAddress));
@@ -8606,9 +8541,18 @@ function () {
                 break;
               }
 
-              // eslint-disable-next-line no-console
-              console.error("Mismatch: " + candidate + " :: " + memberAddress);
-              throw Error("Access group method " + methodName + " failed");
+            case 13:
+              this.stateChannelAccess[objectId] = undefined;
+              audienceData = this.AudienceData({
+                objectId: objectId,
+                versionHash: versionHash
+              });
+              _context50.next = 17;
+              return regeneratorRuntime.awrap(this.authClient.ChannelContentFinalize({
+                objectId: objectId,
+                audienceData: audienceData,
+                percent: percentComplete
+              }));
 
             case 17:
               return _context111.abrupt("return", event.transactionHash);
@@ -8621,15 +8565,16 @@ function () {
       }, null, this);
     }
     /**
-     * Add a member to the access group at the specified contract address. This client's signer must
-     * be a manager of the access group.
+     * Call accessComplete on the specified content object contract using a previously cached requestID.
+     * Caching must be enabled and an access request must have been previously made on the specified
+     * object by this client instance.
      *
-     * @methodGroup Access Groups
+     * @methodGroup Access Requests
      * @namedParams
-     * @param {string} contractAddress - Address of the access group contract
-     * @param {string} memberAddress - Address of the member to add
+     * @param {string} objectId - ID of the object
+     * @param {number} score - Percentage score (0-100)
      *
-     * @returns {Promise<string>} - The transaction hash of the call to the grantAccess method
+     * @returns {Promise<Object>} - Transaction log of the AccessComplete event
      */
 
   }, {
@@ -8655,22 +8600,22 @@ function () {
               return _context112.abrupt("return", _context112.sent);
 
             case 6:
+              return _context51.abrupt("return", _context51.sent);
+
+            case 7:
             case "end":
               return _context112.stop();
           }
         }
       }, null, this);
     }
+    /* URL Methods */
+
     /**
-     * Remove a member from the access group at the specified contract address. This client's signer must
-     * be a manager of the access group.
+     * Determine available DRM types available in this browser environment.
      *
-     * @methodGroup Access Groups
-     * @namedParams
-     * @param {string} contractAddress - Address of the access group contract
-     * @param {string} memberAddress - Address of the member to remove
-     *
-     * @returns {Promise<string>} - The transaction hash of the call to the revokeAccess method
+     * @methodGroup Media
+     * @return {Promise<Array<string>>}
      */
 
   }, {
@@ -8695,25 +8640,26 @@ function () {
             case 5:
               return _context113.abrupt("return", _context113.sent);
 
-            case 6:
+            case 9:
+              availableDRMs.push("widevine"); // eslint-disable-next-line no-empty
+
+              _context52.next = 14;
+              break;
+
+            case 12:
+              _context52.prev = 12;
+              _context52.t0 = _context52["catch"](5);
+
+            case 14:
+              return _context52.abrupt("return", availableDRMs);
+
+            case 15:
             case "end":
               return _context113.stop();
           }
         }
-      }, null, this);
+      }, null, null, [[5, 12]]);
     }
-    /**
-     * Add a manager to the access group at the specified contract address. This client's signer must
-     * be a manager of the access group.
-     *
-     * @methodGroup Access Groups
-     * @namedParams
-     * @param {string} contractAddress - Address of the access group contract
-     * @param {string} memberAddress - Address of the manager to add
-     *
-     * @returns {Promise<string>} - The transaction hash of the call to the grantManagerAccess method
-     */
-
   }, {
     key: "AddAccessGroupManager",
     value: function AddAccessGroupManager(_ref115) {
@@ -8744,15 +8690,23 @@ function () {
       }, null, this);
     }
     /**
-     * Remove a manager from the access group at the specified contract address. This client's signer must
-     * be a manager of the access group.
+     * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
      *
-     * @methodGroup Access Groups
+     * The root level playoutOptions[protocol].playoutUrl and playoutOptions[protocol].drms will contain playout
+     * information that satisfies the specified DRM requirements (if possible), while playoutOptions[protocol].playoutMethods
+     * will contain all available playout options for this content.
+     *
+     * If only objectId is specified, latest version will be played. To retrieve playout options for
+     * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
+     *
+     * @methodGroup Media
      * @namedParams
-     * @param {string} contractAddress - Address of the access group contract
-     * @param {string} memberAddress - Address of the manager to remove
-     *
-     * @returns {Promise<string>} - The transaction hash of the call to the revokeManagerAccess method
+     * @param {string=} objectId - Id of the content
+     * @param {string=} versionHash - Version hash of the content
+     * @param {string=} linkPath - If playing from a link, the path to the link
+     * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+     * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+     * @param {string=} offering=default - The offering to play
      */
 
   }, {
@@ -8796,12 +8750,21 @@ function () {
      * - Example: { "0x0": ["accessor", "contributor"], ...}
      */
 
-  }, {
-    key: "ContentLibraryGroupPermissions",
-    value: function ContentLibraryGroupPermissions(_ref117) {
-      var _this11 = this;
+              _context53.next = 11;
+              return regeneratorRuntime.awrap(this.LinkTarget({
+                libraryId: libraryId,
+                objectId: objectId,
+                versionHash: versionHash,
+                linkPath: linkPath
+              }));
 
-      var libraryId, _ref117$permissions, permissions, libraryPermissions;
+            case 11:
+              linkTargetHash = _context53.sent;
+              linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+              _context53.next = 15;
+              return regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+                objectId: linkTargetId
+              }));
 
       return regeneratorRuntime.async(function ContentLibraryGroupPermissions$(_context118) {
         while (1) {
@@ -8811,19 +8774,17 @@ function () {
               ValidateLibrary(libraryId);
               libraryPermissions = {};
 
-              if (!permissions || permissions.length === 0) {
-                permissions = ["accessor", "contributor", "reviewer"];
-              } else {
-                // Format and validate specified permissions
-                permissions = permissions.map(function (permission) {
-                  permission = permission.toLowerCase();
+            case 19:
+              path = UrlJoin("q", versionHash || objectId, "rep", "playout", offering, "options.json");
 
-                  if (!["accessor", "contributor", "reviewer"].includes(permission)) {
-                    throw Error("Invalid permission: ".concat(permission));
-                  }
+            case 20:
+              _context53.t0 = this;
+              _context53.t1 = linkTargetId || objectId;
+              _context53.t2 = linkTargetHash || versionHash;
 
-                  return permission;
-                });
+              if (_context53.t2) {
+                _context53.next = 27;
+                break;
               }
 
               this.Log("Retrieving ".concat(permissions.join(", "), " group(s) for library ").concat(libraryId));
@@ -8930,7 +8891,12 @@ function () {
                 break;
               }
 
-              throw Error("Invalid group type: ".concat(permission));
+              option = playoutOptions[i];
+              protocol = option.properties.protocol;
+              drm = option.properties.drm; // Remove authorization parameter from playout path - it's re-added by Rep
+
+              playoutPath = option.uri.split("?")[0];
+              licenseServers = option.properties.license_servers; // Create full playout URLs for this protocol / drm combo
 
             case 6:
               this.Log("Adding ".concat(permission, " group ").concat(groupAddress, " to library ").concat(libraryId));
@@ -8970,7 +8936,11 @@ function () {
                 eventName: "".concat(permission, "GroupAdded")
               }));
 
-            case 18:
+            case 76:
+              this.Log(playoutMap);
+              return _context53.abrupt("return", playoutMap);
+
+            case 78:
             case "end":
               return _context119.stop();
           }
@@ -8978,13 +8948,20 @@ function () {
       }, null, this);
     }
     /**
-     * Remove accessor, contributor or reviewer permissions for the specified group on the specified library
+     * Retrieve playout options in BitMovin player format for the specified content that satisfy
+     * the given protocol and DRM requirements
      *
-     * @methodGroup Access Groups
+     * If only objectId is specified, latest version will be played. To retrieve playout options for
+     * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
+     *
+     * @methodGroup Media
      * @namedParams
-     * @param {string} libraryId - The ID of the library
-     * @param {string} groupAddress - The address of the group
-     * @param {string} permission - The type of permission to remove ("accessor", "contributor", "reviewer")
+     * @param {string=} objectId - Id of the content
+     * @param {string} versionHash - Version hash of the content
+     * @param {string=} linkPath - If playing from a link, the path to the link
+     * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+     * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+     * @param {string=} offering=default - The offering to play
      */
 
   }, {
@@ -8995,16 +8972,24 @@ function () {
         while (1) {
           switch (_context120.prev = _context120.next) {
             case 0:
-              libraryId = _ref119.libraryId, groupAddress = _ref119.groupAddress, permission = _ref119.permission;
-              ValidateLibrary(libraryId);
-              ValidateAddress(groupAddress);
+              objectId = _ref57.objectId, versionHash = _ref57.versionHash, linkPath = _ref57.linkPath, _ref57$protocols = _ref57.protocols, protocols = _ref57$protocols === void 0 ? ["dash", "hls"] : _ref57$protocols, _ref57$drms = _ref57.drms, drms = _ref57$drms === void 0 ? [] : _ref57$drms, _ref57$offering = _ref57.offering, offering = _ref57$offering === void 0 ? "default" : _ref57$offering;
+              versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
               if (["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
                 _context120.next = 5;
                 break;
               }
 
-              throw Error("Invalid group type: ".concat(permission));
+              _context54.next = 5;
+              return regeneratorRuntime.awrap(this.PlayoutOptions({
+                objectId: objectId,
+                versionHash: versionHash,
+                linkPath: linkPath,
+                protocols: protocols,
+                drms: drms,
+                offering: offering,
+                hlsjsProfile: false
+              }));
 
             case 5:
               this.Log("Removing ".concat(permission, " group ").concat(groupAddress, " from library ").concat(libraryId));
@@ -9044,7 +9029,29 @@ function () {
                 eventName: "".concat(permission, "GroupRemoved")
               }));
 
-            case 17:
+                    if (licenseUrls.find(filterHTTPS)) {
+                      licenseUrls = licenseUrls.filter(filterHTTPS);
+                    } // Choose a random license server from the available list
+
+
+                    var licenseUrl = licenseUrls.sort(function () {
+                      return 0.5 - Math.random();
+                    })[0];
+
+                    if (!config.drm[drm]) {
+                      config.drm[drm] = {
+                        LA_URL: licenseUrl,
+                        headers: {
+                          Authorization: "Bearer ".concat(authToken)
+                        }
+                      };
+                    }
+                  });
+                }
+              });
+              return _context54.abrupt("return", config);
+
+            case 13:
             case "end":
               return _context120.stop();
           }
@@ -9052,20 +9059,29 @@ function () {
       }, null, this);
     }
     /**
-     * List all of the groups with permissions on the specified object.
+     * Call the specified bitcode method on the specified object
      *
-     * @methodGroup Access Groups
+     * @methodGroup URL Generation
      * @namedParams
-     * @param {string} objectId - The ID of the object
+     * @param {string=} libraryId - ID of the library
+     * @param {string=} objectId - ID of the object
+     * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+     * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
+     * @param {string} method - Bitcode method to call
+     * @param {Object=} queryParams - Query parameters to include in the request
+     * @param {Object=} body - Request body to include, if calling a non-constant method
+     * @param {Object=} headers - Request headers to include
+     * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
+     * Otherwise, a POST with an UpdateRequest will be performed
+     * @param {string=} format=json - The format of the response
      *
-     * @return {Promise<Object>} - Object mapping group addresses to permissions, as an array
-     * - Example: { "0x0": ["see", "access", "manage"], ...}
+     * @returns {Promise<format>} - The response from the call in the specified format
      */
 
   }, {
-    key: "ContentObjectGroupPermissions",
-    value: function ContentObjectGroupPermissions(_ref120) {
-      var _this12 = this;
+    key: "CallBitcodeMethod",
+    value: function CallBitcodeMethod(_ref58) {
+      var libraryId, objectId, versionHash, writeToken, method, _ref58$queryParams, queryParams, _ref58$body, body, _ref58$headers, headers, _ref58$constant, constant, _ref58$format, format, path, authHeader;
 
       var objectId, contractAddress, groupAddresses, groupPermissions;
       return regeneratorRuntime.async(function ContentObjectGroupPermissions$(_context122) {
@@ -9112,22 +9128,26 @@ function () {
 
                         return _context121.abrupt("return");
 
-                      case 6:
-                        permissions = [];
+              if (libraryId) {
+                path = UrlJoin("qlibs", libraryId, path);
+              }
 
-                        if (permission >= 100) {
-                          permissions.push("manage");
-                        }
+              authHeader = headers.authorization || headers.Authorization;
 
-                        if (permission % 100 >= 10) {
-                          permissions.push("access");
-                        }
+              if (authHeader) {
+                _context55.next = 12;
+                break;
+              }
 
-                        if (permission % 10 > 0) {
-                          permissions.push("see");
-                        }
+              _context55.next = 11;
+              return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+                libraryId: libraryId,
+                objectId: objectId,
+                update: !constant
+              }));
 
-                        groupPermissions[groupAddress] = permissions;
+            case 11:
+              headers.Authorization = _context55.sent.Authorization;
 
                       case 11:
                       case "end":
@@ -9140,7 +9160,7 @@ function () {
             case 10:
               return _context122.abrupt("return", groupPermissions);
 
-            case 11:
+            case 19:
             case "end":
               return _context122.stop();
           }
@@ -9148,13 +9168,26 @@ function () {
       }, null, this);
     }
     /**
-     * Add a permission on the specified group for the specified object
+     * Generate a URL to the specified /rep endpoint of a content object. URL includes authorization token.
      *
-     * @methodGroup Access Groups
+     * Alias for the FabricUrl method with the "rep" parameter
+     *
+     * @methodGroup URL Generation
      * @namedParams
-     * @param {string} objectId - The ID of the object
-     * @param {string} groupAddress - The address of the group
-     * @param {string} permission - The type of permission to add ("see", "access", "manage")
+     * @param {string=} libraryId - ID of the library
+     * @param {string=} objectId - ID of the object
+     * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+     * @param {string} rep - Representation to use
+     * @param {Object=} queryParams - Query params to add to the URL
+     * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
+     * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
+     * token. This is useful for accessing public assets.
+     * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+     * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
+     *
+     * @see <a href="#FabricUrl">FabricUrl</a> for creating arbitrary fabric URLs
+     *
+     * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
      */
 
   }, {
@@ -9165,12 +9198,12 @@ function () {
         while (1) {
           switch (_context123.prev = _context123.next) {
             case 0:
-              objectId = _ref121.objectId, groupAddress = _ref121.groupAddress, permission = _ref121.permission;
-              ValidatePresence("permission", permission);
-              ValidateObject(objectId);
-              ValidateAddress(groupAddress);
-              permission = permission.toLowerCase();
-              groupAddress = this.utils.FormatAddress(groupAddress);
+              libraryId = _ref59.libraryId, objectId = _ref59.objectId, versionHash = _ref59.versionHash, rep = _ref59.rep, _ref59$queryParams = _ref59.queryParams, queryParams = _ref59$queryParams === void 0 ? {} : _ref59$queryParams, _ref59$channelAuth = _ref59.channelAuth, channelAuth = _ref59$channelAuth === void 0 ? false : _ref59$channelAuth, _ref59$noAuth = _ref59.noAuth, noAuth = _ref59$noAuth === void 0 ? false : _ref59$noAuth, _ref59$noCache = _ref59.noCache, noCache = _ref59$noCache === void 0 ? false : _ref59$noCache;
+              ValidateParameters({
+                libraryId: libraryId,
+                objectId: objectId,
+                versionHash: versionHash
+              });
 
               if (["see", "access", "manage"].includes(permission)) {
                 _context123.next = 8;
@@ -9198,7 +9231,7 @@ function () {
                 eventName: "RightsChanged"
               }));
 
-            case 14:
+            case 5:
             case "end":
               return _context123.stop();
           }
@@ -9206,13 +9239,21 @@ function () {
       }, null, this);
     }
     /**
-     * Remove a permission on the specified group for the specified object
+     * Generate a URL to the specified /public endpoint of a content object. URL includes authorization token.
      *
-     * @methodGroup Access Groups
+     * Alias for the FabricUrl method with the "rep" parameter
+     *
+     * @methodGroup URL Generation
      * @namedParams
-     * @param {string} objectId - The ID of the object
-     * @param {string} groupAddress - The address of the group
-     * @param {string} permission - The type of permission to remove ("see", "access", "manage")
+     * @param {string=} libraryId - ID of the library
+     * @param {string=} objectId - ID of the object
+     * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+     * @param {string} rep - Representation to use
+     * @param {Object=} queryParams - Query params to add to the URL
+     *
+     * @see <a href="#FabricUrl">FabricUrl</a> for creating arbitrary fabric URLs
+     *
+     * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
      */
 
   }, {
@@ -9223,12 +9264,12 @@ function () {
         while (1) {
           switch (_context124.prev = _context124.next) {
             case 0:
-              objectId = _ref122.objectId, groupAddress = _ref122.groupAddress, permission = _ref122.permission;
-              ValidatePresence("permission", permission);
-              ValidateObject(objectId);
-              ValidateAddress(groupAddress);
-              permission = permission.toLowerCase();
-              groupAddress = this.utils.FormatAddress(groupAddress);
+              libraryId = _ref60.libraryId, objectId = _ref60.objectId, versionHash = _ref60.versionHash, rep = _ref60.rep, _ref60$queryParams = _ref60.queryParams, queryParams = _ref60$queryParams === void 0 ? {} : _ref60$queryParams;
+              ValidateParameters({
+                libraryId: libraryId,
+                objectId: objectId,
+                versionHash: versionHash
+              });
 
               if (["see", "access", "manage"].includes(permission)) {
                 _context124.next = 8;
@@ -9256,29 +9297,34 @@ function () {
                 eventName: "RightsChanged"
               }));
 
-            case 14:
+            case 5:
             case "end":
               return _context124.stop();
           }
         }
       }, null, this);
     }
-    /* Collection */
-
     /**
-     * Get a list of unique addresses of all of the specified type the current user has access
-     * to through both their user wallet and through access groups
+     * Generate a URL to the specified item in the content fabric with appropriate authorization token.
      *
-     * @methodGroup Collections
+     * @methodGroup URL Generation
      * @namedParams
-     * @param {string} collectionType - Type of collection to retrieve
-     * - accessGroups
-     * - contentObjects
-     * - contentTypes
-     * - contracts
-     * - libraries
+     * @param {string=} libraryId - ID of an library
+     * @param {string=} objectId - ID of an object
+     * @param {string=} versionHash - Hash of an object version
+     * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
+     * @param {string=} partHash - Hash of a part - Requires object ID
+     * @param {string=} rep - Rep parameter of the url
+     * @param {string=} publicRep - Public rep parameter of the url
+     * @param {string=} call - Bitcode method to call
+     * @param {Object=} queryParams - Query params to add to the URL
+     * @param {boolean=} channelAuth=false - If specified, state channel authorization will be used instead of access request authorization
+     * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
+     * token. This is useful for accessing public assets.
+     * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+     * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
      *
-     * @return {Promise<Array<string>>} - List of addresses of available items
+     * @returns {Promise<string>} - URL to the specified endpoint with authorization token
      */
 
   }, {
@@ -9289,8 +9335,7 @@ function () {
         while (1) {
           switch (_context125.prev = _context125.next) {
             case 0:
-              collectionType = _ref123.collectionType;
-              validCollectionTypes = ["accessGroups", "contentObjects", "contentTypes", "contracts", "libraries"];
+              libraryId = _ref61.libraryId, objectId = _ref61.objectId, versionHash = _ref61.versionHash, writeToken = _ref61.writeToken, partHash = _ref61.partHash, rep = _ref61.rep, publicRep = _ref61.publicRep, call = _ref61.call, _ref61$queryParams = _ref61.queryParams, queryParams = _ref61$queryParams === void 0 ? {} : _ref61$queryParams, _ref61$channelAuth = _ref61.channelAuth, channelAuth = _ref61$channelAuth === void 0 ? false : _ref61$channelAuth, _ref61$noAuth = _ref61.noAuth, noAuth = _ref61$noAuth === void 0 ? false : _ref61$noAuth, _ref61$noCache = _ref61.noCache, noCache = _ref61$noCache === void 0 ? false : _ref61$noCache;
 
               if (validCollectionTypes.includes(collectionType)) {
                 _context125.next = 4;
@@ -9324,7 +9369,15 @@ function () {
                 break;
               }
 
-              throw new Error("Unable to get collection: User wallet doesn't exist");
+              if (partHash) {
+                path = UrlJoin(path, "data", partHash);
+              } else if (rep) {
+                path = UrlJoin(path, "rep", rep);
+              } else if (publicRep) {
+                path = UrlJoin(path, "public", publicRep);
+              } else if (call) {
+                path = UrlJoin(path, "call", call);
+              }
 
             case 14:
               this.Log("Retrieving ".concat(collectionType, " contract collection for user ").concat(this.signer.address));
@@ -9344,18 +9397,21 @@ function () {
         }
       }, null, this);
     }
-    /* Verification */
-
     /**
-     * Verify the specified content object
+     * Generate a URL to the specified content object file with appropriate authorization token.
      *
-     * @methodGroup Content Objects
+     * @methodGroup URL Generation
      * @namedParams
-     * @param {string} libraryId - ID of the library
-     * @param {string} objectId - ID of the object
-     * @param {string} versionHash - Hash of the content object version
+     * @param {string=} libraryId - ID of an library
+     * @param {string=} objectId - ID of an object
+     * @param {string=} versionHash - Hash of an object version
+     * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
+     * @param {string} filePath - Path to the content object file
+     * @param {Object=} queryParams - Query params to add to the URL
+     * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+     * whether such a request exists in the client cache. This request will not be cached.
      *
-     * @returns {Promise<Object>} - Response describing verification results
+     * @returns {Promise<string>} - URL to the specified file with authorization token
      */
 
   }, {
@@ -9366,7 +9422,7 @@ function () {
         while (1) {
           switch (_context126.prev = _context126.next) {
             case 0:
-              libraryId = _ref124.libraryId, objectId = _ref124.objectId, versionHash = _ref124.versionHash;
+              libraryId = _ref62.libraryId, objectId = _ref62.objectId, versionHash = _ref62.versionHash, writeToken = _ref62.writeToken, filePath = _ref62.filePath, _ref62$queryParams = _ref62.queryParams, queryParams = _ref62$queryParams === void 0 ? {} : _ref62$queryParams, _ref62$noCache = _ref62.noCache, noCache = _ref62$noCache === void 0 ? false : _ref62$noCache;
               ValidateParameters({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -9377,13 +9433,13 @@ function () {
                 client: this,
                 libraryId: libraryId,
                 objectId: objectId,
-                versionHash: versionHash
+                noCache: noCache
               }));
 
             case 4:
               return _context126.abrupt("return", _context126.sent);
 
-            case 5:
+            case 10:
             case "end":
               return _context126.stop();
           }
@@ -9391,16 +9447,17 @@ function () {
       }, null, this);
     }
     /**
-     * Get the proofs associated with a given part
+     * Get a specific content object in the library
      *
-     * @methodGroup Content Objects
+     * @methodGroup Links
      * @namedParams
      * @param {string=} libraryId - ID of the library
      * @param {string=} objectId - ID of the object
-     * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
-     * @param {string} partHash - Hash of the part
+     * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+     * @param {boolean=} autoUpdate=false - If true, lists only links marked as auto-update links
+     * @param {(string | Array<string>)=} select - Limit metadata fields return in link details
      *
-     * @returns {Promise<Object>} - Response containing proof information
+     * @returns {Promise<Object>} - Description of created object
      */
 
   }, {
@@ -9411,13 +9468,13 @@ function () {
         while (1) {
           switch (_context127.prev = _context127.next) {
             case 0:
-              libraryId = _ref125.libraryId, objectId = _ref125.objectId, versionHash = _ref125.versionHash, partHash = _ref125.partHash;
+              libraryId = _ref63.libraryId, objectId = _ref63.objectId, versionHash = _ref63.versionHash, _ref63$autoUpdate = _ref63.autoUpdate, autoUpdate = _ref63$autoUpdate === void 0 ? false : _ref63$autoUpdate, select = _ref63.select;
               ValidateParameters({
                 libraryId: libraryId,
                 objectId: objectId,
                 versionHash: versionHash
               });
-              ValidatePartHash(partHash);
+              this.Log("Retrieving content object graph: ".concat(libraryId || "", " ").concat(objectId || versionHash));
 
               if (versionHash) {
                 objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -9430,7 +9487,8 @@ function () {
               return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
                 libraryId: libraryId,
                 objectId: objectId,
-                versionHash: versionHash
+                versionHash: versionHash,
+                noAuth: true
               }));
 
             case 9:
@@ -9444,36 +9502,152 @@ function () {
               _context127.t5 = _context127.t1.Request.call(_context127.t1, _context127.t4);
               return _context127.abrupt("return", (0, _context127.t0)(_context127.t5));
 
-            case 14:
+            case 19:
+              return _context61.abrupt("return", _context61.sent);
+
+            case 22:
+              _context61.prev = 22;
+              _context61.t9 = _context61["catch"](5);
+              _context61.prev = 24;
+              cycles = _context61.t9.body.errors[0].cause.cause.cause.cycle;
+
+              if (!(!cycles || cycles.length === 0)) {
+                _context61.next = 28;
+                break;
+              }
+
+              throw _context61.t9;
+
+            case 28:
+              info = {};
+              _context61.next = 31;
+              return regeneratorRuntime.awrap(Promise.all(cycles.map(function _callee5(cycleHash) {
+                var cycleId, name;
+                return regeneratorRuntime.async(function _callee5$(_context60) {
+                  while (1) {
+                    switch (_context60.prev = _context60.next) {
+                      case 0:
+                        if (!info[cycleHash]) {
+                          _context60.next = 2;
+                          break;
+                        }
+
+                        return _context60.abrupt("return");
+
+                      case 2:
+                        cycleId = _this5.utils.DecodeVersionHash(cycleHash).objectId;
+                        _context60.next = 5;
+                        return regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
+                          versionHash: cycleHash,
+                          metadataSubtree: "public/asset_metadata/display_title"
+                        }));
+
+                      case 5:
+                        _context60.t2 = _context60.sent;
+
+                        if (_context60.t2) {
+                          _context60.next = 10;
+                          break;
+                        }
+
+                        _context60.next = 9;
+                        return regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
+                          versionHash: cycleHash,
+                          metadataSubtree: "public/name"
+                        }));
+
+                      case 9:
+                        _context60.t2 = _context60.sent;
+
+                      case 10:
+                        _context60.t1 = _context60.t2;
+
+                        if (_context60.t1) {
+                          _context60.next = 15;
+                          break;
+                        }
+
+                        _context60.next = 14;
+                        return regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
+                          versionHash: cycleHash,
+                          metadataSubtree: "name"
+                        }));
+
+                      case 14:
+                        _context60.t1 = _context60.sent;
+
+                      case 15:
+                        _context60.t0 = _context60.t1;
+
+                        if (_context60.t0) {
+                          _context60.next = 18;
+                          break;
+                        }
+
+                        _context60.t0 = cycleId;
+
+                      case 18:
+                        name = _context60.t0;
+                        info[cycleHash] = {
+                          name: name,
+                          objectId: cycleId
+                        };
+
+                      case 20:
+                      case "end":
+                        return _context60.stop();
+                    }
+                  }
+                });
+              })));
+
+            case 31:
+              errorInfo = cycles.map(function (cycleHash) {
+                return "".concat(info[cycleHash].name, " (").concat(info[cycleHash].objectId, ")");
+              });
+              _context61.next = 37;
+              break;
+
+            case 34:
+              _context61.prev = 34;
+              _context61.t10 = _context61["catch"](24);
+              throw _context61.t9;
+
+            case 37:
+              throw new Error("Cycle found in links: ".concat(errorInfo.join(" -> ")));
+
+            case 38:
             case "end":
               return _context127.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[5, 22], [24, 34]]);
     }
     /**
-     * Get part info in CBOR format
+     * Recursively update all auto_update links in the specified object.
      *
-     * @methodGroup Content Objects
-     * @namedParams
-     * @param {string} libraryId - ID of the library - required for authentication
-     * @param {string} objectId - ID of the object - required for authentication
-     * @param {string} partHash - Hash of the part
-     * @param {string} format - Format to retrieve the response - defaults to Blob
+     * Note: Links will not be updated unless they are specifically marked as auto_update
      *
-     * @returns {Promise<Format>} - Response containing the CBOR response in the specified format
+     * @param {string=} libraryId - ID of the library
+     * @param {string=} objectId - ID of the object
+     * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+     * @param {function=} callback - If specified, the callback will be called each time an object is updated with
+     * current progress as well as information about the last update (action)
+     * - Format: {completed: number, total: number, action: string}
      */
 
   }, {
-    key: "QParts",
-    value: function QParts(_ref126) {
-      var libraryId, objectId, partHash, _ref126$format, format, path;
+    key: "UpdateContentObjectGraph",
+    value: function UpdateContentObjectGraph(_ref64) {
+      var _this6 = this;
+
+      var libraryId, objectId, versionHash, callback, total, completed, _loop, _ret;
 
       return regeneratorRuntime.async(function QParts$(_context128) {
         while (1) {
           switch (_context128.prev = _context128.next) {
             case 0:
-              libraryId = _ref126.libraryId, objectId = _ref126.objectId, partHash = _ref126.partHash, _ref126$format = _ref126.format, format = _ref126$format === void 0 ? "blob" : _ref126$format;
+              libraryId = _ref64.libraryId, objectId = _ref64.objectId, versionHash = _ref64.versionHash, callback = _ref64.callback;
               ValidateParameters({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -9511,16 +9685,8 @@ function () {
     }
     /* Contracts */
 
-    /**
-     * Return the name of the contract, as specified in the contracts "version" string
-     *
-     * @methodGroup Contracts
-     *
-     * @namedParams
-     * @param {string} contractAddress - Address of the contract
-     *
-     * @return {Promise<string>} - Name of the contract
-     */
+              _loop = function _loop() {
+                var graph, currentHash, links, details, name, currentLibraryId, currentObjectId, _ref65, write_token, _ref67, hash;
 
   }, {
     key: "ContractName",
@@ -9557,35 +9723,11 @@ function () {
      * @returns {Array<string>} - List of formatted arguments
      */
 
-  }, {
-    key: "FormatContractArguments",
-    value: function FormatContractArguments(_ref128) {
-      var abi = _ref128.abi,
-          methodName = _ref128.methodName,
-          args = _ref128.args;
-      return this.ethClient.FormatContractArguments({
-        abi: abi,
-        methodName: methodName,
-        args: args
-      });
-    }
-    /**
-     * Deploy a contract from ABI and bytecode. This client's signer will be the owner of the contract.
-     *
-     * @methodGroup Contracts
-     * @namedParams
-     * @param {Object} abi - ABI of contract
-     * @param {string} bytecode - Bytecode of the contract
-     * @param {Array<string>} constructorArgs - List of arguments to the contract constructor
-     * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
-     *
-     * @returns {Promise<Object>} - Response containing the deployed contract address and the transaction hash of the deployment
-     */
+                        _this6.Log("No more updates required");
 
-  }, {
-    key: "DeployContract",
-    value: function DeployContract(_ref129) {
-      var abi, bytecode, constructorArgs, _ref129$overrides, overrides;
+                        return _context63.abrupt("return", {
+                          v: void 0
+                        });
 
       return regeneratorRuntime.async(function DeployContract$(_context130) {
         while (1) {
@@ -9630,10 +9772,13 @@ function () {
      * @returns {Promise<*>} - Response containing information about the transaction
      */
 
-  }, {
-    key: "CallContractMethod",
-    value: function CallContractMethod(_ref130) {
-      var contractAddress, abi, methodName, _ref130$methodArgs, methodArgs, value, _ref130$overrides, overrides, _ref130$formatArgumen, formatArguments, _ref130$cacheContract, cacheContract;
+                      case 29:
+                      case "end":
+                        return _context63.stop();
+                    }
+                  }
+                });
+              };
 
       return regeneratorRuntime.async(function CallContractMethod$(_context131) {
         while (1) {
@@ -9686,10 +9831,10 @@ function () {
      * the resulting event(s)
      */
 
-  }, {
-    key: "CallContractMethodAndWait",
-    value: function CallContractMethodAndWait(_ref131) {
-      var contractAddress, abi, methodName, methodArgs, value, _ref131$overrides, overrides, _ref131$formatArgumen, formatArguments;
+              if (!(_typeof(_ret) === "object")) {
+                _context64.next = 12;
+                break;
+              }
 
       return regeneratorRuntime.async(function CallContractMethodAndWait$(_context132) {
         while (1) {
@@ -9712,7 +9857,7 @@ function () {
             case 4:
               return _context132.abrupt("return", _context132.sent);
 
-            case 5:
+            case 14:
             case "end":
               return _context132.stop();
           }
@@ -9720,92 +9865,38 @@ function () {
       }, null, this);
     }
     /**
-     * Extract the specified event log from the given event obtained from the
-     * CallContractAndMethodAndWait method
+     * Create links to files, metadata and/or representations of this or or other
+     * content objects.
      *
-     * @methodGroup Contracts
-     * @namedParams
-     * @param {string} contractAddress - Address of the contract to call the specified method on
-     * @param {Object} abi - ABI of contract
-     * @param {Object} event - Event of the transaction from CallContractMethodAndWait
-     * @param {string} eventName - Name of the event to parse
+     * Expected format of links:
      *
-     * @see Utils.WeiToEther
-     *
-     * @returns {Promise<Object>} - The parsed event log from the event
-     */
-
-  }, {
-    key: "ExtractEventFromLogs",
-    value: function ExtractEventFromLogs(_ref132) {
-      var abi = _ref132.abi,
-          event = _ref132.event,
-          eventName = _ref132.eventName;
-      return this.ethClient.ExtractEventFromLogs({
-        abi: abi,
-        event: event,
-        eventName: eventName
-      });
-    }
-    /**
-     * Extract the specified value from the specified event log from the given event obtained
-     * from the CallContractAndMethodAndWait method
-     *
-     * @methodGroup Contracts
-     * @namedParams
-     * @param {string} contractAddress - Address of the contract to call the specified method on
-     * @param {Object} abi - ABI of contract
-     * @param {Object} event - Event of the transaction from CallContractMethodAndWait
-     * @param {string} eventName - Name of the event to parse
-     * @param {string} eventValue - Name of the value to extract from the event
-     *
-     * @returns {Promise<string>} The value extracted from the event
-     */
-
-  }, {
-    key: "ExtractValueFromEvent",
-    value: function ExtractValueFromEvent(_ref133) {
-      var abi = _ref133.abi,
-          event = _ref133.event,
-          eventName = _ref133.eventName,
-          eventValue = _ref133.eventValue;
-      var eventLog = this.ethClient.ExtractEventFromLogs({
-        abi: abi,
-        event: event,
-        eventName: eventName,
-        eventValue: eventValue
-      });
-      return eventLog ? eventLog.values[eventValue] : undefined;
-    }
-    /**
-     * Set the custom contract of the specified object with the contract at the specified address
-     *
-     * Note: This also updates the content object metadata with information about the contract - particularly the ABI
-     *
-     * @methodGroup Contracts
+          [
+           {
+              path: string (metadata path for the link)
+              target: string (path to link target),
+              type: string ("file", "meta" | "metadata", "rep" - default "metadata")
+              targetHash: string (optional, for cross-object links),
+              autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method)
+            }
+         ]
+      * @methodGroup Links
      * @namedParams
      * @param {string} libraryId - ID of the library
      * @param {string} objectId - ID of the object
-     * @param {string} customContractAddress - Address of the deployed custom contract
-     * @param {string=} name - Optional name of the custom contract
-     * @param {string=} description - Optional description of the custom contract
-     * @param {Object} abi - ABI of the custom contract
-     * @param {Object=} factoryAbi - If the custom contract is a factory, the ABI of the contract it deploys
-     * @param {Object=} overrides - Change default gasPrice or gasLimit used for this action
-     *
-     * @returns {Promise<Object>} - Result transaction of calling the setCustomContract method on the content object contract
+     * @param {string} writeToken - Write token of the draft
+     * @param {Array<Object>} links - Link specifications
      */
 
   }, {
-    key: "SetCustomContentContract",
-    value: function SetCustomContentContract(_ref134) {
-      var libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, _ref134$overrides, overrides, setResult, writeToken;
+    key: "CreateLinks",
+    value: function CreateLinks(_ref68) {
+      var libraryId, objectId, writeToken, _ref68$links, links, i, info, path, type, target, link;
 
       return regeneratorRuntime.async(function SetCustomContentContract$(_context133) {
         while (1) {
           switch (_context133.prev = _context133.next) {
             case 0:
-              libraryId = _ref134.libraryId, objectId = _ref134.objectId, customContractAddress = _ref134.customContractAddress, name = _ref134.name, description = _ref134.description, abi = _ref134.abi, factoryAbi = _ref134.factoryAbi, _ref134$overrides = _ref134.overrides, overrides = _ref134$overrides === void 0 ? {} : _ref134$overrides;
+              libraryId = _ref68.libraryId, objectId = _ref68.objectId, writeToken = _ref68.writeToken, _ref68$links = _ref68.links, links = _ref68$links === void 0 ? [] : _ref68$links;
               ValidateParameters({
                 libraryId: libraryId,
                 objectId: objectId
@@ -9857,7 +9948,7 @@ function () {
             case 15:
               return _context133.abrupt("return", setResult);
 
-            case 16:
+            case 18:
             case "end":
               return _context133.stop();
           }
@@ -9865,15 +9956,17 @@ function () {
       }, null, this);
     }
     /**
-     * Get the custom contract of the specified object
+     * Retrieve the version hash of the specified link's target. If the target is the same as the specified
+     * object and versionHash is not specified, will return the latest version hash.
      *
-     * @methodGroup Content Objects
+     * @methodGroup Links
      * @namedParams
-     * @param {string=} libraryId - ID of the library
-     * @param {string=} objectId - ID of the object
-     * @param {string=} versionHash - Version hash of the object
+     * @param {string=} libraryId - ID of an library
+     * @param {string=} objectId - ID of an object
+     * @param {string=} versionHash - Hash of an object version
+     * @param {string} linkPath - Path to the content object link
      *
-     * @returns {Promise<string> | undefined} - If the object has a custom contract, this will return the address of the custom contract
+     * @returns {Promise<string>} - Version hash of the link's target
      */
 
   }, {
@@ -9884,12 +9977,7 @@ function () {
         while (1) {
           switch (_context134.prev = _context134.next) {
             case 0:
-              libraryId = _ref135.libraryId, objectId = _ref135.objectId, versionHash = _ref135.versionHash;
-              ValidateParameters({
-                libraryId: libraryId,
-                objectId: objectId,
-                versionHash: versionHash
-              });
+              libraryId = _ref69.libraryId, objectId = _ref69.objectId, versionHash = _ref69.versionHash, linkPath = _ref69.linkPath;
 
               if (versionHash) {
                 objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -9934,9 +10022,9 @@ function () {
       }, null, this);
     }
   }, {
-    key: "FormatBlockNumbers",
-    value: function FormatBlockNumbers(_ref136) {
-      var fromBlock, toBlock, _ref136$count, count, latestBlock;
+    key: "LinkUrl",
+    value: function LinkUrl(_ref70) {
+      var libraryId, objectId, versionHash, linkPath, mimeType, _ref70$queryParams, queryParams, _ref70$noCache, noCache, path;
 
       return regeneratorRuntime.async(function FormatBlockNumbers$(_context135) {
         while (1) {
@@ -9949,24 +10037,40 @@ function () {
             case 3:
               latestBlock = _context135.sent;
 
-              if (!toBlock) {
-                if (!fromBlock) {
-                  toBlock = latestBlock;
-                  fromBlock = toBlock - count + 1;
-                } else {
-                  toBlock = fromBlock + count - 1;
-                }
-              } else if (!fromBlock) {
-                fromBlock = toBlock - count + 1;
-              } // Ensure block numbers are valid
+              throw Error("Link path not specified");
 
-
-              if (toBlock > latestBlock) {
-                toBlock = latestBlock;
+            case 4:
+              if (versionHash) {
+                objectId = this.utils.DecodeVersionHash(versionHash).objectId;
               }
 
-              if (fromBlock < 0) {
-                fromBlock = 0;
+              if (libraryId) {
+                path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
+              } else {
+                path = UrlJoin("q", versionHash, "meta", linkPath);
+              }
+
+              _context67.t0 = _objectSpread;
+              _context67.t1 = {};
+              _context67.t2 = queryParams;
+              _context67.next = 11;
+              return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+                libraryId: libraryId,
+                objectId: objectId,
+                noCache: noCache,
+                noAuth: true
+              }));
+
+            case 11:
+              _context67.t3 = _context67.sent;
+              _context67.t4 = {
+                resolve: true,
+                authorization: _context67.t3
+              };
+              queryParams = (0, _context67.t0)(_context67.t1, _context67.t2, _context67.t4);
+
+              if (mimeType) {
+                queryParams["header-accept"] = mimeType;
               }
 
               return _context135.abrupt("return", {
@@ -9974,7 +10078,7 @@ function () {
                 toBlock: toBlock
               });
 
-            case 8:
+            case 16:
             case "end":
               return _context135.stop();
           }
@@ -9982,24 +10086,21 @@ function () {
       }, null, this);
     }
     /**
-     * Get all events on the specified contract
+     * Retrieve the data at the specified link in the specified format
      *
-     * @methodGroup Contracts
+     * @methodGroup Links
      * @namedParams
-     * @param {string} contractAddress - The address of the contract
-     * @param {object} abi - The ABI of the contract
-     * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
-     * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
-     * @param {number=} count=1000 - Maximum range of blocks to search (unless both toBlock and fromBlock are specified)
-     * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
-     * Note: This requires one extra network call per block, so it should not be used for very large ranges
-     * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+     * @param {string=} libraryId - ID of an library
+     * @param {string=} objectId - ID of an object
+     * @param {string=} versionHash - Hash of an object version
+     * @param {string} linkPath - Path to the content object link
+     * @param {string=} format=json - Format of the response
      */
 
   }, {
-    key: "ContractEvents",
-    value: function ContractEvents(_ref137) {
-      var contractAddress, abi, _ref137$fromBlock, fromBlock, toBlock, _ref137$count, count, _ref137$includeTransa, includeTransaction, blocks;
+    key: "LinkData",
+    value: function LinkData(_ref71) {
+      var libraryId, objectId, versionHash, linkPath, _ref71$format, format, linkUrl;
 
       return regeneratorRuntime.async(function ContractEvents$(_context136) {
         while (1) {
@@ -10066,21 +10167,22 @@ function () {
         }
       }, null, this);
     }
-    /* Other blockchain operations */
+    /* Collection */
 
     /**
-     * Get events from the blockchain in reverse chronological order, starting from toBlock. This will also attempt
-     * to identify and parse any known Eluvio contract methods. If successful, the method name, signature, and input
-     * values will be included in the log entry.
+     * Get a list of unique addresses of all of the specified type the current user has access
+     * to through both their user wallet and through access groups
      *
-     * @methodGroup Contracts
+     * @methodGroup Collections
      * @namedParams
-     * @param {number=} toBlock - Limit results to events before the specified block (inclusive) - If not specified, will start from latest block
-     * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
-     * @param {number=} count=10 - Max number of events to include (unless both toBlock and fromBlock are specified)
-     * @param {boolean=} includeTransaction=false - If specified, more detailed transaction info will be included.
-     * Note: This requires two extra network calls per transaction, so it should not be used for very large ranges
-     * @returns {Promise<Array<Array<Object>>>} - List of blocks, in ascending order by block number, each containing a list of the events in the block.
+     * @param {string} collectionType - Type of collection to retrieve
+     * - accessGroups
+     * - contentObjects
+     * - contentTypes
+     * - contracts
+     * - libraries
+     *
+     * @return {Promise<Array<string>>} - List of addresses of available items
      */
 
   }, {
@@ -10121,13 +10223,51 @@ function () {
             case 7:
               return _context138.abrupt("return", _context138.sent);
 
-            case 8:
+            case 10:
+              _context69.t0 = undefined;
+
+            case 11:
+              walletAddress = _context69.t0;
+
+              if (walletAddress) {
+                _context69.next = 14;
+                break;
+              }
+
+              throw new Error("Unable to get collection: User wallet doesn't exist");
+
+            case 14:
+              this.Log("Retrieving ".concat(collectionType, " contract collection for user ").concat(this.signer.address));
+              _context69.next = 17;
+              return regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
+                methodName: "send",
+                args: ["elv_getWalletCollection", [this.contentSpaceId, "iusr".concat(this.utils.AddressToHash(this.signer.address)), collectionType]]
+              }));
+
+            case 17:
+              return _context69.abrupt("return", _context69.sent);
+
+            case 18:
             case "end":
               return _context138.stop();
           }
         }
       }, null, this);
     }
+    /* Verification */
+
+    /**
+     * Verify the specified content object
+     *
+     * @methodGroup Content Objects
+     * @namedParams
+     * @param {string} libraryId - ID of the library
+     * @param {string} objectId - ID of the object
+     * @param {string} versionHash - Hash of the content object version
+     *
+     * @returns {Promise<Object>} - Response describing verification results
+     */
+
   }, {
     key: "BlockNumber",
     value: function BlockNumber() {
@@ -10143,7 +10283,7 @@ function () {
             case 2:
               return _context139.abrupt("return", _context139.sent);
 
-            case 3:
+            case 5:
             case "end":
               return _context139.stop();
           }
@@ -10151,13 +10291,16 @@ function () {
       }, null, this);
     }
     /**
-     * Get the balance (in ether) of the specified address
+     * Get the proofs associated with a given part
      *
-     * @methodGroup Signers
+     * @methodGroup Content Objects
      * @namedParams
-     * @param {string} address - Address to query
+     * @param {string=} libraryId - ID of the library
+     * @param {string=} objectId - ID of the object
+     * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
+     * @param {string} partHash - Hash of the part
      *
-     * @returns {Promise<string>} - Balance of the account, in ether (as string)
+     * @returns {Promise<Object>} - Response containing proof information
      */
 
   }, {
@@ -10180,7 +10323,7 @@ function () {
               balance = _context140.sent;
               return _context140.abrupt("return", Ethers.utils.formatEther(balance));
 
-            case 6:
+            case 14:
             case "end":
               return _context140.stop();
           }
@@ -10188,14 +10331,16 @@ function () {
       }, null, this);
     }
     /**
-     * Send ether from this client's current signer to the specified recipient address
+     * Get part info in CBOR format
      *
-     * @methodGroup Signers
+     * @methodGroup Content Objects
      * @namedParams
-     * @param {string} recipient - Address of the recipient
-     * @param {number} ether - Amount of ether to send
+     * @param {string} libraryId - ID of the library - required for authentication
+     * @param {string} objectId - ID of the object - required for authentication
+     * @param {string} partHash - Hash of the part
+     * @param {string} format - Format to retrieve the response - defaults to Blob
      *
-     * @returns {Promise<Object>} - The transaction receipt
+     * @returns {Promise<Format>} - Response containing the CBOR response in the specified format
      */
 
   }, {
@@ -10222,7 +10367,7 @@ function () {
             case 7:
               return _context141.abrupt("return", _context141.sent);
 
-            case 8:
+            case 14:
             case "end":
               return _context141.stop();
           }
@@ -10244,7 +10389,7 @@ function () {
   }, {
     key: "CallFromFrameMessage",
     value: function CallFromFrameMessage(message, Respond) {
-      var _this13 = this;
+      var _this7 = this;
 
       var callback, method, methodResults, responseError;
       return regeneratorRuntime.async(function CallFromFrameMessage$(_context142) {
@@ -10261,7 +10406,7 @@ function () {
             case 2:
               if (message.callbackId) {
                 callback = function callback(result) {
-                  Respond(_this13.utils.MakeClonable({
+                  Respond(_this7.utils.MakeClonable({
                     type: "ElvFrameResponse",
                     requestId: message.callbackId,
                     response: result
@@ -10342,7 +10487,7 @@ function () {
     }
   }], [{
     key: "Configuration",
-    value: function Configuration(_ref142) {
+    value: function Configuration(_ref76) {
       var configUrl, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
       return regeneratorRuntime.async(function Configuration$(_context143) {
         while (1) {
@@ -10461,4 +10606,10 @@ function () {
   return ElvClient;
 }();
 
+Object.assign(ElvClient.prototype, require("./client/ABRPublishing"));
+Object.assign(ElvClient.prototype, require("./client/AccessGroups").access);
+Object.assign(ElvClient.prototype, require("./client/AccessGroups").manage);
+Object.assign(ElvClient.prototype, require("./client/Contracts"));
+Object.assign(ElvClient.prototype, require("./client/Files").access);
+Object.assign(ElvClient.prototype, require("./client/Files").manage);
 exports.ElvClient = ElvClient;

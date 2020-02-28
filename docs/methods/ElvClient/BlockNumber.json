@@ -1,10 +1,10 @@
 [
   {
     "signature": "async BlockNumber();",
-    "result": "248131"
+    "result": "254568"
   },
   {
     "signature": "async BlockNumber();",
-    "result": "248132"
+    "result": "254569"
   }
 ]

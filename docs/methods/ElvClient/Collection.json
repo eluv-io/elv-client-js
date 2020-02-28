@@ -5,11 +5,11 @@
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"contentTypes\"\n});",
-    "result": "[\n  \"0x58Aec1cCEfE8a931B01D45073cdA650E696c44BC\"\n]"
+    "result": "[\n  \"0xf6cb4285560917D2f01a787a671905c7E373C334\"\n]"
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"libraries\"\n});",
-    "result": "[\n  \"0x946a0db9b39aDF71EE9450cbf2AC2D8245301c42\"\n]"
+    "result": "[\n  \"0xFEA3a44726029C1B06315244AF3E7f9Dce392E6a\"\n]"
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"accessGroups\"\n});",
@@ -17,6 +17,6 @@
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"accessGroups\"\n});",
-    "result": "[\n  \"0xb6c8ca97F8044272413E6d61C1BE0C403e0f440B\"\n]"
+    "result": "[\n  \"0x4b652Eb56D40512c69F3B6eA81A99015B87BE5bA\"\n]"
   }
 ]

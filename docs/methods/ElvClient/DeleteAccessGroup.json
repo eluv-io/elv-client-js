@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async DeleteAccessGroup({\n  \"contractAddress\": \"0xc407ab4fa652530f556e52bc08cd9de51339d2d7\"\n});"
+    "signature": "async DeleteAccessGroup({\n  \"contractAddress\": \"0x68f87e19c993fce03ac938225ef2a577a08a673c\"\n});"
   }
 ]

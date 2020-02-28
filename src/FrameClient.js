@@ -260,7 +260,6 @@ class FrameClient {
       "AvailableDRMs",
       "BitmovinPlayoutOptions",
       "BlockNumber",
-      "CachedAccessTransaction",
       "CallBitcodeMethod",
       "CallContractMethod",
       "CallContractMethodAndWait",
@@ -372,8 +371,7 @@ class FrameClient {
       "UploadPartChunk",
       "UploadStatus",
       "UseRegion",
-      "VerifyContentObject",
-      "WithdrawContractFunds"
+      "VerifyContentObject"
     ];
   }
 
@@ -381,6 +379,7 @@ class FrameClient {
     return [
       "AccessLevel",
       "CollectedTags",
+      "CreateWallet",
       "DeleteUserMetadata",
       "MergeUserMetadata",
       "PublicUserMetadata",

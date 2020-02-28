@@ -1,13 +1,5 @@
 "use strict";
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
-
-function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
-
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -32,18 +24,8 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 
 // NOTE: Querying Ethereum requires CORS enabled
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
-var Ethers = require("ethers");
+var Ethers = require("ethers"); // -- Contract javascript files built using build/BuildContracts.js
 
-var LimitedMap = require("./LimitedMap"); // -- Contract javascript files built using build/BuildContracts.js
-
-
-var FactoryContract = require("./contracts/BaseFactory");
-
-var WalletFactoryContract = require("./contracts/BaseAccessWalletFactory");
-
-var LibraryFactoryContract = require("./contracts/BaseLibraryFactory");
-
-var ContentFactoryContract = require("./contracts/BaseContentFactory");
 
 var ContentSpaceContract = require("./contracts/BaseContentSpace");
 
@@ -665,79 +647,15 @@ function () {
     /* Specific contract management */
 
   }, {
-    key: "DeployContentSpaceContract",
-    value: function DeployContentSpaceContract(_ref12) {
-      var name, signer, deploySpaceEvent, factoryContracts, i, _factoryContracts$i, contract, setMethod, factoryAddress;
-
-      return regeneratorRuntime.async(function DeployContentSpaceContract$(_context8) {
+    key: "DeployAccessGroupContract",
+    value: function DeployAccessGroupContract(_ref12) {
+      var contentSpaceAddress, signer;
+      return regeneratorRuntime.async(function DeployAccessGroupContract$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
-              name = _ref12.name, signer = _ref12.signer;
-              _context8.next = 3;
-              return regeneratorRuntime.awrap(this.DeployContract({
-                abi: ContentSpaceContract.abi,
-                bytecode: ContentSpaceContract.bytecode,
-                constructorArgs: [name],
-                signer: signer
-              }));
-
-            case 3:
-              deploySpaceEvent = _context8.sent;
-              factoryContracts = [[FactoryContract, "setFactory"], [WalletFactoryContract, "setWalletFactory"], [LibraryFactoryContract, "setLibraryFactory"], [ContentFactoryContract, "setContentFactory"]];
-              i = 0;
-
-            case 6:
-              if (!(i < factoryContracts.length)) {
-                _context8.next = 16;
-                break;
-              }
-
-              _factoryContracts$i = _slicedToArray(factoryContracts[i], 2), contract = _factoryContracts$i[0], setMethod = _factoryContracts$i[1];
-              _context8.next = 10;
-              return regeneratorRuntime.awrap(this.DeployContract({
-                abi: contract.abi,
-                bytecode: contract.bytecode,
-                constructorArgs: [],
-                signer: signer
-              }));
-
-            case 10:
-              factoryAddress = _context8.sent.contractAddress;
-              _context8.next = 13;
-              return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
-                contractAddress: deploySpaceEvent.contractAddress,
-                abi: ContentSpaceContract.abi,
-                methodName: setMethod,
-                methodArgs: [factoryAddress],
-                signer: signer
-              }));
-
-            case 13:
-              i++;
-              _context8.next = 6;
-              break;
-
-            case 16:
-              return _context8.abrupt("return", deploySpaceEvent);
-
-            case 17:
-            case "end":
-              return _context8.stop();
-          }
-        }
-      }, null, this);
-    }
-  }, {
-    key: "DeployAccessGroupContract",
-    value: function DeployAccessGroupContract(_ref13) {
-      var contentSpaceAddress, signer;
-      return regeneratorRuntime.async(function DeployAccessGroupContract$(_context9) {
-        while (1) {
-          switch (_context9.prev = _context9.next) {
-            case 0:
-              contentSpaceAddress = _ref13.contentSpaceAddress, signer = _ref13.signer;
-              return _context9.abrupt("return", this.DeployDependentContract({
+              contentSpaceAddress = _ref12.contentSpaceAddress, signer = _ref12.signer;
+              return _context8.abrupt("return", this.DeployDependentContract({
                 contractAddress: contentSpaceAddress,
                 abi: ContentSpaceContract.abi,
                 methodName: "createGroup",
@@ -749,21 +667,21 @@ function () {
 
             case 2:
             case "end":
-              return _context9.stop();
+              return _context8.stop();
           }
         }
       }, null, this);
     }
   }, {
     key: "DeployTypeContract",
-    value: function DeployTypeContract(_ref14) {
+    value: function DeployTypeContract(_ref13) {
       var contentSpaceAddress, signer;
-      return regeneratorRuntime.async(function DeployTypeContract$(_context10) {
+      return regeneratorRuntime.async(function DeployTypeContract$(_context9) {
         while (1) {
-          switch (_context10.prev = _context10.next) {
+          switch (_context9.prev = _context9.next) {
             case 0:
-              contentSpaceAddress = _ref14.contentSpaceAddress, signer = _ref14.signer;
-              return _context10.abrupt("return", this.DeployDependentContract({
+              contentSpaceAddress = _ref13.contentSpaceAddress, signer = _ref13.signer;
+              return _context9.abrupt("return", this.DeployDependentContract({
                 contractAddress: contentSpaceAddress,
                 abi: ContentSpaceContract.abi,
                 methodName: "createContentType",
@@ -775,22 +693,22 @@ function () {
 
             case 2:
             case "end":
-              return _context10.stop();
+              return _context9.stop();
           }
         }
       }, null, this);
     }
   }, {
     key: "DeployLibraryContract",
-    value: function DeployLibraryContract(_ref15) {
+    value: function DeployLibraryContract(_ref14) {
       var contentSpaceAddress, kmsId, signer, kmsAddress;
-      return regeneratorRuntime.async(function DeployLibraryContract$(_context11) {
+      return regeneratorRuntime.async(function DeployLibraryContract$(_context10) {
         while (1) {
-          switch (_context11.prev = _context11.next) {
+          switch (_context10.prev = _context10.next) {
             case 0:
-              contentSpaceAddress = _ref15.contentSpaceAddress, kmsId = _ref15.kmsId, signer = _ref15.signer;
+              contentSpaceAddress = _ref14.contentSpaceAddress, kmsId = _ref14.kmsId, signer = _ref14.signer;
               kmsAddress = Utils.HashToAddress(kmsId);
-              return _context11.abrupt("return", this.DeployDependentContract({
+              return _context10.abrupt("return", this.DeployDependentContract({
                 contractAddress: contentSpaceAddress,
                 abi: ContentSpaceContract.abi,
                 methodName: "createLibrary",
@@ -802,23 +720,23 @@ function () {
 
             case 3:
             case "end":
-              return _context11.stop();
+              return _context10.stop();
           }
         }
       }, null, this);
     }
   }, {
     key: "DeployContentContract",
-    value: function DeployContentContract(_ref16) {
+    value: function DeployContentContract(_ref15) {
       var contentLibraryAddress, typeAddress, signer;
-      return regeneratorRuntime.async(function DeployContentContract$(_context12) {
+      return regeneratorRuntime.async(function DeployContentContract$(_context11) {
         while (1) {
-          switch (_context12.prev = _context12.next) {
+          switch (_context11.prev = _context11.next) {
             case 0:
-              contentLibraryAddress = _ref16.contentLibraryAddress, typeAddress = _ref16.typeAddress, signer = _ref16.signer;
+              contentLibraryAddress = _ref15.contentLibraryAddress, typeAddress = _ref15.typeAddress, signer = _ref15.signer;
               // If type is not specified, use null address
               typeAddress = typeAddress || Utils.nullAddress;
-              return _context12.abrupt("return", this.DeployDependentContract({
+              return _context11.abrupt("return", this.DeployDependentContract({
                 contractAddress: contentLibraryAddress,
                 abi: ContentLibraryContract.abi,
                 methodName: "createContent",
@@ -830,21 +748,21 @@ function () {
 
             case 3:
             case "end":
-              return _context12.stop();
+              return _context11.stop();
           }
         }
       }, null, this);
     }
   }, {
     key: "CommitContent",
-    value: function CommitContent(_ref17) {
+    value: function CommitContent(_ref16) {
       var contentObjectAddress, versionHash, signer;
-      return regeneratorRuntime.async(function CommitContent$(_context13) {
+      return regeneratorRuntime.async(function CommitContent$(_context12) {
         while (1) {
-          switch (_context13.prev = _context13.next) {
+          switch (_context12.prev = _context12.next) {
             case 0:
-              contentObjectAddress = _ref17.contentObjectAddress, versionHash = _ref17.versionHash, signer = _ref17.signer;
-              _context13.next = 3;
+              contentObjectAddress = _ref16.contentObjectAddress, versionHash = _ref16.versionHash, signer = _ref16.signer;
+              _context12.next = 3;
               return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
                 contractAddress: contentObjectAddress,
                 abi: ContentContract.abi,
@@ -856,25 +774,25 @@ function () {
               }));
 
             case 3:
-              return _context13.abrupt("return", _context13.sent);
+              return _context12.abrupt("return", _context12.sent);
 
             case 4:
             case "end":
-              return _context13.stop();
+              return _context12.stop();
           }
         }
       }, null, this);
     }
   }, {
     key: "EngageAccountLibrary",
-    value: function EngageAccountLibrary(_ref18) {
+    value: function EngageAccountLibrary(_ref17) {
       var contentSpaceAddress, signer;
-      return regeneratorRuntime.async(function EngageAccountLibrary$(_context14) {
+      return regeneratorRuntime.async(function EngageAccountLibrary$(_context13) {
         while (1) {
-          switch (_context14.prev = _context14.next) {
+          switch (_context13.prev = _context13.next) {
             case 0:
-              contentSpaceAddress = _ref18.contentSpaceAddress, signer = _ref18.signer;
-              return _context14.abrupt("return", this.CallContractMethodAndWait({
+              contentSpaceAddress = _ref17.contentSpaceAddress, signer = _ref17.signer;
+              return _context13.abrupt("return", this.CallContractMethodAndWait({
                 contractAddress: contentSpaceAddress,
                 abi: ContentSpaceContract.abi,
                 methodName: "engageAccountLibrary",
@@ -884,22 +802,22 @@ function () {
 
             case 2:
             case "end":
-              return _context14.stop();
+              return _context13.stop();
           }
         }
       }, null, this);
     }
   }, {
     key: "SetCustomContentContract",
-    value: function SetCustomContentContract(_ref19) {
-      var contentContractAddress, customContractAddress, _ref19$overrides, overrides, signer;
+    value: function SetCustomContentContract(_ref18) {
+      var contentContractAddress, customContractAddress, _ref18$overrides, overrides, signer;
 
-      return regeneratorRuntime.async(function SetCustomContentContract$(_context15) {
+      return regeneratorRuntime.async(function SetCustomContentContract$(_context14) {
         while (1) {
-          switch (_context15.prev = _context15.next) {
+          switch (_context14.prev = _context14.next) {
             case 0:
-              contentContractAddress = _ref19.contentContractAddress, customContractAddress = _ref19.customContractAddress, _ref19$overrides = _ref19.overrides, overrides = _ref19$overrides === void 0 ? {} : _ref19$overrides, signer = _ref19.signer;
-              _context15.next = 3;
+              contentContractAddress = _ref18.contentContractAddress, customContractAddress = _ref18.customContractAddress, _ref18$overrides = _ref18.overrides, overrides = _ref18$overrides === void 0 ? {} : _ref18$overrides, signer = _ref18.signer;
+              _context14.next = 3;
               return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
                 contractAddress: contentContractAddress,
                 abi: ContentContract.abi,
@@ -910,11 +828,11 @@ function () {
               }));
 
             case 3:
-              return _context15.abrupt("return", _context15.sent);
+              return _context14.abrupt("return", _context14.sent);
 
             case 4:
             case "end":
-              return _context15.stop();
+              return _context14.stop();
           }
         }
       }, null, this);
@@ -922,17 +840,17 @@ function () {
 
   }, {
     key: "ContractEvents",
-    value: function ContractEvents(_ref20) {
+    value: function ContractEvents(_ref19) {
       var _this4 = this;
 
-      var contractAddress, abi, _ref20$fromBlock, fromBlock, toBlock, _ref20$includeTransac, includeTransaction, contractLogs, blocks;
+      var contractAddress, abi, _ref19$fromBlock, fromBlock, toBlock, _ref19$includeTransac, includeTransaction, contractLogs, blocks;
 
-      return regeneratorRuntime.async(function ContractEvents$(_context17) {
+      return regeneratorRuntime.async(function ContractEvents$(_context16) {
         while (1) {
-          switch (_context17.prev = _context17.next) {
+          switch (_context16.prev = _context16.next) {
             case 0:
-              contractAddress = _ref20.contractAddress, abi = _ref20.abi, _ref20$fromBlock = _ref20.fromBlock, fromBlock = _ref20$fromBlock === void 0 ? 0 : _ref20$fromBlock, toBlock = _ref20.toBlock, _ref20$includeTransac = _ref20.includeTransaction, includeTransaction = _ref20$includeTransac === void 0 ? false : _ref20$includeTransac;
-              _context17.next = 3;
+              contractAddress = _ref19.contractAddress, abi = _ref19.abi, _ref19$fromBlock = _ref19.fromBlock, fromBlock = _ref19$fromBlock === void 0 ? 0 : _ref19$fromBlock, toBlock = _ref19.toBlock, _ref19$includeTransac = _ref19.includeTransaction, includeTransaction = _ref19$includeTransac === void 0 ? false : _ref19$includeTransac;
+              _context16.next = 3;
               return regeneratorRuntime.awrap(this.MakeProviderCall({
                 methodName: "getLogs",
                 args: [{
@@ -943,75 +861,75 @@ function () {
               }));
 
             case 3:
-              _context17.t0 = _context17.sent;
+              _context16.t0 = _context16.sent;
 
-              if (_context17.t0) {
-                _context17.next = 6;
+              if (_context16.t0) {
+                _context16.next = 6;
                 break;
               }
 
-              _context17.t0 = [];
+              _context16.t0 = [];
 
             case 6:
-              contractLogs = _context17.t0;
+              contractLogs = _context16.t0;
 
               if (Array.isArray(contractLogs)) {
-                _context17.next = 9;
+                _context16.next = 9;
                 break;
               }
 
-              return _context17.abrupt("return", []);
+              return _context16.abrupt("return", []);
 
             case 9:
               blocks = {};
-              _context17.next = 12;
-              return regeneratorRuntime.awrap(LimitedMap(5, contractLogs, function _callee(log) {
+              _context16.next = 12;
+              return regeneratorRuntime.awrap(Utils.LimitedMap(5, contractLogs, function _callee(log) {
                 var eventInterface, parsedLog;
-                return regeneratorRuntime.async(function _callee$(_context16) {
+                return regeneratorRuntime.async(function _callee$(_context15) {
                   while (1) {
-                    switch (_context16.prev = _context16.next) {
+                    switch (_context15.prev = _context15.next) {
                       case 0:
                         eventInterface = new Ethers.utils.Interface(abi);
                         parsedLog = _objectSpread({}, log, {}, eventInterface.parseLog(log));
 
                         if (!includeTransaction) {
-                          _context16.next = 11;
+                          _context15.next = 11;
                           break;
                         }
 
-                        _context16.t0 = _objectSpread;
-                        _context16.t1 = {};
-                        _context16.t2 = parsedLog;
-                        _context16.t3 = {};
-                        _context16.next = 9;
+                        _context15.t0 = _objectSpread;
+                        _context15.t1 = {};
+                        _context15.t2 = parsedLog;
+                        _context15.t3 = {};
+                        _context15.next = 9;
                         return regeneratorRuntime.awrap(_this4.MakeProviderCall({
                           methodName: "getTransaction",
                           args: [log.transactionHash]
                         }));
 
                       case 9:
-                        _context16.t4 = _context16.sent;
-                        parsedLog = (0, _context16.t0)(_context16.t1, _context16.t2, _context16.t3, _context16.t4);
+                        _context15.t4 = _context15.sent;
+                        parsedLog = (0, _context15.t0)(_context15.t1, _context15.t2, _context15.t3, _context15.t4);
 
                       case 11:
                         blocks[log.blockNumber] = [parsedLog].concat(blocks[log.blockNumber] || []);
 
                       case 12:
                       case "end":
-                        return _context16.stop();
+                        return _context15.stop();
                     }
                   }
                 });
               }));
 
             case 12:
-              return _context17.abrupt("return", Object.values(blocks).sort(function (a, b) {
+              return _context16.abrupt("return", Object.values(blocks).sort(function (a, b) {
                 return a[0].blockNumber < b[0].blockNumber ? 1 : -1;
               }));
 
             case 13:
             case "end":
-              return _context17.stop();
+              return _context16.stop();
           }
         }
       }, null, this);
@@ -1019,8 +937,8 @@ function () {
 
   }, {
     key: "ParseUnknownLog",
-    value: function ParseUnknownLog(_ref21) {
-      var log = _ref21.log;
+    value: function ParseUnknownLog(_ref20) {
+      var log = _ref20.log;
 
       if (log.topics && log.topics.length > 0) {
         var topicHash = log.topics[0];
@@ -1043,27 +961,27 @@ function () {
 
   }, {
     key: "Events",
-    value: function Events(_ref22) {
+    value: function Events(_ref21) {
       var _this5 = this;
 
-      var toBlock, fromBlock, _ref22$includeTransac, includeTransaction, logs, i, newLogs, blocks, output;
+      var toBlock, fromBlock, _ref21$includeTransac, includeTransaction, logs, i, newLogs, blocks, output;
 
-      return regeneratorRuntime.async(function Events$(_context20) {
+      return regeneratorRuntime.async(function Events$(_context19) {
         while (1) {
-          switch (_context20.prev = _context20.next) {
+          switch (_context19.prev = _context19.next) {
             case 0:
-              toBlock = _ref22.toBlock, fromBlock = _ref22.fromBlock, _ref22$includeTransac = _ref22.includeTransaction, includeTransaction = _ref22$includeTransac === void 0 ? false : _ref22$includeTransac;
+              toBlock = _ref21.toBlock, fromBlock = _ref21.fromBlock, _ref21$includeTransac = _ref21.includeTransaction, includeTransaction = _ref21$includeTransac === void 0 ? false : _ref21$includeTransac;
               // Pull logs in batches of 100
               logs = [];
               i = fromBlock;
 
             case 3:
               if (!(i < toBlock)) {
-                _context20.next = 11;
+                _context19.next = 11;
                 break;
               }
 
-              _context20.next = 6;
+              _context19.next = 6;
               return regeneratorRuntime.awrap(this.MakeProviderCall({
                 methodName: "getLogs",
                 args: [{
@@ -1073,12 +991,12 @@ function () {
               }));
 
             case 6:
-              newLogs = _context20.sent;
+              newLogs = _context19.sent;
               logs = logs.concat(newLogs || []);
 
             case 8:
               i += 101;
-              _context20.next = 3;
+              _context19.next = 3;
               break;
 
             case 11:
@@ -1090,29 +1008,29 @@ function () {
                 })].concat(blocks[log.blockNumber] || []);
               });
               output = [];
-              _context20.next = 16;
-              return regeneratorRuntime.awrap(LimitedMap(3, _toConsumableArray(Array(toBlock - fromBlock + 1).keys()), function _callee3(i) {
+              _context19.next = 16;
+              return regeneratorRuntime.awrap(Utils.LimitedMap(3, _toConsumableArray(Array(toBlock - fromBlock + 1).keys()), function _callee3(i) {
                 var blockNumber, blockInfo, transactionInfo;
-                return regeneratorRuntime.async(function _callee3$(_context19) {
+                return regeneratorRuntime.async(function _callee3$(_context18) {
                   while (1) {
-                    switch (_context19.prev = _context19.next) {
+                    switch (_context18.prev = _context18.next) {
                       case 0:
                         blockNumber = toBlock - i;
                         blockInfo = blocks[blockNumber];
 
                         if (blockInfo) {
-                          _context19.next = 8;
+                          _context18.next = 8;
                           break;
                         }
 
-                        _context19.next = 5;
+                        _context18.next = 5;
                         return regeneratorRuntime.awrap(_this5.MakeProviderCall({
                           methodName: "getBlock",
                           args: [blockNumber]
                         }));
 
                       case 5:
-                        blockInfo = _context19.sent;
+                        blockInfo = _context18.sent;
                         blockInfo = blockInfo.transactions.map(function (transactionHash) {
                           return _objectSpread({
                             blockNumber: blockInfo.number,
@@ -1125,74 +1043,74 @@ function () {
 
                       case 8:
                         if (!includeTransaction) {
-                          _context19.next = 13;
+                          _context18.next = 13;
                           break;
                         }
 
                         transactionInfo = {};
-                        _context19.next = 12;
+                        _context18.next = 12;
                         return regeneratorRuntime.awrap(Promise.all(blockInfo.map(function _callee2(block) {
-                          return regeneratorRuntime.async(function _callee2$(_context18) {
+                          return regeneratorRuntime.async(function _callee2$(_context17) {
                             while (1) {
-                              switch (_context18.prev = _context18.next) {
+                              switch (_context17.prev = _context17.next) {
                                 case 0:
                                   if (transactionInfo[block.transactionHash]) {
-                                    _context18.next = 11;
+                                    _context17.next = 11;
                                     break;
                                   }
 
-                                  _context18.t0 = _objectSpread;
-                                  _context18.t1 = {};
-                                  _context18.next = 5;
+                                  _context17.t0 = _objectSpread;
+                                  _context17.t1 = {};
+                                  _context17.next = 5;
                                   return regeneratorRuntime.awrap(_this5.MakeProviderCall({
                                     methodName: "getTransaction",
                                     args: [block.transactionHash]
                                   }));
 
                                 case 5:
-                                  _context18.t2 = _context18.sent;
-                                  _context18.t3 = {};
-                                  _context18.next = 9;
+                                  _context17.t2 = _context17.sent;
+                                  _context17.t3 = {};
+                                  _context17.next = 9;
                                   return regeneratorRuntime.awrap(_this5.MakeProviderCall({
                                     methodName: "getTransactionReceipt",
                                     args: [block.transactionHash]
                                   }));
 
                                 case 9:
-                                  _context18.t4 = _context18.sent;
-                                  transactionInfo[block.transactionHash] = (0, _context18.t0)(_context18.t1, _context18.t2, _context18.t3, _context18.t4);
+                                  _context17.t4 = _context17.sent;
+                                  transactionInfo[block.transactionHash] = (0, _context17.t0)(_context17.t1, _context17.t2, _context17.t3, _context17.t4);
 
                                 case 11:
-                                  return _context18.abrupt("return", _objectSpread({}, block, {}, transactionInfo[block.transactionHash]));
+                                  return _context17.abrupt("return", _objectSpread({}, block, {}, transactionInfo[block.transactionHash]));
 
                                 case 12:
                                 case "end":
-                                  return _context18.stop();
+                                  return _context17.stop();
                               }
                             }
                           });
                         })));
 
                       case 12:
-                        blocks[blockNumber] = _context19.sent;
+                        blocks[blockNumber] = _context18.sent;
 
                       case 13:
                         output.push(blocks[blockNumber]);
 
                       case 14:
                       case "end":
-                        return _context19.stop();
+                        return _context18.stop();
                     }
                   }
                 });
               }));
 
             case 16:
-              return _context20.abrupt("return", output);
+              return _context19.abrupt("return", output);
 
             case 17:
             case "end":
-              return _context20.stop();
+              return _context19.stop();
           }
         }
       }, null, this);

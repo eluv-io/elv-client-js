@@ -277,6 +277,73 @@ const Utils = {
     };
   },
 
+  LimitedMap: async (limit, array, f) => {
+    let index = 0;
+    let locked = false;
+    const nextIndex = async () => {
+      while(locked) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+
+      locked = true;
+      const thisIndex = index;
+      index += 1;
+      locked = false;
+
+      return thisIndex;
+    };
+
+    let results = [];
+    let active = 0;
+    return new Promise((resolve, reject) => {
+      [...Array(limit || 1)].forEach(async () => {
+        active += 1;
+        let index = await nextIndex();
+
+        while(index < array.length) {
+          try {
+            results[index] = await f(array[index], index);
+          } catch(error) {
+            reject(error);
+          }
+
+          index = await nextIndex();
+        }
+
+        // When finished and no more workers are active, resolve
+        active -= 1;
+        if(active === 0) {
+          resolve(results);
+        }
+      });
+    });
+  },
+
+  ResponseToJson: async (response) => {
+    return Utils.ResponseToFormat("json", response);
+  },
+
+  ResponseToFormat: async (format, response) => {
+    response = await response;
+
+    switch(format.toLowerCase()) {
+      case "json":
+        return await response.json();
+      case "text":
+        return await response.text();
+      case "blob":
+        return await response.blob();
+      case "arraybuffer":
+        return await response.arrayBuffer();
+      case "formdata":
+        return await response.formData();
+      case "buffer":
+        return await response.buffer();
+      default:
+        return response;
+    }
+  },
+
   /**
    * Determine if the given value is cloneable - Data passed in messages must be cloneable
    *

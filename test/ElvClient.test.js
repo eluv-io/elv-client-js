@@ -47,18 +47,15 @@ let partInfo = {};
 // Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
-    jest.setTimeout(60000);
+    jest.setTimeout(90000);
 
-    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "50"));
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "10"));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
     testFile3 = RandomBytes(testFileSize);
     testHash = RandomString(10);
-
-    await client.userProfileClient.WalletAddress();
-    await accessClient.userProfileClient.WalletAddress();
 
     s3Access = {
       region: process.env.AWS_REGION,
@@ -67,6 +64,9 @@ describe("Test ElvClient", () => {
       secret: process.env.AWS_SECRET,
       testFile: process.env.AWS_TEST_FILE
     };
+
+    await client.userProfileClient.WalletAddress();
+    await accessClient.userProfileClient.WalletAddress();
 
     // Create required types
     const requiredContentTypes = ["ABR Master", "Library", "Production Master"];
@@ -685,15 +685,12 @@ describe("Test ElvClient", () => {
   });
 
   describe("Content Object Group Permissions", () => {
-    let groupObjectId;
-    beforeAll(async () => {
+    test("Content Object Group Permissions", async () => {
       const {id, write_token} = await client.CreateContentObject({libraryId});
       await client.FinalizeContentObject({libraryId, objectId: id, writeToken: write_token});
 
-      groupObjectId = id;
-    });
+      const groupObjectId = id;
 
-    test("Content Object Group Permissions", async () => {
       const initialPermissions = await client.ContentObjectGroupPermissions({objectId: groupObjectId});
 
       expect(initialPermissions).toBeDefined();
@@ -759,14 +756,12 @@ describe("Test ElvClient", () => {
   });
 
   describe("Encryption", () => {
-    beforeAll(async () => {
+    test("Encrypt and Decrypt", async () => {
       // Ensure encryption conk is set
       const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
       await client.EncryptionConk({libraryId, objectId, writeToken});
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
-    });
 
-    test("Encrypt and Decrypt", async () => {
       const encrypted = await client.Encrypt({libraryId, objectId, chunk: testFile1});
       const decrypted = new Uint8Array(await client.Decrypt({libraryId, objectId, chunk: encrypted}));
 
@@ -1712,7 +1707,7 @@ describe("Test ElvClient", () => {
   describe("Content Object Link Graph", () => {
     let targetId;
 
-    beforeAll(async () => {
+    test("Create Object With Links", async () => {
       const {id, write_token} = await client.CreateContentObject({
         libraryId
       });
@@ -1818,15 +1813,6 @@ describe("Test ElvClient", () => {
   });
 
   describe("Access Requests", () => {
-    test("Cached Access Transactions", async () => {
-      const transactionHash = await client.CachedAccessTransaction({versionHash});
-      expect(transactionHash).toBeDefined();
-
-      client.ClearCache();
-      const noTransaction = await client.CachedAccessTransaction({versionHash});
-      expect(noTransaction).not.toBeDefined();
-    });
-
     test("Access Charge and Info", async () => {
       await client.CallContractMethod({
         abi: BaseContentContract.abi,

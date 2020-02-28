@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async AddAccessGroupMember({\n  \"contractAddress\": \"0xc407ab4fa652530f556e52bc08cd9de51339d2d7\",\n  \"memberAddress\": \"0x8701fbf87ba86b4ce68445ccf20fe1d362971ed7\"\n});",
-    "result": "\"0xbc4da233d4ab8be0b2e2992a8948c3b5b708c43135e7aadcb16057186daf7495\""
+    "signature": "async AddAccessGroupMember({\n  \"contractAddress\": \"0x68f87e19c993fce03ac938225ef2a577a08a673c\",\n  \"memberAddress\": \"0x283b86b3359487404485b7abdba6a8782160baa6\"\n});",
+    "result": "\"0xc20b47daa7e111386fbc1020c0237086fbf4ef90f20cd04fbd914796a5e7c3ad\""
   },
   {
-    "signature": "async AddAccessGroupMember({\n  \"contractAddress\": \"0xc407ab4fa652530f556e52bc08cd9de51339d2d7\",\n  \"memberAddress\": \"0x09bd0d777b77f5bdbc051db80974d3aee5f5b215\"\n});",
-    "result": "\"0x5ea58a101d98a7251a8675f5e6889e7fa9c8c8c3cd8f558b734cf48daee3678e\""
+    "signature": "async AddAccessGroupMember({\n  \"contractAddress\": \"0x68f87e19c993fce03ac938225ef2a577a08a673c\",\n  \"memberAddress\": \"0xda3e50d0c5e27ef9c57f015c2fb2adca865fae15\"\n});",
+    "result": "\"0x3626d2861c474c7a4ca847dc814e465f0b8904e493808b96b6cc4106b034457d\""
   }
 ]
