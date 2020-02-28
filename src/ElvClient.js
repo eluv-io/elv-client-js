@@ -132,6 +132,7 @@ class ElvClient {
     contentSpaceId,
     fabricURIs,
     ethereumURIs,
+    kmsURIs,
     noCache=false,
     noAuth=false
   }) {
@@ -144,6 +145,7 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.kmsURIs = kmsURIs;
 
     this.noCache = noCache;
     this.noAuth = noAuth;
@@ -214,6 +216,7 @@ class ElvClient {
    * @methodGroup Constructor
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
+   * @param {Array<string>} kmsURLs - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: na-west-north na-west-south na-east eu-west
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
@@ -223,6 +226,7 @@ class ElvClient {
    */
   static async FromConfigurationUrl({
     configUrl,
+    kmsUrls=[],
     region,
     noCache=false,
     noAuth=false
@@ -240,6 +244,7 @@ class ElvClient {
       contentSpaceId,
       fabricURIs,
       ethereumURIs,
+      kmsURIs: kmsUrls,
       noCache,
       noAuth
     });
@@ -468,11 +473,37 @@ class ElvClient {
     return this.signer ? this.utils.FormatAddress(this.signer.address) : "";
   }
 
-  SetOauthToken({token}) {
+  /**
+   * Set the signer for this client via OAuth token. The client will exchange the given token
+   * for the user's private key using the KMS specified in the configuration.
+   *
+   * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl)
+   *
+   * @param {string} token - The OAuth ID token to authenticate with
+   */
+  async SetOauthToken({token}) {
+    if(!this.kmsURIs || this.kmsURIs.length === 0) {
+      throw Error("Unable to authorize with OAuth token: No KMS URLs set");
+    }
+
     this.oauthToken = token;
 
+    const path = "/ks/jwt/wlt";
+    const httpClient = new HttpClient({uris: this.kmsURIs});
+
+    const response = await ResponseToJson(
+      httpClient.Request({
+        headers: { Authorization: `Bearer ${token}`},
+        method: "PUT",
+        path
+      })
+    );
+
+    const privateKey = response["UserSKHex"];
+
     const wallet = this.GenerateWallet();
-    const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+    const signer = wallet.AddAccount({privateKey});
+
     this.SetSigner({signer});
   }
 
