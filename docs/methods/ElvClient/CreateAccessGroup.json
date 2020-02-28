@@ -1,10 +1,10 @@
 [
   {
     "signature": "async CreateAccessGroup({\n  \"name\": \"Test Access Group\",\n  \"description\": \"Test Access Group Description\",\n  \"metadata\": {\n    \"group\": \"metadata\"\n  }\n});",
-    "result": "\"0xc407ab4fa652530f556e52bc08cd9de51339d2d7\""
+    "result": "\"0x68f87e19c993fce03ac938225ef2a577a08a673c\""
   },
   {
     "signature": "async CreateAccessGroup({\n  \"name\": \"Test Object Permissions\"\n});",
-    "result": "\"0xb6c8ca97f8044272413e6d61c1be0c403e0f440b\""
+    "result": "\"0x4b652eb56d40512c69f3b6ea81a99015b87be5ba\""
   }
 ]

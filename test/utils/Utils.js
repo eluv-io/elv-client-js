@@ -23,13 +23,18 @@ const RandomString = (size) => {
   return crypto.randomBytes(size).toString("hex");
 };
 
-const CreateClient = async (name, bux="10") => {
+const CreateClient = async (name, bux="2") => {
   try {
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
     const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
 
     const wallet = client.GenerateWallet();
     const fundedSigner = wallet.AddAccount({privateKey});
+
+    const balance = await wallet.GetAccountBalance({signer: fundedSigner});
+    if(balance < parseFloat(bux)) {
+      throw Error(`Insufficient balance: Funded account only has ${balance} ether`);
+    }
 
     await fundedClient.SetSigner({signer: fundedSigner});
 
