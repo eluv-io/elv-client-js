@@ -1,4 +1,4 @@
-"use strict";
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 /**
  * Methods for deploying and interacting with contracts
@@ -24,14 +24,14 @@ var _require = require("../Validation"),
 
 exports.ContractName = function _callee(_ref) {
   var contractAddress;
-  return regeneratorRuntime.async(function _callee$(_context) {
+  return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
           contractAddress = _ref.contractAddress;
           ValidateAddress(contractAddress);
           _context.next = 4;
-          return regeneratorRuntime.awrap(this.ethClient.ContractName(contractAddress));
+          return _regeneratorRuntime.awrap(this.ethClient.ContractName(contractAddress));
 
         case 4:
           return _context.abrupt("return", _context.sent);
@@ -83,13 +83,13 @@ exports.FormatContractArguments = function (_ref2) {
 exports.DeployContract = function _callee2(_ref3) {
   var abi, bytecode, constructorArgs, _ref3$overrides, overrides;
 
-  return regeneratorRuntime.async(function _callee2$(_context2) {
+  return _regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
           abi = _ref3.abi, bytecode = _ref3.bytecode, constructorArgs = _ref3.constructorArgs, _ref3$overrides = _ref3.overrides, overrides = _ref3$overrides === void 0 ? {} : _ref3$overrides;
           _context2.next = 3;
-          return regeneratorRuntime.awrap(this.ethClient.DeployContract({
+          return _regeneratorRuntime.awrap(this.ethClient.DeployContract({
             abi: abi,
             bytecode: bytecode,
             constructorArgs: constructorArgs,
@@ -126,14 +126,14 @@ exports.DeployContract = function _callee2(_ref3) {
 exports.ContractEvents = function _callee3(_ref4) {
   var contractAddress, abi, _ref4$fromBlock, fromBlock, toBlock, _ref4$count, count, _ref4$includeTransact, includeTransaction, blocks;
 
-  return regeneratorRuntime.async(function _callee3$(_context3) {
+  return _regeneratorRuntime.async(function _callee3$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
           contractAddress = _ref4.contractAddress, abi = _ref4.abi, _ref4$fromBlock = _ref4.fromBlock, fromBlock = _ref4$fromBlock === void 0 ? 0 : _ref4$fromBlock, toBlock = _ref4.toBlock, _ref4$count = _ref4.count, count = _ref4$count === void 0 ? 1000 : _ref4$count, _ref4$includeTransact = _ref4.includeTransaction, includeTransaction = _ref4$includeTransact === void 0 ? false : _ref4$includeTransact;
           ValidateAddress(contractAddress);
           _context3.next = 4;
-          return regeneratorRuntime.awrap(this.FormatBlockNumbers({
+          return _regeneratorRuntime.awrap(this.FormatBlockNumbers({
             fromBlock: fromBlock,
             toBlock: toBlock,
             count: count
@@ -143,7 +143,7 @@ exports.ContractEvents = function _callee3(_ref4) {
           blocks = _context3.sent;
           this.Log("Querying contract events ".concat(contractAddress, " - Blocks ").concat(blocks.fromBlock, " to ").concat(blocks.toBlock));
           _context3.next = 8;
-          return regeneratorRuntime.awrap(this.ethClient.ContractEvents({
+          return _regeneratorRuntime.awrap(this.ethClient.ContractEvents({
             contractAddress: contractAddress,
             abi: abi,
             fromBlock: blocks.fromBlock,
@@ -184,14 +184,14 @@ exports.ContractEvents = function _callee3(_ref4) {
 exports.CallContractMethod = function _callee4(_ref5) {
   var contractAddress, abi, methodName, _ref5$methodArgs, methodArgs, value, _ref5$overrides, overrides, _ref5$formatArguments, formatArguments, _ref5$cacheContract, cacheContract;
 
-  return regeneratorRuntime.async(function _callee4$(_context4) {
+  return _regeneratorRuntime.async(function _callee4$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
           contractAddress = _ref5.contractAddress, abi = _ref5.abi, methodName = _ref5.methodName, _ref5$methodArgs = _ref5.methodArgs, methodArgs = _ref5$methodArgs === void 0 ? [] : _ref5$methodArgs, value = _ref5.value, _ref5$overrides = _ref5.overrides, overrides = _ref5$overrides === void 0 ? {} : _ref5$overrides, _ref5$formatArguments = _ref5.formatArguments, formatArguments = _ref5$formatArguments === void 0 ? true : _ref5$formatArguments, _ref5$cacheContract = _ref5.cacheContract, cacheContract = _ref5$cacheContract === void 0 ? true : _ref5$cacheContract;
           ValidateAddress(contractAddress);
           _context4.next = 4;
-          return regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
+          return _regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
             contractAddress: contractAddress,
             abi: abi,
             methodName: methodName,
@@ -239,14 +239,14 @@ exports.CallContractMethod = function _callee4(_ref5) {
 exports.CallContractMethodAndWait = function _callee5(_ref6) {
   var contractAddress, abi, methodName, methodArgs, value, _ref6$overrides, overrides, _ref6$formatArguments, formatArguments;
 
-  return regeneratorRuntime.async(function _callee5$(_context5) {
+  return _regeneratorRuntime.async(function _callee5$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
           contractAddress = _ref6.contractAddress, abi = _ref6.abi, methodName = _ref6.methodName, methodArgs = _ref6.methodArgs, value = _ref6.value, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides, _ref6$formatArguments = _ref6.formatArguments, formatArguments = _ref6$formatArguments === void 0 ? true : _ref6$formatArguments;
           ValidateAddress(contractAddress);
           _context5.next = 4;
-          return regeneratorRuntime.awrap(this.ethClient.CallContractMethodAndWait({
+          return _regeneratorRuntime.awrap(this.ethClient.CallContractMethodAndWait({
             contractAddress: contractAddress,
             abi: abi,
             methodName: methodName,
@@ -282,7 +282,7 @@ exports.CallContractMethodAndWait = function _callee5(_ref6) {
 
 exports.CustomContractAddress = function _callee6(_ref7) {
   var libraryId, objectId, versionHash, customContractAddress;
-  return regeneratorRuntime.async(function _callee6$(_context6) {
+  return _regeneratorRuntime.async(function _callee6$(_context6) {
     while (1) {
       switch (_context6.prev = _context6.next) {
         case 0:
@@ -307,7 +307,7 @@ exports.CustomContractAddress = function _callee6(_ref7) {
         case 5:
           this.Log("Retrieving custom contract address: ".concat(objectId));
           _context6.next = 8;
-          return regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
+          return _regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
             contractAddress: this.utils.HashToAddress(objectId),
             abi: ContentContract.abi,
             methodName: "contentContractAddress",
@@ -358,7 +358,7 @@ exports.CustomContractAddress = function _callee6(_ref7) {
 exports.SetCustomContentContract = function _callee7(_ref8) {
   var libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, _ref8$overrides, overrides, setResult, writeToken;
 
-  return regeneratorRuntime.async(function _callee7$(_context7) {
+  return _regeneratorRuntime.async(function _callee7$(_context7) {
     while (1) {
       switch (_context7.prev = _context7.next) {
         case 0:
@@ -371,7 +371,7 @@ exports.SetCustomContentContract = function _callee7(_ref8) {
           customContractAddress = this.utils.FormatAddress(customContractAddress);
           this.Log("Setting custom contract address: ".concat(objectId, " ").concat(customContractAddress));
           _context7.next = 7;
-          return regeneratorRuntime.awrap(this.ethClient.SetCustomContentContract({
+          return _regeneratorRuntime.awrap(this.ethClient.SetCustomContentContract({
             contentContractAddress: Utils.HashToAddress(objectId),
             customContractAddress: customContractAddress,
             overrides: overrides,
@@ -381,7 +381,7 @@ exports.SetCustomContentContract = function _callee7(_ref8) {
         case 7:
           setResult = _context7.sent;
           _context7.next = 10;
-          return regeneratorRuntime.awrap(this.EditContentObject({
+          return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
@@ -389,7 +389,7 @@ exports.SetCustomContentContract = function _callee7(_ref8) {
         case 10:
           writeToken = _context7.sent.write_token;
           _context7.next = 13;
-          return regeneratorRuntime.awrap(this.ReplaceMetadata({
+          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -405,7 +405,7 @@ exports.SetCustomContentContract = function _callee7(_ref8) {
 
         case 13:
           _context7.next = 15;
-          return regeneratorRuntime.awrap(this.FinalizeContentObject({
+          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken
@@ -481,13 +481,13 @@ exports.ExtractValueFromEvent = function (_ref10) {
 exports.FormatBlockNumbers = function _callee8(_ref11) {
   var fromBlock, toBlock, _ref11$count, count, latestBlock;
 
-  return regeneratorRuntime.async(function _callee8$(_context8) {
+  return _regeneratorRuntime.async(function _callee8$(_context8) {
     while (1) {
       switch (_context8.prev = _context8.next) {
         case 0:
           fromBlock = _ref11.fromBlock, toBlock = _ref11.toBlock, _ref11$count = _ref11.count, count = _ref11$count === void 0 ? 10 : _ref11$count;
           _context8.next = 3;
-          return regeneratorRuntime.awrap(this.BlockNumber());
+          return _regeneratorRuntime.awrap(this.BlockNumber());
 
         case 3:
           latestBlock = _context8.sent;
@@ -551,13 +551,13 @@ exports.Events = function _callee9() {
       blocks,
       _args9 = arguments;
 
-  return regeneratorRuntime.async(function _callee9$(_context9) {
+  return _regeneratorRuntime.async(function _callee9$(_context9) {
     while (1) {
       switch (_context9.prev = _context9.next) {
         case 0:
           _ref12 = _args9.length > 0 && _args9[0] !== undefined ? _args9[0] : {}, toBlock = _ref12.toBlock, fromBlock = _ref12.fromBlock, _ref12$count = _ref12.count, count = _ref12$count === void 0 ? 10 : _ref12$count, _ref12$includeTransac = _ref12.includeTransaction, includeTransaction = _ref12$includeTransac === void 0 ? false : _ref12$includeTransac;
           _context9.next = 3;
-          return regeneratorRuntime.awrap(this.FormatBlockNumbers({
+          return _regeneratorRuntime.awrap(this.FormatBlockNumbers({
             fromBlock: fromBlock,
             toBlock: toBlock,
             count: count
@@ -567,7 +567,7 @@ exports.Events = function _callee9() {
           blocks = _context9.sent;
           this.Log("Querying events - Blocks ".concat(blocks.fromBlock, " to ").concat(blocks.toBlock));
           _context9.next = 7;
-          return regeneratorRuntime.awrap(this.ethClient.Events({
+          return _regeneratorRuntime.awrap(this.ethClient.Events({
             fromBlock: blocks.fromBlock,
             toBlock: blocks.toBlock,
             includeTransaction: includeTransaction
@@ -593,12 +593,12 @@ exports.Events = function _callee9() {
 
 
 exports.BlockNumber = function _callee10() {
-  return regeneratorRuntime.async(function _callee10$(_context10) {
+  return _regeneratorRuntime.async(function _callee10$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
         case 0:
           _context10.next = 2;
-          return regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
+          return _regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
             methodName: "getBlockNumber"
           }));
 
@@ -625,14 +625,14 @@ exports.BlockNumber = function _callee10() {
 
 exports.GetBalance = function _callee11(_ref13) {
   var address, balance;
-  return regeneratorRuntime.async(function _callee11$(_context11) {
+  return _regeneratorRuntime.async(function _callee11$(_context11) {
     while (1) {
       switch (_context11.prev = _context11.next) {
         case 0:
           address = _ref13.address;
           ValidateAddress(address);
           _context11.next = 4;
-          return regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
+          return _regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
             methodName: "getBalance",
             args: [address]
           }));
@@ -662,14 +662,14 @@ exports.GetBalance = function _callee11(_ref13) {
 
 exports.SendFunds = function _callee12(_ref14) {
   var recipient, ether, transaction;
-  return regeneratorRuntime.async(function _callee12$(_context12) {
+  return _regeneratorRuntime.async(function _callee12$(_context12) {
     while (1) {
       switch (_context12.prev = _context12.next) {
         case 0:
           recipient = _ref14.recipient, ether = _ref14.ether;
           ValidateAddress(recipient);
           _context12.next = 4;
-          return regeneratorRuntime.awrap(this.signer.sendTransaction({
+          return _regeneratorRuntime.awrap(this.signer.sendTransaction({
             to: recipient,
             value: Ethers.utils.parseEther(ether.toString())
           }));
@@ -677,7 +677,7 @@ exports.SendFunds = function _callee12(_ref14) {
         case 4:
           transaction = _context12.sent;
           _context12.next = 7;
-          return regeneratorRuntime.awrap(transaction.wait());
+          return _regeneratorRuntime.awrap(transaction.wait());
 
         case 7:
           return _context12.abrupt("return", _context12.sent);

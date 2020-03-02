@@ -1,5 +1,3 @@
-require("@babel/polyfill");
-
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const UrlJoin = require("url-join");
@@ -28,6 +26,15 @@ const {
   ValidatePartHash,
   ValidateParameters
 } = require("./Validation");
+
+if(Utils.Platform() === Utils.PLATFORM_NODE) {
+  // Define Response in node
+  // eslint-disable-next-line no-global-assign
+  global.Response = (require("node-fetch")).Response;
+} else if(Utils.Platform() === Utils.PLATFORM_REACT_NATIVE) {
+  // React native polyfill
+  require("unorm");
+}
 
 class ElvClient {
   Log(message, error=false) {

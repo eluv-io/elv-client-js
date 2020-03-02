@@ -4,7 +4,6 @@ const OutputLogger = require("./utils/OutputLogger");
 
 let UtilsModule = require("../src/Utils");
 const Utils = OutputLogger(UtilsModule, UtilsModule);
-//const Utils = UtilsModule;
 
 const {RandomBytes, RandomString} = require("./utils/Utils");
 
@@ -75,13 +74,13 @@ describe("Test Utils", () => {
   });
 
   test("Ether Conversion", () => {
-    expect(Utils.weiPerEther.isEqualTo("1000000000000000000"));
+    expect(Utils.weiPerEther.eq("1000000000000000000"));
 
     const ether = Utils.WeiToEther(Utils.weiPerEther);
-    expect(ether.isEqualTo(1)).toBeTruthy();
+    expect(ether.eq(Utils.ToBigNumber("1.0"))).toBeTruthy();
 
     const wei = Utils.EtherToWei("1.0");
-    expect(wei.isEqualTo(Utils.weiPerEther)).toBeTruthy();
+    expect(wei.eq(Utils.weiPerEther)).toBeTruthy();
   });
 
   test("Cloneable", async () => {

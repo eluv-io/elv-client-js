@@ -1,26 +1,14 @@
-"use strict";
+var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
-
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
-
-function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
-
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
 
 if (typeof Buffer === "undefined") {
   Buffer = require("buffer/").Buffer;
@@ -28,7 +16,7 @@ if (typeof Buffer === "undefined") {
 
 var bs58 = require("bs58");
 
-var BigNumber = require("bignumber.js");
+var BigNumber = require("bignumber.js")["default"];
 
 var MultiHash = require("multihashes");
 
@@ -46,7 +34,7 @@ var VarInt = require("varint");
 var Utils = {
   name: "Utils",
   nullAddress: "0x0000000000000000000000000000000000000000",
-  weiPerEther: BigNumber("1000000000000000000"),
+  weiPerEther: new BigNumber("1000000000000000000"),
 
   /**
    * Convert number or string to BigNumber
@@ -71,8 +59,7 @@ var Utils = {
    * @returns {BigNumber} - Given value in ether
    */
   WeiToEther: function WeiToEther(wei) {
-    wei = new BigNumber(wei);
-    return BigNumber(wei).div(Utils.weiPerEther);
+    return Utils.ToBigNumber(wei).div(Utils.weiPerEther);
   },
 
   /**
@@ -80,12 +67,12 @@ var Utils = {
    *
    * @param {number | string | BigNumber} ether - Ether value to convert to wei
    *
-   * @see https://github.com/MikeMcl/bignumber.js
+   * @see https://github.com/indutny/bn.js/
    *
    * @returns {BigNumber} - Given value in wei
    */
   EtherToWei: function EtherToWei(ether) {
-    return BigNumber(ether).times(Utils.weiPerEther);
+    return Utils.ToBigNumber(ether).times(Utils.weiPerEther);
   },
 
   /**
@@ -300,7 +287,7 @@ var Utils = {
   },
   LimitedMap: function LimitedMap(limit, array, f) {
     var index, locked, nextIndex, results, active;
-    return regeneratorRuntime.async(function LimitedMap$(_context3) {
+    return _regeneratorRuntime.async(function LimitedMap$(_context3) {
       while (1) {
         switch (_context3.prev = _context3.next) {
           case 0:
@@ -309,7 +296,7 @@ var Utils = {
 
             nextIndex = function nextIndex() {
               var thisIndex;
-              return regeneratorRuntime.async(function nextIndex$(_context) {
+              return _regeneratorRuntime.async(function nextIndex$(_context) {
                 while (1) {
                   switch (_context.prev = _context.next) {
                     case 0:
@@ -319,7 +306,7 @@ var Utils = {
                       }
 
                       _context.next = 3;
-                      return regeneratorRuntime.awrap(new Promise(function (resolve) {
+                      return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                         return setTimeout(resolve, 10);
                       }));
 
@@ -347,13 +334,13 @@ var Utils = {
             return _context3.abrupt("return", new Promise(function (resolve, reject) {
               _toConsumableArray(Array(limit || 1)).forEach(function _callee() {
                 var index;
-                return regeneratorRuntime.async(function _callee$(_context2) {
+                return _regeneratorRuntime.async(function _callee$(_context2) {
                   while (1) {
                     switch (_context2.prev = _context2.next) {
                       case 0:
                         active += 1;
                         _context2.next = 3;
-                        return regeneratorRuntime.awrap(nextIndex());
+                        return _regeneratorRuntime.awrap(nextIndex());
 
                       case 3:
                         index = _context2.sent;
@@ -366,7 +353,7 @@ var Utils = {
 
                         _context2.prev = 5;
                         _context2.next = 8;
-                        return regeneratorRuntime.awrap(f(array[index], index));
+                        return _regeneratorRuntime.awrap(f(array[index], index));
 
                       case 8:
                         results[index] = _context2.sent;
@@ -380,7 +367,7 @@ var Utils = {
 
                       case 14:
                         _context2.next = 16;
-                        return regeneratorRuntime.awrap(nextIndex());
+                        return _regeneratorRuntime.awrap(nextIndex());
 
                       case 16:
                         index = _context2.sent;
@@ -412,7 +399,7 @@ var Utils = {
     });
   },
   ResponseToJson: function ResponseToJson(response) {
-    return regeneratorRuntime.async(function ResponseToJson$(_context4) {
+    return _regeneratorRuntime.async(function ResponseToJson$(_context4) {
       while (1) {
         switch (_context4.prev = _context4.next) {
           case 0:
@@ -426,12 +413,12 @@ var Utils = {
     });
   },
   ResponseToFormat: function ResponseToFormat(format, response) {
-    return regeneratorRuntime.async(function ResponseToFormat$(_context5) {
+    return _regeneratorRuntime.async(function ResponseToFormat$(_context5) {
       while (1) {
         switch (_context5.prev = _context5.next) {
           case 0:
             _context5.next = 2;
-            return regeneratorRuntime.awrap(response);
+            return _regeneratorRuntime.awrap(response);
 
           case 2:
             response = _context5.sent;
@@ -441,42 +428,42 @@ var Utils = {
 
           case 6:
             _context5.next = 8;
-            return regeneratorRuntime.awrap(response.json());
+            return _regeneratorRuntime.awrap(response.json());
 
           case 8:
             return _context5.abrupt("return", _context5.sent);
 
           case 9:
             _context5.next = 11;
-            return regeneratorRuntime.awrap(response.text());
+            return _regeneratorRuntime.awrap(response.text());
 
           case 11:
             return _context5.abrupt("return", _context5.sent);
 
           case 12:
             _context5.next = 14;
-            return regeneratorRuntime.awrap(response.blob());
+            return _regeneratorRuntime.awrap(response.blob());
 
           case 14:
             return _context5.abrupt("return", _context5.sent);
 
           case 15:
             _context5.next = 17;
-            return regeneratorRuntime.awrap(response.arrayBuffer());
+            return _regeneratorRuntime.awrap(response.arrayBuffer());
 
           case 17:
             return _context5.abrupt("return", _context5.sent);
 
           case 18:
             _context5.next = 20;
-            return regeneratorRuntime.awrap(response.formData());
+            return _regeneratorRuntime.awrap(response.formData());
 
           case 20:
             return _context5.abrupt("return", _context5.sent);
 
           case 21:
             _context5.next = 23;
-            return regeneratorRuntime.awrap(response.buffer());
+            return _regeneratorRuntime.awrap(response.buffer());
 
           case 23:
             return _context5.abrupt("return", _context5.sent);

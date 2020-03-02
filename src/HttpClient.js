@@ -1,12 +1,5 @@
 const URI = require("urijs");
-
-const Fetch = (input, init={}) => {
-  if(typeof fetch === "undefined") {
-    return (require("node-fetch")(input, init));
-  } else {
-    return fetch(input, init);
-  }
-};
+const Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch").default;
 
 class HttpClient {
   Log(message, error=false) {

@@ -1,12 +1,10 @@
-"use strict";
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _typeof = require("@babel/runtime/helpers/typeof");
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+var _createClass = require("@babel/runtime/helpers/createClass");
 
 var HttpClient = require("./HttpClient");
 
@@ -46,6 +44,8 @@ var ACCESS_TYPES = {
 var AuthorizationClient =
 /*#__PURE__*/
 function () {
+  "use strict";
+
   _createClass(AuthorizationClient, [{
     key: "Log",
     value: function Log(message) {
@@ -108,12 +108,12 @@ function () {
     key: "AuthorizationHeader",
     value: function AuthorizationHeader(params) {
       var authorizationToken, headers;
-      return regeneratorRuntime.async(function AuthorizationHeader$(_context) {
+      return _regeneratorRuntime.async(function AuthorizationHeader$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
               _context.next = 2;
-              return regeneratorRuntime.awrap(this.AuthorizationToken(params));
+              return _regeneratorRuntime.awrap(this.AuthorizationToken(params));
 
             case 2:
               authorizationToken = _context.sent;
@@ -140,7 +140,7 @@ function () {
     value: function AuthorizationToken(_ref2) {
       var libraryId, objectId, versionHash, partHash, encryption, audienceData, _ref2$update, update, _ref2$channelAuth, channelAuth, oauthToken, _ref2$noCache, noCache, _ref2$noAuth, noAuth, initialNoCache, authorizationToken;
 
-      return regeneratorRuntime.async(function AuthorizationToken$(_context2) {
+      return _regeneratorRuntime.async(function AuthorizationToken$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
@@ -159,7 +159,7 @@ function () {
               }
 
               _context2.next = 7;
-              return regeneratorRuntime.awrap(this.GenerateChannelContentToken({
+              return _regeneratorRuntime.awrap(this.GenerateChannelContentToken({
                 objectId: objectId,
                 audienceData: audienceData,
                 oauthToken: oauthToken
@@ -172,7 +172,7 @@ function () {
 
             case 10:
               _context2.next = 12;
-              return regeneratorRuntime.awrap(this.GenerateAuthorizationToken({
+              return _regeneratorRuntime.awrap(this.GenerateAuthorizationToken({
                 libraryId: libraryId,
                 objectId: objectId,
                 versionHash: versionHash,
@@ -210,7 +210,7 @@ function () {
     value: function GenerateAuthorizationToken(_ref3) {
       var libraryId, objectId, versionHash, partHash, encryption, _ref3$update, update, _ref3$noAuth, noAuth, publicKey, owner, cap, token, _ref4, transactionHash, signature, multiSig;
 
-      return regeneratorRuntime.async(function GenerateAuthorizationToken$(_context3) {
+      return _regeneratorRuntime.async(function GenerateAuthorizationToken$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
@@ -229,7 +229,7 @@ function () {
               }
 
               _context3.next = 6;
-              return regeneratorRuntime.awrap(this.AccessType(objectId));
+              return _regeneratorRuntime.awrap(this.AccessType(objectId));
 
             case 6:
               _context3.t1 = _context3.sent;
@@ -243,7 +243,7 @@ function () {
               }
 
               _context3.next = 12;
-              return regeneratorRuntime.awrap(this.Owner({
+              return _regeneratorRuntime.awrap(this.Owner({
                 id: objectId,
                 abi: ContentContract.abi
               }));
@@ -257,7 +257,7 @@ function () {
               }
 
               _context3.next = 16;
-              return regeneratorRuntime.awrap(this.ReEncryptionConk({
+              return _regeneratorRuntime.awrap(this.ReEncryptionConk({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -278,7 +278,7 @@ function () {
               }
 
               _context3.next = 22;
-              return regeneratorRuntime.awrap(this.MakeAccessRequest({
+              return _regeneratorRuntime.awrap(this.MakeAccessRequest({
                 libraryId: libraryId,
                 objectId: objectId,
                 versionHash: versionHash,
@@ -308,7 +308,7 @@ function () {
 
               token = Utils.B64(JSON.stringify(token));
               _context3.next = 31;
-              return regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token))));
+              return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token))));
 
             case 31:
               signature = _context3.sent;
@@ -329,7 +329,7 @@ function () {
 
       var libraryId, objectId, versionHash, _ref5$args, args, _ref5$publicKey, publicKey, _ref5$update, update, _ref5$skipCache, skipCache, _ref5$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, accessType, _this$AccessInfo, abi, cache, accessArgs, checkAccessCharge, address, cacheHit, accessRequest;
 
-      return regeneratorRuntime.async(function MakeAccessRequest$(_context4) {
+      return _regeneratorRuntime.async(function MakeAccessRequest$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
@@ -346,7 +346,7 @@ function () {
 
             case 3:
               _context4.next = 5;
-              return regeneratorRuntime.awrap(this.client.userProfileClient.UserWalletAddress({
+              return _regeneratorRuntime.awrap(this.client.userProfileClient.UserWalletAddress({
                 address: this.client.signer.address
               }));
 
@@ -359,7 +359,7 @@ function () {
               }
 
               _context4.next = 9;
-              return regeneratorRuntime.awrap(this.client.userProfileClient.WalletAddress());
+              return _regeneratorRuntime.awrap(this.client.userProfileClient.WalletAddress());
 
             case 9:
               walletCreated = _context4.sent;
@@ -378,7 +378,7 @@ function () {
 
               id = objectId || libraryId || this.contentSpaceId;
               _context4.next = 16;
-              return regeneratorRuntime.awrap(this.AccessType(id));
+              return _regeneratorRuntime.awrap(this.AccessType(id));
 
             case 16:
               accessType = _context4.sent;
@@ -426,7 +426,7 @@ function () {
 
               this.Log("Making update request on ".concat(accessType, " ").concat(id));
               _context4.next = 30;
-              return regeneratorRuntime.awrap(this.UpdateRequest({
+              return _regeneratorRuntime.awrap(this.UpdateRequest({
                 id: id,
                 abi: abi
               }));
@@ -439,7 +439,7 @@ function () {
             case 33:
               this.Log("Making access request on ".concat(accessType, " ").concat(id));
               _context4.next = 36;
-              return regeneratorRuntime.awrap(this.AccessRequest({
+              return _regeneratorRuntime.awrap(this.AccessRequest({
                 id: id,
                 abi: abi,
                 args: accessArgs,
@@ -483,7 +483,7 @@ function () {
     value: function AccessRequest(_ref6) {
       var id, abi, _ref6$args, args, _ref6$checkAccessChar, checkAccessCharge, accessCharge, accessType, owner, accessChargeArgs, event, accessRequestEvent;
 
-      return regeneratorRuntime.async(function AccessRequest$(_context5) {
+      return _regeneratorRuntime.async(function AccessRequest$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
@@ -491,7 +491,7 @@ function () {
               // Send some bux if access charge is required
               accessCharge = 0;
               _context5.next = 4;
-              return regeneratorRuntime.awrap(this.AccessType(id));
+              return _regeneratorRuntime.awrap(this.AccessType(id));
 
             case 4:
               accessType = _context5.sent;
@@ -502,7 +502,7 @@ function () {
               }
 
               _context5.next = 8;
-              return regeneratorRuntime.awrap(this.Owner({
+              return _regeneratorRuntime.awrap(this.Owner({
                 id: id,
                 abi: abi
               }));
@@ -520,7 +520,7 @@ function () {
 
               _context5.t0 = Utils;
               _context5.next = 14;
-              return regeneratorRuntime.awrap(this.GetAccessCharge({
+              return _regeneratorRuntime.awrap(this.GetAccessCharge({
                 objectId: id,
                 args: accessChargeArgs
               }));
@@ -536,7 +536,7 @@ function () {
 
 
               _context5.next = 19;
-              return regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
                 contractAddress: Utils.HashToAddress(id),
                 abi: abi,
                 methodName: "accessRequest",
@@ -573,13 +573,13 @@ function () {
     key: "UpdateRequest",
     value: function UpdateRequest(_ref7) {
       var id, abi, event, updateRequestEvent;
-      return regeneratorRuntime.async(function UpdateRequest$(_context6) {
+      return _regeneratorRuntime.async(function UpdateRequest$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
               id = _ref7.id, abi = _ref7.abi;
               _context6.next = 3;
-              return regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
                 contractAddress: Utils.HashToAddress(id),
                 abi: abi,
                 methodName: "updateRequest",
@@ -616,7 +616,7 @@ function () {
     value: function GenerateChannelContentToken(_ref8) {
       var objectId, audienceData, oauthToken, _ref8$value, value, nonce, paramTypes, params, packedHash, stateChannelApi, payload, signature, multiSig, token;
 
-      return regeneratorRuntime.async(function GenerateChannelContentToken$(_context7) {
+      return _regeneratorRuntime.async(function GenerateChannelContentToken$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
@@ -628,7 +628,7 @@ function () {
               }
 
               _context7.next = 4;
-              return regeneratorRuntime.awrap(this.GenerateOauthChannelToken({
+              return _regeneratorRuntime.awrap(this.GenerateOauthChannelToken({
                 objectId: objectId,
                 token: oauthToken
               }));
@@ -651,7 +651,7 @@ function () {
               params = [this.client.signer.address, Utils.HashToAddress(objectId), value, nonce];
               packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
               _context7.next = 14;
-              return regeneratorRuntime.awrap(this.Sign(packedHash));
+              return _regeneratorRuntime.awrap(this.Sign(packedHash));
 
             case 14:
               params[4] = _context7.sent;
@@ -663,7 +663,7 @@ function () {
               }
 
               _context7.next = 19;
-              return regeneratorRuntime.awrap(this.MakeKMSCall({
+              return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: stateChannelApi,
                 params: params
@@ -672,7 +672,7 @@ function () {
             case 19:
               payload = _context7.sent;
               _context7.next = 22;
-              return regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload))));
+              return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload))));
 
             case 22:
               signature = _context7.sent;
@@ -697,7 +697,7 @@ function () {
     value: function ChannelContentFinalize(_ref9) {
       var objectId, audienceData, _ref9$percent, percent, nonce, paramTypes, params, packedHash, result;
 
-      return regeneratorRuntime.async(function ChannelContentFinalize$(_context8) {
+      return _regeneratorRuntime.async(function ChannelContentFinalize$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
@@ -708,13 +708,13 @@ function () {
               params = [this.client.signer.address, Utils.HashToAddress(objectId), percent, nonce];
               packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
               _context8.next = 8;
-              return regeneratorRuntime.awrap(this.Sign(packedHash));
+              return _regeneratorRuntime.awrap(this.Sign(packedHash));
 
             case 8:
               params[4] = _context8.sent;
               params[5] = JSON.stringify(audienceData);
               _context8.next = 12;
-              return regeneratorRuntime.awrap(this.MakeKMSCall({
+              return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: "elv_channelContentFinalizeContext",
                 params: params
@@ -736,7 +736,7 @@ function () {
     key: "GenerateOauthChannelToken",
     value: function GenerateOauthChannelToken(_ref10) {
       var objectId, versionHash, token, kmsUrls, kmsHttpClient, fabricToken;
-      return regeneratorRuntime.async(function GenerateOauthChannelToken$(_context9) {
+      return _regeneratorRuntime.async(function GenerateOauthChannelToken$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
@@ -755,7 +755,7 @@ function () {
 
             case 4:
               _context9.next = 6;
-              return regeneratorRuntime.awrap(this.KMSInfo({
+              return _regeneratorRuntime.awrap(this.KMSInfo({
                 objectId: objectId,
                 versionHash: versionHash
               }));
@@ -775,9 +775,9 @@ function () {
                 uris: [kmsUrls[0]],
                 debug: this.debug
               });
-              _context9.t0 = regeneratorRuntime;
+              _context9.t0 = _regeneratorRuntime;
               _context9.next = 13;
-              return regeneratorRuntime.awrap(kmsHttpClient.Request({
+              return _regeneratorRuntime.awrap(kmsHttpClient.Request({
                 method: "GET",
                 path: UrlJoin("ks", "jwt", "q", objectId),
                 bodyType: "NONE",
@@ -921,12 +921,12 @@ function () {
     key: "AccessType",
     value: function AccessType(id) {
       var contractName;
-      return regeneratorRuntime.async(function AccessType$(_context10) {
+      return _regeneratorRuntime.async(function AccessType$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
               _context10.next = 2;
-              return regeneratorRuntime.awrap(this.client.ethClient.ContractName(Utils.HashToAddress(id)));
+              return _regeneratorRuntime.awrap(this.client.ethClient.ContractName(Utils.HashToAddress(id)));
 
             case 2:
               contractName = _context10.sent;
@@ -966,7 +966,7 @@ function () {
     key: "AccessComplete",
     value: function AccessComplete(_ref13) {
       var id, abi, score, address, requestId, event;
-      return regeneratorRuntime.async(function AccessComplete$(_context11) {
+      return _regeneratorRuntime.async(function AccessComplete$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
@@ -984,7 +984,7 @@ function () {
 
             case 6:
               _context11.next = 8;
-              return regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
                 contractAddress: address,
                 abi: abi,
                 methodName: "accessComplete",
@@ -1010,13 +1010,13 @@ function () {
     key: "GetAccessCharge",
     value: function GetAccessCharge(_ref14) {
       var objectId, args, info;
-      return regeneratorRuntime.async(function GetAccessCharge$(_context12) {
+      return _regeneratorRuntime.async(function GetAccessCharge$(_context12) {
         while (1) {
           switch (_context12.prev = _context12.next) {
             case 0:
               objectId = _ref14.objectId, args = _ref14.args;
               _context12.next = 3;
-              return regeneratorRuntime.awrap(this.client.CallContractMethod({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(objectId),
                 abi: ContentContract.abi,
                 methodName: "getAccessInfo",
@@ -1038,7 +1038,7 @@ function () {
     key: "Owner",
     value: function Owner(_ref15) {
       var id, abi, ownerAddress;
-      return regeneratorRuntime.async(function Owner$(_context13) {
+      return _regeneratorRuntime.async(function Owner$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
             case 0:
@@ -1053,7 +1053,7 @@ function () {
 
             case 3:
               _context13.next = 5;
-              return regeneratorRuntime.awrap(this.client.CallContractMethod({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(id),
                 abi: abi,
                 methodName: "owner",
@@ -1074,12 +1074,12 @@ function () {
   }, {
     key: "Sign",
     value: function Sign(message) {
-      return regeneratorRuntime.async(function Sign$(_context14) {
+      return _regeneratorRuntime.async(function Sign$(_context14) {
         while (1) {
           switch (_context14.prev = _context14.next) {
             case 0:
               _context14.next = 2;
-              return regeneratorRuntime.awrap(Promise.resolve(Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message))));
+              return _regeneratorRuntime.awrap(Promise.resolve(Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message))));
 
             case 2:
               return _context14.abrupt("return", _context14.sent);
@@ -1095,7 +1095,7 @@ function () {
     key: "KMSAddress",
     value: function KMSAddress(_ref16) {
       var objectId, versionHash;
-      return regeneratorRuntime.async(function KMSAddress$(_context15) {
+      return _regeneratorRuntime.async(function KMSAddress$(_context15) {
         while (1) {
           switch (_context15.prev = _context15.next) {
             case 0:
@@ -1106,7 +1106,7 @@ function () {
               }
 
               _context15.next = 4;
-              return regeneratorRuntime.awrap(this.client.CallContractMethod({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(objectId),
                 abi: ContentContract.abi,
                 methodName: "addressKMS"
@@ -1126,7 +1126,7 @@ function () {
     key: "KMSInfo",
     value: function KMSInfo(_ref17) {
       var objectId, versionHash, KMSInfo, publicKey;
-      return regeneratorRuntime.async(function KMSInfo$(_context16) {
+      return _regeneratorRuntime.async(function KMSInfo$(_context16) {
         while (1) {
           switch (_context16.prev = _context16.next) {
             case 0:
@@ -1138,7 +1138,7 @@ function () {
 
 
               _context16.next = 4;
-              return regeneratorRuntime.awrap(this.client.CallContractMethod({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(objectId),
                 abi: ContentContract.abi,
                 methodName: "getKMSInfo",
@@ -1167,7 +1167,7 @@ function () {
     key: "KMSSymmetricKey",
     value: function KMSSymmetricKey(_ref18) {
       var libraryId, objectId, kmsAddress, kmsCapId, kmsCap, paramTypes, params, packedHash;
-      return regeneratorRuntime.async(function KMSSymmetricKey$(_context17) {
+      return _regeneratorRuntime.async(function KMSSymmetricKey$(_context17) {
         while (1) {
           switch (_context17.prev = _context17.next) {
             case 0:
@@ -1180,7 +1180,7 @@ function () {
               }
 
               _context17.next = 4;
-              return regeneratorRuntime.awrap(this.KMSAddress({
+              return _regeneratorRuntime.awrap(this.KMSAddress({
                 objectId: objectId
               }));
 
@@ -1188,7 +1188,7 @@ function () {
               kmsAddress = _context17.sent;
               kmsCapId = "eluv.caps.ikms".concat(Utils.AddressToHash(kmsAddress));
               _context17.next = 8;
-              return regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
+              return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: kmsCapId
@@ -1200,12 +1200,12 @@ function () {
               params = [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""];
               packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
               _context17.next = 14;
-              return regeneratorRuntime.awrap(this.Sign(packedHash));
+              return _regeneratorRuntime.awrap(this.Sign(packedHash));
 
             case 14:
               params[5] = _context17.sent;
               _context17.next = 17;
-              return regeneratorRuntime.awrap(this.MakeKMSCall({
+              return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: "elv_getSymmetricKeyAuth",
                 params: params
@@ -1225,7 +1225,7 @@ function () {
     key: "MakeKMSCall",
     value: function MakeKMSCall(_ref19) {
       var objectId, versionHash, methodName, params, KMSUrls, i, stateChannelProvider;
-      return regeneratorRuntime.async(function MakeKMSCall$(_context18) {
+      return _regeneratorRuntime.async(function MakeKMSCall$(_context18) {
         while (1) {
           switch (_context18.prev = _context18.next) {
             case 0:
@@ -1236,7 +1236,7 @@ function () {
               }
 
               _context18.next = 4;
-              return regeneratorRuntime.awrap(this.KMSInfo({
+              return _regeneratorRuntime.awrap(this.KMSInfo({
                 objectId: objectId,
                 versionHash: versionHash
               }));
@@ -1255,7 +1255,7 @@ function () {
               this.Log("Making KMS request:\n          URL: ".concat(KMSUrls[i], "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
               stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
               _context18.next = 12;
-              return regeneratorRuntime.awrap(stateChannelProvider.send(methodName, params));
+              return _regeneratorRuntime.awrap(stateChannelProvider.send(methodName, params));
 
             case 12:
               return _context18.abrupt("return", _context18.sent);
@@ -1288,7 +1288,7 @@ function () {
     key: "ReEncryptionConk",
     value: function ReEncryptionConk(_ref20) {
       var libraryId, objectId, versionHash, cap;
-      return regeneratorRuntime.async(function ReEncryptionConk$(_context19) {
+      return _regeneratorRuntime.async(function ReEncryptionConk$(_context19) {
         while (1) {
           switch (_context19.prev = _context19.next) {
             case 0:
@@ -1304,12 +1304,12 @@ function () {
               }
 
               _context19.next = 5;
-              return regeneratorRuntime.awrap(Crypto.GenerateTargetConk());
+              return _regeneratorRuntime.awrap(Crypto.GenerateTargetConk());
 
             case 5:
               cap = _context19.sent;
               _context19.next = 8;
-              return regeneratorRuntime.awrap(this.KMSSymmetricKey({
+              return _regeneratorRuntime.awrap(this.KMSSymmetricKey({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -1332,7 +1332,7 @@ function () {
     key: "RecordTags",
     value: function RecordTags(_ref21) {
       var accessType, libraryId, objectId, versionHash, owner;
-      return regeneratorRuntime.async(function RecordTags$(_context20) {
+      return _regeneratorRuntime.async(function RecordTags$(_context20) {
         while (1) {
           switch (_context20.prev = _context20.next) {
             case 0:
@@ -1347,7 +1347,7 @@ function () {
 
             case 3:
               _context20.next = 5;
-              return regeneratorRuntime.awrap(this.Owner({
+              return _regeneratorRuntime.awrap(this.Owner({
                 id: objectId,
                 abi: ContentContract.abi
               }));
@@ -1361,7 +1361,7 @@ function () {
               }
 
               _context20.next = 9;
-              return regeneratorRuntime.awrap(this.client.userProfileClient.RecordTags({
+              return _regeneratorRuntime.awrap(this.client.userProfileClient.RecordTags({
                 libraryId: libraryId,
                 objectId: objectId,
                 versionHash: versionHash
@@ -1381,12 +1381,12 @@ function () {
     value: function CreateAccessGroup() {
       var _ref22, contractAddress, transactionHash;
 
-      return regeneratorRuntime.async(function CreateAccessGroup$(_context21) {
+      return _regeneratorRuntime.async(function CreateAccessGroup$(_context21) {
         while (1) {
           switch (_context21.prev = _context21.next) {
             case 0:
               _context21.next = 2;
-              return regeneratorRuntime.awrap(this.client.ethClient.DeployAccessGroupContract({
+              return _regeneratorRuntime.awrap(this.client.ethClient.DeployAccessGroupContract({
                 contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                 signer: this.client.signer
               }));
@@ -1412,12 +1412,12 @@ function () {
     value: function CreateContentType() {
       var _ref23, contractAddress, transactionHash;
 
-      return regeneratorRuntime.async(function CreateContentType$(_context22) {
+      return _regeneratorRuntime.async(function CreateContentType$(_context22) {
         while (1) {
           switch (_context22.prev = _context22.next) {
             case 0:
               _context22.next = 2;
-              return regeneratorRuntime.awrap(this.client.ethClient.DeployTypeContract({
+              return _regeneratorRuntime.awrap(this.client.ethClient.DeployTypeContract({
                 contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                 signer: this.client.signer
               }));
@@ -1443,13 +1443,13 @@ function () {
     value: function CreateContentLibrary(_ref24) {
       var kmsId, _ref25, contractAddress, transactionHash;
 
-      return regeneratorRuntime.async(function CreateContentLibrary$(_context23) {
+      return _regeneratorRuntime.async(function CreateContentLibrary$(_context23) {
         while (1) {
           switch (_context23.prev = _context23.next) {
             case 0:
               kmsId = _ref24.kmsId;
               _context23.next = 3;
-              return regeneratorRuntime.awrap(this.client.ethClient.DeployLibraryContract({
+              return _regeneratorRuntime.awrap(this.client.ethClient.DeployLibraryContract({
                 contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                 kmsId: kmsId,
                 signer: this.client.signer
@@ -1476,13 +1476,13 @@ function () {
     value: function CreateContentObject(_ref26) {
       var libraryId, typeId, _ref27, contractAddress, transactionHash, objectId;
 
-      return regeneratorRuntime.async(function CreateContentObject$(_context24) {
+      return _regeneratorRuntime.async(function CreateContentObject$(_context24) {
         while (1) {
           switch (_context24.prev = _context24.next) {
             case 0:
               libraryId = _ref26.libraryId, typeId = _ref26.typeId;
               _context24.next = 3;
-              return regeneratorRuntime.awrap(this.client.ethClient.DeployContentContract({
+              return _regeneratorRuntime.awrap(this.client.ethClient.DeployContentContract({
                 contentLibraryAddress: Utils.HashToAddress(libraryId),
                 typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
                 signer: this.client.signer
