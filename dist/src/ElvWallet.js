@@ -1,18 +1,18 @@
-"use strict";
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _typeof = require("@babel/runtime/helpers/typeof");
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+var _createClass = require("@babel/runtime/helpers/createClass");
 
 var Ethers = require("ethers");
 
 var ElvWallet =
 /*#__PURE__*/
 function () {
+  "use strict";
+
   /**
    * Create a new ElvWallet connected to the given provider
    *
@@ -76,7 +76,7 @@ function () {
     key: "AddAccountFromEncryptedPK",
     value: function AddAccountFromEncryptedPK(_ref2) {
       var accountName, encryptedPrivateKey, password, signer;
-      return regeneratorRuntime.async(function AddAccountFromEncryptedPK$(_context) {
+      return _regeneratorRuntime.async(function AddAccountFromEncryptedPK$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
@@ -87,7 +87,7 @@ function () {
               }
 
               _context.next = 4;
-              return regeneratorRuntime.awrap(Ethers.Wallet.fromEncryptedJson(encryptedPrivateKey, password));
+              return _regeneratorRuntime.awrap(Ethers.Wallet.fromEncryptedJson(encryptedPrivateKey, password));
 
             case 4:
               signer = _context.sent;
@@ -144,7 +144,7 @@ function () {
     key: "GetAccountBalance",
     value: function GetAccountBalance(_ref4) {
       var accountName, signer, accountSigner;
-      return regeneratorRuntime.async(function GetAccountBalance$(_context2) {
+      return _regeneratorRuntime.async(function GetAccountBalance$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
@@ -163,7 +163,7 @@ function () {
             case 4:
               _context2.t0 = Ethers.utils;
               _context2.next = 7;
-              return regeneratorRuntime.awrap(accountSigner.getBalance());
+              return _regeneratorRuntime.awrap(accountSigner.getBalance());
 
             case 7:
               _context2.t1 = _context2.sent;
@@ -195,7 +195,7 @@ function () {
     key: "GenerateEncryptedPrivateKey",
     value: function GenerateEncryptedPrivateKey(_ref5) {
       var accountName, signer, password, options, accountSigner;
-      return regeneratorRuntime.async(function GenerateEncryptedPrivateKey$(_context3) {
+      return _regeneratorRuntime.async(function GenerateEncryptedPrivateKey$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
@@ -213,7 +213,7 @@ function () {
 
             case 4:
               _context3.next = 6;
-              return regeneratorRuntime.awrap(accountSigner.encrypt(password, options));
+              return _regeneratorRuntime.awrap(accountSigner.encrypt(password, options));
 
             case 6:
               return _context3.abrupt("return", _context3.sent);

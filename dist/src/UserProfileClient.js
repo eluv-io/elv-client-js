@@ -1,12 +1,10 @@
-"use strict";
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _typeof = require("@babel/runtime/helpers/typeof");
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+var _createClass = require("@babel/runtime/helpers/createClass");
 
 var Utils = require("./Utils");
 
@@ -20,6 +18,8 @@ var SpaceContract = require("./contracts/BaseContentSpace");
 var UserProfileClient =
 /*#__PURE__*/
 function () {
+  "use strict";
+
   _createClass(UserProfileClient, [{
     key: "Log",
     value: function Log(message) {
@@ -96,7 +96,7 @@ function () {
     key: "CreateWallet",
     value: function CreateWallet() {
       var balance, walletCreationEvent, libraryId, objectId, createResponse;
-      return regeneratorRuntime.async(function CreateWallet$(_context) {
+      return _regeneratorRuntime.async(function CreateWallet$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
@@ -112,7 +112,7 @@ function () {
               }
 
               _context.next = 4;
-              return regeneratorRuntime.awrap(new Promise(function (resolve) {
+              return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                 return setTimeout(resolve, 500);
               }));
 
@@ -132,7 +132,7 @@ function () {
               this.Log("Creating user wallet for user ".concat(this.client.signer.address)); // Don't attempt to create a user wallet if user has no funds
 
               _context.next = 12;
-              return regeneratorRuntime.awrap(this.client.GetBalance({
+              return _regeneratorRuntime.awrap(this.client.GetBalance({
                 address: this.client.signer.address
               }));
 
@@ -148,7 +148,7 @@ function () {
 
             case 15:
               _context.next = 17;
-              return regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                 abi: SpaceContract.abi,
                 methodName: "createAccessWallet",
@@ -171,7 +171,7 @@ function () {
               objectId = Utils.AddressToObjectId(this.walletAddress);
               _context.prev = 22;
               _context.next = 25;
-              return regeneratorRuntime.awrap(this.client.ContentObject({
+              return _regeneratorRuntime.awrap(this.client.ContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -191,7 +191,7 @@ function () {
 
               this.Log("Creating wallet object for user ".concat(this.client.signer.address));
               _context.next = 33;
-              return regeneratorRuntime.awrap(this.client.CreateContentObject({
+              return _regeneratorRuntime.awrap(this.client.CreateContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -199,7 +199,7 @@ function () {
             case 33:
               createResponse = _context.sent;
               _context.next = 36;
-              return regeneratorRuntime.awrap(this.client.ReplaceMetadata({
+              return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: createResponse.write_token,
@@ -211,7 +211,7 @@ function () {
 
             case 36:
               _context.next = 38;
-              return regeneratorRuntime.awrap(this.client.FinalizeContentObject({
+              return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: createResponse.write_token
@@ -251,7 +251,7 @@ function () {
     key: "WalletAddress",
     value: function WalletAddress() {
       var walletAddress;
-      return regeneratorRuntime.async(function WalletAddress$(_context2) {
+      return _regeneratorRuntime.async(function WalletAddress$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
@@ -264,7 +264,7 @@ function () {
 
             case 2:
               _context2.next = 4;
-              return regeneratorRuntime.awrap(this.client.CallContractMethod({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 abi: SpaceContract.abi,
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                 methodName: "userWallets",
@@ -284,7 +284,7 @@ function () {
               }
 
               _context2.next = 9;
-              return regeneratorRuntime.awrap(this.CreateWallet());
+              return _regeneratorRuntime.awrap(this.CreateWallet());
 
             case 9:
               return _context2.abrupt("return", this.walletAddress);
@@ -309,7 +309,7 @@ function () {
     key: "UserWalletAddress",
     value: function UserWalletAddress(_ref2) {
       var address, walletAddress;
-      return regeneratorRuntime.async(function UserWalletAddress$(_context3) {
+      return _regeneratorRuntime.async(function UserWalletAddress$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
@@ -321,7 +321,7 @@ function () {
               }
 
               _context3.next = 4;
-              return regeneratorRuntime.awrap(this.WalletAddress());
+              return _regeneratorRuntime.awrap(this.WalletAddress());
 
             case 4:
               return _context3.abrupt("return", _context3.sent);
@@ -334,7 +334,7 @@ function () {
 
               this.Log("Retrieving user wallet address for user ".concat(address));
               _context3.next = 9;
-              return regeneratorRuntime.awrap(this.client.CallContractMethod({
+              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 abi: SpaceContract.abi,
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                 methodName: "userWallets",
@@ -385,13 +385,13 @@ function () {
     value: function PublicUserMetadata(_ref3) {
       var address, _ref3$metadataSubtree, metadataSubtree, _ref3$resolveLinks, resolveLinks, _ref3$resolveIncludeS, resolveIncludeSource, walletAddress, libraryId, objectId;
 
-      return regeneratorRuntime.async(function PublicUserMetadata$(_context4) {
+      return _regeneratorRuntime.async(function PublicUserMetadata$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
               address = _ref3.address, _ref3$metadataSubtree = _ref3.metadataSubtree, metadataSubtree = _ref3$metadataSubtree === void 0 ? "/" : _ref3$metadataSubtree, _ref3$resolveLinks = _ref3.resolveLinks, resolveLinks = _ref3$resolveLinks === void 0 ? false : _ref3$resolveLinks, _ref3$resolveIncludeS = _ref3.resolveIncludeSource, resolveIncludeSource = _ref3$resolveIncludeS === void 0 ? false : _ref3$resolveIncludeS;
               _context4.next = 3;
-              return regeneratorRuntime.awrap(this.UserWalletAddress({
+              return _regeneratorRuntime.awrap(this.UserWalletAddress({
                 address: address
               }));
 
@@ -410,7 +410,7 @@ function () {
               libraryId = this.client.contentSpaceLibraryId;
               objectId = Utils.AddressToObjectId(walletAddress);
               _context4.next = 11;
-              return regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
+              return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: metadataSubtree,
@@ -466,7 +466,7 @@ function () {
           objectId,
           _args5 = arguments;
 
-      return regeneratorRuntime.async(function UserMetadata$(_context5) {
+      return _regeneratorRuntime.async(function UserMetadata$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
@@ -475,13 +475,13 @@ function () {
               libraryId = this.client.contentSpaceLibraryId;
               _context5.t0 = Utils;
               _context5.next = 6;
-              return regeneratorRuntime.awrap(this.WalletAddress());
+              return _regeneratorRuntime.awrap(this.WalletAddress());
 
             case 6:
               _context5.t1 = _context5.sent;
               objectId = _context5.t0.AddressToObjectId.call(_context5.t0, _context5.t1);
               _context5.next = 10;
-              return regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
+              return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: metadataSubtree,
@@ -512,7 +512,7 @@ function () {
     value: function MergeUserMetadata(_ref5) {
       var _ref5$metadataSubtree, metadataSubtree, _ref5$metadata, metadata, libraryId, objectId, editRequest;
 
-      return regeneratorRuntime.async(function MergeUserMetadata$(_context6) {
+      return _regeneratorRuntime.async(function MergeUserMetadata$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
@@ -521,13 +521,13 @@ function () {
               libraryId = this.client.contentSpaceLibraryId;
               _context6.t0 = Utils;
               _context6.next = 6;
-              return regeneratorRuntime.awrap(this.WalletAddress());
+              return _regeneratorRuntime.awrap(this.WalletAddress());
 
             case 6:
               _context6.t1 = _context6.sent;
               objectId = _context6.t0.AddressToObjectId.call(_context6.t0, _context6.t1);
               _context6.next = 10;
-              return regeneratorRuntime.awrap(this.client.EditContentObject({
+              return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -535,7 +535,7 @@ function () {
             case 10:
               editRequest = _context6.sent;
               _context6.next = 13;
-              return regeneratorRuntime.awrap(this.client.MergeMetadata({
+              return _regeneratorRuntime.awrap(this.client.MergeMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
@@ -545,7 +545,7 @@ function () {
 
             case 13:
               _context6.next = 15;
-              return regeneratorRuntime.awrap(this.client.FinalizeContentObject({
+              return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token
@@ -571,7 +571,7 @@ function () {
     value: function ReplaceUserMetadata(_ref6) {
       var _ref6$metadataSubtree, metadataSubtree, _ref6$metadata, metadata, libraryId, objectId, editRequest;
 
-      return regeneratorRuntime.async(function ReplaceUserMetadata$(_context7) {
+      return _regeneratorRuntime.async(function ReplaceUserMetadata$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
@@ -580,13 +580,13 @@ function () {
               libraryId = this.client.contentSpaceLibraryId;
               _context7.t0 = Utils;
               _context7.next = 6;
-              return regeneratorRuntime.awrap(this.WalletAddress());
+              return _regeneratorRuntime.awrap(this.WalletAddress());
 
             case 6:
               _context7.t1 = _context7.sent;
               objectId = _context7.t0.AddressToObjectId.call(_context7.t0, _context7.t1);
               _context7.next = 10;
-              return regeneratorRuntime.awrap(this.client.EditContentObject({
+              return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -594,7 +594,7 @@ function () {
             case 10:
               editRequest = _context7.sent;
               _context7.next = 13;
-              return regeneratorRuntime.awrap(this.client.ReplaceMetadata({
+              return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
@@ -604,7 +604,7 @@ function () {
 
             case 13:
               _context7.next = 15;
-              return regeneratorRuntime.awrap(this.client.FinalizeContentObject({
+              return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token
@@ -629,7 +629,7 @@ function () {
     value: function DeleteUserMetadata(_ref7) {
       var _ref7$metadataSubtree, metadataSubtree, libraryId, objectId, editRequest;
 
-      return regeneratorRuntime.async(function DeleteUserMetadata$(_context8) {
+      return _regeneratorRuntime.async(function DeleteUserMetadata$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
@@ -638,13 +638,13 @@ function () {
               libraryId = this.client.contentSpaceLibraryId;
               _context8.t0 = Utils;
               _context8.next = 6;
-              return regeneratorRuntime.awrap(this.WalletAddress());
+              return _regeneratorRuntime.awrap(this.WalletAddress());
 
             case 6:
               _context8.t1 = _context8.sent;
               objectId = _context8.t0.AddressToObjectId.call(_context8.t0, _context8.t1);
               _context8.next = 10;
-              return regeneratorRuntime.awrap(this.client.EditContentObject({
+              return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -652,7 +652,7 @@ function () {
             case 10:
               editRequest = _context8.sent;
               _context8.next = 13;
-              return regeneratorRuntime.awrap(this.client.DeleteMetadata({
+              return _regeneratorRuntime.awrap(this.client.DeleteMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
@@ -661,7 +661,7 @@ function () {
 
             case 13:
               _context8.next = 15;
-              return regeneratorRuntime.awrap(this.client.FinalizeContentObject({
+              return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token
@@ -687,12 +687,12 @@ function () {
   }, {
     key: "AccessLevel",
     value: function AccessLevel() {
-      return regeneratorRuntime.async(function AccessLevel$(_context9) {
+      return _regeneratorRuntime.async(function AccessLevel$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
               _context9.next = 2;
-              return regeneratorRuntime.awrap(this.UserMetadata({
+              return _regeneratorRuntime.awrap(this.UserMetadata({
                 metadataSubtree: "access_level"
               }));
 
@@ -729,7 +729,7 @@ function () {
     key: "SetAccessLevel",
     value: function SetAccessLevel(_ref8) {
       var level;
-      return regeneratorRuntime.async(function SetAccessLevel$(_context10) {
+      return _regeneratorRuntime.async(function SetAccessLevel$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
@@ -745,7 +745,7 @@ function () {
 
             case 4:
               _context10.next = 6;
-              return regeneratorRuntime.awrap(this.ReplaceUserMetadata({
+              return _regeneratorRuntime.awrap(this.ReplaceUserMetadata({
                 metadataSubtree: "access_level",
                 metadata: level
               }));
@@ -780,7 +780,7 @@ function () {
           objectId,
           _args11 = arguments;
 
-      return regeneratorRuntime.async(function UserProfileImage$(_context11) {
+      return _regeneratorRuntime.async(function UserProfileImage$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
@@ -792,7 +792,7 @@ function () {
               }
 
               _context11.next = 4;
-              return regeneratorRuntime.awrap(this.UserWalletAddress({
+              return _regeneratorRuntime.awrap(this.UserWalletAddress({
                 address: address
               }));
 
@@ -815,7 +815,7 @@ function () {
 
             case 11:
               _context11.next = 13;
-              return regeneratorRuntime.awrap(this.PublicUserMetadata({
+              return _regeneratorRuntime.awrap(this.PublicUserMetadata({
                 address: address,
                 metadataSubtree: "image"
               }));
@@ -834,7 +834,7 @@ function () {
               libraryId = this.client.contentSpaceLibraryId;
               objectId = Utils.AddressToObjectId(walletAddress);
               _context11.next = 20;
-              return regeneratorRuntime.awrap(this.client.PublicRep({
+              return _regeneratorRuntime.awrap(this.client.PublicRep({
                 libraryId: libraryId,
                 objectId: objectId,
                 rep: "image",
@@ -866,7 +866,7 @@ function () {
     key: "SetUserProfileImage",
     value: function SetUserProfileImage(_ref10) {
       var image, libraryId, objectId, editRequest, uploadResponse;
-      return regeneratorRuntime.async(function SetUserProfileImage$(_context12) {
+      return _regeneratorRuntime.async(function SetUserProfileImage$(_context12) {
         while (1) {
           switch (_context12.prev = _context12.next) {
             case 0:
@@ -875,13 +875,13 @@ function () {
               libraryId = this.client.contentSpaceLibraryId;
               _context12.t0 = Utils;
               _context12.next = 6;
-              return regeneratorRuntime.awrap(this.WalletAddress());
+              return _regeneratorRuntime.awrap(this.WalletAddress());
 
             case 6:
               _context12.t1 = _context12.sent;
               objectId = _context12.t0.AddressToObjectId.call(_context12.t0, _context12.t1);
               _context12.next = 10;
-              return regeneratorRuntime.awrap(this.client.EditContentObject({
+              return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -889,7 +889,7 @@ function () {
             case 10:
               editRequest = _context12.sent;
               _context12.next = 13;
-              return regeneratorRuntime.awrap(this.client.UploadPart({
+              return _regeneratorRuntime.awrap(this.client.UploadPart({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
@@ -899,7 +899,7 @@ function () {
             case 13:
               uploadResponse = _context12.sent;
               _context12.next = 16;
-              return regeneratorRuntime.awrap(this.client.MergeMetadata({
+              return _regeneratorRuntime.awrap(this.client.MergeMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
@@ -910,7 +910,7 @@ function () {
 
             case 16:
               _context12.next = 18;
-              return regeneratorRuntime.awrap(this.client.MergeMetadata({
+              return _regeneratorRuntime.awrap(this.client.MergeMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
@@ -922,7 +922,7 @@ function () {
 
             case 18:
               _context12.next = 20;
-              return regeneratorRuntime.awrap(this.client.FinalizeContentObject({
+              return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token
@@ -948,12 +948,12 @@ function () {
   }, {
     key: "CollectedTags",
     value: function CollectedTags() {
-      return regeneratorRuntime.async(function CollectedTags$(_context13) {
+      return _regeneratorRuntime.async(function CollectedTags$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
             case 0:
               _context13.next = 2;
-              return regeneratorRuntime.awrap(this.UserMetadata({
+              return _regeneratorRuntime.awrap(this.UserMetadata({
                 metadataSubtree: "collected_data"
               }));
 
@@ -982,14 +982,14 @@ function () {
     key: "RecordTags",
     value: function RecordTags(_ref11) {
       var libraryId, objectId, versionHash;
-      return regeneratorRuntime.async(function RecordTags$(_context14) {
+      return _regeneratorRuntime.async(function RecordTags$(_context14) {
         while (1) {
           switch (_context14.prev = _context14.next) {
             case 0:
               libraryId = _ref11.libraryId, objectId = _ref11.objectId, versionHash = _ref11.versionHash;
               _context14.prev = 1;
               _context14.next = 4;
-              return regeneratorRuntime.awrap(this.__RecordTags({
+              return _regeneratorRuntime.awrap(this.__RecordTags({
                 libraryId: libraryId,
                 objectId: objectId,
                 versionHash: versionHash
@@ -1016,13 +1016,13 @@ function () {
     key: "__RecordTags",
     value: function __RecordTags(_ref12) {
       var libraryId, objectId, versionHash, accessType, seen, userLibraryId, userObjectId, editRequest, contentTags, userTags, formattedTags;
-      return regeneratorRuntime.async(function __RecordTags$(_context15) {
+      return _regeneratorRuntime.async(function __RecordTags$(_context15) {
         while (1) {
           switch (_context15.prev = _context15.next) {
             case 0:
               libraryId = _ref12.libraryId, objectId = _ref12.objectId, versionHash = _ref12.versionHash;
               _context15.next = 3;
-              return regeneratorRuntime.awrap(this.client.AccessType({
+              return _regeneratorRuntime.awrap(this.client.AccessType({
                 id: objectId
               }));
 
@@ -1043,7 +1043,7 @@ function () {
               }
 
               _context15.next = 9;
-              return regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
+              return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
@@ -1057,7 +1057,7 @@ function () {
               }
 
               _context15.next = 13;
-              return regeneratorRuntime.awrap(this.client.ContentObject({
+              return _regeneratorRuntime.awrap(this.client.ContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
@@ -1067,7 +1067,7 @@ function () {
 
             case 14:
               _context15.next = 16;
-              return regeneratorRuntime.awrap(this.UserMetadata({
+              return _regeneratorRuntime.awrap(this.UserMetadata({
                 metadataSubtree: UrlJoin("accessed_content", versionHash)
               }));
 
@@ -1085,13 +1085,13 @@ function () {
               userLibraryId = this.client.contentSpaceLibraryId;
               _context15.t0 = Utils;
               _context15.next = 23;
-              return regeneratorRuntime.awrap(this.WalletAddress());
+              return _regeneratorRuntime.awrap(this.WalletAddress());
 
             case 23:
               _context15.t1 = _context15.sent;
               userObjectId = _context15.t0.AddressToObjectId.call(_context15.t0, _context15.t1);
               _context15.next = 27;
-              return regeneratorRuntime.awrap(this.client.EditContentObject({
+              return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: userLibraryId,
                 objectId: userObjectId
               }));
@@ -1099,7 +1099,7 @@ function () {
             case 27:
               editRequest = _context15.sent;
               _context15.next = 30;
-              return regeneratorRuntime.awrap(this.client.ReplaceMetadata({
+              return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: userLibraryId,
                 objectId: userObjectId,
                 writeToken: editRequest.write_token,
@@ -1109,7 +1109,7 @@ function () {
 
             case 30:
               _context15.next = 32;
-              return regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
+              return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 versionHash: versionHash,
@@ -1125,7 +1125,7 @@ function () {
               }
 
               _context15.next = 36;
-              return regeneratorRuntime.awrap(this.CollectedTags());
+              return _regeneratorRuntime.awrap(this.CollectedTags());
 
             case 36:
               userTags = _context15.sent;
@@ -1145,7 +1145,7 @@ function () {
               }); // Update user tags
 
               _context15.next = 41;
-              return regeneratorRuntime.awrap(this.client.ReplaceMetadata({
+              return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: userLibraryId,
                 objectId: userObjectId,
                 writeToken: editRequest.write_token,
@@ -1155,7 +1155,7 @@ function () {
 
             case 41:
               _context15.next = 43;
-              return regeneratorRuntime.awrap(this.client.FinalizeContentObject({
+              return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: userLibraryId,
                 objectId: userObjectId,
                 writeToken: editRequest.write_token,

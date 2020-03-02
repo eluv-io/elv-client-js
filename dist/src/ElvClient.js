@@ -1,20 +1,16 @@
-"use strict";
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
+
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
+
+var _typeof = require("@babel/runtime/helpers/typeof");
+
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
+
+var _createClass = require("@babel/runtime/helpers/createClass");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-require("@babel/polyfill");
 
 if (typeof Buffer === "undefined") {
   Buffer = require("buffer/").Buffer;
@@ -57,9 +53,20 @@ var _require = require("./Validation"),
     ValidatePartHash = _require.ValidatePartHash,
     ValidateParameters = _require.ValidateParameters;
 
+if (Utils.Platform() === Utils.PLATFORM_NODE) {
+  // Define Response in node
+  // eslint-disable-next-line no-global-assign
+  global.Response = require("node-fetch").Response;
+} else if (Utils.Platform() === Utils.PLATFORM_REACT_NATIVE) {
+  // React native polyfill
+  require("unorm");
+}
+
 var ElvClient =
 /*#__PURE__*/
 function () {
+  "use strict";
+
   _createClass(ElvClient, [{
     key: "Log",
     value: function Log(message) {
@@ -206,7 +213,7 @@ function () {
     value: function UseRegion(_ref2) {
       var region, _ref3, fabricURIs, ethereumURIs;
 
-      return regeneratorRuntime.async(function UseRegion$(_context) {
+      return _regeneratorRuntime.async(function UseRegion$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
@@ -221,7 +228,7 @@ function () {
 
             case 3:
               _context.next = 5;
-              return regeneratorRuntime.awrap(ElvClient.Configuration({
+              return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: this.configUrl,
                 region: region
               }));
@@ -261,7 +268,7 @@ function () {
   }, {
     key: "ResetRegion",
     value: function ResetRegion() {
-      return regeneratorRuntime.async(function ResetRegion$(_context2) {
+      return _regeneratorRuntime.async(function ResetRegion$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
@@ -274,7 +281,7 @@ function () {
 
             case 2:
               _context2.next = 4;
-              return regeneratorRuntime.awrap(this.UseRegion({
+              return _regeneratorRuntime.awrap(this.UseRegion({
                 region: ""
               }));
 
@@ -306,13 +313,13 @@ function () {
     value: function NodeId(_ref4) {
       var region, _ref5, nodeId;
 
-      return regeneratorRuntime.async(function NodeId$(_context3) {
+      return _regeneratorRuntime.async(function NodeId$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
               region = _ref4.region;
               _context3.next = 3;
-              return regeneratorRuntime.awrap(ElvClient.Configuration({
+              return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: this.configUrl,
                 region: region
               }));
@@ -442,7 +449,7 @@ function () {
     key: "SetSignerFromWeb3Provider",
     value: function SetSignerFromWeb3Provider(_ref8) {
       var provider, ethProvider;
-      return regeneratorRuntime.async(function SetSignerFromWeb3Provider$(_context4) {
+      return _regeneratorRuntime.async(function SetSignerFromWeb3Provider$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
@@ -451,12 +458,12 @@ function () {
               ethProvider.pollingInterval = 250;
               this.signer = ethProvider.getSigner();
               _context4.next = 6;
-              return regeneratorRuntime.awrap(this.signer.getAddress());
+              return _regeneratorRuntime.awrap(this.signer.getAddress());
 
             case 6:
               this.signer.address = _context4.sent;
               _context4.next = 9;
-              return regeneratorRuntime.awrap(this.InitializeClients());
+              return _regeneratorRuntime.awrap(this.InitializeClients());
 
             case 9:
             case "end":
@@ -3214,7 +3221,7 @@ function () {
               }
 
               _context42.next = 20;
-              return regeneratorRuntime.awrap(Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
+              return _regeneratorRuntime.awrap(Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
             case 20:
               if (!status.error) {
@@ -3224,7 +3231,7 @@ function () {
 
             case 23:
               _context42.next = 25;
-              return regeneratorRuntime.awrap(Crypto.GeneratePrimaryConk());
+              return _regeneratorRuntime.awrap(Crypto.GeneratePrimaryConk());
 
             case 25:
               if (!(status.status.toLowerCase() === "failed")) {
@@ -3234,20 +3241,20 @@ function () {
 
               metadata = {};
               _context42.next = 30;
-              return regeneratorRuntime.awrap(Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
+              return _regeneratorRuntime.awrap(Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
 
             case 30:
               metadata[capKey] = _context42.sent;
               _context42.prev = 31;
               _context42.next = 34;
-              return regeneratorRuntime.awrap(this.authClient.KMSAddress({
+              return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
                 objectId: objectId
               }));
 
             case 34:
               kmsAddress = _context42.sent;
               _context42.next = 37;
-              return regeneratorRuntime.awrap(this.authClient.KMSInfo({
+              return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
                 objectId: objectId
               }));
 
@@ -3255,7 +3262,7 @@ function () {
               _kmsPublicKey = _context42.sent.publicKey;
               kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
               _context42.next = 41;
-              return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+              return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 libraryId: libraryId,
                 // Cap may only exist in draft
                 objectId: objectId,
@@ -3285,7 +3292,7 @@ function () {
 
             case 51:
               _context42.next = 53;
-              return regeneratorRuntime.awrap(this.MergeMetadata({
+              return _regeneratorRuntime.awrap(this.MergeMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: writeToken,
@@ -8548,7 +8555,7 @@ function () {
                 versionHash: versionHash
               });
               _context50.next = 17;
-              return regeneratorRuntime.awrap(this.authClient.ChannelContentFinalize({
+              return _regeneratorRuntime.awrap(this.authClient.ChannelContentFinalize({
                 objectId: objectId,
                 audienceData: audienceData,
                 percent: percentComplete
@@ -8751,7 +8758,7 @@ function () {
      */
 
               _context53.next = 11;
-              return regeneratorRuntime.awrap(this.LinkTarget({
+              return _regeneratorRuntime.awrap(this.LinkTarget({
                 libraryId: libraryId,
                 objectId: objectId,
                 versionHash: versionHash,
@@ -8762,7 +8769,7 @@ function () {
               linkTargetHash = _context53.sent;
               linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
               _context53.next = 15;
-              return regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+              return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: linkTargetId
               }));
 
@@ -8981,7 +8988,7 @@ function () {
               }
 
               _context54.next = 5;
-              return regeneratorRuntime.awrap(this.PlayoutOptions({
+              return _regeneratorRuntime.awrap(this.PlayoutOptions({
                 objectId: objectId,
                 versionHash: versionHash,
                 linkPath: linkPath,
@@ -9140,7 +9147,7 @@ function () {
               }
 
               _context55.next = 11;
-              return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+              return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
                 libraryId: libraryId,
                 objectId: objectId,
                 update: !constant
@@ -9521,9 +9528,9 @@ function () {
             case 28:
               info = {};
               _context61.next = 31;
-              return regeneratorRuntime.awrap(Promise.all(cycles.map(function _callee5(cycleHash) {
+              return _regeneratorRuntime.awrap(Promise.all(cycles.map(function _callee5(cycleHash) {
                 var cycleId, name;
-                return regeneratorRuntime.async(function _callee5$(_context60) {
+                return _regeneratorRuntime.async(function _callee5$(_context60) {
                   while (1) {
                     switch (_context60.prev = _context60.next) {
                       case 0:
@@ -9537,7 +9544,7 @@ function () {
                       case 2:
                         cycleId = _this5.utils.DecodeVersionHash(cycleHash).objectId;
                         _context60.next = 5;
-                        return regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
+                        return _regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
                           versionHash: cycleHash,
                           metadataSubtree: "public/asset_metadata/display_title"
                         }));
@@ -9551,7 +9558,7 @@ function () {
                         }
 
                         _context60.next = 9;
-                        return regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
+                        return _regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
                           versionHash: cycleHash,
                           metadataSubtree: "public/name"
                         }));
@@ -9568,7 +9575,7 @@ function () {
                         }
 
                         _context60.next = 14;
-                        return regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
+                        return _regeneratorRuntime.awrap(_this5.ContentObjectMetadata({
                           versionHash: cycleHash,
                           metadataSubtree: "name"
                         }));
@@ -10054,7 +10061,7 @@ function () {
               _context67.t1 = {};
               _context67.t2 = queryParams;
               _context67.next = 11;
-              return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+              return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
                 libraryId: libraryId,
                 objectId: objectId,
                 noCache: noCache,
@@ -10239,7 +10246,7 @@ function () {
             case 14:
               this.Log("Retrieving ".concat(collectionType, " contract collection for user ").concat(this.signer.address));
               _context69.next = 17;
-              return regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
+              return _regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
                 methodName: "send",
                 args: ["elv_getWalletCollection", [this.contentSpaceId, "iusr".concat(this.utils.AddressToHash(this.signer.address)), collectionType]]
               }));

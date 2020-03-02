@@ -1,18 +1,12 @@
-"use strict";
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
+
+var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
+
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
 
 /**
  * Methods for accessing and managing access groups
@@ -46,7 +40,7 @@ exports.manage = {};
 
 exports.access.AccessGroupOwner = function _callee(_ref) {
   var contractAddress;
-  return regeneratorRuntime.async(function _callee$(_context) {
+  return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
@@ -55,7 +49,7 @@ exports.access.AccessGroupOwner = function _callee(_ref) {
           this.Log("Retrieving owner of access group ".concat(contractAddress));
           _context.t0 = this.utils;
           _context.next = 6;
-          return regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
+          return _regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
             contractAddress: contractAddress,
             abi: AccessGroupContract.abi,
             methodName: "owner",
@@ -90,7 +84,7 @@ exports.access.AccessGroupMembers = function _callee3(_ref2) {
   var _this = this;
 
   var contractAddress, length;
-  return regeneratorRuntime.async(function _callee3$(_context3) {
+  return _regeneratorRuntime.async(function _callee3$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
@@ -98,7 +92,7 @@ exports.access.AccessGroupMembers = function _callee3(_ref2) {
           ValidateAddress(contractAddress);
           this.Log("Retrieving members for group ".concat(contractAddress));
           _context3.next = 5;
-          return regeneratorRuntime.awrap(this.CallContractMethod({
+          return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: contractAddress,
             abi: AccessGroupContract.abi,
             methodName: "membersNum"
@@ -107,14 +101,14 @@ exports.access.AccessGroupMembers = function _callee3(_ref2) {
         case 5:
           length = _context3.sent.toNumber();
           _context3.next = 8;
-          return regeneratorRuntime.awrap(Promise.all(_toConsumableArray(Array(length)).map(function _callee2(_, i) {
-            return regeneratorRuntime.async(function _callee2$(_context2) {
+          return _regeneratorRuntime.awrap(Promise.all(_toConsumableArray(Array(length)).map(function _callee2(_, i) {
+            return _regeneratorRuntime.async(function _callee2$(_context2) {
               while (1) {
                 switch (_context2.prev = _context2.next) {
                   case 0:
                     _context2.t0 = _this.utils;
                     _context2.next = 3;
-                    return regeneratorRuntime.awrap(_this.CallContractMethod({
+                    return _regeneratorRuntime.awrap(_this.CallContractMethod({
                       contractAddress: contractAddress,
                       abi: AccessGroupContract.abi,
                       methodName: "membersList",
@@ -159,7 +153,7 @@ exports.access.AccessGroupManagers = function _callee5(_ref3) {
   var _this2 = this;
 
   var contractAddress, length;
-  return regeneratorRuntime.async(function _callee5$(_context5) {
+  return _regeneratorRuntime.async(function _callee5$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
@@ -167,7 +161,7 @@ exports.access.AccessGroupManagers = function _callee5(_ref3) {
           ValidateAddress(contractAddress);
           this.Log("Retrieving managers for group ".concat(contractAddress));
           _context5.next = 5;
-          return regeneratorRuntime.awrap(this.CallContractMethod({
+          return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: contractAddress,
             abi: AccessGroupContract.abi,
             methodName: "managersNum"
@@ -176,14 +170,14 @@ exports.access.AccessGroupManagers = function _callee5(_ref3) {
         case 5:
           length = _context5.sent.toNumber();
           _context5.next = 8;
-          return regeneratorRuntime.awrap(Promise.all(_toConsumableArray(Array(length)).map(function _callee4(_, i) {
-            return regeneratorRuntime.async(function _callee4$(_context4) {
+          return _regeneratorRuntime.awrap(Promise.all(_toConsumableArray(Array(length)).map(function _callee4(_, i) {
+            return _regeneratorRuntime.async(function _callee4$(_context4) {
               while (1) {
                 switch (_context4.prev = _context4.next) {
                   case 0:
                     _context4.t0 = _this2.utils;
                     _context4.next = 3;
-                    return regeneratorRuntime.awrap(_this2.CallContractMethod({
+                    return _regeneratorRuntime.awrap(_this2.CallContractMethod({
                       contractAddress: contractAddress,
                       abi: AccessGroupContract.abi,
                       methodName: "managersList",
@@ -240,14 +234,14 @@ exports.manage.CreateAccessGroup = function _callee6() {
       editResponse,
       _args6 = arguments;
 
-  return regeneratorRuntime.async(function _callee6$(_context6) {
+  return _regeneratorRuntime.async(function _callee6$(_context6) {
     while (1) {
       switch (_context6.prev = _context6.next) {
         case 0:
           _ref4 = _args6.length > 0 && _args6[0] !== undefined ? _args6[0] : {}, name = _ref4.name, description = _ref4.description, _ref4$metadata = _ref4.metadata, metadata = _ref4$metadata === void 0 ? {} : _ref4$metadata;
           this.Log("Creating access group: ".concat(name || "", " ").concat(description || ""));
           _context6.next = 4;
-          return regeneratorRuntime.awrap(this.authClient.CreateAccessGroup());
+          return _regeneratorRuntime.awrap(this.authClient.CreateAccessGroup());
 
         case 4:
           _ref5 = _context6.sent;
@@ -256,7 +250,7 @@ exports.manage.CreateAccessGroup = function _callee6() {
           objectId = this.utils.AddressToObjectId(contractAddress);
           this.Log("Access group: ".concat(contractAddress, " ").concat(objectId));
           _context6.next = 11;
-          return regeneratorRuntime.awrap(this.EditContentObject({
+          return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId
           }));
@@ -264,7 +258,7 @@ exports.manage.CreateAccessGroup = function _callee6() {
         case 11:
           editResponse = _context6.sent;
           _context6.next = 14;
-          return regeneratorRuntime.awrap(this.ReplaceMetadata({
+          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
             writeToken: editResponse.write_token,
@@ -280,7 +274,7 @@ exports.manage.CreateAccessGroup = function _callee6() {
 
         case 14:
           _context6.next = 16;
-          return regeneratorRuntime.awrap(this.FinalizeContentObject({
+          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
             writeToken: editResponse.write_token
@@ -310,7 +304,7 @@ exports.manage.CreateAccessGroup = function _callee6() {
 
 exports.manage.DeleteAccessGroup = function _callee7(_ref6) {
   var contractAddress;
-  return regeneratorRuntime.async(function _callee7$(_context7) {
+  return _regeneratorRuntime.async(function _callee7$(_context7) {
     while (1) {
       switch (_context7.prev = _context7.next) {
         case 0:
@@ -318,7 +312,7 @@ exports.manage.DeleteAccessGroup = function _callee7(_ref6) {
           ValidateAddress(contractAddress);
           this.Log("Deleting access group ".concat(contractAddress));
           _context7.next = 5;
-          return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: contractAddress,
             abi: AccessGroupContract.abi,
             methodName: "kill",
@@ -335,7 +329,7 @@ exports.manage.DeleteAccessGroup = function _callee7(_ref6) {
 
 exports.manage.AccessGroupMembershipMethod = function _callee8(_ref7) {
   var contractAddress, memberAddress, methodName, eventName, isManager, event, candidate;
-  return regeneratorRuntime.async(function _callee8$(_context8) {
+  return _regeneratorRuntime.async(function _callee8$(_context8) {
     while (1) {
       switch (_context8.prev = _context8.next) {
         case 0:
@@ -349,7 +343,7 @@ exports.manage.AccessGroupMembershipMethod = function _callee8(_ref7) {
           }
 
           _context8.next = 6;
-          return regeneratorRuntime.awrap(this.CallContractMethod({
+          return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: contractAddress,
             abi: AccessGroupContract.abi,
             methodName: "hasManagerAccess",
@@ -369,7 +363,7 @@ exports.manage.AccessGroupMembershipMethod = function _callee8(_ref7) {
         case 9:
           this.Log("Calling ".concat(methodName, " on group ").concat(contractAddress, " for user ").concat(memberAddress));
           _context8.next = 12;
-          return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: contractAddress,
             abi: AccessGroupContract.abi,
             methodName: methodName,
@@ -422,7 +416,7 @@ exports.manage.AccessGroupMembershipMethod = function _callee8(_ref7) {
 
 exports.manage.AddAccessGroupMember = function _callee9(_ref8) {
   var contractAddress, memberAddress;
-  return regeneratorRuntime.async(function _callee9$(_context9) {
+  return _regeneratorRuntime.async(function _callee9$(_context9) {
     while (1) {
       switch (_context9.prev = _context9.next) {
         case 0:
@@ -430,7 +424,7 @@ exports.manage.AddAccessGroupMember = function _callee9(_ref8) {
           ValidateAddress(contractAddress);
           ValidateAddress(memberAddress);
           _context9.next = 5;
-          return regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
+          return _regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
             contractAddress: contractAddress,
             memberAddress: memberAddress,
             methodName: "grantAccess",
@@ -463,7 +457,7 @@ exports.manage.AddAccessGroupMember = function _callee9(_ref8) {
 
 exports.manage.RemoveAccessGroupMember = function _callee10(_ref9) {
   var contractAddress, memberAddress;
-  return regeneratorRuntime.async(function _callee10$(_context10) {
+  return _regeneratorRuntime.async(function _callee10$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
         case 0:
@@ -471,7 +465,7 @@ exports.manage.RemoveAccessGroupMember = function _callee10(_ref9) {
           ValidateAddress(contractAddress);
           ValidateAddress(memberAddress);
           _context10.next = 5;
-          return regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
+          return _regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
             contractAddress: contractAddress,
             memberAddress: memberAddress,
             methodName: "revokeAccess",
@@ -504,7 +498,7 @@ exports.manage.RemoveAccessGroupMember = function _callee10(_ref9) {
 
 exports.manage.AddAccessGroupManager = function _callee11(_ref10) {
   var contractAddress, memberAddress;
-  return regeneratorRuntime.async(function _callee11$(_context11) {
+  return _regeneratorRuntime.async(function _callee11$(_context11) {
     while (1) {
       switch (_context11.prev = _context11.next) {
         case 0:
@@ -512,7 +506,7 @@ exports.manage.AddAccessGroupManager = function _callee11(_ref10) {
           ValidateAddress(contractAddress);
           ValidateAddress(memberAddress);
           _context11.next = 5;
-          return regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
+          return _regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
             contractAddress: contractAddress,
             memberAddress: memberAddress,
             methodName: "grantManagerAccess",
@@ -545,7 +539,7 @@ exports.manage.AddAccessGroupManager = function _callee11(_ref10) {
 
 exports.manage.RemoveAccessGroupManager = function _callee12(_ref11) {
   var contractAddress, memberAddress;
-  return regeneratorRuntime.async(function _callee12$(_context12) {
+  return _regeneratorRuntime.async(function _callee12$(_context12) {
     while (1) {
       switch (_context12.prev = _context12.next) {
         case 0:
@@ -553,7 +547,7 @@ exports.manage.RemoveAccessGroupManager = function _callee12(_ref11) {
           ValidateAddress(contractAddress);
           ValidateAddress(memberAddress);
           _context12.next = 5;
-          return regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
+          return _regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
             contractAddress: contractAddress,
             memberAddress: memberAddress,
             methodName: "revokeManagerAccess",
@@ -589,7 +583,7 @@ exports.access.ContentLibraryGroupPermissions = function _callee15(_ref12) {
 
   var libraryId, _ref12$permissions, permissions, libraryPermissions;
 
-  return regeneratorRuntime.async(function _callee15$(_context15) {
+  return _regeneratorRuntime.async(function _callee15$(_context15) {
     while (1) {
       switch (_context15.prev = _context15.next) {
         case 0:
@@ -614,14 +608,14 @@ exports.access.ContentLibraryGroupPermissions = function _callee15(_ref12) {
 
           this.Log("Retrieving ".concat(permissions.join(", "), " group(s) for library ").concat(libraryId));
           _context15.next = 7;
-          return regeneratorRuntime.awrap(Promise.all(permissions.map(function _callee14(type) {
+          return _regeneratorRuntime.awrap(Promise.all(permissions.map(function _callee14(type) {
             var numGroups, accessGroupAddresses;
-            return regeneratorRuntime.async(function _callee14$(_context14) {
+            return _regeneratorRuntime.async(function _callee14$(_context14) {
               while (1) {
                 switch (_context14.prev = _context14.next) {
                   case 0:
                     _context14.next = 2;
-                    return regeneratorRuntime.awrap(_this3.CallContractMethod({
+                    return _regeneratorRuntime.awrap(_this3.CallContractMethod({
                       contractAddress: _this3.utils.HashToAddress(libraryId),
                       abi: LibraryContract.abi,
                       methodName: type + "GroupsLength"
@@ -631,15 +625,15 @@ exports.access.ContentLibraryGroupPermissions = function _callee15(_ref12) {
                     numGroups = _context14.sent;
                     numGroups = parseInt(numGroups._hex, 16);
                     _context14.next = 6;
-                    return regeneratorRuntime.awrap(_this3.utils.LimitedMap(3, _toConsumableArray(Array(numGroups).keys()), function _callee13(i) {
-                      return regeneratorRuntime.async(function _callee13$(_context13) {
+                    return _regeneratorRuntime.awrap(_this3.utils.LimitedMap(3, _toConsumableArray(Array(numGroups).keys()), function _callee13(i) {
+                      return _regeneratorRuntime.async(function _callee13$(_context13) {
                         while (1) {
                           switch (_context13.prev = _context13.next) {
                             case 0:
                               _context13.prev = 0;
                               _context13.t0 = _this3.utils;
                               _context13.next = 4;
-                              return regeneratorRuntime.awrap(_this3.CallContractMethod({
+                              return _regeneratorRuntime.awrap(_this3.CallContractMethod({
                                 contractAddress: _this3.utils.HashToAddress(libraryId),
                                 abi: LibraryContract.abi,
                                 methodName: type + "Groups",
@@ -702,7 +696,7 @@ exports.access.ContentLibraryGroupPermissions = function _callee15(_ref12) {
 
 exports.manage.AddContentLibraryGroup = function _callee16(_ref13) {
   var libraryId, groupAddress, permission, existingPermissions, event;
-  return regeneratorRuntime.async(function _callee16$(_context16) {
+  return _regeneratorRuntime.async(function _callee16$(_context16) {
     while (1) {
       switch (_context16.prev = _context16.next) {
         case 0:
@@ -721,7 +715,7 @@ exports.manage.AddContentLibraryGroup = function _callee16(_ref13) {
         case 6:
           this.Log("Adding ".concat(permission, " group ").concat(groupAddress, " to library ").concat(libraryId));
           _context16.next = 9;
-          return regeneratorRuntime.awrap(this.ContentLibraryGroupPermissions({
+          return _regeneratorRuntime.awrap(this.ContentLibraryGroupPermissions({
             libraryId: libraryId,
             permissions: [permission]
           }));
@@ -740,7 +734,7 @@ exports.manage.AddContentLibraryGroup = function _callee16(_ref13) {
           // Capitalize permission to match method and event names
           permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
           _context16.next = 15;
-          return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(libraryId),
             abi: LibraryContract.abi,
             methodName: "add".concat(permission, "Group"),
@@ -750,7 +744,7 @@ exports.manage.AddContentLibraryGroup = function _callee16(_ref13) {
         case 15:
           event = _context16.sent;
           _context16.next = 18;
-          return regeneratorRuntime.awrap(this.ExtractEventFromLogs({
+          return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: LibraryContract.abi,
             event: event,
             eventName: "".concat(permission, "GroupAdded")
@@ -777,7 +771,7 @@ exports.manage.AddContentLibraryGroup = function _callee16(_ref13) {
 
 exports.manage.RemoveContentLibraryGroup = function _callee17(_ref14) {
   var libraryId, groupAddress, permission, existingPermissions, event;
-  return regeneratorRuntime.async(function _callee17$(_context17) {
+  return _regeneratorRuntime.async(function _callee17$(_context17) {
     while (1) {
       switch (_context17.prev = _context17.next) {
         case 0:
@@ -795,7 +789,7 @@ exports.manage.RemoveContentLibraryGroup = function _callee17(_ref14) {
         case 5:
           this.Log("Removing ".concat(permission, " group ").concat(groupAddress, " from library ").concat(libraryId));
           _context17.next = 8;
-          return regeneratorRuntime.awrap(this.ContentLibraryGroupPermissions({
+          return _regeneratorRuntime.awrap(this.ContentLibraryGroupPermissions({
             libraryId: libraryId,
             permissions: [permission]
           }));
@@ -814,7 +808,7 @@ exports.manage.RemoveContentLibraryGroup = function _callee17(_ref14) {
           // Capitalize permission to match method and event names
           permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
           _context17.next = 14;
-          return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(libraryId),
             abi: LibraryContract.abi,
             methodName: "remove".concat(permission, "Group"),
@@ -824,7 +818,7 @@ exports.manage.RemoveContentLibraryGroup = function _callee17(_ref14) {
         case 14:
           event = _context17.sent;
           _context17.next = 17;
-          return regeneratorRuntime.awrap(this.ExtractEventFromLogs({
+          return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: LibraryContract.abi,
             event: event,
             eventName: "".concat(permission, "GroupRemoved")
@@ -854,7 +848,7 @@ exports.access.ContentObjectGroupPermissions = function _callee19(_ref15) {
   var _this4 = this;
 
   var objectId, contractAddress, groupAddresses, groupPermissions;
-  return regeneratorRuntime.async(function _callee19$(_context19) {
+  return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
@@ -865,7 +859,7 @@ exports.access.ContentObjectGroupPermissions = function _callee19(_ref15) {
           // we belong to about this object
 
           _context19.next = 6;
-          return regeneratorRuntime.awrap(this.Collection({
+          return _regeneratorRuntime.awrap(this.Collection({
             collectionType: "accessGroups"
           }));
 
@@ -873,15 +867,15 @@ exports.access.ContentObjectGroupPermissions = function _callee19(_ref15) {
           groupAddresses = _context19.sent;
           groupPermissions = {};
           _context19.next = 10;
-          return regeneratorRuntime.awrap(Promise.all(groupAddresses.map(function _callee18(groupAddress) {
+          return _regeneratorRuntime.awrap(Promise.all(groupAddresses.map(function _callee18(groupAddress) {
             var permission, permissions;
-            return regeneratorRuntime.async(function _callee18$(_context18) {
+            return _regeneratorRuntime.async(function _callee18$(_context18) {
               while (1) {
                 switch (_context18.prev = _context18.next) {
                   case 0:
                     groupAddress = _this4.utils.FormatAddress(groupAddress);
                     _context18.next = 3;
-                    return regeneratorRuntime.awrap(_this4.CallContractMethod({
+                    return _regeneratorRuntime.awrap(_this4.CallContractMethod({
                       contractAddress: groupAddress,
                       abi: AccessIndexorContract.abi,
                       methodName: "getContentObjectRights",
@@ -947,7 +941,7 @@ exports.access.ContentObjectGroupPermissions = function _callee19(_ref15) {
 
 exports.manage.AddContentObjectGroupPermission = function _callee20(_ref16) {
   var objectId, groupAddress, permission, event;
-  return regeneratorRuntime.async(function _callee20$(_context20) {
+  return _regeneratorRuntime.async(function _callee20$(_context20) {
     while (1) {
       switch (_context20.prev = _context20.next) {
         case 0:
@@ -968,7 +962,7 @@ exports.manage.AddContentObjectGroupPermission = function _callee20(_ref16) {
         case 8:
           this.Log("Adding ".concat(permission, " permission to group ").concat(groupAddress, " for ").concat(objectId));
           _context20.next = 11;
-          return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: groupAddress,
             abi: AccessIndexorContract.abi,
             methodName: "setContentObjectRights",
@@ -978,7 +972,7 @@ exports.manage.AddContentObjectGroupPermission = function _callee20(_ref16) {
         case 11:
           event = _context20.sent;
           _context20.next = 14;
-          return regeneratorRuntime.awrap(this.ExtractEventFromLogs({
+          return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: AccessIndexorContract.abi,
             event: event,
             eventName: "RightsChanged"
@@ -1005,7 +999,7 @@ exports.manage.AddContentObjectGroupPermission = function _callee20(_ref16) {
 
 exports.manage.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
   var objectId, groupAddress, permission, event;
-  return regeneratorRuntime.async(function _callee21$(_context21) {
+  return _regeneratorRuntime.async(function _callee21$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
         case 0:
@@ -1026,7 +1020,7 @@ exports.manage.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
         case 8:
           this.Log("Removing ".concat(permission, " permission from group ").concat(groupAddress, " for ").concat(objectId));
           _context21.next = 11;
-          return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: groupAddress,
             abi: AccessIndexorContract.abi,
             methodName: "setContentObjectRights",
@@ -1036,7 +1030,7 @@ exports.manage.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
         case 11:
           event = _context21.sent;
           _context21.next = 14;
-          return regeneratorRuntime.awrap(this.ExtractEventFromLogs({
+          return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: AccessIndexorContract.abi,
             event: event,
             eventName: "RightsChanged"

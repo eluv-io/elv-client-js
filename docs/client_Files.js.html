@@ -64,20 +64,14 @@
  * @module ElvClient/Files+Parts
  */
 
+const Utils = require("../Utils");
+
 let fs;
-// Platform specific polyfills
-switch(Utils.Platform()) {
-  case Utils.PLATFORM_REACT_NATIVE:
-    // React native polyfills
-    // Polyfill for string.normalized
-    require("unorm");
-    break;
-  case Utils.PLATFORM_NODE:
-    // Define Response in node
-    // eslint-disable-next-line no-global-assign
-    global.Response = (require("node-fetch")).Response;
-    fs = require("fs");
-    break;
+if(Utils.Platform() === Utils.PLATFORM_NODE) {
+  // Define Response in node
+  // eslint-disable-next-line no-global-assign
+  global.Response = (require("node-fetch")).Response;
+  fs = require("fs");
 }
 
 const Crypto = require("../Crypto");

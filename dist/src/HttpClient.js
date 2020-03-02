@@ -1,28 +1,20 @@
-"use strict";
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+var _typeof = require("@babel/runtime/helpers/typeof");
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+var _createClass = require("@babel/runtime/helpers/createClass");
 
 var URI = require("urijs");
 
-var _Fetch = function Fetch(input) {
-  var init = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-  if (typeof fetch === "undefined") {
-    return require("node-fetch")(input, init);
-  } else {
-    return fetch(input, init);
-  }
-};
+var _Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch")["default"];
 
 var HttpClient =
 /*#__PURE__*/
 function () {
+  "use strict";
+
   _createClass(HttpClient, [{
     key: "Log",
     value: function Log(message) {
@@ -80,7 +72,7 @@ function () {
     value: function Request(_ref2) {
       var method, path, _ref2$queryParams, queryParams, _ref2$body, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, uri, fetchParameters, response, responseType, errorBody, error;
 
-      return regeneratorRuntime.async(function Request$(_context) {
+      return _regeneratorRuntime.async(function Request$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
@@ -101,7 +93,7 @@ function () {
 
               _context.prev = 4;
               _context.next = 7;
-              return regeneratorRuntime.awrap(HttpClient.Fetch(uri.toString(), fetchParameters));
+              return _regeneratorRuntime.awrap(HttpClient.Fetch(uri.toString(), fetchParameters));
 
             case 7:
               response = _context.sent;
@@ -134,7 +126,7 @@ function () {
               this.uriIndex = (this.uriIndex + 1) % this.uris.length;
               this.Log("HttpClient failing over: ".concat(attempts + 1, " attempts"), true);
               _context.next = 19;
-              return regeneratorRuntime.awrap(this.Request({
+              return _regeneratorRuntime.awrap(this.Request({
                 method: method,
                 path: path,
                 queryParams: queryParams,
@@ -163,7 +155,7 @@ function () {
               }
 
               _context.next = 26;
-              return regeneratorRuntime.awrap(response.json());
+              return _regeneratorRuntime.awrap(response.json());
 
             case 26:
               _context.t1 = _context.sent;
@@ -172,7 +164,7 @@ function () {
 
             case 29:
               _context.next = 31;
-              return regeneratorRuntime.awrap(response.text());
+              return _regeneratorRuntime.awrap(response.text());
 
             case 31:
               _context.t1 = _context.sent;

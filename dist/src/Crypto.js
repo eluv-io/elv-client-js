@@ -1,4 +1,4 @@
-"use strict";
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 if (typeof Buffer === "undefined") {
   Buffer = require("buffer/").Buffer;
@@ -42,7 +42,7 @@ switch (Utils.Platform()) {
 
 var Crypto = {
   ElvCrypto: function ElvCrypto() {
-    return regeneratorRuntime.async(function ElvCrypto$(_context) {
+    return _regeneratorRuntime.async(function ElvCrypto$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
@@ -54,7 +54,7 @@ var Crypto = {
             }
 
             _context.next = 4;
-            return regeneratorRuntime.awrap(new _ElvCrypto().init());
+            return _regeneratorRuntime.awrap(new _ElvCrypto().init());
 
           case 4:
             Crypto.elvCrypto = _context.sent;
@@ -105,19 +105,19 @@ var Crypto = {
   EncryptConk: function EncryptConk(conk, publicKey) {
     var elvCrypto, _ref, data, ephemeralKey, tag, cap;
 
-    return regeneratorRuntime.async(function EncryptConk$(_context2) {
+    return _regeneratorRuntime.async(function EncryptConk$(_context2) {
       while (1) {
         switch (_context2.prev = _context2.next) {
           case 0:
             _context2.next = 2;
-            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
+            return _regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
           case 2:
             elvCrypto = _context2.sent;
             publicKey = new Uint8Array(Buffer.from(publicKey.replace("0x", ""), "hex"));
             conk = new Uint8Array(Buffer.from(JSON.stringify(conk)));
             _context2.next = 7;
-            return regeneratorRuntime.awrap(elvCrypto.encryptECIES(conk, publicKey));
+            return _regeneratorRuntime.awrap(elvCrypto.encryptECIES(conk, publicKey));
 
           case 7:
             _ref = _context2.sent;
@@ -136,12 +136,12 @@ var Crypto = {
   },
   DecryptCap: function DecryptCap(encryptedCap, privateKey) {
     var elvCrypto, ephemeralKey, tag, data, cap;
-    return regeneratorRuntime.async(function DecryptCap$(_context3) {
+    return _regeneratorRuntime.async(function DecryptCap$(_context3) {
       while (1) {
         switch (_context3.prev = _context3.next) {
           case 0:
             _context3.next = 2;
-            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
+            return _regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
           case 2:
             elvCrypto = _context3.sent;
@@ -163,12 +163,12 @@ var Crypto = {
   GeneratePrimaryConk: function GeneratePrimaryConk() {
     var elvCrypto, _elvCrypto$generatePr, secretKey, publicKey, symmetricKey;
 
-    return regeneratorRuntime.async(function GeneratePrimaryConk$(_context4) {
+    return _regeneratorRuntime.async(function GeneratePrimaryConk$(_context4) {
       while (1) {
         switch (_context4.prev = _context4.next) {
           case 0:
             _context4.next = 2;
-            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
+            return _regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
           case 2:
             elvCrypto = _context4.sent;
@@ -190,12 +190,12 @@ var Crypto = {
   GenerateTargetConk: function GenerateTargetConk() {
     var elvCrypto, _elvCrypto$generateTa, secretKey, publicKey;
 
-    return regeneratorRuntime.async(function GenerateTargetConk$(_context5) {
+    return _regeneratorRuntime.async(function GenerateTargetConk$(_context5) {
       while (1) {
         switch (_context5.prev = _context5.next) {
           case 0:
             _context5.next = 2;
-            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
+            return _regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
           case 2:
             elvCrypto = _context5.sent;
@@ -226,12 +226,12 @@ var Crypto = {
   EncryptionContext: function EncryptionContext(cap) {
     var elvCrypto, _Crypto$CapToConk, symmetricKey, secretKey, publicKey, context, type;
 
-    return regeneratorRuntime.async(function EncryptionContext$(_context6) {
+    return _regeneratorRuntime.async(function EncryptionContext$(_context6) {
       while (1) {
         switch (_context6.prev = _context6.next) {
           case 0:
             _context6.next = 2;
-            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
+            return _regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
           case 2:
             elvCrypto = _context6.sent;
@@ -271,12 +271,12 @@ var Crypto = {
    */
   Encrypt: function Encrypt(cap, data) {
     var stream, dataArray, i, end, encryptedChunks;
-    return regeneratorRuntime.async(function Encrypt$(_context7) {
+    return _regeneratorRuntime.async(function Encrypt$(_context7) {
       while (1) {
         switch (_context7.prev = _context7.next) {
           case 0:
             _context7.next = 2;
-            return regeneratorRuntime.awrap(Crypto.OpenEncryptionStream(cap));
+            return _regeneratorRuntime.awrap(Crypto.OpenEncryptionStream(cap));
 
           case 2:
             stream = _context7.sent;
@@ -288,7 +288,7 @@ var Crypto = {
 
             _context7.t0 = Buffer;
             _context7.next = 7;
-            return regeneratorRuntime.awrap(new Response(data).arrayBuffer());
+            return _regeneratorRuntime.awrap(new Response(data).arrayBuffer());
 
           case 7:
             _context7.t1 = _context7.sent;
@@ -305,7 +305,7 @@ var Crypto = {
             stream.end();
             encryptedChunks = [];
             _context7.next = 15;
-            return regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
+            return _regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
               stream.on("data", function (chunk) {
                 encryptedChunks.push(chunk);
               }).on("finish", function () {
@@ -328,17 +328,17 @@ var Crypto = {
   OpenEncryptionStream: function OpenEncryptionStream(cap) {
     var elvCrypto, _ref2, context, stream, cipher;
 
-    return regeneratorRuntime.async(function OpenEncryptionStream$(_context8) {
+    return _regeneratorRuntime.async(function OpenEncryptionStream$(_context8) {
       while (1) {
         switch (_context8.prev = _context8.next) {
           case 0:
             _context8.next = 2;
-            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
+            return _regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
           case 2:
             elvCrypto = _context8.sent;
             _context8.next = 5;
-            return regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
+            return _regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
 
           case 5:
             _ref2 = _context8.sent;
@@ -370,12 +370,12 @@ var Crypto = {
    */
   Decrypt: function Decrypt(cap, encryptedData) {
     var stream, dataArray, i, end, decryptedChunks;
-    return regeneratorRuntime.async(function Decrypt$(_context9) {
+    return _regeneratorRuntime.async(function Decrypt$(_context9) {
       while (1) {
         switch (_context9.prev = _context9.next) {
           case 0:
             _context9.next = 2;
-            return regeneratorRuntime.awrap(Crypto.OpenDecryptionStream(cap));
+            return _regeneratorRuntime.awrap(Crypto.OpenDecryptionStream(cap));
 
           case 2:
             stream = _context9.sent;
@@ -389,7 +389,7 @@ var Crypto = {
             stream.end();
             decryptedChunks = [];
             _context9.next = 9;
-            return regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
+            return _regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
               stream.on("data", function (chunk) {
                 decryptedChunks.push(chunk);
               }).on("finish", function () {
@@ -412,17 +412,17 @@ var Crypto = {
   OpenDecryptionStream: function OpenDecryptionStream(cap) {
     var elvCrypto, _ref3, context, type, stream, decipher;
 
-    return regeneratorRuntime.async(function OpenDecryptionStream$(_context10) {
+    return _regeneratorRuntime.async(function OpenDecryptionStream$(_context10) {
       while (1) {
         switch (_context10.prev = _context10.next) {
           case 0:
             _context10.next = 2;
-            return regeneratorRuntime.awrap(Crypto.ElvCrypto());
+            return _regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
           case 2:
             elvCrypto = _context10.sent;
             _context10.next = 5;
-            return regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
+            return _regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
 
           case 5:
             _ref3 = _context10.sent;

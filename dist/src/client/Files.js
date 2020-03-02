@@ -1,32 +1,25 @@
-"use strict";
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
+
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 /**
  * Methods for accessing and managing access groups
  *
  * @module ElvClient/Files+Parts
  */
-var fs; // Platform specific polyfills
+var Utils = require("../Utils");
 
-switch (Utils.Platform()) {
-  case Utils.PLATFORM_REACT_NATIVE:
-    // React native polyfills
-    // Polyfill for string.normalized
-    require("unorm");
+var fs;
 
-    break;
-
-  case Utils.PLATFORM_NODE:
-    // Define Response in node
-    // eslint-disable-next-line no-global-assign
-    global.Response = require("node-fetch").Response;
-    fs = require("fs");
-    break;
+if (Utils.Platform() === Utils.PLATFORM_NODE) {
+  // Define Response in node
+  // eslint-disable-next-line no-global-assign
+  global.Response = require("node-fetch").Response;
+  fs = require("fs");
 }
 
 var Crypto = require("../Crypto");
@@ -56,7 +49,7 @@ exports.manage = {};
 
 exports.manage.ListFiles = function _callee(_ref) {
   var libraryId, objectId, versionHash, path;
-  return regeneratorRuntime.async(function _callee$(_context) {
+  return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
@@ -75,7 +68,7 @@ exports.manage.ListFiles = function _callee(_ref) {
           _context.t0 = this.utils;
           _context.t1 = this.HttpClient;
           _context.next = 8;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash
@@ -132,7 +125,7 @@ exports.manage.ListFiles = function _callee(_ref) {
 exports.manage.UploadFilesFromS3 = function _callee2(_ref2) {
   var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref2$copy, copy, callback, defaults, ops, _ref3, id, status, done, progress, _progress;
 
-  return regeneratorRuntime.async(function _callee2$(_context2) {
+  return _regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
@@ -180,7 +173,7 @@ exports.manage.UploadFilesFromS3 = function _callee2(_ref2) {
           }); // eslint-disable-next-line no-unused-vars
 
           _context2.next = 8;
-          return regeneratorRuntime.awrap(this.CreateFileUploadJob({
+          return _regeneratorRuntime.awrap(this.CreateFileUploadJob({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -199,13 +192,13 @@ exports.manage.UploadFilesFromS3 = function _callee2(_ref2) {
           }
 
           _context2.next = 13;
-          return regeneratorRuntime.awrap(new Promise(function (resolve) {
+          return _regeneratorRuntime.awrap(new Promise(function (resolve) {
             return setTimeout(resolve, 1000);
           }));
 
         case 13:
           _context2.next = 15;
-          return regeneratorRuntime.awrap(this.UploadStatus({
+          return _regeneratorRuntime.awrap(this.UploadStatus({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -320,7 +313,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
 
   var libraryId, objectId, writeToken, fileInfo, _ref4$encryption, encryption, callback, conk, progress, fileDataMap, i, entry, _ref5, id, jobs, bufferSize, jobSpecs, prepared, uploaded, PrepareJobs, UploadJob, rateTestJobs, rates, j, start, elapsed, size, averageRate, concurrentUploads;
 
-  return regeneratorRuntime.async(function _callee4$(_context6) {
+  return _regeneratorRuntime.async(function _callee4$(_context6) {
     while (1) {
       switch (_context6.prev = _context6.next) {
         case 0:
@@ -338,7 +331,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
           }
 
           _context6.next = 7;
-          return regeneratorRuntime.awrap(this.EncryptionConk({
+          return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken
@@ -379,7 +372,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
           }
 
           _context6.next = 15;
-          return regeneratorRuntime.awrap(this.CreateFileUploadJob({
+          return _regeneratorRuntime.awrap(this.CreateFileUploadJob({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -402,7 +395,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
           PrepareJobs = function PrepareJobs() {
             var j, jobId, job, f, _fileInfo, data;
 
-            return regeneratorRuntime.async(function PrepareJobs$(_context3) {
+            return _regeneratorRuntime.async(function PrepareJobs$(_context3) {
               while (1) {
                 switch (_context3.prev = _context3.next) {
                   case 0:
@@ -421,7 +414,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
                     }
 
                     _context3.next = 5;
-                    return regeneratorRuntime.awrap(new Promise(function (resolve) {
+                    return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                       return setTimeout(resolve, 500);
                     }));
 
@@ -433,7 +426,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
                     // Retrieve job info
                     jobId = jobs[j];
                     _context3.next = 10;
-                    return regeneratorRuntime.awrap(_this.UploadJobStatus({
+                    return _regeneratorRuntime.awrap(_this.UploadJobStatus({
                       libraryId: libraryId,
                       objectId: objectId,
                       writeToken: writeToken,
@@ -469,7 +462,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
                     }
 
                     _context3.next = 19;
-                    return regeneratorRuntime.awrap(Crypto.Encrypt(conk, data));
+                    return _regeneratorRuntime.awrap(Crypto.Encrypt(conk, data));
 
                   case 19:
                     data = _context3.sent;
@@ -487,7 +480,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
                     jobSpecs[j] = job; // Wait for a bit to let upload start
 
                     _context3.next = 28;
-                    return regeneratorRuntime.awrap(new Promise(function (resolve) {
+                    return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                       return setTimeout(resolve, 50);
                     }));
 
@@ -507,7 +500,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
           UploadJob = function UploadJob(jobId, j) {
             var jobSpec, files, f, _fileInfo2;
 
-            return regeneratorRuntime.async(function UploadJob$(_context4) {
+            return _regeneratorRuntime.async(function UploadJob$(_context4) {
               while (1) {
                 switch (_context4.prev = _context4.next) {
                   case 0:
@@ -517,7 +510,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
                     }
 
                     _context4.next = 3;
-                    return regeneratorRuntime.awrap(new Promise(function (resolve) {
+                    return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                       return setTimeout(resolve, 500);
                     }));
 
@@ -539,7 +532,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
 
                     _fileInfo2 = files[f];
                     _context4.next = 12;
-                    return regeneratorRuntime.awrap(_this.UploadFileData({
+                    return _regeneratorRuntime.awrap(_this.UploadFileData({
                       libraryId: libraryId,
                       objectId: objectId,
                       writeToken: writeToken,
@@ -587,7 +580,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
 
           start = new Date().getTime();
           _context6.next = 34;
-          return regeneratorRuntime.awrap(UploadJob(jobs[j], j));
+          return _regeneratorRuntime.awrap(UploadJob(jobs[j], j));
 
         case 34:
           elapsed = (new Date().getTime() - start) / 1000;
@@ -610,8 +603,8 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
 
           concurrentUploads = Math.min(5, Math.ceil(averageRate / 2));
           _context6.next = 44;
-          return regeneratorRuntime.awrap(this.utils.LimitedMap(concurrentUploads, jobs, function _callee3(jobId, j) {
-            return regeneratorRuntime.async(function _callee3$(_context5) {
+          return _regeneratorRuntime.awrap(this.utils.LimitedMap(concurrentUploads, jobs, function _callee3(jobId, j) {
+            return _regeneratorRuntime.async(function _callee3$(_context5) {
               while (1) {
                 switch (_context5.prev = _context5.next) {
                   case 0:
@@ -624,7 +617,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
 
                   case 2:
                     _context5.next = 4;
-                    return regeneratorRuntime.awrap(UploadJob(jobId, j));
+                    return _regeneratorRuntime.awrap(UploadJob(jobId, j));
 
                   case 4:
                   case "end":
@@ -645,7 +638,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
 exports.manage.CreateFileUploadJob = function _callee5(_ref6) {
   var libraryId, objectId, writeToken, ops, _ref6$defaults, defaults, _ref6$encryption, encryption, path, body;
 
-  return regeneratorRuntime.async(function _callee5$(_context7) {
+  return _regeneratorRuntime.async(function _callee5$(_context7) {
     while (1) {
       switch (_context7.prev = _context7.next) {
         case 0:
@@ -674,7 +667,7 @@ exports.manage.CreateFileUploadJob = function _callee5(_ref6) {
           _context7.t0 = this.utils;
           _context7.t1 = this.HttpClient;
           _context7.next = 12;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true,
@@ -705,7 +698,7 @@ exports.manage.CreateFileUploadJob = function _callee5(_ref6) {
 
 exports.manage.UploadStatus = function _callee6(_ref7) {
   var libraryId, objectId, writeToken, uploadId, path;
-  return regeneratorRuntime.async(function _callee6$(_context8) {
+  return _regeneratorRuntime.async(function _callee6$(_context8) {
     while (1) {
       switch (_context8.prev = _context8.next) {
         case 0:
@@ -719,7 +712,7 @@ exports.manage.UploadStatus = function _callee6(_ref7) {
           _context8.t0 = this.utils;
           _context8.t1 = this.HttpClient;
           _context8.next = 8;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true
@@ -747,7 +740,7 @@ exports.manage.UploadStatus = function _callee6(_ref7) {
 
 exports.manage.UploadJobStatus = function _callee7(_ref8) {
   var libraryId, objectId, writeToken, uploadId, jobId, path;
-  return regeneratorRuntime.async(function _callee7$(_context9) {
+  return _regeneratorRuntime.async(function _callee7$(_context9) {
     while (1) {
       switch (_context9.prev = _context9.next) {
         case 0:
@@ -761,7 +754,7 @@ exports.manage.UploadJobStatus = function _callee7(_ref8) {
           _context9.t0 = this.utils;
           _context9.t1 = this.HttpClient;
           _context9.next = 8;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true
@@ -789,7 +782,7 @@ exports.manage.UploadJobStatus = function _callee7(_ref8) {
 
 exports.manage.UploadFileData = function _callee8(_ref9) {
   var libraryId, objectId, writeToken, uploadId, jobId, fileData, path;
-  return regeneratorRuntime.async(function _callee8$(_context10) {
+  return _regeneratorRuntime.async(function _callee8$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
         case 0:
@@ -800,7 +793,7 @@ exports.manage.UploadFileData = function _callee8(_ref9) {
           });
           ValidateWriteToken(writeToken);
           path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
-          _context10.t0 = regeneratorRuntime;
+          _context10.t0 = _regeneratorRuntime;
           _context10.t1 = this.utils;
           _context10.t2 = this.HttpClient;
           _context10.t3 = path;
@@ -810,7 +803,7 @@ exports.manage.UploadFileData = function _callee8(_ref9) {
             "Content-type": "application/octet-stream"
           };
           _context10.next = 13;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true
@@ -842,7 +835,7 @@ exports.manage.UploadFileData = function _callee8(_ref9) {
 
 exports.manage.FinalizeUploadJob = function _callee9(_ref10) {
   var libraryId, objectId, writeToken, path;
-  return regeneratorRuntime.async(function _callee9$(_context11) {
+  return _regeneratorRuntime.async(function _callee9$(_context11) {
     while (1) {
       switch (_context11.prev = _context11.next) {
         case 0:
@@ -854,11 +847,11 @@ exports.manage.FinalizeUploadJob = function _callee9(_ref10) {
           ValidateWriteToken(writeToken);
           this.Log("Finalizing upload job: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
           path = UrlJoin("q", writeToken, "files");
-          _context11.t0 = regeneratorRuntime;
+          _context11.t0 = _regeneratorRuntime;
           _context11.t1 = this.HttpClient;
           _context11.t2 = path;
           _context11.next = 10;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true
@@ -899,7 +892,7 @@ exports.manage.FinalizeUploadJob = function _callee9(_ref10) {
 
 exports.manage.CreateFileDirectories = function _callee10(_ref11) {
   var libraryId, objectId, writeToken, filePaths, ops;
-  return regeneratorRuntime.async(function _callee10$(_context12) {
+  return _regeneratorRuntime.async(function _callee10$(_context12) {
     while (1) {
       switch (_context12.prev = _context12.next) {
         case 0:
@@ -919,7 +912,7 @@ exports.manage.CreateFileDirectories = function _callee10(_ref11) {
             };
           });
           _context12.next = 8;
-          return regeneratorRuntime.awrap(this.CreateFileUploadJob({
+          return _regeneratorRuntime.awrap(this.CreateFileUploadJob({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -948,7 +941,7 @@ exports.manage.CreateFileDirectories = function _callee10(_ref11) {
 
 exports.manage.DeleteFiles = function _callee11(_ref12) {
   var libraryId, objectId, writeToken, filePaths, ops;
-  return regeneratorRuntime.async(function _callee11$(_context13) {
+  return _regeneratorRuntime.async(function _callee11$(_context13) {
     while (1) {
       switch (_context13.prev = _context13.next) {
         case 0:
@@ -967,7 +960,7 @@ exports.manage.DeleteFiles = function _callee11(_ref12) {
             };
           });
           _context13.next = 8;
-          return regeneratorRuntime.awrap(this.CreateFileUploadJob({
+          return _regeneratorRuntime.awrap(this.CreateFileUploadJob({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -1008,7 +1001,7 @@ exports.manage.DeleteFiles = function _callee11(_ref12) {
 exports.access.DownloadFile = function _callee12(_ref13) {
   var libraryId, objectId, versionHash, writeToken, filePath, _ref13$format, format, _ref13$chunked, chunked, _ref13$chunkSize, chunkSize, callback, fileInfo, encrypted, encryption, path, headers, bytesTotal;
 
-  return regeneratorRuntime.async(function _callee12$(_context14) {
+  return _regeneratorRuntime.async(function _callee12$(_context14) {
     while (1) {
       switch (_context14.prev = _context14.next) {
         case 0:
@@ -1025,7 +1018,7 @@ exports.access.DownloadFile = function _callee12(_ref13) {
           }
 
           _context14.next = 6;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
@@ -1039,7 +1032,7 @@ exports.access.DownloadFile = function _callee12(_ref13) {
           encryption = encrypted ? "cgck" : undefined;
           path = UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
           _context14.next = 12;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
@@ -1053,7 +1046,7 @@ exports.access.DownloadFile = function _callee12(_ref13) {
           _context14.t0 = this.utils;
           _context14.t1 = this.signer.address;
           _context14.next = 18;
-          return regeneratorRuntime.awrap(this.ContentObjectOwner({
+          return _regeneratorRuntime.awrap(this.ContentObjectOwner({
             objectId: objectId
           }));
 
@@ -1075,10 +1068,10 @@ exports.access.DownloadFile = function _callee12(_ref13) {
             break;
           }
 
-          _context14.t3 = regeneratorRuntime;
+          _context14.t3 = _regeneratorRuntime;
           _context14.t4 = this;
           _context14.next = 27;
-          return regeneratorRuntime.awrap(this.EncryptionConk({
+          return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId
           }));
@@ -1109,7 +1102,7 @@ exports.access.DownloadFile = function _callee12(_ref13) {
 
         case 41:
           _context14.next = 43;
-          return regeneratorRuntime.awrap(this.Download({
+          return _regeneratorRuntime.awrap(this.Download({
             downloadPath: path,
             bytesTotal: bytesTotal,
             headers: headers,
@@ -1147,7 +1140,7 @@ exports.access.DownloadFile = function _callee12(_ref13) {
 
 exports.access.ContentParts = function _callee13(_ref14) {
   var libraryId, objectId, versionHash, path, response;
-  return regeneratorRuntime.async(function _callee13$(_context15) {
+  return _regeneratorRuntime.async(function _callee13$(_context15) {
     while (1) {
       switch (_context15.prev = _context15.next) {
         case 0:
@@ -1164,11 +1157,11 @@ exports.access.ContentParts = function _callee13(_ref14) {
           }
 
           path = UrlJoin("q", versionHash || objectId, "parts");
-          _context15.t0 = regeneratorRuntime;
+          _context15.t0 = _regeneratorRuntime;
           _context15.t1 = this.utils;
           _context15.t2 = this.HttpClient;
           _context15.next = 10;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash
@@ -1215,7 +1208,7 @@ exports.access.ContentParts = function _callee13(_ref14) {
 
 exports.access.ContentPart = function _callee14(_ref15) {
   var libraryId, objectId, versionHash, partHash, path;
-  return regeneratorRuntime.async(function _callee14$(_context16) {
+  return _regeneratorRuntime.async(function _callee14$(_context16) {
     while (1) {
       switch (_context16.prev = _context16.next) {
         case 0:
@@ -1233,11 +1226,11 @@ exports.access.ContentPart = function _callee14(_ref15) {
           }
 
           path = UrlJoin("q", versionHash || objectId, "parts", partHash);
-          _context16.t0 = regeneratorRuntime;
+          _context16.t0 = _regeneratorRuntime;
           _context16.t1 = this.utils;
           _context16.t2 = this.HttpClient;
           _context16.next = 11;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash
@@ -1295,7 +1288,7 @@ exports.access.ContentPart = function _callee14(_ref15) {
 exports.access.DownloadPart = function _callee15(_ref16) {
   var libraryId, objectId, versionHash, writeToken, partHash, _ref16$format, format, _ref16$chunked, chunked, _ref16$chunkSize, chunkSize, callback, encrypted, encryption, path, headers, bytesTotal;
 
-  return regeneratorRuntime.async(function _callee15$(_context17) {
+  return _regeneratorRuntime.async(function _callee15$(_context17) {
     while (1) {
       switch (_context17.prev = _context17.next) {
         case 0:
@@ -1315,7 +1308,7 @@ exports.access.DownloadPart = function _callee15(_ref16) {
           encryption = encrypted ? "cgck" : undefined;
           path = UrlJoin("q", writeToken || versionHash || objectId, "data", partHash);
           _context17.next = 9;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
@@ -1325,7 +1318,7 @@ exports.access.DownloadPart = function _callee15(_ref16) {
         case 9:
           headers = _context17.sent;
           _context17.next = 12;
-          return regeneratorRuntime.awrap(this.ContentPart({
+          return _regeneratorRuntime.awrap(this.ContentPart({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
@@ -1340,10 +1333,10 @@ exports.access.DownloadPart = function _callee15(_ref16) {
             break;
           }
 
-          _context17.t0 = regeneratorRuntime;
+          _context17.t0 = _regeneratorRuntime;
           _context17.t1 = this;
           _context17.next = 18;
-          return regeneratorRuntime.awrap(this.EncryptionConk({
+          return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId
           }));
@@ -1374,7 +1367,7 @@ exports.access.DownloadPart = function _callee15(_ref16) {
 
         case 32:
           _context17.next = 34;
-          return regeneratorRuntime.awrap(this.Download({
+          return _regeneratorRuntime.awrap(this.Download({
             downloadPath: path,
             bytesTotal: bytesTotal,
             headers: headers,
@@ -1398,7 +1391,7 @@ exports.access.DownloadPart = function _callee15(_ref16) {
 exports.access.Download = function _callee16(_ref17) {
   var downloadPath, headers, bytesTotal, _ref17$chunked, chunked, _ref17$chunkSize, chunkSize, callback, _ref17$format, format, outputChunks, bytesFinished, totalChunks, i, response;
 
-  return regeneratorRuntime.async(function _callee16$(_context18) {
+  return _regeneratorRuntime.async(function _callee16$(_context18) {
     while (1) {
       switch (_context18.prev = _context18.next) {
         case 0:
@@ -1429,7 +1422,7 @@ exports.access.Download = function _callee16(_ref17) {
 
           headers["Range"] = "bytes=".concat(bytesFinished, "-").concat(bytesFinished + chunkSize - 1);
           _context18.next = 11;
-          return regeneratorRuntime.awrap(this.HttpClient.Request({
+          return _regeneratorRuntime.awrap(this.HttpClient.Request({
             path: downloadPath,
             headers: headers,
             method: "GET"
@@ -1448,7 +1441,7 @@ exports.access.Download = function _callee16(_ref17) {
           _context18.t1 = bytesFinished;
           _context18.t2 = bytesTotal;
           _context18.next = 19;
-          return regeneratorRuntime.awrap(this.utils.ResponseToFormat(format, response));
+          return _regeneratorRuntime.awrap(this.utils.ResponseToFormat(format, response));
 
         case 19:
           _context18.t3 = _context18.sent;
@@ -1472,7 +1465,7 @@ exports.access.Download = function _callee16(_ref17) {
           _context18.t5 = outputChunks;
           _context18.t6 = Buffer;
           _context18.next = 29;
-          return regeneratorRuntime.awrap(response.arrayBuffer());
+          return _regeneratorRuntime.awrap(response.arrayBuffer());
 
         case 29:
           _context18.t7 = _context18.sent;
@@ -1492,7 +1485,7 @@ exports.access.Download = function _callee16(_ref17) {
           }
 
           _context18.next = 38;
-          return regeneratorRuntime.awrap(this.utils.ResponseToFormat(format, new Response(Buffer.concat(outputChunks))));
+          return _regeneratorRuntime.awrap(this.utils.ResponseToFormat(format, new Response(Buffer.concat(outputChunks))));
 
         case 38:
           return _context18.abrupt("return", _context18.sent);
@@ -1510,7 +1503,7 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
 
   var conk, downloadPath, bytesTotal, headers, callback, _ref18$format, format, _ref18$chunked, chunked, _ref18$chunkSize, chunkSize, bytesFinished, outputChunks, stream, totalChunks, i, response;
 
-  return regeneratorRuntime.async(function _callee18$(_context20) {
+  return _regeneratorRuntime.async(function _callee18$(_context20) {
     while (1) {
       switch (_context20.prev = _context20.next) {
         case 0:
@@ -1529,13 +1522,13 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
           outputChunks = []; // Set up decryption stream
 
           _context20.next = 8;
-          return regeneratorRuntime.awrap(Crypto.OpenDecryptionStream(conk));
+          return _regeneratorRuntime.awrap(Crypto.OpenDecryptionStream(conk));
 
         case 8:
           stream = _context20.sent;
           stream.on("data", function _callee17(chunk) {
             var arrayBuffer;
-            return regeneratorRuntime.async(function _callee17$(_context19) {
+            return _regeneratorRuntime.async(function _callee17$(_context19) {
               while (1) {
                 switch (_context19.prev = _context19.next) {
                   case 0:
@@ -1562,7 +1555,7 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
 
                   case 7:
                     _context19.next = 9;
-                    return regeneratorRuntime.awrap(_this2.utils.ResponseToFormat(format, new Response(arrayBuffer)));
+                    return _regeneratorRuntime.awrap(_this2.utils.ResponseToFormat(format, new Response(arrayBuffer)));
 
                   case 9:
                     chunk = _context19.sent;
@@ -1604,7 +1597,7 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
 
           headers["Range"] = "bytes=".concat(bytesFinished, "-").concat(bytesFinished + chunkSize - 1);
           _context20.next = 16;
-          return regeneratorRuntime.awrap(this.HttpClient.Request({
+          return _regeneratorRuntime.awrap(this.HttpClient.Request({
             headers: headers,
             method: "GET",
             path: downloadPath
@@ -1616,7 +1609,7 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
           _context20.t0 = stream;
           _context20.t1 = Uint8Array;
           _context20.next = 22;
-          return regeneratorRuntime.awrap(response.arrayBuffer());
+          return _regeneratorRuntime.awrap(response.arrayBuffer());
 
         case 22:
           _context20.t2 = _context20.sent;
@@ -1633,7 +1626,7 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
           // Wait for decryption to complete
           stream.end();
           _context20.next = 31;
-          return regeneratorRuntime.awrap(new Promise(function (resolve) {
+          return _regeneratorRuntime.awrap(new Promise(function (resolve) {
             return stream.on("finish", function () {
               resolve();
             });
@@ -1646,7 +1639,7 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
           }
 
           _context20.next = 34;
-          return regeneratorRuntime.awrap(this.utils.ResponseToFormat(format, new Response(Buffer.concat(outputChunks))));
+          return _regeneratorRuntime.awrap(this.utils.ResponseToFormat(format, new Response(Buffer.concat(outputChunks))));
 
         case 34:
           return _context20.abrupt("return", _context20.sent);
@@ -1675,7 +1668,7 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
 
 exports.manage.CreatePart = function _callee19(_ref19) {
   var libraryId, objectId, writeToken, encryption, path, openResponse;
-  return regeneratorRuntime.async(function _callee19$(_context21) {
+  return _regeneratorRuntime.async(function _callee19$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
         case 0:
@@ -1686,11 +1679,11 @@ exports.manage.CreatePart = function _callee19(_ref19) {
           });
           ValidateWriteToken(writeToken);
           path = UrlJoin("q", writeToken, "parts");
-          _context21.t0 = regeneratorRuntime;
+          _context21.t0 = _regeneratorRuntime;
           _context21.t1 = this.utils;
           _context21.t2 = this.HttpClient;
           _context21.next = 9;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true,
@@ -1744,7 +1737,7 @@ exports.manage.CreatePart = function _callee19(_ref19) {
 exports.manage.UploadPartChunk = function _callee20(_ref20) {
   var libraryId, objectId, writeToken, partWriteToken, chunk, encryption, _conk, path;
 
-  return regeneratorRuntime.async(function _callee20$(_context22) {
+  return _regeneratorRuntime.async(function _callee20$(_context22) {
     while (1) {
       switch (_context22.prev = _context22.next) {
         case 0:
@@ -1761,7 +1754,7 @@ exports.manage.UploadPartChunk = function _callee20(_ref20) {
           }
 
           _context22.next = 6;
-          return regeneratorRuntime.awrap(this.EncryptionConk({
+          return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken
@@ -1770,18 +1763,18 @@ exports.manage.UploadPartChunk = function _callee20(_ref20) {
         case 6:
           _conk = _context22.sent;
           _context22.next = 9;
-          return regeneratorRuntime.awrap(Crypto.Encrypt(_conk, chunk));
+          return _regeneratorRuntime.awrap(Crypto.Encrypt(_conk, chunk));
 
         case 9:
           chunk = _context22.sent;
 
         case 10:
           path = UrlJoin("q", writeToken, "parts");
-          _context22.t0 = regeneratorRuntime;
+          _context22.t0 = _regeneratorRuntime;
           _context22.t1 = this.utils;
           _context22.t2 = this.HttpClient;
           _context22.next = 16;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true,
@@ -1830,7 +1823,7 @@ exports.manage.UploadPartChunk = function _callee20(_ref20) {
 
 exports.manage.FinalizePart = function _callee21(_ref21) {
   var libraryId, objectId, writeToken, partWriteToken, encryption, path;
-  return regeneratorRuntime.async(function _callee21$(_context23) {
+  return _regeneratorRuntime.async(function _callee21$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
@@ -1841,12 +1834,12 @@ exports.manage.FinalizePart = function _callee21(_ref21) {
           });
           ValidateWriteToken(writeToken);
           path = UrlJoin("q", writeToken, "parts");
-          _context23.t0 = regeneratorRuntime;
+          _context23.t0 = _regeneratorRuntime;
           _context23.t1 = this.utils;
-          _context23.t2 = regeneratorRuntime;
+          _context23.t2 = _regeneratorRuntime;
           _context23.t3 = this.HttpClient;
           _context23.next = 10;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true,
@@ -1908,7 +1901,7 @@ exports.manage.FinalizePart = function _callee21(_ref21) {
 exports.manage.UploadPart = function _callee22(_ref22) {
   var libraryId, objectId, writeToken, data, _ref22$encryption, encryption, partWriteToken;
 
-  return regeneratorRuntime.async(function _callee22$(_context24) {
+  return _regeneratorRuntime.async(function _callee22$(_context24) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
@@ -1919,7 +1912,7 @@ exports.manage.UploadPart = function _callee22(_ref22) {
           });
           ValidateWriteToken(writeToken);
           _context24.next = 5;
-          return regeneratorRuntime.awrap(this.CreatePart({
+          return _regeneratorRuntime.awrap(this.CreatePart({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -1929,7 +1922,7 @@ exports.manage.UploadPart = function _callee22(_ref22) {
         case 5:
           partWriteToken = _context24.sent;
           _context24.next = 8;
-          return regeneratorRuntime.awrap(this.UploadPartChunk({
+          return _regeneratorRuntime.awrap(this.UploadPartChunk({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -1940,7 +1933,7 @@ exports.manage.UploadPart = function _callee22(_ref22) {
 
         case 8:
           _context24.next = 10;
-          return regeneratorRuntime.awrap(this.FinalizePart({
+          return _regeneratorRuntime.awrap(this.FinalizePart({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
@@ -1973,7 +1966,7 @@ exports.manage.UploadPart = function _callee22(_ref22) {
 
 exports.manage.DeletePart = function _callee23(_ref23) {
   var libraryId, objectId, writeToken, partHash, path;
-  return regeneratorRuntime.async(function _callee23$(_context25) {
+  return _regeneratorRuntime.async(function _callee23$(_context25) {
     while (1) {
       switch (_context25.prev = _context25.next) {
         case 0:
@@ -1985,10 +1978,10 @@ exports.manage.DeletePart = function _callee23(_ref23) {
           ValidateWriteToken(writeToken);
           ValidatePartHash(partHash);
           path = UrlJoin("q", writeToken, "parts", partHash);
-          _context25.t0 = regeneratorRuntime;
+          _context25.t0 = _regeneratorRuntime;
           _context25.t1 = this.HttpClient;
           _context25.next = 9;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true

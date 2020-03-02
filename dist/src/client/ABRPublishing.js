@@ -1,18 +1,12 @@
-"use strict";
+var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 /**
  * Methods for ABR video creation and management
@@ -56,14 +50,14 @@ var _require = require("../Validation"),
 exports.CreateProductionMaster = function _callee(_ref) {
   var libraryId, type, name, description, _ref$metadata, metadata, fileInfo, _ref$encrypt, encrypt, access, _ref$copy, copy, callback, _ref2, id, write_token, accessParameter, region, bucket, accessKey, secret, _ref3, logs, errors, warnings, finalizeResponse;
 
-  return regeneratorRuntime.async(function _callee$(_context) {
+  return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
           libraryId = _ref.libraryId, type = _ref.type, name = _ref.name, description = _ref.description, _ref$metadata = _ref.metadata, metadata = _ref$metadata === void 0 ? {} : _ref$metadata, fileInfo = _ref.fileInfo, _ref$encrypt = _ref.encrypt, encrypt = _ref$encrypt === void 0 ? false : _ref$encrypt, access = _ref.access, _ref$copy = _ref.copy, copy = _ref$copy === void 0 ? false : _ref$copy, callback = _ref.callback;
           ValidateLibrary(libraryId);
           _context.next = 4;
-          return regeneratorRuntime.awrap(this.CreateContentObject({
+          return _regeneratorRuntime.awrap(this.CreateContentObject({
             libraryId: libraryId,
             options: type ? {
               type: type
@@ -88,7 +82,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
           // S3 Upload
           region = access.region, bucket = access.bucket, accessKey = access.accessKey, secret = access.secret;
           _context.next = 12;
-          return regeneratorRuntime.awrap(this.UploadFilesFromS3({
+          return _regeneratorRuntime.awrap(this.UploadFilesFromS3({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
@@ -122,7 +116,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
 
         case 15:
           _context.next = 17;
-          return regeneratorRuntime.awrap(this.UploadFiles({
+          return _regeneratorRuntime.awrap(this.UploadFiles({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
@@ -133,7 +127,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
 
         case 17:
           _context.next = 19;
-          return regeneratorRuntime.awrap(this.CallBitcodeMethod({
+          return _regeneratorRuntime.awrap(this.CallBitcodeMethod({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
@@ -150,7 +144,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
           errors = _ref3.errors;
           warnings = _ref3.warnings;
           _context.next = 25;
-          return regeneratorRuntime.awrap(this.MergeMetadata({
+          return _regeneratorRuntime.awrap(this.MergeMetadata({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
@@ -168,7 +162,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
 
         case 25:
           _context.next = 27;
-          return regeneratorRuntime.awrap(this.FinalizeContentObject({
+          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
@@ -213,7 +207,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
 exports.CreateABRMezzanine = function _callee2(_ref4) {
   var libraryId, objectId, type, name, description, metadata, masterVersionHash, abrProfile, _ref4$variant, variant, _ref4$offeringKey, offeringKey, existingMez, options, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _ref5, logs, errors, warnings, finalizeResponse;
 
-  return regeneratorRuntime.async(function _callee2$(_context2) {
+  return _regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
@@ -240,7 +234,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           }
 
           _context2.next = 10;
-          return regeneratorRuntime.awrap(this.EditContentObject({
+          return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId,
             options: options
@@ -255,7 +249,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 
         case 15:
           _context2.next = 17;
-          return regeneratorRuntime.awrap(this.CreateContentObject({
+          return _regeneratorRuntime.awrap(this.CreateContentObject({
             libraryId: libraryId,
             options: options
           }));
@@ -267,7 +261,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 
         case 20:
           _context2.next = 22;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             versionHash: masterVersionHash,
             metadataSubtree: "public/name"
           }));
@@ -278,7 +272,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           authorizationTokens = [];
           _context2.t0 = authorizationTokens;
           _context2.next = 27;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: id,
             update: true
@@ -291,7 +285,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 
           _context2.t2 = authorizationTokens;
           _context2.next = 32;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId
           }));
 
@@ -302,7 +296,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 
           _context2.t4 = authorizationTokens;
           _context2.next = 37;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             versionHash: masterVersionHash
           }));
 
@@ -335,7 +329,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 
         case 47:
           _context2.next = 49;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
             metadataSubtree: "abr_profile/store_clear"
@@ -351,7 +345,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           }
 
           _context2.next = 53;
-          return regeneratorRuntime.awrap(this.EncryptionConk({
+          return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token
@@ -359,7 +353,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 
         case 53:
           _context2.next = 55;
-          return regeneratorRuntime.awrap(this.CallBitcodeMethod({
+          return _regeneratorRuntime.awrap(this.CallBitcodeMethod({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
@@ -396,7 +390,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           }
 
           _context2.next = 64;
-          return regeneratorRuntime.awrap(this.MergeMetadata({
+          return _regeneratorRuntime.awrap(this.MergeMetadata({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
@@ -405,7 +399,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 
         case 64:
           _context2.next = 66;
-          return regeneratorRuntime.awrap(this.FinalizeContentObject({
+          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token
@@ -446,7 +440,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
 
   var libraryId, objectId, _ref6$offeringKey, offeringKey, _ref6$access, access, mezzanineMetadata, prepSpecs, masterVersionHashes, authorizationTokens, headers, accessParameter, region, bucket, accessKey, secret, processingDraft, lroInfo, statusDraft, _ref7, data, errors, warnings, logs;
 
-  return regeneratorRuntime.async(function _callee4$(_context4) {
+  return _regeneratorRuntime.async(function _callee4$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
@@ -456,7 +450,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
             objectId: objectId
           });
           _context4.next = 4;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
@@ -479,13 +473,13 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
           }); // Retrieve authorization tokens for all masters and the mezzanine
 
           _context4.next = 10;
-          return regeneratorRuntime.awrap(Promise.all(masterVersionHashes.map(function _callee3(versionHash) {
-            return regeneratorRuntime.async(function _callee3$(_context3) {
+          return _regeneratorRuntime.awrap(Promise.all(masterVersionHashes.map(function _callee3(versionHash) {
+            return _regeneratorRuntime.async(function _callee3$(_context3) {
               while (1) {
                 switch (_context3.prev = _context3.next) {
                   case 0:
                     _context3.next = 2;
-                    return regeneratorRuntime.awrap(_this.authClient.AuthorizationToken({
+                    return _regeneratorRuntime.awrap(_this.authClient.AuthorizationToken({
                       versionHash: versionHash
                     }));
 
@@ -503,7 +497,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
         case 10:
           authorizationTokens = _context4.sent;
           _context4.next = 13;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
             update: true
@@ -539,7 +533,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
           }
 
           _context4.next = 20;
-          return regeneratorRuntime.awrap(this.EditContentObject({
+          return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
@@ -553,7 +547,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
           }; // Update metadata with LRO version write token
 
           _context4.next = 24;
-          return regeneratorRuntime.awrap(this.EditContentObject({
+          return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
@@ -561,7 +555,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
         case 24:
           statusDraft = _context4.sent;
           _context4.next = 27;
-          return regeneratorRuntime.awrap(this.ReplaceMetadata({
+          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: statusDraft.write_token,
@@ -571,7 +565,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
 
         case 27:
           _context4.next = 29;
-          return regeneratorRuntime.awrap(this.FinalizeContentObject({
+          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: statusDraft.write_token
@@ -579,7 +573,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
 
         case 29:
           _context4.next = 31;
-          return regeneratorRuntime.awrap(this.CallBitcodeMethod({
+          return _regeneratorRuntime.awrap(this.CallBitcodeMethod({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: processingDraft.write_token,
@@ -630,7 +624,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
 exports.LROStatus = function _callee5(_ref8) {
   var libraryId, objectId, _ref8$offeringKey, offeringKey, lroDraft, ready, httpClient, error, result;
 
-  return regeneratorRuntime.async(function _callee5$(_context5) {
+  return _regeneratorRuntime.async(function _callee5$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
@@ -640,7 +634,7 @@ exports.LROStatus = function _callee5(_ref8) {
             objectId: objectId
           });
           _context5.next = 4;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             metadataSubtree: "lro_draft_".concat(offeringKey)
@@ -655,7 +649,7 @@ exports.LROStatus = function _callee5(_ref8) {
           }
 
           _context5.next = 8;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             metadataSubtree: "lro_draft"
@@ -673,7 +667,7 @@ exports.LROStatus = function _callee5(_ref8) {
           }
 
           _context5.next = 13;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             metadataSubtree: UrlJoin("abr_mezzanine", "offerings", offeringKey, "ready")
@@ -701,7 +695,7 @@ exports.LROStatus = function _callee5(_ref8) {
             debug: httpClient.debug
           });
           _context5.next = 24;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: lroDraft.write_token,
@@ -758,7 +752,7 @@ exports.LROStatus = function _callee5(_ref8) {
 exports.FinalizeABRMezzanine = function _callee6(_ref9) {
   var libraryId, objectId, _ref9$offeringKey, offeringKey, lroDraft, httpClient, error, result, mezzanineMetadata, masterHash, authorizationTokens, headers, _ref10, data, errors, warnings, logs, finalizeResponse;
 
-  return regeneratorRuntime.async(function _callee6$(_context6) {
+  return _regeneratorRuntime.async(function _callee6$(_context6) {
     while (1) {
       switch (_context6.prev = _context6.next) {
         case 0:
@@ -768,7 +762,7 @@ exports.FinalizeABRMezzanine = function _callee6(_ref9) {
             objectId: objectId
           });
           _context6.next = 4;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             metadataSubtree: "lro_draft_".concat(offeringKey)
@@ -793,7 +787,7 @@ exports.FinalizeABRMezzanine = function _callee6(_ref9) {
             debug: httpClient.debug
           });
           _context6.next = 12;
-          return regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: lroDraft.write_token,
@@ -805,7 +799,7 @@ exports.FinalizeABRMezzanine = function _callee6(_ref9) {
           masterHash = mezzanineMetadata["default"].prod_master_hash; // Authorization token for mezzanine and master
 
           _context6.next = 16;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
             update: true
@@ -814,7 +808,7 @@ exports.FinalizeABRMezzanine = function _callee6(_ref9) {
         case 16:
           _context6.t0 = _context6.sent;
           _context6.next = 19;
-          return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             versionHash: masterHash
           }));
 
@@ -827,7 +821,7 @@ exports.FinalizeABRMezzanine = function _callee6(_ref9) {
             }).join(",")
           };
           _context6.next = 24;
-          return regeneratorRuntime.awrap(this.CallBitcodeMethod({
+          return _regeneratorRuntime.awrap(this.CallBitcodeMethod({
             objectId: objectId,
             libraryId: libraryId,
             writeToken: lroDraft.write_token,
@@ -843,7 +837,7 @@ exports.FinalizeABRMezzanine = function _callee6(_ref9) {
           warnings = _ref10.warnings;
           logs = _ref10.logs;
           _context6.next = 31;
-          return regeneratorRuntime.awrap(this.FinalizeContentObject({
+          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: lroDraft.write_token,

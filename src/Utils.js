@@ -1,7 +1,7 @@
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const bs58 = require("bs58");
-const BigNumber = require("bignumber.js");
+const BigNumber = require("bignumber.js").default;
 const MultiHash = require("multihashes");
 const VarInt = require("varint");
 
@@ -15,9 +15,8 @@ const VarInt = require("varint");
  */
 const Utils = {
   name: "Utils",
-
   nullAddress: "0x0000000000000000000000000000000000000000",
-  weiPerEther: BigNumber("1000000000000000000"),
+  weiPerEther: new BigNumber("1000000000000000000"),
 
   /**
    * Convert number or string to BigNumber
@@ -42,8 +41,7 @@ const Utils = {
    * @returns {BigNumber} - Given value in ether
    */
   WeiToEther: (wei) => {
-    wei = new BigNumber(wei);
-    return BigNumber(wei).div(Utils.weiPerEther);
+    return Utils.ToBigNumber(wei).div(Utils.weiPerEther);
   },
 
   /**
@@ -51,12 +49,12 @@ const Utils = {
    *
    * @param {number | string | BigNumber} ether - Ether value to convert to wei
    *
-   * @see https://github.com/MikeMcl/bignumber.js
+   * @see https://github.com/indutny/bn.js/
    *
    * @returns {BigNumber} - Given value in wei
    */
   EtherToWei: (ether) => {
-    return BigNumber(ether).times(Utils.weiPerEther);
+    return Utils.ToBigNumber(ether).times(Utils.weiPerEther);
   },
 
   /**

@@ -41,10 +41,7 @@ const BuildContracts = async () => {
   Object.keys(compilationResult.contracts).map((contractKey => {
     const contractName = contractKey.split(":")[1];
     const abi = JSON.parse(compilationResult.contracts[contractKey].interface);
-    const contractData = {
-      abi,
-      bytecode: compilationResult.contracts[contractKey].bytecode
-    };
+    const contractData = { abi };
 
     // Write out contract info
     const contractJS = "const contract=" + JSON.stringify(contractData) + "; module.exports=contract;";
