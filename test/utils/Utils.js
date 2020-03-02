@@ -1,7 +1,11 @@
 const crypto = require("crypto");
 const Ethers = require("ethers");
-const {ElvClient} = require("../../src/ElvClient");
+const Source = require("../../src/ElvClient");
+const Min = require("../../dist/ElvClient-node-min");
 const ClientConfiguration = require("../../TestConfiguration");
+
+// Uses source by default. If USE_BUILD is specified, uses the minified node version
+const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
 
 // Private key can be specified as environment variable
 // e.g. PRIVATE_KEY=<private-key> npm run test

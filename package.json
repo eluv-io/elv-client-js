@@ -23,7 +23,8 @@
     "lint-docs": "./node_modules/.bin/eslint \"vendor/elv-jsdoc-template/tmpl/*.tmpl\" \"vendor/elv-jsdoc-template/**/*.js\" --fix",
     "publish": "npm publish --access public",
     "test": "jest",
-    "test-cov": "GENERATE_METHOD_LOGS=true jest --coverage --coverageDirectory 'test/coverage'"
+    "test-cov": "GENERATE_METHOD_LOGS=true jest --coverage --coverageDirectory 'test/coverage'",
+    "test-build": "USE_BUILD=true jest"
   },
   "pre-commit": {
     "run": [
