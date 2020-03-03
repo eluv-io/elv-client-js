@@ -372,7 +372,7 @@ exports.SetCustomContentContract = function _callee7(_ref8) {
           this.Log("Setting custom contract address: ".concat(objectId, " ").concat(customContractAddress));
           _context7.next = 7;
           return _regeneratorRuntime.awrap(this.ethClient.SetCustomContentContract({
-            contentContractAddress: Utils.HashToAddress(objectId),
+            contentContractAddress: this.utils.HashToAddress(objectId),
             customContractAddress: customContractAddress,
             overrides: overrides,
             signer: this.signer

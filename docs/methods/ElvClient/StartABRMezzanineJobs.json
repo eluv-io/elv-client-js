@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async StartABRMezzanineJobs({\n  \"libraryId\": \"ilibb8tMgmqtprjbPbaURmifp4S8Gqy\",\n  \"objectId\": \"iq__NKMvbgxJ6qVpoGbhLvhXSpVjPaz\",\n  \"offeringKey\": \"default\"\n});",
-    "result": "{\n  \"lro_draft\": {\n    \"write_token\": \"tqw_9h4QxkqUrGfH4tgaVbgSQ1qe2xnnDsANT\",\n    \"node\": \"https://host-35-233-145-232.test.contentfabric.io/\",\n    \"offering\": \"default\"\n  },\n  \"writeToken\": \"tqw_9h4QxkqUrGfH4tgaVbgSQ1qe2xnnDsANT\",\n  \"data\": [\n    \"f8a5efe0-fdd0-4f69-9be9-ade862bb0521\",\n    \"c285addb-4c44-49a6-bdab-6efbb16f1bc7\"\n  ],\n  \"logs\": [\n    \"2020-02-28 22:14:15 Debug: getAvpReqCtx filePath=Video.mp4 qhot=hq__LvdKMWp68eKd91z6v6AGN1qjsUkkRnbXkZX2MRzw78pie944kDjJubPswcY9JvdGtKXdJ6PARE key=hq__LvdKMWp68eKd91z6v6AGN1qjsUkkRnbXkZX2MRzw78pie944kDjJubPswcY9JvdGtKXdJ6PARE.txAudio.Video.mp4\",\n    \"2020-02-28 22:14:15 Debug: getAvpReqCtx filePath=Video.mp4 qhot=hq__LvdKMWp68eKd91z6v6AGN1qjsUkkRnbXkZX2MRzw78pie944kDjJubPswcY9JvdGtKXdJ6PARE key=hq__LvdKMWp68eKd91z6v6AGN1qjsUkkRnbXkZX2MRzw78pie944kDjJubPswcY9JvdGtKXdJ6PARE.txVideo.Video.mp4\"\n  ],\n  \"warnings\": [],\n  \"errors\": []\n}"
-  }
-]

@@ -1,5 +1,0 @@
-[
-  {
-    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib4Yky3ZytxYu4j3kt4VyTJHXctuCu\",\n  \"objectId\": \"iq__mHPFBmpembVaAady2tGZyDFjfM4\",\n  \"writeToken\": \"tqw_BXttPbGnmZU9sePhmEwmTKgawzsbLNbPe\",\n  \"metadataSubtree\": \"toDelete\"\n});"
-  }
-]

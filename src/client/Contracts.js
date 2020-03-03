@@ -257,7 +257,7 @@ exports.SetCustomContentContract = async function({
   this.Log(`Setting custom contract address: ${objectId} ${customContractAddress}`);
 
   const setResult = await this.ethClient.SetCustomContentContract({
-    contentContractAddress: Utils.HashToAddress(objectId),
+    contentContractAddress: this.utils.HashToAddress(objectId),
     customContractAddress,
     overrides,
     signer: this.signer

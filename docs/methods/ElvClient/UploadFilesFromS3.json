@@ -1,8 +1,0 @@
-[
-  {
-    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib4Yky3ZytxYu4j3kt4VyTJHXctuCu\",\n  \"objectId\": \"iq__mHPFBmpembVaAady2tGZyDFjfM4\",\n  \"writeToken\": \"tqw_N9J4wTsqqRp8ccDjZYntkrm5Fo63oGpq3\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-copy\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": true,\n  \"callback\": \"<function>\"\n});"
-  },
-  {
-    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib4Yky3ZytxYu4j3kt4VyTJHXctuCu\",\n  \"objectId\": \"iq__mHPFBmpembVaAady2tGZyDFjfM4\",\n  \"writeToken\": \"tqw_Jo98eMcofxxdti2VPWQecPZk3WoLxbemD\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-reference\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": false,\n  \"callback\": \"<function>\"\n});"
-  }
-]

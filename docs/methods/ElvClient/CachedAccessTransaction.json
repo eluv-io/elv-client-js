@@ -1,9 +1,0 @@
-[
-  {
-    "signature": "async CachedAccessTransaction({\n  \"versionHash\": \"hq__FpdWHvmvebDvYTkRDG2voeSCKowWMpd2z6WNASAbchaMPr445EaBt945W3Ejxfz922DamPajFP\"\n});",
-    "result": "\"0x8eaa75f36515490efdea40fb3d1c11b0ccee63c7a53df638aa239684480bfa1b\""
-  },
-  {
-    "signature": "async CachedAccessTransaction({\n  \"versionHash\": \"hq__FpdWHvmvebDvYTkRDG2voeSCKowWMpd2z6WNASAbchaMPr445EaBt945W3Ejxfz922DamPajFP\"\n});"
-  }
-]

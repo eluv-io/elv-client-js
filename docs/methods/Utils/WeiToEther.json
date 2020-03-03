@@ -1,6 +1,0 @@
-[
-  {
-    "signature": " WeiToEther({\n  \"s\": 1,\n  \"e\": 18,\n  \"c\": [\n    10000\n  ]\n});",
-    "result": "\"1\""
-  }
-]

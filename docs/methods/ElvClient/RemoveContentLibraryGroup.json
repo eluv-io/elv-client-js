@@ -1,5 +1,0 @@
-[
-  {
-    "signature": "async RemoveContentLibraryGroup({\n  \"libraryId\": \"ilib4Yky3ZytxYu4j3kt4VyTJHXctuCu\",\n  \"groupAddress\": \"0x68f87e19c993fce03ac938225ef2a577a08a673c\",\n  \"permission\": \"reviewer\"\n});"
-  }
-]

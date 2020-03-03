@@ -15,7 +15,12 @@ let plugins = [
   new webpack.optimize.LimitChunkCountPlugin({
     maxChunks: 1,
   }),
-  new webpack.IgnorePlugin(/unorm/)
+  new webpack.IgnorePlugin(/unorm/),
+  new BundleAnalyzerPlugin({
+    analyzerMode: "static",
+    reportFilename: path.resolve(path.join(__dirname, "test", "bundle-analysis", "index.html")),
+    openAnalyzer: false
+  })
 ];
 
 // Exclude node-fetch for web build

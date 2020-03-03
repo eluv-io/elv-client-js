@@ -6,7 +6,9 @@
 
 node_modules/
 
-build/contracts/
+test/bundle-analysis
+
+docs/methods
 
 ElvClient-min-dev.js*
 ElvClient-node-min-dev.js*
