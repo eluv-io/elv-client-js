@@ -66,12 +66,16 @@ class ElvClient {
   /**
    * Create a new ElvClient
    *
+   * NOTE: It is highly recommended to use ElvClient.FromConfiguration to
+   * automatically import the client settings from the fabric
+   *
    * @constructor
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+   * @param {Array<string>} kmsURIs - List of KMS urls to use for OAuth authentication
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
@@ -81,6 +85,7 @@ class ElvClient {
     contentSpaceId,
     fabricURIs,
     ethereumURIs,
+    kmsURIs=[],
     noCache=false,
     noAuth=false
   }) {
@@ -93,6 +98,7 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.kmsURIs = kmsURIs;
 
     this.noCache = noCache;
     this.noAuth = noAuth;
@@ -108,6 +114,7 @@ class ElvClient {
    * @methodGroup Constructor
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
+   * @param {Array<string>} kmsUrls - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: na-west-north na-west-south na-east eu-west
    *
@@ -115,6 +122,7 @@ class ElvClient {
    */
   static async Configuration({
     configUrl,
+    kmsUrls=[],
     region
   }) {
     try {
@@ -145,7 +153,8 @@ class ElvClient {
         nodeId: fabricInfo.node_id,
         contentSpaceId: fabricInfo.qspace.id,
         fabricURIs,
-        ethereumURIs
+        ethereumURIs,
+        kmsURIs: kmsUrls
       };
     } catch(error) {
       // eslint-disable-next-line no-console
@@ -417,11 +426,37 @@ class ElvClient {
     return this.signer ? this.utils.FormatAddress(this.signer.address) : "";
   }
 
-  SetOauthToken({token}) {
+  /**
+   * Set the signer for this client via OAuth token. The client will exchange the given token
+   * for the user's private key using the KMS specified in the configuration.
+   *
+   * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl)
+   *
+   * @param {string} token - The OAuth ID token to authenticate with
+   */
+  async SetOauthToken({token}) {
+    if(!this.kmsURIs || this.kmsURIs.length === 0) {
+      throw Error("Unable to authorize with OAuth token: No KMS URLs set");
+    }
+
     this.oauthToken = token;
 
+    const path = "/ks/jwt/wlt";
+    const httpClient = new HttpClient({uris: this.kmsURIs});
+
+    const response = await this.utils.ResponseToJson(
+      httpClient.Request({
+        headers: { Authorization: `Bearer ${token}`},
+        method: "PUT",
+        path
+      })
+    );
+
+    const privateKey = response["UserSKHex"];
+
     const wallet = this.GenerateWallet();
-    const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+    const signer = wallet.AddAccount({privateKey});
+
     this.SetSigner({signer});
   }
 
