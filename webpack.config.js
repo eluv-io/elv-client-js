@@ -26,6 +26,9 @@ let plugins = [
 // Exclude node-fetch for web build
 if(cmdOpts["target"] !== "node") {
   plugins.push(new webpack.IgnorePlugin(/node-fetch-polyfill/));
+  plugins.push(new webpack.IgnorePlugin(/@eluvio\/crypto\/dist\/elv-crypto.bundle.node/));
+} else {
+  plugins.push(new webpack.IgnorePlugin(/@eluvio\/crypto\/dist\/elv-crypto.bundle.js/));
 }
 
 module.exports = {

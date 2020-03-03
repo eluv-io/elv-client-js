@@ -277,32 +277,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-  <div class="example">
-    <h5 id="AccessLevel-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#AccessLevel-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async AccessLevel();
-
-
-"prompt"</pre>
-
-  <pre>async AccessLevel();
-
-
-"public"</pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -414,105 +388,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-
-  <div class="example">
-    <h5 id="CollectedTags-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#CollectedTags-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async CollectedTags();
-
-
-{}</pre>
-
-  <pre>async CollectedTags();
-
-
-{
-  "boat": {
-    "aggregate": 0.6,
-    "occurrences": 1
-  },
-  "cherry": {
-    "aggregate": 0.3,
-    "occurrences": 1
-  },
-  "chocolate": {
-    "aggregate": 0.8,
-    "occurrences": 1
-  }
-}</pre>
-
-  <pre>async CollectedTags();
-
-
-{
-  "boat": {
-    "aggregate": 0.6,
-    "occurrences": 1
-  },
-  "buoy": {
-    "aggregate": 0.6,
-    "occurrences": 1
-  },
-  "cherry": {
-    "aggregate": 1,
-    "occurrences": 2
-  },
-  "chocolate": {
-    "aggregate": 0.8,
-    "occurrences": 1
-  },
-  "duck": {
-    "aggregate": 0.5,
-    "occurrences": 1
-  }
-}</pre>
-
-  <pre>async CollectedTags();
-
-
-{
-  "boat": {
-    "aggregate": 1.5,
-    "occurrences": 2
-  },
-  "buoy": {
-    "aggregate": 0.6,
-    "occurrences": 1
-  },
-  "cherry": {
-    "aggregate": 1,
-    "occurrences": 2
-  },
-  "chocolate": {
-    "aggregate": 0.8,
-    "occurrences": 1
-  },
-  "duck": {
-    "aggregate": 0.5,
-    "occurrences": 1
-  },
-  "mayhem": {
-    "aggregate": 0.5,
-    "occurrences": 1
-  },
-  "shark": {
-    "aggregate": 0.8,
-    "occurrences": 1
-  }
-}</pre>
-
-
-    </div>
-  </div>
 
 
 
@@ -671,29 +546,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-
-  <div class="example">
-    <h5 id="DeleteUserMetadata-examples">Example</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#DeleteUserMetadata-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async DeleteUserMetadata({
-  "metadataSubtree": "toDelete"
-});
-
-
-&lt;No Return Value></pre>
-
-
-    </div>
-  </div>
 
 
 
@@ -889,52 +741,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-
-  <div class="example">
-    <h5 id="MergeUserMetadata-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#MergeUserMetadata-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async MergeUserMetadata({
-  "metadata": {
-    "public": {
-      "meta": "data"
-    },
-    "toMerge": {
-      "meta": "data"
-    },
-    "toReplace": {
-      "meta": "data"
-    },
-    "toDelete": {
-      "meta": "data"
-    }
-  }
-});
-
-
-&lt;No Return Value></pre>
-
-  <pre>async MergeUserMetadata({
-  "metadataSubtree": "toMerge",
-  "metadata": {
-    "new": "metadata"
-  }
-});
-
-
-&lt;No Return Value></pre>
-
-
-    </div>
-  </div>
 
 
 
@@ -1242,47 +1048,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-  <div class="example">
-    <h5 id="PublicUserMetadata-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#PublicUserMetadata-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async PublicUserMetadata({
-  "address": "0x79f02BC5Db4Be8BD8Fe2026765a71887290f5aF8"
-});
-
-
-{
-  "meta": "data"
-}</pre>
-
-  <pre>async PublicUserMetadata({
-  "address": "0x79f02BC5Db4Be8BD8Fe2026765a71887290f5aF8",
-  "metadataSubtree": "image"
-});
-
-
-"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o"</pre>
-
-  <pre>async PublicUserMetadata({
-  "address": "0x79f02BC5Db4Be8BD8Fe2026765a71887290f5aF8",
-  "metadataSubtree": "image"
-});
-
-
-"hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM"</pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -1478,40 +1243,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-  <div class="example">
-    <h5 id="ReplaceUserMetadata-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#ReplaceUserMetadata-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async ReplaceUserMetadata({
-  "metadataSubtree": "toReplace",
-  "metadata": {
-    "new": "metadata"
-  }
-});
-
-
-&lt;No Return Value></pre>
-
-  <pre>async ReplaceUserMetadata({
-  "metadataSubtree": "access_level",
-  "metadata": "public"
-});
-
-
-&lt;No Return Value></pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -1649,29 +1380,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-
-  <div class="example">
-    <h5 id="SetAccessLevel-examples">Example</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#SetAccessLevel-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async SetAccessLevel({
-  "level": "public"
-});
-
-
-&lt;No Return Value></pre>
-
-
-    </div>
-  </div>
 
 
 
@@ -1818,36 +1526,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-
-  <div class="example">
-    <h5 id="SetUserProfileImage-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#SetUserProfileImage-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async SetUserProfileImage({
-  "image": "&lt;ArrayBuffer 101254>"
-});
-
-
-&lt;No Return Value></pre>
-
-  <pre>async SetUserProfileImage({
-  "image": "&lt;ArrayBuffer 102268>"
-});
-
-
-&lt;No Return Value></pre>
-
-
-    </div>
-  </div>
 
 
 
@@ -2133,97 +1811,6 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
 
-  <div class="example">
-    <h5 id="UserMetadata-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#UserMetadata-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async UserMetadata();
-
-
-{
-  "bitcode_flags": "abrmaster",
-  "bitcode_format": "builtin",
-  "public": {
-    "meta": "data"
-  },
-  "toDelete": {
-    "meta": "data"
-  },
-  "toMerge": {
-    "meta": "data"
-  },
-  "toReplace": {
-    "meta": "data"
-  }
-}</pre>
-
-  <pre>async UserMetadata({
-  "metadataSubtree": "toMerge"
-});
-
-
-{
-  "meta": "data"
-}</pre>
-
-  <pre>async UserMetadata();
-
-
-{
-  "bitcode_flags": "abrmaster",
-  "bitcode_format": "builtin",
-  "public": {
-    "meta": "data"
-  },
-  "toMerge": {
-    "meta": "data",
-    "new": "metadata"
-  },
-  "toReplace": {
-    "new": "metadata"
-  }
-}</pre>
-
-  <pre>async UserMetadata({
-  "metadataSubtree": "image"
-});
-
-
-"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o"</pre>
-
-  <pre>async UserMetadata({
-  "metadataSubtree": "image"
-});
-
-
-"hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM"</pre>
-
-  <pre>async UserMetadata({
-  "metadataSubtree": "access_level"
-});
-
-
-&lt;No Return Value></pre>
-
-  <pre>async UserMetadata({
-  "metadataSubtree": "access_level"
-});
-
-
-"public"</pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -2391,34 +1978,6 @@ browser caching when the image is updated</p>
 
 
 
-  <div class="example">
-    <h5 id="UserProfileImage-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#UserProfileImage-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async UserProfileImage();
-
-
-"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1/q/iq__3ek2ogDLCeuKmKCjERoA7wcsK2SM/public/image?hash=hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o&amp;authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDc5ZjAyYmM1ZGI0YmU4YmQ4ZmUyMDI2NzY1YTcxODg3MjkwZjVhZjgiLCJxbGliX2lkIjoiaWxpYjJ6cWE0Z1o4TjNESDFRV2FrUjJlNVVvd0RMRjEifQ%3D%3D.RVMyNTZLX0ZNakhMV0hmTnprRmdnYXdBc3BaRlFpZDhqMXNvcFA0OWVVcjdyUHVTZEZjNXpIdE1tcEt4YndHUWtXb1RpSGQyWUNUd2tUU28xbVJmVndTcEdONmt1dEF3"</pre>
-
-  <pre>async UserProfileImage({
-  "address": "0x79f02BC5Db4Be8BD8Fe2026765a71887290f5aF8"
-});
-
-
-"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1/q/iq__3ek2ogDLCeuKmKCjERoA7wcsK2SM/public/image?hash=hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM&amp;authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDc5ZjAyYmM1ZGI0YmU4YmQ4ZmUyMDI2NzY1YTcxODg3MjkwZjVhZjgiLCJxbGliX2lkIjoiaWxpYjJ6cWE0Z1o4TjNESDFRV2FrUjJlNVVvd0RMRjEifQ%3D%3D.RVMyNTZLX0ZNakhMV0hmTnprRmdnYXdBc3BaRlFpZDhqMXNvcFA0OWVVcjdyUHVTZEZjNXpIdE1tcEt4YndHUWtXb1RpSGQyWUNUd2tUU28xbVJmVndTcEdONmt1dEF3"</pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -2572,29 +2131,6 @@ browser caching when the image is updated</p>
 
 
 
-  <div class="example">
-    <h5 id="UserWalletAddress-examples">Example</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#UserWalletAddress-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async UserWalletAddress({
-  "address": "0x79f02BC5Db4Be8BD8Fe2026765a71887290f5aF8"
-});
-
-
-"0xBe440cDe9e05EAa161b5690cE3Bedd8a31A4d932"</pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -2692,27 +2228,6 @@ browser caching when the image is updated</p>
 
 
 
-
-  <div class="example">
-    <h5 id="WalletAddress-examples">Example</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#WalletAddress-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async WalletAddress();
-
-
-"0xBe440cDe9e05EAa161b5690cE3Bedd8a31A4d932"</pre>
-
-
-    </div>
-  </div>
 
 
 

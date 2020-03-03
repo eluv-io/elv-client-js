@@ -7,6 +7,8 @@ var _regeneratorRuntime = require("@babel/runtime/regenerator");
  */
 var Ethers = require("ethers");
 
+var ContentContract = require("../contracts/BaseContent");
+
 var _require = require("../Validation"),
     ValidateAddress = _require.ValidateAddress,
     ValidateParameters = _require.ValidateParameters;

@@ -5,6 +5,7 @@
  */
 
 const Ethers = require("ethers");
+const ContentContract = require("../contracts/BaseContent");
 
 const {
   ValidateAddress,

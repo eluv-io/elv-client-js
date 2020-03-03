@@ -400,53 +400,6 @@
 
 
 
-  <div class="example">
-    <h5 id="AddAccount-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#AddAccount-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre> AddAccount({
-  "accountName": "test",
-  "privateKey": "&lt;filtered>"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-  <pre> AddAccount({
-  "accountName": "mnemonic",
-  "privateKey": "&lt;filtered>"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-  <pre> AddAccount({
-  "accountName": "private key",
-  "privateKey": "&lt;filtered>"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-  <pre> AddAccount({
-  "privateKey": "&lt;filtered>"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -649,68 +602,6 @@
 
 
 
-  <div class="example">
-    <h5 id="AddAccountFromEncryptedPK-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#AddAccountFromEncryptedPK-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async AddAccountFromEncryptedPK({
-  "accountName": "private key",
-  "encryptedPrivateKey": "{\"address\":\"ef55143b962328914c35c16e225b8aa768434abf\",\"crypto\":{\"cipher\":\"aes-128-ctr\",\"ciphertext\":\"4314d3d5b80ac0c87add387cb3fdf940a4d6d9d999501aa18b5b224f4be70a74\",\"cipherparams\":{\"iv\":\"41cb3d70282553819d836f51540dcca3\"},\"kdf\":\"scrypt\",\"kdfparams\":{\"dklen\":32,\"n\":262144,\"p\":1,\"r\":8,\"salt\":\"03003c0e1f63de7890226b63bf0768fc4faa98eb6c7c1767a72a0cf34c791ac1\"},\"mac\":\"5afd202da30fdadb880dec99a2e8ff4a209fb7aa38c2dd662cc4a375667ce582\"},\"id\":\"05f541df-9dd5-4485-8704-71998d90e6cc\",\"version\":3}",
-  "password": "test"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-  <pre>async AddAccountFromEncryptedPK({
-  "accountName": "private key",
-  "encryptedPrivateKey": {
-    "address": "ef55143b962328914c35c16e225b8aa768434abf",
-    "crypto": {
-      "cipher": "aes-128-ctr",
-      "ciphertext": "4314d3d5b80ac0c87add387cb3fdf940a4d6d9d999501aa18b5b224f4be70a74",
-      "cipherparams": {
-        "iv": "41cb3d70282553819d836f51540dcca3"
-      },
-      "kdf": "scrypt",
-      "kdfparams": {
-        "dklen": 32,
-        "n": 262144,
-        "p": 1,
-        "r": 8,
-        "salt": "03003c0e1f63de7890226b63bf0768fc4faa98eb6c7c1767a72a0cf34c791ac1"
-      },
-      "mac": "5afd202da30fdadb880dec99a2e8ff4a209fb7aa38c2dd662cc4a375667ce582"
-    },
-    "id": "05f541df-9dd5-4485-8704-71998d90e6cc",
-    "version": 3
-  },
-  "password": "test"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-  <pre>async AddAccountFromEncryptedPK({
-  "encryptedPrivateKey": "{\"address\":\"95ced938f7991cd0dfcb48f0a06a40fa1af46ebc\",\"id\":\"e01a8b7f-4809-4040-bef1-aeca11addc11\",\"version\":3,\"Crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"a5d2ff9b4160884c7b243d2fdf50e628\"},\"ciphertext\":\"b27f6fd72247048a871ca53d24893dd4efd7887bf530fe57e4e63a179562b72b\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"ba16c9cbb7c5e7432223c1a99c240eb271a4e39d96da73d477bd40014f97824f\",\"n\":16384,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"92b37f4e2881200e32079f1b0eef13a442bb8ddf3a1db908112f829d4b3fcb93\"}}",
-  "password": "test"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -912,30 +803,6 @@
 
 
 
-
-  <div class="example">
-    <h5 id="AddAccountFromMnemonic-examples">Example</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#AddAccountFromMnemonic-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre> AddAccountFromMnemonic({
-  "accountName": "mnemonic",
-  "mnemonic": "galaxy census fault wrist frost such crew share fly ankle salon aspect"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-
-    </div>
-  </div>
 
 
 
@@ -1144,35 +1011,6 @@ the account name of a saved account</p>
 
 
 
-  <div class="example">
-    <h5 id="GenerateEncryptedPrivateKey-examples">Example</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#GenerateEncryptedPrivateKey-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async GenerateEncryptedPrivateKey({
-  "signer": "&lt;Ethers#Wallet>",
-  "password": "test",
-  "options": {
-    "scrypt": {
-      "N": 16384
-    }
-  }
-});
-
-
-"{\"address\":\"95ced938f7991cd0dfcb48f0a06a40fa1af46ebc\",\"id\":\"e01a8b7f-4809-4040-bef1-aeca11addc11\",\"version\":3,\"Crypto\":{\"cipher\":\"aes-128-ctr\",\"cipherparams\":{\"iv\":\"a5d2ff9b4160884c7b243d2fdf50e628\"},\"ciphertext\":\"b27f6fd72247048a871ca53d24893dd4efd7887bf530fe57e4e63a179562b72b\",\"kdf\":\"scrypt\",\"kdfparams\":{\"salt\":\"ba16c9cbb7c5e7432223c1a99c240eb271a4e39d96da73d477bd40014f97824f\",\"n\":16384,\"dklen\":32,\"p\":1,\"r\":8},\"mac\":\"92b37f4e2881200e32079f1b0eef13a442bb8ddf3a1db908112f829d4b3fcb93\"}}"</pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -1270,27 +1108,6 @@ the account name of a saved account</p>
 
 
 
-
-  <div class="example">
-    <h5 id="GenerateMnemonic-examples">Example</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#GenerateMnemonic-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre> GenerateMnemonic();
-
-
-"galaxy census fault wrist frost such crew share fly ankle salon aspect"</pre>
-
-
-    </div>
-  </div>
 
 
 
@@ -1444,43 +1261,6 @@ the account name of a saved account</p>
 
 
 
-
-  <div class="example">
-    <h5 id="GetAccount-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#GetAccount-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre> GetAccount({
-  "accountName": "test"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-  <pre> GetAccount({
-  "accountName": "test"
-});
-
-
-&lt;No Return Value></pre>
-
-  <pre> GetAccount({
-  "accountName": "mnemonic"
-});
-
-
-&lt;Ethers#Wallet></pre>
-
-
-    </div>
-  </div>
 
 
 
@@ -1688,36 +1468,6 @@ passing the signer object, or by passing the account name of a saved account</p>
 
 
 
-  <div class="example">
-    <h5 id="GetAccountBalance-examples">Examples</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#GetAccountBalance-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre>async GetAccountBalance({
-  "accountName": "mnemonic"
-});
-
-
-"0.0"</pre>
-
-  <pre>async GetAccountBalance({
-  "signer": "&lt;Ethers#Wallet>"
-});
-
-
-"0.0"</pre>
-
-
-    </div>
-  </div>
-
 
 
 
@@ -1863,29 +1613,6 @@ passing the signer object, or by passing the account name of a saved account</p>
 
 
 
-
-  <div class="example">
-    <h5 id="RemoveAccount-examples">Example</h5>
-    <button class="example-toggle-button">Show Examples</button>
-    <div class="example-container">
-      <a class="link-icon" href="#RemoveAccount-examples">
-        <svg height="20" width="20" style="fill: black;">
-          <use xlink:href="#linkIcon"></use>
-        </svg>
-      </a>
-      
-
-
-  <pre> RemoveAccount({
-  "accountName": "test"
-});
-
-
-&lt;No Return Value></pre>
-
-
-    </div>
-  </div>
 
 
 
