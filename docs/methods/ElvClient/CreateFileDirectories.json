@@ -1,5 +1,0 @@
-[
-  {
-    "signature": "async CreateFileDirectories({\n  \"libraryId\": \"ilib4Yky3ZytxYu4j3kt4VyTJHXctuCu\",\n  \"objectId\": \"iq__mHPFBmpembVaAady2tGZyDFjfM4\",\n  \"writeToken\": \"tqw_GuzLPfo4F4A2xSz4cn85QvDKfyejhi18w\",\n  \"filePaths\": [\n    \"new-directory-1\",\n    \"new-directory-2\",\n    \"new-directory-3\"\n  ]\n});"
-  }
-]

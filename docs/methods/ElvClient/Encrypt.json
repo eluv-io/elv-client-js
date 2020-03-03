@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async Encrypt({\n  \"libraryId\": \"ilib4Yky3ZytxYu4j3kt4VyTJHXctuCu\",\n  \"objectId\": \"iq__mHPFBmpembVaAady2tGZyDFjfM4\",\n  \"chunk\": \"<ArrayBuffer 100000>\"\n});",
-    "result": "<ArrayBuffer 102657>"
-  }
-]

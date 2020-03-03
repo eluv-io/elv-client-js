@@ -37,7 +37,7 @@ const testFileSize = 100000;
 
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
-let mediaLibraryId, masterHash, mezzanineId, mezzanineHash;
+let mediaLibraryId, masterId, masterHash, mezzanineId, mezzanineHash;
 let s3Access;
 
 let testFile1, testFile2, testFile3, testHash;
@@ -1531,6 +1531,7 @@ describe("Test ElvClient", () => {
       expect(metadata.public.name).toEqual("Production Master Test");
       expect(metadata.public.description).toEqual("Production Master Test Description");
 
+      masterId = id;
       masterHash = hash;
     });
 
@@ -2131,8 +2132,29 @@ describe("Test ElvClient", () => {
 
       try {
         await client.ContentObject({libraryId, objectId});
+
+        // If test reaches this point, object has not been deleted successfully
         expect(undefined).toBeDefined();
-      // eslint-disable-next-line no-empty
+        // eslint-disable-next-line no-empty
+      } catch(error) {}
+
+      await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: masterId});
+
+      try {
+        await client.ContentObject({libraryId: mediaLibraryId, objectId: masterId});
+
+        expect(undefined).toBeDefined();
+        // eslint-disable-next-line no-empty
+      } catch(error) {}
+
+
+      await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: mezzanineId});
+
+      try {
+        await client.ContentObject({libraryId: mediaLibraryId, objectId: mezzanineId});
+
+        expect(undefined).toBeDefined();
+        // eslint-disable-next-line no-empty
       } catch(error) {}
     });
 

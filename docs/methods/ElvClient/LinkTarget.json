@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async LinkTarget({\n  \"libraryId\": \"ilibb8tMgmqtprjbPbaURmifp4S8Gqy\",\n  \"objectId\": \"iq__NKMvbgxJ6qVpoGbhLvhXSpVjPaz\",\n  \"versionHash\": \"hq__3DJuFgehJmnUjwaytyT6UPWThNDwyhxtuo4z1jQ1cmcyA4xK7TW39CeY8JiSNYMwoEYjLDzELJ\",\n  \"linkPath\": \"videoLink/default\"\n});",
-    "result": "\"hq__3DJuFgehJmnUjwaytyT6UPWThNDwyhxtuo4z1jQ1cmcyA4xK7TW39CeY8JiSNYMwoEYjLDzELJ\""
-  }
-]

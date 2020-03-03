@@ -1,6 +1,0 @@
-[
-  {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"absurd give artefact dutch vanish motion indicate sauce imitate alcohol resemble renew\"\n});",
-    "result": "<Ethers#Wallet>"
-  }
-]

@@ -1,31 +1,14 @@
-if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+const { AccessClient } = require("./AccessClient");
 
-const UrlJoin = require("url-join");
-const URI = require("urijs");
-const Ethers = require("ethers");
+const ManagementClient = Object.assign(AccessClient, {});
 
-const AuthorizationClient = require("./AuthorizationClient");
-const ElvWallet = require("./ElvWallet");
-const EthClient = require("./EthClient");
-const UserProfileClient = require("./UserProfileClient");
-const HttpClient = require("./HttpClient");
-// const ContentObjectVerification = require("./ContentObjectVerification");
-const Utils = require("./Utils");
-const Crypto = require("./Crypto");
+Object.assign(ManagementClient.prototype, require("./client/ABRPublishing"));
+Object.assign(ManagementClient.prototype, require("./client/AccessGroups").manage);
+Object.assign(ManagementClient.prototype, require("./client/ContentManagement"));
+Object.assign(ManagementClient.prototype, require("./client/Files").manage);
 
-const SpaceContract = require("./contracts/BaseContentSpace");
-const LibraryContract = require("./contracts/BaseLibrary");
-const ContentContract = require("./contracts/BaseContent");
-const ContentTypeContract = require("./contracts/BaseContentType");
+exports.ElvClient = ManagementClient;
 
-const {
-  ValidateLibrary,
-  ValidateObject,
-  ValidateVersion,
-  ValidateWriteToken,
-  ValidatePartHash,
-  ValidateParameters
-} = require("./Validation");
 
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node

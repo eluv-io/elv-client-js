@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async FinalizeABRMezzanine({\n  \"libraryId\": \"ilibb8tMgmqtprjbPbaURmifp4S8Gqy\",\n  \"objectId\": \"iq__NKMvbgxJ6qVpoGbhLvhXSpVjPaz\",\n  \"offeringKey\": \"default\"\n});",
-    "result": "{\n  \"logs\": [\n    \"2020-02-28 22:14:37 Debug: getProductionVariantCtx(hq__LvdKMWp68eKd91z6v6AGN1qjsUkkRnbXkZX2MRzw78pie944kDjJubPswcY9JvdGtKXdJ6PARE,default)\",\n    \"2020-02-28 22:14:37 Debug: getting production.Master: hq__LvdKMWp68eKd91z6v6AGN1qjsUkkRnbXkZX2MRzw78pie944kDjJubPswcY9JvdGtKXdJ6PARE\",\n    \"2020-02-28 22:14:37 Debug: Get production.Variant 'default' from production.Master\"\n  ],\n  \"warnings\": [],\n  \"errors\": [],\n  \"id\": \"iq__NKMvbgxJ6qVpoGbhLvhXSpVjPaz\",\n  \"hash\": \"hq__Krab4BgYBaqp1vWRLHAgiPvRMsMMC36eaT9TWHnPeFiihYvu1apUTNm63r8jKX8jNEYqPooRES\",\n  \"write_token\": \"tqw_9h4QxkqUrGfH4tgaVbgSQ1qe2xnnDsANT\",\n  \"type\": \"hq__AZfvQsNDwwqxGcCBZpJ19H7D7WaM6oF35ETbv7y4wUaHrCkc7A8LrippExKuGmXXjrYUWLV3zg\"\n}"
-  }
-]
