@@ -8,24 +8,18 @@
   "homepage": "https://github.com/eluv-io/elv-client-js",
   "scripts": {
     "build": "npm run build-contracts && npm run build-docs && npm run build-frame-client && npm run build-dist && npm run build-prod",
-
     "build-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme README.md",
     "build-dist": "node ./node_modules/@babel/cli/bin/babel.js --source-type=unambiguous --presets=@babel/preset-env --plugins @babel/plugin-transform-runtime src --out-dir dist/src",
     "build-contracts": "node build/BuildContracts.js",
     "build-frame-client": "webpack -p --progress --entry ./dist/src/FrameClient.js --output-filename ElvFrameClient-min.js --devtool none --optimize-minimize && mv test/bundle-analysis/index.html test/bundle-analysis/frame-client.html",
-
     "build-prod": "npm run build-web && npm run build-node && npm run build-web-access && npm run build-node-access",
-
     "build-web": "webpack --progress --mode production --target web --output-filename ElvClient-min.js --devtool none && mv test/bundle-analysis/index.html test/bundle-analysis/web.html",
     "build-node": "webpack --progress --mode production --target node --output-filename ElvClient-node-min.js --devtool none && mv test/bundle-analysis/index.html test/bundle-analysis/node.html",
-
     "build-web-access": "webpack --entry ./dist/src/AccessClient.js --progress --mode production --target web --output-filename AccessClient-min.js --devtool none && mv test/bundle-analysis/index.html test/bundle-analysis/web-access.html",
     "build-node-access": "webpack --entry ./dist/src/AccessClient.js --progress --mode production --target node --output-filename AccessClient-node-min.js --devtool none && mv test/bundle-analysis/index.html test/bundle-analysis/node-access.html",
-
     "build-dev": "npm run build-web-dev && npm run build-node-dev",
     "build-web-dev": "webpack --progress --target web --output-filename ElvClient-min-dev.js",
     "build-node-dev": "webpack --progress --target node --output-filename ElvClient-node-min-dev.js",
-
     "add-build": "git add dist && git add src/contracts && git add src/events && git add docs",
     "lint": "./node_modules/.bin/eslint \"src/**/*.js\" \"test/**/*.js\" --fix",
     "lint-docs": "./node_modules/.bin/eslint \"vendor/elv-jsdoc-template/tmpl/*.tmpl\" \"vendor/elv-jsdoc-template/**/*.js\" --fix",
@@ -57,7 +51,7 @@
   ],
   "dependencies": {
     "@babel/runtime": "^7.8.4",
-    "@eluvio/crypto": "^1.0.6",
+    "@eluvio/crypto": ">=1.0.8",
     "babel-loader": "^8.0.6",
     "bignumber.js": "^8.0.2",
     "bn.js": "^5.1.1",
