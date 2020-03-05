@@ -132,6 +132,7 @@ class ElvClient {
     contentSpaceId,
     fabricURIs,
     ethereumURIs,
+    kmsURIs,
     noCache=false,
     noAuth=false
   }) {
@@ -144,6 +145,7 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.kmsURIs = kmsURIs;
 
     this.noCache = noCache;
     this.noAuth = noAuth;
@@ -214,6 +216,7 @@ class ElvClient {
    * @methodGroup Constructor
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
+   * @param {Array<string>} kmsURLs - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: na-west-north na-west-south na-east eu-west
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
@@ -223,6 +226,7 @@ class ElvClient {
    */
   static async FromConfigurationUrl({
     configUrl,
+    kmsUrls=[],
     region,
     noCache=false,
     noAuth=false
@@ -240,6 +244,7 @@ class ElvClient {
       contentSpaceId,
       fabricURIs,
       ethereumURIs,
+      kmsURIs: kmsUrls,
       noCache,
       noAuth
     });
@@ -468,11 +473,37 @@ class ElvClient {
     return this.signer ? this.utils.FormatAddress(this.signer.address) : "";
   }
 
-  SetOauthToken({token}) {
+  /**
+   * Set the signer for this client via OAuth token. The client will exchange the given token
+   * for the user's private key using the KMS specified in the configuration.
+   *
+   * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl)
+   *
+   * @param {string} token - The OAuth ID token to authenticate with
+   */
+  async SetOauthToken({token}) {
+    if(!this.kmsURIs || this.kmsURIs.length === 0) {
+      throw Error("Unable to authorize with OAuth token: No KMS URLs set");
+    }
+
     this.oauthToken = token;
 
+    const path = "/ks/jwt/wlt";
+    const httpClient = new HttpClient({uris: this.kmsURIs});
+
+    const response = await ResponseToJson(
+      httpClient.Request({
+        headers: { Authorization: `Bearer ${token}`},
+        method: "PUT",
+        path
+      })
+    );
+
+    const privateKey = response["UserSKHex"];
+
     const wallet = this.GenerateWallet();
-    const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+    const signer = wallet.AddAccount({privateKey});
+
     this.SetSigner({signer});
   }
 
@@ -523,7 +554,6 @@ class ElvClient {
    * Returns information about the content library
    *
    * @methodGroup Content Libraries
-   * @see GET /qlibs/:qlibid
    *
    * @namedParams
    * @param {string} libraryId
@@ -582,7 +612,6 @@ class ElvClient {
    * create in the fabric.
    *
    * @methodGroup Content Libraries
-   * @see PUT /qlibs/:qlibid
    *
    * @namedParams
    * @param {string} name - Library name
@@ -739,7 +768,6 @@ class ElvClient {
    * Delete the specified content library
    *
    * @methodGroup Content Libraries
-   * @see DELETE /qlibs/:qlibid
    *
    * @namedParams
    * @param {string} libraryId - ID of the library to delete
@@ -1137,8 +1165,6 @@ class ElvClient {
   /**
    * List content objects in the specified library
    *
-   * @see /qlibs/:qlibid/q
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1243,8 +1269,6 @@ class ElvClient {
 
   /**
    * Get a specific content object in the library
-   *
-   * @see /qlibs/:qlibid/q/:qhit
    *
    * @methodGroup Content Objects
    * @namedParams
@@ -1390,8 +1414,6 @@ class ElvClient {
   /**
    * Get the metadata of a content object
    *
-   * @see /qlibs/:qlibid/q/:qhit/meta
-   *
    * @methodGroup Metadata
    * @namedParams
    * @param {string=} libraryId - ID of the library
@@ -1476,8 +1498,6 @@ class ElvClient {
   /**
    * List the versions of a content object
    *
-   * @see /qlibs/:qlibid/qid/:objectid
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1531,8 +1551,6 @@ class ElvClient {
    * A new content object contract is deployed from
    * the content library, and that contract ID is used to determine the object ID to
    * create in the fabric.
-   *
-   * @see PUT /qlibs/:qlibid/q/:objectid
    *
    * @methodGroup Content Objects
    * @namedParams
@@ -1637,8 +1655,6 @@ class ElvClient {
   /**
    * Create a new content object draft from an existing object.
    *
-   * @see POST /qlibs/:qlibid/qid/:objectid
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1682,8 +1698,6 @@ class ElvClient {
 
   /**
    * Finalize content draft
-   *
-   * @see POST /qlibs/:qlibid/q/:write_token
    *
    * @methodGroup Content Objects
    * @namedParams
@@ -1810,8 +1824,6 @@ class ElvClient {
   /**
    * Merge specified metadata into existing content object metadata
    *
-   * @see POST /qlibs/:qlibid/q/:write_token/meta
-   *
    * @methodGroup Metadata
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1844,8 +1856,6 @@ class ElvClient {
   /**
    * Replace content object metadata with specified metadata
    *
-   * @see PUT /qlibs/:qlibid/q/:write_token/meta
-   *
    * @methodGroup Metadata
    * @namedParams
    * @param {string} libraryId - ID of the library
@@ -1877,8 +1887,6 @@ class ElvClient {
 
   /**
    * Delete content object metadata of specified subtree
-   *
-   * @see DELETE /qlibs/:qlibid/q/:write_token/meta
    *
    * @methodGroup Metadata
    * @namedParams
@@ -2408,8 +2416,6 @@ class ElvClient {
 
   /**
    * Download a file from a content object
-   *
-   * @see GET /qlibs/:qlibid/q/:qhit/files/:filePath
    *
    * @methodGroup Parts and Files
    * @namedParams
@@ -3008,8 +3014,6 @@ class ElvClient {
 
   /**
    * Delete the specified part from a content draft
-   *
-   * @see DELETE /qlibs/:qlibid/q/:write_token/parts/:qparthash
    *
    * @methodGroup Parts and Files
    * @namedParams
@@ -3949,8 +3953,8 @@ class ElvClient {
     // Add authorization token to playout URLs
     let queryParams = {
       authorization: await this.authClient.AuthorizationToken({
-        libraryId,
-        objectId,
+        libraryId: linkTargetLibraryId || libraryId,
+        objectId: linkTargetId || objectId,
         channelAuth: true,
         oauthToken: this.oauthToken,
         audienceData
@@ -4199,7 +4203,7 @@ class ElvClient {
    * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
    * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
    *
-   * @see FabricUrl for creating arbitrary fabric URLs
+   * @see <a href="#FabricUrl">FabricUrl</a> for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
@@ -4222,7 +4226,8 @@ class ElvClient {
    * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
    * @param {string} rep - Representation to use
    * @param {Object=} queryParams - Query params to add to the URL
-   * @see FabricUrl for creating arbitrary fabric URLs
+   *
+   * @see <a href="#FabricUrl">FabricUrl</a> for creating arbitrary fabric URLs
    *
    * @returns {Promise<string>} - URL to the specified rep endpoint with authorization token
    */
@@ -4366,8 +4371,6 @@ class ElvClient {
 
   /**
    * Get a specific content object in the library
-   *
-   * @see /qlibs/:qlibid/q/:qhit
    *
    * @methodGroup Links
    * @namedParams
@@ -5387,8 +5390,6 @@ class ElvClient {
   /**
    * Get the proofs associated with a given part
    *
-   * @see GET /qlibs/:qlibid/q/:qhit/data/:qparthash/proofs
-   *
    * @methodGroup Content Objects
    * @namedParams
    * @param {string=} libraryId - ID of the library
@@ -5417,8 +5418,6 @@ class ElvClient {
 
   /**
    * Get part info in CBOR format
-   *
-   * @see GET /qparts/:qparthash
    *
    * @methodGroup Content Objects
    * @namedParams
