@@ -3953,8 +3953,8 @@ class ElvClient {
     // Add authorization token to playout URLs
     let queryParams = {
       authorization: await this.authClient.AuthorizationToken({
-        libraryId,
-        objectId,
+        libraryId: linkTargetLibraryId || libraryId,
+        objectId: linkTargetId || objectId,
         channelAuth: true,
         oauthToken: this.oauthToken,
         audienceData

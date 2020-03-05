@@ -6929,8 +6929,8 @@ function () {
               audienceData = _context88.t0.AudienceData.call(_context88.t0, _context88.t6);
               _context88.next = 34;
               return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
-                libraryId: libraryId,
-                objectId: objectId,
+                libraryId: linkTargetLibraryId || libraryId,
+                objectId: linkTargetId || objectId,
                 channelAuth: true,
                 oauthToken: this.oauthToken,
                 audienceData: audienceData
