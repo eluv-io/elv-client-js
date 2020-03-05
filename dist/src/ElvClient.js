@@ -7082,7 +7082,7 @@ function () {
   }, {
     key: "BitmovinPlayoutOptions",
     value: function BitmovinPlayoutOptions(_ref92) {
-      var objectId, versionHash, linkPath, _ref92$protocols, protocols, _ref92$drms, drms, _ref92$offering, offering, playoutOptions, config, authToken;
+      var objectId, versionHash, linkPath, _ref92$protocols, protocols, _ref92$drms, drms, _ref92$offering, offering, playoutOptions, linkTargetId, linkTargetHash, _libraryId, authToken, config;
 
       return regeneratorRuntime.async(function BitmovinPlayoutOptions$(_context89) {
         while (1) {
@@ -7109,18 +7109,45 @@ function () {
             case 5:
               playoutOptions = _context89.sent;
               delete playoutOptions.playoutMethods;
-              config = {
-                drm: {}
-              };
+
+              if (!linkPath) {
+                _context89.next = 15;
+                break;
+              }
+
               _context89.next = 10;
-              return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+              return regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: objectId,
+                versionHash: versionHash
+              }));
+
+            case 10:
+              _libraryId = _context89.sent;
+              _context89.next = 13;
+              return regeneratorRuntime.awrap(this.LinkTarget({
+                libraryId: _libraryId,
+                objectId: objectId,
+                versionHash: versionHash,
+                linkPath: linkPath
+              }));
+
+            case 13:
+              linkTargetHash = _context89.sent;
+              linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+
+            case 15:
+              _context89.next = 17;
+              return regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+                objectId: linkTargetId || objectId,
                 channelAuth: true,
                 oauthToken: this.oauthToken
               }));
 
-            case 10:
+            case 17:
               authToken = _context89.sent;
+              config = {
+                drm: {}
+              };
               Object.keys(playoutOptions).forEach(function (protocol) {
                 var option = playoutOptions[protocol];
                 config[protocol] = option.playoutUrl;
@@ -7161,7 +7188,7 @@ function () {
               });
               return _context89.abrupt("return", config);
 
-            case 13:
+            case 21:
             case "end":
               return _context89.stop();
           }

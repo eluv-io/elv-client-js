@@ -4077,15 +4077,22 @@ class ElvClient {
 
     delete playoutOptions.playoutMethods;
 
+    let linkTargetId, linkTargetHash;
+    if(linkPath) {
+      const libraryId = await this.ContentObjectLibraryId({objectId, versionHash});
+      linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+      linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+    }
+
+    const authToken = await this.authClient.AuthorizationToken({
+      objectId: linkTargetId || objectId,
+      channelAuth: true,
+      oauthToken: this.oauthToken,
+    });
+
     let config = {
       drm: {}
     };
-
-    const authToken = await this.authClient.AuthorizationToken({
-      objectId,
-      channelAuth: true,
-      oauthToken: this.oauthToken
-    });
 
     Object.keys(playoutOptions).forEach(protocol => {
       const option = playoutOptions[protocol];
