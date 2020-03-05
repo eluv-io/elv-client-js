@@ -474,6 +474,19 @@ class ElvClient {
   }
 
   /**
+   * Set the signer for this client via OAuth token for use in state channel calls
+   *
+   * @param {string} token - The OAuth ID token to authenticate with
+   */
+  SetOauthToken({token}) {
+    this.oauthToken = token;
+
+    const wallet = this.GenerateWallet();
+    const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+    this.SetSigner({signer});
+  }
+
+  /**
    * Set the signer for this client via OAuth token. The client will exchange the given token
    * for the user's private key using the KMS specified in the configuration.
    *
@@ -481,7 +494,7 @@ class ElvClient {
    *
    * @param {string} token - The OAuth ID token to authenticate with
    */
-  async SetOauthToken({token}) {
+  async SetSignerFromOauthToken({token}) {
     if(!this.kmsURIs || this.kmsURIs.length === 0) {
       throw Error("Unable to authorize with OAuth token: No KMS URLs set");
     }
