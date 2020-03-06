@@ -37,7 +37,7 @@ const testFileSize = 100000;
 
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
-let mediaLibraryId, masterId, masterHash, mezzanineId, mezzanineHash;
+let mediaLibraryId, masterId, masterHash, mezzanineId, mezzanineHash, linkLibraryId, linkObjectId;
 let s3Access;
 
 let testFile1, testFile2, testFile3, testHash;
@@ -1703,6 +1703,72 @@ describe("Test ElvClient", () => {
         throw error;
       }
     });
+
+    test("Playout Options Through Public Link", async () => {
+      try {
+        // Create a new object that accessClient should not have access to,
+        // then attempt to access playout options through a link in that object
+        linkLibraryId = await client.CreateContentLibrary({
+          name: "Test Playout Link"
+        });
+
+        const {id, write_token} = await client.CreateContentObject({
+          libraryId: linkLibraryId,
+          options: {
+            visibility: 1
+          }
+        });
+
+        linkObjectId = id;
+
+        await client.CreateLinks({
+          libraryId: linkLibraryId,
+          objectId: linkObjectId,
+          writeToken: write_token,
+          links: [{
+            type: "rep",
+            path: "public/videoLink",
+            targetHash: await client.LatestVersionHash({objectId: mezzanineId}),
+            target: "playout/default/options.json"
+          }]
+        });
+
+        await client.FinalizeContentObject({
+          libraryId: linkLibraryId,
+          objectId: linkObjectId,
+          writeToken: write_token
+        });
+
+        // Produce playout options from link
+        const playoutOptions = await accessClient.PlayoutOptions({
+          objectId: id,
+          linkPath: "public/videoLink",
+          protocols: ["hls", "dash"],
+          drms: []
+        });
+
+        expect(playoutOptions.dash).toBeDefined();
+        expect(playoutOptions.dash.playoutUrl).toBeDefined();
+        expect(playoutOptions.dash.playoutMethods.clear).toBeDefined();
+
+        expect(playoutOptions.hls).toBeDefined();
+        expect(playoutOptions.hls.playoutUrl).toBeDefined();
+        expect(playoutOptions.hls.playoutMethods.clear).toBeDefined();
+
+        const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
+          objectId: linkObjectId,
+          linkPath: "public/videoLink",
+          protocols: ["hls", "dash"],
+          drms: []
+        });
+
+        expect(bitmovinPlayoutOptions).toBeDefined();
+      } catch(error) {
+        console.error("ERROR:");
+        console.error(JSON.stringify(error, null, 2));
+        throw error;
+      }
+    });
   });
 
   describe("Content Object Link Graph", () => {
@@ -2128,6 +2194,7 @@ describe("Test ElvClient", () => {
     });
 
     test("Delete Content Object", async () => {
+      // Delete test object
       await client.DeleteContentObject({libraryId, objectId});
 
       try {
@@ -2138,6 +2205,7 @@ describe("Test ElvClient", () => {
         // eslint-disable-next-line no-empty
       } catch(error) {}
 
+      // Delete master
       await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: masterId});
 
       try {
@@ -2147,12 +2215,23 @@ describe("Test ElvClient", () => {
         // eslint-disable-next-line no-empty
       } catch(error) {}
 
-
+      // Delete mezzanine
       await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: mezzanineId});
 
       try {
         await client.ContentObject({libraryId: mediaLibraryId, objectId: mezzanineId});
 
+        expect(undefined).toBeDefined();
+        // eslint-disable-next-line no-empty
+      } catch(error) {}
+
+      // Delete link test object
+      await client.DeleteContentObject({libraryId: linkLibraryId, objectId: linkObjectId});
+
+      try {
+        await client.ContentObject({libraryId: linkLibraryId, objectId: linkObjectId});
+
+        // If test reaches this point, object has not been deleted successfully
         expect(undefined).toBeDefined();
         // eslint-disable-next-line no-empty
       } catch(error) {}

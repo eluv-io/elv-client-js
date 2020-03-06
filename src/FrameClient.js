@@ -359,6 +359,7 @@ class FrameClient {
       "SetCustomContentContract",
       "SetNodes",
       "SetOauthToken",
+      "SetSignerFromOauthToken",
       "StartABRMezzanineJobs",
       "UpdateContentObjectGraph",
       "UploadFileData",
