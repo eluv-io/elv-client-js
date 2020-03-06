@@ -1,5 +1,0 @@
-[
-  {
-    "signature": "async DeleteFiles({\n  \"libraryId\": \"ilib34vcL4BA88L6sDsHU83Zh4gqekBB\",\n  \"objectId\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n  \"writeToken\": \"tqw_P3wc4rucDhBYbh1cBGDVZKoTNWJNwN1me\",\n  \"filePaths\": [\n    \"new-directory-1\",\n    \"new-directory-2\",\n    \"testDirectory/File 2\"\n  ]\n});"
-  }
-]

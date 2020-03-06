@@ -1,7 +1,11 @@
 const crypto = require("crypto");
 const Ethers = require("ethers");
-const {ElvClient} = require("../../src/ElvClient");
+const Source = require("../../src/ElvClient");
+const Min = require("../../dist/ElvClient-node-min");
 const ClientConfiguration = require("../../TestConfiguration");
+
+// Uses source by default. If USE_BUILD is specified, uses the minified node version
+const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
 
 // Private key can be specified as environment variable
 // e.g. PRIVATE_KEY=<private-key> npm run test
@@ -23,13 +27,18 @@ const RandomString = (size) => {
   return crypto.randomBytes(size).toString("hex");
 };
 
-const CreateClient = async (name, bux="10") => {
+const CreateClient = async (name, bux="2") => {
   try {
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
     const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
 
     const wallet = client.GenerateWallet();
     const fundedSigner = wallet.AddAccount({privateKey});
+
+    const balance = await wallet.GetAccountBalance({signer: fundedSigner});
+    if(balance < parseFloat(bux)) {
+      throw Error(`Insufficient balance: Funded account only has ${balance} ether`);
+    }
 
     await fundedClient.SetSigner({signer: fundedSigner});
 

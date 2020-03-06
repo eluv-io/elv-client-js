@@ -1,5 +1,3 @@
-require("@babel/polyfill");
-
 const Id = require("./Id");
 const Utils = require("./Utils");
 
@@ -260,7 +258,6 @@ class FrameClient {
       "AvailableDRMs",
       "BitmovinPlayoutOptions",
       "BlockNumber",
-      "CachedAccessTransaction",
       "CallBitcodeMethod",
       "CallContractMethod",
       "CallContractMethodAndWait",
@@ -362,6 +359,7 @@ class FrameClient {
       "SetCustomContentContract",
       "SetNodes",
       "SetOauthToken",
+      "SetSignerFromOauthToken",
       "StartABRMezzanineJobs",
       "UpdateContentObjectGraph",
       "UploadFileData",
@@ -372,8 +370,7 @@ class FrameClient {
       "UploadPartChunk",
       "UploadStatus",
       "UseRegion",
-      "VerifyContentObject",
-      "WithdrawContractFunds"
+      "VerifyContentObject"
     ];
   }
 
@@ -381,6 +378,7 @@ class FrameClient {
     return [
       "AccessLevel",
       "CollectedTags",
+      "CreateWallet",
       "DeleteUserMetadata",
       "MergeUserMetadata",
       "PublicUserMetadata",

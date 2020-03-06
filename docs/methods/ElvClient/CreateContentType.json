@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async CreateContentType({\n  \"name\": \"Test Content Type 2970e61fa16589e97485\",\n  \"bitcode\": \"<ArrayBuffer 100000>\"\n});",
-    "result": "\"iq__2EfDYXPDu2uAKeS35Z6YCrpZTFGo\""
-  }
-]

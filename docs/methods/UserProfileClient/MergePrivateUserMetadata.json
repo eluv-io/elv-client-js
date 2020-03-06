@@ -1,5 +1,0 @@
-[
-  {
-    "signature": "async MergePrivateUserMetadata({\n  \"metadataSubtree\": \"toMerge\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
-  }
-]

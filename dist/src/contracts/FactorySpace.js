@@ -1,5 +1,3 @@
-"use strict";
-
 var contract = {
   "abi": [{
     "constant": false,
@@ -54,7 +52,6 @@ var contract = {
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
-  }],
-  "bytecode": ""
+  }]
 };
 module.exports = contract;

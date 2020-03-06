@@ -219,6 +219,10 @@ nav ul.methods li a:hover {
 
 /*** Main ***/
 
+header {
+  margin-bottom: 20px;
+}
+
 /* Method descriptions */
 
 .methods {

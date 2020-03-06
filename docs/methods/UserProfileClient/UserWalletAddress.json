@@ -1,9 +1,0 @@
-[
-  {
-    "signature": "async UserWalletAddress({\n  \"address\": \"0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\"\n});"
-  },
-  {
-    "signature": "async UserWalletAddress({\n  \"address\": \"0xA80cAb6F7bA85f2A7Fd72253563aA0A2146D99Ee\"\n});",
-    "result": "\"0x5db807a59f16A0a710db9eD2cDd3b4dE8Cc4c002\""
-  }
-]

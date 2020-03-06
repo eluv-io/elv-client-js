@@ -1,5 +1,3 @@
-"use strict";
-
 exports.ValidatePresence = function (name, thing) {
   if (!thing) {
     throw Error("".concat(name, " not specified"));

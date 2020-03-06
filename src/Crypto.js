@@ -17,7 +17,7 @@ switch(Utils.Platform()) {
       });
     }
 
-    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.js").default;
+    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.externals").default;
     break;
   default:
     ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.node").default;

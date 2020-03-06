@@ -1,8 +1,0 @@
-[
-  {
-    "signature": "async SetUserProfileImage({\n  \"image\": \"<ArrayBuffer 101254>\"\n});"
-  },
-  {
-    "signature": "async SetUserProfileImage({\n  \"image\": \"<ArrayBuffer 102268>\"\n});"
-  }
-]

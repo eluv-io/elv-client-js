@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async Proofs({\n  \"libraryId\": \"ilib34vcL4BA88L6sDsHU83Zh4gqekBB\",\n  \"objectId\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n  \"partHash\": \"hqp_5jwGqMpDJGrwBy1UYEHuADdefmn5wupVSC6pJHTZ8UYsodY1\"\n});",
-    "result": "{\n  \"root_hash\": \"4f167f9e347bbae05ddb59a679a40a564920223897a663801fc5e35384e6e72c\",\n  \"proofs\": [\n    {\n      \"byte_beg\": 0,\n      \"byte_end\": 99999,\n      \"proof\": [\n        \"4f167f9e347bbae05ddb59a679a40a564920223897a663801fc5e35384e6e72c\"\n      ]\n    }\n  ],\n  \"proof_data\": {\n    \"4f167f9e347bbae05ddb59a679a40a564920223897a663801fc5e35384e6e72c\": \"+FyhIC+B3ITpS1DWCP1YEIzroLSFgr8VhgQaxaj2DUS7oylsuDgAAAAAAAAAAAAAAAAAAAAAn4YBAAAAAAAvgdyE6UtQ1gj9WBCM66C0hYK/FYYEGsWo9g1Eu6MpbA==\"\n  }\n}"
-  }
-]

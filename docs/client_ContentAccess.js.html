@@ -1,0 +1,1970 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="images/favicon.png" >
+
+  <title>
+    client/ContentAccess.js - Documentation
+  </title>
+
+  <script src="scripts/prettify/prettify.js"></script>
+  <script src="scripts/prettify/lang-css.js"></script>
+
+  <link type="text/css" rel="stylesheet" href="styles/elv-jsdoc.css">
+  <link type="text/css" rel="stylesheet" href="styles/elv-prettify-jsdoc.css">
+</head>
+
+<body>
+  <div class="layout-container">
+    <nav class="nav-container">
+      <div class="header">
+        <a href="index.html">
+          <img class="logo" src="images/logo-dark.png" />
+        </a>
+        <div class="title">
+          Eluvio Javascript Client
+        </div>
+      </div>
+      <div class="nav-content">
+        <h3>Classes</h3><ul><li id="ElvClient-nav">
+          <div data-name="ElvClient" class="class-link-container"><a class="class-link">ElvClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="ElvClient-ElvClient-nav"><a href="ElvClient.html" class="method-link">ElvClient</a></li><li data-type="method" id="ElvClient-Configuration-nav"><a href="ElvClient.html#.Configuration" class="method-link">Configuration</a></li><li data-type="method" id="ElvClient-FromConfigurationUrl-nav"><a href="ElvClient.html#.FromConfigurationUrl" class="method-link">FromConfigurationUrl</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient-ClearCache-nav"><a href="ElvClient.html#ClearCache" class="method-link">ClearCache</a></li><h4 class="methodGroupHeader">Miscellaneous</h4><li data-type="method" id="ElvClient-ToggleLogging-nav"><a href="ElvClient.html#ToggleLogging" class="method-link">ToggleLogging</a></li><h4 class="methodGroupHeader">Nodes</h4><li data-type="method" id="ElvClient-NodeId-nav"><a href="ElvClient.html#NodeId" class="method-link">NodeId</a></li><li data-type="method" id="ElvClient-Nodes-nav"><a href="ElvClient.html#Nodes" class="method-link">Nodes</a></li><li data-type="method" id="ElvClient-ResetRegion-nav"><a href="ElvClient.html#ResetRegion" class="method-link">ResetRegion</a></li><li data-type="method" id="ElvClient-SetNodes-nav"><a href="ElvClient.html#SetNodes" class="method-link">SetNodes</a></li><li data-type="method" id="ElvClient-UseRegion-nav"><a href="ElvClient.html#UseRegion" class="method-link">UseRegion</a></li><h4 class="methodGroupHeader">Signers</h4><li data-type="method" id="ElvClient-ClearSigner-nav"><a href="ElvClient.html#ClearSigner" class="method-link">ClearSigner</a></li><li data-type="method" id="ElvClient-CurrentAccountAddress-nav"><a href="ElvClient.html#CurrentAccountAddress" class="method-link">CurrentAccountAddress</a></li><li data-type="method" id="ElvClient-GenerateWallet-nav"><a href="ElvClient.html#GenerateWallet" class="method-link">GenerateWallet</a></li><li data-type="method" id="ElvClient-SetSigner-nav"><a href="ElvClient.html#SetSigner" class="method-link">SetSigner</a></li><li data-type="method" id="ElvClient-SetSignerFromWeb3Provider-nav"><a href="ElvClient.html#SetSignerFromWeb3Provider" class="method-link">SetSignerFromWeb3Provider</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvClient-SetOauthToken-nav"><a href="ElvClient.html#SetOauthToken" class="method-link">SetOauthToken</a></li><li data-type="method" id="ElvClient-SetSignerFromOauthToken-nav"><a href="ElvClient.html#SetSignerFromOauthToken" class="method-link">SetSignerFromOauthToken</a></li></ul></li><li id="ElvWallet-nav">
+          <div data-name="ElvWallet" class="class-link-container"><a class="class-link">ElvWallet</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="ElvWallet-ElvWallet-nav"><a href="ElvWallet.html" class="method-link">ElvWallet</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvWallet-AddAccount-nav"><a href="ElvWallet.html#AddAccount" class="method-link">AddAccount</a></li><li data-type="method" id="ElvWallet-AddAccountFromEncryptedPK-nav"><a href="ElvWallet.html#AddAccountFromEncryptedPK" class="method-link">AddAccountFromEncryptedPK</a></li><li data-type="method" id="ElvWallet-AddAccountFromMnemonic-nav"><a href="ElvWallet.html#AddAccountFromMnemonic" class="method-link">AddAccountFromMnemonic</a></li><li data-type="method" id="ElvWallet-GenerateEncryptedPrivateKey-nav"><a href="ElvWallet.html#GenerateEncryptedPrivateKey" class="method-link">GenerateEncryptedPrivateKey</a></li><li data-type="method" id="ElvWallet-GenerateMnemonic-nav"><a href="ElvWallet.html#GenerateMnemonic" class="method-link">GenerateMnemonic</a></li><li data-type="method" id="ElvWallet-GetAccount-nav"><a href="ElvWallet.html#GetAccount" class="method-link">GetAccount</a></li><li data-type="method" id="ElvWallet-GetAccountBalance-nav"><a href="ElvWallet.html#GetAccountBalance" class="method-link">GetAccountBalance</a></li><li data-type="method" id="ElvWallet-RemoveAccount-nav"><a href="ElvWallet.html#RemoveAccount" class="method-link">RemoveAccount</a></li></ul></li><li id="FrameClient-nav">
+          <div data-name="FrameClient" class="class-link-container"><a class="class-link">FrameClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="FrameClient-FrameClient-nav"><a href="FrameClient.html" class="method-link">FrameClient</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="FrameClient-AllowedMethods-nav"><a href="FrameClient.html#AllowedMethods" class="method-link">AllowedMethods</a></li><li data-type="method" id="FrameClient-PassRequest-nav"><a href="FrameClient.html#PassRequest" class="method-link">PassRequest</a></li></ul></li><li id="UserProfileClient-nav">
+          <div data-name="UserProfileClient" class="class-link-container"><a class="class-link">UserProfileClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="UserProfileClient-UserProfileClient-nav"><a href="UserProfileClient.html" class="method-link">UserProfileClient</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="UserProfileClient-AccessLevel-nav"><a href="UserProfileClient.html#AccessLevel" class="method-link">AccessLevel</a></li><li data-type="method" id="UserProfileClient-CollectedTags-nav"><a href="UserProfileClient.html#CollectedTags" class="method-link">CollectedTags</a></li><li data-type="method" id="UserProfileClient-DeleteUserMetadata-nav"><a href="UserProfileClient.html#DeleteUserMetadata" class="method-link">DeleteUserMetadata</a></li><li data-type="method" id="UserProfileClient-MergeUserMetadata-nav"><a href="UserProfileClient.html#MergeUserMetadata" class="method-link">MergeUserMetadata</a></li><li data-type="method" id="UserProfileClient-PublicUserMetadata-nav"><a href="UserProfileClient.html#PublicUserMetadata" class="method-link">PublicUserMetadata</a></li><li data-type="method" id="UserProfileClient-ReplaceUserMetadata-nav"><a href="UserProfileClient.html#ReplaceUserMetadata" class="method-link">ReplaceUserMetadata</a></li><li data-type="method" id="UserProfileClient-SetAccessLevel-nav"><a href="UserProfileClient.html#SetAccessLevel" class="method-link">SetAccessLevel</a></li><li data-type="method" id="UserProfileClient-SetUserProfileImage-nav"><a href="UserProfileClient.html#SetUserProfileImage" class="method-link">SetUserProfileImage</a></li><li data-type="method" id="UserProfileClient-UserMetadata-nav"><a href="UserProfileClient.html#UserMetadata" class="method-link">UserMetadata</a></li><li data-type="method" id="UserProfileClient-UserProfileImage-nav"><a href="UserProfileClient.html#UserProfileImage" class="method-link">UserProfileImage</a></li><li data-type="method" id="UserProfileClient-UserWalletAddress-nav"><a href="UserProfileClient.html#UserWalletAddress" class="method-link">UserWalletAddress</a></li><li data-type="method" id="UserProfileClient-WalletAddress-nav"><a href="UserProfileClient.html#WalletAddress" class="method-link">WalletAddress</a></li></ul></li></ul><h3>Modules</h3><ul><li id="ElvClient_ABRPublishing-nav">
+          <div data-name="ElvClient/ABRPublishing" class="class-link-container"><a class="class-link">ElvClient/ABRPublishing</a></div><ul class='methods'><li data-type="method" id="ElvClient_ABRPublishing-ElvClient/ABRPublishing-nav"><a href="module-ElvClient_ABRPublishing.html" class="method-link">ElvClient/ABRPublishing</a></li><h4 class="methodGroupHeader">ABR Publishing</h4><li data-type="method" id="ElvClient_ABRPublishing-CreateABRMezzanine-nav"><a href="module-ElvClient_ABRPublishing.html#.CreateABRMezzanine" class="method-link">CreateABRMezzanine</a></li><li data-type="method" id="ElvClient_ABRPublishing-CreateProductionMaster-nav"><a href="module-ElvClient_ABRPublishing.html#.CreateProductionMaster" class="method-link">CreateProductionMaster</a></li><li data-type="method" id="ElvClient_ABRPublishing-FinalizeABRMezzanine-nav"><a href="module-ElvClient_ABRPublishing.html#.FinalizeABRMezzanine" class="method-link">FinalizeABRMezzanine</a></li><li data-type="method" id="ElvClient_ABRPublishing-LROStatus-nav"><a href="module-ElvClient_ABRPublishing.html#.LROStatus" class="method-link">LROStatus</a></li><li data-type="method" id="ElvClient_ABRPublishing-StartABRMezzanineJobs-nav"><a href="module-ElvClient_ABRPublishing.html#.StartABRMezzanineJobs" class="method-link">StartABRMezzanineJobs</a></li></ul></li><li id="ElvClient_AccessGroups-nav">
+          <div data-name="ElvClient/AccessGroups" class="class-link-container"><a class="class-link">ElvClient/AccessGroups</a></div><ul class='methods'><li data-type="method" id="ElvClient_AccessGroups-ElvClient/AccessGroups-nav"><a href="module-ElvClient_AccessGroups.html" class="method-link">ElvClient/AccessGroups</a></li><h4 class="methodGroupHeader">Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-AccessGroupManagers-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupManagers" class="method-link">AccessGroupManagers</a></li><li data-type="method" id="ElvClient_AccessGroups-AccessGroupMembers-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupMembers" class="method-link">AccessGroupMembers</a></li><li data-type="method" id="ElvClient_AccessGroups-AccessGroupOwner-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupOwner" class="method-link">AccessGroupOwner</a></li><li data-type="method" id="ElvClient_AccessGroups-AddAccessGroupManager-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddAccessGroupManager" class="method-link">AddAccessGroupManager</a></li><li data-type="method" id="ElvClient_AccessGroups-AddAccessGroupMember-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddAccessGroupMember" class="method-link">AddAccessGroupMember</a></li><li data-type="method" id="ElvClient_AccessGroups-CreateAccessGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.CreateAccessGroup" class="method-link">CreateAccessGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-DeleteAccessGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.DeleteAccessGroup" class="method-link">DeleteAccessGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveAccessGroupManager-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveAccessGroupManager" class="method-link">RemoveAccessGroupManager</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveAccessGroupMember-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveAccessGroupMember" class="method-link">RemoveAccessGroupMember</a></li><h4 class="methodGroupHeader">Library Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-AddContentLibraryGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddContentLibraryGroup" class="method-link">AddContentLibraryGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-ContentLibraryGroupPermissions-nav"><a href="module-ElvClient_AccessGroups.html#.exports.ContentLibraryGroupPermissions" class="method-link">ContentLibraryGroupPermissions</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveContentLibraryGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveContentLibraryGroup" class="method-link">RemoveContentLibraryGroup</a></li><h4 class="methodGroupHeader">Object Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-AddContentObjectGroupPermission-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddContentObjectGroupPermission" class="method-link">AddContentObjectGroupPermission</a></li><li data-type="method" id="ElvClient_AccessGroups-ContentObjectGroupPermissions-nav"><a href="module-ElvClient_AccessGroups.html#.exports.ContentObjectGroupPermissions" class="method-link">ContentObjectGroupPermissions</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveContentObjectGroupPermission-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveContentObjectGroupPermission" class="method-link">RemoveContentObjectGroupPermission</a></li></ul></li><li id="ElvClient_ContentAccess-nav">
+          <div data-name="ElvClient/ContentAccess" class="class-link-container"><a class="class-link">ElvClient/ContentAccess</a></div><ul class='methods'><li data-type="method" id="ElvClient_ContentAccess-ElvClient/ContentAccess-nav"><a href="module-ElvClient_ContentAccess.html" class="method-link">ElvClient/ContentAccess</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient_ContentAccess-AccessInfo-nav"><a href="module-ElvClient_ContentAccess.html#.AccessInfo" class="method-link">AccessInfo</a></li><li data-type="method" id="ElvClient_ContentAccess-AccessRequest-nav"><a href="module-ElvClient_ContentAccess.html#.AccessRequest" class="method-link">AccessRequest</a></li><li data-type="method" id="ElvClient_ContentAccess-AccessType-nav"><a href="module-ElvClient_ContentAccess.html#.AccessType" class="method-link">AccessType</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectAccessComplete-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectAccessComplete" class="method-link">ContentObjectAccessComplete</a></li><li data-type="method" id="ElvClient_ContentAccess-FinalizeStateChannelAccess-nav"><a href="module-ElvClient_ContentAccess.html#.FinalizeStateChannelAccess" class="method-link">FinalizeStateChannelAccess</a></li><li data-type="method" id="ElvClient_ContentAccess-GenerateStateChannelToken-nav"><a href="module-ElvClient_ContentAccess.html#.GenerateStateChannelToken" class="method-link">GenerateStateChannelToken</a></li><h4 class="methodGroupHeader">Collections</h4><li data-type="method" id="ElvClient_ContentAccess-Collection-nav"><a href="module-ElvClient_ContentAccess.html#.Collection" class="method-link">Collection</a></li><h4 class="methodGroupHeader">Content Libraries</h4><li data-type="method" id="ElvClient_ContentAccess-ContentLibraries-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibraries" class="method-link">ContentLibraries</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentLibrary-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibrary" class="method-link">ContentLibrary</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentLibraryOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibraryOwner" class="method-link">ContentLibraryOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-LibraryContentTypes-nav"><a href="module-ElvClient_ContentAccess.html#.LibraryContentTypes" class="method-link">LibraryContentTypes</a></li><h4 class="methodGroupHeader">Content Objects</h4><li data-type="method" id="ElvClient_ContentAccess-ContentObject-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObject" class="method-link">ContentObject</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectLibraryId-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectLibraryId" class="method-link">ContentObjectLibraryId</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectOwner" class="method-link">ContentObjectOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjects-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjects" class="method-link">ContentObjects</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectVersions-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectVersions" class="method-link">ContentObjectVersions</a></li><li data-type="method" id="ElvClient_ContentAccess-LatestVersionHash-nav"><a href="module-ElvClient_ContentAccess.html#.LatestVersionHash" class="method-link">LatestVersionHash</a></li><li data-type="method" id="ElvClient_ContentAccess-Proofs-nav"><a href="module-ElvClient_ContentAccess.html#.Proofs" class="method-link">Proofs</a></li><li data-type="method" id="ElvClient_ContentAccess-QParts-nav"><a href="module-ElvClient_ContentAccess.html#.QParts" class="method-link">QParts</a></li><li data-type="method" id="ElvClient_ContentAccess-VerifyContentObject-nav"><a href="module-ElvClient_ContentAccess.html#.VerifyContentObject" class="method-link">VerifyContentObject</a></li><h4 class="methodGroupHeader">Content Space</h4><li data-type="method" id="ElvClient_ContentAccess-ContentSpaceId-nav"><a href="module-ElvClient_ContentAccess.html#.ContentSpaceId" class="method-link">ContentSpaceId</a></li><li data-type="method" id="ElvClient_ContentAccess-DefaultKMSAddress-nav"><a href="module-ElvClient_ContentAccess.html#.DefaultKMSAddress" class="method-link">DefaultKMSAddress</a></li><h4 class="methodGroupHeader">Content Types</h4><li data-type="method" id="ElvClient_ContentAccess-ContentType-nav"><a href="module-ElvClient_ContentAccess.html#.ContentType" class="method-link">ContentType</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentTypeOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentTypeOwner" class="method-link">ContentTypeOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentTypes-nav"><a href="module-ElvClient_ContentAccess.html#.ContentTypes" class="method-link">ContentTypes</a></li><h4 class="methodGroupHeader">Encryption</h4><li data-type="method" id="ElvClient_ContentAccess-Decrypt-nav"><a href="module-ElvClient_ContentAccess.html#.Decrypt" class="method-link">Decrypt</a></li><li data-type="method" id="ElvClient_ContentAccess-Encrypt-nav"><a href="module-ElvClient_ContentAccess.html#.Encrypt" class="method-link">Encrypt</a></li><li data-type="method" id="ElvClient_ContentAccess-EncryptionConk-nav"><a href="module-ElvClient_ContentAccess.html#.EncryptionConk" class="method-link">EncryptionConk</a></li><h4 class="methodGroupHeader">Links</h4><li data-type="method" id="ElvClient_ContentAccess-ContentObjectGraph-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectGraph" class="method-link">ContentObjectGraph</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkData-nav"><a href="module-ElvClient_ContentAccess.html#.LinkData" class="method-link">LinkData</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkTarget-nav"><a href="module-ElvClient_ContentAccess.html#.LinkTarget" class="method-link">LinkTarget</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkUrl-nav"><a href="module-ElvClient_ContentAccess.html#.LinkUrl" class="method-link">LinkUrl</a></li><h4 class="methodGroupHeader">Media</h4><li data-type="method" id="ElvClient_ContentAccess-AvailableDRMs-nav"><a href="module-ElvClient_ContentAccess.html#.AvailableDRMs" class="method-link">AvailableDRMs</a></li><li data-type="method" id="ElvClient_ContentAccess-BitmovinPlayoutOptions-nav"><a href="module-ElvClient_ContentAccess.html#.BitmovinPlayoutOptions" class="method-link">BitmovinPlayoutOptions</a></li><li data-type="method" id="ElvClient_ContentAccess-PlayoutOptions-nav"><a href="module-ElvClient_ContentAccess.html#.PlayoutOptions" class="method-link">PlayoutOptions</a></li><h4 class="methodGroupHeader">Metadata</h4><li data-type="method" id="ElvClient_ContentAccess-ContentObjectMetadata-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectMetadata" class="method-link">ContentObjectMetadata</a></li><h4 class="methodGroupHeader">URL Generation</h4><li data-type="method" id="ElvClient_ContentAccess-CallBitcodeMethod-nav"><a href="module-ElvClient_ContentAccess.html#.CallBitcodeMethod" class="method-link">CallBitcodeMethod</a></li><li data-type="method" id="ElvClient_ContentAccess-FabricUrl-nav"><a href="module-ElvClient_ContentAccess.html#.FabricUrl" class="method-link">FabricUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-FileUrl-nav"><a href="module-ElvClient_ContentAccess.html#.FileUrl" class="method-link">FileUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-PublicRep-nav"><a href="module-ElvClient_ContentAccess.html#.PublicRep" class="method-link">PublicRep</a></li><li data-type="method" id="ElvClient_ContentAccess-Rep-nav"><a href="module-ElvClient_ContentAccess.html#.Rep" class="method-link">Rep</a></li></ul></li><li id="ElvClient_ContentManagement-nav">
+          <div data-name="ElvClient/ContentManagement" class="class-link-container"><a class="class-link">ElvClient/ContentManagement</a></div><ul class='methods'><li data-type="method" id="ElvClient_ContentManagement-ElvClient/ContentManagement-nav"><a href="module-ElvClient_ContentManagement.html" class="method-link">ElvClient/ContentManagement</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient_ContentManagement-SetAccessCharge-nav"><a href="module-ElvClient_ContentManagement.html#.SetAccessCharge" class="method-link">SetAccessCharge</a></li><h4 class="methodGroupHeader">Content Libraries</h4><li data-type="method" id="ElvClient_ContentManagement-AddLibraryContentType-nav"><a href="module-ElvClient_ContentManagement.html#.AddLibraryContentType" class="method-link">AddLibraryContentType</a></li><li data-type="method" id="ElvClient_ContentManagement-CreateContentLibrary-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentLibrary" class="method-link">CreateContentLibrary</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentLibrary-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentLibrary" class="method-link">DeleteContentLibrary</a></li><li data-type="method" id="ElvClient_ContentManagement-RemoveLibraryContentType-nav"><a href="module-ElvClient_ContentManagement.html#.RemoveLibraryContentType" class="method-link">RemoveLibraryContentType</a></li><li data-type="method" id="ElvClient_ContentManagement-SetContentLibraryImage-nav"><a href="module-ElvClient_ContentManagement.html#.SetContentLibraryImage" class="method-link">SetContentLibraryImage</a></li><h4 class="methodGroupHeader">Content Objects</h4><li data-type="method" id="ElvClient_ContentManagement-CopyContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.CopyContentObject" class="method-link">CopyContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-CreateContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentObject" class="method-link">CreateContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentObject" class="method-link">DeleteContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentVersion-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentVersion" class="method-link">DeleteContentVersion</a></li><li data-type="method" id="ElvClient_ContentManagement-EditContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.EditContentObject" class="method-link">EditContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-FinalizeContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.FinalizeContentObject" class="method-link">FinalizeContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-PublishContentVersion-nav"><a href="module-ElvClient_ContentManagement.html#.PublishContentVersion" class="method-link">PublishContentVersion</a></li><li data-type="method" id="ElvClient_ContentManagement-SetContentObjectImage-nav"><a href="module-ElvClient_ContentManagement.html#.SetContentObjectImage" class="method-link">SetContentObjectImage</a></li><h4 class="methodGroupHeader">Content Types</h4><li data-type="method" id="ElvClient_ContentManagement-CreateContentType-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentType" class="method-link">CreateContentType</a></li><h4 class="methodGroupHeader">Links</h4><li data-type="method" id="ElvClient_ContentManagement-CreateLinks-nav"><a href="module-ElvClient_ContentManagement.html#.CreateLinks" class="method-link">CreateLinks</a></li><li data-type="method" id="ElvClient_ContentManagement-UpdateContentObjectGraph-nav"><a href="module-ElvClient_ContentManagement.html#.UpdateContentObjectGraph" class="method-link">UpdateContentObjectGraph</a></li><h4 class="methodGroupHeader">Metadata</h4><li data-type="method" id="ElvClient_ContentManagement-DeleteMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteMetadata" class="method-link">DeleteMetadata</a></li><li data-type="method" id="ElvClient_ContentManagement-MergeMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.MergeMetadata" class="method-link">MergeMetadata</a></li><li data-type="method" id="ElvClient_ContentManagement-ReplaceMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.ReplaceMetadata" class="method-link">ReplaceMetadata</a></li></ul></li><li id="ElvClient_Contracts-nav">
+          <div data-name="ElvClient/Contracts" class="class-link-container"><a class="class-link">ElvClient/Contracts</a></div><ul class='methods'><li data-type="method" id="ElvClient_Contracts-ElvClient/Contracts-nav"><a href="module-ElvClient_Contracts.html" class="method-link">ElvClient/Contracts</a></li><h4 class="methodGroupHeader">Blockchain</h4><li data-type="method" id="ElvClient_Contracts-BlockNumber-nav"><a href="module-ElvClient_Contracts.html#.BlockNumber" class="method-link">BlockNumber</a></li><li data-type="method" id="ElvClient_Contracts-Events-nav"><a href="module-ElvClient_Contracts.html#.Events" class="method-link">Events</a></li><li data-type="method" id="ElvClient_Contracts-GetBalance-nav"><a href="module-ElvClient_Contracts.html#.GetBalance" class="method-link">GetBalance</a></li><li data-type="method" id="ElvClient_Contracts-SendFunds-nav"><a href="module-ElvClient_Contracts.html#.SendFunds" class="method-link">SendFunds</a></li><h4 class="methodGroupHeader">Contracts</h4><li data-type="method" id="ElvClient_Contracts-CallContractMethod-nav"><a href="module-ElvClient_Contracts.html#.CallContractMethod" class="method-link">CallContractMethod</a></li><li data-type="method" id="ElvClient_Contracts-CallContractMethodAndWait-nav"><a href="module-ElvClient_Contracts.html#.CallContractMethodAndWait" class="method-link">CallContractMethodAndWait</a></li><li data-type="method" id="ElvClient_Contracts-ContractEvents-nav"><a href="module-ElvClient_Contracts.html#.ContractEvents" class="method-link">ContractEvents</a></li><li data-type="method" id="ElvClient_Contracts-ContractName-nav"><a href="module-ElvClient_Contracts.html#.ContractName" class="method-link">ContractName</a></li><li data-type="method" id="ElvClient_Contracts-CustomContractAddress-nav"><a href="module-ElvClient_Contracts.html#.CustomContractAddress" class="method-link">CustomContractAddress</a></li><li data-type="method" id="ElvClient_Contracts-DeployContract-nav"><a href="module-ElvClient_Contracts.html#.DeployContract" class="method-link">DeployContract</a></li><li data-type="method" id="ElvClient_Contracts-ExtractEventFromLogs-nav"><a href="module-ElvClient_Contracts.html#.ExtractEventFromLogs" class="method-link">ExtractEventFromLogs</a></li><li data-type="method" id="ElvClient_Contracts-ExtractValueFromEvent-nav"><a href="module-ElvClient_Contracts.html#.ExtractValueFromEvent" class="method-link">ExtractValueFromEvent</a></li><li data-type="method" id="ElvClient_Contracts-FormatContractArguments-nav"><a href="module-ElvClient_Contracts.html#.FormatContractArguments" class="method-link">FormatContractArguments</a></li><li data-type="method" id="ElvClient_Contracts-SetCustomContentContract-nav"><a href="module-ElvClient_Contracts.html#.SetCustomContentContract" class="method-link">SetCustomContentContract</a></li></ul></li><li id="ElvClient_Files+Parts-nav">
+          <div data-name="ElvClient/Files+Parts" class="class-link-container"><a class="class-link">ElvClient/Files+Parts</a></div><ul class='methods'><li data-type="method" id="ElvClient_Files+Parts-ElvClient/Files+Parts-nav"><a href="module-ElvClient_Files+Parts.html" class="method-link">ElvClient/Files+Parts</a></li><h4 class="methodGroupHeader">Files</h4><li data-type="method" id="ElvClient_Files+Parts-CreateFileDirectories-nav"><a href="module-ElvClient_Files+Parts.html#.exports.CreateFileDirectories" class="method-link">CreateFileDirectories</a></li><li data-type="method" id="ElvClient_Files+Parts-DeleteFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DeleteFiles" class="method-link">DeleteFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-DownloadFile-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DownloadFile" class="method-link">DownloadFile</a></li><li data-type="method" id="ElvClient_Files+Parts-ListFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ListFiles" class="method-link">ListFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadFiles" class="method-link">UploadFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadFilesFromS3-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadFilesFromS3" class="method-link">UploadFilesFromS3</a></li><h4 class="methodGroupHeader">Parts</h4><li data-type="method" id="ElvClient_Files+Parts-ContentPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ContentPart" class="method-link">ContentPart</a></li><li data-type="method" id="ElvClient_Files+Parts-ContentParts-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ContentParts" class="method-link">ContentParts</a></li><li data-type="method" id="ElvClient_Files+Parts-CreatePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.CreatePart" class="method-link">CreatePart</a></li><li data-type="method" id="ElvClient_Files+Parts-DeletePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DeletePart" class="method-link">DeletePart</a></li><li data-type="method" id="ElvClient_Files+Parts-DownloadPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DownloadPart" class="method-link">DownloadPart</a></li><li data-type="method" id="ElvClient_Files+Parts-FinalizePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.FinalizePart" class="method-link">FinalizePart</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadPart" class="method-link">UploadPart</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadPartChunk-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadPartChunk" class="method-link">UploadPartChunk</a></li></ul></li></ul><h3>Namespaces</h3><ul><li id="Crypto-nav">
+          <div data-name="Crypto" class="class-link-container"><a class="class-link">Crypto</a></div><ul class='methods'><li data-type="method" id="Crypto-Crypto-nav"><a href="Crypto.html" class="method-link">Crypto</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="Crypto-Decrypt-nav"><a href="Crypto.html#.Decrypt" class="method-link">Decrypt</a></li><li data-type="method" id="Crypto-Encrypt-nav"><a href="Crypto.html#.Encrypt" class="method-link">Encrypt</a></li></ul></li><li id="Utils-nav">
+          <div data-name="Utils" class="class-link-container"><a class="class-link">Utils</a></div><ul class='methods'><li data-type="method" id="Utils-Utils-nav"><a href="Utils.html" class="method-link">Utils</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="Utils-AddressToHash-nav"><a href="Utils.html#.AddressToHash" class="method-link">AddressToHash</a></li><li data-type="method" id="Utils-AddressToLibraryId-nav"><a href="Utils.html#.AddressToLibraryId" class="method-link">AddressToLibraryId</a></li><li data-type="method" id="Utils-AddressToObjectId-nav"><a href="Utils.html#.AddressToObjectId" class="method-link">AddressToObjectId</a></li><li data-type="method" id="Utils-AddressToSpaceId-nav"><a href="Utils.html#.AddressToSpaceId" class="method-link">AddressToSpaceId</a></li><li data-type="method" id="Utils-DecodeAuthorizationToken-nav"><a href="Utils.html#.DecodeAuthorizationToken" class="method-link">DecodeAuthorizationToken</a></li><li data-type="method" id="Utils-DecodeVersionHash-nav"><a href="Utils.html#.DecodeVersionHash" class="method-link">DecodeVersionHash</a></li><li data-type="method" id="Utils-EqualAddress-nav"><a href="Utils.html#.EqualAddress" class="method-link">EqualAddress</a></li><li data-type="method" id="Utils-EqualHash-nav"><a href="Utils.html#.EqualHash" class="method-link">EqualHash</a></li><li data-type="method" id="Utils-EtherToWei-nav"><a href="Utils.html#.EtherToWei" class="method-link">EtherToWei</a></li><li data-type="method" id="Utils-FormatAddress-nav"><a href="Utils.html#.FormatAddress" class="method-link">FormatAddress</a></li><li data-type="method" id="Utils-FormatSignature-nav"><a href="Utils.html#.FormatSignature" class="method-link">FormatSignature</a></li><li data-type="method" id="Utils-HashToAddress-nav"><a href="Utils.html#.HashToAddress" class="method-link">HashToAddress</a></li><li data-type="method" id="Utils-IsCloneable-nav"><a href="Utils.html#.IsCloneable" class="method-link">IsCloneable</a></li><li data-type="method" id="Utils-MakeClonable-nav"><a href="Utils.html#.MakeClonable" class="method-link">MakeClonable</a></li><li data-type="method" id="Utils-ToBigNumber-nav"><a href="Utils.html#.ToBigNumber" class="method-link">ToBigNumber</a></li><li data-type="method" id="Utils-ToBytes32-nav"><a href="Utils.html#.ToBytes32" class="method-link">ToBytes32</a></li><li data-type="method" id="Utils-WeiToEther-nav"><a href="Utils.html#.WeiToEther" class="method-link">WeiToEther</a></li></ul></li></ul>
+      </div>
+    </nav>
+
+    <div class="main">
+      <div class="header"></div>
+      <div class="main-content">
+        
+        <h1 class="page-title">
+          client/ContentAccess.js
+        </h1>
+        
+
+        
+      
+
+<a class="button" href="client_ContentAccess.html">Back</a>
+<div class="source-container">
+  <pre class="prettyprint source linenums"><code>/**
+ * Methods for accessing content types, libraries and objects
+ *
+ * @module ElvClient/ContentAccess
+ */
+
+const UrlJoin = require("url-join");
+
+const HttpClient = require("../HttpClient");
+const Crypto = require("../Crypto");
+
+const SpaceContract = require("../contracts/BaseContentSpace");
+const LibraryContract = require("../contracts/BaseLibrary");
+const ContentContract = require("../contracts/BaseContent");
+const ContentTypeContract = require("../contracts/BaseContentType");
+
+
+const {
+  ValidateLibrary,
+  ValidateObject,
+  ValidateVersion,
+  ValidatePartHash,
+  ValidateWriteToken,
+  ValidateParameters
+} = require("../Validation");
+
+
+/* Content Spaces */
+
+/**
+ * Get the address of the default KMS of the content space
+ *
+ * @methodGroup Content Space
+ *
+ * @returns {Promise&lt;string>} - Address of the KMS
+ */
+exports.DefaultKMSAddress = async function() {
+  return await this.CallContractMethod({
+    contractAddress: this.contentSpaceAddress,
+    abi: SpaceContract.abi,
+    methodName: "addressKMS",
+  });
+};
+
+/**
+ * Get the ID of the current content space
+ *
+ * @methodGroup Content Space
+ *
+ * @return {string} contentSpaceId - The ID of the current content space
+ */
+exports.ContentSpaceId = function() {
+  return this.contentSpaceId;
+};
+
+
+/* Content Types */
+
+/**
+ * Returns the address of the owner of the specified content type
+ *
+ * @methodGroup Content Types
+ * @namedParams
+ * @param {string=} name - Name of the content type to find
+ * @param {string=} typeId - ID of the content type to find
+ * @param {string=} versionHash - Version hash of the content type to find
+ *
+ * @returns {Promise&lt;string>} - The account address of the owner
+ */
+exports.ContentTypeOwner = async function({name, typeId, versionHash}) {
+  const contentType = await this.ContentType({name, typeId, versionHash});
+
+  return this.utils.FormatAddress(
+    await this.ethClient.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(contentType.id),
+      abi: ContentTypeContract.abi,
+      methodName: "owner",
+      methodArgs: [],
+      signer: this.signer
+    })
+  );
+};
+
+/**
+ * Find the content type accessible to the current user by name, ID, or version hash
+ *
+ * @methodGroup Content Types
+ * @namedParams
+ * @param {string=} name - Name of the content type to find
+ * @param {string=} typeId - ID of the content type to find
+ * @param {string=} versionHash - Version hash of the content type to find
+ *
+ * @return {Promise&lt;Object>} - The content type, if found
+ */
+exports.ContentType = async function({name, typeId, versionHash}) {
+  this.Log(`Retrieving content type: ${name || typeId || versionHash}`);
+
+  if(versionHash) { typeId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  if(name) {
+    this.Log("Looking up type by name in content space metadata...");
+    // Look up named type in content space metadata
+    typeId = await this.ContentObjectMetadata({
+      libraryId: this.contentSpaceLibraryId,
+      objectId: this.contentSpaceObjectId,
+      metadataSubtree: UrlJoin("contentTypes", name)
+    });
+  }
+
+  if(!typeId) {
+    this.Log("Looking up type by name in available types...");
+    const types = await this.ContentTypes();
+
+    if(name) {
+      return Object.values(types).find(type => (type.name || "").toLowerCase() === name.toLowerCase());
+    } else {
+      return Object.values(types).find(type => type.hash === versionHash);
+    }
+  }
+
+  try {
+    this.Log("Looking up type by ID...");
+
+    const typeInfo = await this.ContentObject({
+      libraryId: this.contentSpaceLibraryId,
+      objectId: typeId
+    });
+
+    delete typeInfo.type;
+
+    const metadata = (await this.ContentObjectMetadata({
+      libraryId: this.contentSpaceLibraryId,
+      objectId: typeId
+    })) || {};
+
+    return {
+      ...typeInfo,
+      name: metadata.name,
+      meta: metadata
+    };
+  } catch(error) {
+    this.Log("Error looking up content type:");
+    this.Log(error);
+    throw new Error(`Content Type ${name || typeId} is invalid`);
+  }
+};
+
+/**
+ * List all content types accessible to this user.
+ *
+ * @methodGroup Content Types
+ * @namedParams
+ *
+ * @return {Promise&lt;Object>} - Available content types
+ */
+exports.ContentTypes = async function() {
+  this.contentTypes = this.contentTypes || {};
+
+  this.Log("Looking up all available content types");
+
+  // Personally available types
+  let typeAddresses = await this.Collection({collectionType: "contentTypes"});
+
+  this.Log("Personally available types:");
+  this.Log(typeAddresses);
+
+  // Content space types
+  const contentSpaceTypes = await this.ContentObjectMetadata({
+    libraryId: this.contentSpaceLibraryId,
+    objectId: this.contentSpaceObjectId,
+    metadataSubtree: "contentTypes"
+  }) || {};
+
+  const contentSpaceTypeAddresses = Object.values(contentSpaceTypes)
+    .map(typeId => this.utils.HashToAddress(typeId));
+
+  this.Log("Content space types:");
+  this.Log(contentSpaceTypeAddresses);
+
+  typeAddresses = typeAddresses
+    .concat(contentSpaceTypeAddresses)
+    .filter(address => address)
+    .map(address => this.utils.FormatAddress(address))
+    .filter((v, i, a) => a.indexOf(v) === i);
+
+  await Promise.all(
+    typeAddresses.map(async typeAddress => {
+      const typeId = this.utils.AddressToObjectId(typeAddress);
+
+      if(!this.contentTypes[typeId]) {
+        try {
+          this.contentTypes[typeId] = await this.ContentType({typeId});
+        } catch(error) {
+          // eslint-disable-next-line no-console
+          // console.error(error);
+        }
+      }
+    })
+  );
+
+  return this.contentTypes;
+};
+
+
+/* Content Libraries */
+
+/**
+ * List content libraries - returns a list of content library IDs available to the current user
+ *
+ * @methodGroup Content Libraries
+ *
+ * @returns {Promise&lt;Array&lt;string>>}
+ */
+exports.ContentLibraries = async function() {
+  const libraryAddresses = await this.Collection({collectionType: "libraries"});
+
+  return libraryAddresses.map(address => this.utils.AddressToLibraryId(address));
+};
+
+/**
+ * Returns information about the content library
+ *
+ * @methodGroup Content Libraries
+ *
+ * @namedParams
+ * @param {string} libraryId
+ *
+ * @returns {Promise&lt;Object>}
+ */
+exports.ContentLibrary = async function({libraryId}) {
+  ValidateLibrary(libraryId);
+
+  const path = UrlJoin("qlibs", libraryId);
+
+  const library = await this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId}),
+      method: "GET",
+      path: path
+    })
+  );
+
+  return {
+    ...library,
+    meta: library.meta || {}
+  };
+};
+
+/**
+ * Returns the address of the owner of the specified content library
+ *
+ * @methodGroup Content Libraries
+ * @namedParams
+ * @param {string} libraryId
+ *
+ * @returns {Promise&lt;string>} - The account address of the owner
+ */
+exports.ContentLibraryOwner = async function({libraryId}) {
+  ValidateLibrary(libraryId);
+
+  return this.utils.FormatAddress(
+    await this.ethClient.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(libraryId),
+      abi: LibraryContract.abi,
+      methodName: "owner",
+      methodArgs: [],
+      signer: this.signer
+    })
+  );
+};
+
+/**
+ * Retrieve the allowed content types for the specified library.
+ *
+ * Note: If no content types have been set on the library, all types are allowed, but an empty hash will be returned.
+ *
+ * @see &lt;a href="#ContentTypes">ContentTypes&lt;/a>
+ *
+ * @methodGroup Content Libraries
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ *
+ * @returns {Promise&lt;Object>} - List of accepted content types - return format is equivalent to ContentTypes method
+ */
+exports.LibraryContentTypes = async function({libraryId}) {
+  ValidateLibrary(libraryId);
+
+  this.Log(`Retrieving library content types for ${libraryId}`);
+
+  const typesLength = (await this.ethClient.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(libraryId),
+    abi: LibraryContract.abi,
+    methodName: "contentTypesLength",
+    methodArgs: [],
+    signer: this.signer
+  })).toNumber();
+
+  this.Log(`${typesLength} types`);
+
+  // No allowed types set - any type accepted
+  if(typesLength === 0) { return {}; }
+
+  // Get the list of allowed content type addresses
+  let allowedTypes = {};
+  await Promise.all(
+    Array.from(new Array(typesLength), async (_, i) => {
+      const typeAddress = await this.ethClient.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(libraryId),
+        abi: LibraryContract.abi,
+        methodName: "contentTypes",
+        methodArgs: [i],
+        signer: this.signer
+      });
+
+      const typeId = this.utils.AddressToObjectId(typeAddress);
+      allowedTypes[typeId] = await this.ContentType({typeId});
+    })
+  );
+
+  this.Log(allowedTypes);
+
+  return allowedTypes;
+};
+
+
+/* Content Objects */
+
+/**
+ * List content objects in the specified library
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {object=} filterOptions - Pagination, sorting and filtering options
+ * @param {boolean=} filterOptions.latestOnly=true - If specified, only latest version of objects will be included
+ * @param {number=} filterOptions.start - Start index for pagination
+ * @param {number=} filterOptions.limit - Max number of objects to return
+ * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
+ * @param {(Array&lt;string> | string)=} filterOptions.sort - Sort by the specified key(s)
+ * * @param {boolean=} filterOptions.sortDesc=false - Sort in descending order
+ * @param {(Array&lt;string> | string)=} filterOptions.select - Include only the specified metadata keys
+ * @param {(Array&lt;object> | object)=} filterOptions.filter - Filter objects by metadata
+ * @param {string=} filterOptions.filter.key - Key to filter on
+ * @param {string=} filterOptions.filter.type - Type of filter to use for the specified key:
+ * - eq, neq, lt, lte, gt, gte, cnt (contains), ncnt (does not contain),
+ * @param {string=} filterOptions.filter.filter - Filter for the specified key
+ *
+ * @returns {Promise&lt;Array&lt;Object>>} - List of objects in library
+ */
+exports.ContentObjects = async function({libraryId, filterOptions={}}) {
+  ValidateLibrary(libraryId);
+
+  this.Log(`Retrieving content objects from ${libraryId}`);
+
+  let path = UrlJoin("qlibs", libraryId, "q");
+
+  let queryParams = {
+    filter: []
+  };
+
+  // Cache ID
+  if(filterOptions.cacheId) {
+    queryParams.cache_id = filterOptions.cacheId;
+  }
+
+  // Start index
+  if(filterOptions.start) {
+    queryParams.start = filterOptions.start;
+  }
+
+  // Limit
+  if(filterOptions.limit) {
+    queryParams.limit = filterOptions.limit;
+  }
+
+  // Metadata select options
+  if(filterOptions.select) {
+    queryParams.select = filterOptions.select;
+  }
+
+  // Sorting options
+  if(filterOptions.sort) {
+    // Sort keys
+    queryParams.sort_by = filterOptions.sort;
+
+    // Sort order
+    if(filterOptions.sortDesc) {
+      queryParams.sort_descending = true;
+    }
+  }
+
+  if(filterOptions.latestOnly === false) {
+    queryParams.latest_version_only = false;
+  }
+
+  // Filters
+  const filterTypeMap = {
+    eq: ":eq:",
+    neq: ":ne:",
+    lt: ":lt:",
+    lte: ":le:",
+    gt: ":gt:",
+    gte: ":ge:",
+    cnt: ":co:",
+    ncnt: ":nc:"
+  };
+
+  const addFilter = ({key, type, filter}) => {
+    queryParams.filter.push(`${key}${filterTypeMap[type]}${filter}`);
+  };
+
+  if(filterOptions.filter) {
+    if(Array.isArray(filterOptions.filter)) {
+      filterOptions.filter.forEach(filter => addFilter(filter));
+    } else {
+      addFilter(filterOptions.filter);
+    }
+  }
+
+  this.Log("Filter options:");
+  this.Log(filterOptions);
+
+  return await this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId}),
+      method: "GET",
+      path: path,
+      queryParams
+    })
+  );
+};
+
+/**
+ * Get a specific content object in the library
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ *
+ * @returns {Promise&lt;Object>} - Description of content object
+ */
+exports.ContentObject = async function({libraryId, objectId, versionHash}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  this.Log(`Retrieving content object: ${libraryId || ""} ${objectId || versionHash}`);
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  let path = UrlJoin("q", versionHash || objectId);
+
+  return await this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
+      method: "GET",
+      path: path
+    })
+  );
+};
+
+/**
+ * Returns the address of the owner of the specified content object
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId
+ *
+ * @returns {Promise&lt;string>} - The account address of the owner
+ */
+exports.ContentObjectOwner = async function({objectId}) {
+  ValidateObject(objectId);
+
+  this.Log(`Retrieving content object owner: ${objectId}`);
+
+  return this.utils.FormatAddress(
+    await this.ethClient.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      abi: ContentContract.abi,
+      methodName: "owner",
+      methodArgs: [],
+      cacheContract: false,
+      signer: this.signer
+    })
+  );
+};
+
+/**
+ * Retrieve the library ID for the specified content object
+ *
+ * @methodGroup Content Objects
+ *
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise&lt;string>} - Library ID of the object
+ */
+exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  if(!this.objectLibraryIds[objectId]) {
+    this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
+
+    this.objectLibraryIds[objectId] = this.utils.AddressToLibraryId(
+      await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(objectId),
+        abi: ContentContract.abi,
+        methodName: "libraryAddress"
+      })
+    );
+  }
+
+  return this.objectLibraryIds[objectId];
+};
+
+exports.ProduceMetadataLinks = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  path="/",
+  metadata,
+  noAuth=true
+}) {
+  // Primitive
+  if(!metadata || typeof metadata !== "object") { return metadata; }
+
+  // Array
+  if(Array.isArray(metadata)) {
+    return await this.utils.LimitedMap(
+      5,
+      metadata,
+      async (entry, i) => await this.ProduceMetadataLinks({
+        libraryId,
+        objectId,
+        versionHash,
+        path: UrlJoin(path, i.toString()),
+        metadata: entry,
+        noAuth
+      })
+    );
+  }
+
+  // Object
+  if(metadata["/"] &amp;&amp;
+    (metadata["/"].match(/\.\/(rep|files)\/.+/) ||
+      metadata["/"].match(/^\/?qfab\/([\w]+)\/?(rep|files)\/.+/)))
+  {
+    // Is file or rep link - produce a url
+    return {
+      ...metadata,
+      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path})
+    };
+  }
+
+  let result = {};
+  await this.utils.LimitedMap(
+    5,
+    Object.keys(metadata),
+    async key => {
+      result[key] = await this.ProduceMetadataLinks({
+        libraryId,
+        objectId,
+        versionHash,
+        path: UrlJoin(path, key),
+        metadata: metadata[key],
+        noAuth
+      });
+    }
+  );
+
+  return result;
+};
+
+/**
+ * Get the metadata of a content object
+ *
+ * @methodGroup Metadata
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
+ * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
+ * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
+ * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
+
+ Example:
+ {
+          "resolved-link": {
+            ".": {
+              "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
+            },
+            ...
+          }
+       }
+
+ * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
+ * full URL
+ * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
+ *
+ * @returns {Promise&lt;Object | string>} - Metadata of the content object
+ */
+exports.ContentObjectMetadata = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  metadataSubtree="/",
+  resolveLinks=false,
+  resolveIncludeSource=false,
+  produceLinkUrls=false,
+  noAuth=true
+}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  this.Log(
+    `Retrieving content object metadata: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
+       Subtree: ${metadataSubtree}`
+  );
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
+
+  let metadata;
+  try {
+    metadata = await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
+        queryParams: {
+          resolve: resolveLinks,
+          resolve_include_source: resolveIncludeSource
+        },
+        method: "GET",
+        path: path
+      })
+    );
+  } catch(error) {
+    if(error.status !== 404) {
+      throw error;
+    }
+
+    metadata = metadataSubtree === "/" ? {} : undefined;
+  }
+
+  if(!produceLinkUrls) { return metadata; }
+
+  return await this.ProduceMetadataLinks({
+    libraryId,
+    objectId,
+    versionHash,
+    path: metadataSubtree,
+    metadata,
+    noAuth
+  });
+};
+
+/**
+ * List the versions of a content object
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ *
+ * @returns {Promise&lt;Object>} - Response containing versions of the object
+ */
+exports.ContentObjectVersions = async function({libraryId, objectId, noAuth=false}) {
+  ValidateParameters({libraryId, objectId});
+
+  this.Log(`Retrieving content object versions: ${libraryId || ""} ${objectId || versionHash}`);
+
+  let path = UrlJoin("qid", objectId);
+
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, noAuth}),
+      method: "GET",
+      path: path
+    })
+  );
+};
+
+/**
+ * Retrieve the version hash of the latest version of the specified object
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise&lt;string>} - The latest version hash of the object
+ */
+exports.LatestVersionHash = async function({objectId, versionHash}) {
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  ValidateObject(objectId);
+
+  return await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    abi: ContentContract.abi,
+    methodName: "objectHash"
+  });
+};
+
+/* URL Methods */
+
+/**
+ * Determine available DRM types available in this browser environment.
+ *
+ * @methodGroup Media
+ * @return {Promise&lt;Array&lt;string>>}
+ */
+exports.AvailableDRMs = async function() {
+  const availableDRMs = ["clear", "aes-128"];
+
+  if(!window) {
+    return availableDRMs;
+  }
+
+  if(typeof window.navigator.requestMediaKeySystemAccess !== "function") {
+    return availableDRMs;
+  }
+
+  try {
+    const config = [{
+      initDataTypes: ["cenc"],
+      audioCapabilities: [{
+        contentType: "audio/mp4;codecs=\"mp4a.40.2\""
+      }],
+      videoCapabilities: [{
+        contentType: "video/mp4;codecs=\"avc1.42E01E\""
+      }]
+    }];
+
+    await navigator.requestMediaKeySystemAccess("com.widevine.alpha", config);
+
+    availableDRMs.push("widevine");
+    // eslint-disable-next-line no-empty
+  } catch(e) {}
+
+  return availableDRMs;
+};
+
+exports.AudienceData = function({objectId, versionHash, protocols=[], drms=[]}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  this.Log(`Retrieving audience data: ${objectId}`);
+
+  let data = {
+    user_address: this.utils.FormatAddress(this.signer.address),
+    content_id: objectId || this.utils.DecodeVersionHash(versionHash).id,
+    content_hash: versionHash,
+    hostname: this.HttpClient.BaseURI().hostname(),
+    access_time: Math.round(new Date().getTime()).toString(),
+    format: protocols.join(","),
+    drm: drms.join(",")
+  };
+
+  if(typeof window !== "undefined" &amp;&amp; window.navigator) {
+    data.user_string = window.navigator.userAgent;
+    data.language = window.navigator.language;
+  }
+
+  this.Log(data);
+
+  return data;
+};
+
+/**
+ * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
+ *
+ * The root level playoutOptions[protocol].playoutUrl and playoutOptions[protocol].drms will contain playout
+ * information that satisfies the specified DRM requirements (if possible), while playoutOptions[protocol].playoutMethods
+ * will contain all available playout options for this content.
+ *
+ * If only objectId is specified, latest version will be played. To retrieve playout options for
+ * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
+ *
+ * @methodGroup Media
+ * @namedParams
+ * @param {string=} objectId - Id of the content
+ * @param {string=} versionHash - Version hash of the content
+ * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {Array&lt;string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+ * @param {Array&lt;string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {string=} offering=default - The offering to play
+ */
+exports.PlayoutOptions = async function({
+  objectId,
+  versionHash,
+  linkPath,
+  protocols=["dash", "hls"],
+  offering="default",
+  drms=[],
+  hlsjsProfile=true
+}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  protocols = protocols.map(p => p.toLowerCase());
+  drms = drms.map(d => d.toLowerCase());
+
+  if(!objectId) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
+
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
+  if(linkPath) {
+    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+    linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+    linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
+    path = UrlJoin("q", versionHash || objectId, "meta", linkPath);
+  } else {
+    path = UrlJoin("q", versionHash || objectId, "rep", "playout", offering, "options.json");
+  }
+
+  const audienceData = this.AudienceData({
+    objectId: linkTargetId || objectId,
+    versionHash: linkTargetHash || versionHash || await this.LatestVersionHash({objectId}),
+    protocols,
+    drms
+  });
+
+  // Add authorization token to playout URLs
+  let queryParams = {
+    authorization: await this.authClient.AuthorizationToken({
+      libraryId: linkTargetLibraryId || libraryId,
+      objectId: linkTargetId || objectId,
+      channelAuth: true,
+      oauthToken: this.oauthToken,
+      audienceData
+    })
+  };
+
+  if(linkPath) {
+    queryParams.resolve = true;
+  }
+
+  const playoutOptions = Object.values(
+    await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        path: path,
+        method: "GET",
+        queryParams
+      })
+    )
+  );
+
+  let playoutMap = {};
+  for(let i = 0; i &lt; playoutOptions.length; i++) {
+    const option = playoutOptions[i];
+    const protocol = option.properties.protocol;
+    const drm = option.properties.drm;
+    // Remove authorization parameter from playout path - it's re-added by Rep
+    const playoutPath = option.uri.split("?")[0];
+    const licenseServers = option.properties.license_servers;
+
+    // Create full playout URLs for this protocol / drm combo
+    playoutMap[protocol] = {
+      ...(playoutMap[protocol] || {}),
+      playoutMethods: {
+        ...((playoutMap[protocol] || {}).playoutMethods || {}),
+        [drm || "clear"]: {
+          playoutUrl: await this.Rep({
+            libraryId: linkTargetLibraryId || libraryId,
+            objectId: linkTargetId || objectId,
+            versionHash: linkTargetHash || versionHash,
+            rep: UrlJoin("playout", offering, playoutPath),
+            channelAuth: true,
+            queryParams: hlsjsProfile &amp;&amp; protocol === "hls" ? {player_profile: "hls-js"} : {}
+          }),
+          drms: drm ? {[drm]: {licenseServers}} : undefined
+        }
+      }
+    };
+
+    // Exclude any options that do not satisfy the specified protocols and/or DRMs
+    const protocolMatch = protocols.includes(protocol);
+    const drmMatch = drms.includes(drm || "clear") || (drms.length === 0 &amp;&amp; !drm);
+    if(!protocolMatch || !drmMatch) {
+      continue;
+    }
+
+    // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
+    if(!playoutMap[protocol].playoutUrl || (drm &amp;&amp; drm !== "clear")) {
+      playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
+      playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
+    }
+  }
+
+  this.Log(playoutMap);
+
+  return playoutMap;
+};
+
+/**
+ * Retrieve playout options in BitMovin player format for the specified content that satisfy
+ * the given protocol and DRM requirements
+ *
+ * If only objectId is specified, latest version will be played. To retrieve playout options for
+ * a specific version of the content, provide the versionHash parameter (in which case objectId is unnecessary)
+ *
+ * @methodGroup Media
+ * @namedParams
+ * @param {string=} objectId - Id of the content
+ * @param {string} versionHash - Version hash of the content
+ * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {Array&lt;string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+ * @param {Array&lt;string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {string=} offering=default - The offering to play
+ */
+exports.BitmovinPlayoutOptions = async function({
+  objectId,
+  versionHash,
+  linkPath,
+  protocols=["dash", "hls"],
+  drms=[],
+  offering="default"
+}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(!objectId) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
+
+  const playoutOptions = await this.PlayoutOptions({
+    objectId,
+    versionHash,
+    linkPath,
+    protocols,
+    drms,
+    offering,
+    hlsjsProfile: false
+  });
+
+  delete playoutOptions.playoutMethods;
+
+  let linkTargetId, linkTargetHash;
+  if(linkPath) {
+    const libraryId = await this.ContentObjectLibraryId({objectId, versionHash});
+    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+    linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+  }
+
+  const authToken = await this.authClient.AuthorizationToken({
+    objectId: linkTargetId || objectId,
+    channelAuth: true,
+    oauthToken: this.oauthToken,
+  });
+
+  let config = {
+    drm: {}
+  };
+
+  Object.keys(playoutOptions).forEach(protocol => {
+    const option = playoutOptions[protocol];
+    config[protocol] = option.playoutUrl;
+
+    if(option.drms) {
+      Object.keys(option.drms).forEach(drm => {
+        // No license URL specified
+        if(!option.drms[drm].licenseServers || option.drms[drm].licenseServers.length === 0) { return; }
+
+        // Opt for https urls
+        const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
+        let licenseUrls = option.drms[drm].licenseServers;
+        if(licenseUrls.find(filterHTTPS)) {
+          licenseUrls = licenseUrls.filter(filterHTTPS);
+        }
+
+        // Choose a random license server from the available list
+        const licenseUrl = licenseUrls.sort(() => 0.5 - Math.random())[0];
+
+        if(!config.drm[drm]) {
+          config.drm[drm] = {
+            LA_URL: licenseUrl,
+            headers: {
+              Authorization: `Bearer ${authToken}`
+            }
+          };
+        }
+      });
+    }
+  });
+
+  return config;
+};
+
+/**
+ * Call the specified bitcode method on the specified object
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+ * @param {string=} writeToken - Write token of an object draft - if calling bitcode of a draft object
+ * @param {string} method - Bitcode method to call
+ * @param {Object=} queryParams - Query parameters to include in the request
+ * @param {Object=} body - Request body to include, if calling a non-constant method
+ * @param {Object=} headers - Request headers to include
+ * @param {boolean=} constant=true - If specified, a GET request authenticated with an AccessRequest will be made.
+ * Otherwise, a POST with an UpdateRequest will be performed
+ * @param {string=} format=json - The format of the response
+ *
+ * @returns {Promise&lt;format>} - The response from the call in the specified format
+ */
+exports.CallBitcodeMethod = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  method,
+  queryParams={},
+  body={},
+  headers={},
+  constant=true,
+  format="json"
+}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+  if(!method) { throw "Bitcode method not specified"; }
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  let path = UrlJoin("q", writeToken || versionHash || objectId, "call", method);
+
+  if(libraryId) {
+    path = UrlJoin("qlibs", libraryId, path);
+  }
+
+  let authHeader = headers.authorization || headers.Authorization;
+  if(!authHeader) {
+    headers.Authorization = (
+      await this.authClient.AuthorizationHeader({
+        libraryId,
+        objectId,
+        update: !constant
+      })
+    ).Authorization;
+  }
+
+  this.Log(
+    `Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
+      ${constant ? "GET" : "POST"} ${path}
+      Query Params:
+      ${queryParams}
+      Body:
+      ${body}
+      Headers
+      ${headers}`
+  );
+
+  return this.utils.ResponseToFormat(
+    format,
+    await this.HttpClient.Request({
+      body,
+      headers,
+      method: constant ? "GET" : "POST",
+      path,
+      queryParams,
+      failover: false
+    })
+  );
+};
+
+/**
+ * Generate a URL to the specified /rep endpoint of a content object. URL includes authorization token.
+ *
+ * Alias for the FabricUrl method with the "rep" parameter
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+ * @param {string} rep - Representation to use
+ * @param {Object=} queryParams - Query params to add to the URL
+ * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
+ * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
+ * token. This is useful for accessing public assets.
+ * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+ * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
+ *
+ * @see &lt;a href="#FabricUrl">FabricUrl&lt;/a> for creating arbitrary fabric URLs
+ *
+ * @returns {Promise&lt;string>} - URL to the specified rep endpoint with authorization token
+ */
+exports.Rep = async function({libraryId, objectId, versionHash, rep, queryParams={}, channelAuth=false, noAuth=false, noCache=false}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+  if(!rep) { throw "Rep not specified"; }
+
+  return this.FabricUrl({libraryId, objectId, versionHash, rep, queryParams, channelAuth, noAuth, noCache});
+};
+
+/**
+ * Generate a URL to the specified /public endpoint of a content object. URL includes authorization token.
+ *
+ * Alias for the FabricUrl method with the "rep" parameter
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version - if not specified, latest version will be used
+ * @param {string} rep - Representation to use
+ * @param {Object=} queryParams - Query params to add to the URL
+ *
+ * @see &lt;a href="#FabricUrl">FabricUrl&lt;/a> for creating arbitrary fabric URLs
+ *
+ * @returns {Promise&lt;string>} - URL to the specified rep endpoint with authorization token
+ */
+exports.PublicRep = async function({libraryId, objectId, versionHash, rep, queryParams={}}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+  if(!rep) { throw "Rep not specified"; }
+
+  return this.FabricUrl({libraryId, objectId, versionHash, publicRep: rep, queryParams, noAuth: true});
+};
+
+/**
+ * Generate a URL to the specified item in the content fabric with appropriate authorization token.
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string=} libraryId - ID of an library
+ * @param {string=} objectId - ID of an object
+ * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
+ * @param {string=} partHash - Hash of a part - Requires object ID
+ * @param {string=} rep - Rep parameter of the url
+ * @param {string=} publicRep - Public rep parameter of the url
+ * @param {string=} call - Bitcode method to call
+ * @param {Object=} queryParams - Query params to add to the URL
+ * @param {boolean=} channelAuth=false - If specified, state channel authorization will be used instead of access request authorization
+ * @param {boolean=} noAuth=false - If specified, authorization will not be performed and the URL will not have an authorization
+ * token. This is useful for accessing public assets.
+ * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+ * whether such a request exists in the client cache. This request will not be cached. This option has no effect if noAuth is true.
+ *
+ * @returns {Promise&lt;string>} - URL to the specified endpoint with authorization token
+ */
+exports.FabricUrl = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  partHash,
+  rep,
+  publicRep,
+  call,
+  queryParams={},
+  channelAuth=false,
+  noAuth=false,
+  noCache=false
+}) {
+  if(objectId || versionHash) {
+    ValidateParameters({libraryId, objectId, versionHash});
+  }
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  this.Log(
+    `Building Fabric URL:
+      libraryId: ${libraryId}
+      objectId: ${objectId}
+      versionHash: ${versionHash}
+      writeToken: ${writeToken}
+      partHash: ${partHash}
+      rep: ${rep}
+      publicRep: ${publicRep}
+      call: ${call}
+      channelAuth: ${channelAuth}
+      noAuth: ${noAuth}
+      noCache: ${noCache}
+      queryParams: ${JSON.stringify(queryParams || {}, null, 2)}`
+  );
+
+  // Clone queryParams to avoid modification of the original
+  queryParams = {...queryParams};
+
+  queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, channelAuth, noAuth, noCache});
+
+  let path = "";
+  if(libraryId) {
+    path = UrlJoin(path, "qlibs", libraryId);
+
+    if(objectId || versionHash) {
+      path = UrlJoin(path, "q", writeToken || versionHash || objectId);
+    }
+  } else if(versionHash) {
+    path = UrlJoin("q", versionHash);
+  }
+
+  if(partHash){
+    path = UrlJoin(path, "data", partHash);
+  } else if(rep) {
+    path = UrlJoin(path, "rep", rep);
+  } else if(publicRep) {
+    path = UrlJoin(path, "public", publicRep);
+  } else if(call) {
+    path = UrlJoin(path, "call", call);
+  }
+
+  return this.HttpClient.URL({
+    path,
+    queryParams
+  });
+};
+
+/**
+ * Generate a URL to the specified content object file with appropriate authorization token.
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string=} libraryId - ID of an library
+ * @param {string=} objectId - ID of an object
+ * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - A write token for a draft of the object (requires libraryId)
+ * @param {string} filePath - Path to the content object file
+ * @param {Object=} queryParams - Query params to add to the URL
+ * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+ * whether such a request exists in the client cache. This request will not be cached.
+ *
+ * @returns {Promise&lt;string>} - URL to the specified file with authorization token
+ */
+exports.FileUrl = async function({libraryId, objectId, versionHash, writeToken, filePath, queryParams={}, noCache=false}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+  if(!filePath) { throw "File path not specified"; }
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  let path;
+
+  if(libraryId) {
+    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "files", filePath);
+  } else {
+    path = UrlJoin("q", versionHash, "files", filePath);
+  }
+
+  const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
+
+  return this.HttpClient.URL({
+    path: path,
+    queryParams: {
+      ...queryParams,
+      authorization: authorizationToken
+    }
+  });
+};
+
+/* Links */
+
+/**
+ * Get a specific content object in the library
+ *
+ * @methodGroup Links
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is returned
+ * @param {boolean=} autoUpdate=false - If true, lists only links marked as auto-update links
+ * @param {(string | Array&lt;string>)=} select - Limit metadata fields return in link details
+ *
+ * @returns {Promise&lt;Object>} - Description of created object
+ */
+exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, autoUpdate=false, select}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  this.Log(`Retrieving content object graph: ${libraryId || ""} ${objectId || versionHash}`);
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  let path = UrlJoin("q", versionHash || objectId, "links");
+
+  try {
+    return await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
+        queryParams: {
+          auto_update: autoUpdate,
+          select
+        },
+        method: "GET",
+        path: path
+      })
+    );
+  } catch(error) {
+    // If a cycle is present, do some work to present useful information about it
+    let errorInfo;
+    try {
+      const cycles = error.body.errors[0].cause.cause.cause.cycle;
+
+      if(!cycles || cycles.length === 0) { throw error; }
+
+      let info = {};
+      await Promise.all(
+        cycles.map(async cycleHash => {
+          if(info[cycleHash]) { return; }
+
+          const cycleId = (this.utils.DecodeVersionHash(cycleHash)).objectId;
+          const name = (
+            await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "public/asset_metadata/display_title"}) ||
+            await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "public/name"}) ||
+            await this.ContentObjectMetadata({versionHash: cycleHash, metadataSubtree: "name"}) ||
+            cycleId
+          );
+
+          info[cycleHash] = { name, objectId: cycleId };
+        })
+      );
+
+      errorInfo = cycles.map(cycleHash => `${info[cycleHash].name} (${info[cycleHash].objectId})`);
+    } catch(e) {
+      throw error;
+    }
+
+    throw new Error(
+      `Cycle found in links: ${errorInfo.join(" -> ")}`
+    );
+  }
+};
+
+/**
+ * Retrieve the version hash of the specified link's target. If the target is the same as the specified
+ * object and versionHash is not specified, will return the latest version hash.
+ *
+ * @methodGroup Links
+ * @namedParams
+ * @param {string=} libraryId - ID of an library
+ * @param {string=} objectId - ID of an object
+ * @param {string=} versionHash - Hash of an object version
+ * @param {string} linkPath - Path to the content object link
+ *
+ * @returns {Promise&lt;string>} - Version hash of the link's target
+ */
+exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}) {
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  const linkInfo = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    versionHash,
+    metadataSubtree: UrlJoin(linkPath),
+    resolveLinks: false
+  });
+
+  if(!linkInfo || !linkInfo["/"]) {
+    throw Error(`No valid link at ${linkPath}`);
+  }
+
+  /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
+  let targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
+  if(!targetHash) {
+    targetHash = linkInfo["."].container;
+  }
+
+  if(targetHash) {
+    return targetHash;
+  } else if(versionHash) {
+    return versionHash;
+  }
+
+  // Link points to this object - get latest version
+  return await this.LatestVersionHash({objectId});
+};
+
+/**
+ * Generate a URL to the specified file link with appropriate authentication
+ *
+ * @methodGroup Links
+ * @namedParams
+ * @param {string=} libraryId - ID of an library
+ * @param {string=} objectId - ID of an object
+ * @param {string=} versionHash - Hash of an object version
+ * @param {string} linkPath - Path to the content object link
+ * @param {string=} mimeType - Mime type to use when rendering the file
+ * @param {Object=} queryParams - Query params to add to the URL
+ * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
+ * whether such a request exists in the client cache. This request will not be cached.
+ *
+ * @returns {Promise&lt;string>} - URL to the specified file with authorization token
+ */
+exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mimeType, queryParams={}, noCache=false}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  if(!linkPath) { throw Error("Link path not specified"); }
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  let path;
+  if(libraryId) {
+    path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
+  } else {
+    path = UrlJoin("q", versionHash, "meta", linkPath);
+  }
+
+  queryParams = {
+    ...queryParams,
+    resolve: true,
+    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth: true})
+  };
+
+  if(mimeType) { queryParams["header-accept"] = mimeType; }
+
+  return this.HttpClient.URL({
+    path: path,
+    queryParams
+  });
+};
+
+/**
+ * Retrieve the data at the specified link in the specified format
+ *
+ * @methodGroup Links
+ * @namedParams
+ * @param {string=} libraryId - ID of an library
+ * @param {string=} objectId - ID of an object
+ * @param {string=} versionHash - Hash of an object version
+ * @param {string} linkPath - Path to the content object link
+ * @param {string=} format=json - Format of the response
+ */
+exports.LinkData = async function({libraryId, objectId, versionHash, linkPath, format="json"}) {
+  const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, linkPath});
+
+  return this.utils.ResponseToFormat(
+    format,
+    await HttpClient.Fetch(linkUrl)
+  );
+};
+
+
+/* Encryption */
+
+/**
+ * Retrieve the encryption conk for the specified object. If one has not yet been created
+ * and a writeToken has been specified, this method will create a new conk and
+ * save it to the draft metadata
+ *
+ * @methodGroup Encryption
+ *
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string=} writeToken - Write token of the content object draft
+ *
+ * @return Promise&lt;Object> - The encryption conk for the object
+ */
+exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
+  ValidateParameters({libraryId, objectId});
+  if(writeToken) { ValidateWriteToken(writeToken); }
+
+  const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
+
+  if(!this.utils.EqualAddress(owner, this.signer.address)) {
+    // Target decryption
+    if(!this.reencryptionConks[objectId]) {
+      this.reencryptionConks[objectId] = await this.authClient.ReEncryptionConk({libraryId, objectId});
+    }
+
+    return this.reencryptionConks[objectId];
+  }
+
+  // Primary encryption
+  if(!this.encryptionConks[objectId]) {
+    const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+
+    const existingUserCap =
+      await this.ContentObjectMetadata({
+        libraryId,
+        // Cap may only exist in draft
+        objectId,
+        writeToken,
+        metadataSubtree: capKey
+      });
+
+    if(existingUserCap) {
+      this.encryptionConks[objectId] = await Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+    } else {
+      this.encryptionConks[objectId] = await Crypto.GeneratePrimaryConk();
+
+      // If write token is specified, add it to the metadata
+      if(writeToken) {
+        let metadata = {};
+        metadata[capKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
+
+        try {
+          const kmsAddress = await this.authClient.KMSAddress({objectId});
+          const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
+          const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+          const existingKMSCap =
+            await this.ContentObjectMetadata({
+              libraryId,
+              // Cap may only exist in draft
+              objectId,
+              writeToken,
+              metadataSubtree: kmsCapKey
+            });
+
+          if(!existingKMSCap) {
+            metadata[kmsCapKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+          }
+        } catch(error) {
+          // eslint-disable-next-line no-console
+          console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
+        }
+
+        await this.MergeMetadata({
+          libraryId,
+          objectId,
+          writeToken,
+          metadata
+        });
+      }
+    }
+  }
+
+  return this.encryptionConks[objectId];
+};
+
+/**
+ * Encrypt the specified chunk for the specified object or draft
+ *
+ * @methodGroup Encryption
+ *
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the content object draft
+ * @param {ArrayBuffer | Buffer} chunk - The data to encrypt
+ *
+ * @return {Promise&lt;ArrayBuffer>}
+ */
+exports.Encrypt = async function({libraryId, objectId, writeToken, chunk}) {
+  ValidateParameters({libraryId, objectId});
+
+  const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+  const data = await Crypto.Encrypt(conk, chunk);
+
+  // Convert to ArrayBuffer
+  return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+};
+
+/**
+ * Decrypt the specified chunk for the specified object or draft
+ *
+ * @methodGroup Encryption
+ *
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the content object draft
+ * @param {ArrayBuffer | Buffer} chunk - The data to decrypt
+ *
+ * @return {Promise&lt;ArrayBuffer>}
+ */
+exports.Decrypt = async function({libraryId, objectId, writeToken, chunk}) {
+  ValidateParameters({libraryId, objectId});
+
+  const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+  const data = await Crypto.Decrypt(conk, chunk);
+
+  // Convert to ArrayBuffer
+  return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
+};
+
+/* Content Object Access */
+
+/**
+ * Return the type of contract backing the specified ID
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string} id - ID of the item
+ *
+ * @return {Promise&lt;string>} - Contract type of the item - "space", "library", "type", "object", "wallet", "group", or "other"
+ */
+exports.AccessType = async function({id}) {
+  return await this.authClient.AccessType(id);
+};
+
+/**
+ * Retrieve info about the access charge and permissions for the specified object.
+ *
+ * Note: Access charge is specified in ether
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string} objectId - ID of the object
+ * @param {object=} args - Arguments to the getAccessInfo method - See the base content contract
+ *
+ * @return {Promise&lt;Object>} - Info about the access charge and whether or not the object is accessible to the current user   */
+exports.AccessInfo = async function({objectId, args}) {
+  ValidateObject(objectId);
+
+  if(!args) {
+    args = [
+      0, // Access level
+      [], // Custom values
+      [] // Stakeholders
+    ];
+  }
+
+  this.Log(`Retrieving access info: ${objectId}`);
+
+  const info = await this.ethClient.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    abi: ContentContract.abi,
+    methodName: "getAccessInfo",
+    methodArgs: args,
+    signer: this.signer
+  });
+
+  this.Log(info);
+
+  return {
+    visibilityCode: info[0],
+    visible: info[0] >= 1,
+    accessible: info[0] >= 10,
+    editable: info[0] >= 100,
+    hasAccess: info[1] === 0,
+    accessCode: info[1],
+    accessCharge: this.utils.WeiToEther(info[2]).toString()
+  };
+};
+
+/**
+ * Make an explicit call to accessRequest or updateRequest of the appropriate contract. Unless noCache is specified on
+ * this method or on the client, the resultant transaction hash of this method will be cached for all subsequent
+ * access to this contract.
+ *
+ * Note: Access and update requests are handled automatically by ElvClient. Use this method only if you need to make
+ * an explicit call. For example, if you need to specify custom arguments to access a content object, you can call
+ * this method explicitly with those arguments. Since the result is cached (by default), all subsequent calls to
+ * that content object will be authorized with that AccessRequest transaction.
+ *
+ * Note: If the access request has an associated charge, this charge will be determined and supplied automatically.
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ * @param {Array=} args=[] - Custom arguments to the accessRequest or updateRequest methods
+ * @param {boolean=} update=false - If true, will call updateRequest instead of accessRequest
+ * @param {boolean=} noCache=false - If true, the resultant transaction hash will not be cached for future use
+ *
+ * @return {Promise&lt;Object>} - Resultant AccessRequest or UpdateRequest event
+ */
+exports.AccessRequest = async function({libraryId, objectId, versionHash, args=[], update=false, noCache=false}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  return await this.authClient.MakeAccessRequest({
+    libraryId,
+    objectId,
+    versionHash,
+    args,
+    update,
+    skipCache: true,
+    noCache
+  });
+};
+
+/**
+ * Generate a state channel token.
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ * @param {boolean=} noCache=false - If specified, a new state channel token will be generated
+ * regardless whether or not one has been previously cached
+ *
+ * @return {Promise&lt;string>} - The state channel token
+ */
+exports.GenerateStateChannelToken = async function({objectId, versionHash, noCache=false}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else if(!this.stateChannelAccess[objectId]) {
+    versionHash = await this.LatestVersionHash({objectId});
+  }
+
+  this.stateChannelAccess[objectId] = versionHash;
+
+  const audienceData = this.AudienceData({objectId, versionHash});
+
+  return await this.authClient.AuthorizationToken({
+    objectId,
+    channelAuth: true,
+    oauthToken: this.oauthToken,
+    audienceData,
+    noCache
+  });
+};
+
+/**
+ * Finalize state channel access
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ * @param {number} percentComplete - Completion percentage of the content
+ */
+exports.FinalizeStateChannelAccess = async function({objectId, versionHash, percentComplete}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(versionHash) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else {
+    if(this.stateChannelAccess[objectId]) {
+      versionHash = this.stateChannelAccess[objectId];
+    } else {
+      versionHash = await this.LatestVersionHash({objectId});
+    }
+  }
+
+  this.stateChannelAccess[objectId] = undefined;
+
+  const audienceData = this.AudienceData({objectId, versionHash});
+
+  await this.authClient.ChannelContentFinalize({
+    objectId,
+    audienceData,
+    percent: percentComplete
+  });
+};
+
+/**
+ * Call accessComplete on the specified content object contract using a previously cached requestID.
+ * Caching must be enabled and an access request must have been previously made on the specified
+ * object by this client instance.
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string} objectId - ID of the object
+ * @param {number} score - Percentage score (0-100)
+ *
+ * @returns {Promise&lt;Object>} - Transaction log of the AccessComplete event
+ */
+exports.ContentObjectAccessComplete = async function({objectId, score=100}) {
+  ValidateObject(objectId);
+
+  if(score &lt; 0 || score > 100) { throw Error("Invalid AccessComplete score: " + score); }
+
+  return await this.authClient.AccessComplete({id: objectId, abi: ContentContract.abi, score});
+};
+
+/* Collection */
+
+/**
+ * Get a list of unique addresses of all of the specified type the current user has access
+ * to through both their user wallet and through access groups
+ *
+ * @methodGroup Collections
+ * @namedParams
+ * @param {string} collectionType - Type of collection to retrieve
+ * - accessGroups
+ * - contentObjects
+ * - contentTypes
+ * - contracts
+ * - libraries
+ *
+ * @return {Promise&lt;Array&lt;string>>} - List of addresses of available items
+ */
+exports.Collection = async function({collectionType}) {
+  const validCollectionTypes = [
+    "accessGroups",
+    "contentObjects",
+    "contentTypes",
+    "contracts",
+    "libraries"
+  ];
+
+  if(!validCollectionTypes.includes(collectionType)) {
+    throw new Error("Invalid collection type: " + collectionType);
+  }
+
+  const walletAddress = this.signer ? await this.userProfileClient.WalletAddress() : undefined;
+  if(!walletAddress) {
+    throw new Error("Unable to get collection: User wallet doesn't exist");
+  }
+
+  this.Log(`Retrieving ${collectionType} contract collection for user ${this.signer.address}`);
+
+  return await this.ethClient.MakeProviderCall({
+    methodName: "send",
+    args: [
+      "elv_getWalletCollection",
+      [
+        this.contentSpaceId,
+        `iusr${this.utils.AddressToHash(this.signer.address)}`,
+        collectionType
+      ]
+    ]
+  });
+};
+
+
+/* Verification */
+
+/**
+ * Verify the specified content object
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} versionHash - Hash of the content object version
+ *
+ * @returns {Promise&lt;Object>} - Response describing verification results
+ */
+exports.VerifyContentObject = async function({libraryId, objectId, versionHash}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  return await ContentObjectVerification.VerifyContentObject({
+    client: this,
+    libraryId,
+    objectId,
+    versionHash
+  });
+};
+
+/**
+ * Get the proofs associated with a given part
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Hash of the object version - If not specified, latest version will be used
+ * @param {string} partHash - Hash of the part
+ *
+ * @returns {Promise&lt;Object>} - Response containing proof information
+ */
+exports.Proofs = async function({libraryId, objectId, versionHash, partHash}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+  ValidatePartHash(partHash);
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  let path = UrlJoin("q", versionHash || objectId, "data", partHash, "proofs");
+
+  return this.utils.ResponseToJson(
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
+      method: "GET",
+      path: path
+    })
+  );
+};
+
+/**
+ * Get part info in CBOR format
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library - required for authentication
+ * @param {string} objectId - ID of the object - required for authentication
+ * @param {string} partHash - Hash of the part
+ * @param {string} format - Format to retrieve the response - defaults to Blob
+ *
+ * @returns {Promise&lt;Format>} - Response containing the CBOR response in the specified format
+ */
+exports.QParts = async function({libraryId, objectId, partHash, format="blob"}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+  ValidatePartHash(partHash);
+
+  let path = UrlJoin("qparts", partHash);
+
+  return this.utils.ResponseToFormat(
+    format,
+    this.HttpClient.Request({
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, partHash}),
+      method: "GET",
+      path: path
+    })
+  );
+};
+</code></pre>
+</div>
+
+    
+
+
+
+        <footer class="footer">
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Format and add line numbers to code
+    prettyPrint();
+  </script>
+
+  <script type="text/javascript" src="scripts/utils.js"></script>
+
+  </body>
+</html>

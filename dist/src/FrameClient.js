@@ -1,18 +1,14 @@
-"use strict";
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
+
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
+
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
+
+var _createClass = require("@babel/runtime/helpers/createClass");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-require("@babel/polyfill");
 
 var Id = require("./Id");
 
@@ -21,6 +17,8 @@ var Utils = require("./Utils");
 var FrameClient =
 /*#__PURE__*/
 function () {
+  "use strict";
+
   /**
    * FrameClient is a client that looks to the user like an ElvClient, but works by passing messages
    * to another frame with an actual ElvClient instead of making the calls itself.
@@ -76,7 +74,7 @@ function () {
 
         _this[methodName] = function _callee(args) {
           var callback;
-          return regeneratorRuntime.async(function _callee$(_context) {
+          return _regeneratorRuntime.async(function _callee$(_context) {
             while (1) {
               switch (_context.prev = _context.next) {
                 case 0:
@@ -87,7 +85,7 @@ function () {
                   }
 
                   _context.next = 4;
-                  return regeneratorRuntime.awrap(_this.SendMessage({
+                  return _regeneratorRuntime.awrap(_this.SendMessage({
                     options: {
                       calledMethod: methodName,
                       args: _this.utils.MakeClonable(args)
@@ -137,7 +135,7 @@ function () {
 
         _this.userProfileClient[methodName] = function _callee2(args) {
           var callback;
-          return regeneratorRuntime.async(function _callee2$(_context2) {
+          return _regeneratorRuntime.async(function _callee2$(_context2) {
             while (1) {
               switch (_context2.prev = _context2.next) {
                 case 0:
@@ -148,7 +146,7 @@ function () {
                   }
 
                   _context2.next = 4;
-                  return regeneratorRuntime.awrap(_this.SendMessage({
+                  return _regeneratorRuntime.awrap(_this.SendMessage({
                     options: {
                       module: "userProfileClient",
                       calledMethod: methodName,
@@ -202,7 +200,7 @@ function () {
     key: "PassRequest",
     value: function PassRequest(_ref2) {
       var request, Respond, response, error, callback;
-      return regeneratorRuntime.async(function PassRequest$(_context3) {
+      return _regeneratorRuntime.async(function PassRequest$(_context3) {
         while (1) {
           switch (_context3.prev = _context3.next) {
             case 0:
@@ -220,7 +218,7 @@ function () {
               }
 
               _context3.next = 5;
-              return regeneratorRuntime.awrap(this.SendMessage({
+              return _regeneratorRuntime.awrap(this.SendMessage({
                 options: request,
                 callback: callback
               }));
@@ -255,7 +253,7 @@ function () {
     value: function SendMessage(_ref3) {
       var _ref3$options, options, callback, _ref3$noResponse, noResponse, requestId, callbackId, operation, isFileOperation, timeout;
 
-      return regeneratorRuntime.async(function SendMessage$(_context4) {
+      return _regeneratorRuntime.async(function SendMessage$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
@@ -284,7 +282,7 @@ function () {
               isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
               timeout = options.prompted || isFileOperation ? 0 : this.timeout;
               _context4.next = 11;
-              return regeneratorRuntime.awrap(this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
+              return _regeneratorRuntime.awrap(this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
 
             case 11:
               return _context4.abrupt("return", _context4.sent);
@@ -299,12 +297,12 @@ function () {
   }, {
     key: "AwaitMessage",
     value: function AwaitMessage(requestId, timeout, callback, callbackId, operation) {
-      return regeneratorRuntime.async(function AwaitMessage$(_context6) {
+      return _regeneratorRuntime.async(function AwaitMessage$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
               _context6.next = 2;
-              return regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
+              return _regeneratorRuntime.awrap(new Promise(function (resolve, reject) {
                 var _methodListener; // Initialize or reset timeout
 
 
@@ -353,7 +351,7 @@ function () {
 
                 _methodListener = function methodListener(event) {
                   var message;
-                  return regeneratorRuntime.async(function methodListener$(_context5) {
+                  return _regeneratorRuntime.async(function methodListener$(_context5) {
                     while (1) {
                       switch (_context5.prev = _context5.next) {
                         case 0:
@@ -427,12 +425,12 @@ function () {
      * @returns {Array<string>} - List of ElvClient methods available to a FrameClient
      */
     value: function AllowedMethods() {
-      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddContentLibraryGroup", "AddContentObjectGroupPermission", "AddLibraryContentType", "AudienceData", "AvailableDRMs", "BitmovinPlayoutOptions", "BlockNumber", "CachedAccessTransaction", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "ContentLibraries", "ContentLibrary", "ContentLibraryGroupPermissions", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectGraph", "ContentObjectGroupPermissions", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "ContractName", "CopyContentObject", "CreateABRMezzanine", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentType", "CreateFileDirectories", "CreateFileUploadJob", "CreateLinks", "CreatePart", "CreateProductionMaster", "CurrentAccountAddress", "CustomContractAddress", "Decrypt", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeletePart", "DeployContract", "Download", "DownloadEncrypted", "DownloadFile", "DownloadPart", "EditContentObject", "Encrypt", "EncryptionConk", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeABRMezzanine", "FinalizeContentObject", "FinalizePart", "FinalizeStateChannelAccess", "FinalizeUploadJob", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LatestVersionHash", "LibraryContentTypes", "LinkData", "LinkTarget", "LinkUrl", "ListFiles", "LROStatus", "MergeMetadata", "NodeId", "Nodes", "PlayoutOptions", "ProduceMetadataLinks", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveContentObjectGroupPermission", "RemoveContentLibraryGroup", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "SetOauthToken", "StartABRMezzanineJobs", "UpdateContentObjectGraph", "UploadFileData", "UploadFiles", "UploadFilesFromS3", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UploadStatus", "UseRegion", "VerifyContentObject", "WithdrawContractFunds"];
+      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddContentLibraryGroup", "AddContentObjectGroupPermission", "AddLibraryContentType", "AudienceData", "AvailableDRMs", "BitmovinPlayoutOptions", "BlockNumber", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "ContentLibraries", "ContentLibrary", "ContentLibraryGroupPermissions", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectGraph", "ContentObjectGroupPermissions", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractEvents", "ContractName", "CopyContentObject", "CreateABRMezzanine", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentType", "CreateFileDirectories", "CreateFileUploadJob", "CreateLinks", "CreatePart", "CreateProductionMaster", "CurrentAccountAddress", "CustomContractAddress", "Decrypt", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeletePart", "DeployContract", "Download", "DownloadEncrypted", "DownloadFile", "DownloadPart", "EditContentObject", "Encrypt", "EncryptionConk", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeABRMezzanine", "FinalizeContentObject", "FinalizePart", "FinalizeStateChannelAccess", "FinalizeUploadJob", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LatestVersionHash", "LibraryContentTypes", "LinkData", "LinkTarget", "LinkUrl", "ListFiles", "LROStatus", "MergeMetadata", "NodeId", "Nodes", "PlayoutOptions", "ProduceMetadataLinks", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveContentObjectGroupPermission", "RemoveContentLibraryGroup", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "SetOauthToken", "SetSignerFromOauthToken", "StartABRMezzanineJobs", "UpdateContentObjectGraph", "UploadFileData", "UploadFiles", "UploadFilesFromS3", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UploadStatus", "UseRegion", "VerifyContentObject"];
     }
   }, {
     key: "AllowedUserProfileMethods",
     value: function AllowedUserProfileMethods() {
-      return ["AccessLevel", "CollectedTags", "DeleteUserMetadata", "MergeUserMetadata", "PublicUserMetadata", "ReplaceUserMetadata", "UserMetadata", "UserProfileImage", "UserWalletAddress", "WalletAddress"];
+      return ["AccessLevel", "CollectedTags", "CreateWallet", "DeleteUserMetadata", "MergeUserMetadata", "PublicUserMetadata", "ReplaceUserMetadata", "UserMetadata", "UserProfileImage", "UserWalletAddress", "WalletAddress"];
     }
   }], [{
     key: "PromptedMethods",

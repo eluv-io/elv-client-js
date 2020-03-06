@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async ContentObjectVersions({\n  \"libraryId\": \"ilib34vcL4BA88L6sDsHU83Zh4gqekBB\",\n  \"objectId\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\"\n});",
-    "result": "{\n  \"id\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n  \"versions\": [\n    {\n      \"id\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n      \"hash\": \"hq__FpdWHvmvebDvYTkRDG2voeSCKowWMpd2z6WNASAbchaMPr445EaBt945W3Ejxfz922DamPajFP\",\n      \"type\": \"hq__6VgPjgkzu77SoE1cB2ZDLKdA8nN26mErL97gLuiUam2piFYNAjQhQ9YAEoJwMW7iMyjVsLKzGK\"\n    },\n    {\n      \"id\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n      \"hash\": \"hq__2bjHNqcVAD2aiSFbajt55wLRf4ktNYvaopiJmwLn3XHiztzvFY7AHmJSthW3X7wmjoBEMtgRA1\",\n      \"type\": \"hq__6VgPjgkzu77SoE1cB2ZDLKdA8nN26mErL97gLuiUam2piFYNAjQhQ9YAEoJwMW7iMyjVsLKzGK\"\n    }\n  ]\n}"
-  }
-]
