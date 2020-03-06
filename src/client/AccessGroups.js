@@ -15,10 +15,6 @@ const {
   ValidateAddress
 } = require("../Validation");
 
-exports.access = {};
-exports.manage = {};
-
-
 /**
  * Returns the address of the owner of the specified content object
  *
@@ -29,7 +25,7 @@ exports.manage = {};
  *
  * @returns {Promise<string>} - The account address of the owner
  */
-exports.access.AccessGroupOwner = async function({contractAddress}) {
+exports.AccessGroupOwner = async function({contractAddress}) {
   ValidateAddress(contractAddress);
 
   this.Log(`Retrieving owner of access group ${contractAddress}`);
@@ -55,7 +51,7 @@ exports.access.AccessGroupOwner = async function({contractAddress}) {
  *
  * @return {Promise<Array<string>>} - List of member addresses
  */
-exports.access.AccessGroupMembers = async function({contractAddress}) {
+exports.AccessGroupMembers = async function({contractAddress}) {
   ValidateAddress(contractAddress);
 
   this.Log(`Retrieving members for group ${contractAddress}`);
@@ -90,7 +86,7 @@ exports.access.AccessGroupMembers = async function({contractAddress}) {
  *
  * @return {Promise<Array<string>>} - List of manager addresses
  */
-exports.access.AccessGroupManagers = async function({contractAddress}) {
+exports.AccessGroupManagers = async function({contractAddress}) {
   ValidateAddress(contractAddress);
 
   this.Log(`Retrieving managers for group ${contractAddress}`);
@@ -129,7 +125,7 @@ exports.access.AccessGroupManagers = async function({contractAddress}) {
  *
  * @returns {Promise<string>} - Contract address of created access group
  */
-exports.manage.CreateAccessGroup = async function({name, description, metadata={}}={}) {
+exports.CreateAccessGroup = async function({name, description, metadata={}}={}) {
   this.Log(`Creating access group: ${name || ""} ${description || ""}`);
   let { contractAddress } = await this.authClient.CreateAccessGroup();
   contractAddress = this.utils.FormatAddress(contractAddress);
@@ -177,7 +173,7 @@ exports.manage.CreateAccessGroup = async function({name, description, metadata={
  * @namedParams
  * @param {string} contractAddress - The address of the access group contract
  */
-exports.manage.DeleteAccessGroup = async function({contractAddress}) {
+exports.DeleteAccessGroup = async function({contractAddress}) {
   ValidateAddress(contractAddress);
 
   this.Log(`Deleting access group ${contractAddress}`);
@@ -190,7 +186,7 @@ exports.manage.DeleteAccessGroup = async function({contractAddress}) {
   });
 };
 
-exports.manage.AccessGroupMembershipMethod = async function({
+exports.AccessGroupMembershipMethod = async function({
   contractAddress,
   memberAddress,
   methodName,
@@ -252,7 +248,7 @@ exports.manage.AccessGroupMembershipMethod = async function({
  *
  * @returns {Promise<string>} - The transaction hash of the call to the grantAccess method
  */
-exports.manage.AddAccessGroupMember = async function({contractAddress, memberAddress}) {
+exports.AddAccessGroupMember = async function({contractAddress, memberAddress}) {
   ValidateAddress(contractAddress);
   ValidateAddress(memberAddress);
 
@@ -276,7 +272,7 @@ exports.manage.AddAccessGroupMember = async function({contractAddress, memberAdd
  *
  * @returns {Promise<string>} - The transaction hash of the call to the revokeAccess method
  */
-exports.manage.RemoveAccessGroupMember = async function({contractAddress, memberAddress}) {
+exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress}) {
   ValidateAddress(contractAddress);
   ValidateAddress(memberAddress);
 
@@ -300,7 +296,7 @@ exports.manage.RemoveAccessGroupMember = async function({contractAddress, member
  *
  * @returns {Promise<string>} - The transaction hash of the call to the grantManagerAccess method
  */
-exports.manage.AddAccessGroupManager = async function({contractAddress, memberAddress}) {
+exports.AddAccessGroupManager = async function({contractAddress, memberAddress}) {
   ValidateAddress(contractAddress);
   ValidateAddress(memberAddress);
 
@@ -324,7 +320,7 @@ exports.manage.AddAccessGroupManager = async function({contractAddress, memberAd
  *
  * @returns {Promise<string>} - The transaction hash of the call to the revokeManagerAccess method
  */
-exports.manage.RemoveAccessGroupManager = async function({contractAddress, memberAddress}) {
+exports.RemoveAccessGroupManager = async function({contractAddress, memberAddress}) {
   ValidateAddress(contractAddress);
   ValidateAddress(memberAddress);
 
@@ -348,7 +344,7 @@ exports.manage.RemoveAccessGroupManager = async function({contractAddress, membe
  * @return {Promise<Object>} - Object mapping group addresses to permissions, as an array
  * - Example: { "0x0": ["accessor", "contributor"], ...}
  */
-exports.access.ContentLibraryGroupPermissions = async function({libraryId, permissions=[]}) {
+exports.ContentLibraryGroupPermissions = async function({libraryId, permissions=[]}) {
   ValidateLibrary(libraryId);
 
   let libraryPermissions = {};
@@ -419,7 +415,7 @@ exports.access.ContentLibraryGroupPermissions = async function({libraryId, permi
  * @param {string} groupAddress - The address of the group
  * @param {string} permission - The type of permission to add ("accessor", "contributor", "reviewer")
  */
-exports.manage.AddContentLibraryGroup = async function({libraryId, groupAddress, permission}) {
+exports.AddContentLibraryGroup = async function({libraryId, groupAddress, permission}) {
   ValidateLibrary(libraryId);
   ValidateAddress(groupAddress);
 
@@ -465,7 +461,7 @@ exports.manage.AddContentLibraryGroup = async function({libraryId, groupAddress,
  * @param {string} groupAddress - The address of the group
  * @param {string} permission - The type of permission to remove ("accessor", "contributor", "reviewer")
  */
-exports.manage.RemoveContentLibraryGroup = async function({libraryId, groupAddress, permission}) {
+exports.RemoveContentLibraryGroup = async function({libraryId, groupAddress, permission}) {
   ValidateLibrary(libraryId);
   ValidateAddress(groupAddress);
 
@@ -510,7 +506,7 @@ exports.manage.RemoveContentLibraryGroup = async function({libraryId, groupAddre
  * @return {Promise<Object>} - Object mapping group addresses to permissions, as an array
  * - Example: { "0x0": ["see", "access", "manage"], ...}
  */
-exports.access.ContentObjectGroupPermissions = async function({objectId}) {
+exports.ContentObjectGroupPermissions = async function({objectId}) {
   ValidateObject(objectId);
 
   this.Log(`Retrieving group permissions for object ${objectId}`);
@@ -567,7 +563,7 @@ exports.access.ContentObjectGroupPermissions = async function({objectId}) {
  * @param {string} groupAddress - The address of the group
  * @param {string} permission - The type of permission to add ("see", "access", "manage")
  */
-exports.manage.AddContentObjectGroupPermission = async function({objectId, groupAddress, permission}) {
+exports.AddContentObjectGroupPermission = async function({objectId, groupAddress, permission}) {
   ValidatePresence("permission", permission);
   ValidateObject(objectId);
   ValidateAddress(groupAddress);
@@ -609,7 +605,7 @@ exports.manage.AddContentObjectGroupPermission = async function({objectId, group
  * @param {string} groupAddress - The address of the group
  * @param {string} permission - The type of permission to remove ("see", "access", "manage")
  */
-exports.manage.RemoveContentObjectGroupPermission = async function({objectId, groupAddress, permission}) {
+exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddress, permission}) {
   ValidatePresence("permission", permission);
   ValidateObject(objectId);
   ValidateAddress(groupAddress);

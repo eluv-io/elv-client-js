@@ -25,10 +25,6 @@ const {
 } = require("../Validation");
 
 
-exports.access = {};
-exports.manage = {};
-
-
 /* Files */
 
 /**
@@ -41,7 +37,7 @@ exports.manage = {};
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be used
  */
-exports.manage.ListFiles = async function({libraryId, objectId, versionHash}) {
+exports.ListFiles = async function({libraryId, objectId, versionHash}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -85,7 +81,7 @@ exports.manage.ListFiles = async function({libraryId, objectId, versionHash}) {
  * - Arguments (copy): { done: boolean, uploaded: number, total: number, uploadedFiles: number, totalFiles: number, fileStatus: Object }
  * - Arguments (reference): { done: boolean, uploadedFiles: number, totalFiles: number }
  */
-exports.manage.UploadFilesFromS3 = async function({
+exports.UploadFilesFromS3 = async function({
   libraryId,
   objectId,
   writeToken,
@@ -217,7 +213,7 @@ exports.manage.UploadFilesFromS3 = async function({
  * @param {function=} callback - If specified, will be called after each job segment is finished with the current upload progress
  * - Format: {"filename1": {uploaded: number, total: number}, ...}
  */
-exports.manage.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, encryption="none", callback}) {
+exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo, encryption="none", callback}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -385,7 +381,7 @@ exports.manage.UploadFiles = async function({libraryId, objectId, writeToken, fi
   );
 };
 
-exports.manage.CreateFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none"}) {
+exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, ops, defaults={}, encryption="none"}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -416,7 +412,7 @@ exports.manage.CreateFileUploadJob = async function({libraryId, objectId, writeT
   );
 };
 
-exports.manage.UploadStatus = async function({libraryId, objectId, writeToken, uploadId}) {
+exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -432,7 +428,7 @@ exports.manage.UploadStatus = async function({libraryId, objectId, writeToken, u
   );
 };
 
-exports.manage.UploadJobStatus = async function({libraryId, objectId, writeToken, uploadId, jobId}) {
+exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploadId, jobId}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -448,7 +444,7 @@ exports.manage.UploadJobStatus = async function({libraryId, objectId, writeToken
   );
 };
 
-exports.manage.UploadFileData = async function({libraryId, objectId, writeToken, uploadId, jobId, fileData}) {
+exports.UploadFileData = async function({libraryId, objectId, writeToken, uploadId, jobId, fileData}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -469,7 +465,7 @@ exports.manage.UploadFileData = async function({libraryId, objectId, writeToken,
   );
 };
 
-exports.manage.FinalizeUploadJob = async function({libraryId, objectId, writeToken}) {
+exports.FinalizeUploadJob = async function({libraryId, objectId, writeToken}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -497,7 +493,7 @@ exports.manage.FinalizeUploadJob = async function({libraryId, objectId, writeTok
  * @param {string} writeToken - Write token of the draft
  * @param {Array<string>} filePaths - List of file paths to create
  */
-exports.manage.CreateFileDirectories = async function({libraryId, objectId, writeToken, filePaths}) {
+exports.CreateFileDirectories = async function({libraryId, objectId, writeToken, filePaths}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -520,7 +516,7 @@ exports.manage.CreateFileDirectories = async function({libraryId, objectId, writ
  * @param {string} writeToken - Write token of the draft
  * @param {Array<string>} filePaths - List of file paths to delete
  */
-exports.manage.DeleteFiles = async function({libraryId, objectId, writeToken, filePaths}) {
+exports.DeleteFiles = async function({libraryId, objectId, writeToken, filePaths}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -554,7 +550,7 @@ exports.manage.DeleteFiles = async function({libraryId, objectId, writeToken, fi
  *
  * @returns {Promise<ArrayBuffer> | undefined} - No return if chunked is specified, file data in the requested format otherwise
  */
-exports.access.DownloadFile = async function({
+exports.DownloadFile = async function({
   libraryId,
   objectId,
   versionHash,
@@ -629,7 +625,7 @@ exports.access.DownloadFile = async function({
  *
  * @returns {Promise<Object>} - Response containing list of parts of the object
  */
-exports.access.ContentParts = async function({libraryId, objectId, versionHash}) {
+exports.ContentParts = async function({libraryId, objectId, versionHash}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   this.Log(`Retrieving parts: ${libraryId} ${objectId || versionHash}`);
@@ -662,7 +658,7 @@ exports.access.ContentParts = async function({libraryId, objectId, versionHash})
  *
  * @returns {Promise<Object>} - Response containing information about the specified part
  */
-exports.access.ContentPart = async function({libraryId, objectId, versionHash, partHash}) {
+exports.ContentPart = async function({libraryId, objectId, versionHash, partHash}) {
   ValidateParameters({libraryId, objectId, versionHash});
   ValidatePartHash(partHash);
 
@@ -705,7 +701,7 @@ exports.access.ContentPart = async function({libraryId, objectId, versionHash, p
  *
  * @returns {Promise<ArrayBuffer> | undefined} - No return if chunked is specified, part data in the requested format otherwise
  */
-exports.access.DownloadPart = async function({
+exports.DownloadPart = async function({
   libraryId,
   objectId,
   versionHash,
@@ -752,7 +748,7 @@ exports.access.DownloadPart = async function({
   }
 };
 
-exports.access.Download = async function({
+exports.Download = async function({
   downloadPath,
   headers,
   bytesTotal,
@@ -800,7 +796,7 @@ exports.access.Download = async function({
   }
 };
 
-exports.access.DownloadEncrypted = async function({
+exports.DownloadEncrypted = async function({
   conk,
   downloadPath,
   bytesTotal,
@@ -888,7 +884,7 @@ exports.access.DownloadEncrypted = async function({
  *
  * @returns {Promise<string>} - The part write token for the part draft
  */
-exports.manage.CreatePart = async function({libraryId, objectId, writeToken, encryption}) {
+exports.CreatePart = async function({libraryId, objectId, writeToken, encryption}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -923,7 +919,7 @@ exports.manage.CreatePart = async function({libraryId, objectId, writeToken, enc
  *
  * @returns {Promise<string>} - The part write token for the part draft
  */
-exports.manage.UploadPartChunk = async function({libraryId, objectId, writeToken, partWriteToken, chunk, encryption}) {
+exports.UploadPartChunk = async function({libraryId, objectId, writeToken, partWriteToken, chunk, encryption}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -959,7 +955,7 @@ exports.manage.UploadPartChunk = async function({libraryId, objectId, writeToken
  *
  * @returns {Promise<object>} - The finalize response for the new part
  */
-exports.manage.FinalizePart = async function({libraryId, objectId, writeToken, partWriteToken, encryption}) {
+exports.FinalizePart = async function({libraryId, objectId, writeToken, partWriteToken, encryption}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -995,7 +991,7 @@ exports.manage.FinalizePart = async function({libraryId, objectId, writeToken, p
  *
  * @returns {Promise<Object>} - Response containing information about the uploaded part
  */
-exports.manage.UploadPart = async function({libraryId, objectId, writeToken, data, encryption="none"}) {
+exports.UploadPart = async function({libraryId, objectId, writeToken, data, encryption="none"}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
@@ -1017,7 +1013,7 @@ exports.manage.UploadPart = async function({libraryId, objectId, writeToken, dat
  * @param {string} writeToken - Write token of the content object draft
  * @param {string} partHash - Hash of the part to delete
  */
-exports.manage.DeletePart = async function({libraryId, objectId, writeToken, partHash}) {
+exports.DeletePart = async function({libraryId, objectId, writeToken, partHash}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
   ValidatePartHash(partHash);
