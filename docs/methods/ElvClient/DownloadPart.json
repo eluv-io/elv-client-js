@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib34vcL4BA88L6sDsHU83Zh4gqekBB\",\n  \"objectId\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n  \"partHash\": \"hqpeLHHoTRAUTYdXveSvp2cCfiKRuxrC5jtP8gWH7dViHAtTpepM\",\n  \"format\": \"arrayBuffer\"\n});",
-    "result": "<ArrayBuffer 100000>"
-  }
-]

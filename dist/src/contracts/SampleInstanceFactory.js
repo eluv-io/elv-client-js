@@ -1,5 +1,3 @@
-"use strict";
-
 var contract = {
   "abi": [{
     "constant": true,

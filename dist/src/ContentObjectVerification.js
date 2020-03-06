@@ -1,4 +1,4 @@
-"use strict";
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 var CBOR = require("cbor");
 
@@ -13,7 +13,7 @@ var Utils = require("./Utils");
 var ContentObjectVerification = {
   VerifyContentObject: function VerifyContentObject(_ref) {
     var client, libraryId, objectId, versionHash, response, partHash, qpartsResponse, partVerification, qmdHash, metadataPartHash, metadataPartResponse, metadataVerification, metadata, qstructHash, structPartHash, structPartResponse, structVerification;
-    return regeneratorRuntime.async(function VerifyContentObject$(_context) {
+    return _regeneratorRuntime.async(function VerifyContentObject$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
@@ -23,7 +23,7 @@ var ContentObjectVerification = {
             };
             partHash = Utils.DecodeVersionHash(versionHash).partHash;
             _context.next = 5;
-            return regeneratorRuntime.awrap(client.QParts({
+            return _regeneratorRuntime.awrap(client.QParts({
               libraryId: libraryId,
               objectId: objectId,
               partHash: partHash,
@@ -61,7 +61,7 @@ var ContentObjectVerification = {
             qmdHash = partVerification.cbor.QmdHash.value;
             metadataPartHash = "hqp_" + MultiHash.toB58String(qmdHash.slice(1, qmdHash.length));
             _context.next = 14;
-            return regeneratorRuntime.awrap(client.QParts({
+            return _regeneratorRuntime.awrap(client.QParts({
               libraryId: libraryId,
               objectId: objectId,
               partHash: metadataPartHash,
@@ -96,7 +96,7 @@ var ContentObjectVerification = {
             }
 
             _context.next = 21;
-            return regeneratorRuntime.awrap(client.ContentObjectMetadata({
+            return _regeneratorRuntime.awrap(client.ContentObjectMetadata({
               libraryId: libraryId,
               objectId: objectId,
               versionHash: partHash.replace("hqp_", "hq__")
@@ -114,7 +114,7 @@ var ContentObjectVerification = {
             qstructHash = partVerification.cbor.QstructHash.value;
             structPartHash = "hqp_" + MultiHash.toB58String(qstructHash.slice(1, qstructHash.length));
             _context.next = 27;
-            return regeneratorRuntime.awrap(client.QParts({
+            return _regeneratorRuntime.awrap(client.QParts({
               libraryId: libraryId,
               objectId: objectId,
               partHash: structPartHash,

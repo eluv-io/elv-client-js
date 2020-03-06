@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async ContentPart({\n  \"libraryId\": \"ilib34vcL4BA88L6sDsHU83Zh4gqekBB\",\n  \"objectId\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n  \"partHash\": \"hqpeLHHoTRAUTYdXveSvp2cCfiKRuxrC5jtP8gWH7dViHAtTpepM\"\n});",
-    "result": "{\n  \"content\": {\n    \"id\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n    \"hash\": \"hq__FMD46YbGsXnFdJdmkauwfHm3GR1BfoVYxVbyB8AHoZuWsUvuaqgrQ2q31wDFf7wS5NvZpZGJg1\",\n    \"type\": \"hq__6VgPjgkzu77SoE1cB2ZDLKdA8nN26mErL97gLuiUam2piFYNAjQhQ9YAEoJwMW7iMyjVsLKzGK\"\n  },\n  \"part\": {\n    \"hash\": \"hqpeLHHoTRAUTYdXveSvp2cCfiKRuxrC5jtP8gWH7dViHAtTpepM\",\n    \"size\": 102657\n  }\n}"
-  }
-]

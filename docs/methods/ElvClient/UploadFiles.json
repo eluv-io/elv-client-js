@@ -1,8 +1,0 @@
-[
-  {
-    "signature": "async UploadFiles({\n  \"libraryId\": \"ilib34vcL4BA88L6sDsHU83Zh4gqekBB\",\n  \"objectId\": \"iq__xs1pMyJr5qWewRwtBF8vLiKCcyX\",\n  \"writeToken\": \"tqw_GDoT8rMR7dgk79HnYPY3wdVvLcYtqhMyj\",\n  \"fileInfo\": [\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"type\": \"file\",\n      \"mime_type\": \"text/plain\",\n      \"size\": 100000\n    }\n  ],\n  \"callback\": \"<function>\"\n});"
-  },
-  {
-    "signature": "async UploadFiles({\n  \"libraryId\": \"ilib4RUwwkMRAD1ATi8dCcYR6fbuRxSU\",\n  \"objectId\": \"iq__MqpkEdpmMjw4Pqot8LzqNEBbpd3\",\n  \"writeToken\": \"tqw_cUBGRDUsRpzw7V7oH4QG9Y8f7p13guSs\",\n  \"fileInfo\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"mime_type\": \"video/mp4\",\n      \"size\": 3738907,\n      \"type\": \"file\"\n    }\n  ],\n  \"encryption\": \"none\"\n});"
-  }
-]

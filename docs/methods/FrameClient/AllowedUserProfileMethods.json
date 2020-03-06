@@ -1,6 +1,0 @@
-[
-  {
-    "signature": " AllowedUserProfileMethods();",
-    "result": "[\n  \"AccessLevel\",\n  \"CollectedTags\",\n  \"DeleteUserMetadata\",\n  \"MergeUserMetadata\",\n  \"PublicUserMetadata\",\n  \"ReplaceUserMetadata\",\n  \"UserMetadata\",\n  \"UserProfileImage\",\n  \"UserWalletAddress\",\n  \"WalletAddress\"\n]"
-  }
-]

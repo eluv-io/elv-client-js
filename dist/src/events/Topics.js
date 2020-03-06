@@ -1,5 +1,3 @@
-"use strict";
-
 var topics = {
   "0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4": {
     "abi": [{

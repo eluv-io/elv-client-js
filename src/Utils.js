@@ -1,7 +1,7 @@
 if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const bs58 = require("bs58");
-const BigNumber = require("bignumber.js");
+const BigNumber = require("bignumber.js").default;
 const MultiHash = require("multihashes");
 const VarInt = require("varint");
 
@@ -15,9 +15,8 @@ const VarInt = require("varint");
  */
 const Utils = {
   name: "Utils",
-
   nullAddress: "0x0000000000000000000000000000000000000000",
-  weiPerEther: BigNumber("1000000000000000000"),
+  weiPerEther: new BigNumber("1000000000000000000"),
 
   /**
    * Convert number or string to BigNumber
@@ -42,8 +41,7 @@ const Utils = {
    * @returns {BigNumber} - Given value in ether
    */
   WeiToEther: (wei) => {
-    wei = new BigNumber(wei);
-    return BigNumber(wei).div(Utils.weiPerEther);
+    return Utils.ToBigNumber(wei).div(Utils.weiPerEther);
   },
 
   /**
@@ -51,12 +49,12 @@ const Utils = {
    *
    * @param {number | string | BigNumber} ether - Ether value to convert to wei
    *
-   * @see https://github.com/MikeMcl/bignumber.js
+   * @see https://github.com/indutny/bn.js/
    *
    * @returns {BigNumber} - Given value in wei
    */
   EtherToWei: (ether) => {
-    return BigNumber(ether).times(Utils.weiPerEther);
+    return Utils.ToBigNumber(ether).times(Utils.weiPerEther);
   },
 
   /**
@@ -275,6 +273,73 @@ const Utils = {
       ...info,
       signature
     };
+  },
+
+  LimitedMap: async (limit, array, f) => {
+    let index = 0;
+    let locked = false;
+    const nextIndex = async () => {
+      while(locked) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+
+      locked = true;
+      const thisIndex = index;
+      index += 1;
+      locked = false;
+
+      return thisIndex;
+    };
+
+    let results = [];
+    let active = 0;
+    return new Promise((resolve, reject) => {
+      [...Array(limit || 1)].forEach(async () => {
+        active += 1;
+        let index = await nextIndex();
+
+        while(index < array.length) {
+          try {
+            results[index] = await f(array[index], index);
+          } catch(error) {
+            reject(error);
+          }
+
+          index = await nextIndex();
+        }
+
+        // When finished and no more workers are active, resolve
+        active -= 1;
+        if(active === 0) {
+          resolve(results);
+        }
+      });
+    });
+  },
+
+  ResponseToJson: async (response) => {
+    return Utils.ResponseToFormat("json", response);
+  },
+
+  ResponseToFormat: async (format, response) => {
+    response = await response;
+
+    switch(format.toLowerCase()) {
+      case "json":
+        return await response.json();
+      case "text":
+        return await response.text();
+      case "blob":
+        return await response.blob();
+      case "arraybuffer":
+        return await response.arrayBuffer();
+      case "formdata":
+        return await response.formData();
+      case "buffer":
+        return await response.buffer();
+      default:
+        return response;
+    }
   },
 
   /**

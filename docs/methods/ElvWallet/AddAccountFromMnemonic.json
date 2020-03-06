@@ -1,6 +1,0 @@
-[
-  {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"embody fragile over high alarm yellow cloud size volcano brick must nephew\"\n});",
-    "result": "<Ethers#Wallet>"
-  }
-]

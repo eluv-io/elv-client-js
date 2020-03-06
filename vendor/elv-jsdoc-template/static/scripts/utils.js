@@ -41,7 +41,13 @@ window.addEventListener("load", () => {
       }
     };
 
-    if(window.location.toString().includes(classLink.innerText)) {
+    const pageName = window.location.toString()
+      .split("/").pop()
+      .split(".")[0]
+      .replace("module-", "")
+      .replace("_", "/");
+
+    if(pageName === classLink.innerText) {
       classLink.click();
       classContainer.className = classContainer.className + " active";
     }

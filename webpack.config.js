@@ -15,14 +15,21 @@ let plugins = [
   new webpack.optimize.LimitChunkCountPlugin({
     maxChunks: 1,
   }),
-  //new BundleAnalyzerPlugin()
+  new webpack.IgnorePlugin(/unorm/),
+  new BundleAnalyzerPlugin({
+    analyzerMode: "static",
+    reportFilename: path.resolve(path.join(__dirname, "test", "bundle-analysis", "index.html")),
+    openAnalyzer: false
+  })
 ];
 
 // Exclude node-fetch for web build
 if(cmdOpts["target"] !== "node") {
   plugins.push(new webpack.IgnorePlugin(/node-fetch-polyfill/));
+  plugins.push(new webpack.IgnorePlugin(/@eluvio\/crypto\/dist\/elv-crypto.bundle.node/));
+} else {
+  plugins.push(new webpack.IgnorePlugin(/@eluvio\/crypto\/dist\/elv-crypto.bundle.js/));
 }
-
 
 module.exports = {
   entry: "./dist/src/ElvClient.js",
@@ -33,6 +40,12 @@ module.exports = {
   },
   node: {
     fs: "empty"
+  },
+  resolve: {
+    alias: {
+      // Force webpack to use *one* copy of bn.js instead of 8
+      "bn.js": path.resolve(path.join(__dirname, "node_modules", "bn.js"))
+    }
   },
   mode: "development",
   devtool: cmdOpts["mode"] === "production" ? "" : "source-map",
