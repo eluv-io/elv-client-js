@@ -829,8 +829,8 @@ exports.PlayoutOptions = async function({
   // Add authorization token to playout URLs
   let queryParams = {
     authorization: await this.authClient.AuthorizationToken({
-      libraryId,
-      objectId,
+      libraryId: linkTargetLibraryId || libraryId,
+      objectId: linkTargetId || objectId,
       channelAuth: true,
       oauthToken: this.oauthToken,
       audienceData
@@ -940,15 +940,22 @@ exports.BitmovinPlayoutOptions = async function({
 
   delete playoutOptions.playoutMethods;
 
+  let linkTargetId, linkTargetHash;
+  if(linkPath) {
+    const libraryId = await this.ContentObjectLibraryId({objectId, versionHash});
+    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+    linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+  }
+
+  const authToken = await this.authClient.AuthorizationToken({
+    objectId: linkTargetId || objectId,
+    channelAuth: true,
+    oauthToken: this.oauthToken,
+  });
+
   let config = {
     drm: {}
   };
-
-  const authToken = await this.authClient.AuthorizationToken({
-    objectId,
-    channelAuth: true,
-    oauthToken: this.oauthToken
-  });
 
   Object.keys(playoutOptions).forEach(protocol => {
     const option = playoutOptions[protocol];
@@ -1357,11 +1364,7 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}
   }
 
   // Link points to this object - get latest version
-  if(!libraryId) {
-    libraryId = await this.ContentObjectLibraryId({objectId});
-  }
-
-  return (await this.ContentObject({libraryId, objectId})).hash;
+  return await this.LatestVersionHash({objectId});
 };
 
 /**

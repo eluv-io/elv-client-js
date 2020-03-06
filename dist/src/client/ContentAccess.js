@@ -1433,8 +1433,8 @@ exports.PlayoutOptions = function _callee22(_ref16) {
           audienceData = _context22.t0.AudienceData.call(_context22.t0, _context22.t6);
           _context22.next = 34;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
-            libraryId: libraryId,
-            objectId: objectId,
+            libraryId: linkTargetLibraryId || libraryId,
+            objectId: linkTargetId || objectId,
             channelAuth: true,
             oauthToken: this.oauthToken,
             audienceData: audienceData
@@ -1566,7 +1566,7 @@ exports.PlayoutOptions = function _callee22(_ref16) {
 
 
 exports.BitmovinPlayoutOptions = function _callee23(_ref18) {
-  var objectId, versionHash, linkPath, _ref18$protocols, protocols, _ref18$drms, drms, _ref18$offering, offering, playoutOptions, config, authToken;
+  var objectId, versionHash, linkPath, _ref18$protocols, protocols, _ref18$drms, drms, _ref18$offering, offering, playoutOptions, linkTargetId, linkTargetHash, libraryId, authToken, config;
 
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
@@ -1593,18 +1593,45 @@ exports.BitmovinPlayoutOptions = function _callee23(_ref18) {
         case 5:
           playoutOptions = _context23.sent;
           delete playoutOptions.playoutMethods;
-          config = {
-            drm: {}
-          };
+
+          if (!linkPath) {
+            _context23.next = 15;
+            break;
+          }
+
           _context23.next = 10;
-          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: objectId,
+            versionHash: versionHash
+          }));
+
+        case 10:
+          libraryId = _context23.sent;
+          _context23.next = 13;
+          return _regeneratorRuntime.awrap(this.LinkTarget({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            linkPath: linkPath
+          }));
+
+        case 13:
+          linkTargetHash = _context23.sent;
+          linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+
+        case 15:
+          _context23.next = 17;
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+            objectId: linkTargetId || objectId,
             channelAuth: true,
             oauthToken: this.oauthToken
           }));
 
-        case 10:
+        case 17:
           authToken = _context23.sent;
+          config = {
+            drm: {}
+          };
           Object.keys(playoutOptions).forEach(function (protocol) {
             var option = playoutOptions[protocol];
             config[protocol] = option.playoutUrl;
@@ -1645,7 +1672,7 @@ exports.BitmovinPlayoutOptions = function _callee23(_ref18) {
           });
           return _context23.abrupt("return", config);
 
-        case 13:
+        case 21:
         case "end":
           return _context23.stop();
       }
@@ -2295,30 +2322,15 @@ exports.LinkTarget = function _callee31(_ref25) {
           return _context31.abrupt("return", versionHash);
 
         case 15:
-          if (libraryId) {
-            _context31.next = 19;
-            break;
-          }
-
-          _context31.next = 18;
-          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+          _context31.next = 17;
+          return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
+
+        case 17:
+          return _context31.abrupt("return", _context31.sent);
 
         case 18:
-          libraryId = _context31.sent;
-
-        case 19:
-          _context31.next = 21;
-          return _regeneratorRuntime.awrap(this.ContentObject({
-            libraryId: libraryId,
-            objectId: objectId
-          }));
-
-        case 21:
-          return _context31.abrupt("return", _context31.sent.hash);
-
-        case 22:
         case "end":
           return _context31.stop();
       }
