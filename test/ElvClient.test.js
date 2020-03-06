@@ -49,7 +49,7 @@ describe("Test ElvClient", () => {
   beforeAll(async () => {
     jest.setTimeout(90000);
 
-    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "10"));
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "5"));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);

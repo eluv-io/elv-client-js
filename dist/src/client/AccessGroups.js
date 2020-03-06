@@ -24,9 +24,6 @@ var _require = require("../Validation"),
     ValidateLibrary = _require.ValidateLibrary,
     ValidateObject = _require.ValidateObject,
     ValidateAddress = _require.ValidateAddress;
-
-exports.access = {};
-exports.manage = {};
 /**
  * Returns the address of the owner of the specified content object
  *
@@ -38,7 +35,8 @@ exports.manage = {};
  * @returns {Promise<string>} - The account address of the owner
  */
 
-exports.access.AccessGroupOwner = function _callee(_ref) {
+
+exports.AccessGroupOwner = function _callee(_ref) {
   var contractAddress;
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
@@ -80,7 +78,7 @@ exports.access.AccessGroupOwner = function _callee(_ref) {
  */
 
 
-exports.access.AccessGroupMembers = function _callee3(_ref2) {
+exports.AccessGroupMembers = function _callee3(_ref2) {
   var _this = this;
 
   var contractAddress, length;
@@ -149,7 +147,7 @@ exports.access.AccessGroupMembers = function _callee3(_ref2) {
  */
 
 
-exports.access.AccessGroupManagers = function _callee5(_ref3) {
+exports.AccessGroupManagers = function _callee5(_ref3) {
   var _this2 = this;
 
   var contractAddress, length;
@@ -222,7 +220,7 @@ exports.access.AccessGroupManagers = function _callee5(_ref3) {
  */
 
 
-exports.manage.CreateAccessGroup = function _callee6() {
+exports.CreateAccessGroup = function _callee6() {
   var _ref4,
       name,
       description,
@@ -302,7 +300,7 @@ exports.manage.CreateAccessGroup = function _callee6() {
  */
 
 
-exports.manage.DeleteAccessGroup = function _callee7(_ref6) {
+exports.DeleteAccessGroup = function _callee7(_ref6) {
   var contractAddress;
   return _regeneratorRuntime.async(function _callee7$(_context7) {
     while (1) {
@@ -327,7 +325,7 @@ exports.manage.DeleteAccessGroup = function _callee7(_ref6) {
   }, null, this);
 };
 
-exports.manage.AccessGroupMembershipMethod = function _callee8(_ref7) {
+exports.AccessGroupMembershipMethod = function _callee8(_ref7) {
   var contractAddress, memberAddress, methodName, eventName, isManager, event, candidate;
   return _regeneratorRuntime.async(function _callee8$(_context8) {
     while (1) {
@@ -414,7 +412,7 @@ exports.manage.AccessGroupMembershipMethod = function _callee8(_ref7) {
  */
 
 
-exports.manage.AddAccessGroupMember = function _callee9(_ref8) {
+exports.AddAccessGroupMember = function _callee9(_ref8) {
   var contractAddress, memberAddress;
   return _regeneratorRuntime.async(function _callee9$(_context9) {
     while (1) {
@@ -455,7 +453,7 @@ exports.manage.AddAccessGroupMember = function _callee9(_ref8) {
  */
 
 
-exports.manage.RemoveAccessGroupMember = function _callee10(_ref9) {
+exports.RemoveAccessGroupMember = function _callee10(_ref9) {
   var contractAddress, memberAddress;
   return _regeneratorRuntime.async(function _callee10$(_context10) {
     while (1) {
@@ -496,7 +494,7 @@ exports.manage.RemoveAccessGroupMember = function _callee10(_ref9) {
  */
 
 
-exports.manage.AddAccessGroupManager = function _callee11(_ref10) {
+exports.AddAccessGroupManager = function _callee11(_ref10) {
   var contractAddress, memberAddress;
   return _regeneratorRuntime.async(function _callee11$(_context11) {
     while (1) {
@@ -537,7 +535,7 @@ exports.manage.AddAccessGroupManager = function _callee11(_ref10) {
  */
 
 
-exports.manage.RemoveAccessGroupManager = function _callee12(_ref11) {
+exports.RemoveAccessGroupManager = function _callee12(_ref11) {
   var contractAddress, memberAddress;
   return _regeneratorRuntime.async(function _callee12$(_context12) {
     while (1) {
@@ -578,7 +576,7 @@ exports.manage.RemoveAccessGroupManager = function _callee12(_ref11) {
  */
 
 
-exports.access.ContentLibraryGroupPermissions = function _callee15(_ref12) {
+exports.ContentLibraryGroupPermissions = function _callee15(_ref12) {
   var _this3 = this;
 
   var libraryId, _ref12$permissions, permissions, libraryPermissions;
@@ -694,7 +692,7 @@ exports.access.ContentLibraryGroupPermissions = function _callee15(_ref12) {
  */
 
 
-exports.manage.AddContentLibraryGroup = function _callee16(_ref13) {
+exports.AddContentLibraryGroup = function _callee16(_ref13) {
   var libraryId, groupAddress, permission, existingPermissions, event;
   return _regeneratorRuntime.async(function _callee16$(_context16) {
     while (1) {
@@ -769,7 +767,7 @@ exports.manage.AddContentLibraryGroup = function _callee16(_ref13) {
  */
 
 
-exports.manage.RemoveContentLibraryGroup = function _callee17(_ref14) {
+exports.RemoveContentLibraryGroup = function _callee17(_ref14) {
   var libraryId, groupAddress, permission, existingPermissions, event;
   return _regeneratorRuntime.async(function _callee17$(_context17) {
     while (1) {
@@ -844,7 +842,7 @@ exports.manage.RemoveContentLibraryGroup = function _callee17(_ref14) {
  */
 
 
-exports.access.ContentObjectGroupPermissions = function _callee19(_ref15) {
+exports.ContentObjectGroupPermissions = function _callee19(_ref15) {
   var _this4 = this;
 
   var objectId, contractAddress, groupAddresses, groupPermissions;
@@ -939,7 +937,7 @@ exports.access.ContentObjectGroupPermissions = function _callee19(_ref15) {
  */
 
 
-exports.manage.AddContentObjectGroupPermission = function _callee20(_ref16) {
+exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
   var objectId, groupAddress, permission, event;
   return _regeneratorRuntime.async(function _callee20$(_context20) {
     while (1) {
@@ -997,7 +995,7 @@ exports.manage.AddContentObjectGroupPermission = function _callee20(_ref16) {
  */
 
 
-exports.manage.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
+exports.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
   var objectId, groupAddress, permission, event;
   return _regeneratorRuntime.async(function _callee21$(_context21) {
     while (1) {

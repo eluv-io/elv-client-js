@@ -31,9 +31,6 @@ var _require = require("../Validation"),
     ValidateWriteToken = _require.ValidateWriteToken,
     ValidatePartHash = _require.ValidatePartHash,
     ValidateParameters = _require.ValidateParameters;
-
-exports.access = {};
-exports.manage = {};
 /* Files */
 
 /**
@@ -47,7 +44,8 @@ exports.manage = {};
  * @param {string=} versionHash - Hash of the object version - if not specified, most recent version will be used
  */
 
-exports.manage.ListFiles = function _callee(_ref) {
+
+exports.ListFiles = function _callee(_ref) {
   var libraryId, objectId, versionHash, path;
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
@@ -122,7 +120,7 @@ exports.manage.ListFiles = function _callee(_ref) {
  */
 
 
-exports.manage.UploadFilesFromS3 = function _callee2(_ref2) {
+exports.UploadFilesFromS3 = function _callee2(_ref2) {
   var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref2$copy, copy, callback, defaults, ops, _ref3, id, status, done, progress, _progress;
 
   return _regeneratorRuntime.async(function _callee2$(_context2) {
@@ -308,7 +306,7 @@ exports.manage.UploadFilesFromS3 = function _callee2(_ref2) {
  */
 
 
-exports.manage.UploadFiles = function _callee4(_ref4) {
+exports.UploadFiles = function _callee4(_ref4) {
   var _this = this;
 
   var libraryId, objectId, writeToken, fileInfo, _ref4$encryption, encryption, callback, conk, progress, fileDataMap, i, entry, _ref5, id, jobs, bufferSize, jobSpecs, prepared, uploaded, PrepareJobs, UploadJob, rateTestJobs, rates, j, start, elapsed, size, averageRate, concurrentUploads;
@@ -635,7 +633,7 @@ exports.manage.UploadFiles = function _callee4(_ref4) {
   }, null, this);
 };
 
-exports.manage.CreateFileUploadJob = function _callee5(_ref6) {
+exports.CreateFileUploadJob = function _callee5(_ref6) {
   var libraryId, objectId, writeToken, ops, _ref6$defaults, defaults, _ref6$encryption, encryption, path, body;
 
   return _regeneratorRuntime.async(function _callee5$(_context7) {
@@ -696,7 +694,7 @@ exports.manage.CreateFileUploadJob = function _callee5(_ref6) {
   }, null, this);
 };
 
-exports.manage.UploadStatus = function _callee6(_ref7) {
+exports.UploadStatus = function _callee6(_ref7) {
   var libraryId, objectId, writeToken, uploadId, path;
   return _regeneratorRuntime.async(function _callee6$(_context8) {
     while (1) {
@@ -738,7 +736,7 @@ exports.manage.UploadStatus = function _callee6(_ref7) {
   }, null, this);
 };
 
-exports.manage.UploadJobStatus = function _callee7(_ref8) {
+exports.UploadJobStatus = function _callee7(_ref8) {
   var libraryId, objectId, writeToken, uploadId, jobId, path;
   return _regeneratorRuntime.async(function _callee7$(_context9) {
     while (1) {
@@ -780,7 +778,7 @@ exports.manage.UploadJobStatus = function _callee7(_ref8) {
   }, null, this);
 };
 
-exports.manage.UploadFileData = function _callee8(_ref9) {
+exports.UploadFileData = function _callee8(_ref9) {
   var libraryId, objectId, writeToken, uploadId, jobId, fileData, path;
   return _regeneratorRuntime.async(function _callee8$(_context10) {
     while (1) {
@@ -833,7 +831,7 @@ exports.manage.UploadFileData = function _callee8(_ref9) {
   }, null, this);
 };
 
-exports.manage.FinalizeUploadJob = function _callee9(_ref10) {
+exports.FinalizeUploadJob = function _callee9(_ref10) {
   var libraryId, objectId, writeToken, path;
   return _regeneratorRuntime.async(function _callee9$(_context11) {
     while (1) {
@@ -890,7 +888,7 @@ exports.manage.FinalizeUploadJob = function _callee9(_ref10) {
  */
 
 
-exports.manage.CreateFileDirectories = function _callee10(_ref11) {
+exports.CreateFileDirectories = function _callee10(_ref11) {
   var libraryId, objectId, writeToken, filePaths, ops;
   return _regeneratorRuntime.async(function _callee10$(_context12) {
     while (1) {
@@ -939,7 +937,7 @@ exports.manage.CreateFileDirectories = function _callee10(_ref11) {
  */
 
 
-exports.manage.DeleteFiles = function _callee11(_ref12) {
+exports.DeleteFiles = function _callee11(_ref12) {
   var libraryId, objectId, writeToken, filePaths, ops;
   return _regeneratorRuntime.async(function _callee11$(_context13) {
     while (1) {
@@ -998,7 +996,7 @@ exports.manage.DeleteFiles = function _callee11(_ref12) {
  */
 
 
-exports.access.DownloadFile = function _callee12(_ref13) {
+exports.DownloadFile = function _callee12(_ref13) {
   var libraryId, objectId, versionHash, writeToken, filePath, _ref13$format, format, _ref13$chunked, chunked, _ref13$chunkSize, chunkSize, callback, fileInfo, encrypted, encryption, path, headers, bytesTotal;
 
   return _regeneratorRuntime.async(function _callee12$(_context14) {
@@ -1138,7 +1136,7 @@ exports.access.DownloadFile = function _callee12(_ref13) {
  */
 
 
-exports.access.ContentParts = function _callee13(_ref14) {
+exports.ContentParts = function _callee13(_ref14) {
   var libraryId, objectId, versionHash, path, response;
   return _regeneratorRuntime.async(function _callee13$(_context15) {
     while (1) {
@@ -1206,7 +1204,7 @@ exports.access.ContentParts = function _callee13(_ref14) {
  */
 
 
-exports.access.ContentPart = function _callee14(_ref15) {
+exports.ContentPart = function _callee14(_ref15) {
   var libraryId, objectId, versionHash, partHash, path;
   return _regeneratorRuntime.async(function _callee14$(_context16) {
     while (1) {
@@ -1285,7 +1283,7 @@ exports.access.ContentPart = function _callee14(_ref15) {
  */
 
 
-exports.access.DownloadPart = function _callee15(_ref16) {
+exports.DownloadPart = function _callee15(_ref16) {
   var libraryId, objectId, versionHash, writeToken, partHash, _ref16$format, format, _ref16$chunked, chunked, _ref16$chunkSize, chunkSize, callback, encrypted, encryption, path, headers, bytesTotal;
 
   return _regeneratorRuntime.async(function _callee15$(_context17) {
@@ -1388,7 +1386,7 @@ exports.access.DownloadPart = function _callee15(_ref16) {
   }, null, this);
 };
 
-exports.access.Download = function _callee16(_ref17) {
+exports.Download = function _callee16(_ref17) {
   var downloadPath, headers, bytesTotal, _ref17$chunked, chunked, _ref17$chunkSize, chunkSize, callback, _ref17$format, format, outputChunks, bytesFinished, totalChunks, i, response;
 
   return _regeneratorRuntime.async(function _callee16$(_context18) {
@@ -1498,7 +1496,7 @@ exports.access.Download = function _callee16(_ref17) {
   }, null, this);
 };
 
-exports.access.DownloadEncrypted = function _callee18(_ref18) {
+exports.DownloadEncrypted = function _callee18(_ref18) {
   var _this2 = this;
 
   var conk, downloadPath, bytesTotal, headers, callback, _ref18$format, format, _ref18$chunked, chunked, _ref18$chunkSize, chunkSize, bytesFinished, outputChunks, stream, totalChunks, i, response;
@@ -1666,7 +1664,7 @@ exports.access.DownloadEncrypted = function _callee18(_ref18) {
  */
 
 
-exports.manage.CreatePart = function _callee19(_ref19) {
+exports.CreatePart = function _callee19(_ref19) {
   var libraryId, objectId, writeToken, encryption, path, openResponse;
   return _regeneratorRuntime.async(function _callee19$(_context21) {
     while (1) {
@@ -1734,7 +1732,7 @@ exports.manage.CreatePart = function _callee19(_ref19) {
  */
 
 
-exports.manage.UploadPartChunk = function _callee20(_ref20) {
+exports.UploadPartChunk = function _callee20(_ref20) {
   var libraryId, objectId, writeToken, partWriteToken, chunk, encryption, _conk, path;
 
   return _regeneratorRuntime.async(function _callee20$(_context22) {
@@ -1821,7 +1819,7 @@ exports.manage.UploadPartChunk = function _callee20(_ref20) {
  */
 
 
-exports.manage.FinalizePart = function _callee21(_ref21) {
+exports.FinalizePart = function _callee21(_ref21) {
   var libraryId, objectId, writeToken, partWriteToken, encryption, path;
   return _regeneratorRuntime.async(function _callee21$(_context23) {
     while (1) {
@@ -1898,7 +1896,7 @@ exports.manage.FinalizePart = function _callee21(_ref21) {
  */
 
 
-exports.manage.UploadPart = function _callee22(_ref22) {
+exports.UploadPart = function _callee22(_ref22) {
   var libraryId, objectId, writeToken, data, _ref22$encryption, encryption, partWriteToken;
 
   return _regeneratorRuntime.async(function _callee22$(_context24) {
@@ -1964,7 +1962,7 @@ exports.manage.UploadPart = function _callee22(_ref22) {
  */
 
 
-exports.manage.DeletePart = function _callee23(_ref23) {
+exports.DeletePart = function _callee23(_ref23) {
   var libraryId, objectId, writeToken, partHash, path;
   return _regeneratorRuntime.async(function _callee23$(_context25) {
     while (1) {
