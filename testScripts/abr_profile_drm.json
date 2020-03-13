@@ -1,0 +1,555 @@
+{
+  "drm_optional": false,
+  "store_clear": false,
+  "ladder_specs": {
+    "{\"media_type\":\"audio\",\"channels\":2}": {
+      "rung_specs": [
+        {
+          "bit_rate": 128000,
+          "media_type": "audio",
+          "pregenerate": true
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":17,\"aspect_ratio_width\":40}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 2538
+        },
+        {
+          "bit_rate": 6000000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1692
+        },
+        {
+          "bit_rate": 2640000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1270
+        },
+        {
+          "bit_rate": 1450000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1016
+        },
+        {
+          "bit_rate": 530000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 846
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":135,\"aspect_ratio_width\":316}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 2528
+        },
+        {
+          "bit_rate": 6000000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1692
+        },
+        {
+          "bit_rate": 2640000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1270
+        },
+        {
+          "bit_rate": 1450000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1016
+        },
+        {
+          "bit_rate": 530000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 846
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":1,\"aspect_ratio_width\":2}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 2160
+        },
+        {
+          "bit_rate": 5000000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1440
+        },
+        {
+          "bit_rate": 2250000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1080
+        },
+        {
+          "bit_rate": 1200000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 864
+        },
+        {
+          "bit_rate": 450000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 720
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":9,\"aspect_ratio_width\":16}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1920
+        },
+        {
+          "bit_rate": 4500000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1280
+        },
+        {
+          "bit_rate": 2000000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 960
+        },
+        {
+          "bit_rate": 1100000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 768
+        },
+        {
+          "bit_rate": 400000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 640
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":480,\"aspect_ratio_width\":853}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1920
+        },
+        {
+          "bit_rate": 4500000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1280
+        },
+        {
+          "bit_rate": 2000000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 960
+        },
+        {
+          "bit_rate": 1100000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 768
+        },
+        {
+          "bit_rate": 400000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 640
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":40,\"aspect_ratio_width\":71}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1920
+        },
+        {
+          "bit_rate": 4500000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1280
+        },
+        {
+          "bit_rate": 2000000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 960
+        },
+        {
+          "bit_rate": 1100000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 768
+        },
+        {
+          "bit_rate": 400000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 640
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":2,\"aspect_ratio_width\":3}": {
+      "rung_specs": [
+        {
+          "bit_rate": 5500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1620
+        },
+        {
+          "bit_rate": 2400000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1080
+        },
+        {
+          "bit_rate": 1400000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 810
+        },
+        {
+          "bit_rate": 900000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 648
+        },
+        {
+          "bit_rate": 600000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 540
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":27,\"aspect_ratio_width\":40}": {
+      "rung_specs": [
+        {
+          "bit_rate": 5500000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1620
+        },
+        {
+          "bit_rate": 2400000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 1080
+        },
+        {
+          "bit_rate": 1400000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 810
+        },
+        {
+          "bit_rate": 900000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 648
+        },
+        {
+          "bit_rate": 600000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 540
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":639,\"aspect_ratio_width\":889}": {
+      "rung_specs": [
+        {
+          "bit_rate": 4900000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1452
+        },
+        {
+          "bit_rate": 3375000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 968
+        },
+        {
+          "bit_rate": 1500000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 726
+        },
+        {
+          "bit_rate": 825000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 580
+        },
+        {
+          "bit_rate": 300000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 484
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":3,\"aspect_ratio_width\":4}": {
+      "rung_specs": [
+        {
+          "bit_rate": 4900000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1452
+        },
+        {
+          "bit_rate": 3375000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 968
+        },
+        {
+          "bit_rate": 1500000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 726
+        },
+        {
+          "bit_rate": 825000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 580
+        },
+        {
+          "bit_rate": 300000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 484
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":243,\"aspect_ratio_width\":320}": {
+      "rung_specs": [
+        {
+          "bit_rate": 4900000,
+          "height": 1080,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1452
+        },
+        {
+          "bit_rate": 3375000,
+          "height": 720,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 968
+        },
+        {
+          "bit_rate": 1500000,
+          "height": 540,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 726
+        },
+        {
+          "bit_rate": 825000,
+          "height": 432,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 580
+        },
+        {
+          "bit_rate": 300000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 484
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":135,\"aspect_ratio_width\":76}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1920,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1080
+        },
+        {
+          "bit_rate": 4500000,
+          "height": 1280,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 720
+        },
+        {
+          "bit_rate": 2000000,
+          "height": 960,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 540
+        },
+        {
+          "bit_rate": 1100000,
+          "height": 768,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 432
+        },
+        {
+          "bit_rate": 400000,
+          "height": 640,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 360
+        }
+      ]
+    },
+    "{\"media_type\":\"video\",\"aspect_ratio_height\":16,\"aspect_ratio_width\":9}": {
+      "rung_specs": [
+        {
+          "bit_rate": 9500000,
+          "height": 1920,
+          "media_type": "video",
+          "pregenerate": true,
+          "width": 1080
+        },
+        {
+          "bit_rate": 4500000,
+          "height": 1280,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 720
+        },
+        {
+          "bit_rate": 2000000,
+          "height": 960,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 540
+        },
+        {
+          "bit_rate": 1100000,
+          "height": 768,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 432
+        },
+        {
+          "bit_rate": 400000,
+          "height": 640,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 360
+        }
+      ]
+    }
+  },
+  "playout_formats": {
+    "dash-widevine": {
+      "drm": {
+        "content_id": "",
+        "enc_scheme_name": "cenc",
+        "license_servers": [],
+        "type": "DrmWidevine"
+      },
+      "protocol": {
+        "min_buffer_length": 2,
+        "type": "ProtoDash"
+      }
+    },
+    "hls-aes128": {
+      "drm": {
+        "enc_scheme_name": "aes-128",
+        "type": "DrmAes128"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
+    }
+  },
+  "segment_specs": {
+    "audio": {
+      "segs_per_chunk": 15,
+      "target_dur": 2
+    },
+    "video": {
+      "segs_per_chunk": 15,
+      "target_dur": 2
+    }
+  }
+}
