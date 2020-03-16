@@ -1,0 +1,10 @@
+[
+  {
+    "signature": " ToBigNumber({\n  \"s\": 1,\n  \"e\": 18,\n  \"c\": [\n    10000\n  ]\n});",
+    "result": "\"1000000000000000000\""
+  },
+  {
+    "signature": " ToBigNumber(\"1.0\");",
+    "result": "\"1\""
+  }
+]

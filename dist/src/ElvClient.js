@@ -96,7 +96,7 @@ function () {
      * @param {string} contentSpaceId - ID of the content space
      * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
      * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-     * @param {Array<string>} kmsURIs - List of KMS urls to use for OAuth authentication
+     * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
      * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
      * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
      *
@@ -109,8 +109,7 @@ function () {
     var contentSpaceId = _ref.contentSpaceId,
         fabricURIs = _ref.fabricURIs,
         ethereumURIs = _ref.ethereumURIs,
-        _ref$kmsURIs = _ref.kmsURIs,
-        kmsURIs = _ref$kmsURIs === void 0 ? [] : _ref$kmsURIs,
+        trustAuthorityId = _ref.trustAuthorityId,
         _ref$noCache = _ref.noCache,
         noCache = _ref$noCache === void 0 ? false : _ref$noCache,
         _ref$noAuth = _ref.noAuth,
@@ -125,7 +124,7 @@ function () {
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
-    this.kmsURIs = kmsURIs;
+    this.trustAuthorityId = trustAuthorityId;
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.debug = false;
@@ -512,52 +511,100 @@ function () {
   }, {
     key: "SetSignerFromOauthToken",
     value: function SetSignerFromOauthToken(_ref10) {
-      var token, path, httpClient, response, privateKey, wallet, signer;
+      var token, wallet, _ref11, urls, path, httpClient, response, privateKey;
+
       return _regeneratorRuntime.async(function SetSignerFromOauthToken$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
               token = _ref10.token;
 
-              if (!(!this.kmsURIs || this.kmsURIs.length === 0)) {
+              if (this.trustAuthorityId) {
                 _context6.next = 3;
+                break;
+              }
+
+              throw Error("Unable to authorize with OAuth token: No trust authority ID set");
+
+            case 3:
+              wallet = this.GenerateWallet(); // Set dummy account to allow calling of contracts
+
+              this.SetSigner({
+                signer: wallet.AddAccountFromMnemonic({
+                  mnemonic: wallet.GenerateMnemonic()
+                })
+              });
+              _context6.prev = 5;
+
+              if (this.kmsURIs) {
+                _context6.next = 14;
+                break;
+              }
+
+              _context6.next = 9;
+              return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
+                kmsId: this.trustAuthorityId
+              }));
+
+            case 9:
+              _ref11 = _context6.sent;
+              urls = _ref11.urls;
+
+              if (!(!urls || urls.length === 0)) {
+                _context6.next = 13;
                 break;
               }
 
               throw Error("Unable to authorize with OAuth token: No KMS URLs set");
 
-            case 3:
+            case 13:
+              this.kmsURIs = urls;
+
+            case 14:
               this.oauthToken = token;
               path = "/ks/jwt/wlt";
               httpClient = new HttpClient({
-                uris: this.kmsURIs
+                uris: this.kmsURIs,
+                debug: this.debug
               });
-              _context6.next = 8;
+              _context6.next = 19;
               return _regeneratorRuntime.awrap(this.utils.ResponseToJson(httpClient.Request({
                 headers: {
                   Authorization: "Bearer ".concat(token)
                 },
                 method: "PUT",
-                path: path
+                path: path,
+                forceFailover: true
               })));
 
-            case 8:
+            case 19:
               response = _context6.sent;
               privateKey = response["UserSKHex"];
-              wallet = this.GenerateWallet();
-              signer = wallet.AddAccount({
-                privateKey: privateKey
-              });
               this.SetSigner({
-                signer: signer
+                signer: wallet.AddAccount({
+                  privateKey: privateKey
+                })
               });
+              _context6.next = 31;
+              break;
 
-            case 13:
+            case 24:
+              _context6.prev = 24;
+              _context6.t0 = _context6["catch"](5);
+              this.Log("Failed to set signer from OAuth token:", true);
+              this.Log(_context6.t0, true);
+              _context6.next = 30;
+              return _regeneratorRuntime.awrap(this.ClearSigner());
+
+            case 30:
+              throw _context6.t0;
+
+            case 31:
             case "end":
               return _context6.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[5, 24]]);
     }
     /* FrameClient related */
     // Whitelist of methods allowed to be called using the frame API
@@ -672,14 +719,14 @@ function () {
     }
   }], [{
     key: "Configuration",
-    value: function Configuration(_ref11) {
-      var configUrl, _ref11$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
+    value: function Configuration(_ref12) {
+      var configUrl, _ref12$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
 
       return _regeneratorRuntime.async(function Configuration$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
-              configUrl = _ref11.configUrl, _ref11$kmsUrls = _ref11.kmsUrls, kmsUrls = _ref11$kmsUrls === void 0 ? [] : _ref11$kmsUrls, region = _ref11.region;
+              configUrl = _ref12.configUrl, _ref12$kmsUrls = _ref12.kmsUrls, kmsUrls = _ref12$kmsUrls === void 0 ? [] : _ref12$kmsUrls, region = _ref12.region;
               _context8.prev = 1;
               uri = new URI(configUrl);
 
@@ -742,7 +789,7 @@ function () {
      * @param {string} configUrl - Full URL to the config endpoint
      * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
      * - Available regions: na-west-north na-west-south na-east eu-west
-     * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+     * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
      * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
      *
      * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
@@ -750,14 +797,14 @@ function () {
 
   }, {
     key: "FromConfigurationUrl",
-    value: function FromConfigurationUrl(_ref12) {
-      var configUrl, region, _ref12$noCache, noCache, _ref12$noAuth, noAuth, _ref13, contentSpaceId, fabricURIs, ethereumURIs, client;
+    value: function FromConfigurationUrl(_ref13) {
+      var configUrl, region, trustAuthorityId, _ref13$noCache, noCache, _ref13$noAuth, noAuth, _ref14, contentSpaceId, fabricURIs, ethereumURIs, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
-              configUrl = _ref12.configUrl, region = _ref12.region, _ref12$noCache = _ref12.noCache, noCache = _ref12$noCache === void 0 ? false : _ref12$noCache, _ref12$noAuth = _ref12.noAuth, noAuth = _ref12$noAuth === void 0 ? false : _ref12$noAuth;
+              configUrl = _ref13.configUrl, region = _ref13.region, trustAuthorityId = _ref13.trustAuthorityId, _ref13$noCache = _ref13.noCache, noCache = _ref13$noCache === void 0 ? false : _ref13$noCache, _ref13$noAuth = _ref13.noAuth, noAuth = _ref13$noAuth === void 0 ? false : _ref13$noAuth;
               _context9.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
@@ -765,14 +812,15 @@ function () {
               }));
 
             case 3:
-              _ref13 = _context9.sent;
-              contentSpaceId = _ref13.contentSpaceId;
-              fabricURIs = _ref13.fabricURIs;
-              ethereumURIs = _ref13.ethereumURIs;
+              _ref14 = _context9.sent;
+              contentSpaceId = _ref14.contentSpaceId;
+              fabricURIs = _ref14.fabricURIs;
+              ethereumURIs = _ref14.ethereumURIs;
               client = new ElvClient({
                 contentSpaceId: contentSpaceId,
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
+                trustAuthorityId: trustAuthorityId,
                 noCache: noCache,
                 noAuth: noAuth
               });

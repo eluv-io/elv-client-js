@@ -203,6 +203,24 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
+   * Retrieve the user wallet object information (library ID and object ID)
+   *
+   * The user's wallet can be modified in the same way as any other object, using
+   * EditContentObject to get a write token, modification methods to change it,
+   * and FinalizeContentObject to finalize the draft
+   *
+   * @return {Promise<{Object}>} - An object containing the libraryId and objectId for the wallet object.
+   */
+  async UserWalletObjectInfo() {
+    const walletAddress = await this.WalletAddress();
+
+    return {
+      libraryId: this.client.contentSpaceLibraryId,
+      objectId: Utils.AddressToObjectId(walletAddress)
+    };
+  }
+
+  /**
    * Access the specified user's public profile metadata
    *
    * @namedParams
@@ -231,8 +249,7 @@ await client.userProfileClient.UserMetadata()
 
     metadataSubtree = UrlJoin("public", metadataSubtree || "/");
 
-    const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(walletAddress);
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     return await this.client.ContentObjectMetadata({
       libraryId,
@@ -270,8 +287,7 @@ await client.userProfileClient.UserMetadata()
   async UserMetadata({metadataSubtree="/", resolveLinks=false, resolveIncludeSource=false}={}) {
     this.Log(`Accessing private user metadata at ${metadataSubtree}`);
 
-    const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     return await this.client.ContentObjectMetadata({
       libraryId,
@@ -292,8 +308,7 @@ await client.userProfileClient.UserMetadata()
   async MergeUserMetadata({metadataSubtree="/", metadata={}}) {
     this.Log(`Merging user metadata at ${metadataSubtree}`);
 
-    const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
@@ -311,8 +326,7 @@ await client.userProfileClient.UserMetadata()
   async ReplaceUserMetadata({metadataSubtree="/", metadata={}}) {
     this.Log(`Replacing user metadata at ${metadataSubtree}`);
 
-    const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
@@ -329,8 +343,7 @@ await client.userProfileClient.UserMetadata()
   async DeleteUserMetadata({metadataSubtree="/"}) {
     this.Log(`Deleting user metadata at ${metadataSubtree}`);
 
-    const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
@@ -395,8 +408,7 @@ await client.userProfileClient.UserMetadata()
 
     if(!imageHash) { return; }
 
-    const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(walletAddress);
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     return await this.client.PublicRep({
       libraryId,
@@ -417,8 +429,7 @@ await client.userProfileClient.UserMetadata()
   async SetUserProfileImage({image}) {
     this.Log(`Setting profile image for user ${this.client.signer.address}`);
 
-    const libraryId = this.client.contentSpaceLibraryId;
-    const objectId = Utils.AddressToObjectId(await this.WalletAddress());
+    const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
@@ -490,8 +501,9 @@ await client.userProfileClient.UserMetadata()
     const seen = await this.UserMetadata({metadataSubtree: UrlJoin("accessed_content", versionHash)});
     if(seen) { return; }
 
-    const userLibraryId = this.client.contentSpaceLibraryId;
-    const userObjectId = Utils.AddressToObjectId(await this.WalletAddress());
+    const walletObjectInfo = await this.UserWalletObjectInfo();
+    const userLibraryId = walletObjectInfo.libraryId;
+    const userObjectId = walletObjectInfo.objectId;
 
     // Mark content as seen
     const editRequest = await this.client.EditContentObject({libraryId: userLibraryId, objectId: userObjectId});

@@ -629,17 +629,30 @@ class AuthorizationClient {
     });
   }
 
-  async KMSInfo({objectId, versionHash}) {
-    if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
+  async KMSInfo({objectId, versionHash, kmsId}) {
+    let KMSInfo;
+    if(kmsId) {
+      KMSInfo = await this.client.CallContractMethod({
+        contractAddress: this.client.contentSpaceAddress,
+        abi: SpaceContract.abi,
+        methodName: "getKMSInfo",
+        methodArgs: [kmsId, []],
+        formatArguments: false
+      });
+    } else {
+      if(versionHash) {
+        objectId = Utils.DecodeVersionHash(versionHash).objectId;
+      }
 
-    // Get KMS info for the object
-    const KMSInfo = await this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
-      methodName: "getKMSInfo",
-      methodArgs: [[]],
-      formatArguments: false
-    });
+      // Get KMS info for the object
+      KMSInfo = await this.client.CallContractMethod({
+        contractAddress: Utils.HashToAddress(objectId),
+        abi: ContentContract.abi,
+        methodName: "getKMSInfo",
+        methodArgs: [[]],
+        formatArguments: false
+      });
+    }
 
     // Public key is compressed and hashed
     const publicKey = Ethers.utils.computePublicKey(Utils.HashToAddress(KMSInfo[1]), false);

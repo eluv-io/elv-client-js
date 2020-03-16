@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async GetAccountBalance({\n  \"accountName\": \"mnemonic\"\n});",
+    "result": "\"0.0\""
+  },
+  {
+    "signature": "async GetAccountBalance({\n  \"signer\": \"<Ethers#Wallet>\"\n});",
+    "result": "\"0.0\""
+  }
+]

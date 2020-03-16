@@ -1,0 +1,33 @@
+[
+  {
+    "signature": "async UserMetadata();",
+    "result": "{\n  \"bitcode_flags\": \"abrmaster\",\n  \"bitcode_format\": \"builtin\",\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"toMerge\"\n});",
+    "result": "{\n  \"meta\": \"data\"\n}"
+  },
+  {
+    "signature": "async UserMetadata();",
+    "result": "{\n  \"bitcode_flags\": \"abrmaster\",\n  \"bitcode_format\": \"builtin\",\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\",\n    \"new\": \"metadata\"\n  },\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
+    "result": "\"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\""
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"image\"\n});",
+    "result": "\"hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM\""
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"links/metadataLink\",\n  \"resolveLinks\": true\n});",
+    "result": "{\n  \"data\": \"metadata\"\n}"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});",
+    "result": "\"public\""
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "signature": "async LinkUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"linkPath\": \"myLink\",\n  \"mimeType\": \"application/octet-stream\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/meta/myLink?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJxbGliX2lkIjoiaWxpYjRQMmNnbTRURDFXeFV3Q2l0WmFXVFI0SFVaQkQifQ%3D%3D.RVMyNTZLX1BFUm53YnUxNFFqYlREeVVocGZRTW56UUhXTnNITmRzQWs0YmdEeWNMWTViZ3dtVkhHZVFOSkc2eG9VSzRmQUxKTjZnZjdlQXBzSEtpRTg5RjlTaWdwVVJ5&header-accept=application%2Foctet-stream\""
+  },
+  {
+    "signature": "async LinkUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"linkPath\": \"links/myLink2\",\n  \"mimeType\": \"image/*\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/meta/links/myLink2?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJxbGliX2lkIjoiaWxpYjRQMmNnbTRURDFXeFV3Q2l0WmFXVFI0SFVaQkQifQ%3D%3D.RVMyNTZLX1BFUm53YnUxNFFqYlREeVVocGZRTW56UUhXTnNITmRzQWs0YmdEeWNMWTViZ3dtVkhHZVFOSkc2eG9VSzRmQUxKTjZnZjdlQXBzSEtpRTg5RjlTaWdwVVJ5&header-accept=image%2F%2A\""
+  },
+  {
+    "signature": "async LinkUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"linkPath\": \"myLink\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/meta/myLink?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJxbGliX2lkIjoiaWxpYjRQMmNnbTRURDFXeFV3Q2l0WmFXVFI0SFVaQkQifQ%3D%3D.RVMyNTZLX1BFUm53YnUxNFFqYlREeVVocGZRTW56UUhXTnNITmRzQWs0YmdEeWNMWTViZ3dtVkhHZVFOSkc2eG9VSzRmQUxKTjZnZjdlQXBzSEtpRTg5RjlTaWdwVVJ5\""
+  },
+  {
+    "signature": "async LinkUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"linkPath\": \"links/myLink2\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/meta/links/myLink2?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJxbGliX2lkIjoiaWxpYjRQMmNnbTRURDFXeFV3Q2l0WmFXVFI0SFVaQkQifQ%3D%3D.RVMyNTZLX1BFUm53YnUxNFFqYlREeVVocGZRTW56UUhXTnNITmRzQWs0YmdEeWNMWTViZ3dtVkhHZVFOSkc2eG9VSzRmQUxKTjZnZjdlQXBzSEtpRTg5RjlTaWdwVVJ5\""
+  },
+  {
+    "signature": "async LinkUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"linkPath\": \"links/metadataLink\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/meta/links/metadataLink?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJxbGliX2lkIjoiaWxpYjRQMmNnbTRURDFXeFV3Q2l0WmFXVFI0SFVaQkQifQ%3D%3D.RVMyNTZLX1BFUm53YnUxNFFqYlREeVVocGZRTW56UUhXTnNITmRzQWs0YmdEeWNMWTViZ3dtVkhHZVFOSkc2eG9VSzRmQUxKTjZnZjdlQXBzSEtpRTg5RjlTaWdwVVJ5\""
+  },
+  {
+    "signature": "async LinkUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"linkPath\": \"/links/myLink2\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/meta/links/myLink2?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJxbGliX2lkIjoiaWxpYjRQMmNnbTRURDFXeFV3Q2l0WmFXVFI0SFVaQkQifQ%3D%3D.RVMyNTZLX1BFUm53YnUxNFFqYlREeVVocGZRTW56UUhXTnNITmRzQWs0YmdEeWNMWTViZ3dtVkhHZVFOSkc2eG9VSzRmQUxKTjZnZjdlQXBzSEtpRTg5RjlTaWdwVVJ5\""
+  },
+  {
+    "signature": "async LinkUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"linkPath\": \"/myLink\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/meta/myLink?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJxbGliX2lkIjoiaWxpYjRQMmNnbTRURDFXeFV3Q2l0WmFXVFI0SFVaQkQifQ%3D%3D.RVMyNTZLX1BFUm53YnUxNFFqYlREeVVocGZRTW56UUhXTnNITmRzQWs0YmdEeWNMWTViZ3dtVkhHZVFOSkc2eG9VSzRmQUxKTjZnZjdlQXBzSEtpRTg5RjlTaWdwVVJ5\""
+  }
+]

@@ -1,0 +1,18 @@
+[
+  {
+    "signature": "async FileUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"filePath\": \"file\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/files/file?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJ0eF9pZCI6IjB4YzU0NDBmZmMwYzU0ODJlMDhiZmEyNTA5ZDMyYmE1NTgzYzk1MmY3NjBjMDI0NGZlYTM5M2U1ZjU2MTJkZmIwMiIsInFsaWJfaWQiOiJpbGliNFAyY2dtNFREMVd4VXdDaXRaYVdUUjRIVVpCRCJ9.RVMyNTZLX0RLR01Ick01QmZuckFUcUtwQWlMdHRFYW56Y3lyalFZOTE3TUZLS1dQOWl0ZFNtdUI5Y1RuelJNbWVWRloycGg3TEw2clJSVnZZU3hSRU5OV3NtZDFkdzc4\""
+  },
+  {
+    "signature": "async FileUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"filePath\": \"dir/file\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/files/dir/file?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJ0eF9pZCI6IjB4YzU0NDBmZmMwYzU0ODJlMDhiZmEyNTA5ZDMyYmE1NTgzYzk1MmY3NjBjMDI0NGZlYTM5M2U1ZjU2MTJkZmIwMiIsInFsaWJfaWQiOiJpbGliNFAyY2dtNFREMVd4VXdDaXRaYVdUUjRIVVpCRCJ9.RVMyNTZLX0RLR01Ick01QmZuckFUcUtwQWlMdHRFYW56Y3lyalFZOTE3TUZLS1dQOWl0ZFNtdUI5Y1RuelJNbWVWRloycGg3TEw2clJSVnZZU3hSRU5OV3NtZDFkdzc4\""
+  },
+  {
+    "signature": "async FileUrl({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"filePath\": \"file\",\n  \"queryParams\": {\n    \"param1\": \"value1\",\n    \"param2\": \"value2\",\n    \"param3\": \"value3\"\n  }\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/files/file?param1=value1&param2=value2&param3=value3&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJ0eF9pZCI6IjB4YzU0NDBmZmMwYzU0ODJlMDhiZmEyNTA5ZDMyYmE1NTgzYzk1MmY3NjBjMDI0NGZlYTM5M2U1ZjU2MTJkZmIwMiIsInFsaWJfaWQiOiJpbGliNFAyY2dtNFREMVd4VXdDaXRaYVdUUjRIVVpCRCJ9.RVMyNTZLX0RLR01Ick01QmZuckFUcUtwQWlMdHRFYW56Y3lyalFZOTE3TUZLS1dQOWl0ZFNtdUI5Y1RuelJNbWVWRloycGg3TEw2clJSVnZZU3hSRU5OV3NtZDFkdzc4\""
+  },
+  {
+    "signature": "async FileUrl({\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"versionHash\": \"hq__HsQxGJZyxCGT4N6Zyk9t6iGyDD9bSPofiBzErNme3VeDMgHZHcGiYxwuNvx18U7AEUWm7Y2ntE\",\n  \"filePath\": \"file\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/q/hq__HsQxGJZyxCGT4N6Zyk9t6iGyDD9bSPofiBzErNme3VeDMgHZHcGiYxwuNvx18U7AEUWm7Y2ntE/files/file?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJ0eF9pZCI6IjB4YzU0NDBmZmMwYzU0ODJlMDhiZmEyNTA5ZDMyYmE1NTgzYzk1MmY3NjBjMDI0NGZlYTM5M2U1ZjU2MTJkZmIwMiJ9.RVMyNTZLX0dvYWFCTGMyc05lNWluMkFTQ0E4Wmc5SHNteko3Q3kyb2I2bmlaQzNBcE51S3dmRVV5ZVc0VmFIRTNTRTFBZThiN1dta2U2N1VROFVDaWdldDJyaUVVbndj\""
+  }
+]

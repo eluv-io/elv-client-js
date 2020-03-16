@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async LinkTarget({\n  \"libraryId\": \"ilib2RtSsmnBQ2WPky6orkup5pLPyC4a\",\n  \"objectId\": \"iq__3jpYF7cwK1P8MjrJcPpd9RZfJUrm\",\n  \"versionHash\": \"hq__FzM6yA6vf2Egmv9fTMYfJEXXxTeDM1XUdew8MCVJ4fKRR6Hzuxoe4HRZMb13P9eXFB1UehjXNq\",\n  \"linkPath\": \"videoLink/default\"\n});",
+    "result": "\"hq__FzM6yA6vf2Egmv9fTMYfJEXXxTeDM1XUdew8MCVJ4fKRR6Hzuxoe4HRZMb13P9eXFB1UehjXNq\""
+  },
+  {
+    "signature": "async LinkTarget({\n  \"libraryId\": \"ilib2Qd7G4pjEnsnjMe1rhbUTzpFzSXf\",\n  \"objectId\": \"iq__46pTm3MM1PjmLrfiQ5RePwAp1CyU\",\n  \"linkPath\": \"public/videoLink\"\n});",
+    "result": "\"hq__FzM6yA6vf2Egmv9fTMYfJEXXxTeDM1XUdew8MCVJ4fKRR6Hzuxoe4HRZMb13P9eXFB1UehjXNq\""
+  }
+]

@@ -1,0 +1,13 @@
+[
+  {
+    "signature": " GetAccount({\n  \"accountName\": \"test\"\n});",
+    "result": "<Ethers#Wallet>"
+  },
+  {
+    "signature": " GetAccount({\n  \"accountName\": \"test\"\n});"
+  },
+  {
+    "signature": " GetAccount({\n  \"accountName\": \"mnemonic\"\n});",
+    "result": "<Ethers#Wallet>"
+  }
+]

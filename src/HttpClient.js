@@ -52,7 +52,8 @@ class HttpClient {
     bodyType="JSON",
     headers={},
     attempts=0,
-    failover=true
+    failover=true,
+    forceFailover=false
   }) {
     let uri = this.BaseURI()
       .path(path)
@@ -91,7 +92,7 @@ class HttpClient {
     }
 
     if(!response.ok) {
-      if(failover && parseInt(response.status) >= 500 && attempts < this.uris.length) {
+      if(((failover && parseInt(response.status) >= 500) || forceFailover) && attempts < this.uris.length) {
         // Server error - Try next node
         this.uriIndex = (this.uriIndex + 1) % this.uris.length;
 
@@ -104,7 +105,8 @@ class HttpClient {
           body,
           bodyType,
           headers,
-          attempts: attempts + 1
+          attempts: attempts + 1,
+          forceFailover
         });
       }
 

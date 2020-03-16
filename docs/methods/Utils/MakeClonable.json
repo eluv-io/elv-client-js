@@ -1,0 +1,67 @@
+[
+  {
+    "signature": " MakeClonable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"set\": \"<Set>\",\n  \"map\": \"<Map>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\"\n});",
+    "result": "{\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"set\": \"<Set>\",\n  \"map\": \"<Map>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\"\n}"
+  },
+  {
+    "signature": " MakeClonable(\"value\");",
+    "result": "\"value\""
+  },
+  {
+    "signature": " MakeClonable(0.5);",
+    "result": "0.5"
+  },
+  {
+    "signature": " MakeClonable({\n  \"value\": \"something\"\n});",
+    "result": "{\n  \"value\": \"something\"\n}"
+  },
+  {
+    "signature": " MakeClonable(2);",
+    "result": "2"
+  },
+  {
+    "signature": " MakeClonable(\"b\");",
+    "result": "\"b\""
+  },
+  {
+    "signature": " MakeClonable({\n  \"a\": \"b\"\n});",
+    "result": "{\n  \"a\": \"b\"\n}"
+  },
+  {
+    "signature": " MakeClonable();"
+  },
+  {
+    "signature": " MakeClonable({});",
+    "result": "<Map>"
+  },
+  {
+    "signature": " MakeClonable({});",
+    "result": "<Set>"
+  },
+  {
+    "signature": " MakeClonable({\n  \"0\": 57,\n  \"1\": 100,\n  \"2\": 48,\n  \"3\": 53,\n  \"4\": 100,\n  \"5\": 54,\n  \"6\": 49,\n  \"7\": 102,\n  \"8\": 48,\n  \"9\": 98,\n  \"10\": 54,\n  \"11\": 102,\n  \"12\": 99,\n  \"13\": 102,\n  \"14\": 101,\n  \"15\": 51,\n  \"16\": 57,\n  \"17\": 56,\n  \"18\": 97,\n  \"19\": 97,\n  \"20\": 99,\n  \"21\": 100,\n  \"22\": 55,\n  \"23\": 51,\n  \"24\": 97,\n  \"25\": 54,\n  \"26\": 57,\n  \"27\": 50,\n  \"28\": 101,\n  \"29\": 101,\n  \"30\": 101,\n  \"31\": 51,\n  \"32\": 56,\n  \"33\": 102,\n  \"34\": 51,\n  \"35\": 51,\n  \"36\": 49,\n  \"37\": 54,\n  \"38\": 54,\n  \"39\": 100\n});",
+    "result": "<ArrayBuffer 40>"
+  },
+  {
+    "signature": " MakeClonable({});",
+    "result": "<ArrayBuffer 20>"
+  },
+  {
+    "signature": " MakeClonable({});",
+    "result": "<Blob>"
+  },
+  {
+    "signature": " MakeClonable({\n  \"size\": 0,\n  \"timeout\": 0\n});"
+  },
+  {
+    "signature": " MakeClonable();"
+  },
+  {
+    "signature": " MakeClonable({});",
+    "result": "\"Error\""
+  },
+  {
+    "signature": " MakeClonable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<Buffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"response\": \"<Response 0>\",\n  \"function\": \"<function>\",\n  \"error\": {}\n});",
+    "result": "{\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<ArrayBuffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"error\": \"Error\"\n}"
+  }
+]

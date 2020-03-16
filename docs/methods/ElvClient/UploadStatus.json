@@ -1,0 +1,14 @@
+[
+  {
+    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"writeToken\": \"tqw_J5ytRiDzGdcTvsLXFj99Jjh9Ki2nMFRNz\",\n  \"uploadId\": \"iqfj8TzPzYFJrpqwzmVLW5HHzm\"\n});",
+    "result": "{\n  \"id\": \"iqfj8TzPzYFJrpqwzmVLW5HHzm\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"IN_PROGRESS\",\n  \"ingest_copy\": {\n    \"done\": true,\n    \"progress\": {\n      \"files\": {\n        \"total\": 1,\n        \"completed\": 1,\n        \"failed\": 0,\n        \"in_progress\": 0,\n        \"details\": {}\n      },\n      \"bytes\": {\n        \"total\": 97944174,\n        \"completed\": 97944174\n      }\n    }\n  }\n}"
+  },
+  {
+    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"writeToken\": \"tqw_F7mHLYxdUVxvGmn2qrondLjEGMxt3eEhL\",\n  \"uploadId\": \"iqfjFZkTzP3EAmaZZswvofujRp\"\n});",
+    "result": "{\n  \"id\": \"iqfjFZkTzP3EAmaZZswvofujRp\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"COMPLETED\",\n  \"add_reference\": {\n    \"done\": true,\n    \"progress\": {\n      \"total\": 1,\n      \"completed\": 1\n    }\n  }\n}"
+  },
+  {
+    "signature": "async UploadStatus({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"writeToken\": \"tqw_Aun6km6BCGT6R8DwQUhWFDmXGHdqbEEVn\",\n  \"uploadId\": \"iqfjEZCqMAsEJ21sCKJTf4uQEk\"\n});",
+    "result": "{\n  \"id\": \"iqfjEZCqMAsEJ21sCKJTf4uQEk\",\n  \"seqs\": [\n    0\n  ],\n  \"seq_complete\": true,\n  \"status\": \"FAILED\",\n  \"error\": \"op [ingest] kind [I/O error] builder [<nil>] download [<nil>] resolve [op [cloud resolver] kind [I/O error] cause [map[/eluvio-mez-test/invalid-file:op [resolve] kind [I/O error] cause:\\n\\top [cloudFile.StatObject] kind [item does not exist] path [/eluvio-mez-test/invalid-file] cause:\\n\\top [attributes] kind [item does not exist] bucket [eluvio-mez-test] key [invalid-file] message [Not Found] request_id [6A054F69062CD4CF] status_code [404] cause [NotFound: Not Found\\n\\tstatus code: 404, request id: 6A054F69062CD4CF, host id: TrYzx8dgqJa9/3nGNV8dd/wW77nr6FmqZPLmPNDfFwaFJcLaZAZKwsVxITVRX24KDHTPFosv3Cw=]]]]\"\n}"
+  }
+]

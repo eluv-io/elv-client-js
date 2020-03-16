@@ -1,0 +1,14 @@
+[
+  {
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\"\n});",
+    "result": "{\n  \"meta\": \"data\"\n}"
+  },
+  {
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\",\n  \"metadataSubtree\": \"image\"\n});",
+    "result": "\"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\""
+  },
+  {
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\",\n  \"metadataSubtree\": \"image\"\n});",
+    "result": "\"hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM\""
+  }
+]

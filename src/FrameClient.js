@@ -386,6 +386,7 @@ class FrameClient {
       "UserMetadata",
       "UserProfileImage",
       "UserWalletAddress",
+      "UserWalletObjectInfo",
       "WalletAddress"
     ];
   }

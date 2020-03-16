@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async Rep({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"rep\": \"image\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/rep/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJ0eF9pZCI6IjB4YzU0NDBmZmMwYzU0ODJlMDhiZmEyNTA5ZDMyYmE1NTgzYzk1MmY3NjBjMDI0NGZlYTM5M2U1ZjU2MTJkZmIwMiIsInFsaWJfaWQiOiJpbGliNFAyY2dtNFREMVd4VXdDaXRaYVdUUjRIVVpCRCJ9.RVMyNTZLX0RLR01Ick01QmZuckFUcUtwQWlMdHRFYW56Y3lyalFZOTE3TUZLS1dQOWl0ZFNtdUI5Y1RuelJNbWVWRloycGg3TEw2clJSVnZZU3hSRU5OV3NtZDFkdzc4\""
+  },
+  {
+    "signature": "async Rep({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"rep\": \"image\",\n  \"noAuth\": true\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/qlibs/ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD/q/iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94/rep/image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDRjNzZhMmMwZTI3ZDcyNDUxMWVhM2YwZGYxYjcxODI5NjUwODhkZDYiLCJxbGliX2lkIjoiaWxpYjRQMmNnbTRURDFXeFV3Q2l0WmFXVFI0SFVaQkQifQ%3D%3D.RVMyNTZLX1BFUm53YnUxNFFqYlREeVVocGZRTW56UUhXTnNITmRzQWs0YmdEeWNMWTViZ3dtVkhHZVFOSkc2eG9VSzRmQUxKTjZnZjdlQXBzSEtpRTg5RjlTaWdwVVJ5\""
+  }
+]
