@@ -819,7 +819,7 @@ exports.UpdateContentObjectGraph = async function({libraryId, objectId, versionH
     const currentHash = graph.auto_updates.order[0];
     const links = graph.auto_updates.links[currentHash];
 
-    const details = graph.details[currentHash].meta;
+    const details = graph.details[currentHash].meta || {};
     const name = (details.public && details.public.asset_metadata && details.public.asset_metadata.display_title) ||
       (details.public && details.public.name) || details.name || versionHash || objectId;
 
