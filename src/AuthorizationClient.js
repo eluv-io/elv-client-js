@@ -39,6 +39,8 @@ class AuthorizationClient {
   }
 
   constructor({client, contentSpaceId, debug=false, noCache=false, noAuth=false}) {
+    this.ACCESS_TYPES = ACCESS_TYPES;
+
     this.client = client;
     this.contentSpaceId = contentSpaceId;
     this.noCache = noCache;

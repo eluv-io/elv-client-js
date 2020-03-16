@@ -492,6 +492,9 @@ class ElvClient {
       const privateKey = response["UserSKHex"];
 
       this.SetSigner({signer: wallet.AddAccount({privateKey})});
+
+      // Ensure wallet is initialized
+      await this.userProfileClient.WalletAddress();
     } catch(error) {
       this.Log("Failed to set signer from OAuth token:", true);
       this.Log(error, true);

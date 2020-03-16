@@ -563,19 +563,26 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  if(!this.objectLibraryIds[objectId]) {
-    this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
+  switch(await this.authClient.AccessType(objectId)) {
+    case this.authClient.ACCESS_TYPES.LIBRARY:
+      return this.utils.AddressToLibraryId(this.utils.HashToAddress(objectId));
+    case this.authClient.ACCESS_TYPES.OBJECT:
+      if(!this.objectLibraryIds[objectId]) {
+        this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
 
-    this.objectLibraryIds[objectId] = this.utils.AddressToLibraryId(
-      await this.CallContractMethod({
-        contractAddress: this.utils.HashToAddress(objectId),
-        abi: ContentContract.abi,
-        methodName: "libraryAddress"
-      })
-    );
+        this.objectLibraryIds[objectId] = this.utils.AddressToLibraryId(
+          await this.CallContractMethod({
+            contractAddress: this.utils.HashToAddress(objectId),
+            abi: ContentContract.abi,
+            methodName: "libraryAddress"
+          })
+        );
+      }
+
+      return this.objectLibraryIds[objectId];
+    default:
+      return this.contentSpaceLibraryId;
   }
-
-  return this.objectLibraryIds[objectId];
 };
 
 exports.ProduceMetadataLinks = async function({

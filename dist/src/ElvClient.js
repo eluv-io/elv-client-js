@@ -584,27 +584,32 @@ function () {
                 signer: wallet.AddAccount({
                   privateKey: privateKey
                 })
-              });
-              _context6.next = 31;
-              break;
+              }); // Ensure wallet is initialized
+
+              _context6.next = 24;
+              return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
             case 24:
-              _context6.prev = 24;
+              _context6.next = 33;
+              break;
+
+            case 26:
+              _context6.prev = 26;
               _context6.t0 = _context6["catch"](5);
               this.Log("Failed to set signer from OAuth token:", true);
               this.Log(_context6.t0, true);
-              _context6.next = 30;
+              _context6.next = 32;
               return _regeneratorRuntime.awrap(this.ClearSigner());
 
-            case 30:
+            case 32:
               throw _context6.t0;
 
-            case 31:
+            case 33:
             case "end":
               return _context6.stop();
           }
         }
-      }, null, this, [[5, 24]]);
+      }, null, this, [[5, 26]]);
     }
     /* FrameClient related */
     // Whitelist of methods allowed to be called using the frame API

@@ -858,28 +858,43 @@ exports.ContentObjectLibraryId = function _callee14(_ref10) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
+          _context14.next = 5;
+          return _regeneratorRuntime.awrap(this.authClient.AccessType(objectId));
+
+        case 5:
+          _context14.t0 = _context14.sent;
+          _context14.next = _context14.t0 === this.authClient.ACCESS_TYPES.LIBRARY ? 8 : _context14.t0 === this.authClient.ACCESS_TYPES.OBJECT ? 9 : 17;
+          break;
+
+        case 8:
+          return _context14.abrupt("return", this.utils.AddressToLibraryId(this.utils.HashToAddress(objectId)));
+
+        case 9:
           if (this.objectLibraryIds[objectId]) {
-            _context14.next = 10;
+            _context14.next = 16;
             break;
           }
 
           this.Log("Retrieving content object library ID: ".concat(objectId || versionHash));
-          _context14.t0 = this.utils;
-          _context14.next = 8;
+          _context14.t1 = this.utils;
+          _context14.next = 14;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: this.utils.HashToAddress(objectId),
             abi: ContentContract.abi,
             methodName: "libraryAddress"
           }));
 
-        case 8:
-          _context14.t1 = _context14.sent;
-          this.objectLibraryIds[objectId] = _context14.t0.AddressToLibraryId.call(_context14.t0, _context14.t1);
+        case 14:
+          _context14.t2 = _context14.sent;
+          this.objectLibraryIds[objectId] = _context14.t1.AddressToLibraryId.call(_context14.t1, _context14.t2);
 
-        case 10:
+        case 16:
           return _context14.abrupt("return", this.objectLibraryIds[objectId]);
 
-        case 11:
+        case 17:
+          return _context14.abrupt("return", this.contentSpaceLibraryId);
+
+        case 18:
         case "end":
           return _context14.stop();
       }

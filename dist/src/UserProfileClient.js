@@ -371,22 +371,47 @@ function () {
   }, {
     key: "UserWalletObjectInfo",
     value: function UserWalletObjectInfo() {
-      var walletAddress;
+      var _ref3,
+          address,
+          walletAddress,
+          _args4 = arguments;
+
       return _regeneratorRuntime.async(function UserWalletObjectInfo$(_context4) {
         while (1) {
           switch (_context4.prev = _context4.next) {
             case 0:
-              _context4.next = 2;
-              return _regeneratorRuntime.awrap(this.WalletAddress());
+              _ref3 = _args4.length > 0 && _args4[0] !== undefined ? _args4[0] : {}, address = _ref3.address;
 
-            case 2:
-              walletAddress = _context4.sent;
-              return _context4.abrupt("return", {
-                libraryId: this.client.contentSpaceLibraryId,
-                objectId: Utils.AddressToObjectId(walletAddress)
-              });
+              if (!address) {
+                _context4.next = 7;
+                break;
+              }
+
+              _context4.next = 4;
+              return _regeneratorRuntime.awrap(this.UserWalletAddress({
+                address: address
+              }));
 
             case 4:
+              _context4.t0 = _context4.sent;
+              _context4.next = 10;
+              break;
+
+            case 7:
+              _context4.next = 9;
+              return _regeneratorRuntime.awrap(this.WalletAddress());
+
+            case 9:
+              _context4.t0 = _context4.sent;
+
+            case 10:
+              walletAddress = _context4.t0;
+              return _context4.abrupt("return", {
+                libraryId: this.client.contentSpaceLibraryId,
+                objectId: walletAddress ? Utils.AddressToObjectId(walletAddress) : ""
+              });
+
+            case 12:
             case "end":
               return _context4.stop();
           }
@@ -417,39 +442,59 @@ function () {
 
   }, {
     key: "PublicUserMetadata",
-    value: function PublicUserMetadata(_ref3) {
-      var address, _ref3$metadataSubtree, metadataSubtree, _ref3$resolveLinks, resolveLinks, _ref3$resolveIncludeS, resolveIncludeSource, walletAddress, _ref4, libraryId, objectId;
+    value: function PublicUserMetadata(_ref4) {
+      var address, _ref4$metadataSubtree, metadataSubtree, _ref4$resolveLinks, resolveLinks, _ref4$resolveIncludeS, resolveIncludeSource, walletAddress, _ref5, libraryId, objectId;
 
       return _regeneratorRuntime.async(function PublicUserMetadata$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              address = _ref3.address, _ref3$metadataSubtree = _ref3.metadataSubtree, metadataSubtree = _ref3$metadataSubtree === void 0 ? "/" : _ref3$metadataSubtree, _ref3$resolveLinks = _ref3.resolveLinks, resolveLinks = _ref3$resolveLinks === void 0 ? false : _ref3$resolveLinks, _ref3$resolveIncludeS = _ref3.resolveIncludeSource, resolveIncludeSource = _ref3$resolveIncludeS === void 0 ? false : _ref3$resolveIncludeS;
-              _context5.next = 3;
-              return _regeneratorRuntime.awrap(this.UserWalletAddress({
-                address: address
-              }));
+              address = _ref4.address, _ref4$metadataSubtree = _ref4.metadataSubtree, metadataSubtree = _ref4$metadataSubtree === void 0 ? "/" : _ref4$metadataSubtree, _ref4$resolveLinks = _ref4.resolveLinks, resolveLinks = _ref4$resolveLinks === void 0 ? false : _ref4$resolveLinks, _ref4$resolveIncludeS = _ref4.resolveIncludeSource, resolveIncludeSource = _ref4$resolveIncludeS === void 0 ? false : _ref4$resolveIncludeS;
 
-            case 3:
-              walletAddress = _context5.sent;
-
-              if (walletAddress) {
-                _context5.next = 6;
+              if (address) {
+                _context5.next = 3;
                 break;
               }
 
               return _context5.abrupt("return");
 
-            case 6:
-              metadataSubtree = UrlJoin("public", metadataSubtree || "/");
-              _context5.next = 9;
-              return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
+            case 3:
+              _context5.next = 5;
+              return _regeneratorRuntime.awrap(this.UserWalletAddress({
+                address: address
+              }));
 
-            case 9:
-              _ref4 = _context5.sent;
-              libraryId = _ref4.libraryId;
-              objectId = _ref4.objectId;
-              _context5.next = 14;
+            case 5:
+              walletAddress = _context5.sent;
+
+              if (walletAddress) {
+                _context5.next = 8;
+                break;
+              }
+
+              return _context5.abrupt("return");
+
+            case 8:
+              metadataSubtree = UrlJoin("public", metadataSubtree || "/");
+              _context5.next = 11;
+              return _regeneratorRuntime.awrap(this.UserWalletObjectInfo({
+                address: address
+              }));
+
+            case 11:
+              _ref5 = _context5.sent;
+              libraryId = _ref5.libraryId;
+              objectId = _ref5.objectId;
+
+              if (objectId) {
+                _context5.next = 16;
+                break;
+              }
+
+              return _context5.abrupt("return");
+
+            case 16:
+              _context5.next = 18;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -458,10 +503,10 @@ function () {
                 resolveIncludeSource: resolveIncludeSource
               }));
 
-            case 14:
+            case 18:
               return _context5.abrupt("return", _context5.sent);
 
-            case 15:
+            case 19:
             case "end":
               return _context5.stop();
           }
@@ -495,14 +540,14 @@ function () {
   }, {
     key: "UserMetadata",
     value: function UserMetadata() {
-      var _ref5,
-          _ref5$metadataSubtree,
+      var _ref6,
+          _ref6$metadataSubtree,
           metadataSubtree,
-          _ref5$resolveLinks,
+          _ref6$resolveLinks,
           resolveLinks,
-          _ref5$resolveIncludeS,
+          _ref6$resolveIncludeS,
           resolveIncludeSource,
-          _ref6,
+          _ref7,
           libraryId,
           objectId,
           _args6 = arguments;
@@ -511,15 +556,15 @@ function () {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              _ref5 = _args6.length > 0 && _args6[0] !== undefined ? _args6[0] : {}, _ref5$metadataSubtree = _ref5.metadataSubtree, metadataSubtree = _ref5$metadataSubtree === void 0 ? "/" : _ref5$metadataSubtree, _ref5$resolveLinks = _ref5.resolveLinks, resolveLinks = _ref5$resolveLinks === void 0 ? false : _ref5$resolveLinks, _ref5$resolveIncludeS = _ref5.resolveIncludeSource, resolveIncludeSource = _ref5$resolveIncludeS === void 0 ? false : _ref5$resolveIncludeS;
+              _ref6 = _args6.length > 0 && _args6[0] !== undefined ? _args6[0] : {}, _ref6$metadataSubtree = _ref6.metadataSubtree, metadataSubtree = _ref6$metadataSubtree === void 0 ? "/" : _ref6$metadataSubtree, _ref6$resolveLinks = _ref6.resolveLinks, resolveLinks = _ref6$resolveLinks === void 0 ? false : _ref6$resolveLinks, _ref6$resolveIncludeS = _ref6.resolveIncludeSource, resolveIncludeSource = _ref6$resolveIncludeS === void 0 ? false : _ref6$resolveIncludeS;
               this.Log("Accessing private user metadata at ".concat(metadataSubtree));
               _context6.next = 4;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
             case 4:
-              _ref6 = _context6.sent;
-              libraryId = _ref6.libraryId;
-              objectId = _ref6.objectId;
+              _ref7 = _context6.sent;
+              libraryId = _ref7.libraryId;
+              objectId = _ref7.objectId;
               _context6.next = 9;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
@@ -549,22 +594,22 @@ function () {
 
   }, {
     key: "MergeUserMetadata",
-    value: function MergeUserMetadata(_ref7) {
-      var _ref7$metadataSubtree, metadataSubtree, _ref7$metadata, metadata, _ref8, libraryId, objectId, editRequest;
+    value: function MergeUserMetadata(_ref8) {
+      var _ref8$metadataSubtree, metadataSubtree, _ref8$metadata, metadata, _ref9, libraryId, objectId, editRequest;
 
       return _regeneratorRuntime.async(function MergeUserMetadata$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              _ref7$metadataSubtree = _ref7.metadataSubtree, metadataSubtree = _ref7$metadataSubtree === void 0 ? "/" : _ref7$metadataSubtree, _ref7$metadata = _ref7.metadata, metadata = _ref7$metadata === void 0 ? {} : _ref7$metadata;
+              _ref8$metadataSubtree = _ref8.metadataSubtree, metadataSubtree = _ref8$metadataSubtree === void 0 ? "/" : _ref8$metadataSubtree, _ref8$metadata = _ref8.metadata, metadata = _ref8$metadata === void 0 ? {} : _ref8$metadata;
               this.Log("Merging user metadata at ".concat(metadataSubtree));
               _context7.next = 4;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
             case 4:
-              _ref8 = _context7.sent;
-              libraryId = _ref8.libraryId;
-              objectId = _ref8.objectId;
+              _ref9 = _context7.sent;
+              libraryId = _ref9.libraryId;
+              objectId = _ref9.objectId;
               _context7.next = 9;
               return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
@@ -607,22 +652,22 @@ function () {
 
   }, {
     key: "ReplaceUserMetadata",
-    value: function ReplaceUserMetadata(_ref9) {
-      var _ref9$metadataSubtree, metadataSubtree, _ref9$metadata, metadata, _ref10, libraryId, objectId, editRequest;
+    value: function ReplaceUserMetadata(_ref10) {
+      var _ref10$metadataSubtre, metadataSubtree, _ref10$metadata, metadata, _ref11, libraryId, objectId, editRequest;
 
       return _regeneratorRuntime.async(function ReplaceUserMetadata$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
-              _ref9$metadataSubtree = _ref9.metadataSubtree, metadataSubtree = _ref9$metadataSubtree === void 0 ? "/" : _ref9$metadataSubtree, _ref9$metadata = _ref9.metadata, metadata = _ref9$metadata === void 0 ? {} : _ref9$metadata;
+              _ref10$metadataSubtre = _ref10.metadataSubtree, metadataSubtree = _ref10$metadataSubtre === void 0 ? "/" : _ref10$metadataSubtre, _ref10$metadata = _ref10.metadata, metadata = _ref10$metadata === void 0 ? {} : _ref10$metadata;
               this.Log("Replacing user metadata at ".concat(metadataSubtree));
               _context8.next = 4;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
             case 4:
-              _ref10 = _context8.sent;
-              libraryId = _ref10.libraryId;
-              objectId = _ref10.objectId;
+              _ref11 = _context8.sent;
+              libraryId = _ref11.libraryId;
+              objectId = _ref11.objectId;
               _context8.next = 9;
               return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
@@ -664,22 +709,22 @@ function () {
 
   }, {
     key: "DeleteUserMetadata",
-    value: function DeleteUserMetadata(_ref11) {
-      var _ref11$metadataSubtre, metadataSubtree, _ref12, libraryId, objectId, editRequest;
+    value: function DeleteUserMetadata(_ref12) {
+      var _ref12$metadataSubtre, metadataSubtree, _ref13, libraryId, objectId, editRequest;
 
       return _regeneratorRuntime.async(function DeleteUserMetadata$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
-              _ref11$metadataSubtre = _ref11.metadataSubtree, metadataSubtree = _ref11$metadataSubtre === void 0 ? "/" : _ref11$metadataSubtre;
+              _ref12$metadataSubtre = _ref12.metadataSubtree, metadataSubtree = _ref12$metadataSubtre === void 0 ? "/" : _ref12$metadataSubtre;
               this.Log("Deleting user metadata at ".concat(metadataSubtree));
               _context9.next = 4;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
             case 4:
-              _ref12 = _context9.sent;
-              libraryId = _ref12.libraryId;
-              objectId = _ref12.objectId;
+              _ref13 = _context9.sent;
+              libraryId = _ref13.libraryId;
+              objectId = _ref13.objectId;
               _context9.next = 9;
               return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
@@ -764,13 +809,13 @@ function () {
 
   }, {
     key: "SetAccessLevel",
-    value: function SetAccessLevel(_ref13) {
+    value: function SetAccessLevel(_ref14) {
       var level;
       return _regeneratorRuntime.async(function SetAccessLevel$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              level = _ref13.level;
+              level = _ref14.level;
               level = level.toLowerCase();
 
               if (["private", "prompt", "public"].includes(level)) {
@@ -809,11 +854,11 @@ function () {
   }, {
     key: "UserProfileImage",
     value: function UserProfileImage() {
-      var _ref14,
+      var _ref15,
           address,
           walletAddress,
           imageHash,
-          _ref15,
+          _ref16,
           libraryId,
           objectId,
           _args12 = arguments;
@@ -822,7 +867,7 @@ function () {
         while (1) {
           switch (_context12.prev = _context12.next) {
             case 0:
-              _ref14 = _args12.length > 0 && _args12[0] !== undefined ? _args12[0] : {}, address = _ref14.address;
+              _ref15 = _args12.length > 0 && _args12[0] !== undefined ? _args12[0] : {}, address = _ref15.address;
 
               if (!address) {
                 _context12.next = 7;
@@ -873,10 +918,19 @@ function () {
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
             case 18:
-              _ref15 = _context12.sent;
-              libraryId = _ref15.libraryId;
-              objectId = _ref15.objectId;
-              _context12.next = 23;
+              _ref16 = _context12.sent;
+              libraryId = _ref16.libraryId;
+              objectId = _ref16.objectId;
+
+              if (objectId) {
+                _context12.next = 23;
+                break;
+              }
+
+              return _context12.abrupt("return");
+
+            case 23:
+              _context12.next = 25;
               return _regeneratorRuntime.awrap(this.client.PublicRep({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -888,10 +942,10 @@ function () {
                 channelAuth: false
               }));
 
-            case 23:
+            case 25:
               return _context12.abrupt("return", _context12.sent);
 
-            case 24:
+            case 26:
             case "end":
               return _context12.stop();
           }
@@ -907,22 +961,22 @@ function () {
 
   }, {
     key: "SetUserProfileImage",
-    value: function SetUserProfileImage(_ref16) {
-      var image, _ref17, libraryId, objectId, editRequest, uploadResponse;
+    value: function SetUserProfileImage(_ref17) {
+      var image, _ref18, libraryId, objectId, editRequest, uploadResponse;
 
       return _regeneratorRuntime.async(function SetUserProfileImage$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
             case 0:
-              image = _ref16.image;
+              image = _ref17.image;
               this.Log("Setting profile image for user ".concat(this.client.signer.address));
               _context13.next = 4;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
             case 4:
-              _ref17 = _context13.sent;
-              libraryId = _ref17.libraryId;
-              objectId = _ref17.objectId;
+              _ref18 = _context13.sent;
+              libraryId = _ref18.libraryId;
+              objectId = _ref18.objectId;
               _context13.next = 9;
               return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
@@ -1023,13 +1077,13 @@ function () {
 
   }, {
     key: "RecordTags",
-    value: function RecordTags(_ref18) {
+    value: function RecordTags(_ref19) {
       var libraryId, objectId, versionHash;
       return _regeneratorRuntime.async(function RecordTags$(_context15) {
         while (1) {
           switch (_context15.prev = _context15.next) {
             case 0:
-              libraryId = _ref18.libraryId, objectId = _ref18.objectId, versionHash = _ref18.versionHash;
+              libraryId = _ref19.libraryId, objectId = _ref19.objectId, versionHash = _ref19.versionHash;
               _context15.prev = 1;
               _context15.next = 4;
               return _regeneratorRuntime.awrap(this.__RecordTags({
@@ -1057,13 +1111,13 @@ function () {
     }
   }, {
     key: "__RecordTags",
-    value: function __RecordTags(_ref19) {
+    value: function __RecordTags(_ref20) {
       var libraryId, objectId, versionHash, accessType, seen, walletObjectInfo, userLibraryId, userObjectId, editRequest, contentTags, userTags, formattedTags;
       return _regeneratorRuntime.async(function __RecordTags$(_context16) {
         while (1) {
           switch (_context16.prev = _context16.next) {
             case 0:
-              libraryId = _ref19.libraryId, objectId = _ref19.objectId, versionHash = _ref19.versionHash;
+              libraryId = _ref20.libraryId, objectId = _ref20.objectId, versionHash = _ref20.versionHash;
               _context16.next = 3;
               return _regeneratorRuntime.awrap(this.client.AccessType({
                 id: objectId
