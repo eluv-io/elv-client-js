@@ -19,6 +19,8 @@ const Fetch = (input, init={}) => {
 
 const UrlJoin = require("url-join");
 const URI = require("urijs");
+
+// TODO: Remove dependency
 const BaseLibraryContract = require("../src/contracts/BaseLibrary");
 const BaseContentContract = require("../src/contracts/BaseContent");
 const CustomContract = require("../src/contracts/SampleContentLicensing");
@@ -1881,11 +1883,9 @@ describe("Test ElvClient", () => {
 
   describe("Access Requests", () => {
     test("Access Charge and Info", async () => {
-      await client.CallContractMethod({
-        abi: BaseContentContract.abi,
-        contractAddress: client.utils.HashToAddress(objectId),
-        methodName: "setVisibility",
-        methodArgs: [10]
+      await client.SetVisibility({
+        id: objectId,
+        visibility: 10
       });
 
       await client.SetAccessCharge({objectId, accessCharge: "0.5"});

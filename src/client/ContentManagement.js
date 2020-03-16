@@ -6,9 +6,12 @@
 
 const UrlJoin = require("url-join");
 
+/*
 const LibraryContract = require("../contracts/BaseLibrary");
 const ContentContract = require("../contracts/BaseContent");
 const EditableContract = require("../contracts/Editable");
+
+ */
 
 const {
   ValidateLibrary,
@@ -18,6 +21,22 @@ const {
   ValidateParameters,
   ValidatePresence
 } = require("../Validation");
+
+exports.SetVisibility = async function({id, visibility}) {
+  this.Log(`Setting visibility ${visibility} on ${id}`);
+  const abi = await this.ContractAbi({id});
+
+  if(!abi.find(method => method.name === "setVisibility")) {
+    this.Log(`${id} contract has no visibility method, ignoring`);
+    return;
+  }
+
+  return await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(id),
+    methodName: "setVisibility",
+    methodArgs: [visibility],
+  });
+};
 
 /* Content Type Creation */
 
@@ -51,6 +70,9 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   const { contractAddress } = await this.authClient.CreateContentType();
 
   const objectId = this.utils.AddressToObjectId(contractAddress);
+
+  await this.SetVisibility({id: objectId, visibility: 1});
+
   const path = UrlJoin("qlibs", this.contentSpaceLibraryId, "qid", objectId);
 
   this.Log(`Created type: ${contractAddress} ${objectId}`);
@@ -281,7 +303,6 @@ exports.DeleteContentLibrary = async function({libraryId}) {
 
   await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
-    abi: LibraryContract.abi,
     methodName: "kill",
     methodArgs: []
   });
@@ -329,10 +350,8 @@ exports.AddLibraryContentType = async function({libraryId, typeId, typeName, typ
 
   const event = await this.ethClient.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
-    abi: LibraryContract.abi,
     methodName: "addContentType",
-    methodArgs: [typeAddress, customContractAddress],
-    signer: this.signer
+    methodArgs: [typeAddress, customContractAddress]
   });
 
   return event.transactionHash;
@@ -369,10 +388,8 @@ exports.RemoveLibraryContentType = async function({libraryId, typeId, typeName, 
 
   const event = await this.ethClient.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
-    abi: LibraryContract.abi,
     methodName: "removeContentType",
-    methodArgs: [typeAddress],
-    signer: this.signer
+    methodArgs: [typeAddress]
   });
 
   return event.transactionHash;
@@ -440,12 +457,7 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
   if(options.visibility) {
     this.Log(`Setting visibility to ${options.visibility}`);
 
-    await this.CallContractMethod({
-      abi: ContentContract.abi,
-      contractAddress: this.utils.HashToAddress(objectId),
-      methodName: "setVisibility",
-      methodArgs: [options.visibility]
-    });
+    await this.SetVisibility({id: objectId, visibility: options.visibility});
   }
 
   const path = UrlJoin("qid", objectId);
@@ -536,9 +548,7 @@ exports.AwaitPending = async function(objectId) {
   const PendingHash = async () =>
     await this.CallContractMethod({
       contractAddress: this.utils.HashToAddress(objectId),
-      abi: EditableContract.abi,
       methodName: "pendingHash",
-      cacheContract: false
     });
 
   this.Log("Checking for pending commit");
@@ -565,9 +575,7 @@ exports.AwaitPending = async function(objectId) {
     // Clear pending commit, it's probably stuck
     await this.CallContractMethodAndWait({
       contractAddress: this.utils.HashToAddress(objectId),
-      abi: EditableContract.abi,
-      methodName: "clearPending",
-      cacheContract: false
+      methodName: "clearPending"
     });
   } else {
     throw Error(`Unable to finalize ${objectId} - Another commit is pending`);
@@ -647,9 +655,10 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
   if(awaitCommitConfirmation) {
     this.Log("Awaiting commit confirmation...");
 
+    const abi = await this.ContractAbi({id: objectId});
     await this.ethClient.AwaitEvent({
       contractAddress: this.utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
+      abi,
       eventName: "VersionConfirm",
       signer: this.signer
     });
@@ -672,7 +681,6 @@ exports.DeleteContentVersion = async function({versionHash}) {
 
   await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(objectId),
-    abi: ContentContract.abi,
     methodName: "deleteVersion",
     methodArgs: [versionHash]
   });
@@ -693,7 +701,6 @@ exports.DeleteContentObject = async function({libraryId, objectId}) {
 
   await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
-    abi: LibraryContract.abi,
     methodName: "deleteContent",
     methodArgs: [this.utils.HashToAddress(objectId)]
   });
@@ -811,10 +818,8 @@ exports.SetAccessCharge = async function({objectId, accessCharge}) {
 
   await this.ethClient.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(objectId),
-    abi: ContentContract.abi,
     methodName: "setAccessCharge",
-    methodArgs: [this.utils.EtherToWei(accessCharge).toString()],
-    signer: this.signer
+    methodArgs: [this.utils.EtherToWei(accessCharge).toString()]
   });
 };
 

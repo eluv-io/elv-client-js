@@ -2,7 +2,10 @@ const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 const { FrameClient } = require("./FrameClient");
 
+/*
 const SpaceContract = require("./contracts/BaseContentSpace");
+
+ */
 
 class UserProfileClient {
   Log(message, error=false) {
@@ -85,19 +88,18 @@ await client.userProfileClient.UserMetadata()
 
         // Don't attempt to create a user wallet if user has no funds
         const balance = await this.client.GetBalance({address: this.client.signer.address});
+        console.log(balance);
         if(balance < 0.1) {
           return undefined;
         }
 
         const walletCreationEvent = await this.client.CallContractMethodAndWait({
           contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-          abi: SpaceContract.abi,
           methodName: "createAccessWallet",
           methodArgs: []
         });
 
         this.walletAddress = this.client.ExtractValueFromEvent({
-          abi: SpaceContract.abi,
           event: walletCreationEvent,
           eventName: "CreateAccessWallet",
           eventValue: "wallet"
@@ -153,7 +155,6 @@ await client.userProfileClient.UserMetadata()
     if(this.walletAddress) { return this.walletAddress; }
 
     const walletAddress = await this.client.CallContractMethod({
-      abi: SpaceContract.abi,
       contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
       methodName: "userWallets",
       methodArgs: [this.client.signer.address]
@@ -164,6 +165,7 @@ await client.userProfileClient.UserMetadata()
     }
 
     if(!this.walletAddress) {
+      console.log("Creating wallet");
       await this.CreateWallet();
     }
 
@@ -188,7 +190,6 @@ await client.userProfileClient.UserMetadata()
 
       const walletAddress =
         await this.client.CallContractMethod({
-          abi: SpaceContract.abi,
           contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
           methodName: "userWallets",
           methodArgs: [address]

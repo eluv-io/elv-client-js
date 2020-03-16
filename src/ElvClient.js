@@ -218,7 +218,7 @@ class ElvClient {
     this.objectImageUrls = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
-    this.ethClient = new EthClient({uris: this.ethereumURIs, debug: this.debug});
+    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug});
 
     this.authClient = new AuthorizationClient({
       client: this,

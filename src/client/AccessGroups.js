@@ -4,9 +4,12 @@
  * @module ElvClient/AccessGroups
  */
 
+/*
 const LibraryContract = require("../contracts/BaseLibrary");
 const AccessGroupContract = require("../contracts/BaseAccessControlGroup");
 const AccessIndexorContract = require("../contracts/AccessIndexor");
+
+ */
 
 const {
   ValidatePresence,
@@ -30,15 +33,7 @@ exports.AccessGroupOwner = async function({contractAddress}) {
 
   this.Log(`Retrieving owner of access group ${contractAddress}`);
 
-  return this.utils.FormatAddress(
-    await this.ethClient.CallContractMethod({
-      contractAddress,
-      abi: AccessGroupContract.abi,
-      methodName: "owner",
-      methodArgs: [],
-      signer: this.signer
-    })
-  );
+  return await this.authClient.Owner({id});
 };
 
 /**
@@ -58,7 +53,6 @@ exports.AccessGroupMembers = async function({contractAddress}) {
 
   const length = (await this.CallContractMethod({
     contractAddress,
-    abi: AccessGroupContract.abi,
     methodName: "membersNum"
   })).toNumber();
 
@@ -67,7 +61,6 @@ exports.AccessGroupMembers = async function({contractAddress}) {
       this.utils.FormatAddress(
         await this.CallContractMethod({
           contractAddress,
-          abi: AccessGroupContract.abi,
           methodName: "membersList",
           methodArgs: [i]
         })
@@ -93,7 +86,6 @@ exports.AccessGroupManagers = async function({contractAddress}) {
 
   const length = (await this.CallContractMethod({
     contractAddress,
-    abi: AccessGroupContract.abi,
     methodName: "managersNum"
   })).toNumber();
 
@@ -102,7 +94,6 @@ exports.AccessGroupManagers = async function({contractAddress}) {
       this.utils.FormatAddress(
         await this.CallContractMethod({
           contractAddress,
-          abi: AccessGroupContract.abi,
           methodName: "managersList",
           methodArgs: [i]
         })
@@ -180,7 +171,6 @@ exports.DeleteAccessGroup = async function({contractAddress}) {
 
   await this.CallContractMethodAndWait({
     contractAddress,
-    abi: AccessGroupContract.abi,
     methodName: "kill",
     methodArgs: []
   });
@@ -199,7 +189,6 @@ exports.AccessGroupMembershipMethod = async function({
   if(!this.utils.EqualAddress(this.signer.address, memberAddress)) {
     const isManager = await this.CallContractMethod({
       contractAddress,
-      abi: AccessGroupContract.abi,
       methodName: "hasManagerAccess",
       methodArgs: [this.utils.FormatAddress(this.signer.address)]
     });
@@ -213,7 +202,6 @@ exports.AccessGroupMembershipMethod = async function({
 
   const event = await this.CallContractMethodAndWait({
     contractAddress,
-    abi: AccessGroupContract.abi,
     methodName,
     methodArgs: [ this.utils.FormatAddress(memberAddress) ],
     eventName,
@@ -221,7 +209,6 @@ exports.AccessGroupMembershipMethod = async function({
   });
 
   const candidate = this.ExtractValueFromEvent({
-    abi: AccessGroupContract.abi,
     event,
     eventName,
     eventValue: "candidate"
@@ -371,7 +358,6 @@ exports.ContentLibraryGroupPermissions = async function({libraryId, permissions=
       // Get library access groups of the specified type
       let numGroups = await this.CallContractMethod({
         contractAddress: this.utils.HashToAddress(libraryId),
-        abi: LibraryContract.abi,
         methodName: type + "GroupsLength"
       });
 
@@ -385,7 +371,6 @@ exports.ContentLibraryGroupPermissions = async function({libraryId, permissions=
             return this.utils.FormatAddress(
               await this.CallContractMethod({
                 contractAddress: this.utils.HashToAddress(libraryId),
-                abi: LibraryContract.abi,
                 methodName: type + "Groups",
                 methodArgs: [i]
               })
@@ -439,13 +424,11 @@ exports.AddContentLibraryGroup = async function({libraryId, groupAddress, permis
 
   const event = await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
-    abi: LibraryContract.abi,
     methodName: `add${permission}Group`,
     methodArgs: [this.utils.FormatAddress(groupAddress)]
   });
 
   await this.ExtractEventFromLogs({
-    abi: LibraryContract.abi,
     event,
     eventName: `${permission}GroupAdded`
   });
@@ -481,15 +464,16 @@ exports.RemoveContentLibraryGroup = async function({libraryId, groupAddress, per
   // Capitalize permission to match method and event names
   permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
 
+  const abi = await this.ContractAbi({id: libraryId});
   const event = await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
-    abi: LibraryContract.abi,
+    abi,
     methodName: `remove${permission}Group`,
     methodArgs: [this.utils.FormatAddress(groupAddress)]
   });
 
   await this.ExtractEventFromLogs({
-    abi: LibraryContract.abi,
+    abi,
     event,
     eventName: `${permission}GroupRemoved`
   });
@@ -528,7 +512,6 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
 
       let permission = await this.CallContractMethod({
         contractAddress: groupAddress,
-        abi: AccessIndexorContract.abi,
         methodName,
         methodArgs: [contractAddress]
       });
@@ -583,9 +566,10 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
   const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
   const methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
 
+  const { abi } = await this.ContractAbi({contractAddress: groupAddress});
   const event = await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
-    abi: AccessIndexorContract.abi,
+    abi,
     methodName,
     methodArgs: [
       this.utils.HashToAddress(objectId),
@@ -595,7 +579,7 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
   });
 
   await this.ExtractEventFromLogs({
-    abi: AccessIndexorContract.abi,
+    abi,
     event,
     eventName: "RightsChanged"
   });
@@ -628,9 +612,10 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
   const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
   const methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
 
+  const { abi } = await this.ContractAbi({contractAddress: groupAddress});
   const event = await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
-    abi: AccessIndexorContract.abi,
+    abi,
     methodName,
     methodArgs: [
       this.utils.HashToAddress(objectId),
@@ -640,7 +625,7 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
   });
 
   await this.ExtractEventFromLogs({
-    abi: AccessIndexorContract.abi,
+    abi,
     event,
     eventName: "RightsChanged"
   });
