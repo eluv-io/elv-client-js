@@ -1405,7 +1405,7 @@ exports.UpdateContentObjectGraph = function _callee20(_ref22) {
 
                     currentHash = graph.auto_updates.order[0];
                     links = graph.auto_updates.links[currentHash];
-                    details = graph.details[currentHash].meta;
+                    details = graph.details[currentHash].meta || {};
                     name = details["public"] && details["public"].asset_metadata && details["public"].asset_metadata.display_title || details["public"] && details["public"].name || details.name || versionHash || objectId;
                     _context20.next = 13;
                     return _regeneratorRuntime.awrap(_this.ContentObjectLibraryId({
