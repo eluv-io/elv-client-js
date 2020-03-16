@@ -211,12 +211,15 @@ await client.userProfileClient.UserMetadata()
    *
    * @return {Promise<{Object}>} - An object containing the libraryId and objectId for the wallet object.
    */
-  async UserWalletObjectInfo() {
-    const walletAddress = await this.WalletAddress();
+  async UserWalletObjectInfo({address}={}) {
+
+    const walletAddress = address ?
+      await this.UserWalletAddress({address}) :
+      await this.WalletAddress();
 
     return {
       libraryId: this.client.contentSpaceLibraryId,
-      objectId: Utils.AddressToObjectId(walletAddress)
+      objectId: walletAddress ? Utils.AddressToObjectId(walletAddress) : ""
     };
   }
 
@@ -243,13 +246,17 @@ await client.userProfileClient.UserMetadata()
    * @return {Promise<Object|string>}
    */
   async PublicUserMetadata({address, metadataSubtree="/", resolveLinks=false, resolveIncludeSource=false}) {
+    if(!address) { return; }
+
     const walletAddress = await this.UserWalletAddress({address});
 
     if(!walletAddress) { return; }
 
     metadataSubtree = UrlJoin("public", metadataSubtree || "/");
 
-    const { libraryId, objectId } = await this.UserWalletObjectInfo();
+    const { libraryId, objectId } = await this.UserWalletObjectInfo({address});
+
+    if(!objectId) { return; }
 
     return await this.client.ContentObjectMetadata({
       libraryId,
@@ -409,6 +416,8 @@ await client.userProfileClient.UserMetadata()
     if(!imageHash) { return; }
 
     const { libraryId, objectId } = await this.UserWalletObjectInfo();
+
+    if(!objectId) { return; }
 
     return await this.client.PublicRep({
       libraryId,

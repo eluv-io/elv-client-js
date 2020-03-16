@@ -77,6 +77,7 @@ function () {
 
     _classCallCheck(this, AuthorizationClient);
 
+    this.ACCESS_TYPES = ACCESS_TYPES;
     this.client = client;
     this.contentSpaceId = contentSpaceId;
     this.noCache = noCache;
