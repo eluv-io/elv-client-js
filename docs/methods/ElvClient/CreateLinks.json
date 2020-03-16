@@ -1,0 +1,14 @@
+[
+  {
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"writeToken\": \"tqw_3CDT2Ee1nK8zUTv4RYPmT8NqnUEpv19eQ\",\n  \"links\": [\n    {\n      \"target\": \"testDirectory/File 1\",\n      \"path\": \"myLink\",\n      \"type\": \"file\"\n    },\n    {\n      \"target\": \"testDirectory/File 2\",\n      \"path\": \"links/myLink2\",\n      \"type\": \"file\"\n    },\n    {\n      \"target\": \"toLink/meta/data\",\n      \"path\": \"links/metadataLink\",\n      \"type\": \"meta\"\n    }\n  ]\n});"
+  },
+  {
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib2RtSsmnBQ2WPky6orkup5pLPyC4a\",\n  \"objectId\": \"iq__3jpYF7cwK1P8MjrJcPpd9RZfJUrm\",\n  \"writeToken\": \"tqw_FXAoug5WuDBS3SFqZxmimtxqSqmS4BVvX\",\n  \"links\": [\n    {\n      \"type\": \"rep\",\n      \"path\": \"videoLink/default\",\n      \"target\": \"playout/default/options.json\"\n    }\n  ]\n});"
+  },
+  {
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib2Qd7G4pjEnsnjMe1rhbUTzpFzSXf\",\n  \"objectId\": \"iq__46pTm3MM1PjmLrfiQ5RePwAp1CyU\",\n  \"writeToken\": \"tqw_7wCLhyAmgyaFCum5nTFEsJsNqywqYGMFr\",\n  \"links\": [\n    {\n      \"type\": \"rep\",\n      \"path\": \"public/videoLink\",\n      \"targetHash\": \"hq__FzM6yA6vf2Egmv9fTMYfJEXXxTeDM1XUdew8MCVJ4fKRR6Hzuxoe4HRZMb13P9eXFB1UehjXNq\",\n      \"target\": \"playout/default/options.json\"\n    }\n  ]\n});"
+  },
+  {
+    "signature": "async CreateLinks({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"writeToken\": \"tqw_Ln9w2HMLYefDdb2WL96gzkGN4fVY8YMNS\",\n  \"links\": [\n    {\n      \"path\": \"/test/link\",\n      \"targetHash\": \"hq__3cjZydqaX4JYPYdw7KcV1addzvaPjwWFvRSv6JzaAhzcjC1hqHJWU8YReEp6wT9642jr3yXeQ1\",\n      \"target\": \"/public/asset_metadata\",\n      \"type\": \"metadata\",\n      \"autoUpdate\": true\n    }\n  ]\n});"
+  }
+]

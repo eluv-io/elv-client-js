@@ -70,13 +70,13 @@ function () {
   }, {
     key: "Request",
     value: function Request(_ref2) {
-      var method, path, _ref2$queryParams, queryParams, _ref2$body, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, uri, fetchParameters, response, responseType, errorBody, error;
+      var method, path, _ref2$queryParams, queryParams, _ref2$body, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, _ref2$forceFailover, forceFailover, uri, fetchParameters, response, responseType, errorBody, error;
 
       return _regeneratorRuntime.async(function Request$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
-              method = _ref2.method, path = _ref2.path, _ref2$queryParams = _ref2.queryParams, queryParams = _ref2$queryParams === void 0 ? {} : _ref2$queryParams, _ref2$body = _ref2.body, body = _ref2$body === void 0 ? {} : _ref2$body, _ref2$bodyType = _ref2.bodyType, bodyType = _ref2$bodyType === void 0 ? "JSON" : _ref2$bodyType, _ref2$headers = _ref2.headers, headers = _ref2$headers === void 0 ? {} : _ref2$headers, _ref2$attempts = _ref2.attempts, attempts = _ref2$attempts === void 0 ? 0 : _ref2$attempts, _ref2$failover = _ref2.failover, failover = _ref2$failover === void 0 ? true : _ref2$failover;
+              method = _ref2.method, path = _ref2.path, _ref2$queryParams = _ref2.queryParams, queryParams = _ref2$queryParams === void 0 ? {} : _ref2$queryParams, _ref2$body = _ref2.body, body = _ref2$body === void 0 ? {} : _ref2$body, _ref2$bodyType = _ref2.bodyType, bodyType = _ref2$bodyType === void 0 ? "JSON" : _ref2$bodyType, _ref2$headers = _ref2.headers, headers = _ref2$headers === void 0 ? {} : _ref2$headers, _ref2$attempts = _ref2.attempts, attempts = _ref2$attempts === void 0 ? 0 : _ref2$attempts, _ref2$failover = _ref2.failover, failover = _ref2$failover === void 0 ? true : _ref2$failover, _ref2$forceFailover = _ref2.forceFailover, forceFailover = _ref2$forceFailover === void 0 ? false : _ref2$forceFailover;
               uri = this.BaseURI().path(path).query(queryParams).hash("");
               fetchParameters = {
                 method: method,
@@ -117,7 +117,7 @@ function () {
                 break;
               }
 
-              if (!(failover && parseInt(response.status) >= 500 && attempts < this.uris.length)) {
+              if (!((failover && parseInt(response.status) >= 500 || forceFailover) && attempts < this.uris.length)) {
                 _context.next = 20;
                 break;
               }
@@ -133,7 +133,8 @@ function () {
                 body: body,
                 bodyType: bodyType,
                 headers: headers,
-                attempts: attempts + 1
+                attempts: attempts + 1,
+                forceFailover: forceFailover
               }));
 
             case 19:

@@ -1,0 +1,11 @@
+[
+  {
+    "signature": "async AddContentLibraryGroup({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"groupAddress\": \"0x460f0c5fb65f7c819ad5daa1a2d75dea30723b3a\",\n  \"permission\": \"contributor\"\n});"
+  },
+  {
+    "signature": "async AddContentLibraryGroup({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"groupAddress\": \"0x460f0c5fb65f7c819ad5daa1a2d75dea30723b3a\",\n  \"permission\": \"reviewer\"\n});"
+  },
+  {
+    "signature": "async AddContentLibraryGroup({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"groupAddress\": \"0x460f0c5fb65f7c819ad5daa1a2d75dea30723b3a\",\n  \"permission\": \"accessor\"\n});"
+  }
+]

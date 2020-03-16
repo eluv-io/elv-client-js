@@ -1125,19 +1125,39 @@ function () {
   }, {
     key: "KMSInfo",
     value: function KMSInfo(_ref17) {
-      var objectId, versionHash, KMSInfo, publicKey;
+      var objectId, versionHash, kmsId, KMSInfo, publicKey;
       return _regeneratorRuntime.async(function KMSInfo$(_context16) {
         while (1) {
           switch (_context16.prev = _context16.next) {
             case 0:
-              objectId = _ref17.objectId, versionHash = _ref17.versionHash;
+              objectId = _ref17.objectId, versionHash = _ref17.versionHash, kmsId = _ref17.kmsId;
 
+              if (!kmsId) {
+                _context16.next = 7;
+                break;
+              }
+
+              _context16.next = 4;
+              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
+                contractAddress: this.client.contentSpaceAddress,
+                abi: SpaceContract.abi,
+                methodName: "getKMSInfo",
+                methodArgs: [kmsId, []],
+                formatArguments: false
+              }));
+
+            case 4:
+              KMSInfo = _context16.sent;
+              _context16.next = 11;
+              break;
+
+            case 7:
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
               } // Get KMS info for the object
 
 
-              _context16.next = 4;
+              _context16.next = 10;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(objectId),
                 abi: ContentContract.abi,
@@ -1146,8 +1166,10 @@ function () {
                 formatArguments: false
               }));
 
-            case 4:
+            case 10:
               KMSInfo = _context16.sent;
+
+            case 11:
               // Public key is compressed and hashed
               publicKey = Ethers.utils.computePublicKey(Utils.HashToAddress(KMSInfo[1]), false);
               return _context16.abrupt("return", {
@@ -1155,7 +1177,7 @@ function () {
                 publicKey: publicKey
               });
 
-            case 7:
+            case 13:
             case "end":
               return _context16.stop();
           }

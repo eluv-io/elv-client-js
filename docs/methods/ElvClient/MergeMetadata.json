@@ -1,0 +1,20 @@
+[
+  {
+    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"writeToken\": \"tqw_C6eE4T8EW81b2DYb14wBLhgp5n9ENhdZy\",\n  \"metadata\": {\n    \"image\": \"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\"\n  }\n});"
+  },
+  {
+    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"writeToken\": \"tqw_C6eE4T8EW81b2DYb14wBLhgp5n9ENhdZy\",\n  \"metadataSubtree\": \"public\",\n  \"metadata\": {\n    \"image\": \"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\"\n  }\n});"
+  },
+  {
+    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"writeToken\": \"tqw_EdF7QgrtKr9JK6KfUhjMjXrDCLRpymT52\",\n  \"metadataSubtree\": \"toMerge\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
+  },
+  {
+    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"writeToken\": \"tqw_5KtinC4fZDoQN98JTayNJE7vL9XywJx8r\",\n  \"metadata\": {\n    \"eluv.caps.iusr24nYnUMB6PepgyzPthRjhW8DZGLD\": \"BOrFhrR9KORe+e69mmCBjhxxT6vUoE0pUOHq5rmRzex9nY3qn9ySKszfyNfCwU+tOihu32LlLEBYXCkFUcIydFjKVorJZ8e9GNSYKbbaAp2uznSYySKvqzyOQyBSQzZAs4ItBDai+1pnb+hiu0AoI8VZ1Xc64kwfYACPU8CAxpjlt3Pdnbb7nnSSgy1EGzhIbE1KdPFcV0/HpZteIgAdGUr9GnpPDV3ynTwaJR55WQeC2jkekN7Zf2vYvc+YyWskONFLJFsG6i4mrK9qSZ+jgdFp7NLGpfsVBvcwO4HiJ+JAuPYB1rYFGNOX1fVaSCGC4nPpZ4zFjQihnxRxZdGE7CHVrCXrxc6lnOHmmPTap63T5rlGf1PyqSjVZBMDahL5ZUGzw4EAhKiUQptsXwFWOQ1ReEjp12KpjIpIQrNMx9Ddm1mo2fAG+hI6uLpeZS28W7A27GaOaVMOlZ0IR+o4TeVZNxf7+UEINgkkxm2l/9X4\",\n    \"eluv.caps.ikms2s41ivY1BDJ8K5PJyAtTtJZQcHZ\": \"BOrFhrR9KORe+e69mmCBjhxxT6vUoE0pUOHq5rmRzex9nY3qn9ySKszfyNfCwU+tOihu32LlLEBYXCkFUcIydFjoUmCk7BBaXSN3vIEzHu59mNEXp7TFEWlV8DLeh4r0qtXZ8PVkw2qDmQ47HlKNm4LPV+xuA/pcjUlZe+f0prY7xMjZJHbNdTU41mUMmBrkCB7mggzoT0fUEA138hjAmCvkKY5VLeZQp+zBG2wfnSIbGLmZ9Ag3zQZ9sAxntcpljPnkgF6zAR/zvdjpJMLfYn+tBCtlowk7/23/VoGD6IIxw9cKtdLjgT/te6BrepsfeWkdyvP1a/Z7EsqQFIN7ujEbwQp+oXQj2sOgV7cdZ35CRXO5Ar1SK21zoI8EAvf/sHEMSxud2flpNbm5wJPO/aLhUSS+/NpPjDNXDWJjbNYfdsZ5rrFjhtqBEi5RXPsV293NZQMer63nByYu5vawws2rQiyJEQ6x4sXK8Dn8G9i1\"\n  }\n});"
+  },
+  {
+    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilib2RtSsmnBQ2WPky6orkup5pLPyC4a\",\n  \"objectId\": \"iq__3zHouQbyhAhfeb1iDdexcd1Wc4xW\",\n  \"writeToken\": \"tqw_5uedeYWqiFF2jr1yyvBxh4K6LPJZN3Rsr\",\n  \"metadata\": {\n    \"name\": \"Production Master Test\",\n    \"description\": \"Production Master Test Description\",\n    \"public\": {\n      \"name\": \"Production Master Test\",\n      \"description\": \"Production Master Test Description\"\n    },\n    \"elv_created_at\": 1584385653386,\n    \"test\": \"master\"\n  }\n});"
+  },
+  {
+    "signature": "async MergeMetadata({\n  \"libraryId\": \"ilib2RtSsmnBQ2WPky6orkup5pLPyC4a\",\n  \"objectId\": \"iq__3jpYF7cwK1P8MjrJcPpd9RZfJUrm\",\n  \"writeToken\": \"tqw_KjPv5Abs36v3X2wAx6iLt1NuT1R4Ko4k8\",\n  \"metadata\": {\n    \"master\": {\n      \"name\": \"Production Master Test\",\n      \"id\": \"iq__3zHouQbyhAhfeb1iDdexcd1Wc4xW\",\n      \"hash\": \"hq__Etkf8oUbUCA2oXH4HppgvUrTHdPWQNibQ9PL4Z1TWHFD1s7sokLtHNtdDHKNMptfsXb5aVmtZU\",\n      \"variant\": \"default\"\n    },\n    \"public\": {\n      \"name\": \"Mezzanine Test\",\n      \"description\": \"Mezzanine Test Description\"\n    },\n    \"elv_created_at\": 1584385661272,\n    \"test\": \"mezzanine\",\n    \"name\": \"Mezzanine Test\",\n    \"description\": \"Mezzanine Test Description\"\n  }\n});"
+  }
+]

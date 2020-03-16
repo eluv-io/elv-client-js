@@ -75,7 +75,7 @@ class ElvClient {
    * @param {string} contentSpaceId - ID of the content space
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
-   * @param {Array<string>} kmsURIs - List of KMS urls to use for OAuth authentication
+   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
@@ -85,7 +85,7 @@ class ElvClient {
     contentSpaceId,
     fabricURIs,
     ethereumURIs,
-    kmsURIs=[],
+    trustAuthorityId,
     noCache=false,
     noAuth=false
   }) {
@@ -98,7 +98,7 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
-    this.kmsURIs = kmsURIs;
+    this.trustAuthorityId = trustAuthorityId;
 
     this.noCache = noCache;
     this.noAuth = noAuth;
@@ -174,7 +174,7 @@ class ElvClient {
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: na-west-north na-west-south na-east eu-west
-   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
    * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
@@ -182,6 +182,7 @@ class ElvClient {
   static async FromConfigurationUrl({
     configUrl,
     region,
+    trustAuthorityId,
     noCache=false,
     noAuth=false
   }) {
@@ -198,6 +199,7 @@ class ElvClient {
       contentSpaceId,
       fabricURIs,
       ethereumURIs,
+      trustAuthorityId,
       noCache,
       noAuth
     });
@@ -449,29 +451,55 @@ class ElvClient {
    * @param {string} token - The OAuth ID
    */
   async SetSignerFromOauthToken({token}) {
-    if(!this.kmsURIs || this.kmsURIs.length === 0) {
-      throw Error("Unable to authorize with OAuth token: No KMS URLs set");
+    if(!this.trustAuthorityId) {
+      throw Error("Unable to authorize with OAuth token: No trust authority ID set");
     }
 
-    this.oauthToken = token;
-
-    const path = "/ks/jwt/wlt";
-    const httpClient = new HttpClient({uris: this.kmsURIs});
-
-    const response = await this.utils.ResponseToJson(
-      httpClient.Request({
-        headers: { Authorization: `Bearer ${token}`},
-        method: "PUT",
-        path
-      })
-    );
-
-    const privateKey = response["UserSKHex"];
-
     const wallet = this.GenerateWallet();
-    const signer = wallet.AddAccount({privateKey});
 
-    this.SetSigner({signer});
+    // Set dummy account to allow calling of contracts
+    this.SetSigner({
+      signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
+    });
+
+    try {
+      if(!this.kmsURIs) {
+        const {urls} = await this.authClient.KMSInfo({
+          kmsId: this.trustAuthorityId
+        });
+
+        if(!urls || urls.length === 0) {
+          throw Error("Unable to authorize with OAuth token: No KMS URLs set");
+        }
+
+        this.kmsURIs = urls;
+      }
+
+      this.oauthToken = token;
+
+      const path = "/ks/jwt/wlt";
+      const httpClient = new HttpClient({uris: this.kmsURIs, debug: this.debug});
+
+      const response = await this.utils.ResponseToJson(
+        httpClient.Request({
+          headers: {Authorization: `Bearer ${token}`},
+          method: "PUT",
+          path,
+          forceFailover: true
+        })
+      );
+
+      const privateKey = response["UserSKHex"];
+
+      this.SetSigner({signer: wallet.AddAccount({privateKey})});
+    } catch(error) {
+      this.Log("Failed to set signer from OAuth token:", true);
+      this.Log(error, true);
+
+      await this.ClearSigner();
+
+      throw error;
+    }
   }
 
   /* FrameClient related */

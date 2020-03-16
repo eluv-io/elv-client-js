@@ -515,8 +515,7 @@ exports.publish = function (taffyData, opts, tutorials) {
         .replace("module:", "")
         .split("/")[0];
       const name = doclet.name
-        .replace("exports.access.", "")
-        .replace("exports.manage.", "");
+        .replace("exports.", "");
 
       const exampleFile = path.join(examplesDir, memberOf, name + ".json");
 

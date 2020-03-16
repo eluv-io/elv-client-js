@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async UserWalletAddress({\n  \"address\": \"0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\"\n});",
+    "result": "\"0x9815a5a3325981a1da3B8b0297053B8b6bD83eD5\""
+  }
+]

@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async ContentObjectVersions({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\"\n});",
+    "result": "{\n  \"id\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"versions\": [\n    {\n      \"id\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n      \"hash\": \"hq__HsQxGJZyxCGT4N6Zyk9t6iGyDD9bSPofiBzErNme3VeDMgHZHcGiYxwuNvx18U7AEUWm7Y2ntE\",\n      \"type\": \"hq__E99kAxGir5fcbTswosJ9uAfGMPuDbUko5WaZ1pDZtA4zydcWWvwydAi9HkXaL97EfnKYJxLLLL\"\n    },\n    {\n      \"id\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n      \"hash\": \"hq__HyEmL7VJn7A5c5xianx13Ypf3ug5USfvcovjM3hi4DiyqDew4Kfjipyrx7Fnb7HPo9pPqp4gn\",\n      \"type\": \"hq__E99kAxGir5fcbTswosJ9uAfGMPuDbUko5WaZ1pDZtA4zydcWWvwydAi9HkXaL97EfnKYJxLLLL\"\n    }\n  ]\n}"
+  }
+]

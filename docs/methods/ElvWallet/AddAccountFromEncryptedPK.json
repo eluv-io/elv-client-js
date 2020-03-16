@@ -1,0 +1,14 @@
+[
+  {
+    "signature": "async AddAccountFromEncryptedPK({\n  \"accountName\": \"private key\",\n  \"encryptedPrivateKey\": \"{\\\"address\\\":\\\"ef55143b962328914c35c16e225b8aa768434abf\\\",\\\"crypto\\\":{\\\"cipher\\\":\\\"aes-128-ctr\\\",\\\"ciphertext\\\":\\\"4314d3d5b80ac0c87add387cb3fdf940a4d6d9d999501aa18b5b224f4be70a74\\\",\\\"cipherparams\\\":{\\\"iv\\\":\\\"41cb3d70282553819d836f51540dcca3\\\"},\\\"kdf\\\":\\\"scrypt\\\",\\\"kdfparams\\\":{\\\"dklen\\\":32,\\\"n\\\":262144,\\\"p\\\":1,\\\"r\\\":8,\\\"salt\\\":\\\"03003c0e1f63de7890226b63bf0768fc4faa98eb6c7c1767a72a0cf34c791ac1\\\"},\\\"mac\\\":\\\"5afd202da30fdadb880dec99a2e8ff4a209fb7aa38c2dd662cc4a375667ce582\\\"},\\\"id\\\":\\\"05f541df-9dd5-4485-8704-71998d90e6cc\\\",\\\"version\\\":3}\",\n  \"password\": \"test\"\n});",
+    "result": "<Ethers#Wallet>"
+  },
+  {
+    "signature": "async AddAccountFromEncryptedPK({\n  \"accountName\": \"private key\",\n  \"encryptedPrivateKey\": {\n    \"address\": \"ef55143b962328914c35c16e225b8aa768434abf\",\n    \"crypto\": {\n      \"cipher\": \"aes-128-ctr\",\n      \"ciphertext\": \"4314d3d5b80ac0c87add387cb3fdf940a4d6d9d999501aa18b5b224f4be70a74\",\n      \"cipherparams\": {\n        \"iv\": \"41cb3d70282553819d836f51540dcca3\"\n      },\n      \"kdf\": \"scrypt\",\n      \"kdfparams\": {\n        \"dklen\": 32,\n        \"n\": 262144,\n        \"p\": 1,\n        \"r\": 8,\n        \"salt\": \"03003c0e1f63de7890226b63bf0768fc4faa98eb6c7c1767a72a0cf34c791ac1\"\n      },\n      \"mac\": \"5afd202da30fdadb880dec99a2e8ff4a209fb7aa38c2dd662cc4a375667ce582\"\n    },\n    \"id\": \"05f541df-9dd5-4485-8704-71998d90e6cc\",\n    \"version\": 3\n  },\n  \"password\": \"test\"\n});",
+    "result": "<Ethers#Wallet>"
+  },
+  {
+    "signature": "async AddAccountFromEncryptedPK({\n  \"encryptedPrivateKey\": \"{\\\"address\\\":\\\"95ced938f7991cd0dfcb48f0a06a40fa1af46ebc\\\",\\\"id\\\":\\\"6987d311-64a7-44d4-97a6-78f08f791d14\\\",\\\"version\\\":3,\\\"Crypto\\\":{\\\"cipher\\\":\\\"aes-128-ctr\\\",\\\"cipherparams\\\":{\\\"iv\\\":\\\"ed461fb89afa8a7ad9a869eb737ef17e\\\"},\\\"ciphertext\\\":\\\"010bd35e2ce39b9850ec83479902e4c56856e513fc8757878d620a142cfda89e\\\",\\\"kdf\\\":\\\"scrypt\\\",\\\"kdfparams\\\":{\\\"salt\\\":\\\"76ddad9ad99b08527d70fb1a473dd2ab5f866040bb3212ee7e2b533d3dbe27b0\\\",\\\"n\\\":16384,\\\"dklen\\\":32,\\\"p\\\":1,\\\"r\\\":8},\\\"mac\\\":\\\"742335c91bc3498b0443c46967c44051a9c1a483f083866462b735a5eb8faca2\\\"}}\",\n  \"password\": \"test\"\n});",
+    "result": "<Ethers#Wallet>"
+  }
+]

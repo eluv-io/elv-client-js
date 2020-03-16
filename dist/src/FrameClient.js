@@ -430,7 +430,7 @@ function () {
   }, {
     key: "AllowedUserProfileMethods",
     value: function AllowedUserProfileMethods() {
-      return ["AccessLevel", "CollectedTags", "CreateWallet", "DeleteUserMetadata", "MergeUserMetadata", "PublicUserMetadata", "ReplaceUserMetadata", "UserMetadata", "UserProfileImage", "UserWalletAddress", "WalletAddress"];
+      return ["AccessLevel", "CollectedTags", "CreateWallet", "DeleteUserMetadata", "MergeUserMetadata", "PublicUserMetadata", "ReplaceUserMetadata", "UserMetadata", "UserProfileImage", "UserWalletAddress", "UserWalletObjectInfo", "WalletAddress"];
     }
   }], [{
     key: "PromptedMethods",

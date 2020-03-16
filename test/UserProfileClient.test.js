@@ -8,10 +8,11 @@ Object.defineProperty(global.self, "crypto", {
 
 const fs = require("fs");
 const OutputLogger = require("./utils/OutputLogger");
-const {CreateClient, BufferToArrayBuffer, ReturnBalance} = require("./utils/Utils");
+const {CreateClient, BufferToArrayBuffer, ReturnBalance, RandomBytes} = require("./utils/Utils");
 const UserProfileClient = require("../src/UserProfileClient");
 
-let client, tagClient;
+let client, tagClient, testFile;
+const testFileSize = 10000;
 
 const CreateTaggedObject = async (tagLibraryId, tags) => {
   const createResponse = await tagClient.CreateContentObject({
@@ -40,6 +41,7 @@ describe("Test UserProfileClient", () => {
 
     client = await CreateClient("UserProfileClient");
     tagClient = await CreateClient("UserProfileClient Tags");
+    testFile = RandomBytes(testFileSize);
 
     client.userProfileClient = OutputLogger(UserProfileClient, client.userProfileClient);
   });
@@ -125,6 +127,97 @@ describe("Test UserProfileClient", () => {
 
     const newImageUrl = await client.userProfileClient.UserProfileImage({address: client.signer.address});
     expect(newImageUrl).toBeDefined();
+  });
+
+  test("Links in User Profile Metadata", async () => {
+    const libraryId = await client.CreateContentLibrary({name: "Test User Profile Links"});
+    const {id, write_token} = await client.CreateContentObject({libraryId});
+    await client.ReplaceMetadata({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      metadata: {
+        public: {
+          target: {
+            meta: {
+              data: "metadata"
+            }
+          }
+        }
+      }
+    });
+
+    await client.UploadFiles({
+      libraryId,
+      objectId: id,
+      writeToken: write_token,
+      fileInfo: [{
+        path: "testDirectory/File 1",
+        type: "file",
+        mime_type: "text/plain",
+        size: testFileSize,
+        data: testFile
+      }]
+    });
+
+    const { hash } = await client.FinalizeContentObject({
+      libraryId,
+      objectId: id,
+      writeToken: write_token
+    });
+
+    const userProfile = await client.userProfileClient.UserWalletObjectInfo();
+
+    const profileDraft = await client.EditContentObject({
+      libraryId: userProfile.libraryId,
+      objectId: userProfile.objectId
+    });
+
+    await client.CreateLinks({
+      libraryId: userProfile.libraryId,
+      objectId: userProfile.objectId,
+      writeToken: profileDraft.write_token,
+      links: [
+        {
+          target: "testDirectory/File 1",
+          targetHash: hash,
+          path: "links/fileLink",
+          type: "file"
+        },
+        {
+          target: "public/target/meta",
+          targetHash: hash,
+          path: "links/metadataLink",
+          type: "metadata"
+        },
+      ]
+    });
+
+    await client.FinalizeContentObject({
+      libraryId: userProfile.libraryId,
+      objectId: userProfile.objectId,
+      writeToken: profileDraft.write_token
+    });
+
+    const linkedMeta = await client.userProfileClient.UserMetadata({
+      metadataSubtree: "links/metadataLink",
+      resolveLinks: true
+    });
+
+    expect(linkedMeta).toBeDefined();
+    expect(linkedMeta).toEqual({data: "metadata"});
+
+    const walletObjectInfo = await client.userProfileClient.UserWalletObjectInfo();
+
+    const linkedFile = await client.LinkData({
+      libraryId: walletObjectInfo.libraryId,
+      objectId: walletObjectInfo.objectId,
+      linkPath: "links/fileLink",
+      format: "arrayBuffer"
+    });
+
+    expect(linkedFile).toBeDefined();
+    expect(new Uint8Array(linkedFile).toString()).toEqual(new Uint8Array(testFile).toString());
   });
 
   test("Access Level", async () => {

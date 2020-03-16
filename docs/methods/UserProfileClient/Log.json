@@ -1,0 +1,56 @@
+[
+  {
+    "signature": " Log(\"Creating user wallet for user 0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\");"
+  },
+  {
+    "signature": " Log(\"Creating wallet object for user 0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\");"
+  },
+  {
+    "signature": " Log(\"Merging user metadata at /\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at /\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at toMerge\");"
+  },
+  {
+    "signature": " Log(\"Merging user metadata at toMerge\");"
+  },
+  {
+    "signature": " Log(\"Replacing user metadata at toReplace\");"
+  },
+  {
+    "signature": " Log(\"Deleting user metadata at toDelete\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at /\");"
+  },
+  {
+    "signature": " Log(\"Setting profile image for user 0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at image\");"
+  },
+  {
+    "signature": " Log(\"Setting profile image for user 0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at image\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at links/metadataLink\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at access_level\");"
+  },
+  {
+    "signature": " Log(\"Replacing user metadata at access_level\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at access_level\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at access_level\");"
+  }
+]

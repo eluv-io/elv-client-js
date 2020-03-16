@@ -1,0 +1,8 @@
+[
+  {
+    "signature": "async ReplaceUserMetadata({\n  \"metadataSubtree\": \"toReplace\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
+  },
+  {
+    "signature": "async ReplaceUserMetadata({\n  \"metadataSubtree\": \"access_level\",\n  \"metadata\": \"public\"\n});"
+  }
+]

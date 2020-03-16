@@ -1,0 +1,8 @@
+[
+  {
+    "signature": "async MergeUserMetadata({\n  \"metadata\": {\n    \"public\": {\n      \"meta\": \"data\"\n    },\n    \"toMerge\": {\n      \"meta\": \"data\"\n    },\n    \"toReplace\": {\n      \"meta\": \"data\"\n    },\n    \"toDelete\": {\n      \"meta\": \"data\"\n    }\n  }\n});"
+  },
+  {
+    "signature": "async MergeUserMetadata({\n  \"metadataSubtree\": \"toMerge\",\n  \"metadata\": {\n    \"new\": \"metadata\"\n  }\n});"
+  }
+]
