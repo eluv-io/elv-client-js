@@ -9,10 +9,14 @@ const UrlJoin = require("url-join");
 const HttpClient = require("../HttpClient");
 const Crypto = require("../Crypto");
 
+/*
 const SpaceContract = require("../contracts/BaseContentSpace");
 const LibraryContract = require("../contracts/BaseLibrary");
 const ContentContract = require("../contracts/BaseContent");
 const ContentTypeContract = require("../contracts/BaseContentType");
+const AccessibleContract = require("../contracts/Accessible");
+
+ */
 
 const {
   ValidateLibrary,
@@ -23,6 +27,21 @@ const {
   ValidateParameters
 } = require("../Validation");
 
+
+exports.Visibility = async function({id}) {
+  try {
+    return await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(id),
+      methodName: "visibility"
+    });
+  } catch(error) {
+    if(error.code === "CALL_EXCEPTION") {
+      return 0;
+    }
+
+    throw error;
+  }
+};
 
 /* Content Spaces */
 
@@ -36,7 +55,6 @@ const {
 exports.DefaultKMSAddress = async function() {
   return await this.CallContractMethod({
     contractAddress: this.contentSpaceAddress,
-    abi: SpaceContract.abi,
     methodName: "addressKMS",
   });
 };
@@ -72,10 +90,8 @@ exports.ContentTypeOwner = async function({name, typeId, versionHash}) {
   return this.utils.FormatAddress(
     await this.ethClient.CallContractMethod({
       contractAddress: this.utils.HashToAddress(contentType.id),
-      abi: ContentTypeContract.abi,
       methodName: "owner",
-      methodArgs: [],
-      signer: this.signer
+      methodArgs: []
     })
   );
 };
@@ -117,24 +133,23 @@ exports.ContentType = async function({name, typeId, versionHash}) {
     }
   }
 
+  if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId: typeId});
+  }
+
   try {
     this.Log("Looking up type by ID...");
 
-    const typeInfo = await this.ContentObject({
-      libraryId: this.contentSpaceLibraryId,
-      objectId: typeId
-    });
-
-    delete typeInfo.type;
-
     const metadata = (await this.ContentObjectMetadata({
       libraryId: this.contentSpaceLibraryId,
-      objectId: typeId
+      objectId: typeId,
+      metadataSubtree: "public"
     })) || {};
 
     return {
-      ...typeInfo,
-      name: metadata.name,
+      id: typeId,
+      hash: versionHash,
+      name: metadata.name || typeId,
       meta: metadata
     };
   } catch(error) {
@@ -167,7 +182,7 @@ exports.ContentTypes = async function() {
   const contentSpaceTypes = await this.ContentObjectMetadata({
     libraryId: this.contentSpaceLibraryId,
     objectId: this.contentSpaceObjectId,
-    metadataSubtree: "contentTypes"
+    metadataSubtree: "public/contentTypes"
   }) || {};
 
   const contentSpaceTypeAddresses = Object.values(contentSpaceTypes)
@@ -191,7 +206,7 @@ exports.ContentTypes = async function() {
           this.contentTypes[typeId] = await this.ContentType({typeId});
         } catch(error) {
           // eslint-disable-next-line no-console
-          // console.error(error);
+          console.error(error);
         }
       }
     })
@@ -260,10 +275,8 @@ exports.ContentLibraryOwner = async function({libraryId}) {
   return this.utils.FormatAddress(
     await this.ethClient.CallContractMethod({
       contractAddress: this.utils.HashToAddress(libraryId),
-      abi: LibraryContract.abi,
       methodName: "owner",
-      methodArgs: [],
-      signer: this.signer
+      methodArgs: []
     })
   );
 };
@@ -288,10 +301,8 @@ exports.LibraryContentTypes = async function({libraryId}) {
 
   const typesLength = (await this.ethClient.CallContractMethod({
     contractAddress: this.utils.HashToAddress(libraryId),
-    abi: LibraryContract.abi,
     methodName: "contentTypesLength",
-    methodArgs: [],
-    signer: this.signer
+    methodArgs: []
   })).toNumber();
 
   this.Log(`${typesLength} types`);
@@ -305,10 +316,8 @@ exports.LibraryContentTypes = async function({libraryId}) {
     Array.from(new Array(typesLength), async (_, i) => {
       const typeAddress = await this.ethClient.CallContractMethod({
         contractAddress: this.utils.HashToAddress(libraryId),
-        abi: LibraryContract.abi,
         methodName: "contentTypes",
-        methodArgs: [i],
-        signer: this.signer
+        methodArgs: [i]
       });
 
       const typeId = this.utils.AddressToObjectId(typeAddress);
@@ -475,11 +484,8 @@ exports.ContentObjectOwner = async function({objectId}) {
   return this.utils.FormatAddress(
     await this.ethClient.CallContractMethod({
       contractAddress: this.utils.HashToAddress(objectId),
-      abi: ContentContract.abi,
       methodName: "owner",
-      methodArgs: [],
-      cacheContract: false,
-      signer: this.signer
+      methodArgs: []
     })
   );
 };
@@ -510,7 +516,6 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
         this.objectLibraryIds[objectId] = this.utils.AddressToLibraryId(
           await this.CallContractMethod({
             contractAddress: this.utils.HashToAddress(objectId),
-            abi: ContentContract.abi,
             methodName: "libraryAddress"
           })
         );
@@ -593,8 +598,8 @@ exports.ProduceMetadataLinks = async function({
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
- Example:
- {
+   Example:
+       {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
@@ -617,8 +622,7 @@ exports.ContentObjectMetadata = async function({
   metadataSubtree="/",
   resolveLinks=false,
   resolveIncludeSource=false,
-  produceLinkUrls=false,
-  noAuth=true
+  produceLinkUrls=false
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
 
@@ -633,6 +637,10 @@ exports.ContentObjectMetadata = async function({
 
   let metadata;
   try {
+    const visibility = await this.Visibility({id: objectId});
+    const noAuth = visibility >= 10 ||
+      ((metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
+
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
@@ -705,12 +713,9 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
 
   ValidateObject(objectId);
 
-  // TODO: Remove cache contract bit
   return await this.CallContractMethod({
     contractAddress: this.utils.HashToAddress(objectId),
-    abi: ContentContract.abi,
-    methodName: "objectHash",
-    cacheContract: false
+    methodName: "objectHash"
   });
 };
 
@@ -1497,7 +1502,7 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
   ValidateParameters({libraryId, objectId});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
-  const owner = await this.authClient.Owner({id: objectId, abi: ContentContract.abi});
+  const owner = await this.authClient.Owner({id: objectId});
 
   if(!this.utils.EqualAddress(owner, this.signer.address)) {
     // Target decryption
@@ -1652,10 +1657,8 @@ exports.AccessInfo = async function({objectId, args}) {
 
   const info = await this.ethClient.CallContractMethod({
     contractAddress: this.utils.HashToAddress(objectId),
-    abi: ContentContract.abi,
     methodName: "getAccessInfo",
-    methodArgs: args,
-    signer: this.signer
+    methodArgs: args
   });
 
   this.Log(info);
@@ -1794,7 +1797,7 @@ exports.ContentObjectAccessComplete = async function({objectId, score=100}) {
 
   if(score < 0 || score > 100) { throw Error("Invalid AccessComplete score: " + score); }
 
-  return await this.authClient.AccessComplete({id: objectId, abi: ContentContract.abi, score});
+  return await this.authClient.AccessComplete({id: objectId, score});
 };
 
 /* Collection */

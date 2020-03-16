@@ -2,10 +2,17 @@
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
 const Ethers = require("ethers");
 
+const HttpClient = require("./HttpClient");
+
+/*
 // -- Contract javascript files built using build/BuildContracts.js
 const ContentSpaceContract = require("./contracts/BaseContentSpace");
 const ContentLibraryContract = require("./contracts/BaseLibrary");
 const ContentContract = require("./contracts/BaseContent");
+ */
+
+const AccessibleContract = require("./contracts/v3/Accessible");
+
 
 const Utils = require("./Utils");
 
@@ -27,7 +34,8 @@ class EthClient {
     // eslint-disable-next-line no-console
   }
 
-  constructor({uris, debug}) {
+  constructor({client, uris, debug}) {
+    this.client = client;
     this.ethereumURIs = uris;
     this.ethereumURIIndex = 0;
     this.locked = false;
@@ -35,6 +43,9 @@ class EthClient {
 
     this.cachedContracts = {};
     this.contractNames = {};
+
+    // HTTP client for making misc calls to elv-master
+    this.HttpClient = new HttpClient({uris: this.ethereumURIs, debug: this.debug});
 
     Ethers.errors.setLogLevel("error");
   }
@@ -48,14 +59,14 @@ class EthClient {
   }
 
   async ContractName(contractAddress) {
-    const versionContract = new Ethers.Contract(contractAddress, ContentSpaceContract.abi, this.Provider());
+    const versionContract = new Ethers.Contract(contractAddress, AccessibleContract.abi, this.Provider());
 
     if(!this.contractNames[contractAddress]) {
       try {
         // Call using general "ownable" abi
         const versionBytes32 = await this.CallContractMethod({
           contract: versionContract,
-          abi: ContentSpaceContract.abi,
+          abi: AccessibleContract.abi,
           methodName: "version",
           cacheContract: false
         });
@@ -66,6 +77,8 @@ class EthClient {
             versionBytes32.slice(0, -2) + "00"
           );
 
+        console.log(contractAddress, version);
+
         this.contractNames[contractAddress] = version.split(/\d+/)[0];
       } catch(error) {
         this.contractNames[contractAddress] = "Unknown";
@@ -75,12 +88,15 @@ class EthClient {
     return this.contractNames[contractAddress];
   }
 
-  Contract({contractAddress, abi, signer, cacheContract}) {
-    let contract = this.cachedContracts[contractAddress];
+  Contract({contractAddress, abi, cacheContract, overrideCachedContract}) {
+    let contract;
+    if(!overrideCachedContract) {
+      contract = this.cachedContracts[contractAddress];
+    }
 
     if(!contract) {
       contract = new Ethers.Contract(contractAddress, abi, this.Provider());
-      contract = contract.connect(signer);
+      contract = contract.connect(this.client.signer);
 
       // Redefine deployed to avoid making call to getCode
       contract._deployedPromise = new Promise(resolve => resolve(this));
@@ -146,7 +162,9 @@ class EthClient {
       return func.name === methodName || func.type === methodName;
     });
 
-    if(method === undefined) { throw Error("Unknown method: " + methodName); }
+    if(method === undefined) {
+      throw Error("Unknown method: " + methodName);
+    }
 
     // Format each argument
     return args.map((arg, i) => this.FormatContractArgument({type: method.inputs[i].type, value: arg}));
@@ -161,12 +179,11 @@ class EthClient {
     abi,
     bytecode,
     constructorArgs=[],
-    overrides={},
-    signer
+    overrides={}
   }) {
     this.Log(`Deploying contract with args [${constructorArgs.join(", ")}]`);
 
-    signer = signer.connect(this.Provider());
+    const signer = this.client.signer.connect(this.Provider());
     this.ValidateSigner(signer);
 
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
@@ -193,44 +210,51 @@ class EthClient {
     overrides={},
     formatArguments=true,
     cacheContract=true,
-    signer
+    overrideCachedContract=false
   }) {
-    while(this.locked) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+    if(!abi) { abi = await this.client.ContractAbi({contractAddress}); }
+
+    contract = contract || this.Contract({contractAddress, abi, cacheContract, overrideCachedContract});
+
+    abi = contract.interface.abi;
+
+    // Automatically format contract arguments
+    if(formatArguments) {
+      methodArgs = this.FormatContractArguments({
+        abi,
+        methodName,
+        args: methodArgs
+      });
     }
 
-    this.locked = true;
+    if(value) {
+      // Convert Ether to Wei
+      overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
+    }
 
-    try {
-      contract = contract || this.Contract({contractAddress, abi, signer, cacheContract});
+    if(contract.functions[methodName] === undefined) {
+      throw Error("Unknown method: " + methodName);
+    }
 
-      abi = contract.interface.abi;
-
-      // Automatically format contract arguments
-      if(formatArguments) {
-        methodArgs = this.FormatContractArguments({
-          abi,
-          methodName,
-          args: methodArgs
-        });
-      }
-
-      if(value) {
-        // Convert Ether to Wei
-        overrides.value = "0x" + Utils.EtherToWei(value.toString()).toString(16);
-      }
-
-      if(contract.functions[methodName] === undefined) {
-        throw Error("Unknown method: " + methodName);
-      }
-
-      this.Log(
-        `Calling contract method:
+    this.Log(
+      `Calling contract method:
         Address: ${contract.address}
         Method: ${methodName}
         Args: [${methodArgs.join(", ")}]`
-      );
+    );
 
+    const methodAbi = contract.interface.abi.find(method => method.name === methodName);
+
+    // Lock if performing a transaction
+    if(!methodAbi || !methodAbi.constant) {
+      while(this.locked) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
+      this.locked = true;
+    }
+
+    try {
       let result;
       let success = false;
       while(!success) {
@@ -251,7 +275,10 @@ class EthClient {
 
       return result;
     } finally {
-      this.locked = false;
+      // Unlock if performing a transaction
+      if(!methodAbi || !methodAbi.constant) {
+        this.locked = false;
+      }
     }
   }
 
@@ -263,9 +290,12 @@ class EthClient {
     value,
     timeout=10000,
     formatArguments=true,
-    signer
+    cacheContract=true,
+    overrideCachedContract=false,
   }) {
-    const contract = this.Contract({contractAddress, abi, signer});
+    if(!abi) { abi = await this.client.ContractAbi({contractAddress}); }
+
+    const contract = this.Contract({contractAddress, abi, cacheContract, overrideCachedContract});
 
     // Make method call
     const createMethodCall = await this.CallContractMethod({
@@ -275,7 +305,7 @@ class EthClient {
       methodArgs,
       value,
       formatArguments,
-      signer
+      cacheContract
     });
 
     this.Log(`Awaiting transaction completion: ${createMethodCall.hash}`);
@@ -310,8 +340,8 @@ class EthClient {
     return methodEvent;
   }
 
-  async AwaitEvent({contractAddress, abi, eventName, signer}) {
-    const contract = this.Contract({contractAddress, abi, signer});
+  async AwaitEvent({contractAddress, abi, eventName}) {
+    const contract = this.Contract({contractAddress, abi});
 
     return await new Promise(resolve => {
       contract.on(eventName, (_, __, event) => {
@@ -334,14 +364,14 @@ class EthClient {
 
   async DeployDependentContract({
     contractAddress,
-    abi,
     methodName,
     args=[],
     eventName,
-    eventValue,
-    signer
+    eventValue
   }) {
-    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs: args, signer});
+    const abi = await this.client.ContractAbi({contractAddress: this.client.contentSpaceAddress});
+
+    const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs: args});
 
     const eventLog = this.ExtractEventFromLogs({abi, event, eventName, eventValue});
 
@@ -359,89 +389,75 @@ class EthClient {
 
   /* Specific contract management */
 
-  async DeployAccessGroupContract({contentSpaceAddress, signer}) {
+  async DeployAccessGroupContract({contentSpaceAddress}) {
     return this.DeployDependentContract({
       contractAddress: contentSpaceAddress,
-      abi: ContentSpaceContract.abi,
       methodName: "createGroup",
       args: [],
       eventName: "CreateGroup",
-      eventValue: "groupAddress",
-      signer
+      eventValue: "groupAddress"
     });
   }
 
-  async DeployTypeContract({contentSpaceAddress, signer}) {
+  async DeployTypeContract({contentSpaceAddress}) {
     return this.DeployDependentContract({
       contractAddress: contentSpaceAddress,
-      abi: ContentSpaceContract.abi,
       methodName: "createContentType",
       args: [],
       eventName: "CreateContentType",
-      eventValue: "contentTypeAddress",
-      signer
+      eventValue: "contentTypeAddress"
     });
   }
 
-  async DeployLibraryContract({contentSpaceAddress, kmsId, signer}) {
+  async DeployLibraryContract({contentSpaceAddress, kmsId}) {
     const kmsAddress = Utils.HashToAddress(kmsId);
 
     return this.DeployDependentContract({
       contractAddress: contentSpaceAddress,
-      abi: ContentSpaceContract.abi,
       methodName: "createLibrary",
       args: [kmsAddress],
       eventName: "CreateLibrary",
-      eventValue: "libraryAddress",
-      signer
+      eventValue: "libraryAddress"
     });
   }
 
-  async DeployContentContract({contentLibraryAddress, typeAddress, signer}) {
+  async DeployContentContract({contentLibraryAddress, typeAddress}) {
     // If type is not specified, use null address
     typeAddress = typeAddress || Utils.nullAddress;
 
     return this.DeployDependentContract({
       contractAddress: contentLibraryAddress,
-      abi: ContentLibraryContract.abi,
       methodName: "createContent",
       args: [typeAddress],
       eventName: "ContentObjectCreated",
       eventValue: "contentAddress",
-      signer
     });
   }
 
-  async CommitContent({contentObjectAddress, versionHash, signer}) {
+  async CommitContent({contentObjectAddress, versionHash}) {
     return await this.CallContractMethodAndWait({
       contractAddress: contentObjectAddress,
-      abi: ContentContract.abi,
       methodName: "commit",
       methodArgs: [versionHash],
       eventName: "CommitPending",
       eventValue: "pendingHash",
-      signer
     });
   }
 
-  async EngageAccountLibrary({contentSpaceAddress, signer}) {
+  async EngageAccountLibrary({contentSpaceAddress}) {
     return this.CallContractMethodAndWait({
       contractAddress: contentSpaceAddress,
-      abi: ContentSpaceContract.abi,
       methodName: "engageAccountLibrary",
-      args: [],
-      signer
+      args: []
     });
   }
 
-  async SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}, signer}) {
+  async SetCustomContentContract({contentContractAddress, customContractAddress, overrides={}}) {
     return await this.CallContractMethodAndWait({
       contractAddress: contentContractAddress,
-      abi: ContentContract.abi,
       methodName: "setContentContractAddress",
       methodArgs: [customContractAddress],
-      overrides,
-      signer
+      overrides
     });
   }
 

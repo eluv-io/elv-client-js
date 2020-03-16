@@ -1,0 +1,1 @@
+const contract={"abi":[]}; module.exports=contract;
