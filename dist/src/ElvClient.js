@@ -511,7 +511,7 @@ function () {
   }, {
     key: "SetSignerFromOauthToken",
     value: function SetSignerFromOauthToken(_ref10) {
-      var token, wallet, _ref11, urls, path, httpClient, response, privateKey;
+      var token, wallet, client, _ref11, urls, path, httpClient, response, privateKey;
 
       return _regeneratorRuntime.async(function SetSignerFromOauthToken$(_context6) {
         while (1) {
@@ -527,47 +527,53 @@ function () {
               throw Error("Unable to authorize with OAuth token: No trust authority ID set");
 
             case 3:
-              wallet = this.GenerateWallet(); // Set dummy account to allow calling of contracts
+              wallet = this.GenerateWallet();
+              _context6.prev = 4;
 
-              this.SetSigner({
+              if (this.kmsURIs) {
+                _context6.next = 17;
+                break;
+              }
+
+              _context6.next = 8;
+              return _regeneratorRuntime.awrap(ElvClient.FromConfigurationUrl({
+                configUrl: this.configUrl
+              }));
+
+            case 8:
+              client = _context6.sent;
+              client.SetSigner({
                 signer: wallet.AddAccountFromMnemonic({
                   mnemonic: wallet.GenerateMnemonic()
                 })
               });
-              _context6.prev = 5;
-
-              if (this.kmsURIs) {
-                _context6.next = 14;
-                break;
-              }
-
-              _context6.next = 9;
-              return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
+              _context6.next = 12;
+              return _regeneratorRuntime.awrap(client.authClient.KMSInfo({
                 kmsId: this.trustAuthorityId
               }));
 
-            case 9:
+            case 12:
               _ref11 = _context6.sent;
               urls = _ref11.urls;
 
               if (!(!urls || urls.length === 0)) {
-                _context6.next = 13;
+                _context6.next = 16;
                 break;
               }
 
               throw Error("Unable to authorize with OAuth token: No KMS URLs set");
 
-            case 13:
+            case 16:
               this.kmsURIs = urls;
 
-            case 14:
+            case 17:
               this.oauthToken = token;
               path = "/ks/jwt/wlt";
               httpClient = new HttpClient({
                 uris: this.kmsURIs,
                 debug: this.debug
               });
-              _context6.next = 19;
+              _context6.next = 22;
               return _regeneratorRuntime.awrap(this.utils.ResponseToJson(httpClient.Request({
                 headers: {
                   Authorization: "Bearer ".concat(token)
@@ -577,7 +583,7 @@ function () {
                 forceFailover: true
               })));
 
-            case 19:
+            case 22:
               response = _context6.sent;
               privateKey = response["UserSKHex"];
               this.SetSigner({
@@ -586,30 +592,30 @@ function () {
                 })
               }); // Ensure wallet is initialized
 
-              _context6.next = 24;
+              _context6.next = 27;
               return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
-            case 24:
-              _context6.next = 33;
+            case 27:
+              _context6.next = 36;
               break;
 
-            case 26:
-              _context6.prev = 26;
-              _context6.t0 = _context6["catch"](5);
+            case 29:
+              _context6.prev = 29;
+              _context6.t0 = _context6["catch"](4);
               this.Log("Failed to set signer from OAuth token:", true);
               this.Log(_context6.t0, true);
-              _context6.next = 32;
+              _context6.next = 35;
               return _regeneratorRuntime.awrap(this.ClearSigner());
 
-            case 32:
+            case 35:
               throw _context6.t0;
 
-            case 33:
+            case 36:
             case "end":
               return _context6.stop();
           }
         }
-      }, null, this, [[5, 26]]);
+      }, null, this, [[4, 29]]);
     }
     /* FrameClient related */
     // Whitelist of methods allowed to be called using the frame API
