@@ -457,14 +457,15 @@ class ElvClient {
 
     const wallet = this.GenerateWallet();
 
-    // Set dummy account to allow calling of contracts
-    this.SetSigner({
-      signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
-    });
-
     try {
       if(!this.kmsURIs) {
-        const {urls} = await this.authClient.KMSInfo({
+        // Make dummy client with dummy account to allow calling of contracts
+        const client = await ElvClient.FromConfigurationUrl({configUrl: this.configUrl});
+        client.SetSigner({
+          signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
+        });
+
+        const {urls} = await client.authClient.KMSInfo({
           kmsId: this.trustAuthorityId
         });
 
