@@ -78,7 +78,7 @@ const Create = async ({
       }));
     } else {
       fileInfo = files.map(path => {
-        const fileDescriptor = fs.openSync(path);
+        const fileDescriptor = fs.openSync(path, "r");
         fileHandles.push(fileDescriptor);
         const size = fs.fstatSync(fileDescriptor).size;
         const mimeType = mime.lookup(path) || "video/mp4";
