@@ -70,6 +70,7 @@ const UrlJoin = require("url-join");
 
 const LibraryContract = require("../contracts/BaseLibrary");
 const ContentContract = require("../contracts/BaseContent");
+const EditableContract = require("../contracts/Editable");
 
 const {
   ValidateLibrary,
@@ -594,6 +595,48 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   );
 };
 
+exports.AwaitPending = async function(objectId) {
+  const PendingHash = async () =>
+    await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      abi: EditableContract.abi,
+      methodName: "pendingHash",
+      cacheContract: false
+    });
+
+  this.Log("Checking for pending commit");
+  const pending = await PendingHash();
+
+  if(!pending) { return; }
+
+  // Only allow 3 seconds for wallet updates because they should be fast
+  const isWallet = (await this.authClient.AccessType(objectId)) === this.authClient.ACCESS_TYPES.WALLET;
+  let timeout = isWallet ? 3 : 10;
+
+  this.Log(`Waiting for pending commit to clear for ${objectId}`);
+  for(let i = 0; i &lt; timeout; i++) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Pending hash cleared
+    if(!(await PendingHash())) {
+      return;
+    }
+  }
+
+  if(isWallet) {
+    this.Log("Clearing stuck wallet commit", true);
+    // Clear pending commit, it's probably stuck
+    await this.CallContractMethodAndWait({
+      contractAddress: this.utils.HashToAddress(objectId),
+      abi: EditableContract.abi,
+      methodName: "clearPending",
+      cacheContract: false
+    });
+  } else {
+    throw Error(`Unable to finalize ${objectId} - Another commit is pending`);
+  }
+};
+
 /**
  * Finalize content draft
  *
@@ -611,6 +654,8 @@ exports.FinalizeContentObject = async function({libraryId, objectId, writeToken,
   ValidateWriteToken(writeToken);
 
   this.Log(`Finalizing content draft: ${libraryId} ${objectId} ${writeToken}`);
+
+  await this.AwaitPending(objectId);
 
   let path = UrlJoin("q", writeToken);
 

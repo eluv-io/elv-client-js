@@ -256,6 +256,7 @@ class FrameClient {
       "AddLibraryContentType",
       "AudienceData",
       "AvailableDRMs",
+      "AwaitPending",
       "BitmovinPlayoutOptions",
       "BlockNumber",
       "CallBitcodeMethod",
