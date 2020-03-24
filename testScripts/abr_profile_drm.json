@@ -42,7 +42,14 @@
           "width": 1016
         },
         {
-          "bit_rate": 530000,
+          "bit_rate": 1070000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 846
+        },
+        {
+          "bit_rate": 690000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -81,7 +88,14 @@
           "width": 1016
         },
         {
-          "bit_rate": 530000,
+          "bit_rate": 1070000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 846
+        },
+        {
+          "bit_rate": 690000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -120,7 +134,14 @@
           "width": 864
         },
         {
-          "bit_rate": 450000,
+          "bit_rate": 910000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 720
+        },
+        {
+          "bit_rate": 580000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -159,7 +180,14 @@
           "width": 768
         },
         {
-          "bit_rate": 400000,
+          "bit_rate": 810000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 640
+        },
+        {
+          "bit_rate": 520000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -198,7 +226,14 @@
           "width": 768
         },
         {
-          "bit_rate": 400000,
+          "bit_rate": 810000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 640
+        },
+        {
+          "bit_rate": 520000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -237,7 +272,14 @@
           "width": 768
         },
         {
-          "bit_rate": 400000,
+          "bit_rate": 810000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 640
+        },
+        {
+          "bit_rate": 520000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -276,7 +318,14 @@
           "width": 648
         },
         {
-          "bit_rate": 600000,
+          "bit_rate": 680000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 540
+        },
+        {
+          "bit_rate": 440000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -315,7 +364,14 @@
           "width": 648
         },
         {
-          "bit_rate": 600000,
+          "bit_rate": 680000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 540
+        },
+        {
+          "bit_rate": 440000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -354,7 +410,14 @@
           "width": 580
         },
         {
-          "bit_rate": 300000,
+          "bit_rate": 610000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 484
+        },
+        {
+          "bit_rate": 390000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -393,7 +456,14 @@
           "width": 580
         },
         {
-          "bit_rate": 300000,
+          "bit_rate": 610000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 484
+        },
+        {
+          "bit_rate": 390000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -432,7 +502,14 @@
           "width": 580
         },
         {
-          "bit_rate": 300000,
+          "bit_rate": 610000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 484
+        },
+        {
+          "bit_rate": 390000,
           "height": 360,
           "media_type": "video",
           "pregenerate": false,
@@ -471,11 +548,18 @@
           "width": 432
         },
         {
-          "bit_rate": 400000,
-          "height": 640,
+          "bit_rate": 810000,
+          "height": 360,
           "media_type": "video",
           "pregenerate": false,
-          "width": 360
+          "width": 640
+        },
+        {
+          "bit_rate": 520000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 640
         }
       ]
     },
@@ -510,11 +594,18 @@
           "width": 432
         },
         {
-          "bit_rate": 400000,
-          "height": 640,
+          "bit_rate": 810000,
+          "height": 360,
           "media_type": "video",
           "pregenerate": false,
-          "width": 360
+          "width": 640
+        },
+        {
+          "bit_rate": 520000,
+          "height": 360,
+          "media_type": "video",
+          "pregenerate": false,
+          "width": 640
         }
       ]
     }
