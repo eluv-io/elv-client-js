@@ -375,7 +375,13 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
               hash: masterVersionHash,
               variant: variant
             },
-            "public": {},
+            "public": {
+              asset_metadata: {
+                sources: _defineProperty({}, offeringKey, {
+                  "/": "./rep/playout/".concat(offeringKey, "/options.json")
+                })
+              }
+            },
             elv_created_at: new Date().getTime()
           }, metadata || {});
 
