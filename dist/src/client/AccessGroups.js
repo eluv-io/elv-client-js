@@ -830,7 +830,7 @@ exports.RemoveContentLibraryGroup = function _callee17(_ref14) {
   }, null, this);
 };
 /**
- * List all of the groups with permissions on the specified object.
+ * List all of the groups with permissions on the specified object or content type
  *
  * @memberof module:ElvClient/AccessGroups
  * @methodGroup Object Access Groups
@@ -845,7 +845,7 @@ exports.RemoveContentLibraryGroup = function _callee17(_ref14) {
 exports.ContentObjectGroupPermissions = function _callee19(_ref15) {
   var _this4 = this;
 
-  var objectId, contractAddress, groupAddresses, groupPermissions;
+  var objectId, contractAddress, groupAddresses, isType, methodName, groupPermissions;
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
@@ -863,8 +863,18 @@ exports.ContentObjectGroupPermissions = function _callee19(_ref15) {
 
         case 6:
           groupAddresses = _context19.sent;
+          _context19.next = 9;
+          return _regeneratorRuntime.awrap(this.AccessType({
+            id: objectId
+          }));
+
+        case 9:
+          _context19.t0 = _context19.sent;
+          _context19.t1 = this.authClient.ACCESS_TYPES.TYPE;
+          isType = _context19.t0 === _context19.t1;
+          methodName = isType ? "getContentTypeRights" : "getContentObjectRights";
           groupPermissions = {};
-          _context19.next = 10;
+          _context19.next = 16;
           return _regeneratorRuntime.awrap(Promise.all(groupAddresses.map(function _callee18(groupAddress) {
             var permission, permissions;
             return _regeneratorRuntime.async(function _callee18$(_context18) {
@@ -876,7 +886,7 @@ exports.ContentObjectGroupPermissions = function _callee19(_ref15) {
                     return _regeneratorRuntime.awrap(_this4.CallContractMethod({
                       contractAddress: groupAddress,
                       abi: AccessIndexorContract.abi,
-                      methodName: "getContentObjectRights",
+                      methodName: methodName,
                       methodArgs: [contractAddress]
                     }));
 
@@ -915,10 +925,10 @@ exports.ContentObjectGroupPermissions = function _callee19(_ref15) {
             });
           })));
 
-        case 10:
+        case 16:
           return _context19.abrupt("return", groupPermissions);
 
-        case 11:
+        case 17:
         case "end":
           return _context19.stop();
       }
@@ -926,7 +936,7 @@ exports.ContentObjectGroupPermissions = function _callee19(_ref15) {
   }, null, this);
 };
 /**
- * Add a permission on the specified group for the specified object
+ * Add a permission on the specified group for the specified object or content type
  *
  * @memberof module:ElvClient/AccessGroups
  * @methodGroup Object Access Groups
@@ -938,7 +948,7 @@ exports.ContentObjectGroupPermissions = function _callee19(_ref15) {
 
 
 exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
-  var objectId, groupAddress, permission, event;
+  var objectId, groupAddress, permission, isType, methodName, event;
   return _regeneratorRuntime.async(function _callee20$(_context20) {
     while (1) {
       switch (_context20.prev = _context20.next) {
@@ -960,23 +970,33 @@ exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
         case 8:
           this.Log("Adding ".concat(permission, " permission to group ").concat(groupAddress, " for ").concat(objectId));
           _context20.next = 11;
-          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
-            contractAddress: groupAddress,
-            abi: AccessIndexorContract.abi,
-            methodName: "setContentObjectRights",
-            methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, permission === "none" ? 0 : 2]
+          return _regeneratorRuntime.awrap(this.AccessType({
+            id: objectId
           }));
 
         case 11:
+          _context20.t0 = _context20.sent;
+          _context20.t1 = this.authClient.ACCESS_TYPES.TYPE;
+          isType = _context20.t0 === _context20.t1;
+          methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
+          _context20.next = 17;
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+            contractAddress: groupAddress,
+            abi: AccessIndexorContract.abi,
+            methodName: methodName,
+            methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, permission === "none" ? 0 : 2]
+          }));
+
+        case 17:
           event = _context20.sent;
-          _context20.next = 14;
+          _context20.next = 20;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: AccessIndexorContract.abi,
             event: event,
             eventName: "RightsChanged"
           }));
 
-        case 14:
+        case 20:
         case "end":
           return _context20.stop();
       }
@@ -984,7 +1004,7 @@ exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
   }, null, this);
 };
 /**
- * Remove a permission on the specified group for the specified object
+ * Remove a permission on the specified group for the specified object or content type
  *
  * @memberof module:ElvClient/AccessGroups
  * @methodGroup Object Access Groups
@@ -996,7 +1016,7 @@ exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
 
 
 exports.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
-  var objectId, groupAddress, permission, event;
+  var objectId, groupAddress, permission, isType, methodName, event;
   return _regeneratorRuntime.async(function _callee21$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
@@ -1018,23 +1038,33 @@ exports.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
         case 8:
           this.Log("Removing ".concat(permission, " permission from group ").concat(groupAddress, " for ").concat(objectId));
           _context21.next = 11;
-          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
-            contractAddress: groupAddress,
-            abi: AccessIndexorContract.abi,
-            methodName: "setContentObjectRights",
-            methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, 0]
+          return _regeneratorRuntime.awrap(this.AccessType({
+            id: objectId
           }));
 
         case 11:
+          _context21.t0 = _context21.sent;
+          _context21.t1 = this.authClient.ACCESS_TYPES.TYPE;
+          isType = _context21.t0 === _context21.t1;
+          methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
+          _context21.next = 17;
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+            contractAddress: groupAddress,
+            abi: AccessIndexorContract.abi,
+            methodName: methodName,
+            methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, 0]
+          }));
+
+        case 17:
           event = _context21.sent;
-          _context21.next = 14;
+          _context21.next = 20;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: AccessIndexorContract.abi,
             event: event,
             eventName: "RightsChanged"
           }));
 
-        case 14:
+        case 20:
         case "end":
           return _context21.stop();
       }

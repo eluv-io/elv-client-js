@@ -496,7 +496,7 @@ exports.RemoveContentLibraryGroup = async function({libraryId, groupAddress, per
 };
 
 /**
- * List all of the groups with permissions on the specified object.
+ * List all of the groups with permissions on the specified object or content type
  *
  * @memberof module:ElvClient/AccessGroups
  * @methodGroup Object Access Groups
@@ -518,6 +518,9 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
 
   const groupAddresses = await this.Collection({collectionType: "accessGroups"});
 
+  const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
+  const methodName = isType ? "getContentTypeRights" : "getContentObjectRights";
+
   const groupPermissions = {};
   await Promise.all(
     groupAddresses.map(async groupAddress => {
@@ -526,7 +529,7 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
       let permission = await this.CallContractMethod({
         contractAddress: groupAddress,
         abi: AccessIndexorContract.abi,
-        methodName: "getContentObjectRights",
+        methodName,
         methodArgs: [contractAddress]
       });
 
@@ -554,7 +557,7 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
 };
 
 /**
- * Add a permission on the specified group for the specified object
+ * Add a permission on the specified group for the specified object or content type
  *
  * @memberof module:ElvClient/AccessGroups
  * @methodGroup Object Access Groups
@@ -577,10 +580,13 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
 
   this.Log(`Adding ${permission} permission to group ${groupAddress} for ${objectId}`);
 
+  const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
+  const methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
+
   const event = await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
     abi: AccessIndexorContract.abi,
-    methodName: "setContentObjectRights",
+    methodName,
     methodArgs: [
       this.utils.HashToAddress(objectId),
       permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
@@ -596,7 +602,7 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
 };
 
 /**
- * Remove a permission on the specified group for the specified object
+ * Remove a permission on the specified group for the specified object or content type
  *
  * @memberof module:ElvClient/AccessGroups
  * @methodGroup Object Access Groups
@@ -619,10 +625,13 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
 
   this.Log(`Removing ${permission} permission from group ${groupAddress} for ${objectId}`);
 
+  const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
+  const methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
+
   const event = await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
     abi: AccessIndexorContract.abi,
-    methodName: "setContentObjectRights",
+    methodName,
     methodArgs: [
       this.utils.HashToAddress(objectId),
       permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
