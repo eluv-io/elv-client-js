@@ -270,7 +270,15 @@ exports.CreateABRMezzanine = async function({
       hash: masterVersionHash,
       variant
     },
-    public: {},
+    public: {
+      asset_metadata: {
+        sources: {
+          [offeringKey]: {
+            "/": `./rep/playout/${offeringKey}/options.json`
+          }
+        }
+      }
+    },
     elv_created_at: new Date().getTime(),
     ...(metadata || {})
   };
