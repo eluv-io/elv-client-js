@@ -411,21 +411,18 @@ await client.userProfileClient.UserMetadata()
 
     if(!walletAddress) { return; }
 
-    const imageHash = await this.PublicUserMetadata({address, metadataSubtree: "image"});
+    const imageLink = await this.PublicUserMetadata({address, metadataSubtree: "profile_image"});
 
-    if(!imageHash) { return; }
+    if(!imageLink) { return; }
 
-    const { libraryId, objectId } = await this.UserWalletObjectInfo();
+    const { libraryId, objectId } = await this.UserWalletObjectInfo({address});
 
     if(!objectId) { return; }
 
-    return await this.client.PublicRep({
+    return await this.client.LinkUrl({
       libraryId,
       objectId,
-      rep: "image",
-      queryParams: {hash: imageHash},
-      noAuth: true,
-      channelAuth: false
+      linkPath: "public/profile_image"
     });
   }
 
@@ -438,15 +435,27 @@ await client.userProfileClient.UserMetadata()
   async SetUserProfileImage({image}) {
     this.Log(`Setting profile image for user ${this.client.signer.address}`);
 
+    const size = image.length || image.byteLength || image.size;
+    if(size > 5000000) {
+      throw Error("Maximum profile image size is 5MB");
+    }
+
     const { libraryId, objectId } = await this.UserWalletObjectInfo();
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
-    const uploadResponse = await this.client.UploadPart({
+    await this.client.UploadFiles({
       libraryId,
       objectId,
       writeToken: editRequest.write_token,
-      data: image
+      fileInfo: [
+        {
+          path: "profile_image",
+          mime_type: "image/*",
+          size,
+          data: image
+        }
+      ]
     });
 
     await this.client.MergeMetadata({
@@ -454,17 +463,11 @@ await client.userProfileClient.UserMetadata()
       objectId,
       writeToken: editRequest.write_token,
       metadata: {
-        image: uploadResponse.part.hash
-      }
-    });
-
-    await this.client.MergeMetadata({
-      libraryId,
-      objectId,
-      writeToken: editRequest.write_token,
-      metadataSubtree: "public",
-      metadata: {
-        image: uploadResponse.part.hash
+        public: {
+          profile_image: {
+            "/": "./files/profile_image"
+          }
+        }
       }
     });
 

@@ -857,7 +857,7 @@ function () {
       var _ref15,
           address,
           walletAddress,
-          imageHash,
+          imageLink,
           _ref16,
           libraryId,
           objectId,
@@ -900,13 +900,13 @@ function () {
               _context12.next = 13;
               return _regeneratorRuntime.awrap(this.PublicUserMetadata({
                 address: address,
-                metadataSubtree: "image"
+                metadataSubtree: "profile_image"
               }));
 
             case 13:
-              imageHash = _context12.sent;
+              imageLink = _context12.sent;
 
-              if (imageHash) {
+              if (imageLink) {
                 _context12.next = 16;
                 break;
               }
@@ -915,7 +915,9 @@ function () {
 
             case 16:
               _context12.next = 18;
-              return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
+              return _regeneratorRuntime.awrap(this.UserWalletObjectInfo({
+                address: address
+              }));
 
             case 18:
               _ref16 = _context12.sent;
@@ -931,15 +933,10 @@ function () {
 
             case 23:
               _context12.next = 25;
-              return _regeneratorRuntime.awrap(this.client.PublicRep({
+              return _regeneratorRuntime.awrap(this.client.LinkUrl({
                 libraryId: libraryId,
                 objectId: objectId,
-                rep: "image",
-                queryParams: {
-                  hash: imageHash
-                },
-                noAuth: true,
-                channelAuth: false
+                linkPath: "public/profile_image"
               }));
 
             case 25:
@@ -962,7 +959,7 @@ function () {
   }, {
     key: "SetUserProfileImage",
     value: function SetUserProfileImage(_ref17) {
-      var image, _ref18, libraryId, objectId, editRequest, uploadResponse;
+      var image, size, _ref18, libraryId, objectId, editRequest;
 
       return _regeneratorRuntime.async(function SetUserProfileImage$(_context13) {
         while (1) {
@@ -970,39 +967,42 @@ function () {
             case 0:
               image = _ref17.image;
               this.Log("Setting profile image for user ".concat(this.client.signer.address));
-              _context13.next = 4;
+              size = image.length || image.byteLength || image.size;
+
+              if (!(size > 5000000)) {
+                _context13.next = 5;
+                break;
+              }
+
+              throw Error("Maximum profile image size is 5MB");
+
+            case 5:
+              _context13.next = 7;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
-            case 4:
+            case 7:
               _ref18 = _context13.sent;
               libraryId = _ref18.libraryId;
               objectId = _ref18.objectId;
-              _context13.next = 9;
+              _context13.next = 12;
               return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
-            case 9:
-              editRequest = _context13.sent;
-              _context13.next = 12;
-              return _regeneratorRuntime.awrap(this.client.UploadPart({
-                libraryId: libraryId,
-                objectId: objectId,
-                writeToken: editRequest.write_token,
-                data: image
-              }));
-
             case 12:
-              uploadResponse = _context13.sent;
+              editRequest = _context13.sent;
               _context13.next = 15;
-              return _regeneratorRuntime.awrap(this.client.MergeMetadata({
+              return _regeneratorRuntime.awrap(this.client.UploadFiles({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
-                metadata: {
-                  image: uploadResponse.part.hash
-                }
+                fileInfo: [{
+                  path: "profile_image",
+                  mime_type: "image/*",
+                  size: size,
+                  data: image
+                }]
               }));
 
             case 15:
@@ -1011,9 +1011,12 @@ function () {
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
-                metadataSubtree: "public",
                 metadata: {
-                  image: uploadResponse.part.hash
+                  "public": {
+                    profile_image: {
+                      "/": "./files/profile_image"
+                    }
+                  }
                 }
               }));
 

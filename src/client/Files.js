@@ -192,14 +192,14 @@ exports.UploadFilesFromS3 = async function({
  *
  * Expected format of fileInfo:
  *
- [
- {
-        path: string,
-        mime_type: string,
-        size: number,
-        data: File | ArrayBuffer | Buffer | File Descriptor (Node)
-      }
- ]
+     [
+         {
+            path: string,
+            mime_type: string,
+            size: number,
+            data: File | ArrayBuffer | Buffer | File Descriptor (Node)
+          }
+     ]
  *
  *
  * @memberof module:ElvClient/Files+Parts
