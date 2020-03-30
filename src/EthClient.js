@@ -243,6 +243,7 @@ class EthClient {
             overrides.gasLimit = latestBlock.gasLimit;
             overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
           } else {
+            this.Log(typeof error === "object" ? JSON.stringify(error, null, 2) : error, true);
             throw error;
           }
         }

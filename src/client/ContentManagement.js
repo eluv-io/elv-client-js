@@ -15,7 +15,8 @@ const {
   ValidateObject,
   ValidateVersion,
   ValidateWriteToken,
-  ValidateParameters
+  ValidateParameters,
+  ValidatePresence
 } = require("../Validation");
 
 /* Content Type Creation */
@@ -118,6 +119,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
  * @param {string} name - Library name
  * @param {string=} description - Library description
  * @param {blob=} image - Image associated with the library
+ * @param {string=} - imageName - Name of the image associated with the library (required if image specified)
  * @param {Object=} metadata - Metadata of library object
  * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
  * the default KMS will be used.
@@ -128,6 +130,7 @@ exports.CreateContentLibrary = async function({
   name,
   description,
   image,
+  imageName,
   metadata={},
   kmsId,
 }) {
@@ -183,7 +186,8 @@ exports.CreateContentLibrary = async function({
   if(image) {
     await this.SetContentLibraryImage({
       libraryId,
-      image
+      image,
+      imageName
     });
   }
 
@@ -198,9 +202,11 @@ exports.CreateContentLibrary = async function({
  * @methodGroup Content Libraries
  * @namedParams
  * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token for the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
+ * @param {string} imageName - Name of the image file
  */
-exports.SetContentLibraryImage = async function({libraryId, image}) {
+exports.SetContentLibraryImage = async function({libraryId, writeToken, image, imageName}) {
   ValidateLibrary(libraryId);
 
   const objectId = libraryId.replace("ilib", "iq__");
@@ -208,60 +214,53 @@ exports.SetContentLibraryImage = async function({libraryId, image}) {
   return this.SetContentObjectImage({
     libraryId,
     objectId,
-    image
+    writeToken,
+    image,
+    imageName
   });
 };
 
 /**
  * Set the image associated with this object
  *
- * Note: The content type of the object must support /rep/image
- *
  * @methodGroup Content Objects
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
+ * @param {string} imageName - Name of the image file
  */
-exports.SetContentObjectImage = async function({libraryId, objectId, image}) {
+exports.SetContentObjectImage = async function({libraryId, objectId, writeToken, image, imageName}) {
   ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+  ValidatePresence("image", image);
+  ValidatePresence("imageName", imageName);
 
-  const editResponse = await this.EditContentObject({
-    libraryId,
-    objectId
-  });
-
-  const uploadResponse = await this.UploadPart({
+  await this.UploadFiles({
     libraryId,
     objectId,
-    writeToken: editResponse.write_token,
+    writeToken,
     data: image,
-    encrypted: false
+    encrypted: false,
+    fileInfo: [
+      {
+        path: imageName,
+        mime_type: "image/*",
+        size: image.size || image.length || image.byteLength,
+        data: image
+      }
+    ]
   });
 
-  await this.MergeMetadata({
+  await this.ReplaceMetadata({
     libraryId,
     objectId,
-    writeToken: editResponse.write_token,
+    writeToken,
+    metadataSubtree: "public/display_image",
     metadata: {
-      "image": uploadResponse.part.hash,
+      "/": `./files/${imageName}`
     }
-  });
-
-  await this.MergeMetadata({
-    libraryId,
-    objectId,
-    writeToken: editResponse.write_token,
-    metadataSubtree: "public",
-    metadata: {
-      "image": uploadResponse.part.hash,
-    }
-  });
-
-  await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken: editResponse.write_token
   });
 };
 
