@@ -14,7 +14,6 @@ const LibraryContract = require("../contracts/BaseLibrary");
 const ContentContract = require("../contracts/BaseContent");
 const ContentTypeContract = require("../contracts/BaseContentType");
 
-
 const {
   ValidateLibrary,
   ValidateObject,
@@ -706,10 +705,12 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
 
   ValidateObject(objectId);
 
+  // TODO: Remove cache contract bit
   return await this.CallContractMethod({
     contractAddress: this.utils.HashToAddress(objectId),
     abi: ContentContract.abi,
-    methodName: "objectHash"
+    methodName: "objectHash",
+    cacheContract: false
   });
 };
 
@@ -1256,6 +1257,43 @@ exports.FileUrl = async function({libraryId, objectId, versionHash, writeToken, 
       authorization: authorizationToken
     }
   });
+};
+
+/**
+ * Get the image URL for the specified object
+ *
+ * @methodGroup URL Generation
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is used
+ *
+ * @returns {Promise<string | undefined>} - If the object has an image, will return a URL for that image.
+ */
+exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
+  }
+
+  this.Log(`Retrieving content object image url: ${libraryId} ${objectId} ${versionHash}`);
+
+  if(!this.objectImageUrls[versionHash]) {
+    const imageMetadata = await this.ContentObjectMetadata({versionHash, metadataSubtree: "public/display_image"});
+
+    if(!imageMetadata) {
+      this.Log(`No image url set: ${libraryId} ${objectId} ${versionHash}`);
+      return;
+    }
+
+    this.objectImageUrls[versionHash] = await this.LinkUrl({
+      versionHash,
+      linkPath: "public/display_image"
+    });
+  }
+
+  return this.objectImageUrls[versionHash];
 };
 
 /* Links */

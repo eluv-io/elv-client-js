@@ -152,6 +152,7 @@ function () {
       this.reencryptionConks = {};
       this.stateChannelAccess = {};
       this.objectLibraryIds = {};
+      this.objectImageUrls = {};
       this.HttpClient = new HttpClient({
         uris: this.fabricURIs,
         debug: this.debug

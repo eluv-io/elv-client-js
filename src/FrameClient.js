@@ -272,6 +272,7 @@ class FrameClient {
       "ContentObjectAccessComplete",
       "ContentObjectGraph",
       "ContentObjectGroupPermissions",
+      "ContentObjectImageUrl",
       "ContentObjectLibraryId",
       "ContentObjectMetadata",
       "ContentObjectOwner",

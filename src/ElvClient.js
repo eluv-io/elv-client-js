@@ -215,6 +215,7 @@ class ElvClient {
     this.reencryptionConks = {};
     this.stateChannelAccess = {};
     this.objectLibraryIds = {};
+    this.objectImageUrls = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
     this.ethClient = new EthClient({uris: this.ethereumURIs, debug: this.debug});

@@ -26,7 +26,8 @@ var _require = require("../Validation"),
     ValidateObject = _require.ValidateObject,
     ValidateVersion = _require.ValidateVersion,
     ValidateWriteToken = _require.ValidateWriteToken,
-    ValidateParameters = _require.ValidateParameters;
+    ValidateParameters = _require.ValidateParameters,
+    ValidatePresence = _require.ValidatePresence;
 /* Content Type Creation */
 
 /**
@@ -166,6 +167,7 @@ exports.CreateContentType = function _callee(_ref) {
  * @param {string} name - Library name
  * @param {string=} description - Library description
  * @param {blob=} image - Image associated with the library
+ * @param {string=} - imageName - Name of the image associated with the library (required if image specified)
  * @param {Object=} metadata - Metadata of library object
  * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
  * the default KMS will be used.
@@ -175,13 +177,13 @@ exports.CreateContentType = function _callee(_ref) {
 
 
 exports.CreateContentLibrary = function _callee2(_ref3) {
-  var name, description, image, _ref3$metadata, metadata, kmsId, _ref4, contractAddress, libraryId, objectId, editResponse;
+  var name, description, image, imageName, _ref3$metadata, metadata, kmsId, _ref4, contractAddress, libraryId, objectId, editResponse;
 
   return _regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
-          name = _ref3.name, description = _ref3.description, image = _ref3.image, _ref3$metadata = _ref3.metadata, metadata = _ref3$metadata === void 0 ? {} : _ref3$metadata, kmsId = _ref3.kmsId;
+          name = _ref3.name, description = _ref3.description, image = _ref3.image, imageName = _ref3.imageName, _ref3$metadata = _ref3.metadata, metadata = _ref3$metadata === void 0 ? {} : _ref3$metadata, kmsId = _ref3.kmsId;
 
           if (kmsId) {
             _context2.next = 9;
@@ -258,7 +260,8 @@ exports.CreateContentLibrary = function _callee2(_ref3) {
           _context2.next = 30;
           return _regeneratorRuntime.awrap(this.SetContentLibraryImage({
             libraryId: libraryId,
-            image: image
+            image: image,
+            imageName: imageName
           }));
 
         case 30:
@@ -278,23 +281,27 @@ exports.CreateContentLibrary = function _callee2(_ref3) {
  * @methodGroup Content Libraries
  * @namedParams
  * @param {string} libraryId - ID of the library
+ * @param {string} writeToken - Write token for the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
+ * @param {string} imageName - Name of the image file
  */
 
 
 exports.SetContentLibraryImage = function _callee3(_ref5) {
-  var libraryId, image, objectId;
+  var libraryId, writeToken, image, imageName, objectId;
   return _regeneratorRuntime.async(function _callee3$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
-          libraryId = _ref5.libraryId, image = _ref5.image;
+          libraryId = _ref5.libraryId, writeToken = _ref5.writeToken, image = _ref5.image, imageName = _ref5.imageName;
           ValidateLibrary(libraryId);
           objectId = libraryId.replace("ilib", "iq__");
           return _context3.abrupt("return", this.SetContentObjectImage({
             libraryId: libraryId,
             objectId: objectId,
-            image: image
+            writeToken: writeToken,
+            image: image,
+            imageName: imageName
           }));
 
         case 4:
@@ -307,77 +314,58 @@ exports.SetContentLibraryImage = function _callee3(_ref5) {
 /**
  * Set the image associated with this object
  *
- * Note: The content type of the object must support /rep/image
- *
  * @methodGroup Content Objects
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
+ * @param {string} imageName - Name of the image file
  */
 
 
 exports.SetContentObjectImage = function _callee4(_ref6) {
-  var libraryId, objectId, image, editResponse, uploadResponse;
+  var libraryId, objectId, writeToken, image, imageName;
   return _regeneratorRuntime.async(function _callee4$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          libraryId = _ref6.libraryId, objectId = _ref6.objectId, image = _ref6.image;
+          libraryId = _ref6.libraryId, objectId = _ref6.objectId, writeToken = _ref6.writeToken, image = _ref6.image, imageName = _ref6.imageName;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
           });
-          _context4.next = 4;
-          return _regeneratorRuntime.awrap(this.EditContentObject({
-            libraryId: libraryId,
-            objectId: objectId
-          }));
-
-        case 4:
-          editResponse = _context4.sent;
+          ValidateWriteToken(writeToken);
+          ValidatePresence("image", image);
+          ValidatePresence("imageName", imageName);
           _context4.next = 7;
-          return _regeneratorRuntime.awrap(this.UploadPart({
+          return _regeneratorRuntime.awrap(this.UploadFiles({
             libraryId: libraryId,
             objectId: objectId,
-            writeToken: editResponse.write_token,
+            writeToken: writeToken,
             data: image,
-            encrypted: false
+            encrypted: false,
+            fileInfo: [{
+              path: imageName,
+              mime_type: "image/*",
+              size: image.size || image.length || image.byteLength,
+              data: image
+            }]
           }));
 
         case 7:
-          uploadResponse = _context4.sent;
-          _context4.next = 10;
-          return _regeneratorRuntime.awrap(this.MergeMetadata({
+          _context4.next = 9;
+          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
-            writeToken: editResponse.write_token,
+            writeToken: writeToken,
+            metadataSubtree: "public/display_image",
             metadata: {
-              "image": uploadResponse.part.hash
+              "/": "./files/".concat(imageName)
             }
           }));
 
-        case 10:
-          _context4.next = 12;
-          return _regeneratorRuntime.awrap(this.MergeMetadata({
-            libraryId: libraryId,
-            objectId: objectId,
-            writeToken: editResponse.write_token,
-            metadataSubtree: "public",
-            metadata: {
-              "image": uploadResponse.part.hash
-            }
-          }));
-
-        case 12:
-          _context4.next = 14;
-          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
-            libraryId: libraryId,
-            objectId: objectId,
-            writeToken: editResponse.write_token
-          }));
-
-        case 14:
+        case 9:
         case "end":
           return _context4.stop();
       }

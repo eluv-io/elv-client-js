@@ -375,7 +375,7 @@ function () {
 
             case 16:
               if (success) {
-                _context4.next = 37;
+                _context4.next = 38;
                 break;
               }
 
@@ -386,7 +386,7 @@ function () {
             case 20:
               result = _context4.sent;
               success = true;
-              _context4.next = 35;
+              _context4.next = 36;
               break;
 
             case 24:
@@ -408,30 +408,31 @@ function () {
               latestBlock = _context4.sent;
               overrides.gasLimit = latestBlock.gasLimit;
               overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-              _context4.next = 35;
+              _context4.next = 36;
               break;
 
             case 34:
+              this.Log(_typeof(_context4.t0) === "object" ? JSON.stringify(_context4.t0, null, 2) : _context4.t0, true);
               throw _context4.t0;
 
-            case 35:
+            case 36:
               _context4.next = 16;
               break;
 
-            case 37:
+            case 38:
               return _context4.abrupt("return", result);
 
-            case 38:
-              _context4.prev = 38;
+            case 39:
+              _context4.prev = 39;
               this.locked = false;
-              return _context4.finish(38);
+              return _context4.finish(39);
 
-            case 41:
+            case 42:
             case "end":
               return _context4.stop();
           }
         }
-      }, null, this, [[7,, 38, 41], [17, 24]]);
+      }, null, this, [[7,, 39, 42], [17, 24]]);
     }
   }, {
     key: "CallContractMethodAndWait",
