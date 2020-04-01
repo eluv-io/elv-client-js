@@ -1242,12 +1242,12 @@ function () {
   }, {
     key: "Owner",
     value: function Owner(_ref22) {
-      var id, ownerAddress;
+      var id, address, ownerAddress;
       return _regeneratorRuntime.async(function Owner$(_context16) {
         while (1) {
           switch (_context16.prev = _context16.next) {
             case 0:
-              id = _ref22.id;
+              id = _ref22.id, address = _ref22.address;
 
               if (this.client.signer) {
                 _context16.next = 3;
@@ -1257,18 +1257,22 @@ function () {
               return _context16.abrupt("return", false);
 
             case 3:
-              _context16.next = 5;
+              if (id) {
+                address = Utils.HashToAddress(id);
+              }
+
+              _context16.next = 6;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
-                contractAddress: Utils.HashToAddress(id),
+                contractAddress: address,
                 methodName: "owner",
                 methodArgs: []
               }));
 
-            case 5:
+            case 6:
               ownerAddress = _context16.sent;
               return _context16.abrupt("return", Utils.FormatAddress(ownerAddress));
 
-            case 7:
+            case 8:
             case "end":
               return _context16.stop();
           }

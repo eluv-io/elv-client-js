@@ -33,7 +33,7 @@ exports.AccessGroupOwner = async function({contractAddress}) {
 
   this.Log(`Retrieving owner of access group ${contractAddress}`);
 
-  return await this.authClient.Owner({id});
+  return await this.authClient.Owner({address: contractAddress});
 };
 
 /**
@@ -208,7 +208,9 @@ exports.AccessGroupMembershipMethod = async function({
     eventValue: "candidate",
   });
 
+  const abi = await this.ContractAbi({contractAddress});
   const candidate = this.ExtractValueFromEvent({
+    abi,
     event,
     eventName,
     eventValue: "candidate"
@@ -428,7 +430,9 @@ exports.AddContentLibraryGroup = async function({libraryId, groupAddress, permis
     methodArgs: [this.utils.FormatAddress(groupAddress)]
   });
 
+  const abi = await this.ContractAbi({id: libraryId});
   await this.ExtractEventFromLogs({
+    abi,
     event,
     eventName: `${permission}GroupAdded`
   });
@@ -464,14 +468,13 @@ exports.RemoveContentLibraryGroup = async function({libraryId, groupAddress, per
   // Capitalize permission to match method and event names
   permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
 
-  const abi = await this.ContractAbi({id: libraryId});
   const event = await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
-    abi,
     methodName: `remove${permission}Group`,
     methodArgs: [this.utils.FormatAddress(groupAddress)]
   });
 
+  const abi = await this.ContractAbi({id: libraryId});
   await this.ExtractEventFromLogs({
     abi,
     event,
@@ -566,10 +569,8 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
   const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
   const methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
 
-  const { abi } = await this.ContractAbi({contractAddress: groupAddress});
   const event = await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
-    abi,
     methodName,
     methodArgs: [
       this.utils.HashToAddress(objectId),
@@ -578,6 +579,7 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
     ]
   });
 
+  const abi = await this.ContractAbi({contractAddress: groupAddress});
   await this.ExtractEventFromLogs({
     abi,
     event,
@@ -612,10 +614,8 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
   const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
   const methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
 
-  const { abi } = await this.ContractAbi({contractAddress: groupAddress});
   const event = await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
-    abi,
     methodName,
     methodArgs: [
       this.utils.HashToAddress(objectId),
@@ -624,6 +624,7 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
     ]
   });
 
+  const abi = await this.ContractAbi({contractAddress: groupAddress});
   await this.ExtractEventFromLogs({
     abi,
     event,

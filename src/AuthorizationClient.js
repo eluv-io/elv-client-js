@@ -712,11 +712,15 @@ class AuthorizationClient {
     return info[2];
   }
 
-  async Owner({id}) {
+  async Owner({id, address}) {
     if(!this.client.signer) { return false; }
 
+    if(id) {
+      address = Utils.HashToAddress(id);
+    }
+
     const ownerAddress = await this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(id),
+      contractAddress: address,
       methodName: "owner",
       methodArgs: []
     });

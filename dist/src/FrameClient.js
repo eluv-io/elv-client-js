@@ -53,12 +53,15 @@ function () {
     var _this = this;
 
     var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
-        _ref$target = _ref.target,
-        target = _ref$target === void 0 ? parent : _ref$target,
+        target = _ref.target,
         _ref$timeout = _ref.timeout,
         timeout = _ref$timeout === void 0 ? 30 : _ref$timeout;
 
     _classCallCheck(this, FrameClient);
+
+    if (!target && typeof window !== "undefined" && window.parent) {
+      target = window.parent;
+    }
 
     this.target = target;
     this.timeout = timeout;

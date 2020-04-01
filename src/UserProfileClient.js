@@ -98,7 +98,9 @@ await client.userProfileClient.UserMetadata()
           methodArgs: []
         });
 
+        const abi = await this.client.ContractAbi({contractAddress: this.client.contentSpaceAddress});
         this.walletAddress = this.client.ExtractValueFromEvent({
+          abi,
           event: walletCreationEvent,
           eventName: "CreateAccessWallet",
           eventValue: "wallet"
