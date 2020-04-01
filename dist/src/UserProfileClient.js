@@ -12,8 +12,11 @@ var UrlJoin = require("url-join");
 
 var _require = require("./FrameClient"),
     FrameClient = _require.FrameClient;
+/*
+const SpaceContract = require("./contracts/BaseContentSpace");
 
-var SpaceContract = require("./contracts/BaseContentSpace");
+ */
+
 
 var UserProfileClient =
 /*#__PURE__*/
@@ -95,7 +98,7 @@ function () {
   _createClass(UserProfileClient, [{
     key: "CreateWallet",
     value: function CreateWallet() {
-      var balance, walletCreationEvent, libraryId, objectId, createResponse;
+      var balance, walletCreationEvent, abi, libraryId, objectId, createResponse;
       return _regeneratorRuntime.async(function CreateWallet$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
@@ -125,7 +128,7 @@ function () {
               _context.prev = 7;
 
               if (!(!this.walletAddress || Utils.EqualAddress(this.walletAddress, Utils.nullAddress))) {
-                _context.next = 20;
+                _context.next = 23;
                 break;
               }
 
@@ -150,55 +153,61 @@ function () {
               _context.next = 17;
               return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-                abi: SpaceContract.abi,
                 methodName: "createAccessWallet",
                 methodArgs: []
               }));
 
             case 17:
               walletCreationEvent = _context.sent;
+              _context.next = 20;
+              return _regeneratorRuntime.awrap(this.client.ContractAbi({
+                contractAddress: this.client.contentSpaceAddress
+              }));
+
+            case 20:
+              abi = _context.sent;
               this.walletAddress = this.client.ExtractValueFromEvent({
-                abi: SpaceContract.abi,
+                abi: abi,
                 event: walletCreationEvent,
                 eventName: "CreateAccessWallet",
                 eventValue: "wallet"
               });
               this.userWalletAddresses[Utils.FormatAddress(this.client.signer.address)] = this.walletAddress;
 
-            case 20:
+            case 23:
               // Check if wallet object is created
               libraryId = this.client.contentSpaceLibraryId;
               objectId = Utils.AddressToObjectId(this.walletAddress);
-              _context.prev = 22;
-              _context.next = 25;
+              _context.prev = 25;
+              _context.next = 28;
               return _regeneratorRuntime.awrap(this.client.ContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
-            case 25:
-              _context.next = 38;
+            case 28:
+              _context.next = 41;
               break;
 
-            case 27:
-              _context.prev = 27;
-              _context.t0 = _context["catch"](22);
+            case 30:
+              _context.prev = 30;
+              _context.t0 = _context["catch"](25);
 
               if (!(_context.t0.status === 404)) {
-                _context.next = 38;
+                _context.next = 41;
                 break;
               }
 
               this.Log("Creating wallet object for user ".concat(this.client.signer.address));
-              _context.next = 33;
+              _context.next = 36;
               return _regeneratorRuntime.awrap(this.client.CreateContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
-            case 33:
+            case 36:
               createResponse = _context.sent;
-              _context.next = 36;
+              _context.next = 39;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -209,37 +218,37 @@ function () {
                 }
               }));
 
-            case 36:
-              _context.next = 38;
+            case 39:
+              _context.next = 41;
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: createResponse.write_token
               }));
 
-            case 38:
-              _context.next = 44;
+            case 41:
+              _context.next = 47;
               break;
 
-            case 40:
-              _context.prev = 40;
+            case 43:
+              _context.prev = 43;
               _context.t1 = _context["catch"](7);
               // eslint-disable-next-line no-console
               console.error("Failed to create wallet contract:"); // eslint-disable-next-line no-console
 
               console.error(_context.t1);
 
-            case 44:
-              _context.prev = 44;
-              this.creatingWallet = false;
-              return _context.finish(44);
-
             case 47:
+              _context.prev = 47;
+              this.creatingWallet = false;
+              return _context.finish(47);
+
+            case 50:
             case "end":
               return _context.stop();
           }
         }
-      }, null, this, [[7, 40, 44, 47], [22, 27]]);
+      }, null, this, [[7, 43, 47, 50], [25, 30]]);
     }
     /**
      * Get the contract address of the current user's BaseAccessWallet contract
@@ -265,7 +274,6 @@ function () {
             case 2:
               _context2.next = 4;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
-                abi: SpaceContract.abi,
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                 methodName: "userWallets",
                 methodArgs: [this.client.signer.address]
@@ -335,7 +343,6 @@ function () {
               this.Log("Retrieving user wallet address for user ".concat(address));
               _context3.next = 9;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
-                abi: SpaceContract.abi,
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                 methodName: "userWallets",
                 methodArgs: [address]

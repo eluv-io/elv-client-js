@@ -112,18 +112,18 @@ describe("Test UserProfileClient", () => {
   test("User Profile Image", async () => {
     const image = BufferToArrayBuffer(fs.readFileSync("test/files/test-image1.png"));
     await client.userProfileClient.SetUserProfileImage({image});
-    const oldImageHash = await client.userProfileClient.UserMetadata({metadataSubtree: "image"});
-    expect(oldImageHash).toBeDefined();
+    const oldImage = await client.userProfileClient.PublicUserMetadata({address: client.signer.address, metadataSubtree: "profile_image"});
+    expect(oldImage).toBeDefined();
 
     const oldImageUrl = await client.userProfileClient.UserProfileImage();
     expect(oldImageUrl).toBeDefined();
 
-    const newImage = BufferToArrayBuffer(fs.readFileSync("test/files/test-image2.png"));
-    await client.userProfileClient.SetUserProfileImage({image: newImage});
+    const image2 = BufferToArrayBuffer(fs.readFileSync("test/files/test-image2.png"));
+    await client.userProfileClient.SetUserProfileImage({image: image2});
 
-    const newImageHash = await client.userProfileClient.UserMetadata({metadataSubtree: "image"});
-    expect(newImageHash).toBeDefined();
-    expect(newImageHash).not.toEqual(oldImageHash);
+    const newImage = await client.userProfileClient.PublicUserMetadata({address: client.signer.address, metadataSubtree: "profile_image"});
+    expect(newImage).toBeDefined();
+    expect(newImage).not.toEqual(oldImage);
 
     const newImageUrl = await client.userProfileClient.UserProfileImage({address: client.signer.address});
     expect(newImageUrl).toBeDefined();

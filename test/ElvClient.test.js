@@ -19,9 +19,8 @@ const Fetch = (input, init={}) => {
 
 const UrlJoin = require("url-join");
 const URI = require("urijs");
-const BaseLibraryContract = require("../src/contracts/BaseLibrary");
-const BaseContentContract = require("../src/contracts/BaseContent");
-const CustomContract = require("../src/contracts/SampleContentLicensing");
+
+//const CustomContract = require("../src/contracts/SampleContentLicensing");
 
 const {ElvClient} = require("../src/ElvClient");
 
@@ -1881,11 +1880,9 @@ describe("Test ElvClient", () => {
 
   describe("Access Requests", () => {
     test("Access Charge and Info", async () => {
-      await client.CallContractMethod({
-        abi: BaseContentContract.abi,
-        contractAddress: client.utils.HashToAddress(objectId),
-        methodName: "setVisibility",
-        methodArgs: [10]
+      await client.SetVisibility({
+        id: objectId,
+        visibility: 10
       });
 
       await client.SetAccessCharge({objectId, accessCharge: "0.5"});
@@ -1952,7 +1949,6 @@ describe("Test ElvClient", () => {
     test("Contract Events", async () => {
       const events = await client.ContractEvents({
         contractAddress: client.utils.HashToAddress(libraryId),
-        abi: BaseLibraryContract.abi
       });
 
       expect(events).toBeDefined();
@@ -1980,8 +1976,9 @@ describe("Test ElvClient", () => {
 
       expect(event).toBeDefined();
 
+      const abi = await client.ContractAbi({id: objectId});
       const eventLog = client.ExtractEventFromLogs({
-        abi: BaseContentContract.abi,
+        abi,
         event,
         eventName: "SetContentContract"
       });
