@@ -48,7 +48,7 @@ exports.AccessGroupOwner = function _callee(_ref) {
           this.Log("Retrieving owner of access group ".concat(contractAddress));
           _context.next = 5;
           return _regeneratorRuntime.awrap(this.authClient.Owner({
-            id: id
+            address: contractAddress
           }));
 
         case 5:
@@ -316,7 +316,7 @@ exports.DeleteAccessGroup = function _callee7(_ref6) {
 };
 
 exports.AccessGroupMembershipMethod = function _callee8(_ref7) {
-  var contractAddress, memberAddress, methodName, eventName, isManager, event, candidate;
+  var contractAddress, memberAddress, methodName, eventName, isManager, event, abi, candidate;
   return _regeneratorRuntime.async(function _callee8$(_context8) {
     while (1) {
       switch (_context8.prev = _context8.next) {
@@ -360,14 +360,22 @@ exports.AccessGroupMembershipMethod = function _callee8(_ref7) {
 
         case 12:
           event = _context8.sent;
+          _context8.next = 15;
+          return _regeneratorRuntime.awrap(this.ContractAbi({
+            contractAddress: contractAddress
+          }));
+
+        case 15:
+          abi = _context8.sent;
           candidate = this.ExtractValueFromEvent({
+            abi: abi,
             event: event,
             eventName: eventName,
             eventValue: "candidate"
           });
 
           if (!(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress))) {
-            _context8.next = 17;
+            _context8.next = 20;
             break;
           }
 
@@ -375,10 +383,10 @@ exports.AccessGroupMembershipMethod = function _callee8(_ref7) {
           console.error("Mismatch: " + candidate + " :: " + memberAddress);
           throw Error("Access group method " + methodName + " failed");
 
-        case 17:
+        case 20:
           return _context8.abrupt("return", event.transactionHash);
 
-        case 18:
+        case 21:
         case "end":
           return _context8.stop();
       }
@@ -678,7 +686,7 @@ exports.ContentLibraryGroupPermissions = function _callee15(_ref12) {
 
 
 exports.AddContentLibraryGroup = function _callee16(_ref13) {
-  var libraryId, groupAddress, permission, existingPermissions, event;
+  var libraryId, groupAddress, permission, existingPermissions, event, abi;
   return _regeneratorRuntime.async(function _callee16$(_context16) {
     while (1) {
       switch (_context16.prev = _context16.next) {
@@ -726,12 +734,20 @@ exports.AddContentLibraryGroup = function _callee16(_ref13) {
         case 15:
           event = _context16.sent;
           _context16.next = 18;
+          return _regeneratorRuntime.awrap(this.ContractAbi({
+            id: libraryId
+          }));
+
+        case 18:
+          abi = _context16.sent;
+          _context16.next = 21;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
+            abi: abi,
             event: event,
             eventName: "".concat(permission, "GroupAdded")
           }));
 
-        case 18:
+        case 21:
         case "end":
           return _context16.stop();
       }
@@ -751,7 +767,7 @@ exports.AddContentLibraryGroup = function _callee16(_ref13) {
 
 
 exports.RemoveContentLibraryGroup = function _callee17(_ref14) {
-  var libraryId, groupAddress, permission, existingPermissions, abi, event;
+  var libraryId, groupAddress, permission, existingPermissions, event, abi;
   return _regeneratorRuntime.async(function _callee17$(_context17) {
     while (1) {
       switch (_context17.prev = _context17.next) {
@@ -789,22 +805,21 @@ exports.RemoveContentLibraryGroup = function _callee17(_ref14) {
           // Capitalize permission to match method and event names
           permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
           _context17.next = 14;
-          return _regeneratorRuntime.awrap(this.ContractAbi({
-            id: libraryId
-          }));
-
-        case 14:
-          abi = _context17.sent;
-          _context17.next = 17;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(libraryId),
-            abi: abi,
             methodName: "remove".concat(permission, "Group"),
             methodArgs: [this.utils.FormatAddress(groupAddress)]
           }));
 
-        case 17:
+        case 14:
           event = _context17.sent;
+          _context17.next = 17;
+          return _regeneratorRuntime.awrap(this.ContractAbi({
+            id: libraryId
+          }));
+
+        case 17:
+          abi = _context17.sent;
           _context17.next = 20;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: abi,
@@ -937,8 +952,7 @@ exports.ContentObjectGroupPermissions = function _callee19(_ref15) {
 
 
 exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
-  var objectId, groupAddress, permission, isType, methodName, _ref17, abi, event;
-
+  var objectId, groupAddress, permission, isType, methodName, event, abi;
   return _regeneratorRuntime.async(function _callee20$(_context20) {
     while (1) {
       switch (_context20.prev = _context20.next) {
@@ -970,31 +984,29 @@ exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
           isType = _context20.t0 === _context20.t1;
           methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
           _context20.next = 17;
-          return _regeneratorRuntime.awrap(this.ContractAbi({
-            contractAddress: groupAddress
-          }));
-
-        case 17:
-          _ref17 = _context20.sent;
-          abi = _ref17.abi;
-          _context20.next = 21;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: groupAddress,
-            abi: abi,
             methodName: methodName,
             methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, permission === "none" ? 0 : 2]
           }));
 
-        case 21:
+        case 17:
           event = _context20.sent;
-          _context20.next = 24;
+          _context20.next = 20;
+          return _regeneratorRuntime.awrap(this.ContractAbi({
+            contractAddress: groupAddress
+          }));
+
+        case 20:
+          abi = _context20.sent;
+          _context20.next = 23;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: abi,
             event: event,
             eventName: "RightsChanged"
           }));
 
-        case 24:
+        case 23:
         case "end":
           return _context20.stop();
       }
@@ -1013,14 +1025,13 @@ exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
  */
 
 
-exports.RemoveContentObjectGroupPermission = function _callee21(_ref18) {
-  var objectId, groupAddress, permission, isType, methodName, _ref19, abi, event;
-
+exports.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
+  var objectId, groupAddress, permission, isType, methodName, event, abi;
   return _regeneratorRuntime.async(function _callee21$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
         case 0:
-          objectId = _ref18.objectId, groupAddress = _ref18.groupAddress, permission = _ref18.permission;
+          objectId = _ref17.objectId, groupAddress = _ref17.groupAddress, permission = _ref17.permission;
           ValidatePresence("permission", permission);
           ValidateObject(objectId);
           ValidateAddress(groupAddress);
@@ -1047,31 +1058,29 @@ exports.RemoveContentObjectGroupPermission = function _callee21(_ref18) {
           isType = _context21.t0 === _context21.t1;
           methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
           _context21.next = 17;
-          return _regeneratorRuntime.awrap(this.ContractAbi({
-            contractAddress: groupAddress
-          }));
-
-        case 17:
-          _ref19 = _context21.sent;
-          abi = _ref19.abi;
-          _context21.next = 21;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: groupAddress,
-            abi: abi,
             methodName: methodName,
             methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, 0]
           }));
 
-        case 21:
+        case 17:
           event = _context21.sent;
-          _context21.next = 24;
+          _context21.next = 20;
+          return _regeneratorRuntime.awrap(this.ContractAbi({
+            contractAddress: groupAddress
+          }));
+
+        case 20:
+          abi = _context21.sent;
+          _context21.next = 23;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: abi,
             event: event,
             eventName: "RightsChanged"
           }));
 
-        case 24:
+        case 23:
         case "end":
           return _context21.stop();
       }
