@@ -52,9 +52,6 @@ const CONTRACTS = {
   }
 };
 
-const V2_ACCESS_ABI = [{"constant":false,"inputs":[],"name":"accessRequest","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[],"name":"AccessRequest","type":"event"}];
-const V2_CONTENT_ACCESS_ABI = [{"anonymous":false,"inputs":[{"indexed":false,"name":"spaceAddress","type":"address"},{"indexed":false,"name":"objectHash","type":"string"}],"name":"VersionConfirm","type":"event"},{"constant":false,"inputs":[{"name":"level","type":"uint8"},{"name":"pke_requestor","type":"string"},{"name":"pke_AFGH","type":"string"},{"name":"custom_values","type":"bytes32[]"},{"name":"stakeholders","type":"address[]"}],"name":"accessRequest","outputs":[{"name":"","type":"uint256"}],"payable":true,"stateMutability":"payable","type":"function"},{"anonymous":false,"inputs":[{"indexed":false,"name":"requestID","type":"uint256"},{"indexed":false,"name":"level","type":"uint8"},{"indexed":false,"name":"contentHash","type":"string"},{"indexed":false,"name":"pkeRequestor","type":"string"},{"indexed":false,"name":"pkeAFGH","type":"string"}],"name":"AccessRequest","type":"event"}];
-
 class AuthorizationClient {
   Log(message, error=false) {
     if(!this.debug) { return; }
@@ -80,8 +77,6 @@ class AuthorizationClient {
     this.noAuth = noAuth;
     this.debug = debug;
 
-    this.contractAbis = {};
-
     this.accessTransactions = {
       spaces: {},
       libraries: {},
@@ -104,6 +99,9 @@ class AuthorizationClient {
       other: {}
     };
 
+    this.methodAvailability = {};
+    this.accessVersions = {};
+    this.accessTypes = {};
     this.channelContentTokens = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
@@ -251,7 +249,7 @@ class AuthorizationClient {
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
     const id = objectId || libraryId || this.contentSpaceId;
-    const { isV3, accessType, abi } = await this.ContractAbi({id});
+    const { isV3, accessType, abi } = await this.ContractInfo({id});
     const { cache, accessArgs, checkAccessCharge } = await this.AccessInfo({
       accessType,
       publicKey,
@@ -301,7 +299,7 @@ class AuthorizationClient {
   }
 
   async AccessRequest({id, args=[], checkAccessCharge=false}) {
-    const { isV3, accessType, abi } = await this.ContractAbi({id});
+    const { isV3, accessType, abi } = await this.ContractInfo({id});
 
     // Send some bux if access charge is required
     let accessCharge = 0;
@@ -320,24 +318,26 @@ class AuthorizationClient {
       this.Log(`Access charge: ${accessCharge}`);
     }
 
-    let event;
+    let event, methodName;
+    const contractAddress = Utils.HashToAddress(id);
     if(isV3) {
-      event = await this.client.CallContractMethodAndWait({
-        contractAddress: Utils.HashToAddress(id),
-        abi,
-        methodName: "accessRequestV3",
-        methodArgs: args,
-        value: accessCharge
-      });
+      methodName = "accessRequestV3";
     } else {
-      event = await this.client.CallContractMethodAndWait({
-        contractAddress: Utils.HashToAddress(id),
-        abi,
-        methodName: "accessRequest",
-        methodArgs: args,
-        value: accessCharge
-      });
+      methodName = "accessRequest";
     }
+
+    if(!(await this.ContractHasMethod({contractAddress, abi, methodName}))) {
+      this.Log(`${accessType} ${id} has no ${methodName} method. Skipping`);
+      return { transactionHash: "", logs: [] };
+    }
+
+    event = await this.client.CallContractMethodAndWait({
+      contractAddress,
+      abi,
+      methodName,
+      methodArgs: args,
+      value: accessCharge
+    });
 
     // If access request did not succeed, no event will be emitted
     if(event.logs.length === 0) {
@@ -523,11 +523,15 @@ class AuthorizationClient {
   }
 
   async IsV3({id}) {
-    return await this.ContractHasMethod({
-      contractAddress: this.client.utils.HashToAddress(id),
-      abi: this.CONTRACTS.v3[this.ACCESS_TYPES.ACCESSIBLE].abi,
-      methodName: "accessRequestV3"
-    });
+    if(!this.accessVersions[id]) {
+      this.accessVersions[id] = await this.ContractHasMethod({
+        contractAddress: this.client.utils.HashToAddress(id),
+        abi: this.CONTRACTS.v3[this.ACCESS_TYPES.ACCESSIBLE].abi,
+        methodName: "accessRequestV3"
+      });
+    }
+
+    return this.accessVersions[id];
   }
 
   async AccessInfo({accessType, publicKey, args, isV3}) {
@@ -622,27 +626,40 @@ class AuthorizationClient {
   async AccessType(id) {
     const contractName = await this.client.ethClient.ContractName(Utils.HashToAddress(id));
 
-    switch(contractName) {
-      case "BaseContentSpace":
-        return ACCESS_TYPES.SPACE;
-      case "BaseLibrary":
-        return ACCESS_TYPES.LIBRARY;
-      case "BaseContentType":
-        return ACCESS_TYPES.TYPE;
-      case "BsAccessWallet":
-        return ACCESS_TYPES.WALLET;
-      case "BsAccessCtrlGrp":
-        return ACCESS_TYPES.GROUP;
-      case "BaseContent":
-        return ACCESS_TYPES.OBJECT;
-      default:
-        return ACCESS_TYPES.OTHER;
+    if(!this.accessTypes[id]) {
+      let accessType;
+      switch(contractName) {
+        case "BaseContentSpace":
+          accessType = ACCESS_TYPES.SPACE;
+          break;
+        case "BaseLibrary":
+          accessType = ACCESS_TYPES.LIBRARY;
+          break;
+        case "BaseContentType":
+          accessType = ACCESS_TYPES.TYPE;
+          break;
+        case "BsAccessWallet":
+          accessType = ACCESS_TYPES.WALLET;
+          break;
+        case "BsAccessCtrlGrp":
+          accessType = ACCESS_TYPES.GROUP;
+          break;
+        case "BaseContent":
+          accessType = ACCESS_TYPES.OBJECT;
+          break;
+        default:
+          accessType = ACCESS_TYPES.OTHER;
+      }
+
+      this.accessTypes[id] = accessType;
     }
+
+    return this.accessTypes[id];
   }
 
   async AccessComplete({id, score}) {
     this.Log(`Calling access complete on ${id} with score ${score}`);
-    const { abi } = await this.ContractAbi({id});
+    const { abi } = await this.ContractInfo({id});
 
     const address = Utils.HashToAddress(id);
     const requestId = this.requestIds[address];
@@ -665,36 +682,25 @@ class AuthorizationClient {
 
   /* Utility methods */
 
-  async ContractAbi({id, address}) {
+  async ContractInfo({id, address}) {
     if(!address) { address = Utils.HashToAddress(id); }
     if(!id) { id = Utils.AddressToObjectId(address); }
 
-    if(!this.contractAbis[address]) {
-      const isV3 = await this.IsV3({id});
-      const accessType = await this.AccessType(id);
+    const isV3 = await this.IsV3({id});
+    const version = isV3 ? "v3" : "v2";
+    const accessType = await this.AccessType(id);
 
-      this.contractAbis[address] = {
-        isV3: isV3,
-        version: isV3 ? "v3" : "v2",
-        contract: accessType
-      };
-    }
-
-    const { isV3, version, contract } = this.contractAbis[address];
-
-    if(contract === this.ACCESS_TYPES.OTHER) { return; }
-
-    console.log("CONTRACT:", id, address, version, contract);
+    if(accessType === this.ACCESS_TYPES.OTHER) { return; }
 
     return {
       isV3,
-      accessType: contract,
-      abi: this.CONTRACTS[version][contract].abi
+      accessType,
+      abi: this.CONTRACTS[version][accessType].abi
     };
   }
 
   async GetAccessCharge({objectId, args}) {
-    const { abi } = await this.ContractAbi({id: objectId});
+    const { abi } = await this.ContractInfo({id: objectId});
 
     const info = await this.client.CallContractMethod({
       contractAddress: Utils.HashToAddress(objectId),
@@ -729,7 +735,7 @@ class AuthorizationClient {
       objectId = Utils.DecodeVersionHash(versionHash).objectId;
     }
 
-    const { abi } = await this.ContractAbi({id: objectId});
+    const { abi } = await this.ContractInfo({id: objectId});
 
     return await this.client.CallContractMethod({
       contractAddress: Utils.HashToAddress(objectId),
@@ -741,7 +747,7 @@ class AuthorizationClient {
   async KMSInfo({objectId, versionHash, kmsId}) {
     let KMSInfo;
     if(kmsId) {
-      const { abi } = await this.ContractAbi({address: this.client.contentSpaceAddress});
+      const { abi } = await this.ContractInfo({address: this.client.contentSpaceAddress});
 
       KMSInfo = await this.client.CallContractMethod({
         contractAddress: this.client.contentSpaceAddress,
@@ -755,7 +761,7 @@ class AuthorizationClient {
         objectId = Utils.DecodeVersionHash(versionHash).objectId;
       }
 
-      const { abi } = await this.ContractAbi({id: objectId});
+      const { abi } = await this.ContractInfo({id: objectId});
 
       // Get KMS info for the object
       KMSInfo = await this.client.CallContractMethod({
@@ -829,22 +835,38 @@ class AuthorizationClient {
   }
 
   async ContractHasMethod({contractAddress, abi, methodName}) {
-    const method = abi.find(method => method.name === methodName);
+    contractAddress = Utils.FormatAddress(contractAddress);
 
-    if(!method) { return false; }
+    const key = `${contractAddress}-${methodName}`;
 
-    const methodSignature = `${method.name}(${method.inputs.map(i => i.type).join(",")})`;
-    const methodId = Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(methodSignature))
-      .replace("0x", "")
-      .slice(0, 8);
+    if(this.methodAvailability[key] === undefined) {
+      this.Log(`Checking method availability: ${contractAddress} ${methodName}`);
 
-    return await this.MakeElvMasterCall({
-      methodName: "elv_deployedContractHasMethod",
-      params: [
-        contractAddress,
-        methodId
-      ]
-    });
+      if(!abi) {
+        abi = (await this.ContractInfo({address: contractAddress})).abi;
+      }
+
+      const method = abi.find(method => method.name === methodName);
+
+      if(!method) {
+        return false;
+      }
+
+      const methodSignature = `${method.name}(${method.inputs.map(i => i.type).join(",")})`;
+      const methodId = Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(methodSignature))
+        .replace("0x", "")
+        .slice(0, 8);
+
+      this.methodAvailability[key] = await this.MakeElvMasterCall({
+        methodName: "elv_deployedContractHasMethod",
+        params: [
+          contractAddress,
+          methodId
+        ]
+      });
+    }
+
+    return this.methodAvailability[key];
   }
 
   async MakeElvMasterCall({methodName, params}) {
@@ -892,7 +914,7 @@ class AuthorizationClient {
   async RecordTags({accessType, libraryId, objectId, versionHash}) {
     if(accessType !== ACCESS_TYPES.OBJECT) { return; }
 
-    const { abi } = await this.ContractAbi({id: objectId});
+    const { abi } = await this.ContractInfo({id: objectId});
 
     // After making an access request, record the tags in the user's profile, if appropriate
     const owner = await this.Owner({id: objectId, abi});

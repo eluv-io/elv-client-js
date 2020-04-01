@@ -30,10 +30,22 @@ const {
 
 exports.Visibility = async function({id}) {
   try {
+    // TODO: Test only - Remove
+    return 1;
+
+    // eslint-disable-next-line no-unreachable
+    const hasVisibility = await this.authClient.ContractHasMethod({
+      contractAddress: this.utils.HashToAddress(id),
+      methodName: "visibility"
+    });
+
+    if(!hasVisibility) { return 10; }
+
     return await this.CallContractMethod({
       contractAddress: this.utils.HashToAddress(id),
       methodName: "visibility"
     });
+  // eslint-disable-next-line no-unreachable
   } catch(error) {
     if(error.code === "CALL_EXCEPTION") {
       return 0;
@@ -104,10 +116,11 @@ exports.ContentTypeOwner = async function({name, typeId, versionHash}) {
  * @param {string=} name - Name of the content type to find
  * @param {string=} typeId - ID of the content type to find
  * @param {string=} versionHash - Version hash of the content type to find
+ * @param {boolean=} publicOnly=false - If specified, will only retrieve public metadata (no access request needed)
  *
  * @return {Promise<Object>} - The content type, if found
  */
-exports.ContentType = async function({name, typeId, versionHash}) {
+exports.ContentType = async function({name, typeId, versionHash, publicOnly=false}) {
   this.Log(`Retrieving content type: ${name || typeId || versionHash}`);
 
   if(versionHash) { typeId = this.utils.DecodeVersionHash(versionHash).objectId; }
@@ -140,11 +153,21 @@ exports.ContentType = async function({name, typeId, versionHash}) {
   try {
     this.Log("Looking up type by ID...");
 
-    const metadata = (await this.ContentObjectMetadata({
-      libraryId: this.contentSpaceLibraryId,
-      objectId: typeId,
-      metadataSubtree: "public"
-    })) || {};
+    let metadata;
+    if(publicOnly) {
+      metadata = {
+        public: (await this.ContentObjectMetadata({
+          libraryId: this.contentSpaceLibraryId,
+          objectId: typeId,
+          metadataSubtree: "public"
+        })) || {}
+      };
+    } else {
+      metadata = (await this.ContentObjectMetadata({
+        libraryId: this.contentSpaceLibraryId,
+        objectId: typeId
+      })) || {};
+    }
 
     return {
       id: typeId,
@@ -203,7 +226,7 @@ exports.ContentTypes = async function() {
 
       if(!this.contentTypes[typeId]) {
         try {
-          this.contentTypes[typeId] = await this.ContentType({typeId});
+          this.contentTypes[typeId] = await this.ContentType({typeId, publicOnly: true});
         } catch(error) {
           // eslint-disable-next-line no-console
           console.error(error);
@@ -460,7 +483,7 @@ exports.ContentObject = async function({libraryId, objectId, versionHash}) {
 
   return await this.utils.ResponseToJson(
     this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
       method: "GET",
       path: path
     })
@@ -682,16 +705,16 @@ exports.ContentObjectMetadata = async function({
  *
  * @returns {Promise<Object>} - Response containing versions of the object
  */
-exports.ContentObjectVersions = async function({libraryId, objectId, noAuth=false}) {
+exports.ContentObjectVersions = async function({libraryId, objectId}) {
   ValidateParameters({libraryId, objectId});
 
-  this.Log(`Retrieving content object versions: ${libraryId || ""} ${objectId || versionHash}`);
+  this.Log(`Retrieving content object versions: ${libraryId || ""} ${objectId}`);
 
   let path = UrlJoin("qid", objectId);
 
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
-      headers: await this.authClient.AuthorizationHeader({libraryId, objectId, noAuth}),
+      headers: await this.authClient.AuthorizationHeader({libraryId, objectId}),
       method: "GET",
       path: path
     })

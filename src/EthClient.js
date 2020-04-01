@@ -53,6 +53,12 @@ class EthClient {
   Provider() {
     if(!this.provider) {
       this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]);
+
+      // Ethers.js uses eth_getCode to ensure a contract is deployed and nothing else - this pulls a large chunk of pointless
+      // data every time a contract is initialized in the client (often). Ethers.js just checks that the code isn't == "0x", so
+      // we can give it some dummy string instead and assume the contract is fine
+      this.provider.getCode = async () => "0x123";
+      this.provider.pollingInterval = 1000;
     }
 
     return this.provider;
@@ -76,9 +82,6 @@ class EthClient {
             // Ensure bytes32 string is null terminated
             versionBytes32.slice(0, -2) + "00"
           );
-
-        console.log(contractAddress, version);
-
         this.contractNames[contractAddress] = version.split(/\d+/)[0];
       } catch(error) {
         this.contractNames[contractAddress] = "Unknown";
@@ -311,7 +314,7 @@ class EthClient {
     this.Log(`Awaiting transaction completion: ${createMethodCall.hash}`);
 
     // Poll for transaction completion
-    const interval = 250;
+    const interval = this.Provider().pollingInterval;
     let elapsed = 0;
     let methodEvent;
 
@@ -369,10 +372,8 @@ class EthClient {
     eventName,
     eventValue
   }) {
-    const abi = await this.client.ContractAbi({contractAddress: this.client.contentSpaceAddress});
-
+    const abi = await this.client.ContractAbi({contractAddress});
     const event = await this.CallContractMethodAndWait({contractAddress, abi, methodName, methodArgs: args});
-
     const eventLog = this.ExtractEventFromLogs({abi, event, eventName, eventValue});
 
     if(!eventLog) {

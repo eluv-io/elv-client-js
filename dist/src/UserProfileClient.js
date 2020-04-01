@@ -12,8 +12,11 @@ var UrlJoin = require("url-join");
 
 var _require = require("./FrameClient"),
     FrameClient = _require.FrameClient;
+/*
+const SpaceContract = require("./contracts/BaseContentSpace");
 
-var SpaceContract = require("./contracts/BaseContentSpace");
+ */
+
 
 var UserProfileClient =
 /*#__PURE__*/
@@ -150,7 +153,6 @@ function () {
               _context.next = 17;
               return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-                abi: SpaceContract.abi,
                 methodName: "createAccessWallet",
                 methodArgs: []
               }));
@@ -158,7 +160,6 @@ function () {
             case 17:
               walletCreationEvent = _context.sent;
               this.walletAddress = this.client.ExtractValueFromEvent({
-                abi: SpaceContract.abi,
                 event: walletCreationEvent,
                 eventName: "CreateAccessWallet",
                 eventValue: "wallet"
@@ -265,7 +266,6 @@ function () {
             case 2:
               _context2.next = 4;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
-                abi: SpaceContract.abi,
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                 methodName: "userWallets",
                 methodArgs: [this.client.signer.address]
@@ -335,7 +335,6 @@ function () {
               this.Log("Retrieving user wallet address for user ".concat(address));
               _context3.next = 9;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
-                abi: SpaceContract.abi,
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                 methodName: "userWallets",
                 methodArgs: [address]
