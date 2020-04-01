@@ -5,7 +5,7 @@
  */
 
 const Ethers = require("ethers");
-const ContentContract = require("../contracts/BaseContent");
+//const ContentContract = require("../contracts/BaseContent");
 
 const {
   ValidateAddress,
@@ -26,6 +26,26 @@ exports.ContractName = async function({contractAddress}) {
   ValidateAddress(contractAddress);
 
   return await this.ethClient.ContractName(contractAddress);
+};
+
+/**
+ * Retrieve the ABI for the given contract via its address or a Fabric ID. Contract must be a standard Eluvio contract
+ *
+ * @param {string=} contractAddress - The address of the contract
+ * @param {string=} id - The Fabric ID of the contract
+ *
+ * @return {Promise<Object>} - The ABI for the given contract
+ *
+ * @throws If ABI is not able to be determined, throws an error
+ */
+exports.ContractAbi = async function({contractAddress, id}) {
+  const contractInfo = await this.authClient.ContractInfo({address: contractAddress, id});
+
+  if(!contractInfo) {
+    throw Error(`Unable to determine contract info for ${contractAddress}`);
+  }
+
+  return contractInfo.abi;
 };
 
 /**
@@ -65,7 +85,7 @@ exports.DeployContract = async function({abi, bytecode, constructorArgs, overrid
  * @methodGroup Contracts
  * @namedParams
  * @param {string} contractAddress - The address of the contract
- * @param {object} abi - The ABI of the contract
+ * @param {Object=} abi - ABI of contract - If the contract is a standard Eluvio contract, this can be determined automatically if not specified
  * @param {number=} fromBlock - Limit results to events after the specified block (inclusive)
  * @param {number=} toBlock - Limit results to events before the specified block (inclusive)
  * @param {number=} count=1000 - Maximum range of blocks to search (unless both toBlock and fromBlock are specified)
@@ -82,6 +102,8 @@ exports.ContractEvents = async function({
   includeTransaction=false
 }) {
   ValidateAddress(contractAddress);
+
+  if(!abi) { abi = await this.ContractAbi({contractAddress}); }
 
   const blocks = await this.FormatBlockNumbers({fromBlock, toBlock, count});
 
@@ -106,7 +128,7 @@ exports.ContractEvents = async function({
  * @methodGroup Contracts
  * @namedParams
  * @param {string} contractAddress - Address of the contract to call the specified method on
- * @param {Object} abi - ABI of contract
+ * @param {Object=} abi - ABI of contract - If the contract is a standard Eluvio contract, this can be determined automatically if not specified
  * @param {string} methodName - Method to call on the contract
  * @param {Array=} methodArgs - List of arguments to the contract constructor
  * @param {(number | BigNumber)=} value - Amount of ether to include in the transaction
@@ -123,9 +145,12 @@ exports.CallContractMethod = async function({
   value,
   overrides={},
   formatArguments=true,
-  cacheContract=true
+  cacheContract=true,
+  overrideCachedContract=false
 }) {
   ValidateAddress(contractAddress);
+
+  if(!abi) { abi = await this.ContractAbi({contractAddress}); }
 
   return await this.ethClient.CallContractMethod({
     contractAddress,
@@ -136,7 +161,7 @@ exports.CallContractMethod = async function({
     overrides,
     formatArguments,
     cacheContract,
-    signer: this.signer
+    overrideCachedContract
   });
 };
 
@@ -149,7 +174,7 @@ exports.CallContractMethod = async function({
  * @methodGroup Contracts
  * @namedParams
  * @param {string} contractAddress - Address of the contract to call the specified method on
- * @param {Object} abi - ABI of contract
+ * @param {Object=} abi - ABI of contract - If the contract is a standard Eluvio contract, this can be determined automatically if not specified
  * @param {string} methodName - Method to call on the contract
  * @param {Array<string>=} methodArgs=[] - List of arguments to the contract constructor
  * @param {(number | BigNumber)=} value - Amount of ether to include in the transaction
@@ -168,9 +193,13 @@ exports.CallContractMethodAndWait = async function({
   methodArgs,
   value,
   overrides={},
-  formatArguments=true
+  formatArguments=true,
+  cacheContract=true,
+  overrideCachedContract=false
 }) {
   ValidateAddress(contractAddress);
+
+  if(!abi) { abi = await this.ContractAbi({contractAddress}); }
 
   return await this.ethClient.CallContractMethodAndWait({
     contractAddress,
@@ -180,7 +209,8 @@ exports.CallContractMethodAndWait = async function({
     value,
     overrides,
     formatArguments,
-    signer: this.signer
+    cacheContract,
+    overrideCachedContract
   });
 };
 
@@ -209,12 +239,12 @@ exports.CustomContractAddress = async function({libraryId, objectId, versionHash
 
   this.Log(`Retrieving custom contract address: ${objectId}`);
 
+  const abi = await this.ContractAbi({id: objectId});
   const customContractAddress = await this.ethClient.CallContractMethod({
     contractAddress: this.utils.HashToAddress(objectId),
-    abi: ContentContract.abi,
+    abi,
     methodName: "contentContractAddress",
-    methodArgs: [],
-    signer: this.signer
+    methodArgs: []
   });
 
   if(customContractAddress === this.utils.nullAddress) { return; }
@@ -292,7 +322,7 @@ exports.SetCustomContentContract = async function({
  * @methodGroup Contracts
  * @namedParams
  * @param {string} contractAddress - Address of the contract to call the specified method on
- * @param {Object} abi - ABI of contract
+ *
  * @param {Object} event - Event of the transaction from CallContractMethodAndWait
  * @param {string} eventName - Name of the event to parse
  *

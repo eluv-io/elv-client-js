@@ -2,7 +2,10 @@ const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 const { FrameClient } = require("./FrameClient");
 
+/*
 const SpaceContract = require("./contracts/BaseContentSpace");
+
+ */
 
 class UserProfileClient {
   Log(message, error=false) {
@@ -91,13 +94,13 @@ await client.userProfileClient.UserMetadata()
 
         const walletCreationEvent = await this.client.CallContractMethodAndWait({
           contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-          abi: SpaceContract.abi,
           methodName: "createAccessWallet",
           methodArgs: []
         });
 
+        const abi = await this.client.ContractAbi({contractAddress: this.client.contentSpaceAddress});
         this.walletAddress = this.client.ExtractValueFromEvent({
-          abi: SpaceContract.abi,
+          abi,
           event: walletCreationEvent,
           eventName: "CreateAccessWallet",
           eventValue: "wallet"
@@ -153,7 +156,6 @@ await client.userProfileClient.UserMetadata()
     if(this.walletAddress) { return this.walletAddress; }
 
     const walletAddress = await this.client.CallContractMethod({
-      abi: SpaceContract.abi,
       contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
       methodName: "userWallets",
       methodArgs: [this.client.signer.address]
@@ -188,7 +190,6 @@ await client.userProfileClient.UserMetadata()
 
       const walletAddress =
         await this.client.CallContractMethod({
-          abi: SpaceContract.abi,
           contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
           methodName: "userWallets",
           methodArgs: [address]
