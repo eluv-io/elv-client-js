@@ -284,6 +284,7 @@ class FrameClient {
       "ContentType",
       "ContentTypeOwner",
       "ContentTypes",
+      "ContractAbi",
       "ContractEvents",
       "ContractName",
       "CopyContentObject",
@@ -362,6 +363,7 @@ class FrameClient {
       "SetNodes",
       "SetOauthToken",
       "SetSignerFromOauthToken",
+      "SetVisibility",
       "StartABRMezzanineJobs",
       "UpdateContentObjectGraph",
       "UploadFileData",
@@ -372,7 +374,8 @@ class FrameClient {
       "UploadPartChunk",
       "UploadStatus",
       "UseRegion",
-      "VerifyContentObject"
+      "VerifyContentObject",
+      "Visibility"
     ];
   }
 

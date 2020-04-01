@@ -39,7 +39,7 @@ exports.ContractName = async function({contractAddress}) {
  * @throws If ABI is not able to be determined, throws an error
  */
 exports.ContractAbi = async function({contractAddress, id}) {
-  const contractInfo = await this.authClient.ContractAbi({address: contractAddress, id});
+  const contractInfo = await this.authClient.ContractInfo({address: contractAddress, id});
 
   if(!contractInfo) {
     throw Error(`Unable to determine contract info for ${contractAddress}`);
