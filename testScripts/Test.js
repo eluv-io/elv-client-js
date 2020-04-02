@@ -1,7 +1,5 @@
 const { ElvClient } = require("../src/ElvClient");
-const fs = require("fs");
 const ClientConfiguration = require("../TestConfiguration.json");
-if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const Test = async () => {
   try {

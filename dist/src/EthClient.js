@@ -1,55 +1,33 @@
-"use strict";
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
-function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-function _iterableToArrayLimit(arr, i) { if (!(Symbol.iterator in Object(arr) || Object.prototype.toString.call(arr) === "[object Arguments]")) { return; } var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+var _typeof = require("@babel/runtime/helpers/typeof");
 
-function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
+
+var _createClass = require("@babel/runtime/helpers/createClass");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
-
-function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
 // NOTE: Querying Ethereum requires CORS enabled
 // Use --rpccorsdomain "http[s]://hostname:port" or set up proxy
 var Ethers = require("ethers");
 
-var LimitedMap = require("./LimitedMap"); // -- Contract javascript files built using build/BuildContracts.js
+var HttpClient = require("./HttpClient");
+/*
+// -- Contract javascript files built using build/BuildContracts.js
+const ContentSpaceContract = require("./contracts/BaseContentSpace");
+const ContentLibraryContract = require("./contracts/BaseLibrary");
+const ContentContract = require("./contracts/BaseContent");
+ */
 
 
-var FactoryContract = require("./contracts/BaseFactory");
-
-var WalletFactoryContract = require("./contracts/BaseAccessWalletFactory");
-
-var LibraryFactoryContract = require("./contracts/BaseLibraryFactory");
-
-var ContentFactoryContract = require("./contracts/BaseContentFactory");
-
-var ContentSpaceContract = require("./contracts/BaseContentSpace");
-
-var ContentLibraryContract = require("./contracts/BaseLibrary");
-
-var ContentContract = require("./contracts/BaseContent");
+var AccessibleContract = require("./contracts/v3/Accessible");
 
 var Utils = require("./Utils");
 
@@ -58,6 +36,8 @@ var Topics = require("./events/Topics");
 var EthClient =
 /*#__PURE__*/
 function () {
+  "use strict";
+
   _createClass(EthClient, [{
     key: "Log",
     value: function Log(message) {
@@ -78,17 +58,24 @@ function () {
   }]);
 
   function EthClient(_ref) {
-    var uris = _ref.uris,
+    var client = _ref.client,
+        uris = _ref.uris,
         debug = _ref.debug;
 
     _classCallCheck(this, EthClient);
 
+    this.client = client;
     this.ethereumURIs = uris;
     this.ethereumURIIndex = 0;
     this.locked = false;
     this.debug = debug;
     this.cachedContracts = {};
-    this.contractNames = {};
+    this.contractNames = {}; // HTTP client for making misc calls to elv-master
+
+    this.HttpClient = new HttpClient({
+      uris: this.ethereumURIs,
+      debug: this.debug
+    });
     Ethers.errors.setLogLevel("error");
   }
 
@@ -96,7 +83,26 @@ function () {
     key: "Provider",
     value: function Provider() {
       if (!this.provider) {
-        this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]);
+        this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]); // Ethers.js uses eth_getCode to ensure a contract is deployed and nothing else - this pulls a large chunk of pointless
+        // data every time a contract is initialized in the client (often). Ethers.js just checks that the code isn't == "0x", so
+        // we can give it some dummy string instead and assume the contract is fine
+
+        this.provider.getCode = function _callee() {
+          return _regeneratorRuntime.async(function _callee$(_context) {
+            while (1) {
+              switch (_context.prev = _context.next) {
+                case 0:
+                  return _context.abrupt("return", "0x123");
+
+                case 1:
+                case "end":
+                  return _context.stop();
+              }
+            }
+          });
+        };
+
+        this.provider.pollingInterval = 1000;
       }
 
       return this.provider;
@@ -105,45 +111,45 @@ function () {
     key: "ContractName",
     value: function ContractName(contractAddress) {
       var versionContract, versionBytes32, version;
-      return regeneratorRuntime.async(function ContractName$(_context) {
+      return _regeneratorRuntime.async(function ContractName$(_context2) {
         while (1) {
-          switch (_context.prev = _context.next) {
+          switch (_context2.prev = _context2.next) {
             case 0:
-              versionContract = new Ethers.Contract(contractAddress, ContentSpaceContract.abi, this.Provider());
+              versionContract = new Ethers.Contract(contractAddress, AccessibleContract.abi, this.Provider());
 
               if (this.contractNames[contractAddress]) {
-                _context.next = 13;
+                _context2.next = 13;
                 break;
               }
 
-              _context.prev = 2;
-              _context.next = 5;
-              return regeneratorRuntime.awrap(this.CallContractMethod({
+              _context2.prev = 2;
+              _context2.next = 5;
+              return _regeneratorRuntime.awrap(this.CallContractMethod({
                 contract: versionContract,
-                abi: ContentSpaceContract.abi,
+                abi: AccessibleContract.abi,
                 methodName: "version",
                 cacheContract: false
               }));
 
             case 5:
-              versionBytes32 = _context.sent;
+              versionBytes32 = _context2.sent;
               version = Ethers.utils.parseBytes32String( // Ensure bytes32 string is null terminated
               versionBytes32.slice(0, -2) + "00");
               this.contractNames[contractAddress] = version.split(/\d+/)[0];
-              _context.next = 13;
+              _context2.next = 13;
               break;
 
             case 10:
-              _context.prev = 10;
-              _context.t0 = _context["catch"](2);
+              _context2.prev = 10;
+              _context2.t0 = _context2["catch"](2);
               this.contractNames[contractAddress] = "Unknown";
 
             case 13:
-              return _context.abrupt("return", this.contractNames[contractAddress]);
+              return _context2.abrupt("return", this.contractNames[contractAddress]);
 
             case 14:
             case "end":
-              return _context.stop();
+              return _context2.stop();
           }
         }
       }, null, this, [[2, 10]]);
@@ -155,13 +161,17 @@ function () {
 
       var contractAddress = _ref2.contractAddress,
           abi = _ref2.abi,
-          signer = _ref2.signer,
-          cacheContract = _ref2.cacheContract;
-      var contract = this.cachedContracts[contractAddress];
+          cacheContract = _ref2.cacheContract,
+          overrideCachedContract = _ref2.overrideCachedContract;
+      var contract;
+
+      if (!overrideCachedContract) {
+        contract = this.cachedContracts[contractAddress];
+      }
 
       if (!contract) {
         contract = new Ethers.Contract(contractAddress, abi, this.Provider());
-        contract = contract.connect(signer); // Redefine deployed to avoid making call to getCode
+        contract = contract.connect(this.client.signer); // Redefine deployed to avoid making call to getCode
 
         contract._deployedPromise = new Promise(function (resolve) {
           return resolve(_this);
@@ -179,46 +189,46 @@ function () {
     value: function MakeProviderCall(_ref3) {
       var methodName, _ref3$args, args, _ref3$attempts, attempts, provider;
 
-      return regeneratorRuntime.async(function MakeProviderCall$(_context2) {
+      return _regeneratorRuntime.async(function MakeProviderCall$(_context3) {
         while (1) {
-          switch (_context2.prev = _context2.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
               methodName = _ref3.methodName, _ref3$args = _ref3.args, args = _ref3$args === void 0 ? [] : _ref3$args, _ref3$attempts = _ref3.attempts, attempts = _ref3$attempts === void 0 ? 0 : _ref3$attempts;
-              _context2.prev = 1;
+              _context3.prev = 1;
               provider = this.Provider();
               this.Log("ETH ".concat(provider.connection.url, " ").concat(methodName, " [").concat(args.join(", "), "]"));
-              _context2.next = 6;
-              return regeneratorRuntime.awrap(provider[methodName].apply(provider, _toConsumableArray(args)));
+              _context3.next = 6;
+              return _regeneratorRuntime.awrap(provider[methodName].apply(provider, _toConsumableArray(args)));
 
             case 6:
-              return _context2.abrupt("return", _context2.sent);
+              return _context3.abrupt("return", _context3.sent);
 
             case 9:
-              _context2.prev = 9;
-              _context2.t0 = _context2["catch"](1);
+              _context3.prev = 9;
+              _context3.t0 = _context3["catch"](1);
               // eslint-disable-next-line no-console
-              console.error(_context2.t0);
+              console.error(_context3.t0);
 
               if (!(attempts < this.ethereumURIs.length)) {
-                _context2.next = 17;
+                _context3.next = 17;
                 break;
               }
 
               this.Log("EthClient failing over: ".concat(attempts + 1, " attempts"), true);
               this.provider = undefined;
               this.ethereumURIIndex = (this.ethereumURIIndex + 1) % this.ethereumURIs.length;
-              return _context2.abrupt("return", this.MakeProviderCall({
+              return _context3.abrupt("return", this.MakeProviderCall({
                 methodName: methodName,
                 args: args,
                 attempts: attempts + 1
               }));
 
             case 17:
-              return _context2.abrupt("return", {});
+              return _context3.abrupt("return", {});
 
             case 18:
             case "end":
-              return _context2.stop();
+              return _context3.stop();
           }
         }
       }, null, this, [[1, 9]]);
@@ -304,33 +314,33 @@ function () {
     value: function DeployContract(_ref6) {
       var abi, bytecode, _ref6$constructorArgs, constructorArgs, _ref6$overrides, overrides, signer, contractFactory, contract;
 
-      return regeneratorRuntime.async(function DeployContract$(_context3) {
+      return _regeneratorRuntime.async(function DeployContract$(_context4) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
-              abi = _ref6.abi, bytecode = _ref6.bytecode, _ref6$constructorArgs = _ref6.constructorArgs, constructorArgs = _ref6$constructorArgs === void 0 ? [] : _ref6$constructorArgs, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides, signer = _ref6.signer;
+              abi = _ref6.abi, bytecode = _ref6.bytecode, _ref6$constructorArgs = _ref6.constructorArgs, constructorArgs = _ref6$constructorArgs === void 0 ? [] : _ref6$constructorArgs, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides;
               this.Log("Deploying contract with args [".concat(constructorArgs.join(", "), "]"));
-              signer = signer.connect(this.Provider());
+              signer = this.client.signer.connect(this.Provider());
               this.ValidateSigner(signer);
               contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
-              _context3.next = 7;
-              return regeneratorRuntime.awrap(contractFactory.deploy.apply(contractFactory, _toConsumableArray(constructorArgs).concat([overrides])));
+              _context4.next = 7;
+              return _regeneratorRuntime.awrap(contractFactory.deploy.apply(contractFactory, _toConsumableArray(constructorArgs).concat([overrides])));
 
             case 7:
-              contract = _context3.sent;
-              _context3.next = 10;
-              return regeneratorRuntime.awrap(contract.deployed());
+              contract = _context4.sent;
+              _context4.next = 10;
+              return _regeneratorRuntime.awrap(contract.deployed());
 
             case 10:
               this.Log("Deployed: ".concat(contract.address));
-              return _context3.abrupt("return", {
+              return _context4.abrupt("return", {
                 contractAddress: Utils.FormatAddress(contract.address),
                 transactionHash: contract.deployTransaction.hash
               });
 
             case 12:
             case "end":
-              return _context3.stop();
+              return _context4.stop();
           }
         }
       }, null, this);
@@ -339,37 +349,33 @@ function () {
   }, {
     key: "CallContractMethod",
     value: function CallContractMethod(_ref7) {
-      var contract, contractAddress, abi, methodName, _ref7$methodArgs, methodArgs, value, _ref7$overrides, overrides, _ref7$formatArguments, formatArguments, _ref7$cacheContract, cacheContract, signer, result, success, _contract$functions, latestBlock;
+      var contract, contractAddress, abi, methodName, _ref7$methodArgs, methodArgs, value, _ref7$overrides, overrides, _ref7$formatArguments, formatArguments, _ref7$cacheContract, cacheContract, _ref7$overrideCachedC, overrideCachedContract, methodAbi, result, success, _contract$functions, latestBlock;
 
-      return regeneratorRuntime.async(function CallContractMethod$(_context4) {
+      return _regeneratorRuntime.async(function CallContractMethod$(_context5) {
         while (1) {
-          switch (_context4.prev = _context4.next) {
+          switch (_context5.prev = _context5.next) {
             case 0:
-              contract = _ref7.contract, contractAddress = _ref7.contractAddress, abi = _ref7.abi, methodName = _ref7.methodName, _ref7$methodArgs = _ref7.methodArgs, methodArgs = _ref7$methodArgs === void 0 ? [] : _ref7$methodArgs, value = _ref7.value, _ref7$overrides = _ref7.overrides, overrides = _ref7$overrides === void 0 ? {} : _ref7$overrides, _ref7$formatArguments = _ref7.formatArguments, formatArguments = _ref7$formatArguments === void 0 ? true : _ref7$formatArguments, _ref7$cacheContract = _ref7.cacheContract, cacheContract = _ref7$cacheContract === void 0 ? true : _ref7$cacheContract, signer = _ref7.signer;
+              contract = _ref7.contract, contractAddress = _ref7.contractAddress, abi = _ref7.abi, methodName = _ref7.methodName, _ref7$methodArgs = _ref7.methodArgs, methodArgs = _ref7$methodArgs === void 0 ? [] : _ref7$methodArgs, value = _ref7.value, _ref7$overrides = _ref7.overrides, overrides = _ref7$overrides === void 0 ? {} : _ref7$overrides, _ref7$formatArguments = _ref7.formatArguments, formatArguments = _ref7$formatArguments === void 0 ? true : _ref7$formatArguments, _ref7$cacheContract = _ref7.cacheContract, cacheContract = _ref7$cacheContract === void 0 ? true : _ref7$cacheContract, _ref7$overrideCachedC = _ref7.overrideCachedContract, overrideCachedContract = _ref7$overrideCachedC === void 0 ? false : _ref7$overrideCachedC;
 
-            case 1:
-              if (!this.locked) {
-                _context4.next = 6;
+              if (abi) {
+                _context5.next = 5;
                 break;
               }
 
-              _context4.next = 4;
-              return regeneratorRuntime.awrap(new Promise(function (resolve) {
-                return setTimeout(resolve, 100);
+              _context5.next = 4;
+              return _regeneratorRuntime.awrap(this.client.ContractAbi({
+                contractAddress: contractAddress
               }));
 
             case 4:
-              _context4.next = 1;
-              break;
+              abi = _context5.sent;
 
-            case 6:
-              this.locked = true;
-              _context4.prev = 7;
+            case 5:
               contract = contract || this.Contract({
                 contractAddress: contractAddress,
                 abi: abi,
-                signer: signer,
-                cacheContract: cacheContract
+                cacheContract: cacheContract,
+                overrideCachedContract: overrideCachedContract
               });
               abi = contract["interface"].abi; // Automatically format contract arguments
 
@@ -387,160 +393,211 @@ function () {
               }
 
               if (!(contract.functions[methodName] === undefined)) {
-                _context4.next = 14;
+                _context5.next = 11;
                 break;
               }
 
               throw Error("Unknown method: " + methodName);
 
-            case 14:
+            case 11:
               this.Log("Calling contract method:\n        Address: ".concat(contract.address, "\n        Method: ").concat(methodName, "\n        Args: [").concat(methodArgs.join(", "), "]"));
-              success = false;
+              methodAbi = contract["interface"].abi.find(function (method) {
+                return method.name === methodName;
+              }); // Lock if performing a transaction
 
-            case 16:
-              if (success) {
-                _context4.next = 37;
+              if (!(!methodAbi || !methodAbi.constant)) {
+                _context5.next = 20;
                 break;
               }
 
-              _context4.prev = 17;
-              _context4.next = 20;
-              return regeneratorRuntime.awrap((_contract$functions = contract.functions)[methodName].apply(_contract$functions, _toConsumableArray(methodArgs).concat([overrides])));
+            case 14:
+              if (!this.locked) {
+                _context5.next = 19;
+                break;
+              }
 
-            case 20:
-              result = _context4.sent;
-              success = true;
-              _context4.next = 35;
+              _context5.next = 17;
+              return _regeneratorRuntime.awrap(new Promise(function (resolve) {
+                return setTimeout(resolve, 100);
+              }));
+
+            case 17:
+              _context5.next = 14;
               break;
 
-            case 24:
-              _context4.prev = 24;
-              _context4.t0 = _context4["catch"](17);
+            case 19:
+              this.locked = true;
 
-              if (!(_context4.t0.code === -32000 || _context4.t0.code === "REPLACEMENT_UNDERPRICED")) {
-                _context4.next = 34;
+            case 20:
+              _context5.prev = 20;
+              success = false;
+
+            case 22:
+              if (success) {
+                _context5.next = 44;
                 break;
               }
 
-              _context4.next = 29;
-              return regeneratorRuntime.awrap(this.MakeProviderCall({
+              _context5.prev = 23;
+              _context5.next = 26;
+              return _regeneratorRuntime.awrap((_contract$functions = contract.functions)[methodName].apply(_contract$functions, _toConsumableArray(methodArgs).concat([overrides])));
+
+            case 26:
+              result = _context5.sent;
+              success = true;
+              _context5.next = 42;
+              break;
+
+            case 30:
+              _context5.prev = 30;
+              _context5.t0 = _context5["catch"](23);
+
+              if (!(_context5.t0.code === -32000 || _context5.t0.code === "REPLACEMENT_UNDERPRICED")) {
+                _context5.next = 40;
+                break;
+              }
+
+              _context5.next = 35;
+              return _regeneratorRuntime.awrap(this.MakeProviderCall({
                 methodName: "getBlock",
                 args: ["latest"]
               }));
 
-            case 29:
-              latestBlock = _context4.sent;
+            case 35:
+              latestBlock = _context5.sent;
               overrides.gasLimit = latestBlock.gasLimit;
               overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-              _context4.next = 35;
+              _context5.next = 42;
               break;
 
-            case 34:
-              throw _context4.t0;
+            case 40:
+              this.Log(_typeof(_context5.t0) === "object" ? JSON.stringify(_context5.t0, null, 2) : _context5.t0, true);
+              throw _context5.t0;
 
-            case 35:
-              _context4.next = 16;
+            case 42:
+              _context5.next = 22;
               break;
 
-            case 37:
-              return _context4.abrupt("return", result);
+            case 44:
+              return _context5.abrupt("return", result);
 
-            case 38:
-              _context4.prev = 38;
-              this.locked = false;
-              return _context4.finish(38);
+            case 45:
+              _context5.prev = 45;
 
-            case 41:
+              // Unlock if performing a transaction
+              if (!methodAbi || !methodAbi.constant) {
+                this.locked = false;
+              }
+
+              return _context5.finish(45);
+
+            case 48:
             case "end":
-              return _context4.stop();
+              return _context5.stop();
           }
         }
-      }, null, this, [[7,, 38, 41], [17, 24]]);
+      }, null, this, [[20,, 45, 48], [23, 30]]);
     }
   }, {
     key: "CallContractMethodAndWait",
     value: function CallContractMethodAndWait(_ref8) {
-      var contractAddress, abi, methodName, methodArgs, value, _ref8$timeout, timeout, _ref8$formatArguments, formatArguments, signer, contract, createMethodCall, interval, elapsed, methodEvent;
+      var contractAddress, abi, methodName, methodArgs, value, _ref8$timeout, timeout, _ref8$formatArguments, formatArguments, _ref8$cacheContract, cacheContract, _ref8$overrideCachedC, overrideCachedContract, contract, createMethodCall, interval, elapsed, methodEvent;
 
-      return regeneratorRuntime.async(function CallContractMethodAndWait$(_context5) {
+      return _regeneratorRuntime.async(function CallContractMethodAndWait$(_context6) {
         while (1) {
-          switch (_context5.prev = _context5.next) {
+          switch (_context6.prev = _context6.next) {
             case 0:
-              contractAddress = _ref8.contractAddress, abi = _ref8.abi, methodName = _ref8.methodName, methodArgs = _ref8.methodArgs, value = _ref8.value, _ref8$timeout = _ref8.timeout, timeout = _ref8$timeout === void 0 ? 10000 : _ref8$timeout, _ref8$formatArguments = _ref8.formatArguments, formatArguments = _ref8$formatArguments === void 0 ? true : _ref8$formatArguments, signer = _ref8.signer;
+              contractAddress = _ref8.contractAddress, abi = _ref8.abi, methodName = _ref8.methodName, methodArgs = _ref8.methodArgs, value = _ref8.value, _ref8$timeout = _ref8.timeout, timeout = _ref8$timeout === void 0 ? 10000 : _ref8$timeout, _ref8$formatArguments = _ref8.formatArguments, formatArguments = _ref8$formatArguments === void 0 ? true : _ref8$formatArguments, _ref8$cacheContract = _ref8.cacheContract, cacheContract = _ref8$cacheContract === void 0 ? true : _ref8$cacheContract, _ref8$overrideCachedC = _ref8.overrideCachedContract, overrideCachedContract = _ref8$overrideCachedC === void 0 ? false : _ref8$overrideCachedC;
+
+              if (abi) {
+                _context6.next = 5;
+                break;
+              }
+
+              _context6.next = 4;
+              return _regeneratorRuntime.awrap(this.client.ContractAbi({
+                contractAddress: contractAddress
+              }));
+
+            case 4:
+              abi = _context6.sent;
+
+            case 5:
               contract = this.Contract({
                 contractAddress: contractAddress,
                 abi: abi,
-                signer: signer
+                cacheContract: cacheContract,
+                overrideCachedContract: overrideCachedContract
               }); // Make method call
 
-              _context5.next = 4;
-              return regeneratorRuntime.awrap(this.CallContractMethod({
+              _context6.next = 8;
+              return _regeneratorRuntime.awrap(this.CallContractMethod({
                 contract: contract,
                 abi: abi,
                 methodName: methodName,
                 methodArgs: methodArgs,
                 value: value,
                 formatArguments: formatArguments,
-                signer: signer
+                cacheContract: cacheContract
               }));
 
-            case 4:
-              createMethodCall = _context5.sent;
+            case 8:
+              createMethodCall = _context6.sent;
               this.Log("Awaiting transaction completion: ".concat(createMethodCall.hash)); // Poll for transaction completion
 
-              interval = 250;
+              interval = this.Provider().pollingInterval;
               elapsed = 0;
 
-            case 8:
+            case 12:
               if (!(elapsed < timeout)) {
-                _context5.next = 20;
+                _context6.next = 24;
                 break;
               }
 
-              _context5.next = 11;
-              return regeneratorRuntime.awrap(this.MakeProviderCall({
+              _context6.next = 15;
+              return _regeneratorRuntime.awrap(this.MakeProviderCall({
                 methodName: "getTransactionReceipt",
                 args: [createMethodCall.hash]
               }));
 
-            case 11:
-              methodEvent = _context5.sent;
+            case 15:
+              methodEvent = _context6.sent;
 
               if (!methodEvent) {
-                _context5.next = 15;
+                _context6.next = 19;
                 break;
               }
 
               methodEvent.logs = methodEvent.logs.map(function (log) {
                 return _objectSpread({}, log, {}, contract["interface"].parseLog(log));
               });
-              return _context5.abrupt("break", 20);
+              return _context6.abrupt("break", 24);
 
-            case 15:
+            case 19:
               elapsed += interval;
-              _context5.next = 18;
-              return regeneratorRuntime.awrap(new Promise(function (resolve) {
+              _context6.next = 22;
+              return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                 return setTimeout(resolve, interval);
               }));
 
-            case 18:
-              _context5.next = 8;
+            case 22:
+              _context6.next = 12;
               break;
 
-            case 20:
+            case 24:
               if (methodEvent) {
-                _context5.next = 22;
+                _context6.next = 26;
                 break;
               }
 
               throw Error("Timed out waiting for completion of ".concat(methodName, ". TXID: ").concat(createMethodCall.hash));
 
-            case 22:
-              return _context5.abrupt("return", methodEvent);
+            case 26:
+              return _context6.abrupt("return", methodEvent);
 
-            case 23:
+            case 27:
             case "end":
-              return _context5.stop();
+              return _context6.stop();
           }
         }
       }, null, this);
@@ -548,19 +605,18 @@ function () {
   }, {
     key: "AwaitEvent",
     value: function AwaitEvent(_ref9) {
-      var contractAddress, abi, eventName, signer, contract;
-      return regeneratorRuntime.async(function AwaitEvent$(_context6) {
+      var contractAddress, abi, eventName, contract;
+      return _regeneratorRuntime.async(function AwaitEvent$(_context7) {
         while (1) {
-          switch (_context6.prev = _context6.next) {
+          switch (_context7.prev = _context7.next) {
             case 0:
-              contractAddress = _ref9.contractAddress, abi = _ref9.abi, eventName = _ref9.eventName, signer = _ref9.signer;
+              contractAddress = _ref9.contractAddress, abi = _ref9.abi, eventName = _ref9.eventName;
               contract = this.Contract({
                 contractAddress: contractAddress,
-                abi: abi,
-                signer: signer
+                abi: abi
               });
-              _context6.next = 4;
-              return regeneratorRuntime.awrap(new Promise(function (resolve) {
+              _context7.next = 4;
+              return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                 contract.on(eventName, function (_, __, event) {
                   contract.removeAllListeners(eventName);
                   resolve(event);
@@ -568,11 +624,11 @@ function () {
               }));
 
             case 4:
-              return _context6.abrupt("return", _context6.sent);
+              return _context7.abrupt("return", _context7.sent);
 
             case 5:
             case "end":
-              return _context6.stop();
+              return _context7.stop();
           }
         }
       }, null, this);
@@ -616,24 +672,30 @@ function () {
   }, {
     key: "DeployDependentContract",
     value: function DeployDependentContract(_ref11) {
-      var contractAddress, abi, methodName, _ref11$args, args, eventName, eventValue, signer, event, eventLog, newContractAddress;
+      var contractAddress, methodName, _ref11$args, args, eventName, eventValue, abi, event, eventLog, newContractAddress;
 
-      return regeneratorRuntime.async(function DeployDependentContract$(_context7) {
+      return _regeneratorRuntime.async(function DeployDependentContract$(_context8) {
         while (1) {
-          switch (_context7.prev = _context7.next) {
+          switch (_context8.prev = _context8.next) {
             case 0:
-              contractAddress = _ref11.contractAddress, abi = _ref11.abi, methodName = _ref11.methodName, _ref11$args = _ref11.args, args = _ref11$args === void 0 ? [] : _ref11$args, eventName = _ref11.eventName, eventValue = _ref11.eventValue, signer = _ref11.signer;
-              _context7.next = 3;
-              return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
-                contractAddress: contractAddress,
-                abi: abi,
-                methodName: methodName,
-                methodArgs: args,
-                signer: signer
+              contractAddress = _ref11.contractAddress, methodName = _ref11.methodName, _ref11$args = _ref11.args, args = _ref11$args === void 0 ? [] : _ref11$args, eventName = _ref11.eventName, eventValue = _ref11.eventValue;
+              _context8.next = 3;
+              return _regeneratorRuntime.awrap(this.client.ContractAbi({
+                contractAddress: contractAddress
               }));
 
             case 3:
-              event = _context7.sent;
+              abi = _context8.sent;
+              _context8.next = 6;
+              return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+                contractAddress: contractAddress,
+                abi: abi,
+                methodName: methodName,
+                methodArgs: args
+              }));
+
+            case 6:
+              event = _context8.sent;
               eventLog = this.ExtractEventFromLogs({
                 abi: abi,
                 event: event,
@@ -642,22 +704,22 @@ function () {
               });
 
               if (eventLog) {
-                _context7.next = 7;
+                _context8.next = 10;
                 break;
               }
 
               throw Error("".concat(methodName, " failed - Log not present in transaction"));
 
-            case 7:
+            case 10:
               newContractAddress = eventLog.values[eventValue];
-              return _context7.abrupt("return", {
+              return _context8.abrupt("return", {
                 contractAddress: Utils.FormatAddress(newContractAddress),
                 transactionHash: event.transactionHash
               });
 
-            case 9:
+            case 12:
             case "end":
-              return _context7.stop();
+              return _context8.stop();
           }
         }
       }, null, this);
@@ -665,86 +727,20 @@ function () {
     /* Specific contract management */
 
   }, {
-    key: "DeployContentSpaceContract",
-    value: function DeployContentSpaceContract(_ref12) {
-      var name, signer, deploySpaceEvent, factoryContracts, i, _factoryContracts$i, contract, setMethod, factoryAddress;
-
-      return regeneratorRuntime.async(function DeployContentSpaceContract$(_context8) {
-        while (1) {
-          switch (_context8.prev = _context8.next) {
-            case 0:
-              name = _ref12.name, signer = _ref12.signer;
-              _context8.next = 3;
-              return regeneratorRuntime.awrap(this.DeployContract({
-                abi: ContentSpaceContract.abi,
-                bytecode: ContentSpaceContract.bytecode,
-                constructorArgs: [name],
-                signer: signer
-              }));
-
-            case 3:
-              deploySpaceEvent = _context8.sent;
-              factoryContracts = [[FactoryContract, "setFactory"], [WalletFactoryContract, "setWalletFactory"], [LibraryFactoryContract, "setLibraryFactory"], [ContentFactoryContract, "setContentFactory"]];
-              i = 0;
-
-            case 6:
-              if (!(i < factoryContracts.length)) {
-                _context8.next = 16;
-                break;
-              }
-
-              _factoryContracts$i = _slicedToArray(factoryContracts[i], 2), contract = _factoryContracts$i[0], setMethod = _factoryContracts$i[1];
-              _context8.next = 10;
-              return regeneratorRuntime.awrap(this.DeployContract({
-                abi: contract.abi,
-                bytecode: contract.bytecode,
-                constructorArgs: [],
-                signer: signer
-              }));
-
-            case 10:
-              factoryAddress = _context8.sent.contractAddress;
-              _context8.next = 13;
-              return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
-                contractAddress: deploySpaceEvent.contractAddress,
-                abi: ContentSpaceContract.abi,
-                methodName: setMethod,
-                methodArgs: [factoryAddress],
-                signer: signer
-              }));
-
-            case 13:
-              i++;
-              _context8.next = 6;
-              break;
-
-            case 16:
-              return _context8.abrupt("return", deploySpaceEvent);
-
-            case 17:
-            case "end":
-              return _context8.stop();
-          }
-        }
-      }, null, this);
-    }
-  }, {
     key: "DeployAccessGroupContract",
-    value: function DeployAccessGroupContract(_ref13) {
-      var contentSpaceAddress, signer;
-      return regeneratorRuntime.async(function DeployAccessGroupContract$(_context9) {
+    value: function DeployAccessGroupContract(_ref12) {
+      var contentSpaceAddress;
+      return _regeneratorRuntime.async(function DeployAccessGroupContract$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
-              contentSpaceAddress = _ref13.contentSpaceAddress, signer = _ref13.signer;
+              contentSpaceAddress = _ref12.contentSpaceAddress;
               return _context9.abrupt("return", this.DeployDependentContract({
                 contractAddress: contentSpaceAddress,
-                abi: ContentSpaceContract.abi,
                 methodName: "createGroup",
                 args: [],
                 eventName: "CreateGroup",
-                eventValue: "groupAddress",
-                signer: signer
+                eventValue: "groupAddress"
               }));
 
             case 2:
@@ -756,21 +752,19 @@ function () {
     }
   }, {
     key: "DeployTypeContract",
-    value: function DeployTypeContract(_ref14) {
-      var contentSpaceAddress, signer;
-      return regeneratorRuntime.async(function DeployTypeContract$(_context10) {
+    value: function DeployTypeContract(_ref13) {
+      var contentSpaceAddress;
+      return _regeneratorRuntime.async(function DeployTypeContract$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
-              contentSpaceAddress = _ref14.contentSpaceAddress, signer = _ref14.signer;
+              contentSpaceAddress = _ref13.contentSpaceAddress;
               return _context10.abrupt("return", this.DeployDependentContract({
                 contractAddress: contentSpaceAddress,
-                abi: ContentSpaceContract.abi,
                 methodName: "createContentType",
                 args: [],
                 eventName: "CreateContentType",
-                eventValue: "contentTypeAddress",
-                signer: signer
+                eventValue: "contentTypeAddress"
               }));
 
             case 2:
@@ -782,22 +776,20 @@ function () {
     }
   }, {
     key: "DeployLibraryContract",
-    value: function DeployLibraryContract(_ref15) {
-      var contentSpaceAddress, kmsId, signer, kmsAddress;
-      return regeneratorRuntime.async(function DeployLibraryContract$(_context11) {
+    value: function DeployLibraryContract(_ref14) {
+      var contentSpaceAddress, kmsId, kmsAddress;
+      return _regeneratorRuntime.async(function DeployLibraryContract$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              contentSpaceAddress = _ref15.contentSpaceAddress, kmsId = _ref15.kmsId, signer = _ref15.signer;
+              contentSpaceAddress = _ref14.contentSpaceAddress, kmsId = _ref14.kmsId;
               kmsAddress = Utils.HashToAddress(kmsId);
               return _context11.abrupt("return", this.DeployDependentContract({
                 contractAddress: contentSpaceAddress,
-                abi: ContentSpaceContract.abi,
                 methodName: "createLibrary",
                 args: [kmsAddress],
                 eventName: "CreateLibrary",
-                eventValue: "libraryAddress",
-                signer: signer
+                eventValue: "libraryAddress"
               }));
 
             case 3:
@@ -809,23 +801,21 @@ function () {
     }
   }, {
     key: "DeployContentContract",
-    value: function DeployContentContract(_ref16) {
-      var contentLibraryAddress, typeAddress, signer;
-      return regeneratorRuntime.async(function DeployContentContract$(_context12) {
+    value: function DeployContentContract(_ref15) {
+      var contentLibraryAddress, typeAddress;
+      return _regeneratorRuntime.async(function DeployContentContract$(_context12) {
         while (1) {
           switch (_context12.prev = _context12.next) {
             case 0:
-              contentLibraryAddress = _ref16.contentLibraryAddress, typeAddress = _ref16.typeAddress, signer = _ref16.signer;
+              contentLibraryAddress = _ref15.contentLibraryAddress, typeAddress = _ref15.typeAddress;
               // If type is not specified, use null address
               typeAddress = typeAddress || Utils.nullAddress;
               return _context12.abrupt("return", this.DeployDependentContract({
                 contractAddress: contentLibraryAddress,
-                abi: ContentLibraryContract.abi,
                 methodName: "createContent",
                 args: [typeAddress],
                 eventName: "ContentObjectCreated",
-                eventValue: "contentAddress",
-                signer: signer
+                eventValue: "contentAddress"
               }));
 
             case 3:
@@ -837,22 +827,20 @@ function () {
     }
   }, {
     key: "CommitContent",
-    value: function CommitContent(_ref17) {
-      var contentObjectAddress, versionHash, signer;
-      return regeneratorRuntime.async(function CommitContent$(_context13) {
+    value: function CommitContent(_ref16) {
+      var contentObjectAddress, versionHash;
+      return _regeneratorRuntime.async(function CommitContent$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
             case 0:
-              contentObjectAddress = _ref17.contentObjectAddress, versionHash = _ref17.versionHash, signer = _ref17.signer;
+              contentObjectAddress = _ref16.contentObjectAddress, versionHash = _ref16.versionHash;
               _context13.next = 3;
-              return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+              return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
                 contractAddress: contentObjectAddress,
-                abi: ContentContract.abi,
                 methodName: "commit",
                 methodArgs: [versionHash],
                 eventName: "CommitPending",
-                eventValue: "pendingHash",
-                signer: signer
+                eventValue: "pendingHash"
               }));
 
             case 3:
@@ -867,19 +855,17 @@ function () {
     }
   }, {
     key: "EngageAccountLibrary",
-    value: function EngageAccountLibrary(_ref18) {
-      var contentSpaceAddress, signer;
-      return regeneratorRuntime.async(function EngageAccountLibrary$(_context14) {
+    value: function EngageAccountLibrary(_ref17) {
+      var contentSpaceAddress;
+      return _regeneratorRuntime.async(function EngageAccountLibrary$(_context14) {
         while (1) {
           switch (_context14.prev = _context14.next) {
             case 0:
-              contentSpaceAddress = _ref18.contentSpaceAddress, signer = _ref18.signer;
+              contentSpaceAddress = _ref17.contentSpaceAddress;
               return _context14.abrupt("return", this.CallContractMethodAndWait({
                 contractAddress: contentSpaceAddress,
-                abi: ContentSpaceContract.abi,
                 methodName: "engageAccountLibrary",
-                args: [],
-                signer: signer
+                args: []
               }));
 
             case 2:
@@ -891,22 +877,20 @@ function () {
     }
   }, {
     key: "SetCustomContentContract",
-    value: function SetCustomContentContract(_ref19) {
-      var contentContractAddress, customContractAddress, _ref19$overrides, overrides, signer;
+    value: function SetCustomContentContract(_ref18) {
+      var contentContractAddress, customContractAddress, _ref18$overrides, overrides;
 
-      return regeneratorRuntime.async(function SetCustomContentContract$(_context15) {
+      return _regeneratorRuntime.async(function SetCustomContentContract$(_context15) {
         while (1) {
           switch (_context15.prev = _context15.next) {
             case 0:
-              contentContractAddress = _ref19.contentContractAddress, customContractAddress = _ref19.customContractAddress, _ref19$overrides = _ref19.overrides, overrides = _ref19$overrides === void 0 ? {} : _ref19$overrides, signer = _ref19.signer;
+              contentContractAddress = _ref18.contentContractAddress, customContractAddress = _ref18.customContractAddress, _ref18$overrides = _ref18.overrides, overrides = _ref18$overrides === void 0 ? {} : _ref18$overrides;
               _context15.next = 3;
-              return regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+              return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
                 contractAddress: contentContractAddress,
-                abi: ContentContract.abi,
                 methodName: "setContentContractAddress",
                 methodArgs: [customContractAddress],
-                overrides: overrides,
-                signer: signer
+                overrides: overrides
               }));
 
             case 3:
@@ -922,18 +906,18 @@ function () {
 
   }, {
     key: "ContractEvents",
-    value: function ContractEvents(_ref20) {
+    value: function ContractEvents(_ref19) {
       var _this4 = this;
 
-      var contractAddress, abi, _ref20$fromBlock, fromBlock, toBlock, _ref20$includeTransac, includeTransaction, contractLogs, blocks;
+      var contractAddress, abi, _ref19$fromBlock, fromBlock, toBlock, _ref19$includeTransac, includeTransaction, contractLogs, blocks;
 
-      return regeneratorRuntime.async(function ContractEvents$(_context17) {
+      return _regeneratorRuntime.async(function ContractEvents$(_context17) {
         while (1) {
           switch (_context17.prev = _context17.next) {
             case 0:
-              contractAddress = _ref20.contractAddress, abi = _ref20.abi, _ref20$fromBlock = _ref20.fromBlock, fromBlock = _ref20$fromBlock === void 0 ? 0 : _ref20$fromBlock, toBlock = _ref20.toBlock, _ref20$includeTransac = _ref20.includeTransaction, includeTransaction = _ref20$includeTransac === void 0 ? false : _ref20$includeTransac;
+              contractAddress = _ref19.contractAddress, abi = _ref19.abi, _ref19$fromBlock = _ref19.fromBlock, fromBlock = _ref19$fromBlock === void 0 ? 0 : _ref19$fromBlock, toBlock = _ref19.toBlock, _ref19$includeTransac = _ref19.includeTransaction, includeTransaction = _ref19$includeTransac === void 0 ? false : _ref19$includeTransac;
               _context17.next = 3;
-              return regeneratorRuntime.awrap(this.MakeProviderCall({
+              return _regeneratorRuntime.awrap(this.MakeProviderCall({
                 methodName: "getLogs",
                 args: [{
                   address: contractAddress,
@@ -965,9 +949,9 @@ function () {
             case 9:
               blocks = {};
               _context17.next = 12;
-              return regeneratorRuntime.awrap(LimitedMap(5, contractLogs, function _callee(log) {
+              return _regeneratorRuntime.awrap(Utils.LimitedMap(5, contractLogs, function _callee2(log) {
                 var eventInterface, parsedLog;
-                return regeneratorRuntime.async(function _callee$(_context16) {
+                return _regeneratorRuntime.async(function _callee2$(_context16) {
                   while (1) {
                     switch (_context16.prev = _context16.next) {
                       case 0:
@@ -984,7 +968,7 @@ function () {
                         _context16.t2 = parsedLog;
                         _context16.t3 = {};
                         _context16.next = 9;
-                        return regeneratorRuntime.awrap(_this4.MakeProviderCall({
+                        return _regeneratorRuntime.awrap(_this4.MakeProviderCall({
                           methodName: "getTransaction",
                           args: [log.transactionHash]
                         }));
@@ -1019,8 +1003,8 @@ function () {
 
   }, {
     key: "ParseUnknownLog",
-    value: function ParseUnknownLog(_ref21) {
-      var log = _ref21.log;
+    value: function ParseUnknownLog(_ref20) {
+      var log = _ref20.log;
 
       if (log.topics && log.topics.length > 0) {
         var topicHash = log.topics[0];
@@ -1043,16 +1027,16 @@ function () {
 
   }, {
     key: "Events",
-    value: function Events(_ref22) {
+    value: function Events(_ref21) {
       var _this5 = this;
 
-      var toBlock, fromBlock, _ref22$includeTransac, includeTransaction, logs, i, newLogs, blocks, output;
+      var toBlock, fromBlock, _ref21$includeTransac, includeTransaction, logs, i, newLogs, blocks, output;
 
-      return regeneratorRuntime.async(function Events$(_context20) {
+      return _regeneratorRuntime.async(function Events$(_context20) {
         while (1) {
           switch (_context20.prev = _context20.next) {
             case 0:
-              toBlock = _ref22.toBlock, fromBlock = _ref22.fromBlock, _ref22$includeTransac = _ref22.includeTransaction, includeTransaction = _ref22$includeTransac === void 0 ? false : _ref22$includeTransac;
+              toBlock = _ref21.toBlock, fromBlock = _ref21.fromBlock, _ref21$includeTransac = _ref21.includeTransaction, includeTransaction = _ref21$includeTransac === void 0 ? false : _ref21$includeTransac;
               // Pull logs in batches of 100
               logs = [];
               i = fromBlock;
@@ -1064,7 +1048,7 @@ function () {
               }
 
               _context20.next = 6;
-              return regeneratorRuntime.awrap(this.MakeProviderCall({
+              return _regeneratorRuntime.awrap(this.MakeProviderCall({
                 methodName: "getLogs",
                 args: [{
                   fromBlock: i,
@@ -1091,9 +1075,9 @@ function () {
               });
               output = [];
               _context20.next = 16;
-              return regeneratorRuntime.awrap(LimitedMap(3, _toConsumableArray(Array(toBlock - fromBlock + 1).keys()), function _callee3(i) {
+              return _regeneratorRuntime.awrap(Utils.LimitedMap(3, _toConsumableArray(Array(toBlock - fromBlock + 1).keys()), function _callee4(i) {
                 var blockNumber, blockInfo, transactionInfo;
-                return regeneratorRuntime.async(function _callee3$(_context19) {
+                return _regeneratorRuntime.async(function _callee4$(_context19) {
                   while (1) {
                     switch (_context19.prev = _context19.next) {
                       case 0:
@@ -1106,7 +1090,7 @@ function () {
                         }
 
                         _context19.next = 5;
-                        return regeneratorRuntime.awrap(_this5.MakeProviderCall({
+                        return _regeneratorRuntime.awrap(_this5.MakeProviderCall({
                           methodName: "getBlock",
                           args: [blockNumber]
                         }));
@@ -1131,8 +1115,8 @@ function () {
 
                         transactionInfo = {};
                         _context19.next = 12;
-                        return regeneratorRuntime.awrap(Promise.all(blockInfo.map(function _callee2(block) {
-                          return regeneratorRuntime.async(function _callee2$(_context18) {
+                        return _regeneratorRuntime.awrap(Promise.all(blockInfo.map(function _callee3(block) {
+                          return _regeneratorRuntime.async(function _callee3$(_context18) {
                             while (1) {
                               switch (_context18.prev = _context18.next) {
                                 case 0:
@@ -1144,7 +1128,7 @@ function () {
                                   _context18.t0 = _objectSpread;
                                   _context18.t1 = {};
                                   _context18.next = 5;
-                                  return regeneratorRuntime.awrap(_this5.MakeProviderCall({
+                                  return _regeneratorRuntime.awrap(_this5.MakeProviderCall({
                                     methodName: "getTransaction",
                                     args: [block.transactionHash]
                                   }));
@@ -1153,7 +1137,7 @@ function () {
                                   _context18.t2 = _context18.sent;
                                   _context18.t3 = {};
                                   _context18.next = 9;
-                                  return regeneratorRuntime.awrap(_this5.MakeProviderCall({
+                                  return _regeneratorRuntime.awrap(_this5.MakeProviderCall({
                                     methodName: "getTransactionReceipt",
                                     args: [block.transactionHash]
                                   }));

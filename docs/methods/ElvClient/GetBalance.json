@@ -1,18 +1,18 @@
 [
   {
-    "signature": "async GetBalance({\n  \"address\": \"0x09bD0D777b77F5BDBc051db80974d3aEe5F5b215\"\n});",
-    "result": "\"10.0\""
+    "signature": "async GetBalance({\n  \"address\": \"0x58264eBC2D0c746B9b19e77024EC8943AF0879eA\"\n});",
+    "result": "\"2.0\""
   },
   {
-    "signature": "async GetBalance({\n  \"address\": \"0x09bD0D777b77F5BDBc051db80974d3aEe5F5b215\"\n});",
-    "result": "\"9.96395796\""
+    "signature": "async GetBalance({\n  \"address\": \"0x58264eBC2D0c746B9b19e77024EC8943AF0879eA\"\n});",
+    "result": "\"1.963986672\""
   },
   {
-    "signature": "async GetBalance({\n  \"address\": \"0x452221123460f1fb35344863099b28dd0ca05072\"\n});",
+    "signature": "async GetBalance({\n  \"address\": \"0xab468b90e3950050734931b460ce619f8f7ee047\"\n});",
     "result": "\"0.01\""
   },
   {
-    "signature": "async GetBalance({\n  \"address\": \"0x8701fbf87ba86b4CE68445Ccf20fe1D362971Ed7\"\n});",
-    "result": "\"49.222709752\""
+    "signature": "async GetBalance({\n  \"address\": \"0x4c76a2c0e27D724511eA3F0Df1B7182965088DD6\"\n});",
+    "result": "\"4.155538024\""
   }
 ]

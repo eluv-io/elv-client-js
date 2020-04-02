@@ -2,8 +2,6 @@
 
 const { ElvClient } = require("../src/ElvClient");
 const readline = require("readline");
-const Path = require("path");
-const mime = require("mime-types");
 const fs = require("fs");
 
 const yargs = require("yargs");
@@ -19,9 +17,6 @@ const argv = yargs
   })
   .option("title", {
     description: "Title for the mezzanine"
-  })
-  .option("poster", {
-    description: "Poster image for this mezzanine"
   })
   .option("metadata", {
     description: "Metadata JSON string to include in the object metadata"
@@ -40,21 +35,13 @@ const argv = yargs
   .option("abr-profile", {
     description: "Path to JSON file containing alternative ABR profile"
   })
-  .option("s3-copy", {
-    type: "boolean",
-    description: "If specified, poster file will be pulled from an S3 bucket instead of the local system"
-  })
-  .option("s3-reference", {
-    type: "boolean",
-    description: "If specified, poster file will be referenced from an S3 bucket instead of the local system"
-  })
   .option("elv-geo", {
     type: "string",
     description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
   })
   .demandOption(
-    ["library", "masterHash"],
-    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> --poster <path-to-poster-image> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--s3-copy || --s3-reference) (--elv-geo eu-west)\n"
+    ["library", "masterHash", "type"],
+    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
   )
   .argv;
 
@@ -79,12 +66,9 @@ const Create = async ({
   variant,
   offeringKey,
   title,
-  poster,
   metadata,
   existingMezzId,
   abrProfile,
-  s3Copy,
-  s3Reference,
   elvGeo,
   wait=false
 }) => {
@@ -107,15 +91,20 @@ const Create = async ({
       secret: process.env.AWS_SECRET
     };
 
-    if(!type && !existingMezzId) {
-      const abrMasterType = await client.ContentType({name: "ABR Master"});
-
-      if(!abrMasterType) {
-        throw Error("Unable to find content type 'ABR Master'");
-      }
-
-      type = abrMasterType.id;
+    const originalType = type;
+    if(type.startsWith("iq__")) {
+      type = await client.ContentType({typeId: type});
+    } else if(type.startsWith("hq__")) {
+      type = await client.ContentType({versionHash: type});
+    } else {
+      type = await client.ContentType({name: type});
     }
+
+    if(!type) {
+      throw Error(`Unable to find content type "${originalType}"`);
+    }
+
+    type = type.hash;
 
     console.log("\nCreating ABR Mezzanine...");
     const createResponse = await client.CreateABRMezzanine({
@@ -134,59 +123,6 @@ const Create = async ({
     Report(createResponse);
 
     const objectId = createResponse.id;
-
-    if(poster) {
-      const {write_token} = await client.EditContentObject({libraryId: library, objectId});
-
-      if(s3Copy || s3Reference) {
-        const {region, bucket, accessKey, secret} = access;
-
-        await client.UploadFilesFromS3({
-          libraryId: library,
-          objectId,
-          writeToken: write_token,
-          fileInfo: [{
-            path: Path.basename(poster),
-            source: poster
-          }],
-          region,
-          bucket,
-          accessKey,
-          secret,
-          copy: s3Copy,
-        });
-      } else {
-        const data = fs.readFileSync(poster);
-
-        await client.UploadFiles({
-          libraryId: library,
-          objectId,
-          writeToken: write_token,
-          fileInfo: [{
-            path: Path.basename(poster),
-            type: "file",
-            mimeType: mime.lookup(poster) || "image/*",
-            size: data.length,
-            data
-          }]
-        });
-      }
-
-      await client.CreateLinks({
-        libraryId: library,
-        objectId,
-        writeToken: write_token,
-        links: [
-          {
-            target: Path.basename(poster),
-            path: "asset_metadata/components/poster",
-            type: "file"
-          }
-        ]
-      });
-
-      await client.FinalizeContentObject({libraryId: library, objectId, writeToken: write_token});
-    }
 
     console.log("Starting Mezzanine Job(s)");
 
@@ -257,15 +193,12 @@ let {
   masterHash,
   type,
   title,
-  poster,
   existingMezzId,
   abrProfile,
   variant,
   offeringKey,
   metadata,
   wait,
-  s3Reference,
-  s3Copy,
   elvGeo
 } = argv;
 
@@ -295,12 +228,9 @@ Create({
   variant,
   offeringKey,
   title,
-  poster,
   metadata,
   existingMezzId,
   abrProfile,
-  s3Copy,
-  s3Reference,
   elvGeo,
   wait
 });

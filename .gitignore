@@ -4,9 +4,11 @@
 
 **.DS_STORE
 
+deploy-docs.sh
+
 node_modules/
 
-build/contracts/
+test/bundle-analysis
 
 ElvClient-min-dev.js*
 ElvClient-node-min-dev.js*

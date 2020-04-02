@@ -304,6 +304,11 @@ function attachModuleSymbols(doclets, modules) {
 }
 
 function MethodEntry(item, method) {
+  // Modified: Fix segregated module names (exports.access / exports.manage)
+  if(method.name.startsWith("exports")) {
+    method.name = method.name.split(".").pop();
+  }
+
   return (
     "<li data-type=\"method\" id=\"" + item.name.replace("/", "_") + "-" + method.name + "-nav\">" +
     linkto(method.longname, method.name, "method-link") +
@@ -311,7 +316,7 @@ function MethodEntry(item, method) {
   );
 }
 
-// Use the @methodGroup tag to group methods
+// Modified: Use the @methodGroup tag to group methods
 function GroupedMethods(item, methods) {
   const groupedMethods = {};
   methods.forEach(method => {
@@ -505,7 +510,15 @@ exports.publish = function (taffyData, opts, tutorials) {
     doclet.attribs = "";
 
     if(doclet.memberof && doclet.name) {
-      const exampleFile = path.join(examplesDir, doclet.memberof, doclet.name + ".json");
+      // Modified: Look for examples
+      const memberOf = doclet.memberof
+        .replace("module:", "")
+        .split("/")[0];
+      const name = doclet.name
+        .replace("exports.", "");
+
+      const exampleFile = path.join(examplesDir, memberOf, name + ".json");
+
       if (fs.existsSync(exampleFile)) {
         doclet.examples = JSON.parse(fs.readFileSync(exampleFile, "utf8"))
           .map(example => {

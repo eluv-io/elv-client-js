@@ -1,17 +1,11 @@
-"use strict";
+var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
-
-function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 // Async map - Perform up to `limit` operations simultaneously
 var LimitedMap = function LimitedMap(limit, array, f) {
   var index, locked, nextIndex, results, active;
-  return regeneratorRuntime.async(function LimitedMap$(_context3) {
+  return _regeneratorRuntime.async(function LimitedMap$(_context3) {
     while (1) {
       switch (_context3.prev = _context3.next) {
         case 0:
@@ -20,7 +14,7 @@ var LimitedMap = function LimitedMap(limit, array, f) {
 
           nextIndex = function nextIndex() {
             var thisIndex;
-            return regeneratorRuntime.async(function nextIndex$(_context) {
+            return _regeneratorRuntime.async(function nextIndex$(_context) {
               while (1) {
                 switch (_context.prev = _context.next) {
                   case 0:
@@ -30,7 +24,7 @@ var LimitedMap = function LimitedMap(limit, array, f) {
                     }
 
                     _context.next = 3;
-                    return regeneratorRuntime.awrap(new Promise(function (resolve) {
+                    return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                       return setTimeout(resolve, 10);
                     }));
 
@@ -58,13 +52,13 @@ var LimitedMap = function LimitedMap(limit, array, f) {
           return _context3.abrupt("return", new Promise(function (resolve, reject) {
             _toConsumableArray(Array(limit || 1)).forEach(function _callee() {
               var index;
-              return regeneratorRuntime.async(function _callee$(_context2) {
+              return _regeneratorRuntime.async(function _callee$(_context2) {
                 while (1) {
                   switch (_context2.prev = _context2.next) {
                     case 0:
                       active += 1;
                       _context2.next = 3;
-                      return regeneratorRuntime.awrap(nextIndex());
+                      return _regeneratorRuntime.awrap(nextIndex());
 
                     case 3:
                       index = _context2.sent;
@@ -77,7 +71,7 @@ var LimitedMap = function LimitedMap(limit, array, f) {
 
                       _context2.prev = 5;
                       _context2.next = 8;
-                      return regeneratorRuntime.awrap(f(array[index], index));
+                      return _regeneratorRuntime.awrap(f(array[index], index));
 
                     case 8:
                       results[index] = _context2.sent;
@@ -91,7 +85,7 @@ var LimitedMap = function LimitedMap(limit, array, f) {
 
                     case 14:
                       _context2.next = 16;
-                      return regeneratorRuntime.awrap(nextIndex());
+                      return _regeneratorRuntime.awrap(nextIndex());
 
                     case 16:
                       index = _context2.sent;
