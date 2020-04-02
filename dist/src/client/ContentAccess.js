@@ -18,15 +18,6 @@ var UrlJoin = require("url-join");
 var HttpClient = require("../HttpClient");
 
 var Crypto = require("../Crypto");
-/*
-const SpaceContract = require("../contracts/BaseContentSpace");
-const LibraryContract = require("../contracts/BaseLibrary");
-const ContentContract = require("../contracts/BaseContent");
-const ContentTypeContract = require("../contracts/BaseContentType");
-const AccessibleContract = require("../contracts/Accessible");
-
- */
-
 
 var _require = require("../Validation"),
     ValidateLibrary = _require.ValidateLibrary,
@@ -37,55 +28,69 @@ var _require = require("../Validation"),
     ValidateParameters = _require.ValidateParameters;
 
 exports.Visibility = function _callee(_ref) {
-  var id, hasVisibility;
+  var id, address, hasVisibility;
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
           id = _ref.id;
           _context.prev = 1;
-          return _context.abrupt("return", 1);
+          address = this.utils.HashToAddress(id);
 
-        case 5:
-          hasVisibility = _context.sent;
-
-          if (hasVisibility) {
-            _context.next = 8;
+          if (this.visibilityInfo[address]) {
+            _context.next = 12;
             break;
           }
 
-          return _context.abrupt("return", 10);
+          _context.next = 6;
+          return _regeneratorRuntime.awrap(this.authClient.ContractHasMethod({
+            contractAddress: address,
+            methodName: "visibility"
+          }));
 
-        case 8:
-          _context.next = 10;
+        case 6:
+          hasVisibility = _context.sent;
+
+          if (hasVisibility) {
+            _context.next = 9;
+            break;
+          }
+
+          return _context.abrupt("return", 1);
+
+        case 9:
+          _context.next = 11;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: this.utils.HashToAddress(id),
             methodName: "visibility"
           }));
 
-        case 10:
-          return _context.abrupt("return", _context.sent);
+        case 11:
+          this.visibilityInfo[address] = _context.sent;
 
-        case 13:
-          _context.prev = 13;
+        case 12:
+          return _context.abrupt("return", this.visibilityInfo[address]);
+
+        case 15:
+          _context.prev = 15;
           _context.t0 = _context["catch"](1);
 
           if (!(_context.t0.code === "CALL_EXCEPTION")) {
-            _context.next = 17;
+            _context.next = 19;
             break;
           }
 
           return _context.abrupt("return", 0);
 
-        case 17:
+        case 19:
           throw _context.t0;
 
-        case 18:
+        case 20:
         case "end":
           return _context.stop();
       }
     }
-  }, null, this, [[1, 13]]);
+  }, null, this, [[1, 15]]);
 };
 /* Content Spaces */
 

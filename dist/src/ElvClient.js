@@ -147,12 +147,14 @@ function () {
   _createClass(ElvClient, [{
     key: "InitializeClients",
     value: function InitializeClients() {
+      // Cached info
       this.contentTypes = {};
       this.encryptionConks = {};
       this.reencryptionConks = {};
       this.stateChannelAccess = {};
       this.objectLibraryIds = {};
       this.objectImageUrls = {};
+      this.visibilityInfo = {};
       this.HttpClient = new HttpClient({
         uris: this.fabricURIs,
         debug: this.debug

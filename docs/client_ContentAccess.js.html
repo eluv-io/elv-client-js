@@ -71,15 +71,6 @@ const UrlJoin = require("url-join");
 const HttpClient = require("../HttpClient");
 const Crypto = require("../Crypto");
 
-/*
-const SpaceContract = require("../contracts/BaseContentSpace");
-const LibraryContract = require("../contracts/BaseLibrary");
-const ContentContract = require("../contracts/BaseContent");
-const ContentTypeContract = require("../contracts/BaseContentType");
-const AccessibleContract = require("../contracts/Accessible");
-
- */
-
 const {
   ValidateLibrary,
   ValidateObject,
@@ -92,21 +83,26 @@ const {
 
 exports.Visibility = async function({id}) {
   try {
-    // TODO: Test only - Remove
-    return 1;
+    const address = this.utils.HashToAddress(id);
 
-    // eslint-disable-next-line no-unreachable
-    const hasVisibility = await this.authClient.ContractHasMethod({
-      contractAddress: this.utils.HashToAddress(id),
-      methodName: "visibility"
-    });
+    if(!this.visibilityInfo[address]) {
+      // eslint-disable-next-line no-unreachable
+      const hasVisibility = await this.authClient.ContractHasMethod({
+        contractAddress: address,
+        methodName: "visibility"
+      });
 
-    if(!hasVisibility) { return 10; }
+      if(!hasVisibility) {
+        return 1;
+      }
 
-    return await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(id),
-      methodName: "visibility"
-    });
+      this.visibilityInfo[address] = await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(id),
+        methodName: "visibility"
+      });
+    }
+
+    return this.visibilityInfo[address];
   // eslint-disable-next-line no-unreachable
   } catch(error) {
     if(error.code === "CALL_EXCEPTION") {

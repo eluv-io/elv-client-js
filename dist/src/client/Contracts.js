@@ -250,23 +250,29 @@ exports.CallContractMethod = function _callee5(_ref6) {
       switch (_context5.prev = _context5.next) {
         case 0:
           contractAddress = _ref6.contractAddress, abi = _ref6.abi, methodName = _ref6.methodName, _ref6$methodArgs = _ref6.methodArgs, methodArgs = _ref6$methodArgs === void 0 ? [] : _ref6$methodArgs, value = _ref6.value, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides, _ref6$formatArguments = _ref6.formatArguments, formatArguments = _ref6$formatArguments === void 0 ? true : _ref6$formatArguments, _ref6$cacheContract = _ref6.cacheContract, cacheContract = _ref6$cacheContract === void 0 ? true : _ref6$cacheContract, _ref6$overrideCachedC = _ref6.overrideCachedContract, overrideCachedContract = _ref6$overrideCachedC === void 0 ? false : _ref6$overrideCachedC;
-          ValidateAddress(contractAddress);
+          ValidateAddress(contractAddress); // Delete cached visibility value if it is being changed
+
+          contractAddress = this.utils.FormatAddress(contractAddress);
+
+          if (methodName === "setVisibility" && this.visibilityInfo[contractAddress]) {
+            delete this.visibilityInfo[contractAddress];
+          }
 
           if (abi) {
-            _context5.next = 6;
+            _context5.next = 8;
             break;
           }
 
-          _context5.next = 5;
+          _context5.next = 7;
           return _regeneratorRuntime.awrap(this.ContractAbi({
             contractAddress: contractAddress
           }));
 
-        case 5:
+        case 7:
           abi = _context5.sent;
 
-        case 6:
-          _context5.next = 8;
+        case 8:
+          _context5.next = 10;
           return _regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
             contractAddress: contractAddress,
             abi: abi,
@@ -279,10 +285,10 @@ exports.CallContractMethod = function _callee5(_ref6) {
             overrideCachedContract: overrideCachedContract
           }));
 
-        case 8:
+        case 10:
           return _context5.abrupt("return", _context5.sent);
 
-        case 9:
+        case 11:
         case "end":
           return _context5.stop();
       }
@@ -320,23 +326,29 @@ exports.CallContractMethodAndWait = function _callee6(_ref7) {
       switch (_context6.prev = _context6.next) {
         case 0:
           contractAddress = _ref7.contractAddress, abi = _ref7.abi, methodName = _ref7.methodName, methodArgs = _ref7.methodArgs, value = _ref7.value, _ref7$overrides = _ref7.overrides, overrides = _ref7$overrides === void 0 ? {} : _ref7$overrides, _ref7$formatArguments = _ref7.formatArguments, formatArguments = _ref7$formatArguments === void 0 ? true : _ref7$formatArguments, _ref7$cacheContract = _ref7.cacheContract, cacheContract = _ref7$cacheContract === void 0 ? true : _ref7$cacheContract, _ref7$overrideCachedC = _ref7.overrideCachedContract, overrideCachedContract = _ref7$overrideCachedC === void 0 ? false : _ref7$overrideCachedC;
-          ValidateAddress(contractAddress);
+          ValidateAddress(contractAddress); // Delete cached visibility value if it is being changed
+
+          contractAddress = this.utils.FormatAddress(contractAddress);
+
+          if (methodName === "setVisibility" && this.visibilityInfo[contractAddress]) {
+            delete this.visibilityInfo[contractAddress];
+          }
 
           if (abi) {
-            _context6.next = 6;
+            _context6.next = 8;
             break;
           }
 
-          _context6.next = 5;
+          _context6.next = 7;
           return _regeneratorRuntime.awrap(this.ContractAbi({
             contractAddress: contractAddress
           }));
 
-        case 5:
+        case 7:
           abi = _context6.sent;
 
-        case 6:
-          _context6.next = 8;
+        case 8:
+          _context6.next = 10;
           return _regeneratorRuntime.awrap(this.ethClient.CallContractMethodAndWait({
             contractAddress: contractAddress,
             abi: abi,
@@ -349,10 +361,10 @@ exports.CallContractMethodAndWait = function _callee6(_ref7) {
             overrideCachedContract: overrideCachedContract
           }));
 
-        case 8:
+        case 10:
           return _context6.abrupt("return", _context6.sent);
 
-        case 9:
+        case 11:
         case "end":
           return _context6.stop();
       }
