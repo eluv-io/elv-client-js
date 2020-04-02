@@ -1,6 +1,6 @@
 [
   {
-    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"embody fragile over high alarm yellow cloud size volcano brick must nephew\"\n});",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"bright design cloud drift beach must equip nuclear tongue chicken fringe layer\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

@@ -19,9 +19,8 @@ const Fetch = (input, init={}) => {
 
 const UrlJoin = require("url-join");
 const URI = require("urijs");
-const BaseLibraryContract = require("../src/contracts/BaseLibrary");
-const BaseContentContract = require("../src/contracts/BaseContent");
-const CustomContract = require("../src/contracts/SampleContentLicensing");
+
+//const CustomContract = require("../src/contracts/SampleContentLicensing");
 
 const {ElvClient} = require("../src/ElvClient");
 
@@ -37,7 +36,7 @@ const testFileSize = 100000;
 
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
-let mediaLibraryId, masterHash, mezzanineId, mezzanineHash;
+let mediaLibraryId, masterId, masterHash, mezzanineId, mezzanineHash, linkLibraryId, linkObjectId;
 let s3Access;
 
 let testFile1, testFile2, testFile3, testHash;
@@ -47,18 +46,15 @@ let partInfo = {};
 // Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
-    jest.setTimeout(60000);
+    jest.setTimeout(90000);
 
-    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "50"));
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "5"));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);
     testFile2 = RandomBytes(testFileSize);
     testFile3 = RandomBytes(testFileSize);
     testHash = RandomString(10);
-
-    await client.userProfileClient.WalletAddress();
-    await accessClient.userProfileClient.WalletAddress();
 
     s3Access = {
       region: process.env.AWS_REGION,
@@ -67,6 +63,9 @@ describe("Test ElvClient", () => {
       secret: process.env.AWS_SECRET,
       testFile: process.env.AWS_TEST_FILE
     };
+
+    await client.userProfileClient.WalletAddress();
+    await accessClient.userProfileClient.WalletAddress();
 
     // Create required types
     const requiredContentTypes = ["ABR Master", "Library", "Production Master"];
@@ -685,15 +684,12 @@ describe("Test ElvClient", () => {
   });
 
   describe("Content Object Group Permissions", () => {
-    let groupObjectId;
-    beforeAll(async () => {
+    test("Content Object Group Permissions", async () => {
       const {id, write_token} = await client.CreateContentObject({libraryId});
       await client.FinalizeContentObject({libraryId, objectId: id, writeToken: write_token});
 
-      groupObjectId = id;
-    });
+      const groupObjectId = id;
 
-    test("Content Object Group Permissions", async () => {
       const initialPermissions = await client.ContentObjectGroupPermissions({objectId: groupObjectId});
 
       expect(initialPermissions).toBeDefined();
@@ -759,14 +755,12 @@ describe("Test ElvClient", () => {
   });
 
   describe("Encryption", () => {
-    beforeAll(async () => {
+    test("Encrypt and Decrypt", async () => {
       // Ensure encryption conk is set
       const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
       await client.EncryptionConk({libraryId, objectId, writeToken});
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
-    });
 
-    test("Encrypt and Decrypt", async () => {
       const encrypted = await client.Encrypt({libraryId, objectId, chunk: testFile1});
       const decrypted = new Uint8Array(await client.Decrypt({libraryId, objectId, chunk: encrypted}));
 
@@ -1536,6 +1530,7 @@ describe("Test ElvClient", () => {
       expect(metadata.public.name).toEqual("Production Master Test");
       expect(metadata.public.description).toEqual("Production Master Test Description");
 
+      masterId = id;
       masterHash = hash;
     });
 
@@ -1707,12 +1702,78 @@ describe("Test ElvClient", () => {
         throw error;
       }
     });
+
+    test("Playout Options Through Public Link", async () => {
+      try {
+        // Create a new object that accessClient should not have access to,
+        // then attempt to access playout options through a link in that object
+        linkLibraryId = await client.CreateContentLibrary({
+          name: "Test Playout Link"
+        });
+
+        const {id, write_token} = await client.CreateContentObject({
+          libraryId: linkLibraryId,
+          options: {
+            visibility: 1
+          }
+        });
+
+        linkObjectId = id;
+
+        await client.CreateLinks({
+          libraryId: linkLibraryId,
+          objectId: linkObjectId,
+          writeToken: write_token,
+          links: [{
+            type: "rep",
+            path: "public/videoLink",
+            targetHash: await client.LatestVersionHash({objectId: mezzanineId}),
+            target: "playout/default/options.json"
+          }]
+        });
+
+        await client.FinalizeContentObject({
+          libraryId: linkLibraryId,
+          objectId: linkObjectId,
+          writeToken: write_token
+        });
+
+        // Produce playout options from link
+        const playoutOptions = await accessClient.PlayoutOptions({
+          objectId: id,
+          linkPath: "public/videoLink",
+          protocols: ["hls", "dash"],
+          drms: []
+        });
+
+        expect(playoutOptions.dash).toBeDefined();
+        expect(playoutOptions.dash.playoutUrl).toBeDefined();
+        expect(playoutOptions.dash.playoutMethods.clear).toBeDefined();
+
+        expect(playoutOptions.hls).toBeDefined();
+        expect(playoutOptions.hls.playoutUrl).toBeDefined();
+        expect(playoutOptions.hls.playoutMethods.clear).toBeDefined();
+
+        const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
+          objectId: linkObjectId,
+          linkPath: "public/videoLink",
+          protocols: ["hls", "dash"],
+          drms: []
+        });
+
+        expect(bitmovinPlayoutOptions).toBeDefined();
+      } catch(error) {
+        console.error("ERROR:");
+        console.error(JSON.stringify(error, null, 2));
+        throw error;
+      }
+    });
   });
 
   describe("Content Object Link Graph", () => {
     let targetId;
 
-    beforeAll(async () => {
+    test("Create Object With Links", async () => {
       const {id, write_token} = await client.CreateContentObject({
         libraryId
       });
@@ -1818,21 +1879,10 @@ describe("Test ElvClient", () => {
   });
 
   describe("Access Requests", () => {
-    test("Cached Access Transactions", async () => {
-      const transactionHash = await client.CachedAccessTransaction({versionHash});
-      expect(transactionHash).toBeDefined();
-
-      client.ClearCache();
-      const noTransaction = await client.CachedAccessTransaction({versionHash});
-      expect(noTransaction).not.toBeDefined();
-    });
-
     test("Access Charge and Info", async () => {
-      await client.CallContractMethod({
-        abi: BaseContentContract.abi,
-        contractAddress: client.utils.HashToAddress(objectId),
-        methodName: "setVisibility",
-        methodArgs: [10]
+      await client.SetVisibility({
+        id: objectId,
+        visibility: 10
       });
 
       await client.SetAccessCharge({objectId, accessCharge: "0.5"});
@@ -1899,7 +1949,6 @@ describe("Test ElvClient", () => {
     test("Contract Events", async () => {
       const events = await client.ContractEvents({
         contractAddress: client.utils.HashToAddress(libraryId),
-        abi: BaseLibraryContract.abi
       });
 
       expect(events).toBeDefined();
@@ -1927,8 +1976,9 @@ describe("Test ElvClient", () => {
 
       expect(event).toBeDefined();
 
+      const abi = await client.ContractAbi({id: objectId});
       const eventLog = client.ExtractEventFromLogs({
-        abi: BaseContentContract.abi,
+        abi,
         event,
         eventName: "SetContentContract"
       });
@@ -2141,12 +2191,46 @@ describe("Test ElvClient", () => {
     });
 
     test("Delete Content Object", async () => {
+      // Delete test object
       await client.DeleteContentObject({libraryId, objectId});
 
       try {
         await client.ContentObject({libraryId, objectId});
+
+        // If test reaches this point, object has not been deleted successfully
         expect(undefined).toBeDefined();
-      // eslint-disable-next-line no-empty
+        // eslint-disable-next-line no-empty
+      } catch(error) {}
+
+      // Delete master
+      await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: masterId});
+
+      try {
+        await client.ContentObject({libraryId: mediaLibraryId, objectId: masterId});
+
+        expect(undefined).toBeDefined();
+        // eslint-disable-next-line no-empty
+      } catch(error) {}
+
+      // Delete mezzanine
+      await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: mezzanineId});
+
+      try {
+        await client.ContentObject({libraryId: mediaLibraryId, objectId: mezzanineId});
+
+        expect(undefined).toBeDefined();
+        // eslint-disable-next-line no-empty
+      } catch(error) {}
+
+      // Delete link test object
+      await client.DeleteContentObject({libraryId: linkLibraryId, objectId: linkObjectId});
+
+      try {
+        await client.ContentObject({libraryId: linkLibraryId, objectId: linkObjectId});
+
+        // If test reaches this point, object has not been deleted successfully
+        expect(undefined).toBeDefined();
+        // eslint-disable-next-line no-empty
       } catch(error) {}
     });
 

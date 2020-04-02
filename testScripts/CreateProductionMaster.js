@@ -40,7 +40,7 @@ const argv = yargs
     description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
   })
   .demandOption(
-    ["library", "title", "files"],
+    ["library", "type", "title", "files"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateProductionMaster.js --library <master-library-id> --title <title> --metadata '<metadata-json>' --files <file1> (<file2>...) (--s3-copy || --s3-reference)\n"
   )
   .argv;
@@ -78,7 +78,7 @@ const Create = async ({
       }));
     } else {
       fileInfo = files.map(path => {
-        const fileDescriptor = fs.openSync(path);
+        const fileDescriptor = fs.openSync(path, "r");
         fileHandles.push(fileDescriptor);
         const size = fs.fstatSync(fileDescriptor).size;
         const mimeType = mime.lookup(path) || "video/mp4";
@@ -95,15 +95,21 @@ const Create = async ({
 
     console.log("\nCreating Production Master");
 
-    if(!type) {
-      const abrMasterType = await client.ContentType({name: "Production Master"});
-
-      if(!abrMasterType) {
-        throw Error("Unable to find content type 'Production Master'");
-      }
-
-      type = abrMasterType.id;
+    console.log(type);
+    const originalType = type;
+    if(type.startsWith("iq__")) {
+      type = await client.ContentType({typeId: type});
+    } else if(type.startsWith("hq__")) {
+      type = await client.ContentType({versionHash: type});
+    } else {
+      type = await client.ContentType({name: type});
     }
+
+    if(!type) {
+      throw Error(`Unable to find content type "${originalType}"`);
+    }
+
+    type = type.hash;
 
     try {
       const {errors, warnings, id, hash} = await client.CreateProductionMaster({

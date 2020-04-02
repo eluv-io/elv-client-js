@@ -1,5 +1,3 @@
-require("@babel/polyfill");
-
 const Id = require("./Id");
 const Utils = require("./Utils");
 
@@ -34,7 +32,11 @@ class FrameClient {
    * @param {number} timeout - How long to wait for a response after calling a method before giving up
    * and generating a timeout error
    */
-  constructor({target=parent, timeout=30}={}) {
+  constructor({target, timeout=30}={}) {
+    if(!target && typeof window !== "undefined" && window.parent) {
+      target = window.parent;
+    }
+
     this.target = target;
     this.timeout = timeout;
 
@@ -258,9 +260,9 @@ class FrameClient {
       "AddLibraryContentType",
       "AudienceData",
       "AvailableDRMs",
+      "AwaitPending",
       "BitmovinPlayoutOptions",
       "BlockNumber",
-      "CachedAccessTransaction",
       "CallBitcodeMethod",
       "CallContractMethod",
       "CallContractMethodAndWait",
@@ -274,6 +276,7 @@ class FrameClient {
       "ContentObjectAccessComplete",
       "ContentObjectGraph",
       "ContentObjectGroupPermissions",
+      "ContentObjectImageUrl",
       "ContentObjectLibraryId",
       "ContentObjectMetadata",
       "ContentObjectOwner",
@@ -285,6 +288,7 @@ class FrameClient {
       "ContentType",
       "ContentTypeOwner",
       "ContentTypes",
+      "ContractAbi",
       "ContractEvents",
       "ContractName",
       "CopyContentObject",
@@ -362,6 +366,8 @@ class FrameClient {
       "SetCustomContentContract",
       "SetNodes",
       "SetOauthToken",
+      "SetSignerFromOauthToken",
+      "SetVisibility",
       "StartABRMezzanineJobs",
       "UpdateContentObjectGraph",
       "UploadFileData",
@@ -373,7 +379,7 @@ class FrameClient {
       "UploadStatus",
       "UseRegion",
       "VerifyContentObject",
-      "WithdrawContractFunds"
+      "Visibility"
     ];
   }
 
@@ -381,6 +387,7 @@ class FrameClient {
     return [
       "AccessLevel",
       "CollectedTags",
+      "CreateWallet",
       "DeleteUserMetadata",
       "MergeUserMetadata",
       "PublicUserMetadata",
@@ -388,6 +395,7 @@ class FrameClient {
       "UserMetadata",
       "UserProfileImage",
       "UserWalletAddress",
+      "UserWalletObjectInfo",
       "WalletAddress"
     ];
   }

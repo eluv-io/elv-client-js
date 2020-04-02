@@ -20,6 +20,10 @@
     "result": "\"hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM\""
   },
   {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"links/metadataLink\",\n  \"resolveLinks\": true\n});",
+    "result": "{\n  \"data\": \"metadata\"\n}"
+  },
+  {
     "signature": "async UserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});"
   },
   {

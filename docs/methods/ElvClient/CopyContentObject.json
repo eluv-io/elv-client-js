@@ -1,6 +1,0 @@
-[
-  {
-    "signature": "async CopyContentObject({\n  \"libraryId\": \"ilib2BgBG7MBFtePKRHG7CReRaYcn8zy\",\n  \"originalVersionHash\": \"hq__8vwod6difAqq5azK5VSciwUZMT9ECUnBzW12CpBUfKhxoeAB9UK2w6xSPRPFoTXdmrFY1y3vVW\",\n  \"options\": {\n    \"type\": \"\",\n    \"meta\": {\n      \"copy\": \"metadata\"\n    },\n    \"copy_from\": \"hq__8vwod6difAqq5azK5VSciwUZMT9ECUnBzW12CpBUfKhxoeAB9UK2w6xSPRPFoTXdmrFY1y3vVW\"\n  }\n});",
-    "result": "{\n  \"id\": \"iq__32JPfKPYp9vKHWXKMViZsuqfszxQ\",\n  \"write_token\": \"tqw_4C42NDCooBQDoz4gXqAS7dpf5DZTrMkqe\",\n  \"type\": \"hq__E4mhM59yjRgGFCdnTcPswGgN6HXwTtdKmiFcy7rWo8pU6wo3RixPv9Y9eibCFs2pzEuPHQdSex\"\n}"
-  }
-]

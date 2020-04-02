@@ -1,11 +1,11 @@
 [
   {
-    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__2bxcxdyu2BgNZR9SLr2m8QZdFM6b\",\n  \"groupAddress\": \"0xb6c8ca97f8044272413e6d61c1be0c403e0f440b\",\n  \"permission\": \"manage\"\n});"
+    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__3tEP7jpGSGbyuxDpGaZkW8w1c9z2\",\n  \"groupAddress\": \"0x1b575e71c0931068cde5629fd3fd74fd383a1f67\",\n  \"permission\": \"manage\"\n});"
   },
   {
-    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__2bxcxdyu2BgNZR9SLr2m8QZdFM6b\",\n  \"groupAddress\": \"0xb6c8ca97f8044272413e6d61c1be0c403e0f440b\",\n  \"permission\": \"access\"\n});"
+    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__3tEP7jpGSGbyuxDpGaZkW8w1c9z2\",\n  \"groupAddress\": \"0x1b575e71c0931068cde5629fd3fd74fd383a1f67\",\n  \"permission\": \"access\"\n});"
   },
   {
-    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__2bxcxdyu2BgNZR9SLr2m8QZdFM6b\",\n  \"groupAddress\": \"0xb6c8ca97f8044272413e6d61c1be0c403e0f440b\",\n  \"permission\": \"see\"\n});"
+    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__3tEP7jpGSGbyuxDpGaZkW8w1c9z2\",\n  \"groupAddress\": \"0x1b575e71c0931068cde5629fd3fd74fd383a1f67\",\n  \"permission\": \"see\"\n});"
   }
 ]
