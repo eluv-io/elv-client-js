@@ -418,7 +418,7 @@ function () {
     value: function SetSigner(_ref7) {
       var signer = _ref7.signer;
       signer.connect(this.ethClient.Provider());
-      signer.provider.pollingInterval = 1000;
+      signer.provider.pollingInterval = 500;
       this.signer = signer;
       this.InitializeClients();
     }

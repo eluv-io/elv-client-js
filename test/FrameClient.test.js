@@ -1,10 +1,17 @@
-const crypto = require("crypto");
+const TestSuite = require("./TestSuite/TestSuite");
+const {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  mockCallback,
+  runTests,
+  test
+} = new TestSuite();
 
-Object.defineProperty(global.self, "crypto", {
-  value: {
-    getRandomValues: arr => crypto.randomBytes(arr.length),
-  },
-});
+const Window = require("window");
+//const window = new Window();
+global.window = new Window();
 
 const {FrameClient} = require("../src/FrameClient");
 const OutputLogger = require("./utils/OutputLogger");
@@ -30,8 +37,6 @@ const CompareMethods = (frameClientMethods, elvClientMethods) => {
 
 describe("Test FrameClient", () => {
   beforeAll(async () => {
-    jest.setTimeout(30000);
-
     frameClient = OutputLogger(
       FrameClient,
       new FrameClient({target: window}),
@@ -80,7 +85,7 @@ describe("Test FrameClient", () => {
   });
 
   test("Call ElvClient Method - Errors", async () => {
-    console.error = jest.fn();
+    console.error = mockCallback();
 
     try {
       // Access a library with a bad transaction hash
@@ -114,7 +119,7 @@ describe("Test FrameClient", () => {
   });
 
   test("Pass FrameClient Request", async () => {
-    const Respond = jest.fn();
+    const Respond = mockCallback();
 
     const request = {
       calledMethod: "ContentLibraries",
@@ -160,7 +165,7 @@ describe("Test FrameClient", () => {
 
     partHash = uploadResult.part.hash;
 
-    const callback = jest.fn();
+    const callback = mockCallback();
     await frameClient.DownloadPart({
       libraryId,
       objectId,
@@ -174,7 +179,7 @@ describe("Test FrameClient", () => {
   });
 
   test("Pass FrameClient Request With Callback", async () => {
-    const callback = jest.fn();
+    const callback = mockCallback();
 
     const request = {
       type: "ElvFrameRequest",
@@ -204,3 +209,6 @@ describe("Test FrameClient", () => {
     expect(callback).toHaveBeenCalledTimes(10);
   });
 });
+
+if(!module.parent) { runTests(); }
+module.exports = runTests;

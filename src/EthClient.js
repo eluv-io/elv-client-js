@@ -58,7 +58,7 @@ class EthClient {
       // data every time a contract is initialized in the client (often). Ethers.js just checks that the code isn't == "0x", so
       // we can give it some dummy string instead and assume the contract is fine
       this.provider.getCode = async () => "0x123";
-      this.provider.pollingInterval = 1000;
+      this.provider.pollingInterval = 500;
     }
 
     return this.provider;
@@ -115,6 +115,7 @@ class EthClient {
   async MakeProviderCall({methodName, args=[], attempts=0}) {
     try {
       const provider = this.Provider();
+      await provider.getNetwork();
 
       this.Log(`ETH ${provider.connection.url} ${methodName} [${args.join(", ")}]`);
       return await provider[methodName](...args);
@@ -186,7 +187,10 @@ class EthClient {
   }) {
     this.Log(`Deploying contract with args [${constructorArgs.join(", ")}]`);
 
-    const signer = this.client.signer.connect(this.Provider());
+    const provider = this.Provider();
+    await provider.getNetwork();
+
+    const signer = this.client.signer.connect(provider);
     this.ValidateSigner(signer);
 
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);

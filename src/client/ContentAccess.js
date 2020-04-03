@@ -168,7 +168,7 @@ exports.ContentType = async function({name, typeId, versionHash, publicOnly=fals
     return {
       id: typeId,
       hash: versionHash,
-      name: metadata.name || typeId,
+      name: (metadata.public && metadata.public.name) || metadata.name || typeId,
       meta: metadata
     };
   } catch(error) {
@@ -686,8 +686,7 @@ exports.ContentObjectMetadata = async function({
     objectId,
     versionHash,
     path: metadataSubtree,
-    metadata,
-    noAuth
+    metadata
   });
 };
 
@@ -753,7 +752,7 @@ exports.AvailableDRMs = async function() {
     return availableDRMs;
   }
 
-  if(typeof window.navigator.requestMediaKeySystemAccess !== "function") {
+  if(typeof window !== "undefined" && typeof window.navigator.requestMediaKeySystemAccess !== "function") {
     return availableDRMs;
   }
 

@@ -102,7 +102,7 @@ function () {
           });
         };
 
-        this.provider.pollingInterval = 1000;
+        this.provider.pollingInterval = 500;
       }
 
       return this.provider;
@@ -196,21 +196,25 @@ function () {
               methodName = _ref3.methodName, _ref3$args = _ref3.args, args = _ref3$args === void 0 ? [] : _ref3$args, _ref3$attempts = _ref3.attempts, attempts = _ref3$attempts === void 0 ? 0 : _ref3$attempts;
               _context3.prev = 1;
               provider = this.Provider();
+              _context3.next = 5;
+              return _regeneratorRuntime.awrap(provider.getNetwork());
+
+            case 5:
               this.Log("ETH ".concat(provider.connection.url, " ").concat(methodName, " [").concat(args.join(", "), "]"));
-              _context3.next = 6;
+              _context3.next = 8;
               return _regeneratorRuntime.awrap(provider[methodName].apply(provider, _toConsumableArray(args)));
 
-            case 6:
+            case 8:
               return _context3.abrupt("return", _context3.sent);
 
-            case 9:
-              _context3.prev = 9;
+            case 11:
+              _context3.prev = 11;
               _context3.t0 = _context3["catch"](1);
               // eslint-disable-next-line no-console
               console.error(_context3.t0);
 
               if (!(attempts < this.ethereumURIs.length)) {
-                _context3.next = 17;
+                _context3.next = 19;
                 break;
               }
 
@@ -223,15 +227,15 @@ function () {
                 attempts: attempts + 1
               }));
 
-            case 17:
+            case 19:
               return _context3.abrupt("return", {});
 
-            case 18:
+            case 20:
             case "end":
               return _context3.stop();
           }
         }
-      }, null, this, [[1, 9]]);
+      }, null, this, [[1, 11]]);
     }
     /* General contract management */
 
@@ -312,7 +316,7 @@ function () {
   }, {
     key: "DeployContract",
     value: function DeployContract(_ref6) {
-      var abi, bytecode, _ref6$constructorArgs, constructorArgs, _ref6$overrides, overrides, signer, contractFactory, contract;
+      var abi, bytecode, _ref6$constructorArgs, constructorArgs, _ref6$overrides, overrides, provider, signer, contractFactory, contract;
 
       return _regeneratorRuntime.async(function DeployContract$(_context4) {
         while (1) {
@@ -320,25 +324,30 @@ function () {
             case 0:
               abi = _ref6.abi, bytecode = _ref6.bytecode, _ref6$constructorArgs = _ref6.constructorArgs, constructorArgs = _ref6$constructorArgs === void 0 ? [] : _ref6$constructorArgs, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides;
               this.Log("Deploying contract with args [".concat(constructorArgs.join(", "), "]"));
-              signer = this.client.signer.connect(this.Provider());
+              provider = this.Provider();
+              _context4.next = 5;
+              return _regeneratorRuntime.awrap(provider.getNetwork());
+
+            case 5:
+              signer = this.client.signer.connect(provider);
               this.ValidateSigner(signer);
               contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
-              _context4.next = 7;
+              _context4.next = 10;
               return _regeneratorRuntime.awrap(contractFactory.deploy.apply(contractFactory, _toConsumableArray(constructorArgs).concat([overrides])));
 
-            case 7:
+            case 10:
               contract = _context4.sent;
-              _context4.next = 10;
+              _context4.next = 13;
               return _regeneratorRuntime.awrap(contract.deployed());
 
-            case 10:
+            case 13:
               this.Log("Deployed: ".concat(contract.address));
               return _context4.abrupt("return", {
                 contractAddress: Utils.FormatAddress(contract.address),
                 transactionHash: contract.deployTransaction.hash
               });
 
-            case 12:
+            case 15:
             case "end":
               return _context4.stop();
           }

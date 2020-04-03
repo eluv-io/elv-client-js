@@ -330,7 +330,7 @@ exports.ContentType = function _callee4(_ref3) {
           return _context4.abrupt("return", {
             id: typeId,
             hash: versionHash,
-            name: metadata.name || typeId,
+            name: metadata["public"] && metadata["public"].name || metadata.name || typeId,
             meta: metadata
           });
 
@@ -1141,7 +1141,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, _noAuth;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
@@ -1168,7 +1168,7 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
 
         case 8:
           visibility = _context19.sent;
-          _noAuth = visibility >= 10 || (metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
+          noAuth = visibility >= 10 || (metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
           _context19.t0 = _regeneratorRuntime;
           _context19.t1 = this.utils;
           _context19.t2 = this.HttpClient;
@@ -1177,7 +1177,7 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            noAuth: _noAuth
+            noAuth: noAuth
           }));
 
         case 15:
@@ -1232,8 +1232,7 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             objectId: objectId,
             versionHash: versionHash,
             path: metadataSubtree,
-            metadata: metadata,
-            noAuth: noAuth
+            metadata: metadata
           }));
 
         case 35:
@@ -1364,7 +1363,7 @@ exports.AvailableDRMs = function _callee22() {
           return _context22.abrupt("return", availableDRMs);
 
         case 3:
-          if (!(typeof window.navigator.requestMediaKeySystemAccess !== "function")) {
+          if (!(typeof window !== "undefined" && typeof window.navigator.requestMediaKeySystemAccess !== "function")) {
             _context22.next = 5;
             break;
           }
