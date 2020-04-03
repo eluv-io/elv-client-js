@@ -1,10 +1,13 @@
-const crypto = require("crypto");
-
-Object.defineProperty(global.self, "crypto", {
-  value: {
-    getRandomValues: arr => crypto.randomBytes(arr.length),
-  },
-});
+const TestSuite = require("./TestSuite/TestSuite");
+const {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  spyOn,
+  runTests,
+  test
+} = new TestSuite();
 
 const fs = require("fs");
 const OutputLogger = require("./utils/OutputLogger");
@@ -37,8 +40,6 @@ const CreateTaggedObject = async (tagLibraryId, tags) => {
 // Describe blocks and tests within them are run in order
 describe("Test UserProfileClient", () => {
   beforeAll(async () => {
-    jest.setTimeout(1000000);
-
     client = await CreateClient("UserProfileClient");
     tagClient = await CreateClient("UserProfileClient Tags");
     testFile = RandomBytes(testFileSize);
@@ -231,9 +232,13 @@ describe("Test UserProfileClient", () => {
     expect(newAccessLevel).toBeDefined();
     expect(newAccessLevel.toLowerCase()).toEqual("public");
 
-    await expect(client.userProfileClient.SetAccessLevel({level: "invalid"})).rejects.toThrow(
-      new Error("Invalid access level: invalid")
-    );
+    try {
+      // Expect invalid access level to fail
+      await client.userProfileClient.SetAccessLevel({level: "invalid"});
+      expect(true).toBeFalsy();
+    } catch(error) {
+      expect(error).toEqual(new Error("Invalid access level: invalid"));
+    }
 
     const unchangedAccessLevel = await client.userProfileClient.AccessLevel();
     expect(unchangedAccessLevel).toBeDefined();
@@ -259,7 +264,7 @@ describe("Test UserProfileClient", () => {
       ]
     ];
 
-    const recordTagsSpy = jest.spyOn(client.userProfileClient, "RecordTags");
+    const recordTagsSpy = spyOn(client.userProfileClient, "RecordTags");
 
     const tagLibraryId = await tagClient.CreateContentLibrary({name: "Test Tagging"});
     // Create tagged objects with another user, then access them with this user
@@ -290,3 +295,6 @@ describe("Test UserProfileClient", () => {
     });
   });
 });
+
+if(!module.parent) { runTests(); }
+module.exports = runTests;

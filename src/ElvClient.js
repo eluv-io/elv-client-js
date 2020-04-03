@@ -397,7 +397,7 @@ class ElvClient {
    */
   SetSigner({signer}) {
     signer.connect(this.ethClient.Provider());
-    signer.provider.pollingInterval = 1000;
+    signer.provider.pollingInterval = 500;
     this.signer = signer;
 
     this.InitializeClients();

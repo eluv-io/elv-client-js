@@ -336,7 +336,7 @@ exports.CreateContentLibrary = function _callee3(_ref4) {
  * @param {string} libraryId - ID of the library
  * @param {string} writeToken - Write token for the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
- * @param {string} imageName - Name of the image file
+ * @param {string=} imageName - Name of the image file
  */
 
 
@@ -373,7 +373,7 @@ exports.SetContentLibraryImage = function _callee4(_ref6) {
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
- * @param {string} imageName - Name of the image file
+ * @param {string=} imageName - Name of the image file
  */
 
 
@@ -390,7 +390,7 @@ exports.SetContentObjectImage = function _callee5(_ref7) {
           });
           ValidateWriteToken(writeToken);
           ValidatePresence("image", image);
-          ValidatePresence("imageName", imageName);
+          imageName = imageName || "display_image";
           _context5.next = 7;
           return _regeneratorRuntime.awrap(this.UploadFiles({
             libraryId: libraryId,

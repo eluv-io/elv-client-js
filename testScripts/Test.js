@@ -9,10 +9,12 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      privateKey: process.env.PRIVATE_KEY
+      privateKey: "0x39a75f46a47080b38aa41760910105bf17f7fedeaf04663e7bca032d4dfb351b"
     });
 
     client.SetSigner({signer});
+
+    console.log(JSON.stringify(await client.ContentObjects({libraryId: "ilib3v96fU1nPVAB2AFsffg2FPSG7Fbg"}),null,2));
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));

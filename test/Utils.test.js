@@ -1,3 +1,11 @@
+const TestSuite = require("./TestSuite/TestSuite");
+const {
+  expect,
+  describe,
+  runTests,
+  test
+} = new TestSuite();
+
 const {ElvClient} = require("../src/ElvClient");
 const {FrameClient} = require("../src/FrameClient");
 const OutputLogger = require("./utils/OutputLogger");
@@ -19,7 +27,7 @@ describe("Test Utils", () => {
   });
 
   test("FrameClient Utils", () => {
-    const client = new FrameClient();
+    const client = new FrameClient({target: undefined});
 
     expect(client.utils).toBeDefined();
   });
@@ -132,3 +140,6 @@ describe("Test Utils", () => {
     expect(notCloneable).toEqual(cloneable);
   });
 });
+
+if(!module.parent) { runTests(); }
+module.exports = runTests;
