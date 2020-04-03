@@ -39,13 +39,20 @@ const argv = yargs
     type: "string",
     description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
   })
+ .option("config-url", {
+    type: "string",
+    description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
+  })
   .demandOption(
     ["library", "masterHash", "type"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
   )
   .argv;
 
-const ClientConfiguration = require("../TestConfiguration.json");
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
+
+
+
 
 const Report = response => {
   if(response.errors.length > 0) {
