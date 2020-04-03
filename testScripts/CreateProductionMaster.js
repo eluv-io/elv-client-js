@@ -204,8 +204,6 @@ if(metadata) {
   }
 }
 
-console.log("files", files);
-
 Create({
   elvGeo,
   libraryId: library,
