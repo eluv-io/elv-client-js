@@ -14,13 +14,17 @@ const argv = yargs
     description: "Offering key of the mezzanine",
     default: "default"
   })
+  .option("config-url", {
+    type: "string",
+    description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
+  })
   .demandOption(
     ["objectId"],
     "\nUsage: PRIVATE_KEY=<private-key> node MezzanineStatus.js --objectId <mezzanine-object-id> (--finalize) (--variant \"default\")\n"
   )
   .argv;
 
-const ClientConfiguration = require("../TestConfiguration.json");
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
 
 
 const Status = async (objectId, offeringKey="default", finalize) => {
