@@ -157,8 +157,6 @@ function () {
   }, {
     key: "Contract",
     value: function Contract(_ref2) {
-      var _this = this;
-
       var contractAddress = _ref2.contractAddress,
           abi = _ref2.abi,
           cacheContract = _ref2.cacheContract,
@@ -171,11 +169,7 @@ function () {
 
       if (!contract) {
         contract = new Ethers.Contract(contractAddress, abi, this.Provider());
-        contract = contract.connect(this.client.signer); // Redefine deployed to avoid making call to getCode
-
-        contract._deployedPromise = new Promise(function (resolve) {
-          return resolve(_this);
-        });
+        contract = contract.connect(this.client.signer);
 
         if (cacheContract) {
           this.cachedContracts[contractAddress] = contract;
@@ -197,7 +191,7 @@ function () {
               _context3.prev = 1;
               provider = this.Provider();
               _context3.next = 5;
-              return _regeneratorRuntime.awrap(provider.getNetwork());
+              return _regeneratorRuntime.awrap(this.provider.getNetwork());
 
             case 5:
               this.Log("ETH ".concat(provider.connection.url, " ").concat(methodName, " [").concat(args.join(", "), "]"));
@@ -242,7 +236,7 @@ function () {
   }, {
     key: "FormatContractArgument",
     value: function FormatContractArgument(_ref4) {
-      var _this2 = this;
+      var _this = this;
 
       var type = _ref4.type,
           value = _ref4.value;
@@ -261,7 +255,7 @@ function () {
 
         var singleType = type.replace("[]", "");
         return value.map(function (element) {
-          return _this2.FormatContractArgument({
+          return _this.FormatContractArgument({
             type: singleType,
             value: element
           });
@@ -283,7 +277,7 @@ function () {
   }, {
     key: "FormatContractArguments",
     value: function FormatContractArguments(_ref5) {
-      var _this3 = this;
+      var _this2 = this;
 
       var abi = _ref5.abi,
           methodName = _ref5.methodName,
@@ -299,7 +293,7 @@ function () {
 
 
       return args.map(function (arg, i) {
-        return _this3.FormatContractArgument({
+        return _this2.FormatContractArgument({
           type: method.inputs[i].type,
           value: arg
         });
@@ -325,29 +319,26 @@ function () {
               abi = _ref6.abi, bytecode = _ref6.bytecode, _ref6$constructorArgs = _ref6.constructorArgs, constructorArgs = _ref6$constructorArgs === void 0 ? [] : _ref6$constructorArgs, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides;
               this.Log("Deploying contract with args [".concat(constructorArgs.join(", "), "]"));
               provider = this.Provider();
-              _context4.next = 5;
-              return _regeneratorRuntime.awrap(provider.getNetwork());
-
-            case 5:
+              provider.getNetwork();
               signer = this.client.signer.connect(provider);
               this.ValidateSigner(signer);
               contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
-              _context4.next = 10;
+              _context4.next = 9;
               return _regeneratorRuntime.awrap(contractFactory.deploy.apply(contractFactory, _toConsumableArray(constructorArgs).concat([overrides])));
 
-            case 10:
+            case 9:
               contract = _context4.sent;
-              _context4.next = 13;
+              _context4.next = 12;
               return _regeneratorRuntime.awrap(contract.deployed());
 
-            case 13:
+            case 12:
               this.Log("Deployed: ".concat(contract.address));
               return _context4.abrupt("return", {
                 contractAddress: Utils.FormatAddress(contract.address),
                 transactionHash: contract.deployTransaction.hash
               });
 
-            case 15:
+            case 14:
             case "end":
               return _context4.stop();
           }
@@ -443,7 +434,7 @@ function () {
 
             case 22:
               if (success) {
-                _context5.next = 44;
+                _context5.next = 45;
                 break;
               }
 
@@ -454,7 +445,7 @@ function () {
             case 26:
               result = _context5.sent;
               success = true;
-              _context5.next = 42;
+              _context5.next = 43;
               break;
 
             case 30:
@@ -476,36 +467,41 @@ function () {
               latestBlock = _context5.sent;
               overrides.gasLimit = latestBlock.gasLimit;
               overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-              _context5.next = 42;
+              _context5.next = 43;
               break;
 
             case 40:
+              if ((_context5.t0.message || _context5.t0).includes("invalid response")) {
+                _context5.next = 43;
+                break;
+              }
+
               this.Log(_typeof(_context5.t0) === "object" ? JSON.stringify(_context5.t0, null, 2) : _context5.t0, true);
               throw _context5.t0;
 
-            case 42:
+            case 43:
               _context5.next = 22;
               break;
 
-            case 44:
+            case 45:
               return _context5.abrupt("return", result);
 
-            case 45:
-              _context5.prev = 45;
+            case 46:
+              _context5.prev = 46;
 
               // Unlock if performing a transaction
               if (!methodAbi || !methodAbi.constant) {
                 this.locked = false;
               }
 
-              return _context5.finish(45);
+              return _context5.finish(46);
 
-            case 48:
+            case 49:
             case "end":
               return _context5.stop();
           }
         }
-      }, null, this, [[20,, 45, 48], [23, 30]]);
+      }, null, this, [[20,, 46, 49], [23, 30]]);
     }
   }, {
     key: "CallContractMethodAndWait",
@@ -916,7 +912,7 @@ function () {
   }, {
     key: "ContractEvents",
     value: function ContractEvents(_ref19) {
-      var _this4 = this;
+      var _this3 = this;
 
       var contractAddress, abi, _ref19$fromBlock, fromBlock, toBlock, _ref19$includeTransac, includeTransaction, contractLogs, blocks;
 
@@ -977,7 +973,7 @@ function () {
                         _context16.t2 = parsedLog;
                         _context16.t3 = {};
                         _context16.next = 9;
-                        return _regeneratorRuntime.awrap(_this4.MakeProviderCall({
+                        return _regeneratorRuntime.awrap(_this3.MakeProviderCall({
                           methodName: "getTransaction",
                           args: [log.transactionHash]
                         }));
@@ -1037,7 +1033,7 @@ function () {
   }, {
     key: "Events",
     value: function Events(_ref21) {
-      var _this5 = this;
+      var _this4 = this;
 
       var toBlock, fromBlock, _ref21$includeTransac, includeTransaction, logs, i, newLogs, blocks, output;
 
@@ -1078,7 +1074,7 @@ function () {
               // Group logs by blocknumber
               blocks = {};
               logs.forEach(function (log) {
-                blocks[log.blockNumber] = [_this5.ParseUnknownLog({
+                blocks[log.blockNumber] = [_this4.ParseUnknownLog({
                   log: log
                 })].concat(blocks[log.blockNumber] || []);
               });
@@ -1099,7 +1095,7 @@ function () {
                         }
 
                         _context19.next = 5;
-                        return _regeneratorRuntime.awrap(_this5.MakeProviderCall({
+                        return _regeneratorRuntime.awrap(_this4.MakeProviderCall({
                           methodName: "getBlock",
                           args: [blockNumber]
                         }));
@@ -1137,7 +1133,7 @@ function () {
                                   _context18.t0 = _objectSpread;
                                   _context18.t1 = {};
                                   _context18.next = 5;
-                                  return _regeneratorRuntime.awrap(_this5.MakeProviderCall({
+                                  return _regeneratorRuntime.awrap(_this4.MakeProviderCall({
                                     methodName: "getTransaction",
                                     args: [block.transactionHash]
                                   }));
@@ -1146,7 +1142,7 @@ function () {
                                   _context18.t2 = _context18.sent;
                                   _context18.t3 = {};
                                   _context18.next = 9;
-                                  return _regeneratorRuntime.awrap(_this5.MakeProviderCall({
+                                  return _regeneratorRuntime.awrap(_this4.MakeProviderCall({
                                     methodName: "getTransactionReceipt",
                                     args: [block.transactionHash]
                                   }));

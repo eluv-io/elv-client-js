@@ -1,10 +1,10 @@
-const TestSuite = require("./TestSuite/TestSuite");
+const {Initialize} = require("./utils/Utils");
 const {
-  expect,
   describe,
+  expect,
   runTests,
   test
-} = new TestSuite();
+} = Initialize();
 
 const {ElvClient} = require("../src/ElvClient");
 const {FrameClient} = require("../src/FrameClient");

@@ -87,14 +87,41 @@ const ReturnBalance = async (client) => {
   const wallet = client.GenerateWallet();
   const fundedSigner = wallet.AddAccount({privateKey});
 
-  console.log(`${client.clientName} used ${(client.initialBalance - balance).toFixed(3)} ether`);
+  console.log(`\n${client.clientName} used ${(client.initialBalance - balance).toFixed(3)} ether\n`);
   await client.SendFunds({
     recipient: fundedSigner.address,
     ether: balance - 0.25
   });
 };
 
+const Initialize = () => {
+  if(typeof jest !== "undefined") {
+    jest.setTimeout(240000);
+
+    const crypto = require("crypto");
+    Object.defineProperty(global.self, "crypto", {
+      value: {
+        getRandomValues: arr => crypto.randomBytes(arr.length),
+      },
+    });
+
+    return {
+      afterAll: afterAll,
+      beforeAll: beforeAll,
+      describe: describe,
+      expect: expect,
+      mockCallback: jest.fn,
+      spyOn: jest.spyOn,
+      runTests: () => {},
+      test: test
+    };
+  } else {
+    return new (require("../TestSuite/TestSuite"))();
+  }
+};
+
 module.exports = {
+  Initialize,
   BufferToArrayBuffer,
   RandomBytes,
   RandomString,

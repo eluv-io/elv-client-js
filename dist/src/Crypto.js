@@ -17,13 +17,11 @@ switch (Utils.Platform()) {
     if (typeof crypto === "undefined") {
       var _crypto = require("crypto");
 
-      Object.defineProperty(global.self, "crypto", {
-        value: {
-          getRandomValues: function getRandomValues(arr) {
-            return _crypto.randomBytes(arr.length);
-          }
-        }
-      });
+      _crypto.getRandomValues = function (arr) {
+        return _crypto.randomBytes(arr.length);
+      };
+
+      global.crypto = _crypto;
     }
 
     _ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.externals")["default"];

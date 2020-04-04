@@ -1,4 +1,4 @@
-const TestSuite = require("./TestSuite/TestSuite");
+const {Initialize} = require("./utils/Utils");
 const {
   afterAll,
   beforeAll,
@@ -6,7 +6,7 @@ const {
   expect,
   runTests,
   test
-} = new TestSuite();
+} = Initialize();
 
 const OutputLogger = require("./utils/OutputLogger");
 const {CreateClient, ReturnBalance} = require("./utils/Utils");

@@ -101,9 +101,6 @@ class EthClient {
       contract = new Ethers.Contract(contractAddress, abi, this.Provider());
       contract = contract.connect(this.client.signer);
 
-      // Redefine deployed to avoid making call to getCode
-      contract._deployedPromise = new Promise(resolve => resolve(this));
-
       if(cacheContract) {
         this.cachedContracts[contractAddress] = contract;
       }
@@ -115,7 +112,7 @@ class EthClient {
   async MakeProviderCall({methodName, args=[], attempts=0}) {
     try {
       const provider = this.Provider();
-      await provider.getNetwork();
+      await this.provider.getNetwork();
 
       this.Log(`ETH ${provider.connection.url} ${methodName} [${args.join(", ")}]`);
       return await provider[methodName](...args);
@@ -188,7 +185,7 @@ class EthClient {
     this.Log(`Deploying contract with args [${constructorArgs.join(", ")}]`);
 
     const provider = this.Provider();
-    await provider.getNetwork();
+    provider.getNetwork();
 
     const signer = this.client.signer.connect(provider);
     this.ValidateSigner(signer);
@@ -273,7 +270,7 @@ class EthClient {
             const latestBlock = await this.MakeProviderCall({methodName: "getBlock", args: ["latest"]});
             overrides.gasLimit = latestBlock.gasLimit;
             overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-          } else {
+          } else if(!(error.message || error).includes("invalid response")) {
             this.Log(typeof error === "object" ? JSON.stringify(error, null, 2) : error, true);
             throw error;
           }

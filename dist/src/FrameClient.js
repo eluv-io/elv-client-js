@@ -14,6 +14,8 @@ var Id = require("./Id");
 
 var Utils = require("./Utils");
 
+var window = global.window || new (require("window"))();
+
 var FrameClient =
 /*#__PURE__*/
 function () {
@@ -65,6 +67,7 @@ function () {
 
     this.target = target;
     this.timeout = timeout;
+    this.window = window;
     this.utils = Utils; // Dynamically defined methods defined in AllowedMethods
 
     var _iteratorNormalCompletion = true;

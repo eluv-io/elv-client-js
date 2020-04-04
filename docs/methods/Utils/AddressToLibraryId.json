@@ -6,5 +6,53 @@
   {
     "signature": " AddressToLibraryId(\"0x2806e87e50dd3d9873c8487573ea512c6861c0df\");",
     "result": "\"ilibZLusoJnHFwAX9pfFB2rYX2yLnsY\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x8f5b42b31d734800c5f1d3be26461f3827d65498\");",
+    "result": "\"ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x8d35737aca95d0fb81c2f3513dc2371cf7a07453\");",
+    "result": "\"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x8D35737aCA95d0FB81C2F3513dc2371CF7a07453\");",
+    "result": "\"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x1d992f95eb63222575352a99d5cf40d0cec847aa\");",
+    "result": "\"ilibQvAT8oVoxSHuMPeoLivUi4NSDAR\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x9c88833693ef47dd38b9a092edb9d48f47068ecc\");",
+    "result": "\"ilib3BV7ehGKg1BCWDDvmT46ZmQ3iLrX\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0xd366e999ca0a202412009f7717377d4cd87c42c5\");",
+    "result": "\"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0xd366E999ca0a202412009f7717377D4cD87C42c5\");",
+    "result": "\"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x4da932c61be09a91d0c55b3815502093a0e197ad\");",
+    "result": "\"ilib25kfuHg1g1cT2deJqz1txa9EUosS\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0xce83033d32f79b9bbf8297d4fb32a3ff0a79d6d3\");",
+    "result": "\"ilib3ssRA4rhPP9noEyVqwTykvGLgAPk\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0xcE83033d32f79B9BBf8297D4Fb32a3FF0A79d6D3\");",
+    "result": "\"ilib3ssRA4rhPP9noEyVqwTykvGLgAPk\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x20a87d25d0758e55c862d90117b56881e4934b42\");",
+    "result": "\"ilibTPZev4F5yxcQUU1ivYM8ikXuC5o\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x20a87D25d0758e55c862D90117b56881E4934b42\");",
+    "result": "\"ilibTPZev4F5yxcQUU1ivYM8ikXuC5o\""
   }
 ]
