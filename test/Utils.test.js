@@ -8,7 +8,6 @@ const {
 
 const {ElvClient} = require("../src/ElvClient");
 const {FrameClient} = require("../src/FrameClient");
-const OutputLogger = require("./utils/OutputLogger");
 
 const Utils = require("../src/Utils");
 

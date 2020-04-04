@@ -15,6 +15,10 @@ const {RandomBytes, CreateClient, ReturnBalance} = require("./utils/Utils");
 
 let frameClient, client, libraryId, objectId, partHash;
 
+if(!global.window) {
+  global.window = new (require("window"))();
+}
+
 const CompareMethods = (frameClientMethods, elvClientMethods) => {
   const differentKeys = frameClientMethods
     .filter(x => !elvClientMethods.includes(x))
@@ -39,11 +43,9 @@ describe("Test FrameClient", () => {
       ["AwaitMessage"]
     );
 
-    frameClient.target = frameClient.window;
-
     client = await CreateClient("FrameClient");
 
-    frameClient.window.addEventListener("message", async (event) => {
+    window.addEventListener("message", async (event) => {
       if(!event || !event.data || event.data.type !== "ElvFrameRequest") { return; }
 
       const Respond = (response) => {
@@ -52,7 +54,7 @@ describe("Test FrameClient", () => {
           type: "ElvFrameResponse"
         };
 
-        frameClient.window.postMessage(
+        window.postMessage(
           response,
           "*"
         );

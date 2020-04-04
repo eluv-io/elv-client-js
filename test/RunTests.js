@@ -1,5 +1,6 @@
 const fs = require("fs");
 const { performance } = require("perf_hooks");
+global.window = new (require("window"))();
 
 const Tests = {
   Utils: require("./Utils.test"),

@@ -1,8 +1,6 @@
 const Id = require("./Id");
 const Utils = require("./Utils");
 
-let window = global.window || new (require("window"))();
-
 class FrameClient {
   /**
    * FrameClient is a client that looks to the user like an ElvClient, but works by passing messages
@@ -41,7 +39,6 @@ class FrameClient {
 
     this.target = target;
     this.timeout = timeout;
-    this.window = window;
 
     this.utils = Utils;
 
