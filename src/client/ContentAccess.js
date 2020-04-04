@@ -1462,10 +1462,14 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mi
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
 
+  const visibility = await this.Visibility({id: objectId});
+  const noAuth = visibility >= 10 ||
+    ((linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
+
   queryParams = {
     ...queryParams,
     resolve: true,
-    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache})
+    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth})
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }
