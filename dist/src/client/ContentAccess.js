@@ -2547,7 +2547,7 @@ exports.LinkTarget = function _callee33(_ref27) {
 
 
 exports.LinkUrl = function _callee34(_ref28) {
-  var libraryId, objectId, versionHash, linkPath, mimeType, _ref28$queryParams, queryParams, _ref28$noCache, noCache, path;
+  var libraryId, objectId, versionHash, linkPath, mimeType, _ref28$queryParams, queryParams, _ref28$noCache, noCache, path, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee34$(_context34) {
     while (1) {
@@ -2578,17 +2578,26 @@ exports.LinkUrl = function _callee34(_ref28) {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
 
+          _context34.next = 8;
+          return _regeneratorRuntime.awrap(this.Visibility({
+            id: objectId
+          }));
+
+        case 8:
+          visibility = _context34.sent;
+          noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
           _context34.t0 = _objectSpread;
           _context34.t1 = {};
           _context34.t2 = queryParams;
-          _context34.next = 11;
+          _context34.next = 15;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
-            noCache: noCache
+            noCache: noCache,
+            noAuth: noAuth
           }));
 
-        case 11:
+        case 15:
           _context34.t3 = _context34.sent;
           _context34.t4 = {
             resolve: true,
@@ -2605,7 +2614,7 @@ exports.LinkUrl = function _callee34(_ref28) {
             queryParams: queryParams
           }));
 
-        case 16:
+        case 20:
         case "end":
           return _context34.stop();
       }
