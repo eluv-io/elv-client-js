@@ -14,6 +14,9 @@ const OutputLogger = require("./utils/OutputLogger");
 const {CreateClient, BufferToArrayBuffer, ReturnBalance, RandomBytes} = require("./utils/Utils");
 const UserProfileClient = require("../src/UserProfileClient");
 
+if(!global.window) {
+  global.window = new (require("window"))();
+}
 
 let client, tagClient;
 const testFileSize = 10000;
