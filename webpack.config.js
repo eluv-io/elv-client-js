@@ -23,6 +23,8 @@ let plugins = [
   })
 ];
 
+plugins.push(new webpack.IgnorePlugin(/window/));
+
 // Exclude node-fetch for web build
 if(cmdOpts["target"] !== "node") {
   plugins.push(new webpack.IgnorePlugin(/node-fetch-polyfill/));

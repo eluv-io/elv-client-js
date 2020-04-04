@@ -1,4 +1,4 @@
-const TestSuite = require("./TestSuite/TestSuite");
+const {Initialize} = require("./utils/Utils");
 const {
   afterAll,
   beforeAll,
@@ -7,14 +7,15 @@ const {
   spyOn,
   runTests,
   test
-} = new TestSuite();
+} = Initialize();
 
 const fs = require("fs");
 const OutputLogger = require("./utils/OutputLogger");
 const {CreateClient, BufferToArrayBuffer, ReturnBalance, RandomBytes} = require("./utils/Utils");
 const UserProfileClient = require("../src/UserProfileClient");
 
-let client, tagClient, testFile;
+
+let client, tagClient;
 const testFileSize = 10000;
 
 const CreateTaggedObject = async (tagLibraryId, tags) => {
@@ -148,24 +149,13 @@ describe("Test UserProfileClient", () => {
       }
     });
 
-    await client.UploadFiles({
-      libraryId,
-      objectId: id,
-      writeToken: write_token,
-      fileInfo: [{
-        path: "testDirectory/File 1",
-        type: "file",
-        mime_type: "text/plain",
-        size: testFileSize,
-        data: testFile
-      }]
-    });
-
     const { hash } = await client.FinalizeContentObject({
       libraryId,
       objectId: id,
       writeToken: write_token
     });
+
+    await client.SetVisibility({id, visibility: 10});
 
     const userProfile = await client.userProfileClient.UserWalletObjectInfo();
 
@@ -180,17 +170,11 @@ describe("Test UserProfileClient", () => {
       writeToken: profileDraft.write_token,
       links: [
         {
-          target: "testDirectory/File 1",
-          targetHash: hash,
-          path: "links/fileLink",
-          type: "file"
-        },
-        {
           target: "public/target/meta",
           targetHash: hash,
-          path: "links/metadataLink",
+          path: "public/links/metadataLink",
           type: "metadata"
-        },
+        }
       ]
     });
 
@@ -201,24 +185,12 @@ describe("Test UserProfileClient", () => {
     });
 
     const linkedMeta = await client.userProfileClient.UserMetadata({
-      metadataSubtree: "links/metadataLink",
+      metadataSubtree: "public/links/metadataLink",
       resolveLinks: true
     });
 
     expect(linkedMeta).toBeDefined();
     expect(linkedMeta).toEqual({data: "metadata"});
-
-    const walletObjectInfo = await client.userProfileClient.UserWalletObjectInfo();
-
-    const linkedFile = await client.LinkData({
-      libraryId: walletObjectInfo.libraryId,
-      objectId: walletObjectInfo.objectId,
-      linkPath: "links/fileLink",
-      format: "arrayBuffer"
-    });
-
-    expect(linkedFile).toBeDefined();
-    expect(new Uint8Array(linkedFile).toString()).toEqual(new Uint8Array(testFile).toString());
   });
 
   test("Access Level", async () => {

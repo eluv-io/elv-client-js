@@ -1,14 +1,14 @@
 [
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x087b4db474f24495E93F551BE20553a31122FC6c\"\n});",
     "result": "{\n  \"meta\": \"data\"\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\",\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "\"hqp_97acrTzL3kEEQfu8UCLS4EcShUv7eMyozWF1s5Rmi1HLTa3o\""
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x087b4db474f24495E93F551BE20553a31122FC6c\",\n  \"metadataSubtree\": \"profile_image\"\n});",
+    "result": "{\n  \".\": {\n    \"container\": \"hq__CogdbCiF7qrJgQZMVZNnMJcRCW7ME9giNQmD1sfKed9izfbzCwuw7veEzwp1sFTxPjtvqu5ux5\"\n  },\n  \"/\": \"./files/profile_image\"\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x5C575887F85f10dA5A023bA648A36CA4aFd3CBAD\",\n  \"metadataSubtree\": \"image\"\n});",
-    "result": "\"hqp_9TMZrT5sHVYHn7YCywC2gUZd8BXyQAQoC79zoP97HonCfDvM\""
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x087b4db474f24495E93F551BE20553a31122FC6c\",\n  \"metadataSubtree\": \"profile_image\"\n});",
+    "result": "{\n  \".\": {\n    \"container\": \"hq__6KSuAhvAbVkkCtab5Ag5PuqgMWTWXWSAnx1zdCZzz8NWyPkKRNhoaF9bmneWvBSd6jiB2QbW5F\"\n  },\n  \"/\": \"./files/profile_image\"\n}"
   }
 ]

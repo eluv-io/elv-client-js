@@ -551,8 +551,7 @@ exports.ProduceMetadataLinks = async function({
   objectId,
   versionHash,
   path="/",
-  metadata,
-  noAuth=true
+  metadata
 }) {
   // Primitive
   if(!metadata || typeof metadata !== "object") { return metadata; }
@@ -567,8 +566,7 @@ exports.ProduceMetadataLinks = async function({
         objectId,
         versionHash,
         path: UrlJoin(path, i.toString()),
-        metadata: entry,
-        noAuth
+        metadata: entry
       })
     );
   }
@@ -595,8 +593,7 @@ exports.ProduceMetadataLinks = async function({
         objectId,
         versionHash,
         path: UrlJoin(path, key),
-        metadata: metadata[key],
-        noAuth
+        metadata: metadata[key]
       });
     }
   );
@@ -1468,7 +1465,7 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mi
   queryParams = {
     ...queryParams,
     resolve: true,
-    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth: true})
+    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache})
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }

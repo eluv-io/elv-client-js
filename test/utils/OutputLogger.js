@@ -60,7 +60,7 @@ const FormatResult = (result) => {
   if(result === undefined) { return; }
 
   // Signers
-  if(result.signingKey && result.provider) {
+  if(result && result.signingKey && result.provider) {
     return "<Ethers#Wallet>";
   }
 

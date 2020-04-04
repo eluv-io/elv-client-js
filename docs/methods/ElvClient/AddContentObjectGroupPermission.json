@@ -1,11 +1,11 @@
 [
   {
-    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__3tEP7jpGSGbyuxDpGaZkW8w1c9z2\",\n  \"groupAddress\": \"0x1b575e71c0931068cde5629fd3fd74fd383a1f67\",\n  \"permission\": \"see\"\n});"
+    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__3xJbD7yD5o6Jr4mLcMtSoVLziceR\",\n  \"groupAddress\": \"0xc3833582b86aeb6f5a9deaecc1123661d6130237\",\n  \"permission\": \"see\"\n});"
   },
   {
-    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__3tEP7jpGSGbyuxDpGaZkW8w1c9z2\",\n  \"groupAddress\": \"0x1b575e71c0931068cde5629fd3fd74fd383a1f67\",\n  \"permission\": \"access\"\n});"
+    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__3xJbD7yD5o6Jr4mLcMtSoVLziceR\",\n  \"groupAddress\": \"0xc3833582b86aeb6f5a9deaecc1123661d6130237\",\n  \"permission\": \"access\"\n});"
   },
   {
-    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__3tEP7jpGSGbyuxDpGaZkW8w1c9z2\",\n  \"groupAddress\": \"0x1b575e71c0931068cde5629fd3fd74fd383a1f67\",\n  \"permission\": \"manage\"\n});"
+    "signature": "async AddContentObjectGroupPermission({\n  \"objectId\": \"iq__3xJbD7yD5o6Jr4mLcMtSoVLziceR\",\n  \"groupAddress\": \"0xc3833582b86aeb6f5a9deaecc1123661d6130237\",\n  \"permission\": \"manage\"\n});"
   }
 ]

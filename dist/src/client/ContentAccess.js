@@ -995,13 +995,13 @@ exports.ContentObjectLibraryId = function _callee15(_ref11) {
 exports.ProduceMetadataLinks = function _callee18(_ref12) {
   var _this4 = this;
 
-  var libraryId, objectId, versionHash, _ref12$path, path, metadata, _ref12$noAuth, noAuth, result;
+  var libraryId, objectId, versionHash, _ref12$path, path, metadata, result;
 
   return _regeneratorRuntime.async(function _callee18$(_context18) {
     while (1) {
       switch (_context18.prev = _context18.next) {
         case 0:
-          libraryId = _ref12.libraryId, objectId = _ref12.objectId, versionHash = _ref12.versionHash, _ref12$path = _ref12.path, path = _ref12$path === void 0 ? "/" : _ref12$path, metadata = _ref12.metadata, _ref12$noAuth = _ref12.noAuth, noAuth = _ref12$noAuth === void 0 ? true : _ref12$noAuth;
+          libraryId = _ref12.libraryId, objectId = _ref12.objectId, versionHash = _ref12.versionHash, _ref12$path = _ref12.path, path = _ref12$path === void 0 ? "/" : _ref12$path, metadata = _ref12.metadata;
 
           if (!(!metadata || _typeof(metadata) !== "object")) {
             _context18.next = 3;
@@ -1028,8 +1028,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
                       objectId: objectId,
                       versionHash: versionHash,
                       path: UrlJoin(path, i.toString()),
-                      metadata: entry,
-                      noAuth: noAuth
+                      metadata: entry
                     }));
 
                   case 2:
@@ -1084,8 +1083,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
                       objectId: objectId,
                       versionHash: versionHash,
                       path: UrlJoin(path, key),
-                      metadata: metadata[key],
-                      noAuth: noAuth
+                      metadata: metadata[key]
                     }));
 
                   case 2:
@@ -2587,8 +2585,7 @@ exports.LinkUrl = function _callee34(_ref28) {
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
-            noCache: noCache,
-            noAuth: true
+            noCache: noCache
           }));
 
         case 11:

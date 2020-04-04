@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async ContentObjectOwner({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\"\n});",
-    "result": "\"0x4c76a2c0e27d724511ea3f0df1b7182965088dd6\""
+    "signature": "async ContentObjectOwner({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\"\n});",
+    "result": "\"0xe2c1ca8623e9529d229c84f9dda0a5db9555be5e\""
   },
   {
-    "signature": "async ContentObjectOwner({\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\"\n});",
-    "result": "\"0x4c76a2c0e27d724511ea3f0df1b7182965088dd6\""
+    "signature": "async ContentObjectOwner({\n  \"objectId\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\"\n});",
+    "result": "\"0xe2c1ca8623e9529d229c84f9dda0a5db9555be5e\""
   }
 ]

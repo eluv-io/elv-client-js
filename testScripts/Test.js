@@ -9,12 +9,24 @@ const Test = async () => {
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
-      privateKey: "0x39a75f46a47080b38aa41760910105bf17f7fedeaf04663e7bca032d4dfb351b"
+      privateKey: process.env.PRIVATE_KEY
     });
 
     client.SetSigner({signer});
 
-    console.log(JSON.stringify(await client.ContentObjects({libraryId: "ilib3v96fU1nPVAB2AFsffg2FPSG7Fbg"}),null,2));
+    const libraryId = "ilib4BJnAwiwy7XfKvtYEpR1n3xcXnWj";
+    const objectId = "iq__3ZUhwxucJXDjhPoPAiW2jjPzyJaP";
+
+    const po = await client.PlayoutOptions({
+      objectId,
+      linkPath: "public/asset_metadata/titles/0/flirty-dancing/sources/default"
+    });
+
+    console.log(po);
+
+
+
+
   } catch(error) {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));

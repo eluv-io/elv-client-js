@@ -1,4 +1,5 @@
 const Lodash = require("lodash");
+const { performance } = require("perf_hooks");
 
 // Incremental numerical IDs
 let __id = 0;
@@ -9,6 +10,15 @@ class Id {
     return __id;
   }
 }
+
+const Log = (message, rewrite=false) => {
+  if(rewrite) {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+  }
+
+  process.stdout.write(message);
+};
 
 const mockCallback = (object, methodName) => {
   let calls = [];
@@ -90,7 +100,7 @@ const expect = (value) => {
 
 class TestSuite {
   constructor() {
-    this.timeout = 120000;
+    this.timeout = 240000;
 
     this.expect = expect;
     this.mockCallback = mockCallback;
@@ -98,6 +108,7 @@ class TestSuite {
 
     this.testList = [];
     this.describeBlocks = {};
+    this.describeBlockTiming = {};
 
     this.currentDescribeBlocks = [];
 
@@ -115,7 +126,8 @@ class TestSuite {
     let stats = {
       passed: [],
       skipped: [],
-      failed: []
+      failed: [],
+      timing: {}
     };
 
     let currentDescribeBlocks = [];
@@ -127,9 +139,18 @@ class TestSuite {
         console.log();
         // Print headers for each new describe block we encounter
         describeBlocks.forEach((id, index) => {
-          if(id !== currentDescribeBlocks[index]) {
-            console.log("\t".repeat(index), this.describeBlocks[id].name);
+          if(id === currentDescribeBlocks[index]) { return; }
+
+          // Finish timing on old block
+          if(currentDescribeBlocks[index]) {
+            const time = (performance.now() - this.describeBlockTiming[currentDescribeBlocks[index]]) / 1000;
+            console.log("\t".repeat(index), this.describeBlocks[currentDescribeBlocks[index]].name, `(${time.toFixed(1)})s\n`);
           }
+
+          // Start timing on new block
+          this.describeBlockTiming[describeBlocks[index]] = performance.now();
+
+          console.log("\t".repeat(index), this.describeBlocks[id].name);
         });
       }
 
@@ -143,10 +164,13 @@ class TestSuite {
         console.log(tabs, "<SKIP>", name);
         stats.skipped.push({
           name,
-          describeBlocks: outputDescribeBlocks
+          describeBlocks: outputDescribeBlocks,
+          time: 0
         });
       } else {
-        console.log(tabs, name);
+        Log(`${tabs}${name}`);
+
+        const startTime = performance.now();
 
         try {
           let error;
@@ -166,26 +190,40 @@ class TestSuite {
             throw error;
           }
 
+          const time = performance.now() - startTime;
           stats.passed.push({
             name,
-            describeBlocks: outputDescribeBlocks
+            describeBlocks: outputDescribeBlocks,
+            time
           });
+
+          Log(`${tabs}${name} ✓   (${(time / 1000).toFixed(1)}s)\n`, true);
         } catch(error) {
           let message;
           message = error.stack || error.message || error;
 
-          console.error("\n", name, "Error:");
-          console.error("\n", message, "\n");
-          console.log();
-
+          const time = performance.now() - startTime;
           stats.failed.push({
             name,
             describeBlocks: outputDescribeBlocks,
-            error: message
+            error: message,
+            time
           });
+
+          Log(`${tabs}<ERROR> ${name} ✗   (${(time / 1000).toFixed(1)}s)\n`, true);
+
+          console.log("\n", message, "\n");
+          console.log();
         }
       }
     }
+
+    for(let i = currentDescribeBlocks.length - 1; i >= 0; i--) {
+      const id = currentDescribeBlocks[i];
+      const time = (performance.now() - this.describeBlockTiming[id]) / 1000;
+      console.log("\t".repeat(i), this.describeBlocks[id].name, `(${time.toFixed(1)})s`);
+    }
+    console.log();
 
     return stats;
   }

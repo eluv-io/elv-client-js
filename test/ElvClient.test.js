@@ -1,4 +1,4 @@
-const TestSuite = require("./TestSuite/TestSuite");
+const {Initialize} = require("./utils/Utils");
 const {
   afterAll,
   beforeAll,
@@ -7,8 +7,7 @@ const {
   mockCallback,
   runTests,
   test
-} = new TestSuite();
-
+} = Initialize();
 
 const ClientConfiguration = require("../TestConfiguration");
 const fs = require("fs");
@@ -41,8 +40,10 @@ const testFileSize = 100000;
 
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
-let mediaLibraryId, masterId, masterHash, mezzanineId, mezzanineHash, linkLibraryId, linkObjectId;
+let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
 let s3Access;
+
+let playoutResult;
 
 let testFile1, testFile2, testFile3, testHash;
 let fileInfo = [];
@@ -92,6 +93,10 @@ describe("Test ElvClient", () => {
 
   afterAll(async () => {
     await Promise.all([client, accessClient].map(async client => ReturnBalance(client)));
+
+    console.log("\nPlayout Options:");
+    console.log(JSON.stringify(playoutResult, null, 2));
+    console.log("\n");
   });
 
   describe("Initialize From Configuration Url", () => {
@@ -1606,26 +1611,19 @@ describe("Test ElvClient", () => {
 
         if(done) { break; }
 
-        if(new Date().getTime() - startTime > 60000) {
+        if(new Date().getTime() - startTime > 120000) {
           // If processing takes too long, start logging status for debugging
           console.log(status);
         }
 
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
 
-      const finalizeResponse = await client.FinalizeABRMezzanine({
+      await client.FinalizeABRMezzanine({
         libraryId: mediaLibraryId,
         objectId: mezzanineId,
         offeringKey: "default"
       });
-
-      mezzanineHash = finalizeResponse.hash;
-
-      console.log(client.signer.signingKey.privateKey);
-      console.log(
-        mediaLibraryId, mezzanineId, mezzanineHash
-      );
 
       await new Promise(resolve => setTimeout(resolve, 5000));
     });
@@ -1659,11 +1657,10 @@ describe("Test ElvClient", () => {
         drms: []
       });
 
-      console.log("HLS Playout:");
-      console.log(clearPlayoutOptions.hls.playoutUrl);
-
-      console.log("Dash Playout:");
-      console.log(clearPlayoutOptions.dash.playoutUrl);
+      playoutResult = {
+        hls: clearPlayoutOptions.hls.playoutUrl,
+        dash: clearPlayoutOptions.dash.playoutUrl
+      };
     });
 
     test("Playout Options From Self Link", async () => {

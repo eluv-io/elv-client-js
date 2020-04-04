@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async ContentObjectImageUrl({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3wpbycgg5PWTYAiTaZQG24LqL2xL\"\n});",
+    "result": "\"https://host-35-233-145-232.test.contentfabric.io/q/hq__Bdh3UC6891woRUn49WNtfQB2B3Gmik5VHnAX1b7tbm6pXTdeHP4FK5mo6KuEFAd4QVudF5YYxU/meta/public/display_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweGUyYzFjYTg2MjNlOTUyOWQyMjljODRmOWRkYTBhNWRiOTU1NWJlNWUiLCJ0eF9pZCI6IjB4NjdlMDQxNjI2YWM2ZjZhNjQ3ZTBkZDQ0Y2UwNWIyMGIzOTIxNDNhOTg4YmQzMTY0ZGY4ODliNGE2ZGE1NDg5ZSJ9.RVMyNTZLX0Ftc1U3d0ZWeEpUOXRhdEp0VTlQa0E5eDlHMXNOM2pxQkJ4S3RHWTJBRXB3NmREeHV2VDJwOFl6N0VERXI3dUJCZWRqUUVFU0NkOUx5RDZoVGNyc0hBck5F\""
+  }
+]

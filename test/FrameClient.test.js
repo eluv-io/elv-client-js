@@ -1,4 +1,4 @@
-const TestSuite = require("./TestSuite/TestSuite");
+const {Initialize} = require("./utils/Utils");
 const {
   afterAll,
   beforeAll,
@@ -7,11 +7,7 @@ const {
   mockCallback,
   runTests,
   test
-} = new TestSuite();
-
-const Window = require("window");
-//const window = new Window();
-global.window = new Window();
+} = Initialize();
 
 const {FrameClient} = require("../src/FrameClient");
 const OutputLogger = require("./utils/OutputLogger");
@@ -39,13 +35,15 @@ describe("Test FrameClient", () => {
   beforeAll(async () => {
     frameClient = OutputLogger(
       FrameClient,
-      new FrameClient({target: window}),
+      new FrameClient(),
       ["AwaitMessage"]
     );
 
+    frameClient.target = frameClient.window;
+
     client = await CreateClient("FrameClient");
 
-    window.addEventListener("message", async (event) => {
+    frameClient.window.addEventListener("message", async (event) => {
       if(!event || !event.data || event.data.type !== "ElvFrameRequest") { return; }
 
       const Respond = (response) => {
@@ -54,7 +52,7 @@ describe("Test FrameClient", () => {
           type: "ElvFrameResponse"
         };
 
-        window.postMessage(
+        frameClient.window.postMessage(
           response,
           "*"
         );

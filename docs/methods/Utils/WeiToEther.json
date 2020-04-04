@@ -2,5 +2,13 @@
   {
     "signature": " WeiToEther({\n  \"s\": 1,\n  \"e\": 18,\n  \"c\": [\n    10000\n  ]\n});",
     "result": "\"1\""
+  },
+  {
+    "signature": " WeiToEther({\n  \"_hex\": \"0x00\"\n});",
+    "result": "\"0\""
+  },
+  {
+    "signature": " WeiToEther({\n  \"_hex\": \"0x06f05b59d3b20000\"\n});",
+    "result": "\"0.5\""
   }
 ]
