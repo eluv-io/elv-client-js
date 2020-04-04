@@ -10,8 +10,7 @@ const {ElvClient} = require("../src/ElvClient");
 const {FrameClient} = require("../src/FrameClient");
 const OutputLogger = require("./utils/OutputLogger");
 
-let UtilsModule = require("../src/Utils");
-const Utils = OutputLogger(UtilsModule, UtilsModule);
+const Utils = require("../src/Utils");
 
 const {RandomBytes, RandomString} = require("./utils/Utils");
 
