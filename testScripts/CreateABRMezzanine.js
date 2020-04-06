@@ -200,6 +200,13 @@ const Create = async ({
     Report(createResponse);
 
     const objectId = createResponse.id;
+    if(objectId) {
+      await client.CallContractMethodAndWait({
+        contractAddress: client.utils.HashToAddress(objectId),
+        methodName: "setVisibility",
+        methodArgs: [0],
+      })
+    }
 
     console.log("Starting Mezzanine Job(s)");
 
