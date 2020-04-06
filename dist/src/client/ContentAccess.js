@@ -56,7 +56,7 @@ exports.Visibility = function _callee(_ref) {
             break;
           }
 
-          return _context.abrupt("return", 1);
+          return _context.abrupt("return", 10);
 
         case 9:
           _context.next = 11;
@@ -225,7 +225,7 @@ exports.ContentType = function _callee4(_ref3) {
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: this.contentSpaceObjectId,
-            metadataSubtree: UrlJoin("contentTypes", name)
+            metadataSubtree: UrlJoin("public", "contentTypes", name)
           }));
 
         case 7:
