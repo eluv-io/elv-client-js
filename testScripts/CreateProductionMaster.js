@@ -148,6 +148,14 @@ const Create = async ({
       console.log("\tObject ID:", id);
       console.log("\tVersion Hash:", hash, "\n");
 
+      if(id) {
+	await client.CallContractMethodAndWait({
+	   contractAddress: client.utils.HashToAddress(id),
+	   methodName: "setVisibility",
+	   methodArgs: [0],
+	})
+      }
+
       if(errors.length > 0) {
         console.error("Errors:");
         console.error(errors.join("\n"), "\n");
@@ -203,6 +211,8 @@ if(metadata) {
     return;
   }
 }
+
+console.log("files", files);
 
 Create({
   elvGeo,
