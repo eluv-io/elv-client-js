@@ -51,7 +51,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
   // Switch to new tenant admin account
   client.SetSigner({signer: tenantAdminSigner});
 
-  const tenantSlug = tenantName.toLowerCase().replace(" ", "-");
+  const tenantSlug = tenantName.toLowerCase().replace(/ /g, "-");
   await client.userProfileClient.MergeUserMetadata({
     metadata: {
       public: {
