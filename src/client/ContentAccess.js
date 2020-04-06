@@ -24,14 +24,13 @@ exports.Visibility = async function({id}) {
     const address = this.utils.HashToAddress(id);
 
     if(!this.visibilityInfo[address]) {
-      // eslint-disable-next-line no-unreachable
       const hasVisibility = await this.authClient.ContractHasMethod({
         contractAddress: address,
         methodName: "visibility"
       });
 
       if(!hasVisibility) {
-        return 1;
+        return 10;
       }
 
       this.visibilityInfo[address] = await this.CallContractMethod({
@@ -127,7 +126,7 @@ exports.ContentType = async function({name, typeId, versionHash, publicOnly=fals
     typeId = await this.ContentObjectMetadata({
       libraryId: this.contentSpaceLibraryId,
       objectId: this.contentSpaceObjectId,
-      metadataSubtree: UrlJoin("contentTypes", name)
+      metadataSubtree: UrlJoin("public", "contentTypes", name)
     });
   }
 

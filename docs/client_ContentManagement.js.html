@@ -86,10 +86,13 @@ const {
 
 exports.SetVisibility = async function({id, visibility}) {
   this.Log(`Setting visibility ${visibility} on ${id}`);
-  const abi = await this.ContractAbi({id});
 
-  if(!abi.find(method => method.name === "setVisibility")) {
-    this.Log(`${id} contract has no visibility method, ignoring`);
+  const hasSetVisibility = await this.authClient.ContractHasMethod({
+    contractAddress: this.utils.HashToAddress(id),
+    methodName: "setVisibility"
+  });
+
+  if(!hasSetVisibility) {
     return;
   }
 
