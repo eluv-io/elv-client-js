@@ -1167,10 +1167,11 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
         case 8:
           visibility = _context19.sent;
           noAuth = visibility >= 10 || (metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
+          noAuth = true;
           _context19.t0 = _regeneratorRuntime;
           _context19.t1 = this.utils;
           _context19.t2 = this.HttpClient;
-          _context19.next = 15;
+          _context19.next = 16;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
@@ -1178,7 +1179,7 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             noAuth: noAuth
           }));
 
-        case 15:
+        case 16:
           _context19.t3 = _context19.sent;
           _context19.t4 = {
             resolve: resolveLinks,
@@ -1193,38 +1194,38 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
           };
           _context19.t7 = _context19.t2.Request.call(_context19.t2, _context19.t6);
           _context19.t8 = _context19.t1.ResponseToJson.call(_context19.t1, _context19.t7);
-          _context19.next = 23;
+          _context19.next = 24;
           return _context19.t0.awrap.call(_context19.t0, _context19.t8);
 
-        case 23:
+        case 24:
           metadata = _context19.sent;
-          _context19.next = 31;
+          _context19.next = 32;
           break;
 
-        case 26:
-          _context19.prev = 26;
+        case 27:
+          _context19.prev = 27;
           _context19.t9 = _context19["catch"](5);
 
           if (!(_context19.t9.status !== 404)) {
-            _context19.next = 30;
+            _context19.next = 31;
             break;
           }
 
           throw _context19.t9;
 
-        case 30:
+        case 31:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 31:
+        case 32:
           if (produceLinkUrls) {
-            _context19.next = 33;
+            _context19.next = 34;
             break;
           }
 
           return _context19.abrupt("return", metadata);
 
-        case 33:
-          _context19.next = 35;
+        case 34:
+          _context19.next = 36;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
@@ -1233,15 +1234,15 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             metadata: metadata
           }));
 
-        case 35:
+        case 36:
           return _context19.abrupt("return", _context19.sent);
 
-        case 36:
+        case 37:
         case "end":
           return _context19.stop();
       }
     }
-  }, null, this, [[5, 26]]);
+  }, null, this, [[5, 27]]);
 };
 /**
  * List the versions of a content object
