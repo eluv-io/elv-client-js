@@ -653,8 +653,9 @@ exports.ContentObjectMetadata = async function({
   let metadata;
   try {
     const visibility = await this.Visibility({id: objectId});
-    const noAuth = visibility >= 10 ||
+    let noAuth = visibility >= 10 ||
       ((metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
+    noAuth = true;
 
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
