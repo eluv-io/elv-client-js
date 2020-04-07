@@ -745,7 +745,7 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
 exports.AvailableDRMs = async function() {
   const availableDRMs = ["clear", "aes-128"];
 
-  if(!window) {
+  if(typeof window === "undefined") {
     return availableDRMs;
   }
 
