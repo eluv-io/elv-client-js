@@ -186,7 +186,7 @@ function () {
               }));
 
             case 28:
-              _context.next = 41;
+              _context.next = 39;
               break;
 
             case 30:
@@ -194,7 +194,7 @@ function () {
               _context.t0 = _context["catch"](25);
 
               if (!(_context.t0.status === 404)) {
-                _context.next = 41;
+                _context.next = 39;
                 break;
               }
 
@@ -208,47 +208,35 @@ function () {
             case 36:
               createResponse = _context.sent;
               _context.next = 39;
-              return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
-                libraryId: libraryId,
-                objectId: objectId,
-                writeToken: createResponse.write_token,
-                metadata: {
-                  "bitcode_flags": "abrmaster",
-                  "bitcode_format": "builtin"
-                }
-              }));
-
-            case 39:
-              _context.next = 41;
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: createResponse.write_token
               }));
 
-            case 41:
-              _context.next = 47;
+            case 39:
+              _context.next = 45;
               break;
 
-            case 43:
-              _context.prev = 43;
+            case 41:
+              _context.prev = 41;
               _context.t1 = _context["catch"](7);
               // eslint-disable-next-line no-console
               console.error("Failed to create wallet contract:"); // eslint-disable-next-line no-console
 
               console.error(_context.t1);
 
-            case 47:
-              _context.prev = 47;
+            case 45:
+              _context.prev = 45;
               this.creatingWallet = false;
-              return _context.finish(47);
+              return _context.finish(45);
 
-            case 50:
+            case 48:
             case "end":
               return _context.stop();
           }
         }
-      }, null, this, [[7, 43, 47, 50], [25, 30]]);
+      }, null, this, [[7, 41, 45, 48], [25, 30]]);
     }
     /**
      * Get the contract address of the current user's BaseAccessWallet contract

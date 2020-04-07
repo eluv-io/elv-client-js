@@ -182,16 +182,6 @@ await client.userProfileClient.UserMetadata()
           this.Log(`Creating wallet object for user ${this.client.signer.address}`);
           const createResponse = await this.client.CreateContentObject({libraryId, objectId});
 
-          await this.client.ReplaceMetadata({
-            libraryId,
-            objectId,
-            writeToken: createResponse.write_token,
-            metadata: {
-              "bitcode_flags": "abrmaster",
-              "bitcode_format": "builtin"
-            }
-          });
-
           await this.client.FinalizeContentObject({
             libraryId,
             objectId,
