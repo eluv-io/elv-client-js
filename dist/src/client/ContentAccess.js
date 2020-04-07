@@ -1353,7 +1353,7 @@ exports.AvailableDRMs = function _callee22() {
         case 0:
           availableDRMs = ["clear", "aes-128"];
 
-          if (window) {
+          if (!(typeof window === "undefined")) {
             _context22.next = 3;
             break;
           }
