@@ -18,6 +18,23 @@ const argv = yargs
   .option("title", {
     description: "Title for the mezzanine"
   })
+  .option("display-title", {
+    description: "Display title for the mezzanine (set to title if not specified)"
+  })
+  .option("slug", {
+    description: "Slug for the mezzanine (generated based on title if not specified)"
+  })
+  .option("ip-title-id", {
+    description: "IP title ID for the mezzanine (equivalent to slug if not specified)"
+  })
+  .option("title-type", {
+    description: "Title type for the mezzanine",
+    default: "title"
+  })
+  .option("asset-type", {
+    description: "Asset type for the mezzanine",
+    default: "primary"
+  })
   .option("metadata", {
     description: "Metadata JSON string to include in the object metadata"
   })
@@ -39,20 +56,20 @@ const argv = yargs
     type: "string",
     description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
   })
- .option("config-url", {
+  .option("config-url", {
     type: "string",
     description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
   })
   .demandOption(
-    ["library", "masterHash", "type"],
+    ["library", "masterHash", "type", "title"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
   )
   .argv;
 
 const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
 
-
-
+const Slugify = str =>
+  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g,"");
 
 const Report = response => {
   if(response.errors.length > 0) {
@@ -73,6 +90,11 @@ const Create = async ({
   variant,
   offeringKey,
   title,
+  displayTitle,
+  slug,
+  ipTitleId,
+  titleType,
+  assetType,
   metadata,
   existingMezzId,
   abrProfile,
@@ -80,6 +102,54 @@ const Create = async ({
   wait=false
 }) => {
   try {
+    const privateKey = process.env.PRIVATE_KEY;
+    if(!privateKey) {
+      console.error("PRIVATE_KEY environment variable must be specified");
+      return;
+    }
+
+    if(metadata) {
+      try {
+        metadata = JSON.parse(metadata);
+
+        const name = (metadata.public || {}).name || metadata.name || title;
+        metadata.name = metadata.name || name;
+        metadata.public = {
+          ...(metadata.public || {}),
+          public: {
+            name
+          }
+        };
+
+      } catch(error) {
+        console.error("Error parsing metadata:");
+        console.error(error);
+      }
+    } else {
+      metadata = {
+        name: title,
+        public: {
+          name: title,
+          asset_metadata: {
+
+          }
+        }
+      };
+    }
+
+    if(abrProfile) {
+      abrProfile = JSON.parse(fs.readFileSync(abrProfile));
+    }
+
+    metadata.public.asset_metadata = {
+      title,
+      display_title: displayTitle || title,
+      slug: slug || Slugify(displayTitle || title),
+      ip_title_id: ipTitleId || slug || Slugify(displayTitle || title),
+      title_type: titleType,
+      asset_type: assetType
+    };
+
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"],
       region: elvGeo
@@ -195,49 +265,5 @@ const Create = async ({
   }
 };
 
-let {
-  library,
-  masterHash,
-  type,
-  title,
-  existingMezzId,
-  abrProfile,
-  variant,
-  offeringKey,
-  metadata,
-  wait,
-  elvGeo
-} = argv;
 
-const privateKey = process.env.PRIVATE_KEY;
-if(!privateKey) {
-  console.error("PRIVATE_KEY environment variable must be specified");
-  return;
-}
-
-if(metadata) {
-  try {
-    metadata = JSON.parse(metadata);
-  } catch(error) {
-    console.error("Error parsing metadata:");
-    console.error(error);
-  }
-}
-
-if(abrProfile) {
-  abrProfile = JSON.parse(fs.readFileSync(abrProfile));
-}
-
-Create({
-  library,
-  masterHash,
-  type,
-  variant,
-  offeringKey,
-  title,
-  metadata,
-  existingMezzId,
-  abrProfile,
-  elvGeo,
-  wait
-});
+Create(argv);
