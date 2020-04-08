@@ -16,8 +16,6 @@ var Ethers = require("ethers");
 
 var Id = require("./Id");
 
-var Crypto = require("./Crypto");
-
 var Utils = require("./Utils");
 
 var UrlJoin = require("url-join");
@@ -1679,7 +1677,7 @@ function () {
               }
 
               _context24.next = 5;
-              return _regeneratorRuntime.awrap(Crypto.GenerateTargetConk());
+              return _regeneratorRuntime.awrap(this.client.Crypto.GenerateTargetConk());
 
             case 5:
               cap = _context24.sent;

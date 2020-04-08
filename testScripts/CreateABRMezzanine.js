@@ -108,6 +108,7 @@ const Create = async ({
       return;
     }
 
+    let name = title;
     if(metadata) {
       try {
         if(metadata.startsWith("@")) {
@@ -115,31 +116,14 @@ const Create = async ({
         }
 
         metadata = JSON.parse(metadata);
-
-        const name = (metadata.public || {}).name || metadata.name || title;
-        metadata.name = metadata.name || name;
-        metadata.public = {
-          ...(metadata.public || {}),
-          public: {
-            name
-          }
-        };
-
+        name = (metadata.public || {}).name || metadata.name || title;
       } catch(error) {
         console.error("Error parsing metadata:");
         console.error(error);
         return;
       }
     } else {
-      metadata = {
-        name: title,
-        public: {
-          name: title,
-          asset_metadata: {
-
-          }
-        }
-      };
+      metadata = { public: { asset_metadata: {} } };
     }
 
     if(abrProfile) {
@@ -152,7 +136,8 @@ const Create = async ({
       slug: slug || Slugify(displayTitle || title),
       ip_title_id: ipTitleId || slug || Slugify(displayTitle || title),
       title_type: titleType,
-      asset_type: assetType
+      asset_type: assetType,
+      ...(metadata.public.asset_metadata || {})
     };
 
     const client = await ElvClient.FromConfigurationUrl({
@@ -190,7 +175,7 @@ const Create = async ({
 
     console.log("\nCreating ABR Mezzanine...");
     const createResponse = await client.CreateABRMezzanine({
-      name: title,
+      name,
       libraryId: library,
       objectId: existingMezzId,
       type,
