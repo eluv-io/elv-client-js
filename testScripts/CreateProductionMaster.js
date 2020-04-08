@@ -17,7 +17,7 @@ const argv = yargs
     description: "Title for the master"
   })
   .option("metadata", {
-    description: "Metadata JSON string to include in the object metadata or file path prefixed with '@'"
+    description: "Metadata JSON string (or file path if prefixed with '@') to include in the object metadata",
   })
   .option("files", {
     type: "array",
@@ -144,17 +144,12 @@ const Create = async ({
       // Close file handles
       fileHandles.forEach(descriptor => fs.closeSync(descriptor));
 
+      await client.SetVisibility({id, visibility: 0});
+
       console.log("\nProduction master object created:");
       console.log("\tObject ID:", id);
       console.log("\tVersion Hash:", hash, "\n");
 
-      if(id) {
-	await client.CallContractMethodAndWait({
-	   contractAddress: client.utils.HashToAddress(id),
-	   methodName: "setVisibility",
-	   methodArgs: [0],
-	})
-      }
 
       if(errors.length > 0) {
         console.error("Errors:");
