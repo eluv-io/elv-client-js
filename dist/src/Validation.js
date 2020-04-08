@@ -16,7 +16,7 @@ exports.ValidateLibrary = function (libraryId) {
 
 exports.ValidateObject = function (objectId) {
   if (!objectId) {
-    throw "Object ID not specified";
+    throw Error("Object ID not specified");
   } else if (!objectId.toString().startsWith("iq__")) {
     throw Error("Invalid object ID: ".concat(objectId));
   }
@@ -61,9 +61,9 @@ exports.ValidateParameters = function (_ref) {
 
 exports.ValidateAddress = function (address) {
   if (!address) {
-    throw "Address not specified";
+    throw Error("Address not specified");
   } else if (!/^(0x)?[0-9a-f]{40}$/i.test(address.toLowerCase())) {
-    throw "Invalid address: ".concat(address);
+    throw Error("Invalid address: ".concat(address));
   }
 
   return Utils.FormatAddress(address);
