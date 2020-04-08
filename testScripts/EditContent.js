@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const { ElvClient } = require("../src/ElvClient");
 const fs = require("fs");
 const Path = require("path");
@@ -36,14 +38,17 @@ const argv = yargs
     type: "string",
     description: "New type for this object (object ID, version hash or name of type)"
   })
+  .option("config-url", {
+    type: "string",
+    description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
+  })
   .demandOption(
     ["objectId"],
-    "\nUsage: PRIVATE_KEY=<private-key> node EditContent --objectId <object-id> --replaceMetadata <subtree> '<metadata-json>' ..."
+    "\nUsage: PRIVATE_KEY=<private-key> node EditContent --objectId <object-id> --replaceMetadata <subtree> '<metadata-json>'  (--config-url \"<fabric-config-url>\") ..."
   )
   .argv;
 
-const ClientConfiguration = require("../TestConfiguration.json");
-
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 
 const EditContent = async ({
   objectId,

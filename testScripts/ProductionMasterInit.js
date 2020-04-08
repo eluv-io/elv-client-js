@@ -1,16 +1,41 @@
+/* eslint-disable no-console */
+
 // initialize production master without uploading any files
 // - use to turn a manually created object into a production master
 
-// still need to pass in cloud credentials if files are remote
+// still need to pass in cloud credentials via env vars if files are remote
 
 const { ElvClient } = require("../src/ElvClient");
 
-const ClientConfiguration = require("../TestConfiguration.json");
+const yargs = require("yargs");
+const argv = yargs
+  .option("libraryId", {
+    description: "ID of the library containing master"
+  })
+  .option("objectId", {
+    description: "ID of the master object"
+  })
+  .option("elv-geo", {
+    type: "string",
+    description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
+  })
+  .option("config-url", {
+    type: "string",
+    description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
+  })
+  .demandOption(
+    ["libraryId", "objectId"],
+    "\nUsage: PRIVATE_KEY=<private-key> node ProductionMasterInit.js --libraryId <master-library-id> --objectId <master-object-id>  (--config-url \"<fabric-config-url>\") (--elv-geo eu-west) \n"
+  )
+  .argv;
 
-const ProductionMasterInit = async (libraryId, objectId, access) => {
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
+
+const ProductionMasterInit = async ({libraryId, objectId, access, elvGeo}) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
-      configUrl: ClientConfiguration["config-url"]
+      configUrl: ClientConfiguration["config-url"],
+      region: elvGeo
     });
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({
@@ -69,9 +94,7 @@ const ProductionMasterInit = async (libraryId, objectId, access) => {
   }
 };
 
-const [ , , libraryId, objectId ] = process.argv;
-
-// const access = null;
+let {libraryId, objectId, elvGeo} = argv;
 
 // Example access if all files in filePaths are in S3 bucket
 //
@@ -94,9 +117,4 @@ const access = [
 ];
 
 
-if(!libraryId || !objectId ) {
-  console.error("Usage: PRIVATE_KEY=<private-key> node ./testScripts/ProductionMasterInit.js libraryId objectId");
-  return;
-}
-
-ProductionMasterInit(libraryId, objectId, access);
+ProductionMasterInit({libraryId, objectId, elvGeo, access});
