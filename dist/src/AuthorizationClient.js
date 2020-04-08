@@ -495,8 +495,8 @@ function () {
                 }); // Save request ID if present
 
                 accessRequest.logs.some(function (log) {
-                  if (log.values && log.values.requestID) {
-                    _this.requestIds[address] = log.values.requestID;
+                  if (log.values && (log.values.requestID || log.values.requestNonce)) {
+                    _this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
                     return true;
                   }
                 });
@@ -1103,7 +1103,7 @@ function () {
   }, {
     key: "AccessComplete",
     value: function AccessComplete(_ref17) {
-      var id, score, _ref18, abi, address, requestId, event;
+      var id, score, _ref18, abi, isV3, address, requestId, event;
 
       return _regeneratorRuntime.async(function AccessComplete$(_context13) {
         while (1) {
@@ -1119,32 +1119,54 @@ function () {
             case 4:
               _ref18 = _context13.sent;
               abi = _ref18.abi;
+              isV3 = _ref18.isV3;
               address = Utils.HashToAddress(id);
               requestId = this.requestIds[address];
 
               if (requestId) {
-                _context13.next = 10;
+                _context13.next = 11;
                 break;
               }
 
               throw Error("Unknown request ID for " + id);
 
-            case 10:
-              _context13.next = 12;
+            case 11:
+              if (!isV3) {
+                _context13.next = 17;
+                break;
+              }
+
+              _context13.next = 14;
               return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
                 contractAddress: address,
                 abi: abi,
-                methodName: "accessComplete",
+                methodName: "accessCompleteV3",
+                methodArgs: [requestId, [], []]
+              }));
+
+            case 14:
+              event = _context13.sent;
+              _context13.next = 20;
+              break;
+
+            case 17:
+              _context13.next = 19;
+              return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
+                contractAddress: address,
+                abi: abi,
+                methodName: isV3 ? "accessCompleteV3" : "accessComplete",
                 methodArgs: [requestId, score, ""]
               }));
 
-            case 12:
+            case 19:
               event = _context13.sent;
+
+            case 20:
               delete this.requestIds[address];
               delete this.accessTransactions.objects[address];
               return _context13.abrupt("return", event);
 
-            case 16:
+            case 23:
             case "end":
               return _context13.stop();
           }

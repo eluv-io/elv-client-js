@@ -236,6 +236,26 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "indexType",
+      "type": "uint8"
+    }, {
+      "name": "obj",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setEntityRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [],
     "name": "TYPE_EDIT",
@@ -267,26 +287,6 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "indexType",
-      "type": "uint8"
-    }, {
-      "name": "obj",
-      "type": "address"
-    }, {
-      "name": "access_type",
-      "type": "uint8"
-    }, {
-      "name": "access",
-      "type": "uint8"
-    }],
-    "name": "setRights",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,

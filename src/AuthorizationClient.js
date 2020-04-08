@@ -288,8 +288,8 @@ class AuthorizationClient {
 
       // Save request ID if present
       accessRequest.logs.some(log => {
-        if(log.values && log.values.requestID) {
-          this.requestIds[address] = log.values.requestID;
+        if(log.values && (log.values.requestID || log.values.requestNonce)) {
+          this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
           return true;
         }
       });
@@ -641,20 +641,29 @@ class AuthorizationClient {
 
   async AccessComplete({id, score}) {
     this.Log(`Calling access complete on ${id} with score ${score}`);
-    const { abi } = await this.ContractInfo({id});
+    const { abi, isV3 } = await this.ContractInfo({id});
 
     const address = Utils.HashToAddress(id);
     const requestId = this.requestIds[address];
 
     if(!requestId) { throw Error("Unknown request ID for " + id); }
 
-    // If access request did not succeed, no event will be emitted
-    const event = await this.client.CallContractMethodAndWait({
-      contractAddress: address,
-      abi,
-      methodName: "accessComplete",
-      methodArgs: [requestId, score, ""]
-    });
+    let event;
+    if(isV3) {
+      event = await this.client.CallContractMethodAndWait({
+        contractAddress: address,
+        abi,
+        methodName: "accessCompleteV3",
+        methodArgs: [requestId, [], []]
+      });
+    } else {
+      event = await this.client.CallContractMethodAndWait({
+        contractAddress: address,
+        abi,
+        methodName: isV3 ? "accessCompleteV3" : "accessComplete",
+        methodArgs: [requestId, score, ""]
+      });
+    }
 
     delete this.requestIds[address];
     delete this.accessTransactions.objects[address];

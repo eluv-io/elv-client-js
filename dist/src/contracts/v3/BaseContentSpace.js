@@ -1099,35 +1099,6 @@ var contract = {
     "stateMutability": "nonpayable",
     "type": "function"
   }, {
-    "constant": false,
-    "inputs": [{
-      "name": "_v",
-      "type": "uint8[]"
-    }, {
-      "name": "_r",
-      "type": "bytes32[]"
-    }, {
-      "name": "_s",
-      "type": "bytes32[]"
-    }, {
-      "name": "_from",
-      "type": "address[]"
-    }, {
-      "name": "_dest",
-      "type": "address[]"
-    }, {
-      "name": "_value",
-      "type": "uint256[]"
-    }, {
-      "name": "_ts",
-      "type": "uint256[]"
-    }],
-    "name": "executeBatch",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
     "constant": true,
     "inputs": [],
     "name": "CAN_EDIT",
@@ -1467,6 +1438,10 @@ var contract = {
       "type": "address"
     }, {
       "indexed": false,
+      "name": "parentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
       "name": "objectHash",
       "type": "string"
     }],
@@ -1513,6 +1488,15 @@ var contract = {
       "type": "uint256"
     }],
     "name": "AccessRequestV3",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
     "type": "event"
   }]
 };

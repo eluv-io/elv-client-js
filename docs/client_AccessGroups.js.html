@@ -80,17 +80,44 @@ const {
   ValidateAddress
 } = require("../Validation");
 
-exports.GroupActionMethod = async function(objectId, set=false) {
-  switch(await this.AccessType({id: objectId})) {
-    case this.authClient.ACCESS_TYPES.OBJECT:
-      return set ? "setContentObjectRights" : "getContentObjectRights";
-    case this.authClient.ACCESS_TYPES.TYPE:
-      return set ? "setContentTypeRights" : "getContentTypeRights";
-    case this.authClient.ACCESS_TYPES.GROUP:
-      return set ? "setAccessGroupRights" : "getAccessGroupRights";
-    case this.authClient.ACCESS_TYPES.LIBRARY:
-      return set ? "setLibraryRights" : "getLibraryRights";
+exports.SetGroupPermission = async function({groupAddress, objectId, permission, remove=false}) {
+  const groupInfo = await this.authClient.ContractInfo({address: groupAddress});
+  const objectInfo = await this.authClient.ContractInfo({id: objectId});
+
+  let event;
+  if(!objectInfo.isV3 &amp;&amp; objectInfo.accessType === this.authClient.ACCESS_TYPES.GROUP) {
+    // V2 access group does not have "setRights" method
+
+    if(groupInfo.isV3) {
+      throw Error("Unable to map V3 group to V2 object");
+    }
+
+    event = await this.CallContractMethodAndWait({
+      contractAddress: groupAddress,
+      methodName: "setAccessGroupRights",
+      methodArgs: [
+        this.utils.HashToAddress(objectId),
+        permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
+        permission === "none" || remove ? 0 : 2
+      ]
+    });
+  } else {
+    event = await this.CallContractMethodAndWait({
+      contractAddress: this.utils.HashToAddress(objectId),
+      methodName: "setRights",
+      methodArgs: [
+        groupAddress,
+        permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
+        permission === "none" || remove ? 0 : 2
+      ]
+    });
   }
+
+  return await this.ExtractEventFromLogs({
+    abi: groupInfo.abi,
+    event,
+    eventName: "RightsChanged"
+  });
 };
 
 /**
@@ -578,6 +605,21 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
 
   const groupAddresses = await this.Collection({collectionType: "accessGroups"});
 
+  let rightsMethod;
+  switch(await this.AccessType({id: objectId})) {
+    case this.authClient.ACCESS_TYPES.OBJECT:
+      rightsMethod = "getContentObjectRights";
+      break;
+    case this.authClient.ACCESS_TYPES.TYPE:
+      rightsMethod = "getContentTypeRights";
+      break;
+    case this.authClient.ACCESS_TYPES.GROUP:
+      rightsMethod = "getAccessGroupRights";
+      break;
+    case this.authClient.ACCESS_TYPES.LIBRARY:
+      rightsMethod = "getLibraryRights";
+  }
+
   const groupPermissions = {};
   await Promise.all(
     groupAddresses.map(async groupAddress => {
@@ -585,7 +627,7 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
 
       let permission = await this.CallContractMethod({
         contractAddress: groupAddress,
-        methodName: await this.GroupActionMethod(objectId, false),
+        methodName: rightsMethod,
         methodArgs: [contractAddress]
       });
 
@@ -639,21 +681,10 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
 
   this.Log(`Adding ${permission} permission to group ${groupAddress} for ${objectId}`);
 
-  const event = await this.CallContractMethodAndWait({
-    contractAddress: groupAddress,
-    methodName: await this.GroupActionMethod(objectId, true),
-    methodArgs: [
-      this.utils.HashToAddress(objectId),
-      permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
-      permission === "none" ? 0 : 2
-    ]
-  });
-
-  const abi = await this.ContractAbi({contractAddress: groupAddress});
-  await this.ExtractEventFromLogs({
-    abi,
-    event,
-    eventName: "RightsChanged"
+  return await this.SetGroupPermission({
+    groupAddress,
+    objectId,
+    permission
   });
 };
 
@@ -680,21 +711,11 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
 
   this.Log(`Removing ${permission} permission from group ${groupAddress} for ${objectId}`);
 
-  const event = await this.CallContractMethodAndWait({
-    contractAddress: groupAddress,
-    methodName: await this.GroupActionMethod(objectId, true),
-    methodArgs: [
-      this.utils.HashToAddress(objectId),
-      permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
-      0
-    ]
-  });
-
-  const abi = await this.ContractAbi({contractAddress: groupAddress});
-  await this.ExtractEventFromLogs({
-    abi,
-    event,
-    eventName: "RightsChanged"
+  return await this.SetGroupPermission({
+    groupAddress,
+    objectId,
+    permission,
+    remove: true
   });
 };
 

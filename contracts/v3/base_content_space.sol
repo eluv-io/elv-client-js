@@ -319,29 +319,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         emit RemoveKMSLocator(msg.sender,1);
         return false;
     }
-
-    function executeBatch(uint8[] _v, bytes32[] _r, bytes32[] _s, address[] _from, address[] _dest, uint256[] _value, uint256[] _ts) public {
-
-        require(msg.sender == owner || checkKMSAddr(msg.sender) > 0);
-
-        // TODO: not sure if this is worth it - will just crash if the parameters are passed in incorrectly, which is the same as a revert...?
-        require(_v.length == _r.length);
-        require(_r.length == _s.length);
-        require(_s.length == _from.length);
-        require(_from.length == _dest.length);
-        require(_dest.length == _value.length);
-        require(_value.length == _ts.length);
-
-        for (uint i = 0; i < _v.length; i++) {
-            Transactable t = Transactable(_from[i]);
-            bool success = t.execute(msg.sender, _v[i], _r[i], _s[i], _dest[i], _value[i], _ts[i]);
-
-            if (!success) {
-                // we failed to get the target wallet to pay so - in this scenario - we have to pay!
-                // _dest[i].send(_value[i]); // TODO: transfer? error handling?
-            }
-        }
-    }
+    
 }
 
 
@@ -420,11 +398,12 @@ BaseCtFactory20191017165200ML: Updated to reflect change in BaseContent201908011
 BaseCtFactory20191219182100ML: Updated to reflect change in BaseContent20191219135200ML
 BaseCtFactory20200203112500ML: Set rights to SEE upon creation to avoid interfering with ownership transfer
 BaseCtFactory20200316121100ML: Uses content setRights instead of going straight to the wallet
+BaseCtFactory20200422180700ML: Updated to reflect fix of deletion of content objects
 */
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20200316121100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20200422180700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createContent(address lib, address content_type) public  returns (address) {
         Container libraryObj = Container(lib);
@@ -441,17 +420,6 @@ contract BaseContentFactory is Ownable {
 
         return address(content);
     }
-}
-
-//BaseCtFactoryXt20191031115100PO: adds support for custom contract
-//BaseCtFactoryXt20191031153200ML: passes accessor to the runAccess via the addresses array
-//BaseCtFactoryXt20191031170400ML: adds request timestamp to event
-//BaseCtFactoryXt20191031203100ML: changes initialization of array
-//BaseCtFactoryXt20200211164000ML: Modified to conform with authV3 API
-
-contract BaseContentFactoryExt is BaseContentFactory {
-
-    bytes32 public version ="BaseCtFactoryXt20200211164000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;

@@ -1874,6 +1874,27 @@ var topics = {
     }],
     "ambiguous": true
   },
+  "0xbdaffceabaaa783aa187fea6c2e815541d29e2290bf3f7d3c4fc53672b68f7df": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "spaceAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "parentAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "objectHash",
+        "type": "string"
+      }],
+      "name": "VersionConfirm",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
   "0x79f778ed0728e9eb0e0ceb581a3f1f01fa09306a34abb3feb08c692623269152": {
     "abi": [{
       "anonymous": false,
