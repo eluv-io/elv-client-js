@@ -62,11 +62,11 @@ const argv = yargs
   })
   .demandOption(
     ["library", "masterHash", "type", "title"],
-    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
+    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--config-url \"<fabric-config-url>\") (--elv-geo eu-west)\n"
   )
   .argv;
 
-const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 
 const Slugify = str =>
   (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g,"");
