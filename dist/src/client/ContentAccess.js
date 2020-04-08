@@ -17,8 +17,6 @@ var UrlJoin = require("url-join");
 
 var HttpClient = require("../HttpClient");
 
-var Crypto = require("../Crypto");
-
 var _require = require("../Validation"),
     ValidateLibrary = _require.ValidateLibrary,
     ValidateObject = _require.ValidateObject,
@@ -1117,18 +1115,25 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
  * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
  * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
  * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
+ * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
    Example:
+
        {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
             },
+            "public": {
+              "name": "My Linked Object",
+            }
             ...
           }
        }
+
 
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
@@ -1139,13 +1144,13 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
+          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1182,6 +1187,7 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
         case 16:
           _context19.t3 = _context19.sent;
           _context19.t4 = {
+            select: select,
             resolve: resolveLinks,
             resolve_include_source: resolveIncludeSource
           };
@@ -2759,7 +2765,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
           }
 
           _context36.next = 20;
-          return _regeneratorRuntime.awrap(Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
+          return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
         case 20:
           this.encryptionConks[objectId] = _context36.sent;
@@ -2768,7 +2774,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
 
         case 23:
           _context36.next = 25;
-          return _regeneratorRuntime.awrap(Crypto.GeneratePrimaryConk());
+          return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk());
 
         case 25:
           this.encryptionConks[objectId] = _context36.sent;
@@ -2780,7 +2786,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
 
           metadata = {};
           _context36.next = 30;
-          return _regeneratorRuntime.awrap(Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
 
         case 30:
           metadata[capKey] = _context36.sent;
@@ -2818,7 +2824,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
           }
 
           _context36.next = 45;
-          return _regeneratorRuntime.awrap(Crypto.EncryptConk(this.encryptionConks[objectId], _kmsPublicKey));
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], _kmsPublicKey));
 
         case 45:
           metadata[kmsCapKey] = _context36.sent;
@@ -2888,7 +2894,7 @@ exports.Encrypt = function _callee37(_ref31) {
         case 4:
           conk = _context37.sent;
           _context37.next = 7;
-          return _regeneratorRuntime.awrap(Crypto.Encrypt(conk, chunk));
+          return _regeneratorRuntime.awrap(this.Crypto.Encrypt(conk, chunk));
 
         case 7:
           data = _context37.sent;
@@ -2937,7 +2943,7 @@ exports.Decrypt = function _callee38(_ref32) {
         case 4:
           conk = _context38.sent;
           _context38.next = 7;
-          return _regeneratorRuntime.awrap(Crypto.Decrypt(conk, chunk));
+          return _regeneratorRuntime.awrap(this.Crypto.Decrypt(conk, chunk));
 
         case 7:
           data = _context38.sent;

@@ -1,7 +1,6 @@
 const HttpClient = require("./HttpClient");
 const Ethers = require("ethers");
 const Id = require("./Id");
-const Crypto = require("./Crypto");
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 
@@ -906,7 +905,7 @@ class AuthorizationClient {
     }
 
     if(!this.reencryptionKeys[objectId]) {
-      let cap = await Crypto.GenerateTargetConk();
+      let cap = await this.client.Crypto.GenerateTargetConk();
       cap.symm_key = await this.KMSSymmetricKey({libraryId, objectId});
 
       this.reencryptionKeys[objectId] = cap;

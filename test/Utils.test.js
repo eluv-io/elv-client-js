@@ -15,6 +15,9 @@ const {RandomBytes, RandomString} = require("./utils/Utils");
 
 describe("Test Utils", () => {
   test("ElvClient Utils", () => {
+    const w = global.window;
+    global.window = undefined;
+
     const client = new ElvClient({
       contentSpaceId: "ispc2tNqMTr51szPGsttFQJSq6gRdKaZ",
       fabricURIs: ["http://localhost:8008"],
@@ -22,6 +25,8 @@ describe("Test Utils", () => {
     });
 
     expect(client.utils).toBeDefined();
+
+    global.window = w;
   });
 
   test("FrameClient Utils", () => {

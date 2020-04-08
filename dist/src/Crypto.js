@@ -10,20 +10,20 @@ var Stream = require("stream");
 
 var Utils = require("./Utils");
 
+if (typeof crypto === "undefined") {
+  var _crypto = require("crypto");
+
+  _crypto.getRandomValues = function (arr) {
+    return _crypto.randomBytes(arr.length);
+  };
+
+  global.crypto = _crypto;
+}
+
 var _ElvCrypto;
 
 switch (Utils.Platform()) {
   case Utils.PLATFORM_WEB:
-    if (typeof crypto === "undefined") {
-      var _crypto = require("crypto");
-
-      _crypto.getRandomValues = function (arr) {
-        return _crypto.randomBytes(arr.length);
-      };
-
-      global.crypto = _crypto;
-    }
-
     _ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.externals")["default"];
     break;
 

@@ -29,6 +29,10 @@ const RandomString = (size) => {
 
 const CreateClient = async (name, bux="2") => {
   try {
+    // Un-initialize global.window so that elv-crypto knows it's running in node
+    const w = global.window;
+    global.window = undefined;
+
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
     const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
 
@@ -67,6 +71,10 @@ const CreateClient = async (name, bux="2") => {
 
     client.clientName = name;
     client.initialBalance = parseFloat(bux);
+
+    // Re-initialize global.window for frame client and ensure that window.crypto is set for elv-crypto
+    global.window = w;
+    window.crypto = global.crypto;
 
     return client;
   } catch(error) {

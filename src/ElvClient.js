@@ -10,6 +10,7 @@ const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
+const Crypto = require("./Crypto");
 
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
@@ -235,6 +236,10 @@ class ElvClient {
       client: this,
       debug: this.debug
     });
+
+    // Initialize crypto wasm
+    this.Crypto = Crypto;
+    this.Crypto.ElvCrypto();
   }
 
   SetAuth(auth) {

@@ -27,6 +27,8 @@ var HttpClient = require("./HttpClient"); // const ContentObjectVerification = r
 
 var Utils = require("./Utils");
 
+var Crypto = require("./Crypto");
+
 if (Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
@@ -175,7 +177,10 @@ function () {
       this.userProfileClient = new UserProfileClient({
         client: this,
         debug: this.debug
-      });
+      }); // Initialize crypto wasm
+
+      this.Crypto = Crypto;
+      this.Crypto.ElvCrypto();
     }
   }, {
     key: "SetAuth",

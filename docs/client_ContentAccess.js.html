@@ -69,7 +69,6 @@
 const UrlJoin = require("url-join");
 
 const HttpClient = require("../HttpClient");
-const Crypto = require("../Crypto");
 
 const {
   ValidateLibrary,
@@ -672,18 +671,25 @@ exports.ProduceMetadataLinks = async function({
  * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
  * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
  * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {Array&lt;string>=} select - Limit the returned metadata to the specified attributes
+ * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
    Example:
+
        {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
             },
+            "public": {
+              "name": "My Linked Object",
+            }
             ...
           }
        }
+
 
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
@@ -697,6 +703,7 @@ exports.ContentObjectMetadata = async function({
   versionHash,
   writeToken,
   metadataSubtree="/",
+  select=[],
   resolveLinks=false,
   resolveIncludeSource=false,
   produceLinkUrls=false
@@ -723,6 +730,7 @@ exports.ContentObjectMetadata = async function({
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
         queryParams: {
+          select,
           resolve: resolveLinks,
           resolve_include_source: resolveIncludeSource
         },
@@ -1608,14 +1616,14 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
       });
 
     if(existingUserCap) {
-      this.encryptionConks[objectId] = await Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+      this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
     } else {
-      this.encryptionConks[objectId] = await Crypto.GeneratePrimaryConk();
+      this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
 
       // If write token is specified, add it to the metadata
       if(writeToken) {
         let metadata = {};
-        metadata[capKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
+        metadata[capKey] = await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
 
         try {
           const kmsAddress = await this.authClient.KMSAddress({objectId});
@@ -1631,7 +1639,7 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
             });
 
           if(!existingKMSCap) {
-            metadata[kmsCapKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+            metadata[kmsCapKey] = await this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
           }
         } catch(error) {
           // eslint-disable-next-line no-console
@@ -1668,7 +1676,7 @@ exports.Encrypt = async function({libraryId, objectId, writeToken, chunk}) {
   ValidateParameters({libraryId, objectId});
 
   const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
-  const data = await Crypto.Encrypt(conk, chunk);
+  const data = await this.Crypto.Encrypt(conk, chunk);
 
   // Convert to ArrayBuffer
   return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
@@ -1691,7 +1699,7 @@ exports.Decrypt = async function({libraryId, objectId, writeToken, chunk}) {
   ValidateParameters({libraryId, objectId});
 
   const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
-  const data = await Crypto.Decrypt(conk, chunk);
+  const data = await this.Crypto.Decrypt(conk, chunk);
 
   // Convert to ArrayBuffer
   return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);

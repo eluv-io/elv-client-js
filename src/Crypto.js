@@ -4,15 +4,15 @@ const bs58 = require("bs58");
 const Stream = require("stream");
 const Utils = require("./Utils");
 
+if(typeof crypto === "undefined") {
+  const crypto = require("crypto");
+  crypto.getRandomValues = arr => crypto.randomBytes(arr.length);
+  global.crypto = crypto;
+}
+
 let ElvCrypto;
 switch(Utils.Platform()) {
   case Utils.PLATFORM_WEB:
-    if(typeof crypto === "undefined") {
-      const crypto = require("crypto");
-      crypto.getRandomValues = arr => crypto.randomBytes(arr.length);
-      global.crypto = crypto;
-    }
-
     ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.externals").default;
     break;
   default:
