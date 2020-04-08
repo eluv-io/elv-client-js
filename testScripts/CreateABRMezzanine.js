@@ -36,7 +36,7 @@ const argv = yargs
     default: "primary"
   })
   .option("metadata", {
-    description: "Metadata JSON string to include in the object metadata"
+    description: "Metadata JSON string (or file path if prefixed with '@') to include in the object metadata"
   })
   .option("variant", {
     description: "Variant of the mezzanine",
@@ -110,6 +110,10 @@ const Create = async ({
 
     if(metadata) {
       try {
+        if(metadata.startsWith("@")) {
+          metadata = fs.readFileSync(metadata.substring(1));
+        }
+
         metadata = JSON.parse(metadata);
 
         const name = (metadata.public || {}).name || metadata.name || title;
@@ -124,6 +128,7 @@ const Create = async ({
       } catch(error) {
         console.error("Error parsing metadata:");
         console.error(error);
+        return;
       }
     } else {
       metadata = {
@@ -200,6 +205,7 @@ const Create = async ({
     Report(createResponse);
 
     const objectId = createResponse.id;
+    await client.SetVisibility({id: objectId, visibility: 0});
 
     console.log("Starting Mezzanine Job(s)");
 
