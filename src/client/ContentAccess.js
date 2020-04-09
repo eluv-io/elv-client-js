@@ -629,6 +629,7 @@ exports.ProduceMetadataLinks = async function({
        }
 
 
+ * @param {number=} linkDepthLimit - Limit link resolution to the specified depth
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -644,6 +645,7 @@ exports.ContentObjectMetadata = async function({
   select=[],
   resolveLinks=false,
   resolveIncludeSource=false,
+  linkDepthLimit,
   produceLinkUrls=false
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
@@ -669,6 +671,7 @@ exports.ContentObjectMetadata = async function({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
         queryParams: {
           select,
+          link_depth: linkDepthLimit,
           resolve: resolveLinks,
           resolve_include_source: resolveIncludeSource
         },
