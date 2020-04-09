@@ -11,7 +11,7 @@ const {
 
 const fs = require("fs");
 const OutputLogger = require("./utils/OutputLogger");
-const {CreateClient, BufferToArrayBuffer, ReturnBalance, RandomBytes} = require("./utils/Utils");
+const {CreateClient, BufferToArrayBuffer, ReturnBalance} = require("./utils/Utils");
 const UserProfileClient = require("../src/UserProfileClient");
 
 if(!global.window) {
@@ -19,7 +19,6 @@ if(!global.window) {
 }
 
 let client, tagClient;
-const testFileSize = 10000;
 
 const CreateTaggedObject = async (tagLibraryId, tags) => {
   const createResponse = await tagClient.CreateContentObject({
@@ -46,7 +45,6 @@ describe("Test UserProfileClient", () => {
   beforeAll(async () => {
     client = await CreateClient("UserProfileClient");
     tagClient = await CreateClient("UserProfileClient Tags");
-    testFile = RandomBytes(testFileSize);
 
     client.userProfileClient = OutputLogger(UserProfileClient, client.userProfileClient);
   });
