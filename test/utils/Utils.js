@@ -3,6 +3,7 @@ const Ethers = require("ethers");
 const Source = require("../../src/ElvClient");
 const Min = require("../../dist/ElvClient-node-min");
 const ClientConfiguration = require("../../TestConfiguration");
+const ElvCrypto = require("../../src/Crypto");
 
 // Uses source by default. If USE_BUILD is specified, uses the minified node version
 const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
@@ -29,10 +30,6 @@ const RandomString = (size) => {
 
 const CreateClient = async (name, bux="2") => {
   try {
-    // Un-initialize global.window so that elv-crypto knows it's running in node
-    const w = global.window;
-    global.window = undefined;
-
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
     const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
 
@@ -71,6 +68,14 @@ const CreateClient = async (name, bux="2") => {
 
     client.clientName = name;
     client.initialBalance = parseFloat(bux);
+
+    // Un-initialize global.window so that elv-crypto knows it's running in node
+    const w = global.window;
+    global.window = undefined;
+
+    // Reset client's crypto module with one created for node
+    client.Crypto = ElvCrypto;
+    await client.Crypto.ElvCrypto();
 
     // Re-initialize global.window for frame client and ensure that window.crypto is set for elv-crypto
     global.window = w;
