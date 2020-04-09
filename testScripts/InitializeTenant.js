@@ -112,7 +112,6 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     permission: "manage"
   });
 
-  typeMetadata.bitcode_flags = "production_master";
   const masterTypeId = await client.CreateContentType({
     name: `${tenantName} - Title Master`,
     metadata: { ...typeMetadata }
