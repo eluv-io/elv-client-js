@@ -13,8 +13,17 @@ const argv = yargs
   .option("type", {
     description: "Name, object ID, or version hash of the type for the mezzanine"
   })
+  .option("name", {
+    description: "Object public name for the mezzanine (derived from title and ip-title-id if not specified)"
+  })
+ .option("ip-title-id", { 
+    description: "IP title ID for the asset (derived from title if not specified)"
+  })
   .option("title", {
-    description: "Title for the master"
+    description: "Title for the asset"
+  })
+  .option("display-title", {
+    description: "Display title for the asset (defaulted to title if not provided)"
   })
   .option("metadata", {
     description: "Metadata JSON string (or file path if prefixed with '@') to include in the object metadata",
@@ -45,15 +54,20 @@ const argv = yargs
   })
   .demandOption(
     ["library", "type", "title", "files"],
-    "\nUsage: PRIVATE_KEY=<private-key> node CreateProductionMaster.js --library <master-library-id> --title <title> --metadata '<metadata-json>' --files <file1> (<file2>...) (--s3-copy || --s3-reference)  (--config-url \"<fabric-config-url>\") (--elv-geo eu-west)\n"
+    "\nUsage: PRIVATE_KEY=<private-key> node CreateProductionMaster.js --library <master-library-id> --title <title> --metadata '<metadata-json>' --files <file1> (<file2>...) (--s3-copy || --s3-reference)\n"
   )
   .argv;
-const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
+
+const Slugify = str =>
+  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g,"");
 
 const Create = async ({
   elvGeo,
   libraryId,
   type,
+  name,
+  ipTitleId,
   title,
   metadata,
   files,
@@ -114,11 +128,31 @@ const Create = async ({
 
     type = type.hash;
 
+    if (!metadata.public) {
+      metadata.public = {};
+    }
+    if (!metadata.public.asset_metadata){
+      metadata.public.asset_metadata = {title};
+    }
+    if (displayTitle) {
+      metadata.public.asset_metadata.display_title = displayTitle;
+    } else {
+      displayTitle = title;
+    }
+    if (ipTitleId) {
+      metadata.public.asset_metadata.ip_title_id = ipTitleId;
+    } else {
+      ipTitleId = Slugify(displayTitle);
+    }
+    if (!name) {
+	name = metadata.public.name || (ipTitleId + " - " + title);
+    }
+
     try {
       const {errors, warnings, id, hash} = await client.CreateProductionMaster({
         libraryId,
         type,
-        name: title,
+        name,
         description: "Production Master for " + title,
         metadata,
         fileInfo,
@@ -170,7 +204,7 @@ const Create = async ({
   }
 };
 
-let {library, type, title, metadata, files, encrypt, s3Reference, s3Copy, elvGeo} = argv;
+let {library, type, title, ipTitleId, displayTitle, name, metadata, files, encrypt, s3Reference, s3Copy, elvGeo} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -205,15 +239,19 @@ if(metadata) {
     console.error(error);
     return;
   }
+} else {
+  metadata = {};
 }
 
-console.log("files", files);
 
 Create({
   elvGeo,
   libraryId: library,
   type,
   title,
+  displayTitle,
+  ipTitleId,
+  name,
   metadata,
   files,
   encrypt,
