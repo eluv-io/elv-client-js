@@ -16,7 +16,7 @@ const argv = yargs
     description: "Name, object ID, or version hash of the type for the mezzanine"
   })
   .option("name", {
-    description: "Object public name for the mezzanine (derived from ip-title-id and title if not provided)"
+    description: "Name for the mezzanine object (derived from ip-title-id and title if not provided)"
   })
   .option("title", {
     description: "Title for the mezzanine"
@@ -118,10 +118,10 @@ const Create = async ({
           metadata = fs.readFileSync(metadata.substring(1));
         }
 
-        metadata = JSON.parse(metadata);
-        if (!name) {
-          name = (metadata.public || {}).name || metadata.name;
-	}
+        metadata = JSON.parse(metadata) || {};
+        if(!metadata.public) { metadata.public = {}; }
+
+        name = name || metadata.public.name || metadata.name;
       } catch(error) {
         console.error("Error parsing metadata:");
         console.error(error);
@@ -145,9 +145,7 @@ const Create = async ({
       ...(metadata.public.asset_metadata || {})
     };
 
-    if (!name) { //Generate from components
-	name = metadata.public.asset_metadata.ip_title_id + " MEZ - " + title;
-    }
+    name = name || metadata.public.asset_metadata.ip_title_id + " MEZ - " + title;
 
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"],

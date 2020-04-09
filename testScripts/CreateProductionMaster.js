@@ -14,16 +14,19 @@ const argv = yargs
     description: "Name, object ID, or version hash of the type for the mezzanine"
   })
   .option("name", {
-    description: "Object public name for the mezzanine (derived from title and ip-title-id if not specified)"
-  })
- .option("ip-title-id", { 
-    description: "IP title ID for the asset (derived from title if not specified)"
+    description: "Name for the master object (derived from ip-title-id and title if not specified)"
   })
   .option("title", {
     description: "Title for the asset"
   })
   .option("display-title", {
-    description: "Display title for the asset (defaulted to title if not provided)"
+    description: "Display title for the asset (set to title if not specified)"
+  })
+  .option("slug", {
+    description: "Slug for the mezzanine (generated based on title if not specified)"
+  })
+  .option("ip-title-id", {
+    description: "IP title ID for the mezzanine (equivalent to slug if not specified)"
   })
   .option("metadata", {
     description: "Metadata JSON string (or file path if prefixed with '@') to include in the object metadata",
@@ -64,18 +67,72 @@ const Slugify = str =>
 
 const Create = async ({
   elvGeo,
-  libraryId,
+  library,
   type,
   name,
   ipTitleId,
   title,
+  displayTitle,
+  slug,
   metadata,
   files,
   encrypt=false,
-  access,
-  copy=false
+  s3Reference,
+  s3Copy
 }) => {
   try {
+    const privateKey = process.env.PRIVATE_KEY;
+    if(!privateKey) {
+      console.error("PRIVATE_KEY environment variable must be specified");
+      return;
+    }
+
+    let access;
+    if(s3Reference || s3Copy) {
+      access = {
+        region: process.env.AWS_REGION,
+        bucket: process.env.AWS_BUCKET,
+        accessKey: process.env.AWS_KEY,
+        secret: process.env.AWS_SECRET
+      };
+
+      if(!access.region || !access.bucket || !access.accessKey || !access.secret) {
+        console.error("Missing required S3 environment variables: AWS_REGION AWS_BUCKET AWS_KEY AWS_SECRET");
+        return;
+      }
+    }
+
+    if(metadata) {
+      try {
+        if(metadata.startsWith("@")) {
+          metadata = fs.readFileSync(metadata.substring(1));
+        }
+
+        metadata = JSON.parse(metadata) || {};
+        if(!metadata.public) { metadata.public = {}; }
+
+        name = name || metadata.public.name || metadata.name;
+      } catch(error) {
+        console.error("Error parsing metadata:");
+        console.error(error);
+        return;
+      }
+    } else {
+      metadata = { public: { asset_metadata: {} } };
+    }
+
+    metadata.public.asset_metadata = {
+      title,
+      ...(metadata.public.asset_metadata || {})
+    };
+
+    if(ipTitleId) { metadata.public.asset_metadata.ip_title_id = ipTitleId; }
+    if(displayTitle) { metadata.public.asset_metadata.displayTitle = displayTitle; }
+    if(slug) { metadata.public.asset_metadata.slug = slug; }
+
+    ipTitleId = ipTitleId || slug || Slugify(displayTitle || title);
+    name = name || ipTitleId + " MASTER - " + title;
+
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"],
       region: elvGeo
@@ -128,29 +185,9 @@ const Create = async ({
 
     type = type.hash;
 
-    if (!metadata.public) {
-      metadata.public = {};
-    }
-    if (!metadata.public.asset_metadata){
-      metadata.public.asset_metadata = {title};
-    }
-    if (displayTitle) {
-      metadata.public.asset_metadata.display_title = displayTitle;
-    } else {
-      displayTitle = title;
-    }
-    if (ipTitleId) {
-      metadata.public.asset_metadata.ip_title_id = ipTitleId;
-    } else {
-      ipTitleId = Slugify(displayTitle);
-    }
-    if (!name) {
-	name = metadata.public.name || (ipTitleId + " - " + title);
-    }
-
     try {
       const {errors, warnings, id, hash} = await client.CreateProductionMaster({
-        libraryId,
+        libraryId: library,
         type,
         name,
         description: "Production Master for " + title,
@@ -158,7 +195,7 @@ const Create = async ({
         fileInfo,
         encrypt,
         access,
-        copy,
+        copy: s3Copy && !s3Reference,
         callback: progress => {
           if(access) {
             console.log(progress);
@@ -184,7 +221,6 @@ const Create = async ({
       console.log("\tObject ID:", id);
       console.log("\tVersion Hash:", hash, "\n");
 
-
       if(errors.length > 0) {
         console.error("Errors:");
         console.error(errors.join("\n"), "\n");
@@ -204,57 +240,4 @@ const Create = async ({
   }
 };
 
-let {library, type, title, ipTitleId, displayTitle, name, metadata, files, encrypt, s3Reference, s3Copy, elvGeo} = argv;
-
-const privateKey = process.env.PRIVATE_KEY;
-if(!privateKey) {
-  console.error("PRIVATE_KEY environment variable must be specified");
-  return;
-}
-
-let access;
-if(s3Reference || s3Copy) {
-  access = {
-    region: process.env.AWS_REGION,
-    bucket: process.env.AWS_BUCKET,
-    accessKey: process.env.AWS_KEY,
-    secret: process.env.AWS_SECRET
-  };
-
-  if(!access.region || !access.bucket || !access.accessKey || !access.secret) {
-    console.error("Missing required S3 environment variables: AWS_REGION AWS_BUCKET AWS_KEY AWS_SECRET");
-    return;
-  }
-}
-
-if(metadata) {
-  if(metadata.startsWith("@")) {
-    metadata = fs.readFileSync(metadata.substring(1));
-  }
-
-  try {
-    metadata = JSON.parse(metadata);
-  } catch(error) {
-    console.error("Error parsing metadata:");
-    console.error(error);
-    return;
-  }
-} else {
-  metadata = {};
-}
-
-
-Create({
-  elvGeo,
-  libraryId: library,
-  type,
-  title,
-  displayTitle,
-  ipTitleId,
-  name,
-  metadata,
-  files,
-  encrypt,
-  access,
-  copy: s3Copy && !s3Reference
-});
+Create(argv);
