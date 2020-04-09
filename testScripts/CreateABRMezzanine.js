@@ -15,6 +15,9 @@ const argv = yargs
   .option("type", {
     description: "Name, object ID, or version hash of the type for the mezzanine"
   })
+  .option("name", {
+    description: "Object public name for the mezzanine (derived from ip-title-id and title if not provided)"
+  })
   .option("title", {
     description: "Title for the mezzanine"
   })
@@ -62,11 +65,11 @@ const argv = yargs
   })
   .demandOption(
     ["library", "masterHash", "type", "title"],
-    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--config-url \"<fabric-config-url>\") (--elv-geo eu-west)\n"
+    "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
   )
   .argv;
 
-const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
 
 const Slugify = str =>
   (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g,"");
@@ -89,6 +92,7 @@ const Create = async ({
   type,
   variant,
   offeringKey,
+  name,
   title,
   displayTitle,
   slug,
@@ -108,7 +112,6 @@ const Create = async ({
       return;
     }
 
-    let name = title;
     if(metadata) {
       try {
         if(metadata.startsWith("@")) {
@@ -116,7 +119,9 @@ const Create = async ({
         }
 
         metadata = JSON.parse(metadata);
-        name = (metadata.public || {}).name || metadata.name || title;
+        if (!name) {
+          name = (metadata.public || {}).name || metadata.name;
+	}
       } catch(error) {
         console.error("Error parsing metadata:");
         console.error(error);
@@ -139,6 +144,10 @@ const Create = async ({
       asset_type: assetType,
       ...(metadata.public.asset_metadata || {})
     };
+
+    if (!name) { //Generate from components
+	name = metadata.public.asset_metadata.ip_title_id + " MEZ - " + title;
+    }
 
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"],
