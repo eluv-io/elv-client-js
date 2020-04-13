@@ -212,6 +212,12 @@ exports.CallContractMethod = async function({
 }) {
   ValidateAddress(contractAddress);
 
+  // Delete cached visibility value if it is being changed
+  contractAddress = this.utils.FormatAddress(contractAddress);
+  if(methodName === "setVisibility" &amp;&amp; this.visibilityInfo[contractAddress]) {
+    delete this.visibilityInfo[contractAddress];
+  }
+
   if(!abi) { abi = await this.ContractAbi({contractAddress}); }
 
   return await this.ethClient.CallContractMethod({
@@ -260,6 +266,12 @@ exports.CallContractMethodAndWait = async function({
   overrideCachedContract=false
 }) {
   ValidateAddress(contractAddress);
+
+  // Delete cached visibility value if it is being changed
+  contractAddress = this.utils.FormatAddress(contractAddress);
+  if(methodName === "setVisibility" &amp;&amp; this.visibilityInfo[contractAddress]) {
+    delete this.visibilityInfo[contractAddress];
+  }
 
   if(!abi) { abi = await this.ContractAbi({contractAddress}); }
 

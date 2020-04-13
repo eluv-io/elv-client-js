@@ -27,6 +27,8 @@ var HttpClient = require("./HttpClient"); // const ContentObjectVerification = r
 
 var Utils = require("./Utils");
 
+var Crypto = require("./Crypto");
+
 if (Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
@@ -147,12 +149,14 @@ function () {
   _createClass(ElvClient, [{
     key: "InitializeClients",
     value: function InitializeClients() {
+      // Cached info
       this.contentTypes = {};
       this.encryptionConks = {};
       this.reencryptionConks = {};
       this.stateChannelAccess = {};
       this.objectLibraryIds = {};
       this.objectImageUrls = {};
+      this.visibilityInfo = {};
       this.HttpClient = new HttpClient({
         uris: this.fabricURIs,
         debug: this.debug
@@ -173,7 +177,10 @@ function () {
       this.userProfileClient = new UserProfileClient({
         client: this,
         debug: this.debug
-      });
+      }); // Initialize crypto wasm
+
+      this.Crypto = Crypto;
+      this.Crypto.ElvCrypto();
     }
   }, {
     key: "SetAuth",
@@ -416,7 +423,7 @@ function () {
     value: function SetSigner(_ref7) {
       var signer = _ref7.signer;
       signer.connect(this.ethClient.Provider());
-      signer.provider.pollingInterval = 1000;
+      signer.provider.pollingInterval = 500;
       this.signer = signer;
       this.InitializeClients();
     }

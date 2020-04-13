@@ -17,17 +17,6 @@ var UrlJoin = require("url-join");
 
 var HttpClient = require("../HttpClient");
 
-var Crypto = require("../Crypto");
-/*
-const SpaceContract = require("../contracts/BaseContentSpace");
-const LibraryContract = require("../contracts/BaseLibrary");
-const ContentContract = require("../contracts/BaseContent");
-const ContentTypeContract = require("../contracts/BaseContentType");
-const AccessibleContract = require("../contracts/Accessible");
-
- */
-
-
 var _require = require("../Validation"),
     ValidateLibrary = _require.ValidateLibrary,
     ValidateObject = _require.ValidateObject,
@@ -37,55 +26,69 @@ var _require = require("../Validation"),
     ValidateParameters = _require.ValidateParameters;
 
 exports.Visibility = function _callee(_ref) {
-  var id, hasVisibility;
+  var id, address, hasVisibility;
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
           id = _ref.id;
           _context.prev = 1;
-          return _context.abrupt("return", 1);
+          address = this.utils.HashToAddress(id);
 
-        case 5:
+          if (this.visibilityInfo[address]) {
+            _context.next = 12;
+            break;
+          }
+
+          _context.next = 6;
+          return _regeneratorRuntime.awrap(this.authClient.ContractHasMethod({
+            contractAddress: address,
+            methodName: "visibility"
+          }));
+
+        case 6:
           hasVisibility = _context.sent;
 
           if (hasVisibility) {
-            _context.next = 8;
+            _context.next = 9;
             break;
           }
 
           return _context.abrupt("return", 10);
 
-        case 8:
-          _context.next = 10;
+        case 9:
+          _context.next = 11;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: this.utils.HashToAddress(id),
             methodName: "visibility"
           }));
 
-        case 10:
-          return _context.abrupt("return", _context.sent);
+        case 11:
+          this.visibilityInfo[address] = _context.sent;
 
-        case 13:
-          _context.prev = 13;
+        case 12:
+          return _context.abrupt("return", this.visibilityInfo[address]);
+
+        case 15:
+          _context.prev = 15;
           _context.t0 = _context["catch"](1);
 
           if (!(_context.t0.code === "CALL_EXCEPTION")) {
-            _context.next = 17;
+            _context.next = 19;
             break;
           }
 
           return _context.abrupt("return", 0);
 
-        case 17:
+        case 19:
           throw _context.t0;
 
-        case 18:
+        case 20:
         case "end":
           return _context.stop();
       }
     }
-  }, null, this, [[1, 13]]);
+  }, null, this, [[1, 15]]);
 };
 /* Content Spaces */
 
@@ -220,7 +223,7 @@ exports.ContentType = function _callee4(_ref3) {
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: this.contentSpaceObjectId,
-            metadataSubtree: UrlJoin("contentTypes", name)
+            metadataSubtree: UrlJoin("public", "contentTypes", name)
           }));
 
         case 7:
@@ -325,7 +328,7 @@ exports.ContentType = function _callee4(_ref3) {
           return _context4.abrupt("return", {
             id: typeId,
             hash: versionHash,
-            name: metadata.name || typeId,
+            name: metadata["public"] && metadata["public"].name || metadata.name || typeId,
             meta: metadata
           });
 
@@ -990,13 +993,13 @@ exports.ContentObjectLibraryId = function _callee15(_ref11) {
 exports.ProduceMetadataLinks = function _callee18(_ref12) {
   var _this4 = this;
 
-  var libraryId, objectId, versionHash, _ref12$path, path, metadata, _ref12$noAuth, noAuth, result;
+  var libraryId, objectId, versionHash, _ref12$path, path, metadata, result;
 
   return _regeneratorRuntime.async(function _callee18$(_context18) {
     while (1) {
       switch (_context18.prev = _context18.next) {
         case 0:
-          libraryId = _ref12.libraryId, objectId = _ref12.objectId, versionHash = _ref12.versionHash, _ref12$path = _ref12.path, path = _ref12$path === void 0 ? "/" : _ref12$path, metadata = _ref12.metadata, _ref12$noAuth = _ref12.noAuth, noAuth = _ref12$noAuth === void 0 ? true : _ref12$noAuth;
+          libraryId = _ref12.libraryId, objectId = _ref12.objectId, versionHash = _ref12.versionHash, _ref12$path = _ref12.path, path = _ref12$path === void 0 ? "/" : _ref12$path, metadata = _ref12.metadata;
 
           if (!(!metadata || _typeof(metadata) !== "object")) {
             _context18.next = 3;
@@ -1023,8 +1026,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
                       objectId: objectId,
                       versionHash: versionHash,
                       path: UrlJoin(path, i.toString()),
-                      metadata: entry,
-                      noAuth: noAuth
+                      metadata: entry
                     }));
 
                   case 2:
@@ -1079,8 +1081,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
                       objectId: objectId,
                       versionHash: versionHash,
                       path: UrlJoin(path, key),
-                      metadata: metadata[key],
-                      noAuth: noAuth
+                      metadata: metadata[key]
                     }));
 
                   case 2:
@@ -1114,19 +1115,27 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
  * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
  * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
  * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
+ * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
    Example:
+
        {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
             },
+            "public": {
+              "name": "My Linked Object",
+            }
             ...
           }
        }
 
+
+ * @param {number=} linkDepthLimit - Limit link resolution to the specified depth
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -1136,13 +1145,13 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, _noAuth;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
+          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, linkDepthLimit = _ref13.linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1163,21 +1172,24 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
 
         case 8:
           visibility = _context19.sent;
-          _noAuth = visibility >= 10 || (metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
+          noAuth = visibility >= 10 || (metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
+          noAuth = true;
           _context19.t0 = _regeneratorRuntime;
           _context19.t1 = this.utils;
           _context19.t2 = this.HttpClient;
-          _context19.next = 15;
+          _context19.next = 16;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            noAuth: _noAuth
+            noAuth: noAuth
           }));
 
-        case 15:
+        case 16:
           _context19.t3 = _context19.sent;
           _context19.t4 = {
+            select: select,
+            link_depth: linkDepthLimit,
             resolve: resolveLinks,
             resolve_include_source: resolveIncludeSource
           };
@@ -1190,56 +1202,55 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
           };
           _context19.t7 = _context19.t2.Request.call(_context19.t2, _context19.t6);
           _context19.t8 = _context19.t1.ResponseToJson.call(_context19.t1, _context19.t7);
-          _context19.next = 23;
+          _context19.next = 24;
           return _context19.t0.awrap.call(_context19.t0, _context19.t8);
 
-        case 23:
+        case 24:
           metadata = _context19.sent;
-          _context19.next = 31;
+          _context19.next = 32;
           break;
 
-        case 26:
-          _context19.prev = 26;
+        case 27:
+          _context19.prev = 27;
           _context19.t9 = _context19["catch"](5);
 
           if (!(_context19.t9.status !== 404)) {
-            _context19.next = 30;
+            _context19.next = 31;
             break;
           }
 
           throw _context19.t9;
 
-        case 30:
+        case 31:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 31:
+        case 32:
           if (produceLinkUrls) {
-            _context19.next = 33;
+            _context19.next = 34;
             break;
           }
 
           return _context19.abrupt("return", metadata);
 
-        case 33:
-          _context19.next = 35;
+        case 34:
+          _context19.next = 36;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
             path: metadataSubtree,
-            metadata: metadata,
-            noAuth: noAuth
+            metadata: metadata
           }));
 
-        case 35:
+        case 36:
           return _context19.abrupt("return", _context19.sent);
 
-        case 36:
+        case 37:
         case "end":
           return _context19.stop();
       }
     }
-  }, null, this, [[5, 26]]);
+  }, null, this, [[5, 27]]);
 };
 /**
  * List the versions of a content object
@@ -1351,7 +1362,7 @@ exports.AvailableDRMs = function _callee22() {
         case 0:
           availableDRMs = ["clear", "aes-128"];
 
-          if (window) {
+          if (!(typeof window === "undefined")) {
             _context22.next = 3;
             break;
           }
@@ -1359,7 +1370,7 @@ exports.AvailableDRMs = function _callee22() {
           return _context22.abrupt("return", availableDRMs);
 
         case 3:
-          if (!(typeof window.navigator.requestMediaKeySystemAccess !== "function")) {
+          if (!(typeof window !== "undefined" && typeof window.navigator.requestMediaKeySystemAccess !== "function")) {
             _context22.next = 5;
             break;
           }
@@ -2545,7 +2556,7 @@ exports.LinkTarget = function _callee33(_ref27) {
 
 
 exports.LinkUrl = function _callee34(_ref28) {
-  var libraryId, objectId, versionHash, linkPath, mimeType, _ref28$queryParams, queryParams, _ref28$noCache, noCache, path;
+  var libraryId, objectId, versionHash, linkPath, mimeType, _ref28$queryParams, queryParams, _ref28$noCache, noCache, path, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee34$(_context34) {
     while (1) {
@@ -2576,18 +2587,26 @@ exports.LinkUrl = function _callee34(_ref28) {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
 
+          _context34.next = 8;
+          return _regeneratorRuntime.awrap(this.Visibility({
+            id: objectId
+          }));
+
+        case 8:
+          visibility = _context34.sent;
+          noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
           _context34.t0 = _objectSpread;
           _context34.t1 = {};
           _context34.t2 = queryParams;
-          _context34.next = 11;
+          _context34.next = 15;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
             noCache: noCache,
-            noAuth: true
+            noAuth: noAuth
           }));
 
-        case 11:
+        case 15:
           _context34.t3 = _context34.sent;
           _context34.t4 = {
             resolve: true,
@@ -2604,7 +2623,7 @@ exports.LinkUrl = function _callee34(_ref28) {
             queryParams: queryParams
           }));
 
-        case 16:
+        case 20:
         case "end":
           return _context34.stop();
       }
@@ -2748,7 +2767,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
           }
 
           _context36.next = 20;
-          return _regeneratorRuntime.awrap(Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
+          return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
         case 20:
           this.encryptionConks[objectId] = _context36.sent;
@@ -2757,7 +2776,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
 
         case 23:
           _context36.next = 25;
-          return _regeneratorRuntime.awrap(Crypto.GeneratePrimaryConk());
+          return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk());
 
         case 25:
           this.encryptionConks[objectId] = _context36.sent;
@@ -2769,7 +2788,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
 
           metadata = {};
           _context36.next = 30;
-          return _regeneratorRuntime.awrap(Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
 
         case 30:
           metadata[capKey] = _context36.sent;
@@ -2807,7 +2826,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
           }
 
           _context36.next = 45;
-          return _regeneratorRuntime.awrap(Crypto.EncryptConk(this.encryptionConks[objectId], _kmsPublicKey));
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], _kmsPublicKey));
 
         case 45:
           metadata[kmsCapKey] = _context36.sent;
@@ -2877,7 +2896,7 @@ exports.Encrypt = function _callee37(_ref31) {
         case 4:
           conk = _context37.sent;
           _context37.next = 7;
-          return _regeneratorRuntime.awrap(Crypto.Encrypt(conk, chunk));
+          return _regeneratorRuntime.awrap(this.Crypto.Encrypt(conk, chunk));
 
         case 7:
           data = _context37.sent;
@@ -2926,7 +2945,7 @@ exports.Decrypt = function _callee38(_ref32) {
         case 4:
           conk = _context38.sent;
           _context38.next = 7;
-          return _regeneratorRuntime.awrap(Crypto.Decrypt(conk, chunk));
+          return _regeneratorRuntime.awrap(this.Crypto.Decrypt(conk, chunk));
 
         case 7:
           data = _context38.sent;

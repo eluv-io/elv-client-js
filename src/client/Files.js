@@ -14,7 +14,6 @@ if(Utils.Platform() === Utils.PLATFORM_NODE) {
   fs = require("fs");
 }
 
-const Crypto = require("../Crypto");
 const UrlJoin = require("url-join");
 
 const {
@@ -308,7 +307,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
         }
 
         if(encryption === "cgck") {
-          data = await Crypto.Encrypt(conk, data);
+          data = await this.Crypto.Encrypt(conk, data);
         }
 
         job.files[f].data = data;
@@ -814,7 +813,7 @@ exports.DownloadEncrypted = async function({
   let outputChunks = [];
 
   // Set up decryption stream
-  const stream = await Crypto.OpenDecryptionStream(conk);
+  const stream = await this.Crypto.OpenDecryptionStream(conk);
   stream.on("data", async chunk => {
     if(chunked) {
       // Turn buffer into desired format, if necessary
@@ -925,7 +924,7 @@ exports.UploadPartChunk = async function({libraryId, objectId, writeToken, partW
 
   if(encryption && encryption !== "none") {
     const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
-    chunk = await Crypto.Encrypt(conk, chunk);
+    chunk = await this.Crypto.Encrypt(conk, chunk);
   }
 
   const path = UrlJoin("q", writeToken, "parts");

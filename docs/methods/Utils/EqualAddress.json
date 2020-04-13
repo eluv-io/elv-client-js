@@ -1,0 +1,50 @@
+[
+  {
+    "signature": " EqualAddress(\"0x0000000000000000000000000000000000000000\", \"0x0000000000000000000000000000000000000000\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0x901fb17a1a6eb3fA29bDB038499BF1593b152673\", \"0x901fb17a1a6eb3fA29bDB038499BF1593b152673\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0x901fb17a1a6eb3fA29bDB038499BF1593b152673\", \"0x901fb17a1a6eb3fa29bdb038499bf1593b152673\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0x087b4db474f24495E93F551BE20553a31122FC6c\", \"0x087b4db474f24495E93F551BE20553a31122FC6c\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\", \"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0xC2E0AfE26315412e385a8857486840EF69958CB8\", \"0xC2E0AfE26315412e385a8857486840EF69958CB8\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\", \"0xe2c1ca8623e9529d229c84f9dda0a5db9555be5e\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\", \"0xc2e0afe26315412e385a8857486840ef69958cb8\");",
+    "result": "false"
+  },
+  {
+    "signature": " EqualAddress(\"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\", \"e2c1ca8623e9529d229c84f9dda0a5db9555be5e\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0xe2c1ca8623e9529d229c84f9dda0a5db9555be5e\", \"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\");",
+    "result": "true"
+  },
+  {
+    "signature": " EqualAddress(\"0xe2c1ca8623e9529d229c84f9dda0a5db9555be5e\", \"0xC2E0AfE26315412e385a8857486840EF69958CB8\");",
+    "result": "false"
+  },
+  {
+    "signature": " EqualAddress(\"0xC2E0AfE26315412e385a8857486840EF69958CB8\", \"0xe2c1ca8623e9529d229c84f9dda0a5db9555be5e\");",
+    "result": "false"
+  }
+]

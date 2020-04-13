@@ -203,7 +203,7 @@ var Utils = {
    */
   HashToAddress: function HashToAddress(hash) {
     hash = hash.substr(4);
-    return "0x" + bs58.decode(hash).toString("hex");
+    return Utils.FormatAddress("0x" + bs58.decode(hash).toString("hex"));
   },
 
   /**

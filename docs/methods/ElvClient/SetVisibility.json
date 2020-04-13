@@ -1,0 +1,27 @@
+[
+  {
+    "signature": "async SetVisibility({\n  \"id\": \"iq__wRQF77NdiTzz6WHsRMjZW3bMCBW\",\n  \"visibility\": 1\n});"
+  },
+  {
+    "signature": "async SetVisibility({\n  \"id\": \"iq__39SFa3shAMzvFLLK3oG3wwNwU5g5\",\n  \"visibility\": 1\n});"
+  },
+  {
+    "signature": "async SetVisibility({\n  \"id\": \"iq__4CN8HqLXRpFVenThaiXLoWTRFkbt\",\n  \"visibility\": 1\n});"
+  },
+  {
+    "signature": "async SetVisibility({\n  \"id\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\",\n  \"visibility\": 100\n});",
+    "result": "{\n  \"nonce\": 45,\n  \"gasPrice\": {\n    \"_hex\": \"0x01dcd65000\"\n  },\n  \"gasLimit\": {\n    \"_hex\": \"0xa096\"\n  },\n  \"to\": \"0xB3B79F8117eAc61CB6d30BcB1E0E7f28945F9685\",\n  \"value\": {\n    \"_hex\": \"0x00\"\n  },\n  \"data\": \"0xaa024e8b0000000000000000000000000000000000000000000000000000000000000064\",\n  \"chainId\": 955210,\n  \"v\": 1910456,\n  \"r\": \"0xcc55e9f9ecccb31f23617bab7c95c9921f89c9a36c4280b753f0a31b0caa3202\",\n  \"s\": \"0x3747b93a7d3cd89ff7c1dec42377381e8b5d04bd8ec741b8787687bb0cec2763\",\n  \"from\": \"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\",\n  \"hash\": \"0xc337690c2a4333a9d86c5c8c2e3f7b8f5e32d3e2e6e1978e6f5868efc7de070d\",\n  \"wait\": \"<function>\"\n}"
+  },
+  {
+    "signature": "async SetVisibility({\n  \"id\": \"iq__3XCZdsTwFBvYjHmA5nsyMvyHCp9v\",\n  \"visibility\": 1\n});",
+    "result": "{\n  \"nonce\": 127,\n  \"gasPrice\": {\n    \"_hex\": \"0x01dcd65000\"\n  },\n  \"gasLimit\": {\n    \"_hex\": \"0xa096\"\n  },\n  \"to\": \"0xB4eE707D56fe04CeE219be5067dAde8aA7218499\",\n  \"value\": {\n    \"_hex\": \"0x00\"\n  },\n  \"data\": \"0xaa024e8b0000000000000000000000000000000000000000000000000000000000000001\",\n  \"chainId\": 955210,\n  \"v\": 1910456,\n  \"r\": \"0x82f9e4ee2ba9f80daf92bd02d6f0aaa6c99595852bdd93e1b10ab6a1a87d57cc\",\n  \"s\": \"0x6789603a7f1e687b8865cf3fdaddf5440d83189e371f44860362d2e1b900a0dc\",\n  \"from\": \"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\",\n  \"hash\": \"0xf1ef3afff128ff22b92da72656f11cd3b181038c2a464491590bab248313eb9f\",\n  \"wait\": \"<function>\"\n}"
+  },
+  {
+    "signature": "async SetVisibility({\n  \"id\": \"iq__3XCZdsTwFBvYjHmA5nsyMvyHCp9v\",\n  \"visibility\": 10\n});",
+    "result": "{\n  \"nonce\": 131,\n  \"gasPrice\": {\n    \"_hex\": \"0x01dcd65000\"\n  },\n  \"gasLimit\": {\n    \"_hex\": \"0xa096\"\n  },\n  \"to\": \"0xB4eE707D56fe04CeE219be5067dAde8aA7218499\",\n  \"value\": {\n    \"_hex\": \"0x00\"\n  },\n  \"data\": \"0xaa024e8b000000000000000000000000000000000000000000000000000000000000000a\",\n  \"chainId\": 955210,\n  \"v\": 1910455,\n  \"r\": \"0x5f78d43a9ee090af599d55bfedaac28507bec651c6a73975279dd626c7ae20fd\",\n  \"s\": \"0x1ac47a7c1f83054e338aa44e730b6cf3092cd72f262b3a5233c91b757804855f\",\n  \"from\": \"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\",\n  \"hash\": \"0xeffa8cb51b0f9b65061b92cd0589539d68125daf02089695f13cf59617e59f75\",\n  \"wait\": \"<function>\"\n}"
+  },
+  {
+    "signature": "async SetVisibility({\n  \"id\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\",\n  \"visibility\": 10\n});",
+    "result": "{\n  \"nonce\": 138,\n  \"gasPrice\": {\n    \"_hex\": \"0x01dcd65000\"\n  },\n  \"gasLimit\": {\n    \"_hex\": \"0xa096\"\n  },\n  \"to\": \"0xB3B79F8117eAc61CB6d30BcB1E0E7f28945F9685\",\n  \"value\": {\n    \"_hex\": \"0x00\"\n  },\n  \"data\": \"0xaa024e8b000000000000000000000000000000000000000000000000000000000000000a\",\n  \"chainId\": 955210,\n  \"v\": 1910456,\n  \"r\": \"0xdf50f593d1a758731caf33eccba3e127f4dbaf9d96e000bcc384aec1fb9a2deb\",\n  \"s\": \"0x5096abd26b2b28a7b727dff03c4585ac6964197a47b879b559ace6c619e8d616\",\n  \"from\": \"0xE2C1Ca8623e9529D229c84F9DDa0A5dB9555BE5e\",\n  \"hash\": \"0x2532b9af8617b469d24ac5bb70fc7372dbda151759b100a595a3f72736cd06f5\",\n  \"wait\": \"<function>\"\n}"
+  }
+]

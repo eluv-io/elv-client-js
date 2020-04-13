@@ -3,6 +3,7 @@ const Ethers = require("ethers");
 const Source = require("../../src/ElvClient");
 const Min = require("../../dist/ElvClient-node-min");
 const ClientConfiguration = require("../../TestConfiguration");
+const ElvCrypto = require("../../src/Crypto");
 
 // Uses source by default. If USE_BUILD is specified, uses the minified node version
 const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
@@ -68,6 +69,18 @@ const CreateClient = async (name, bux="2") => {
     client.clientName = name;
     client.initialBalance = parseFloat(bux);
 
+    // Un-initialize global.window so that elv-crypto knows it's running in node
+    const w = global.window;
+    global.window = undefined;
+
+    // Reset client's crypto module with one created for node
+    client.Crypto = ElvCrypto;
+    await client.Crypto.ElvCrypto();
+
+    // Re-initialize global.window for frame client and ensure that window.crypto is set for elv-crypto
+    global.window = w;
+    window.crypto = global.crypto;
+
     return client;
   } catch(error) {
     console.error("ERROR INITIALIZING TEST CLIENT: ");
@@ -87,14 +100,41 @@ const ReturnBalance = async (client) => {
   const wallet = client.GenerateWallet();
   const fundedSigner = wallet.AddAccount({privateKey});
 
-  console.log(`${client.clientName} used ${(client.initialBalance - balance).toFixed(3)} ether`);
+  console.log(`\n${client.clientName} used ${(client.initialBalance - balance).toFixed(3)} ether\n`);
   await client.SendFunds({
     recipient: fundedSigner.address,
     ether: balance - 0.25
   });
 };
 
+const Initialize = () => {
+  if(typeof jest !== "undefined") {
+    jest.setTimeout(240000);
+
+    const crypto = require("crypto");
+    Object.defineProperty(global.self, "crypto", {
+      value: {
+        getRandomValues: arr => crypto.randomBytes(arr.length),
+      },
+    });
+
+    return {
+      afterAll: afterAll,
+      beforeAll: beforeAll,
+      describe: describe,
+      expect: expect,
+      mockCallback: jest.fn,
+      spyOn: jest.spyOn,
+      runTests: () => {},
+      test: test
+    };
+  } else {
+    return new (require("../TestSuite/TestSuite"))();
+  }
+};
+
 module.exports = {
+  Initialize,
   BufferToArrayBuffer,
   RandomBytes,
   RandomString,

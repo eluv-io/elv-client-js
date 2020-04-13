@@ -22,8 +22,6 @@ if (Utils.Platform() === Utils.PLATFORM_NODE) {
   fs = require("fs");
 }
 
-var Crypto = require("../Crypto");
-
 var UrlJoin = require("url-join");
 
 var _require = require("../Validation"),
@@ -460,7 +458,7 @@ exports.UploadFiles = function _callee4(_ref4) {
                     }
 
                     _context3.next = 19;
-                    return _regeneratorRuntime.awrap(Crypto.Encrypt(conk, data));
+                    return _regeneratorRuntime.awrap(_this.Crypto.Encrypt(conk, data));
 
                   case 19:
                     data = _context3.sent;
@@ -1520,7 +1518,7 @@ exports.DownloadEncrypted = function _callee18(_ref18) {
           outputChunks = []; // Set up decryption stream
 
           _context20.next = 8;
-          return _regeneratorRuntime.awrap(Crypto.OpenDecryptionStream(conk));
+          return _regeneratorRuntime.awrap(this.Crypto.OpenDecryptionStream(conk));
 
         case 8:
           stream = _context20.sent;
@@ -1761,7 +1759,7 @@ exports.UploadPartChunk = function _callee20(_ref20) {
         case 6:
           _conk = _context22.sent;
           _context22.next = 9;
-          return _regeneratorRuntime.awrap(Crypto.Encrypt(_conk, chunk));
+          return _regeneratorRuntime.awrap(this.Crypto.Encrypt(_conk, chunk));
 
         case 9:
           chunk = _context22.sent;

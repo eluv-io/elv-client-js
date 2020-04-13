@@ -12,3 +12,5 @@ test/bundle-analysis
 
 ElvClient-min-dev.js*
 ElvClient-node-min-dev.js*
+
+TestResults.json

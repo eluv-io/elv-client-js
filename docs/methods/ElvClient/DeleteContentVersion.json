@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async DeleteContentVersion({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"versionHash\": \"hq__HsQxGJZyxCGT4N6Zyk9t6iGyDD9bSPofiBzErNme3VeDMgHZHcGiYxwuNvx18U7AEUWm7Y2ntE\"\n});"
+    "signature": "async DeleteContentVersion({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\",\n  \"versionHash\": \"hq__G34fKkzsdWfYf1irHMxYbkXchwXqzPajtZMFc43pZaVcL5Hgxyb56AC2pz1P92zK2M2rE5v7QG\"\n});"
   }
 ]

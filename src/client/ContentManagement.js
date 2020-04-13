@@ -24,10 +24,13 @@ const {
 
 exports.SetVisibility = async function({id, visibility}) {
   this.Log(`Setting visibility ${visibility} on ${id}`);
-  const abi = await this.ContractAbi({id});
 
-  if(!abi.find(method => method.name === "setVisibility")) {
-    this.Log(`${id} contract has no visibility method, ignoring`);
+  const hasSetVisibility = await this.authClient.ContractHasMethod({
+    contractAddress: this.utils.HashToAddress(id),
+    methodName: "setVisibility"
+  });
+
+  if(!hasSetVisibility) {
     return;
   }
 
@@ -226,7 +229,7 @@ exports.CreateContentLibrary = async function({
  * @param {string} libraryId - ID of the library
  * @param {string} writeToken - Write token for the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
- * @param {string} imageName - Name of the image file
+ * @param {string=} imageName - Name of the image file
  */
 exports.SetContentLibraryImage = async function({libraryId, writeToken, image, imageName}) {
   ValidateLibrary(libraryId);
@@ -251,13 +254,14 @@ exports.SetContentLibraryImage = async function({libraryId, writeToken, image, i
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
- * @param {string} imageName - Name of the image file
+ * @param {string=} imageName - Name of the image file
  */
 exports.SetContentObjectImage = async function({libraryId, objectId, writeToken, image, imageName}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
   ValidatePresence("image", image);
-  ValidatePresence("imageName", imageName);
+
+  imageName = imageName || "display_image";
 
   await this.UploadFiles({
     libraryId,

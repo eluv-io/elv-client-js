@@ -1,13 +1,17 @@
-const crypto = require("crypto");
+const {Initialize} = require("./utils/Utils");
+const {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  mockCallback,
+  runTests,
+  test
+} = Initialize();
+
 const ClientConfiguration = require("../TestConfiguration");
 const fs = require("fs");
 const Path = require("path");
-
-Object.defineProperty(global.self, "crypto", {
-  value: {
-    getRandomValues: arr => crypto.randomBytes(arr.length),
-  },
-});
 
 const Fetch = (input, init={}) => {
   if(typeof fetch === "undefined") {
@@ -36,8 +40,10 @@ const testFileSize = 100000;
 
 let client, accessClient;
 let libraryId, objectId, versionHash, typeId, typeName, typeHash, accessGroupAddress;
-let mediaLibraryId, masterId, masterHash, mezzanineId, mezzanineHash, linkLibraryId, linkObjectId;
+let mediaLibraryId, masterId, masterHash, mezzanineId, linkLibraryId, linkObjectId;
 let s3Access;
+
+let playoutResult;
 
 let testFile1, testFile2, testFile3, testHash;
 let fileInfo = [];
@@ -46,9 +52,7 @@ let partInfo = {};
 // Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
-    jest.setTimeout(90000);
-
-    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "5"));
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "2"));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);
@@ -89,6 +93,10 @@ describe("Test ElvClient", () => {
 
   afterAll(async () => {
     await Promise.all([client, accessClient].map(async client => ReturnBalance(client)));
+
+    console.log("\nPlayout Options:");
+    console.log(JSON.stringify(playoutResult, null, 2));
+    console.log("\n");
   });
 
   describe("Initialize From Configuration Url", () => {
@@ -375,18 +383,29 @@ describe("Test ElvClient", () => {
     });
 
     test("Set Library Image", async () => {
+      const libraryObjectId = client.utils.AddressToObjectId(client.utils.HashToAddress(libraryId));
       const buffer = fs.readFileSync(Path.resolve(__dirname, "files", "test-image1.png"));
       const image = client.utils.BufferToArrayBuffer(buffer);
 
-      await client.SetContentLibraryImage({libraryId, image});
+      const editResponse = await client.EditContentObject({libraryId, objectId: libraryObjectId});
+      const writeToken = editResponse.write_token;
+      await client.SetContentLibraryImage({libraryId, image, writeToken});
+      await client.FinalizeContentObject({libraryId, objectId: libraryObjectId, writeToken});
 
-      const libraryMetadata = await client.ContentObjectMetadata({
+      const libraryImageMeta = await client.ContentObjectMetadata({
         libraryId,
-        objectId: libraryId.replace("ilib", "iq__")
+        objectId: libraryId.replace("ilib", "iq__"),
+        metadataSubtree: "public/display_image"
       });
 
-      expect(libraryMetadata.image).toBeDefined();
-      expect(libraryMetadata.public.image).toBeDefined();
+      expect(libraryImageMeta).toBeDefined();
+
+      const imageUrl = await client.ContentObjectImageUrl({
+        libraryId,
+        objectId: libraryObjectId
+      });
+
+      expect(imageUrl).toBeDefined();
     });
   });
 
@@ -537,59 +556,66 @@ describe("Test ElvClient", () => {
 
       let objectNames = [];
       // Create a bunch of objects
-      await Promise.all(
-        Array(10).fill().map(async (_, i) => {
-          const name = `Test Object ${10 - i}`;
-          objectNames.push(name);
-          const createResponse = await client.CreateContentObject({
-            libraryId: testLibraryId,
-            options: {
-              meta: {
+      for(let i = 0; i < 10; i++) {
+        const name = `Test Object ${10 - i}`;
+        objectNames.push(name);
+        const createResponse = await client.CreateContentObject({
+          libraryId: testLibraryId,
+          options: {
+            meta: {
+              public: {
                 name,
                 otherKey: i
               }
             }
-          });
+          }
+        });
 
-          await client.FinalizeContentObject({
-            libraryId: testLibraryId,
-            objectId: createResponse.id,
-            writeToken: createResponse.write_token
-          });
-        })
-      );
+        await client.FinalizeContentObject({
+          libraryId: testLibraryId,
+          objectId: createResponse.id,
+          writeToken: createResponse.write_token
+        });
+      }
 
       objectNames = objectNames.sort();
 
       /* No filters */
-      const unfiltered = await client.ContentObjects({libraryId: testLibraryId});
+      const unfiltered = await client.ContentObjects({
+        libraryId: testLibraryId,
+        filterOptions: {
+          select: ["/public"]
+        }
+      });
 
       expect(unfiltered).toBeDefined();
       expect(unfiltered.contents).toBeDefined();
       expect(unfiltered.contents.length).toEqual(10);
       expect(unfiltered.paging).toBeDefined();
 
-      unfiltered.contents.forEach(object => {
-        expect(object.versions[0].meta.name).toBeDefined();
-        expect(object.versions[0].meta.otherKey).toBeDefined();
-      });
-
       /* Sorting */
       const sorted = await client.ContentObjects({
         libraryId: testLibraryId,
-        filterOptions: { sort: "name" }
+        filterOptions: {
+          select: ["/public"],
+          sort: "/public/name"
+        }
       });
 
-      const sortedNames = sorted.contents.map(object => object.versions[0].meta.name);
+      const sortedNames = sorted.contents.map(object => object.versions[0].meta.public.name);
 
       expect(sortedNames).toEqual(objectNames);
 
       const descSorted = await client.ContentObjects({
         libraryId: testLibraryId,
-        filterOptions: { sort: "name", sortDesc: true }
+        filterOptions: {
+          select: ["/public"],
+          sort: "/public/name",
+          sortDesc: true
+        }
       });
 
-      const descSortedNames = descSorted.contents.map(object => object.versions[0].meta.name);
+      const descSortedNames = descSorted.contents.map(object => object.versions[0].meta.public.name);
 
       const descObjectNames = [...objectNames].reverse();
       expect(descSortedNames).toEqual(descObjectNames);
@@ -598,30 +624,31 @@ describe("Test ElvClient", () => {
       const filtered = await client.ContentObjects({
         libraryId: testLibraryId,
         filterOptions: {
-          sort: ["name"],
+          select: ["/public"],
+          sort: ["/public/name"],
           filter: [
-            {key: "name", type: "gte", filter: objectNames[3]},
-            {key: "name", type: "lte", filter: objectNames[7]}
+            {key: "/public/name", type: "gte", filter: objectNames[3]},
+            {key: "/public/name", type: "lte", filter: objectNames[7]}
           ]
         }
       });
 
       expect(filtered.contents.length).toEqual(5);
-      const filteredNames = filtered.contents.map(object => object.versions[0].meta.name);
+      const filteredNames = filtered.contents.map(object => object.versions[0].meta.public.name);
       expect(filteredNames).toEqual(objectNames.slice(3, 8));
 
       /* Selecting metadata fields */
       const selected = await client.ContentObjects({
         libraryId: testLibraryId,
         filterOptions: {
-          sort: "name",
-          select: ["name"]
+          sort: "/public/name",
+          select: ["/public/name"]
         }
       });
 
       selected.contents.forEach(object => {
-        expect(object.versions[0].meta.name).toBeDefined();
-        expect(object.versions[0].meta.otherKey).not.toBeDefined();
+        expect(object.versions[0].meta.public.name).toBeDefined();
+        expect(object.versions[0].meta.public.otherKey).not.toBeDefined();
       });
     });
 
@@ -888,10 +915,10 @@ describe("Test ElvClient", () => {
 
     test("Download Part In Chunks", async () => {
       let partChunks = [];
-      const mockCallback = jest.fn();
+      const mock = mockCallback();
       const callback = ({chunk}) => {
         partChunks.push(Buffer.from(chunk));
-        mockCallback();
+        mock();
       };
 
       await client.DownloadPart({
@@ -903,7 +930,7 @@ describe("Test ElvClient", () => {
         callback
       });
 
-      expect(mockCallback).toHaveBeenCalledTimes(10);
+      expect(mock).toHaveBeenCalledTimes(10);
 
       const chunkedPart = Buffer.concat(partChunks);
       expect(new Uint8Array(chunkedPart).toString()).toEqual(new Uint8Array(testFile2).toString());
@@ -911,10 +938,10 @@ describe("Test ElvClient", () => {
 
     test("Download Encrypted Part In Chunks", async () => {
       let partChunks = [];
-      const mockCallback = jest.fn();
+      const mock = mockCallback();
       const callback = ({chunk}) => {
         partChunks.push(Buffer.from(chunk));
-        mockCallback();
+        mock();
       };
 
       await client.DownloadPart({
@@ -926,7 +953,7 @@ describe("Test ElvClient", () => {
         callback
       });
 
-      expect(mockCallback).toHaveBeenCalledTimes(10);
+      expect(mock).toHaveBeenCalledTimes(10);
 
       const chunkedPart = Buffer.concat(partChunks);
       expect(new Uint8Array(chunkedPart).toString()).toEqual(new Uint8Array(testFile3).toString());
@@ -1374,8 +1401,6 @@ describe("Test ElvClient", () => {
 
   describe("Media", () => {
     test("Create Production Master", async () => {
-      jest.setTimeout(600000);
-
       mediaLibraryId = await client.CreateContentLibrary({
         name: "Test Media Library",
         metadata: {
@@ -1560,8 +1585,6 @@ describe("Test ElvClient", () => {
     });
 
     test("Process Mezzanine", async () => {
-      jest.setTimeout(600000);
-
       const startResponse = await client.StartABRMezzanineJobs({
         libraryId: mediaLibraryId,
         objectId: mezzanineId,
@@ -1588,26 +1611,19 @@ describe("Test ElvClient", () => {
 
         if(done) { break; }
 
-        if(new Date().getTime() - startTime > 60000) {
+        if(new Date().getTime() - startTime > 120000) {
           // If processing takes too long, start logging status for debugging
           console.log(status);
         }
 
-        await new Promise(resolve => setTimeout(resolve, 10000));
+        await new Promise(resolve => setTimeout(resolve, 5000));
       }
 
-      const finalizeResponse = await client.FinalizeABRMezzanine({
+      await client.FinalizeABRMezzanine({
         libraryId: mediaLibraryId,
         objectId: mezzanineId,
         offeringKey: "default"
       });
-
-      mezzanineHash = finalizeResponse.hash;
-
-      console.log(client.signer.signingKey.privateKey);
-      console.log(
-        mediaLibraryId, mezzanineId, mezzanineHash
-      );
 
       await new Promise(resolve => setTimeout(resolve, 5000));
     });
@@ -1641,11 +1657,10 @@ describe("Test ElvClient", () => {
         drms: []
       });
 
-      console.log("HLS Playout:");
-      console.log(clearPlayoutOptions.hls.playoutUrl);
-
-      console.log("Dash Playout:");
-      console.log(clearPlayoutOptions.dash.playoutUrl);
+      playoutResult = {
+        hls: clearPlayoutOptions.hls.playoutUrl,
+        dash: clearPlayoutOptions.dash.playoutUrl
+      };
     });
 
     test("Playout Options From Self Link", async () => {
@@ -1737,6 +1752,13 @@ describe("Test ElvClient", () => {
           objectId: linkObjectId,
           writeToken: write_token
         });
+
+        await client.CallContractMethodAndWait({
+          contractAddress: client.utils.HashToAddress(linkObjectId),
+          methodName: "publish"
+        });
+
+        await client.SetVisibility({id: linkObjectId, visibility: 10});
 
         // Produce playout options from link
         const playoutOptions = await accessClient.PlayoutOptions({
@@ -1858,7 +1880,7 @@ describe("Test ElvClient", () => {
       // Update graph and expect root object to have been updated
       const latestHash = await client.LatestVersionHash({objectId});
 
-      const callback = jest.fn();
+      const callback = mockCallback();
       await client.UpdateContentObjectGraph({libraryId, objectId, callback});
 
       expect(callback).toHaveBeenCalled();
@@ -2212,7 +2234,8 @@ describe("Test ElvClient", () => {
         // eslint-disable-next-line no-empty
       } catch(error) {}
 
-      // Delete mezzanine
+      // Keep mezzanine for playout validation
+      /*
       await client.DeleteContentObject({libraryId: mediaLibraryId, objectId: mezzanineId});
 
       try {
@@ -2221,6 +2244,8 @@ describe("Test ElvClient", () => {
         expect(undefined).toBeDefined();
         // eslint-disable-next-line no-empty
       } catch(error) {}
+
+       */
 
       // Delete link test object
       await client.DeleteContentObject({libraryId: linkLibraryId, objectId: linkObjectId});
@@ -2265,11 +2290,8 @@ describe("Test ElvClient", () => {
   });
 });
 
-
-
-
-
-
+if(!module.parent) { runTests(); }
+module.exports = runTests;
 
 
 

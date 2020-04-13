@@ -7,16 +7,6 @@
 const UrlJoin = require("url-join");
 
 const HttpClient = require("../HttpClient");
-const Crypto = require("../Crypto");
-
-/*
-const SpaceContract = require("../contracts/BaseContentSpace");
-const LibraryContract = require("../contracts/BaseLibrary");
-const ContentContract = require("../contracts/BaseContent");
-const ContentTypeContract = require("../contracts/BaseContentType");
-const AccessibleContract = require("../contracts/Accessible");
-
- */
 
 const {
   ValidateLibrary,
@@ -30,21 +20,25 @@ const {
 
 exports.Visibility = async function({id}) {
   try {
-    // TODO: Test only - Remove
-    return 1;
+    const address = this.utils.HashToAddress(id);
 
-    // eslint-disable-next-line no-unreachable
-    const hasVisibility = await this.authClient.ContractHasMethod({
-      contractAddress: this.utils.HashToAddress(id),
-      methodName: "visibility"
-    });
+    if(!this.visibilityInfo[address]) {
+      const hasVisibility = await this.authClient.ContractHasMethod({
+        contractAddress: address,
+        methodName: "visibility"
+      });
 
-    if(!hasVisibility) { return 10; }
+      if(!hasVisibility) {
+        return 10;
+      }
 
-    return await this.CallContractMethod({
-      contractAddress: this.utils.HashToAddress(id),
-      methodName: "visibility"
-    });
+      this.visibilityInfo[address] = await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(id),
+        methodName: "visibility"
+      });
+    }
+
+    return this.visibilityInfo[address];
   // eslint-disable-next-line no-unreachable
   } catch(error) {
     if(error.code === "CALL_EXCEPTION") {
@@ -131,7 +125,7 @@ exports.ContentType = async function({name, typeId, versionHash, publicOnly=fals
     typeId = await this.ContentObjectMetadata({
       libraryId: this.contentSpaceLibraryId,
       objectId: this.contentSpaceObjectId,
-      metadataSubtree: UrlJoin("contentTypes", name)
+      metadataSubtree: UrlJoin("public", "contentTypes", name)
     });
   }
 
@@ -172,7 +166,7 @@ exports.ContentType = async function({name, typeId, versionHash, publicOnly=fals
     return {
       id: typeId,
       hash: versionHash,
-      name: metadata.name || typeId,
+      name: (metadata.public && metadata.public.name) || metadata.name || typeId,
       meta: metadata
     };
   } catch(error) {
@@ -555,8 +549,7 @@ exports.ProduceMetadataLinks = async function({
   objectId,
   versionHash,
   path="/",
-  metadata,
-  noAuth=true
+  metadata
 }) {
   // Primitive
   if(!metadata || typeof metadata !== "object") { return metadata; }
@@ -571,8 +564,7 @@ exports.ProduceMetadataLinks = async function({
         objectId,
         versionHash,
         path: UrlJoin(path, i.toString()),
-        metadata: entry,
-        noAuth
+        metadata: entry
       })
     );
   }
@@ -599,8 +591,7 @@ exports.ProduceMetadataLinks = async function({
         objectId,
         versionHash,
         path: UrlJoin(path, key),
-        metadata: metadata[key],
-        noAuth
+        metadata: metadata[key]
       });
     }
   );
@@ -618,19 +609,27 @@ exports.ProduceMetadataLinks = async function({
  * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
  * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
  * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
+ * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
    Example:
+
        {
           "resolved-link": {
             ".": {
               "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
             },
+            "public": {
+              "name": "My Linked Object",
+            }
             ...
           }
        }
 
+
+ * @param {number=} linkDepthLimit - Limit link resolution to the specified depth
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -643,8 +642,10 @@ exports.ContentObjectMetadata = async function({
   versionHash,
   writeToken,
   metadataSubtree="/",
+  select=[],
   resolveLinks=false,
   resolveIncludeSource=false,
+  linkDepthLimit,
   produceLinkUrls=false
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
@@ -661,13 +662,16 @@ exports.ContentObjectMetadata = async function({
   let metadata;
   try {
     const visibility = await this.Visibility({id: objectId});
-    const noAuth = visibility >= 10 ||
+    let noAuth = visibility >= 10 ||
       ((metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
+    noAuth = true;
 
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
         headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
         queryParams: {
+          select,
+          link_depth: linkDepthLimit,
           resolve: resolveLinks,
           resolve_include_source: resolveIncludeSource
         },
@@ -690,8 +694,7 @@ exports.ContentObjectMetadata = async function({
     objectId,
     versionHash,
     path: metadataSubtree,
-    metadata,
-    noAuth
+    metadata
   });
 };
 
@@ -753,11 +756,11 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
 exports.AvailableDRMs = async function() {
   const availableDRMs = ["clear", "aes-128"];
 
-  if(!window) {
+  if(typeof window === "undefined") {
     return availableDRMs;
   }
 
-  if(typeof window.navigator.requestMediaKeySystemAccess !== "function") {
+  if(typeof window !== "undefined" && typeof window.navigator.requestMediaKeySystemAccess !== "function") {
     return availableDRMs;
   }
 
@@ -1470,10 +1473,14 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mi
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
 
+  const visibility = await this.Visibility({id: objectId});
+  const noAuth = visibility >= 10 ||
+    ((linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
+
   queryParams = {
     ...queryParams,
     resolve: true,
-    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth: true})
+    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth})
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }
@@ -1550,14 +1557,14 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
       });
 
     if(existingUserCap) {
-      this.encryptionConks[objectId] = await Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+      this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
     } else {
-      this.encryptionConks[objectId] = await Crypto.GeneratePrimaryConk();
+      this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
 
       // If write token is specified, add it to the metadata
       if(writeToken) {
         let metadata = {};
-        metadata[capKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
+        metadata[capKey] = await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
 
         try {
           const kmsAddress = await this.authClient.KMSAddress({objectId});
@@ -1573,7 +1580,7 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
             });
 
           if(!existingKMSCap) {
-            metadata[kmsCapKey] = await Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
+            metadata[kmsCapKey] = await this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
           }
         } catch(error) {
           // eslint-disable-next-line no-console
@@ -1610,7 +1617,7 @@ exports.Encrypt = async function({libraryId, objectId, writeToken, chunk}) {
   ValidateParameters({libraryId, objectId});
 
   const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
-  const data = await Crypto.Encrypt(conk, chunk);
+  const data = await this.Crypto.Encrypt(conk, chunk);
 
   // Convert to ArrayBuffer
   return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
@@ -1633,7 +1640,7 @@ exports.Decrypt = async function({libraryId, objectId, writeToken, chunk}) {
   ValidateParameters({libraryId, objectId});
 
   const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
-  const data = await Crypto.Decrypt(conk, chunk);
+  const data = await this.Crypto.Decrypt(conk, chunk);
 
   // Convert to ArrayBuffer
   return data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);

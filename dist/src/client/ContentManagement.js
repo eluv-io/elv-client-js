@@ -31,7 +31,7 @@ var _require = require("../Validation"),
     ValidatePresence = _require.ValidatePresence;
 
 exports.SetVisibility = function _callee(_ref) {
-  var id, visibility, abi;
+  var id, visibility, hasSetVisibility;
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -39,35 +39,33 @@ exports.SetVisibility = function _callee(_ref) {
           id = _ref.id, visibility = _ref.visibility;
           this.Log("Setting visibility ".concat(visibility, " on ").concat(id));
           _context.next = 4;
-          return _regeneratorRuntime.awrap(this.ContractAbi({
-            id: id
+          return _regeneratorRuntime.awrap(this.authClient.ContractHasMethod({
+            contractAddress: this.utils.HashToAddress(id),
+            methodName: "setVisibility"
           }));
 
         case 4:
-          abi = _context.sent;
+          hasSetVisibility = _context.sent;
 
-          if (abi.find(function (method) {
-            return method.name === "setVisibility";
-          })) {
-            _context.next = 8;
+          if (hasSetVisibility) {
+            _context.next = 7;
             break;
           }
 
-          this.Log("".concat(id, " contract has no visibility method, ignoring"));
           return _context.abrupt("return");
 
-        case 8:
-          _context.next = 10;
+        case 7:
+          _context.next = 9;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: this.utils.HashToAddress(id),
             methodName: "setVisibility",
             methodArgs: [visibility]
           }));
 
-        case 10:
+        case 9:
           return _context.abrupt("return", _context.sent);
 
-        case 11:
+        case 10:
         case "end":
           return _context.stop();
       }
@@ -336,7 +334,7 @@ exports.CreateContentLibrary = function _callee3(_ref4) {
  * @param {string} libraryId - ID of the library
  * @param {string} writeToken - Write token for the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
- * @param {string} imageName - Name of the image file
+ * @param {string=} imageName - Name of the image file
  */
 
 
@@ -373,7 +371,7 @@ exports.SetContentLibraryImage = function _callee4(_ref6) {
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
- * @param {string} imageName - Name of the image file
+ * @param {string=} imageName - Name of the image file
  */
 
 
@@ -390,7 +388,7 @@ exports.SetContentObjectImage = function _callee5(_ref7) {
           });
           ValidateWriteToken(writeToken);
           ValidatePresence("image", image);
-          ValidatePresence("imageName", imageName);
+          imageName = imageName || "display_image";
           _context5.next = 7;
           return _regeneratorRuntime.awrap(this.UploadFiles({
             libraryId: libraryId,
