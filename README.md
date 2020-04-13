@@ -10,6 +10,7 @@ The Eluvio Javascript Client is designed to make interacting with the Eluvio Con
 - [ Identifying Content ](#id-format)
 - [ Creating and Editing Content ](#editing)
 - [ Playing Video ](#video)
+- [ Publishing ABR Video Content ](#abr-publishing)
 - [ Other Resources](#resources)
 
 <a name="installation"></a>
@@ -283,6 +284,11 @@ Both the [Eluvio Fabric Browser](https://github.com/eluv-io/elv-fabric-browser) 
 ## Playing Video from the Fabric
 
 See the [Stream Sample App](https://github.com/eluv-io/elv-stream-sample) for a detailed explanation on playing video from the Fabric using the Eluvio JavaScript client.
+
+<a name="abr-publishing"></a>
+## Publishing ABR Video Content on the Fabric
+
+For more information on how to publish ABR content see <a href="./abr/index.html">this detailed guide</a>
 
 <a name="resources"></a>
 ## Other Resources
