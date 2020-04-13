@@ -1,6 +1,8 @@
 /**
  * Methods for ABR video creation and management
  *
+ * For more information on how to publish ABR content see <a href="./abr/index.html">this detailed guide</a>
+ *
  * @module ElvClient/ABRPublishing
  */
 
