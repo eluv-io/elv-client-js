@@ -288,7 +288,7 @@ See the [Stream Sample App](https://github.com/eluv-io/elv-stream-sample) for a 
 <a name="abr-publishing"></a>
 ## Publishing ABR Video Content on the Fabric
 
-For more information on how to publish ABR content see <a href="./abr/index.html">this detailed guide</a>
+For more information on how to publish ABR content see [this detailed guide](https://eluv-io.github.io/elv-client-js/abr/index.html).
 
 <a name="resources"></a>
 ## Other Resources
