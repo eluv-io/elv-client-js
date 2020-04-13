@@ -368,22 +368,32 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           logs = _ref5.logs;
           errors = _ref5.errors;
           warnings = _ref5.warnings;
-          metadata = _objectSpread({
-            master: {
-              name: masterName,
-              id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
-              hash: masterVersionHash,
-              variant: variant
-            },
-            "public": {
-              asset_metadata: {
-                sources: _defineProperty({}, offeringKey, {
-                  "/": "./rep/playout/".concat(offeringKey, "/options.json")
-                })
-              }
-            },
-            elv_created_at: new Date().getTime()
-          }, metadata || {});
+
+          if (!metadata) {
+            metadata = {};
+          }
+
+          if (!metadata["public"]) {
+            metadata["public"] = {};
+          }
+
+          if (!metadata["public"].asset_metadata) {
+            metadata["public"].asset_metadata = {};
+          }
+
+          metadata.master = {
+            name: masterName,
+            id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
+            hash: masterVersionHash,
+            variant: variant
+          };
+          metadata["public"] = _objectSpread({}, metadata["public"]);
+          metadata["public"].asset_metadata = _objectSpread({
+            sources: _defineProperty({}, offeringKey, {
+              "/": "./rep/playout/".concat(offeringKey, "/options.json")
+            })
+          }, metadata["public"].asset_metadata);
+          metadata.elv_created_at = new Date().getTime();
 
           if (name || !existingMez) {
             metadata.name = name || "".concat(masterName, " Mezzanine");
@@ -395,7 +405,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             metadata["public"].description = description || "";
           }
 
-          _context2.next = 64;
+          _context2.next = 70;
           return _regeneratorRuntime.awrap(this.MergeMetadata({
             libraryId: libraryId,
             objectId: id,
@@ -403,15 +413,15 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             metadata: metadata
           }));
 
-        case 64:
-          _context2.next = 66;
+        case 70:
+          _context2.next = 72;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token
           }));
 
-        case 66:
+        case 72:
           finalizeResponse = _context2.sent;
           return _context2.abrupt("return", _objectSpread({
             logs: logs || [],
@@ -419,7 +429,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             errors: errors || []
           }, finalizeResponse));
 
-        case 68:
+        case 74:
         case "end":
           return _context2.stop();
       }

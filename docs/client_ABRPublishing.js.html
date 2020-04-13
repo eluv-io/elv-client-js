@@ -327,25 +327,31 @@ exports.CreateABRMezzanine = async function({
     constant: false
   });
 
-  metadata = {
-    master: {
-      name: masterName,
-      id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
-      hash: masterVersionHash,
-      variant
-    },
-    public: {
-      asset_metadata: {
-        sources: {
-          [offeringKey]: {
-            "/": `./rep/playout/${offeringKey}/options.json`
-          }
-        }
+  if(!metadata) { metadata = {}; }
+  if(!metadata.public) { metadata.public = {}; }
+  if(!metadata.public.asset_metadata) { metadata.public.asset_metadata = {}; }
+
+  metadata.master = {
+    name: masterName,
+    id: this.utils.DecodeVersionHash(masterVersionHash).objectId,
+    hash: masterVersionHash,
+    variant
+  };
+
+  metadata.public = {
+    ...metadata.public
+  };
+
+  metadata.public.asset_metadata = {
+    sources: {
+      [offeringKey]: {
+        "/": `./rep/playout/${offeringKey}/options.json`
       }
     },
-    elv_created_at: new Date().getTime(),
-    ...(metadata || {})
+    ...metadata.public.asset_metadata
   };
+
+  metadata.elv_created_at = new Date().getTime();
 
   if(name || !existingMez) {
     metadata.name = name || `${masterName} Mezzanine`;

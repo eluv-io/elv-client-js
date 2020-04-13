@@ -58,7 +58,7 @@ class EthClient {
       // data every time a contract is initialized in the client (often). Ethers.js just checks that the code isn't == "0x", so
       // we can give it some dummy string instead and assume the contract is fine
       this.provider.getCode = async () => "0x123";
-      this.provider.pollingInterval = 1000;
+      this.provider.pollingInterval = 500;
     }
 
     return this.provider;
@@ -101,9 +101,6 @@ class EthClient {
       contract = new Ethers.Contract(contractAddress, abi, this.Provider());
       contract = contract.connect(this.client.signer);
 
-      // Redefine deployed to avoid making call to getCode
-      contract._deployedPromise = new Promise(resolve => resolve(this));
-
       if(cacheContract) {
         this.cachedContracts[contractAddress] = contract;
       }
@@ -115,6 +112,7 @@ class EthClient {
   async MakeProviderCall({methodName, args=[], attempts=0}) {
     try {
       const provider = this.Provider();
+      await this.provider.getNetwork();
 
       this.Log(`ETH ${provider.connection.url} ${methodName} [${args.join(", ")}]`);
       return await provider[methodName](...args);
@@ -186,7 +184,10 @@ class EthClient {
   }) {
     this.Log(`Deploying contract with args [${constructorArgs.join(", ")}]`);
 
-    const signer = this.client.signer.connect(this.Provider());
+    const provider = this.Provider();
+    provider.getNetwork();
+
+    const signer = this.client.signer.connect(provider);
     this.ValidateSigner(signer);
 
     let contractFactory = new Ethers.ContractFactory(abi, bytecode, signer);
@@ -269,7 +270,7 @@ class EthClient {
             const latestBlock = await this.MakeProviderCall({methodName: "getBlock", args: ["latest"]});
             overrides.gasLimit = latestBlock.gasLimit;
             overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-          } else {
+          } else if(!(error.message || error).includes("invalid response")) {
             this.Log(typeof error === "object" ? JSON.stringify(error, null, 2) : error, true);
             throw error;
           }

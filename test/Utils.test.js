@@ -1,14 +1,23 @@
+const {Initialize} = require("./utils/Utils");
+const {
+  describe,
+  expect,
+  runTests,
+  test
+} = Initialize();
+
 const {ElvClient} = require("../src/ElvClient");
 const {FrameClient} = require("../src/FrameClient");
-const OutputLogger = require("./utils/OutputLogger");
 
-let UtilsModule = require("../src/Utils");
-const Utils = OutputLogger(UtilsModule, UtilsModule);
+const Utils = require("../src/Utils");
 
 const {RandomBytes, RandomString} = require("./utils/Utils");
 
 describe("Test Utils", () => {
   test("ElvClient Utils", () => {
+    const w = global.window;
+    global.window = undefined;
+
     const client = new ElvClient({
       contentSpaceId: "ispc2tNqMTr51szPGsttFQJSq6gRdKaZ",
       fabricURIs: ["http://localhost:8008"],
@@ -16,10 +25,12 @@ describe("Test Utils", () => {
     });
 
     expect(client.utils).toBeDefined();
+
+    global.window = w;
   });
 
   test("FrameClient Utils", () => {
-    const client = new FrameClient();
+    const client = new FrameClient({target: undefined});
 
     expect(client.utils).toBeDefined();
   });
@@ -132,3 +143,6 @@ describe("Test Utils", () => {
     expect(notCloneable).toEqual(cloneable);
   });
 });
+
+if(!module.parent) { runTests(); }
+module.exports = runTests;

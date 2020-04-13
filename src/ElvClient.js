@@ -10,6 +10,7 @@ const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
+const Crypto = require("./Crypto");
 
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
@@ -210,12 +211,14 @@ class ElvClient {
   }
 
   InitializeClients() {
+    // Cached info
     this.contentTypes = {};
     this.encryptionConks = {};
     this.reencryptionConks = {};
     this.stateChannelAccess = {};
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
+    this.visibilityInfo = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug});
@@ -233,6 +236,10 @@ class ElvClient {
       client: this,
       debug: this.debug
     });
+
+    // Initialize crypto wasm
+    this.Crypto = Crypto;
+    this.Crypto.ElvCrypto();
   }
 
   SetAuth(auth) {
@@ -395,7 +402,7 @@ class ElvClient {
    */
   SetSigner({signer}) {
     signer.connect(this.ethClient.Provider());
-    signer.provider.pollingInterval = 1000;
+    signer.provider.pollingInterval = 500;
     this.signer = signer;
 
     this.InitializeClients();

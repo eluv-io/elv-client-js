@@ -1,10 +1,14 @@
 [
   {
-    "signature": "async UploadJobStatus({\n  \"libraryId\": \"ilib4P2cgm4TD1WxUwCitZaWTR4HUZBD\",\n  \"objectId\": \"iq__3PQ2mnJHLzMmGLbkTNA1EJabPS94\",\n  \"writeToken\": \"tqw_4XQAZXuDgq8iWG2JCcx9gusGUsVmArEDB\",\n  \"uploadId\": \"iqfj23sJDDHbnkyz3sCYs7RKQN\",\n  \"jobId\": \"iqfu6WkF52P1bxzirXbLhjZKnn\"\n});",
-    "result": "{\n  \"id\": \"iqfu6WkF52P1bxzirXbLhjZKnn\",\n  \"next\": -1,\n  \"total\": 2,\n  \"files\": [\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"size\": 100000,\n      \"off\": 0,\n      \"len\": 100000,\n      \"rem\": 100000,\n      \"skip\": 0\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"size\": 100000,\n      \"off\": 0,\n      \"len\": 100000,\n      \"rem\": 100000,\n      \"skip\": 0\n    }\n  ]\n}"
+    "signature": "async UploadJobStatus({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"writeToken\": \"tqw_8fWNsfTqQMZsVgzJKkM7fKKmebA7Ukhqy\",\n  \"uploadId\": \"iqfjKouJBN2Eag6XcoWdRjTY3S\",\n  \"jobId\": \"iqfuQfnpXmHJSmUfhRx2FTnXLr\"\n});",
+    "result": "{\n  \"id\": \"iqfuQfnpXmHJSmUfhRx2FTnXLr\",\n  \"next\": -1,\n  \"total\": 1,\n  \"files\": [\n    {\n      \"path\": \"display_image\",\n      \"size\": 101254,\n      \"off\": 0,\n      \"len\": 101254,\n      \"rem\": 101254,\n      \"skip\": 0\n    }\n  ]\n}"
   },
   {
-    "signature": "async UploadJobStatus({\n  \"libraryId\": \"ilib2RtSsmnBQ2WPky6orkup5pLPyC4a\",\n  \"objectId\": \"iq__3zHouQbyhAhfeb1iDdexcd1Wc4xW\",\n  \"writeToken\": \"tqw_5uedeYWqiFF2jr1yyvBxh4K6LPJZN3Rsr\",\n  \"uploadId\": \"iqfjSi7qzLGsLMPT9ZNBPNhLRi\",\n  \"jobId\": \"iqfuQAvnjfQoVQpu1ZUtjs4XMQ\"\n});",
-    "result": "{\n  \"id\": \"iqfuQAvnjfQoVQpu1ZUtjs4XMQ\",\n  \"next\": -1,\n  \"total\": 1,\n  \"files\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"size\": 3738907,\n      \"off\": 0,\n      \"len\": 3738907,\n      \"rem\": 3738907,\n      \"skip\": 0\n    }\n  ]\n}"
+    "signature": "async UploadJobStatus({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\",\n  \"writeToken\": \"tqw_Lqz6jrfEWyJwU9cAF9M779EWtzJsh6f2u\",\n  \"uploadId\": \"iqfj4WnnYdd8p9UZYxpk4rWhL6\",\n  \"jobId\": \"iqfuCvGZww5u3naqnQCPza4icc\"\n});",
+    "result": "{\n  \"id\": \"iqfuCvGZww5u3naqnQCPza4icc\",\n  \"next\": -1,\n  \"total\": 2,\n  \"files\": [\n    {\n      \"path\": \"testDirectory/File 1\",\n      \"size\": 100000,\n      \"off\": 0,\n      \"len\": 100000,\n      \"rem\": 100000,\n      \"skip\": 0\n    },\n    {\n      \"path\": \"testDirectory/File 2\",\n      \"size\": 100000,\n      \"off\": 0,\n      \"len\": 100000,\n      \"rem\": 100000,\n      \"skip\": 0\n    }\n  ]\n}"
+  },
+  {
+    "signature": "async UploadJobStatus({\n  \"libraryId\": \"ilib3ssRA4rhPP9noEyVqwTykvGLgAPk\",\n  \"objectId\": \"iq__kEtfnzPjvxrLPKWiVFq3vroSKf1\",\n  \"writeToken\": \"tqw_ByfEdL6Hgigd23TefiqtxZsCBdTvC3ZE2\",\n  \"uploadId\": \"iqfj543CpH9NMGdvGFPvnDQCWv\",\n  \"jobId\": \"iqfu9M6EJ4ww8WPX1TkHEZFLJD\"\n});",
+    "result": "{\n  \"id\": \"iqfu9M6EJ4ww8WPX1TkHEZFLJD\",\n  \"next\": -1,\n  \"total\": 1,\n  \"files\": [\n    {\n      \"path\": \"Video.mp4\",\n      \"size\": 3738907,\n      \"off\": 0,\n      \"len\": 3738907,\n      \"rem\": 3738907,\n      \"skip\": 0\n    }\n  ]\n}"
   }
 ]

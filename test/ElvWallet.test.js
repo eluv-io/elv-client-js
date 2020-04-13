@@ -1,3 +1,13 @@
+const {Initialize} = require("./utils/Utils");
+const {
+  afterAll,
+  beforeAll,
+  describe,
+  expect,
+  runTests,
+  test
+} = Initialize();
+
 const OutputLogger = require("./utils/OutputLogger");
 const {CreateClient, ReturnBalance} = require("./utils/Utils");
 
@@ -8,8 +18,6 @@ let client, wallet;
 // Describe blocks and tests within them are run in order
 describe("Test ElvWallet", () => {
   beforeAll(async () => {
-    jest.setTimeout(30000);
-
     client = await CreateClient("ElvWallet");
     wallet = OutputLogger(ElvWallet, client.GenerateWallet());
   });
@@ -130,3 +138,6 @@ describe("Test ElvWallet", () => {
     expect(signer.privateKey).toEqual(privateKey);
   });
 });
+
+if(!module.parent) { runTests(); }
+module.exports = runTests;

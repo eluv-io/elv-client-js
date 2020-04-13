@@ -1,12 +1,13 @@
 {
   "name": "@eluvio/elv-client-js",
-  "version": "1.0.0",
+  "version": "2.0.2",
   "description": "Javascript client for the  Eluvio Content Fabric",
   "main": "src/ElvClient.js",
   "author": "Kevin Talmadge",
   "license": "MIT",
   "homepage": "https://github.com/eluv-io/elv-client-js",
   "scripts": {
+    "bump-version": "npm --git-tag-version --no-commit-hooks version patch",
     "build": "npm run build-contracts && npm run build-docs && npm run build-frame-client && npm run build-dist && npm run build-prod",
     "build-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme README.md",
     "build-dist": "node ./node_modules/@babel/cli/bin/babel.js --source-type=unambiguous --presets=@babel/preset-env --plugins @babel/plugin-transform-runtime src --out-dir dist/src",
@@ -22,8 +23,10 @@
     "lint": "./node_modules/.bin/eslint \"src/**/*.js\" \"test/**/*.js\" --fix",
     "lint-docs": "./node_modules/.bin/eslint \"vendor/elv-jsdoc-template/tmpl/*.tmpl\" \"vendor/elv-jsdoc-template/**/*.js\" --fix",
     "publish": "npm publish --access public",
-    "test": "jest",
-    "test-cov": "GENERATE_METHOD_LOGS=true jest --coverage --coverageDirectory 'test/coverage'",
+    "test": "node test/RunTests.js",
+    "test-docs": "GENERATE_METHOD_LOGS=true node test/RunTests.js",
+    "jest": "jest",
+    "test-cov": "jest --coverage --coverageDirectory 'test/coverage'",
     "test-build": "USE_BUILD=true jest"
   },
   "pre-commit": {
@@ -83,6 +86,7 @@
     "jest": "^24.9.0",
     "jest-cli": "^24.9.0",
     "jsdoc": "^3.6.3",
+    "lodash": "^4.17.15",
     "lodash.isequal": "^4.5.0",
     "minami": "^1.2.3",
     "pre-commit": "^1.2.2",
@@ -96,6 +100,7 @@
     "webpack": "^4.20.2",
     "webpack-bundle-analyzer": "^3.3.2",
     "webpack-cli": "^3.1.2",
+    "window": "^4.2.7",
     "yargs": "^14.2.0"
   }
 }
