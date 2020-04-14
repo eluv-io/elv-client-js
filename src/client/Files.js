@@ -802,10 +802,13 @@ exports.DownloadEncrypted = async function({
   headers,
   callback,
   format="arrayBuffer",
-  chunked=false,
-  chunkSize=1000000,
+  chunked=false
 }) {
   if(chunked && !callback) { throw Error("No callback specified for chunked download"); }
+
+  // Must align chunk size with encryption block size
+  const isReencryption = conk.public_key.startsWith("ktpk");
+  const chunkSize = this.Crypto.EncryptedBlockSize(1000000, isReencryption);
 
   let bytesFinished = 0;
   format = format.toLowerCase();

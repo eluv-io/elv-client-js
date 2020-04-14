@@ -1497,13 +1497,13 @@ exports.Download = function _callee16(_ref17) {
 exports.DownloadEncrypted = function _callee18(_ref18) {
   var _this2 = this;
 
-  var conk, downloadPath, bytesTotal, headers, callback, _ref18$format, format, _ref18$chunked, chunked, _ref18$chunkSize, chunkSize, bytesFinished, outputChunks, stream, totalChunks, i, response;
+  var conk, downloadPath, bytesTotal, headers, callback, _ref18$format, format, _ref18$chunked, chunked, isReencryption, chunkSize, bytesFinished, outputChunks, stream, totalChunks, i, response;
 
   return _regeneratorRuntime.async(function _callee18$(_context20) {
     while (1) {
       switch (_context20.prev = _context20.next) {
         case 0:
-          conk = _ref18.conk, downloadPath = _ref18.downloadPath, bytesTotal = _ref18.bytesTotal, headers = _ref18.headers, callback = _ref18.callback, _ref18$format = _ref18.format, format = _ref18$format === void 0 ? "arrayBuffer" : _ref18$format, _ref18$chunked = _ref18.chunked, chunked = _ref18$chunked === void 0 ? false : _ref18$chunked, _ref18$chunkSize = _ref18.chunkSize, chunkSize = _ref18$chunkSize === void 0 ? 1000000 : _ref18$chunkSize;
+          conk = _ref18.conk, downloadPath = _ref18.downloadPath, bytesTotal = _ref18.bytesTotal, headers = _ref18.headers, callback = _ref18.callback, _ref18$format = _ref18.format, format = _ref18$format === void 0 ? "arrayBuffer" : _ref18$format, _ref18$chunked = _ref18.chunked, chunked = _ref18$chunked === void 0 ? false : _ref18$chunked;
 
           if (!(chunked && !callback)) {
             _context20.next = 3;
@@ -1513,14 +1513,17 @@ exports.DownloadEncrypted = function _callee18(_ref18) {
           throw Error("No callback specified for chunked download");
 
         case 3:
+          // Must align chunk size with encryption block size
+          isReencryption = conk.public_key.startsWith("ktpk");
+          chunkSize = this.Crypto.EncryptedBlockSize(1000000, isReencryption);
           bytesFinished = 0;
           format = format.toLowerCase();
           outputChunks = []; // Set up decryption stream
 
-          _context20.next = 8;
+          _context20.next = 10;
           return _regeneratorRuntime.awrap(this.Crypto.OpenDecryptionStream(conk));
 
-        case 8:
+        case 10:
           stream = _context20.sent;
           stream.on("data", function _callee17(chunk) {
             var arrayBuffer;
@@ -1585,62 +1588,62 @@ exports.DownloadEncrypted = function _callee18(_ref18) {
           totalChunks = Math.ceil(bytesTotal / chunkSize);
           i = 0;
 
-        case 12:
+        case 14:
           if (!(i < totalChunks)) {
-            _context20.next = 28;
+            _context20.next = 30;
             break;
           }
 
           headers["Range"] = "bytes=".concat(bytesFinished, "-").concat(bytesFinished + chunkSize - 1);
-          _context20.next = 16;
+          _context20.next = 18;
           return _regeneratorRuntime.awrap(this.HttpClient.Request({
             headers: headers,
             method: "GET",
             path: downloadPath
           }));
 
-        case 16:
+        case 18:
           response = _context20.sent;
           bytesFinished = Math.min(bytesFinished + chunkSize, bytesTotal);
           _context20.t0 = stream;
           _context20.t1 = Uint8Array;
-          _context20.next = 22;
+          _context20.next = 24;
           return _regeneratorRuntime.awrap(response.arrayBuffer());
 
-        case 22:
+        case 24:
           _context20.t2 = _context20.sent;
           _context20.t3 = new _context20.t1(_context20.t2);
 
           _context20.t0.write.call(_context20.t0, _context20.t3);
 
-        case 25:
+        case 27:
           i++;
-          _context20.next = 12;
+          _context20.next = 14;
           break;
 
-        case 28:
+        case 30:
           // Wait for decryption to complete
           stream.end();
-          _context20.next = 31;
+          _context20.next = 33;
           return _regeneratorRuntime.awrap(new Promise(function (resolve) {
             return stream.on("finish", function () {
               resolve();
             });
           }));
 
-        case 31:
+        case 33:
           if (chunked) {
-            _context20.next = 35;
+            _context20.next = 37;
             break;
           }
 
-          _context20.next = 34;
+          _context20.next = 36;
           return _regeneratorRuntime.awrap(this.utils.ResponseToFormat(format, new Response(Buffer.concat(outputChunks))));
 
-        case 34:
+        case 36:
           return _context20.abrupt("return", _context20.sent);
 
-        case 35:
+        case 37:
         case "end":
           return _context20.stop();
       }

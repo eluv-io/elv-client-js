@@ -88,7 +88,9 @@ var Crypto = {
     return encryptedFileSize;
   },
   EncryptedBlockSize: function EncryptedBlockSize(clearSize) {
+    var reencrypt = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     var primaryEncBlockOverhead = 129;
+    var targetEncBlockOverhead = 608;
     var MODBYTES_384_58 = 48;
     var clearElementByteSize = 12 * (MODBYTES_384_58 - 1);
     var encElementByteSize = 12 * MODBYTES_384_58;
@@ -98,7 +100,7 @@ var Crypto = {
       encryptedBlockSize += encElementByteSize;
     }
 
-    return encryptedBlockSize + primaryEncBlockOverhead;
+    return reencrypt ? encryptedBlockSize + targetEncBlockOverhead : encryptedBlockSize + primaryEncBlockOverhead;
   },
   EncryptConk: function EncryptConk(conk, publicKey) {
     var elvCrypto, _ref, data, ephemeralKey, tag, cap;
