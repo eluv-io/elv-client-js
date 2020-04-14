@@ -1135,7 +1135,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
        }
 
 
- * @param {number=} linkDepthLimit - Limit link resolution to the specified depth
+ * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -1145,13 +1145,13 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, linkDepthLimit = _ref13.linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
+          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,

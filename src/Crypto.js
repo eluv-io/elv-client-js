@@ -56,8 +56,9 @@ const Crypto = {
     return encryptedFileSize;
   },
 
-  EncryptedBlockSize: (clearSize) => {
+  EncryptedBlockSize: (clearSize, reencrypt=false) => {
     const primaryEncBlockOverhead = 129;
+    const targetEncBlockOverhead = 608;
     const MODBYTES_384_58 = 48;
     const clearElementByteSize = 12 * (MODBYTES_384_58 - 1);
     const encElementByteSize = 12 * MODBYTES_384_58;
@@ -67,7 +68,7 @@ const Crypto = {
       encryptedBlockSize += encElementByteSize;
     }
 
-    return encryptedBlockSize + primaryEncBlockOverhead;
+    return reencrypt ? encryptedBlockSize + targetEncBlockOverhead : encryptedBlockSize + primaryEncBlockOverhead;
   },
 
   async EncryptConk(conk, publicKey) {
