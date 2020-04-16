@@ -146,9 +146,24 @@ const Create = async ({
       }
     } else if(existingMezzId) {
       const libraryId = await client.ContentObjectLibraryId({objectId: existingMezzId});
-      metadata = (await client.ContentObjectMetadata({libraryId, objectId: existingMezzId})) || {};
-      metadata.public = metadata.public || {};
-      metadata.public.asset_metadata = metadata.public.asset_metadata || {};
+      const assetMetadata = (await client.ContentObjectMetadata({
+        libraryId,
+        objectId: existingMezzId,
+        metadataSubtree: "public/asset_metadata"
+      })) || {};
+
+      const existingName = (await client.ContentObjectMetadata({
+        libraryId,
+        objectId: existingMezzId,
+        metadataSubtree: "public/name"
+      })) || {};
+
+      metadata = {
+        public: {
+          assetMetadata: assetMetadata || {},
+          name: name || existingName || ""
+        }
+      };
 
       if(!title && !metadata.public.asset_metadata.title) {
         throw Error("Existing mez does not have 'title' set and title argument was not provided");
