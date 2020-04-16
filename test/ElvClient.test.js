@@ -276,6 +276,18 @@ describe("Test ElvClient", () => {
   });
 
   describe("Content Libraries", () => {
+    test("Set tenant ID for user", async () => {
+      const tenantId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
+
+      await client.userProfileClient.SetTenantId({id: tenantId});
+      const tenantById = await client.userProfileClient.TenantId();
+      expect(tenantById).toEqual(tenantId);
+
+      await client.userProfileClient.SetTenantId({address: accessGroupAddress});
+      const tenantByAddress = await client.userProfileClient.TenantId();
+      expect(tenantByAddress).toEqual(tenantId);
+    });
+
     test("Create Content Library", async () => {
       libraryId = await client.CreateContentLibrary({
         name: "Test Library " + testHash,
@@ -296,6 +308,19 @@ describe("Test ElvClient", () => {
       });
 
       expect(privateMetadata).toEqual({meta: "data"});
+
+      const libraryTenant = await client.CallContractMethod({
+        contractAddress: client.utils.HashToAddress(libraryId),
+        methodName: "getMeta",
+        methodArgs: [
+          "_tenantId"
+        ]
+      });
+
+      const tenantId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
+      const libraryTenantId = Buffer.from(libraryTenant.replace("0x", ""), "hex").toString("utf8");
+
+      expect(libraryTenantId).toEqual(tenantId);
     });
 
     test("List Content Libraries", async () => {

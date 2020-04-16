@@ -903,6 +903,9 @@ function () {
               }));
 
             case 6:
+              this.tenantId = id;
+
+            case 7:
             case "end":
               return _context13.stop();
           }
