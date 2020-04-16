@@ -12,11 +12,6 @@ var UrlJoin = require("url-join");
 
 var _require = require("./FrameClient"),
     FrameClient = _require.FrameClient;
-/*
-const SpaceContract = require("./contracts/BaseContentSpace");
-
- */
-
 
 var UserProfileClient =
 /*#__PURE__*/
@@ -835,6 +830,86 @@ function () {
       }, null, this);
     }
     /**
+     * Return the ID of the tenant this user belongs to, if set.
+     *
+     * @return {Promise<string>} - Tenant ID
+     */
+
+  }, {
+    key: "TenantId",
+    value: function TenantId() {
+      return _regeneratorRuntime.async(function TenantId$(_context12) {
+        while (1) {
+          switch (_context12.prev = _context12.next) {
+            case 0:
+              if (this.tenantId) {
+                _context12.next = 4;
+                break;
+              }
+
+              _context12.next = 3;
+              return _regeneratorRuntime.awrap(this.UserMetadata({
+                metadataSubtree: "tenantId"
+              }));
+
+            case 3:
+              this.tenantId = _context12.sent;
+
+            case 4:
+              return _context12.abrupt("return", this.tenantId);
+
+            case 5:
+            case "end":
+              return _context12.stop();
+          }
+        }
+      }, null, this);
+    }
+    /**
+     * Set the current user's tenant
+     *
+     * Note: This method is not accessible to applications. Eluvio core will drop the request.
+     *
+     * @namedParams
+     * @param level
+     */
+
+  }, {
+    key: "SetTenantId",
+    value: function SetTenantId(_ref15) {
+      var id, address;
+      return _regeneratorRuntime.async(function SetTenantId$(_context13) {
+        while (1) {
+          switch (_context13.prev = _context13.next) {
+            case 0:
+              id = _ref15.id, address = _ref15.address;
+
+              if (!(id && !id.startsWith("iten"))) {
+                _context13.next = 3;
+                break;
+              }
+
+              throw Error("Invalid tenant ID: ".concat(id));
+
+            case 3:
+              if (address) {
+                id = "iten".concat(Utils.AddressToHash(address));
+              }
+
+              _context13.next = 6;
+              return _regeneratorRuntime.awrap(this.ReplaceUserMetadata({
+                metadataSubtree: "tenantId",
+                metadata: id
+              }));
+
+            case 6:
+            case "end":
+              return _context13.stop();
+          }
+        }
+      }, null, this);
+    }
+    /**
      * Get the URL of the current user's profile image
      *
      * Note: Part hash of profile image will be appended to the URL as a query parameter to invalidate
@@ -849,34 +924,34 @@ function () {
   }, {
     key: "UserProfileImage",
     value: function UserProfileImage() {
-      var _ref15,
+      var _ref16,
           address,
           walletAddress,
           imageLink,
-          _ref16,
+          _ref17,
           libraryId,
           objectId,
-          _args12 = arguments;
+          _args14 = arguments;
 
-      return _regeneratorRuntime.async(function UserProfileImage$(_context12) {
+      return _regeneratorRuntime.async(function UserProfileImage$(_context14) {
         while (1) {
-          switch (_context12.prev = _context12.next) {
+          switch (_context14.prev = _context14.next) {
             case 0:
-              _ref15 = _args12.length > 0 && _args12[0] !== undefined ? _args12[0] : {}, address = _ref15.address;
+              _ref16 = _args14.length > 0 && _args14[0] !== undefined ? _args14[0] : {}, address = _ref16.address;
 
               if (!address) {
-                _context12.next = 7;
+                _context14.next = 7;
                 break;
               }
 
-              _context12.next = 4;
+              _context14.next = 4;
               return _regeneratorRuntime.awrap(this.UserWalletAddress({
                 address: address
               }));
 
             case 4:
-              walletAddress = _context12.sent;
-              _context12.next = 9;
+              walletAddress = _context14.sent;
+              _context14.next = 9;
               break;
 
             case 7:
@@ -885,49 +960,49 @@ function () {
 
             case 9:
               if (walletAddress) {
-                _context12.next = 11;
+                _context14.next = 11;
                 break;
               }
 
-              return _context12.abrupt("return");
+              return _context14.abrupt("return");
 
             case 11:
-              _context12.next = 13;
+              _context14.next = 13;
               return _regeneratorRuntime.awrap(this.PublicUserMetadata({
                 address: address,
                 metadataSubtree: "profile_image"
               }));
 
             case 13:
-              imageLink = _context12.sent;
+              imageLink = _context14.sent;
 
               if (imageLink) {
-                _context12.next = 16;
+                _context14.next = 16;
                 break;
               }
 
-              return _context12.abrupt("return");
+              return _context14.abrupt("return");
 
             case 16:
-              _context12.next = 18;
+              _context14.next = 18;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo({
                 address: address
               }));
 
             case 18:
-              _ref16 = _context12.sent;
-              libraryId = _ref16.libraryId;
-              objectId = _ref16.objectId;
+              _ref17 = _context14.sent;
+              libraryId = _ref17.libraryId;
+              objectId = _ref17.objectId;
 
               if (objectId) {
-                _context12.next = 23;
+                _context14.next = 23;
                 break;
               }
 
-              return _context12.abrupt("return");
+              return _context14.abrupt("return");
 
             case 23:
-              _context12.next = 25;
+              _context14.next = 25;
               return _regeneratorRuntime.awrap(this.client.LinkUrl({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -935,11 +1010,11 @@ function () {
               }));
 
             case 25:
-              return _context12.abrupt("return", _context12.sent);
+              return _context14.abrupt("return", _context14.sent);
 
             case 26:
             case "end":
-              return _context12.stop();
+              return _context14.stop();
           }
         }
       }, null, this);
@@ -953,41 +1028,41 @@ function () {
 
   }, {
     key: "SetUserProfileImage",
-    value: function SetUserProfileImage(_ref17) {
-      var image, size, _ref18, libraryId, objectId, editRequest;
+    value: function SetUserProfileImage(_ref18) {
+      var image, size, _ref19, libraryId, objectId, editRequest;
 
-      return _regeneratorRuntime.async(function SetUserProfileImage$(_context13) {
+      return _regeneratorRuntime.async(function SetUserProfileImage$(_context15) {
         while (1) {
-          switch (_context13.prev = _context13.next) {
+          switch (_context15.prev = _context15.next) {
             case 0:
-              image = _ref17.image;
+              image = _ref18.image;
               this.Log("Setting profile image for user ".concat(this.client.signer.address));
               size = image.length || image.byteLength || image.size;
 
               if (!(size > 5000000)) {
-                _context13.next = 5;
+                _context15.next = 5;
                 break;
               }
 
               throw Error("Maximum profile image size is 5MB");
 
             case 5:
-              _context13.next = 7;
+              _context15.next = 7;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
             case 7:
-              _ref18 = _context13.sent;
-              libraryId = _ref18.libraryId;
-              objectId = _ref18.objectId;
-              _context13.next = 12;
+              _ref19 = _context15.sent;
+              libraryId = _ref19.libraryId;
+              objectId = _ref19.objectId;
+              _context15.next = 12;
               return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
             case 12:
-              editRequest = _context13.sent;
-              _context13.next = 15;
+              editRequest = _context15.sent;
+              _context15.next = 15;
               return _regeneratorRuntime.awrap(this.client.UploadFiles({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -1001,7 +1076,7 @@ function () {
               }));
 
             case 15:
-              _context13.next = 17;
+              _context15.next = 17;
               return _regeneratorRuntime.awrap(this.client.MergeMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -1016,7 +1091,7 @@ function () {
               }));
 
             case 17:
-              _context13.next = 19;
+              _context15.next = 19;
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -1025,7 +1100,7 @@ function () {
 
             case 19:
             case "end":
-              return _context13.stop();
+              return _context15.stop();
           }
         }
       }, null, this);
@@ -1043,31 +1118,31 @@ function () {
   }, {
     key: "CollectedTags",
     value: function CollectedTags() {
-      return _regeneratorRuntime.async(function CollectedTags$(_context14) {
+      return _regeneratorRuntime.async(function CollectedTags$(_context16) {
         while (1) {
-          switch (_context14.prev = _context14.next) {
+          switch (_context16.prev = _context16.next) {
             case 0:
-              _context14.next = 2;
+              _context16.next = 2;
               return _regeneratorRuntime.awrap(this.UserMetadata({
                 metadataSubtree: "collected_data"
               }));
 
             case 2:
-              _context14.t0 = _context14.sent;
+              _context16.t0 = _context16.sent;
 
-              if (_context14.t0) {
-                _context14.next = 5;
+              if (_context16.t0) {
+                _context16.next = 5;
                 break;
               }
 
-              _context14.t0 = {};
+              _context16.t0 = {};
 
             case 5:
-              return _context14.abrupt("return", _context14.t0);
+              return _context16.abrupt("return", _context16.t0);
 
             case 6:
             case "end":
-              return _context14.stop();
+              return _context16.stop();
           }
         }
       }, null, this);
@@ -1075,15 +1150,15 @@ function () {
 
   }, {
     key: "RecordTags",
-    value: function RecordTags(_ref19) {
+    value: function RecordTags(_ref20) {
       var libraryId, objectId, versionHash;
-      return _regeneratorRuntime.async(function RecordTags$(_context15) {
+      return _regeneratorRuntime.async(function RecordTags$(_context17) {
         while (1) {
-          switch (_context15.prev = _context15.next) {
+          switch (_context17.prev = _context17.next) {
             case 0:
-              libraryId = _ref19.libraryId, objectId = _ref19.objectId, versionHash = _ref19.versionHash;
-              _context15.prev = 1;
-              _context15.next = 4;
+              libraryId = _ref20.libraryId, objectId = _ref20.objectId, versionHash = _ref20.versionHash;
+              _context17.prev = 1;
+              _context17.next = 4;
               return _regeneratorRuntime.awrap(this.__RecordTags({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -1091,109 +1166,109 @@ function () {
               }));
 
             case 4:
-              _context15.next = 9;
+              _context17.next = 9;
               break;
 
             case 6:
-              _context15.prev = 6;
-              _context15.t0 = _context15["catch"](1);
+              _context17.prev = 6;
+              _context17.t0 = _context17["catch"](1);
               // eslint-disable-next-line no-console
-              console.error(_context15.t0);
+              console.error(_context17.t0);
 
             case 9:
             case "end":
-              return _context15.stop();
+              return _context17.stop();
           }
         }
       }, null, this, [[1, 6]]);
     }
   }, {
     key: "__RecordTags",
-    value: function __RecordTags(_ref20) {
+    value: function __RecordTags(_ref21) {
       var libraryId, objectId, versionHash, accessType, seen, walletObjectInfo, userLibraryId, userObjectId, editRequest, contentTags, userTags, formattedTags;
-      return _regeneratorRuntime.async(function __RecordTags$(_context16) {
+      return _regeneratorRuntime.async(function __RecordTags$(_context18) {
         while (1) {
-          switch (_context16.prev = _context16.next) {
+          switch (_context18.prev = _context18.next) {
             case 0:
-              libraryId = _ref20.libraryId, objectId = _ref20.objectId, versionHash = _ref20.versionHash;
-              _context16.next = 3;
+              libraryId = _ref21.libraryId, objectId = _ref21.objectId, versionHash = _ref21.versionHash;
+              _context18.next = 3;
               return _regeneratorRuntime.awrap(this.client.AccessType({
                 id: objectId
               }));
 
             case 3:
-              accessType = _context16.sent;
+              accessType = _context18.sent;
 
               if (!(accessType !== "object")) {
-                _context16.next = 6;
+                _context18.next = 6;
                 break;
               }
 
-              return _context16.abrupt("return");
+              return _context18.abrupt("return");
 
             case 6:
               if (!(!versionHash && !libraryId)) {
-                _context16.next = 10;
+                _context18.next = 10;
                 break;
               }
 
-              _context16.next = 9;
+              _context18.next = 9;
               return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
             case 9:
-              libraryId = _context16.sent;
+              libraryId = _context18.sent;
 
             case 10:
               if (versionHash) {
-                _context16.next = 14;
+                _context18.next = 14;
                 break;
               }
 
-              _context16.next = 13;
+              _context18.next = 13;
               return _regeneratorRuntime.awrap(this.client.ContentObject({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
             case 13:
-              versionHash = _context16.sent.hash;
+              versionHash = _context18.sent.hash;
 
             case 14:
-              _context16.next = 16;
+              _context18.next = 16;
               return _regeneratorRuntime.awrap(this.UserMetadata({
                 metadataSubtree: UrlJoin("accessed_content", versionHash)
               }));
 
             case 16:
-              seen = _context16.sent;
+              seen = _context18.sent;
 
               if (!seen) {
-                _context16.next = 19;
+                _context18.next = 19;
                 break;
               }
 
-              return _context16.abrupt("return");
+              return _context18.abrupt("return");
 
             case 19:
-              _context16.next = 21;
+              _context18.next = 21;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
 
             case 21:
-              walletObjectInfo = _context16.sent;
+              walletObjectInfo = _context18.sent;
               userLibraryId = walletObjectInfo.libraryId;
               userObjectId = walletObjectInfo.objectId; // Mark content as seen
 
-              _context16.next = 26;
+              _context18.next = 26;
               return _regeneratorRuntime.awrap(this.client.EditContentObject({
                 libraryId: userLibraryId,
                 objectId: userObjectId
               }));
 
             case 26:
-              editRequest = _context16.sent;
-              _context16.next = 29;
+              editRequest = _context18.sent;
+              _context18.next = 29;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: userLibraryId,
                 objectId: userObjectId,
@@ -1203,7 +1278,7 @@ function () {
               }));
 
             case 29:
-              _context16.next = 31;
+              _context18.next = 31;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -1212,18 +1287,18 @@ function () {
               }));
 
             case 31:
-              contentTags = _context16.sent;
+              contentTags = _context18.sent;
 
               if (!(contentTags && contentTags.length > 0)) {
-                _context16.next = 40;
+                _context18.next = 40;
                 break;
               }
 
-              _context16.next = 35;
+              _context18.next = 35;
               return _regeneratorRuntime.awrap(this.CollectedTags());
 
             case 35:
-              userTags = _context16.sent;
+              userTags = _context18.sent;
               formattedTags = this.__FormatVideoTags(contentTags);
               Object.keys(formattedTags).forEach(function (tag) {
                 if (userTags[tag]) {
@@ -1239,7 +1314,7 @@ function () {
                 }
               }); // Update user tags
 
-              _context16.next = 40;
+              _context18.next = 40;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: userLibraryId,
                 objectId: userObjectId,
@@ -1249,7 +1324,7 @@ function () {
               }));
 
             case 40:
-              _context16.next = 42;
+              _context18.next = 42;
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: userLibraryId,
                 objectId: userObjectId,
@@ -1259,7 +1334,7 @@ function () {
 
             case 42:
             case "end":
-              return _context16.stop();
+              return _context18.stop();
           }
         }
       }, null, this);
@@ -1330,7 +1405,7 @@ function () {
   }, {
     key: "FrameAllowedMethods",
     value: function FrameAllowedMethods() {
-      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "Log", "MetadataMethods", "PromptedMethods", "RecordTags", "SetAccessLevel", "SetUserProfileImage", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
+      var forbiddenMethods = ["constructor", "FrameAllowedMethods", "Log", "MetadataMethods", "PromptedMethods", "RecordTags", "SetAccessLevel", "SetTenantId", "SetUserProfileImage", "__IsLibraryCreated", "__TouchLibrary", "__FormatVideoTags", "__RecordTags"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return !forbiddenMethods.includes(method);
       });

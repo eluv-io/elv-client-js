@@ -168,6 +168,20 @@ exports.CreateContentLibrary = async function({
 
   const { contractAddress } = await this.authClient.CreateContentLibrary({kmsId});
 
+
+  // Set tenant ID on the library if the user is associated with a tenant
+  const tenantId = await this.userProfileClient.TenantId();
+  if(tenantId) {
+    await this.CallContractMethod({
+      contractAddress,
+      methodName: "putMeta",
+      methodArgs: [
+        "_tenantId",
+        tenantId
+      ]
+    });
+  }
+
   metadata = {
     ...metadata,
     name,
