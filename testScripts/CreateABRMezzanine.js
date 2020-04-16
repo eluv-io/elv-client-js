@@ -157,7 +157,7 @@ const Create = async ({
         objectId: existingMezzId,
         metadataSubtree: "public/name"
       })) || {};
-      
+
       metadata = {
         public: {
           asset_metadata: assetMetadata || {},
@@ -187,9 +187,6 @@ const Create = async ({
     };
 
     name = name || metadata.public.name || metadata.public.asset_metadata.title + " MEZ";
-
-    console.log(metadata);
-    return;
 
     const access = {
       region: process.env.AWS_REGION,
