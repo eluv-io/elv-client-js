@@ -668,7 +668,7 @@ function () {
   }, {
     key: "GenerateChannelContentToken",
     value: function GenerateChannelContentToken(_ref11) {
-      var objectId, audienceData, oauthToken, _ref11$value, value, nonce, paramTypes, params, packedHash, stateChannelApi, payload, signature, multiSig, token;
+      var objectId, audienceData, oauthToken, _ref11$value, value, paramTypes, params, packedHash, stateChannelApi, payload, signature, multiSig, token;
 
       return _regeneratorRuntime.async(function GenerateChannelContentToken$(_context7) {
         while (1) {
@@ -700,14 +700,13 @@ function () {
 
             case 7:
               this.Log("Making state channel access request: ".concat(objectId));
-              nonce = Date.now() + Id.next();
               paramTypes = ["address", "address", "uint", "uint"];
-              params = [this.client.signer.address, Utils.HashToAddress(objectId), value, nonce];
+              params = [this.client.signer.address, Utils.HashToAddress(objectId), value, Date.now()];
               packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-              _context7.next = 14;
+              _context7.next = 13;
               return _regeneratorRuntime.awrap(this.Sign(packedHash));
 
-            case 14:
+            case 13:
               params[4] = _context7.sent;
               stateChannelApi = "elv_channelContentRequest";
 
@@ -716,19 +715,19 @@ function () {
                 params[5] = JSON.stringify(audienceData);
               }
 
-              _context7.next = 19;
+              _context7.next = 18;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: stateChannelApi,
                 params: params
               }));
 
-            case 19:
+            case 18:
               payload = _context7.sent;
-              _context7.next = 22;
+              _context7.next = 21;
               return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload))));
 
-            case 22:
+            case 21:
               signature = _context7.sent;
               multiSig = Utils.FormatSignature(signature);
               token = "".concat(payload, ".").concat(Utils.B64(multiSig));
@@ -739,7 +738,7 @@ function () {
 
               return _context7.abrupt("return", token);
 
-            case 27:
+            case 26:
             case "end":
               return _context7.stop();
           }

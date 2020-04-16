@@ -381,8 +381,6 @@ class AuthorizationClient {
 
     this.Log(`Making state channel access request: ${objectId}`);
 
-    const nonce = Date.now() + Id.next();
-
     const paramTypes = [
       "address",
       "address",
@@ -394,7 +392,7 @@ class AuthorizationClient {
       this.client.signer.address,
       Utils.HashToAddress(objectId),
       value,
-      nonce
+      Date.now()
     ];
 
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
