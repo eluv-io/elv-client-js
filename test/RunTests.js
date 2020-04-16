@@ -1,6 +1,5 @@
 const fs = require("fs");
 const { performance } = require("perf_hooks");
-global.window = new (require("window"))();
 
 const Tests = {
   Utils: require("./Utils.test"),
@@ -51,6 +50,8 @@ const RunTests = async () => {
 
   const time = (performance.now() - startTime) / 1000;
   console.log(`==== All test suites finished in ${time.toFixed(1)}s: ${count.passed} Passed, ${count.failed} Failed, ${count.skipped} Skipped ====\n`);
+
+  stats.results = count;
 
   fs.writeFileSync("TestResults.json", JSON.stringify(stats, null, 2));
 

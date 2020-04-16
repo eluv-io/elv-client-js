@@ -468,6 +468,8 @@ await client.userProfileClient.UserMetadata()
     }
 
     await this.ReplaceUserMetadata({metadataSubtree: "tenantId", metadata: id});
+
+    this.tenantId = id;
   }
 
   /**

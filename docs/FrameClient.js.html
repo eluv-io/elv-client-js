@@ -208,10 +208,14 @@ class FrameClient {
 
         if(timeout > 0) {
           timeoutId = setTimeout(() => {
-            reject(`Request ${requestId} timed out (${operation})`);
+            if(typeof window !== "undefined") {
+              window.removeEventListener("message", methodListener);
 
-            window.removeEventListener("message", methodListener);
-            if(callbackListener) { window.removeEventListener("message", callbackListener); }
+              if(callbackListener) {
+                window.removeEventListener("message", callbackListener);
+              }
+            }
+            reject(`Request ${requestId} timed out (${operation})`);
           }, timeout * 1000);
         }
       };
@@ -248,19 +252,23 @@ class FrameClient {
             return;
           }
 
+          clearTimeout(timeoutId);
+
+          window.removeEventListener("message", methodListener);
+          if(callbackListener) { window.removeEventListener("message", callbackListener); }
+
           if(message.error) {
             reject(message.error);
           } else {
             resolve(message.response);
           }
-
-          window.removeEventListener("message", methodListener);
-          if(callbackListener) { window.removeEventListener("message", callbackListener); }
         } catch(error){
-          reject(error);
+          clearTimeout(timeoutId);
 
           window.removeEventListener("message", methodListener);
           if(callbackListener) { window.removeEventListener("message", callbackListener); }
+
+          reject(error);
         }
       };
 
