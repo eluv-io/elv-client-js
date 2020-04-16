@@ -405,6 +405,16 @@ await client.userProfileClient.UserMetadata()
       id = `iten${Utils.AddressToHash(address)}`;
     }
 
+    try {
+      const version = await this.client.AccessType({id});
+
+      if(version !== this.client.authClient.ACCESS_TYPES.GROUP) {
+        throw Error("Invalid tenant ID: " + id);
+      }
+    } catch(error) {
+      throw Error("Invalid tenant ID: " + id);
+    }
+
     await this.ReplaceUserMetadata({metadataSubtree: "tenantId", metadata: id});
 
     this.tenantId = id;

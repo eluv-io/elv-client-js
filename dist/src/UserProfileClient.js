@@ -877,7 +877,7 @@ function () {
   }, {
     key: "SetTenantId",
     value: function SetTenantId(_ref15) {
-      var id, address;
+      var id, address, version;
       return _regeneratorRuntime.async(function SetTenantId$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
@@ -896,21 +896,47 @@ function () {
                 id = "iten".concat(Utils.AddressToHash(address));
               }
 
-              _context13.next = 6;
+              _context13.prev = 4;
+              _context13.next = 7;
+              return _regeneratorRuntime.awrap(this.client.AccessType({
+                id: id
+              }));
+
+            case 7:
+              version = _context13.sent;
+
+              if (!(version !== this.client.authClient.ACCESS_TYPES.GROUP)) {
+                _context13.next = 10;
+                break;
+              }
+
+              throw Error("Invalid tenant ID: " + id);
+
+            case 10:
+              _context13.next = 15;
+              break;
+
+            case 12:
+              _context13.prev = 12;
+              _context13.t0 = _context13["catch"](4);
+              throw Error("Invalid tenant ID: " + id);
+
+            case 15:
+              _context13.next = 17;
               return _regeneratorRuntime.awrap(this.ReplaceUserMetadata({
                 metadataSubtree: "tenantId",
                 metadata: id
               }));
 
-            case 6:
+            case 17:
               this.tenantId = id;
 
-            case 7:
+            case 18:
             case "end":
               return _context13.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[4, 12]]);
     }
     /**
      * Get the URL of the current user's profile image
