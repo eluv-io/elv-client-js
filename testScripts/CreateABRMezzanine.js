@@ -127,7 +127,6 @@ const Create = async ({
 
     await client.SetSigner({signer});
 
-
     if(metadata) {
       try {
         if(metadata.startsWith("@")) {
@@ -151,7 +150,7 @@ const Create = async ({
       metadata.public = metadata.public || {};
       metadata.public.asset_metadata = metadata.public.asset_metadata || {};
 
-      if(!title && metadata.public.asset_metadata.title) {
+      if(!title && !metadata.public.asset_metadata.title) {
         throw Error("Existing mez does not have 'title' set and title argument was not provided");
       }
     } else {
