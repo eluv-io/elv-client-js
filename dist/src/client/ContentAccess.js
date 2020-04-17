@@ -2091,6 +2091,21 @@ exports.FabricUrl = function _callee28(_ref23) {
 
         case 7:
           queryParams.authorization = _context28.sent;
+
+          if (!((rep || publicRep) && objectId && !versionHash)) {
+            _context28.next = 12;
+            break;
+          }
+
+          _context28.next = 11;
+          return _regeneratorRuntime.awrap(this.LatestVersionHash({
+            objectId: objectId
+          }));
+
+        case 11:
+          versionHash = _context28.sent;
+
+        case 12:
           path = "";
 
           if (libraryId) {
@@ -2118,7 +2133,7 @@ exports.FabricUrl = function _callee28(_ref23) {
             queryParams: queryParams
           }));
 
-        case 12:
+        case 16:
         case "end":
           return _context28.stop();
       }
