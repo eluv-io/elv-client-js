@@ -906,6 +906,8 @@ exports.PlayoutOptions = async function({
 
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
   }
 
   const libraryId = await this.ContentObjectLibraryId({objectId});
@@ -915,9 +917,9 @@ exports.PlayoutOptions = async function({
     linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
     linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
     linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
-    path = UrlJoin("q", versionHash || objectId, "meta", linkPath);
+    path = UrlJoin("q", versionHash, "meta", linkPath);
   } else {
-    path = UrlJoin("q", versionHash || objectId, "rep", "playout", offering, "options.json");
+    path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
   }
 
   const audienceData = this.AudienceData({
