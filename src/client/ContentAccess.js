@@ -1225,6 +1225,10 @@ exports.FabricUrl = async function({
 
   queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, channelAuth, noAuth, noCache});
 
+  if((rep || publicRep) && objectId && !versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
+  }
+
   let path = "";
   if(libraryId) {
     path = UrlJoin(path, "qlibs", libraryId);
