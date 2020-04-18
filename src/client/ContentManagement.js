@@ -968,34 +968,37 @@ exports.CreateLinks = async function({
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  for(let i = 0; i < links.length; i++) {
-    const info = links[i];
-    const path = info.path.replace(/^(\/|\.)+/, "");
+  await this.utils.LimitedMap(
+    10,
+    links,
+    async info => {
+      const path = info.path.replace(/^(\/|\.)+/, "");
 
-    let type = (info.type || "file") === "file" ? "files" : info.type;
-    if(type === "metadata") { type = "meta"; }
+      let type = (info.type || "file") === "file" ? "files" : info.type;
+      if(type === "metadata") { type = "meta"; }
 
-    let target = info.target.replace(/^(\/|\.)+/, "");
-    if(info.targetHash) {
-      target = `/qfab/${info.targetHash}/${type}/${target}`;
-    } else {
-      target = `./${type}/${target}`;
+      let target = info.target.replace(/^(\/|\.)+/, "");
+      if(info.targetHash) {
+        target = `/qfab/${info.targetHash}/${type}/${target}`;
+      } else {
+        target = `./${type}/${target}`;
+      }
+
+      let link = {
+        "/": target
+      };
+
+      if(info.autoUpdate) {
+        link["."] = { auto_update: { tag: "latest"} };
+      }
+
+      await this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: path,
+        metadata: link
+      });
     }
-
-    let link = {
-      "/": target
-    };
-
-    if(info.autoUpdate) {
-      link["."] = { auto_update: { tag: "latest"} };
-    }
-
-    await this.ReplaceMetadata({
-      libraryId,
-      objectId,
-      writeToken,
-      metadataSubtree: path,
-      metadata: link
-    });
-  }
+  );
 };
