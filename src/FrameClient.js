@@ -400,6 +400,7 @@ class FrameClient {
       "MergeUserMetadata",
       "PublicUserMetadata",
       "ReplaceUserMetadata",
+      "TenantId",
       "UserMetadata",
       "UserProfileImage",
       "UserWalletAddress",
