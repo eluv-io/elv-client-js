@@ -509,6 +509,14 @@ class AuthorizationClient {
         cache = cache.types;
         break;
 
+      case ACCESS_TYPES.GROUP:
+        cache = cache.groups;
+        break;
+
+      case ACCESS_TYPES.WALLET:
+        cache = cache.wallets;
+        break;
+
       case ACCESS_TYPES.OBJECT:
         cache = publicKey ? cache.encryptedObjects : cache.objects;
         break;
