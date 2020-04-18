@@ -1716,12 +1716,14 @@ exports.UpdateContentObjectGraph = function _callee22(_ref23) {
  */
 
 
-exports.CreateLinks = function _callee23(_ref27) {
-  var libraryId, objectId, writeToken, _ref27$links, links, i, info, path, type, target, link;
+exports.CreateLinks = function _callee24(_ref27) {
+  var _this3 = this;
 
-  return _regeneratorRuntime.async(function _callee23$(_context25) {
+  var libraryId, objectId, writeToken, _ref27$links, links;
+
+  return _regeneratorRuntime.async(function _callee24$(_context26) {
     while (1) {
-      switch (_context25.prev = _context25.next) {
+      switch (_context26.prev = _context26.next) {
         case 0:
           libraryId = _ref27.libraryId, objectId = _ref27.objectId, writeToken = _ref27.writeToken, _ref27$links = _ref27.links, links = _ref27$links === void 0 ? [] : _ref27$links;
           ValidateParameters({
@@ -1729,59 +1731,60 @@ exports.CreateLinks = function _callee23(_ref27) {
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
-          i = 0;
+          _context26.next = 5;
+          return _regeneratorRuntime.awrap(this.utils.LimitedMap(10, links, function _callee23(info) {
+            var path, type, target, link;
+            return _regeneratorRuntime.async(function _callee23$(_context25) {
+              while (1) {
+                switch (_context25.prev = _context25.next) {
+                  case 0:
+                    path = info.path.replace(/^(\/|\.)+/, "");
+                    type = (info.type || "file") === "file" ? "files" : info.type;
 
-        case 4:
-          if (!(i < links.length)) {
-            _context25.next = 18;
-            break;
-          }
+                    if (type === "metadata") {
+                      type = "meta";
+                    }
 
-          info = links[i];
-          path = info.path.replace(/^(\/|\.)+/, "");
-          type = (info.type || "file") === "file" ? "files" : info.type;
+                    target = info.target.replace(/^(\/|\.)+/, "");
 
-          if (type === "metadata") {
-            type = "meta";
-          }
+                    if (info.targetHash) {
+                      target = "/qfab/".concat(info.targetHash, "/").concat(type, "/").concat(target);
+                    } else {
+                      target = "./".concat(type, "/").concat(target);
+                    }
 
-          target = info.target.replace(/^(\/|\.)+/, "");
+                    link = {
+                      "/": target
+                    };
 
-          if (info.targetHash) {
-            target = "/qfab/".concat(info.targetHash, "/").concat(type, "/").concat(target);
-          } else {
-            target = "./".concat(type, "/").concat(target);
-          }
+                    if (info.autoUpdate) {
+                      link["."] = {
+                        auto_update: {
+                          tag: "latest"
+                        }
+                      };
+                    }
 
-          link = {
-            "/": target
-          };
+                    _context25.next = 9;
+                    return _regeneratorRuntime.awrap(_this3.ReplaceMetadata({
+                      libraryId: libraryId,
+                      objectId: objectId,
+                      writeToken: writeToken,
+                      metadataSubtree: path,
+                      metadata: link
+                    }));
 
-          if (info.autoUpdate) {
-            link["."] = {
-              auto_update: {
-                tag: "latest"
+                  case 9:
+                  case "end":
+                    return _context25.stop();
+                }
               }
-            };
-          }
-
-          _context25.next = 15;
-          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
-            libraryId: libraryId,
-            objectId: objectId,
-            writeToken: writeToken,
-            metadataSubtree: path,
-            metadata: link
+            });
           }));
 
-        case 15:
-          i++;
-          _context25.next = 4;
-          break;
-
-        case 18:
+        case 5:
         case "end":
-          return _context25.stop();
+          return _context26.stop();
       }
     }
   }, null, this);
