@@ -11,6 +11,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 /**
  * Methods for ABR video creation and management
  *
+ * For more information on how to publish ABR content see <a href="./abr/index.html">this detailed guide</a>
+ *
  * @module ElvClient/ABRPublishing
  */
 var UrlJoin = require("url-join");

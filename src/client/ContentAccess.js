@@ -629,7 +629,7 @@ exports.ProduceMetadataLinks = async function({
        }
 
 
- * @param {number=} linkDepthLimit - Limit link resolution to the specified depth
+ * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
  * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
@@ -645,7 +645,7 @@ exports.ContentObjectMetadata = async function({
   select=[],
   resolveLinks=false,
   resolveIncludeSource=false,
-  linkDepthLimit,
+  linkDepthLimit=1,
   produceLinkUrls=false
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
@@ -844,6 +844,8 @@ exports.PlayoutOptions = async function({
 
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
   }
 
   const libraryId = await this.ContentObjectLibraryId({objectId});
@@ -853,9 +855,9 @@ exports.PlayoutOptions = async function({
     linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
     linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
     linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
-    path = UrlJoin("q", versionHash || objectId, "meta", linkPath);
+    path = UrlJoin("q", versionHash, "meta", linkPath);
   } else {
-    path = UrlJoin("q", versionHash || objectId, "rep", "playout", offering, "options.json");
+    path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
   }
 
   const audienceData = this.AudienceData({
@@ -1222,6 +1224,10 @@ exports.FabricUrl = async function({
   queryParams = {...queryParams};
 
   queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, channelAuth, noAuth, noCache});
+
+  if((rep || publicRep) && objectId && !versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
+  }
 
   let path = "";
   if(libraryId) {
