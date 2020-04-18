@@ -2,11 +2,6 @@ const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 const { FrameClient } = require("./FrameClient");
 
-/*
-const SpaceContract = require("./contracts/BaseContentSpace");
-
- */
-
 class UserProfileClient {
   Log(message, error=false) {
     if(!this.debug) { return; }
@@ -381,6 +376,51 @@ await client.userProfileClient.UserMetadata()
   }
 
   /**
+   * Return the ID of the tenant this user belongs to, if set.
+   *
+   * @return {Promise<string>} - Tenant ID
+   */
+  async TenantId() {
+    if(!this.tenantId) {
+      this.tenantId = await this.UserMetadata({metadataSubtree: "tenantId"});
+    }
+
+    return this.tenantId;
+  }
+
+  /**
+   * Set the current user's tenant
+   *
+   * Note: This method is not accessible to applications. Eluvio core will drop the request.
+   *
+   * @namedParams
+   * @param level
+   */
+  async SetTenantId({id, address}) {
+    if(id && !id.startsWith("iten")) {
+      throw Error(`Invalid tenant ID: ${id}`);
+    }
+
+    if(address) {
+      id = `iten${Utils.AddressToHash(address)}`;
+    }
+
+    try {
+      const version = await this.client.AccessType({id});
+
+      if(version !== this.client.authClient.ACCESS_TYPES.GROUP) {
+        throw Error("Invalid tenant ID: " + id);
+      }
+    } catch(error) {
+      throw Error("Invalid tenant ID: " + id);
+    }
+
+    await this.ReplaceUserMetadata({metadataSubtree: "tenantId", metadata: id});
+
+    this.tenantId = id;
+  }
+
+  /**
    * Get the URL of the current user's profile image
    *
    * Note: Part hash of profile image will be appended to the URL as a query parameter to invalidate
@@ -633,6 +673,7 @@ await client.userProfileClient.UserMetadata()
       "PromptedMethods",
       "RecordTags",
       "SetAccessLevel",
+      "SetTenantId",
       "SetUserProfileImage",
       "__IsLibraryCreated",
       "__TouchLibrary",

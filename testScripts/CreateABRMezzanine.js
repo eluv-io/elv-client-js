@@ -64,7 +64,7 @@ const argv = yargs
     description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
   })
   .demandOption(
-    ["library", "masterHash", "type", "title"],
+    ["library", "masterHash", "type"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
   )
   .argv;
@@ -112,6 +112,21 @@ const Create = async ({
       return;
     }
 
+    if(!existingMezzId && !title) {
+      throw Error("--title argument is required unless --existingMezzId is specified");
+    }
+
+    const client = await ElvClient.FromConfigurationUrl({
+      configUrl: ClientConfiguration["config-url"],
+      region: elvGeo
+    });
+    let wallet = client.GenerateWallet();
+    let signer = wallet.AddAccount({
+      privateKey: process.env.PRIVATE_KEY
+    });
+
+    await client.SetSigner({signer});
+
     if(metadata) {
       try {
         if(metadata.startsWith("@")) {
@@ -119,13 +134,39 @@ const Create = async ({
         }
 
         metadata = JSON.parse(metadata) || {};
-        if(!metadata.public) { metadata.public = {}; }
+        if(!metadata.public) {
+          metadata.public = {};
+        }
 
         name = name || metadata.public.name || metadata.name;
       } catch(error) {
         console.error("Error parsing metadata:");
         console.error(error);
         return;
+      }
+    } else if(existingMezzId) {
+      const libraryId = await client.ContentObjectLibraryId({objectId: existingMezzId});
+      const assetMetadata = (await client.ContentObjectMetadata({
+        libraryId,
+        objectId: existingMezzId,
+        metadataSubtree: "public/asset_metadata"
+      })) || {};
+
+      const existingName = (await client.ContentObjectMetadata({
+        libraryId,
+        objectId: existingMezzId,
+        metadataSubtree: "public/name"
+      })) || {};
+
+      metadata = {
+        public: {
+          asset_metadata: assetMetadata || {},
+          name: name || existingName || ""
+        }
+      };
+
+      if(!title && !metadata.public.asset_metadata.title) {
+        throw Error("Existing mez does not have 'title' set and title argument was not provided");
       }
     } else {
       metadata = { public: { asset_metadata: {} } };
@@ -145,18 +186,7 @@ const Create = async ({
       ...(metadata.public.asset_metadata || {})
     };
 
-    name = name || metadata.public.asset_metadata.ip_title_id + " MEZ - " + title;
-
-    const client = await ElvClient.FromConfigurationUrl({
-      configUrl: ClientConfiguration["config-url"],
-      region: elvGeo
-    });
-    let wallet = client.GenerateWallet();
-    let signer = wallet.AddAccount({
-      privateKey: process.env.PRIVATE_KEY
-    });
-
-    await client.SetSigner({signer});
+    name = name || metadata.public.name || metadata.public.asset_metadata.title + " MEZ";
 
     const access = {
       region: process.env.AWS_REGION,

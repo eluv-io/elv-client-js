@@ -318,12 +318,15 @@ function () {
 
                   if (timeout > 0) {
                     timeoutId = setTimeout(function () {
-                      reject("Request ".concat(requestId, " timed out (").concat(operation, ")"));
-                      window.removeEventListener("message", _methodListener);
+                      if (typeof window !== "undefined") {
+                        window.removeEventListener("message", _methodListener);
 
-                      if (callbackListener) {
-                        window.removeEventListener("message", callbackListener);
+                        if (callbackListener) {
+                          window.removeEventListener("message", callbackListener);
+                        }
                       }
+
+                      reject("Request ".concat(requestId, " timed out (").concat(operation, ")"));
                     }, timeout * 1000);
                   }
                 }; // Set up callback listener
@@ -369,37 +372,40 @@ function () {
                           return _context5.abrupt("return");
 
                         case 4:
+                          clearTimeout(timeoutId);
+                          window.removeEventListener("message", _methodListener);
+
+                          if (callbackListener) {
+                            window.removeEventListener("message", callbackListener);
+                          }
+
                           if (message.error) {
                             reject(message.error);
                           } else {
                             resolve(message.response);
                           }
 
-                          window.removeEventListener("message", _methodListener);
-
-                          if (callbackListener) {
-                            window.removeEventListener("message", callbackListener);
-                          }
-
-                          _context5.next = 14;
+                          _context5.next = 16;
                           break;
 
-                        case 9:
-                          _context5.prev = 9;
+                        case 10:
+                          _context5.prev = 10;
                           _context5.t0 = _context5["catch"](0);
-                          reject(_context5.t0);
+                          clearTimeout(timeoutId);
                           window.removeEventListener("message", _methodListener);
 
                           if (callbackListener) {
                             window.removeEventListener("message", callbackListener);
                           }
 
-                        case 14:
+                          reject(_context5.t0);
+
+                        case 16:
                         case "end":
                           return _context5.stop();
                       }
                     }
-                  }, null, null, [[0, 9]]);
+                  }, null, null, [[0, 10]]);
                 }; // Start the timeout
 
 
@@ -433,7 +439,7 @@ function () {
   }, {
     key: "AllowedUserProfileMethods",
     value: function AllowedUserProfileMethods() {
-      return ["AccessLevel", "CollectedTags", "CreateWallet", "DeleteUserMetadata", "MergeUserMetadata", "PublicUserMetadata", "ReplaceUserMetadata", "UserMetadata", "UserProfileImage", "UserWalletAddress", "UserWalletObjectInfo", "WalletAddress"];
+      return ["AccessLevel", "CollectedTags", "CreateWallet", "DeleteUserMetadata", "MergeUserMetadata", "PublicUserMetadata", "ReplaceUserMetadata", "TenantId", "UserMetadata", "UserProfileImage", "UserWalletAddress", "UserWalletObjectInfo", "WalletAddress"];
     }
   }], [{
     key: "PromptedMethods",

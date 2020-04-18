@@ -131,7 +131,7 @@ const Create = async ({
     if(slug) { metadata.public.asset_metadata.slug = slug; }
 
     ipTitleId = ipTitleId || slug || Slugify(displayTitle || title);
-    name = name || ipTitleId + " MASTER - " + title;
+    name = name || title + " MASTER";
 
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"],

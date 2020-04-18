@@ -63,7 +63,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
     console.log("\nAdmin account:\n");
     console.log(`\t${tenantSlug}-elv-admin`);
-    console.log(`\t${tenantAdminSigner.address}`);
+    console.log(`\t${client.utils.FormatAddress(tenantAdminSigner.address)}`);
     console.log(`\t${tenantAdminSigner.signingKey.privateKey}`);
     console.log(`\t${mnemonic}`);
 
@@ -79,6 +79,10 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
     console.log("\nContent Admins Group:\n");
     console.log(`\t${adminGroupAddress}`);
+
+    await client.userProfileClient.SetTenantId({address: adminGroupAddress});
+    console.log("\nTenant ID:\n");
+    console.log("\t", await client.userProfileClient.TenantId());
 
     /* Content Types - Create Title, Title Collection and Production Master and add each to the group */
 
