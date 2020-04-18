@@ -2186,10 +2186,10 @@ describe("Test ElvClient", () => {
 
     test("Rep URL", async () => {
       const repUrl = await client.Rep({libraryId, objectId, rep: "image"});
-      validateUrl(repUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "rep", "image"));
+      validateUrl(repUrl, UrlJoin("/q", versionHash, "rep", "image"));
 
       const noAuthUrl = await client.Rep({libraryId, objectId, rep: "image", noAuth: true});
-      validateUrl(noAuthUrl, UrlJoin("/qlibs", libraryId, "q", objectId, "rep", "image"), {}, false);
+      validateUrl(noAuthUrl, UrlJoin("/q", versionHash, "rep", "image"), {}, false);
     });
 
     test("File URL", async () => {
