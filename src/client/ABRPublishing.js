@@ -122,15 +122,16 @@ exports.CreateProductionMaster = async function({
     objectId: id,
     writeToken: write_token,
     metadata: {
+      ...(metadata || {}),
       name,
       description,
       reference: access && !copy,
       public: {
+        ...((metadata || {}).public || {}),
         name: name || "",
         description: description || ""
       },
       elv_created_at: new Date().getTime(),
-      ...(metadata || {})
     }
   });
 

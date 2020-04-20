@@ -109,7 +109,9 @@ const Create = async ({
         }
 
         metadata = JSON.parse(metadata) || {};
-        if(!metadata.public) { metadata.public = {}; }
+        if(!metadata.public) {
+          metadata.public = {};
+        }
 
         name = name || metadata.public.name || metadata.name;
       } catch(error) {
@@ -130,7 +132,6 @@ const Create = async ({
     if(displayTitle) { metadata.public.asset_metadata.displayTitle = displayTitle; }
     if(slug) { metadata.public.asset_metadata.slug = slug; }
 
-    ipTitleId = ipTitleId || slug || Slugify(displayTitle || title);
     name = name || title + " MASTER";
 
     const client = await ElvClient.FromConfigurationUrl({
