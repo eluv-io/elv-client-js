@@ -86,7 +86,20 @@
       "protocol": {
         "type": "ProtoHls"
       }
-    }
+    },
+    "dash-clear": {
+      "drm": null,
+      "protocol": {
+        "min_buffer_length": 2,
+        "type": "ProtoDash"
+      }
+    },
+    "hls-clear": {
+      "drm": null,
+      "protocol": {
+        "type": "ProtoHls"
+      }
+    }      
   },
   "segment_specs": {
     "audio": {
