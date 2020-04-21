@@ -1,5 +1,5 @@
 {
-  "drm_optional": false,
+  "drm_optional": true,
   "store_clear": false,
   "ladder_specs": {
     "{\"media_type\":\"audio\",\"channels\":2}": {
