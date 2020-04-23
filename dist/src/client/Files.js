@@ -1892,19 +1892,21 @@ exports.FinalizePart = function _callee21(_ref21) {
  * @param {(File | ArrayBuffer | Buffer)} data - Data to upload
  * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
  * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {function=} callback - If specified, will be periodically called with current upload status
+ * - Signature: ({bytesFinished, bytesTotal}) => {}
  *
  * @returns {Promise<Object>} - Response containing information about the uploaded part
  */
 
 
 exports.UploadPart = function _callee22(_ref22) {
-  var libraryId, objectId, writeToken, data, _ref22$encryption, encryption, partWriteToken;
+  var libraryId, objectId, writeToken, data, _ref22$encryption, encryption, _ref22$chunkSize, chunkSize, callback, partWriteToken, size, i, chunk;
 
   return _regeneratorRuntime.async(function _callee22$(_context24) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
-          libraryId = _ref22.libraryId, objectId = _ref22.objectId, writeToken = _ref22.writeToken, data = _ref22.data, _ref22$encryption = _ref22.encryption, encryption = _ref22$encryption === void 0 ? "none" : _ref22$encryption;
+          libraryId = _ref22.libraryId, objectId = _ref22.objectId, writeToken = _ref22.writeToken, data = _ref22.data, _ref22$encryption = _ref22.encryption, encryption = _ref22$encryption === void 0 ? "none" : _ref22$encryption, _ref22$chunkSize = _ref22.chunkSize, chunkSize = _ref22$chunkSize === void 0 ? 10000000 : _ref22$chunkSize, callback = _ref22.callback;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -1920,18 +1922,47 @@ exports.UploadPart = function _callee22(_ref22) {
 
         case 5:
           partWriteToken = _context24.sent;
-          _context24.next = 8;
+          size = data.length || data.byteLength || data.size;
+
+          if (callback) {
+            callback({
+              bytesFinished: 0,
+              bytesTotal: size
+            });
+          }
+
+          i = 0;
+
+        case 9:
+          if (!(i < size)) {
+            _context24.next = 17;
+            break;
+          }
+
+          chunk = data.slice(i, i + chunkSize);
+          _context24.next = 13;
           return _regeneratorRuntime.awrap(this.UploadPartChunk({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
             partWriteToken: partWriteToken,
-            chunk: data,
+            chunk: chunk,
             encryption: encryption
           }));
 
-        case 8:
-          _context24.next = 10;
+        case 13:
+          callback({
+            bytesFinished: Math.min(i + chunkSize, size),
+            bytesTotal: size
+          });
+
+        case 14:
+          i += chunkSize;
+          _context24.next = 9;
+          break;
+
+        case 17:
+          _context24.next = 19;
           return _regeneratorRuntime.awrap(this.FinalizePart({
             libraryId: libraryId,
             objectId: objectId,
@@ -1940,10 +1971,10 @@ exports.UploadPart = function _callee22(_ref22) {
             encryption: encryption
           }));
 
-        case 10:
+        case 19:
           return _context24.abrupt("return", _context24.sent);
 
-        case 11:
+        case 20:
         case "end":
           return _context24.stop();
       }

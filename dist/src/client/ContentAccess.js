@@ -2629,11 +2629,13 @@ exports.LinkUrl = function _callee34(_ref28) {
 
         case 8:
           visibility = _context34.sent;
-          noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
+          noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1; // TODO: Remove for authv3
+
+          noAuth = true;
           _context34.t0 = _objectSpread;
           _context34.t1 = {};
           _context34.t2 = queryParams;
-          _context34.next = 15;
+          _context34.next = 16;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -2641,7 +2643,7 @@ exports.LinkUrl = function _callee34(_ref28) {
             noAuth: noAuth
           }));
 
-        case 15:
+        case 16:
           _context34.t3 = _context34.sent;
           _context34.t4 = {
             resolve: true,
@@ -2658,7 +2660,7 @@ exports.LinkUrl = function _callee34(_ref28) {
             queryParams: queryParams
           }));
 
-        case 20:
+        case 21:
         case "end":
           return _context34.stop();
       }
