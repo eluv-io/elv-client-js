@@ -1940,7 +1940,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_Files.js.html">client/Files.js</a>, <a href="client_Files.js.html#line1018">line 1018</a>
+          <a href="client_Files.js.html">client/Files.js</a>, <a href="client_Files.js.html#line1038">line 1038</a>
         </li>
       </ul>
     </dd>
@@ -5020,7 +5020,7 @@ source: string
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".exports.UploadPart">
-      <span class="type-signature">static </span>UploadPart<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">data,</div><div class="block-param">chunkSize<span class="signature-attributes">optional</span>,</div><div class="block-param">encryption<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+      <span class="type-signature">static </span>UploadPart<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">writeToken,</div><div class="block-param">data,</div><div class="block-param">chunkSize<span class="signature-attributes">optional</span>,</div><div class="block-param">encryption<span class="signature-attributes">optional</span>,</div><div class="block-param">callback<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -5344,6 +5344,52 @@ smaller chunks.</p>
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>callback</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      function
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>If specified, will be periodically called with current upload status</p>
+<ul>
+<li>Signature: ({bytesFinished, bytesTotal}) =&gt; {}</li>
+</ul>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -5472,7 +5518,7 @@ smaller chunks.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_Files.js.html">client/Files.js</a>, <a href="client_Files.js.html#line996">line 996</a>
+          <a href="client_Files.js.html">client/Files.js</a>, <a href="client_Files.js.html#line998">line 998</a>
         </li>
       </ul>
     </dd>

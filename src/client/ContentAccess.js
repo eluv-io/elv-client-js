@@ -1480,8 +1480,10 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mi
   }
 
   const visibility = await this.Visibility({id: objectId});
-  const noAuth = visibility >= 10 ||
+  let noAuth = visibility >= 10 ||
     ((linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
+  // TODO: Remove for authv3
+  noAuth = true;
 
   queryParams = {
     ...queryParams,
