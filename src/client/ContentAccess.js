@@ -153,13 +153,15 @@ exports.ContentType = async function({name, typeId, versionHash, publicOnly=fals
         public: (await this.ContentObjectMetadata({
           libraryId: this.contentSpaceLibraryId,
           objectId: typeId,
+          versionHash,
           metadataSubtree: "public"
         })) || {}
       };
     } else {
       metadata = (await this.ContentObjectMetadata({
         libraryId: this.contentSpaceLibraryId,
-        objectId: typeId
+        objectId: typeId,
+        versionHash
       })) || {};
     }
 
@@ -739,10 +741,22 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
 
   ValidateObject(objectId);
 
-  return await this.CallContractMethod({
+  let latestHash = await this.CallContractMethod({
     contractAddress: this.utils.HashToAddress(objectId),
     methodName: "objectHash"
   });
+
+  if(!latestHash) {
+    // If hash not present in contract for some reason, get latest version from fabric API
+    const versions = await this.ContentObjectVersions({
+      libraryId: await this.ContentObjectLibraryId({objectId}),
+      objectId
+    });
+
+    latestHash = versions.versions[0].hash;
+  }
+
+  return latestHash;
 };
 
 /* URL Methods */
