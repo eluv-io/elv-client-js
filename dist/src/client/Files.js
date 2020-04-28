@@ -1951,10 +1951,12 @@ exports.UploadPart = function _callee22(_ref22) {
           }));
 
         case 13:
-          callback({
-            bytesFinished: Math.min(i + chunkSize, size),
-            bytesTotal: size
-          });
+          if (callback) {
+            callback({
+              bytesFinished: Math.min(i + chunkSize, size),
+              bytesTotal: size
+            });
+          }
 
         case 14:
           i += chunkSize;
