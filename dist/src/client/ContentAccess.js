@@ -283,6 +283,7 @@ exports.ContentType = function _callee4(_ref3) {
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: typeId,
+            versionHash: versionHash,
             metadataSubtree: "public"
           }));
 
@@ -308,7 +309,8 @@ exports.ContentType = function _callee4(_ref3) {
           _context4.next = 36;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
-            objectId: typeId
+            objectId: typeId,
+            versionHash: versionHash
           }));
 
         case 36:
@@ -1316,7 +1318,7 @@ exports.ContentObjectVersions = function _callee20(_ref14) {
 
 
 exports.LatestVersionHash = function _callee21(_ref15) {
-  var objectId, versionHash;
+  var objectId, versionHash, latestHash, versions;
   return _regeneratorRuntime.async(function _callee21$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
@@ -1335,9 +1337,39 @@ exports.LatestVersionHash = function _callee21(_ref15) {
           }));
 
         case 5:
-          return _context21.abrupt("return", _context21.sent);
+          latestHash = _context21.sent;
 
-        case 6:
+          if (latestHash) {
+            _context21.next = 19;
+            break;
+          }
+
+          _context21.t0 = _regeneratorRuntime;
+          _context21.t1 = this;
+          _context21.next = 11;
+          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+            objectId: objectId
+          }));
+
+        case 11:
+          _context21.t2 = _context21.sent;
+          _context21.t3 = objectId;
+          _context21.t4 = {
+            libraryId: _context21.t2,
+            objectId: _context21.t3
+          };
+          _context21.t5 = _context21.t1.ContentObjectVersions.call(_context21.t1, _context21.t4);
+          _context21.next = 17;
+          return _context21.t0.awrap.call(_context21.t0, _context21.t5);
+
+        case 17:
+          versions = _context21.sent;
+          latestHash = versions.versions[0].hash;
+
+        case 19:
+          return _context21.abrupt("return", latestHash);
+
+        case 20:
         case "end":
           return _context21.stop();
       }

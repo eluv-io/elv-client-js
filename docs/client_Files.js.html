@@ -1080,7 +1080,9 @@ exports.UploadPart = async function({libraryId, objectId, writeToken, data, encr
       encryption
     });
 
-    callback({bytesFinished: Math.min(i + chunkSize, size), bytesTotal: size});
+    if(callback) {
+      callback({bytesFinished: Math.min(i + chunkSize, size), bytesTotal: size});
+    }
   }
 
   return await this.FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption});
