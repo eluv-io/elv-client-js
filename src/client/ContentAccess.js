@@ -1318,10 +1318,14 @@ exports.FileUrl = async function({libraryId, objectId, versionHash, writeToken, 
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is used
+ * @param {number=} height - If specified, the image will be scaled to the specified maximum height
+ * @param {string=} imagePath=public/display_image - Metadata path to the image link
+ *
+ * @see <a href="Utils.html#.ResizeImage">Utils#ResizeImage</a>
  *
  * @returns {Promise<string | undefined>} - If the object has an image, will return a URL for that image.
  */
-exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash}) {
+exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash, height, imagePath="public/display_image"}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   if(!versionHash) {
@@ -1331,16 +1335,22 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
   this.Log(`Retrieving content object image url: ${libraryId} ${objectId} ${versionHash}`);
 
   if(!this.objectImageUrls[versionHash]) {
-    const imageMetadata = await this.ContentObjectMetadata({versionHash, metadataSubtree: "public/display_image"});
+    const imageMetadata = await this.ContentObjectMetadata({versionHash, metadataSubtree: imagePath});
 
     if(!imageMetadata) {
       this.Log(`No image url set: ${libraryId} ${objectId} ${versionHash}`);
       return;
     }
 
+    let queryParams = {};
+    if(height && !isNaN(parseInt(height))) {
+      queryParams["height"] = parseInt(height);
+    }
+
     this.objectImageUrls[versionHash] = await this.LinkUrl({
       versionHash,
-      linkPath: "public/display_image"
+      linkPath: imagePath,
+      queryParams
     });
   }
 

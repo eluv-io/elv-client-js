@@ -428,10 +428,13 @@ await client.userProfileClient.UserMetadata()
    *
    * @namedParams
    * @param {string=} address - The address of the user. If not specified, the address of the current user will be used.
+   * @param {number=} height - If specified, the image will be scaled to the specified maximum height
+   *
+   * @see <a href="Utils.html#.ResizeImage">Utils#ResizeImage</a>
    *
    * @return {Promise<string | undefined>} - URL of the user's profile image. Will be undefined if no profile image is set.
    */
-  async UserProfileImage({address}={}) {
+  async UserProfileImage({address, height}={}) {
     let walletAddress;
     if(address) {
       walletAddress = await this.UserWalletAddress({address});
@@ -442,19 +445,8 @@ await client.userProfileClient.UserMetadata()
 
     if(!walletAddress) { return; }
 
-    const imageLink = await this.PublicUserMetadata({address, metadataSubtree: "profile_image"});
-
-    if(!imageLink) { return; }
-
     const { libraryId, objectId } = await this.UserWalletObjectInfo({address});
-
-    if(!objectId) { return; }
-
-    return await this.client.LinkUrl({
-      libraryId,
-      objectId,
-      linkPath: "public/profile_image"
-    });
+    return this.client.ContentObjectImageUrl({libraryId, objectId, height, imagePath: "public/profile_image"});
   }
 
   /**
@@ -475,31 +467,13 @@ await client.userProfileClient.UserMetadata()
 
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
-    await this.client.UploadFiles({
+    await this.client.SetContentObjectImage({
       libraryId,
       objectId,
       writeToken: editRequest.write_token,
-      fileInfo: [
-        {
-          path: "profile_image",
-          mime_type: "image/*",
-          size,
-          data: image
-        }
-      ]
-    });
-
-    await this.client.MergeMetadata({
-      libraryId,
-      objectId,
-      writeToken: editRequest.write_token,
-      metadata: {
-        public: {
-          profile_image: {
-            "/": "./files/profile_image"
-          }
-        }
-      }
+      image,
+      imageName: "profile_image",
+      imagePath: "public/profile_image"
     });
 
     await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});

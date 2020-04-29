@@ -14,6 +14,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
  * @module ElvClient/ContentManagement
  */
 var UrlJoin = require("url-join");
+
+var ImageType = require("image-type");
 /*
 const LibraryContract = require("../contracts/BaseLibrary");
 const ContentContract = require("../contracts/BaseContent");
@@ -391,16 +393,18 @@ exports.SetContentLibraryImage = function _callee4(_ref6) {
  * @param {string} writeToken - Write token of the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
  * @param {string=} imageName - Name of the image file
+ * @param {string=} imagePath=public/display_image - Metadata path of the image link (default is recommended)
  */
 
 
 exports.SetContentObjectImage = function _callee5(_ref7) {
-  var libraryId, objectId, writeToken, image, imageName;
+  var libraryId, objectId, writeToken, image, imageName, _ref7$imagePath, imagePath, type, mimeType;
+
   return _regeneratorRuntime.async(function _callee5$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
-          libraryId = _ref7.libraryId, objectId = _ref7.objectId, writeToken = _ref7.writeToken, image = _ref7.image, imageName = _ref7.imageName;
+          libraryId = _ref7.libraryId, objectId = _ref7.objectId, writeToken = _ref7.writeToken, image = _ref7.image, imageName = _ref7.imageName, _ref7$imagePath = _ref7.imagePath, imagePath = _ref7$imagePath === void 0 ? "public/display_image" : _ref7$imagePath;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -408,7 +412,23 @@ exports.SetContentObjectImage = function _callee5(_ref7) {
           ValidateWriteToken(writeToken);
           ValidatePresence("image", image);
           imageName = imageName || "display_image";
-          _context5.next = 7;
+
+          if (!(_typeof(image) === "object")) {
+            _context5.next = 9;
+            break;
+          }
+
+          _context5.next = 8;
+          return _regeneratorRuntime.awrap(new Response(image).arrayBuffer());
+
+        case 8:
+          image = _context5.sent;
+
+        case 9:
+          // Determine image type
+          type = ImageType(image);
+          mimeType = ["jpg", "jpeg", "png", "gif", "webp"].includes(type.ext) ? type.mime : "image/*";
+          _context5.next = 13;
           return _regeneratorRuntime.awrap(this.UploadFiles({
             libraryId: libraryId,
             objectId: objectId,
@@ -417,25 +437,25 @@ exports.SetContentObjectImage = function _callee5(_ref7) {
             encrypted: false,
             fileInfo: [{
               path: imageName,
-              mime_type: "image/*",
+              mime_type: mimeType,
               size: image.size || image.length || image.byteLength,
               data: image
             }]
           }));
 
-        case 7:
-          _context5.next = 9;
+        case 13:
+          _context5.next = 15;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
-            metadataSubtree: "public/display_image",
+            metadataSubtree: imagePath,
             metadata: {
               "/": "./files/".concat(imageName)
             }
           }));
 
-        case 9:
+        case 15:
         case "end":
           return _context5.stop();
       }
