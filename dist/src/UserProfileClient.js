@@ -946,6 +946,9 @@ function () {
      *
      * @namedParams
      * @param {string=} address - The address of the user. If not specified, the address of the current user will be used.
+     * @param {number=} height - If specified, the image will be scaled to the specified maximum height
+     *
+     * @see <a href="Utils.html#.ResizeImage">Utils#ResizeImage</a>
      *
      * @return {Promise<string | undefined>} - URL of the user's profile image. Will be undefined if no profile image is set.
      */
@@ -955,8 +958,8 @@ function () {
     value: function UserProfileImage() {
       var _ref16,
           address,
+          height,
           walletAddress,
-          imageLink,
           _ref17,
           libraryId,
           objectId,
@@ -966,7 +969,7 @@ function () {
         while (1) {
           switch (_context14.prev = _context14.next) {
             case 0:
-              _ref16 = _args14.length > 0 && _args14[0] !== undefined ? _args14[0] : {}, address = _ref16.address;
+              _ref16 = _args14.length > 0 && _args14[0] !== undefined ? _args14[0] : {}, address = _ref16.address, height = _ref16.height;
 
               if (!address) {
                 _context14.next = 7;
@@ -997,51 +1000,22 @@ function () {
 
             case 11:
               _context14.next = 13;
-              return _regeneratorRuntime.awrap(this.PublicUserMetadata({
-                address: address,
-                metadataSubtree: "profile_image"
-              }));
-
-            case 13:
-              imageLink = _context14.sent;
-
-              if (imageLink) {
-                _context14.next = 16;
-                break;
-              }
-
-              return _context14.abrupt("return");
-
-            case 16:
-              _context14.next = 18;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo({
                 address: address
               }));
 
-            case 18:
+            case 13:
               _ref17 = _context14.sent;
               libraryId = _ref17.libraryId;
               objectId = _ref17.objectId;
-
-              if (objectId) {
-                _context14.next = 23;
-                break;
-              }
-
-              return _context14.abrupt("return");
-
-            case 23:
-              _context14.next = 25;
-              return _regeneratorRuntime.awrap(this.client.LinkUrl({
+              return _context14.abrupt("return", this.client.ContentObjectImageUrl({
                 libraryId: libraryId,
                 objectId: objectId,
-                linkPath: "public/profile_image"
+                height: height,
+                imagePath: "public/profile_image"
               }));
 
-            case 25:
-              return _context14.abrupt("return", _context14.sent);
-
-            case 26:
+            case 17:
             case "end":
               return _context14.stop();
           }
@@ -1092,42 +1066,24 @@ function () {
             case 12:
               editRequest = _context15.sent;
               _context15.next = 15;
-              return _regeneratorRuntime.awrap(this.client.UploadFiles({
+              return _regeneratorRuntime.awrap(this.client.SetContentObjectImage({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token,
-                fileInfo: [{
-                  path: "profile_image",
-                  mime_type: "image/*",
-                  size: size,
-                  data: image
-                }]
+                image: image,
+                imageName: "profile_image",
+                imagePath: "public/profile_image"
               }));
 
             case 15:
               _context15.next = 17;
-              return _regeneratorRuntime.awrap(this.client.MergeMetadata({
-                libraryId: libraryId,
-                objectId: objectId,
-                writeToken: editRequest.write_token,
-                metadata: {
-                  "public": {
-                    profile_image: {
-                      "/": "./files/profile_image"
-                    }
-                  }
-                }
-              }));
-
-            case 17:
-              _context15.next = 19;
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
                 writeToken: editRequest.write_token
               }));
 
-            case 19:
+            case 17:
             case "end":
               return _context15.stop();
           }

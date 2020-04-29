@@ -21,6 +21,8 @@ var BigNumber = require("bignumber.js")["default"];
 var MultiHash = require("multihashes");
 
 var VarInt = require("varint");
+
+var URI = require("urijs");
 /**
  * @namespace
  * @description This is a utility namespace mostly containing functions for managing
@@ -477,6 +479,32 @@ var Utils = {
         }
       }
     });
+  },
+
+  /**
+   * Resize the image file or link URL to the specified maximum height. Can also be used to remove
+   * max height parameter(s) from a url if height is not specified.
+   *
+   * @param imageUrl - Url to an image file or link in the Fabric
+   * @param {number=} height - The maximum height for the image to be scaled to.
+   *
+   * @returns {string} - The modified URL with the height parameter
+   */
+  ResizeImage: function ResizeImage(_ref) {
+    var imageUrl = _ref.imageUrl,
+        height = _ref.height;
+
+    if (!imageUrl || imageUrl && !imageUrl.startsWith("http")) {
+      return imageUrl;
+    }
+
+    imageUrl = URI(imageUrl).removeSearch("height").removeSearch("header-x_image_height");
+
+    if (height && !isNaN(parseInt(height))) {
+      imageUrl.addSearch("height", parseInt(height));
+    }
+
+    return imageUrl.toString();
   },
 
   /**

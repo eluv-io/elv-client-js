@@ -62,6 +62,7 @@
     "deep-equal": "^1.0.1",
     "ethers": "^4.0.26",
     "hash.js": "^1.1.7",
+    "image-type": "^4.1.0",
     "js-polyfills": "^0.1.42",
     "mime-types": "^2.1.24",
     "multicodec": "^0.5.3",
