@@ -1,3 +1,5 @@
+const Utils = require("./Utils");
+
 exports.ValidatePresence = (name, thing) => {
   if(!thing) {
     throw Error(`${name} not specified`);
@@ -56,7 +58,10 @@ exports.ValidateParameters = ({libraryId, objectId, versionHash}) => {
 exports.ValidateAddress = (address) => {
   if(!address) {
     throw "Address not specified";
-  } else if(address.toString().trim().replace("0x", "").length !== 40) {
+  } else if(!/^(0x)?[0-9a-f]{40}$/i.test(address.toLowerCase())) {
     throw `Invalid address: ${address}`;
   }
+
+
+  return Utils.FormatAddress(address);
 };

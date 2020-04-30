@@ -29,7 +29,7 @@ const {
  * @returns {Promise<string>} - The account address of the owner
  */
 exports.AccessGroupOwner = async function({contractAddress}) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   this.Log(`Retrieving owner of access group ${contractAddress}`);
 
@@ -47,7 +47,7 @@ exports.AccessGroupOwner = async function({contractAddress}) {
  * @return {Promise<Array<string>>} - List of member addresses
  */
 exports.AccessGroupMembers = async function({contractAddress}) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   this.Log(`Retrieving members for group ${contractAddress}`);
 
@@ -80,7 +80,7 @@ exports.AccessGroupMembers = async function({contractAddress}) {
  * @return {Promise<Array<string>>} - List of manager addresses
  */
 exports.AccessGroupManagers = async function({contractAddress}) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   this.Log(`Retrieving managers for group ${contractAddress}`);
 
@@ -165,7 +165,7 @@ exports.CreateAccessGroup = async function({name, description, metadata={}}={}) 
  * @param {string} contractAddress - The address of the access group contract
  */
 exports.DeleteAccessGroup = async function({contractAddress}) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   this.Log(`Deleting access group ${contractAddress}`);
 
@@ -182,8 +182,8 @@ exports.AccessGroupMembershipMethod = async function({
   methodName,
   eventName
 }) {
-  ValidateAddress(contractAddress);
-  ValidateAddress(memberAddress);
+  contractAddress = ValidateAddress(contractAddress);
+  memberAddress = ValidateAddress(memberAddress);
 
   // Ensure caller is the member being acted upon or a manager/owner of the group
   if(!this.utils.EqualAddress(this.signer.address, memberAddress)) {
@@ -203,7 +203,7 @@ exports.AccessGroupMembershipMethod = async function({
   const event = await this.CallContractMethodAndWait({
     contractAddress,
     methodName,
-    methodArgs: [ this.utils.FormatAddress(memberAddress) ],
+    methodArgs: [memberAddress],
     eventName,
     eventValue: "candidate",
   });
@@ -238,8 +238,8 @@ exports.AccessGroupMembershipMethod = async function({
  * @returns {Promise<string>} - The transaction hash of the call to the grantAccess method
  */
 exports.AddAccessGroupMember = async function({contractAddress, memberAddress}) {
-  ValidateAddress(contractAddress);
-  ValidateAddress(memberAddress);
+  contractAddress = ValidateAddress(contractAddress);
+  memberAddress = ValidateAddress(memberAddress);
 
   return await this.AccessGroupMembershipMethod({
     contractAddress,
@@ -262,8 +262,8 @@ exports.AddAccessGroupMember = async function({contractAddress, memberAddress}) 
  * @returns {Promise<string>} - The transaction hash of the call to the revokeAccess method
  */
 exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress}) {
-  ValidateAddress(contractAddress);
-  ValidateAddress(memberAddress);
+  contractAddress = ValidateAddress(contractAddress);
+  memberAddress = ValidateAddress(memberAddress);
 
   return await this.AccessGroupMembershipMethod({
     contractAddress,
@@ -286,8 +286,8 @@ exports.RemoveAccessGroupMember = async function({contractAddress, memberAddress
  * @returns {Promise<string>} - The transaction hash of the call to the grantManagerAccess method
  */
 exports.AddAccessGroupManager = async function({contractAddress, memberAddress}) {
-  ValidateAddress(contractAddress);
-  ValidateAddress(memberAddress);
+  contractAddress = ValidateAddress(contractAddress);
+  memberAddress = ValidateAddress(memberAddress);
 
   return await this.AccessGroupMembershipMethod({
     contractAddress,
@@ -310,8 +310,8 @@ exports.AddAccessGroupManager = async function({contractAddress, memberAddress})
  * @returns {Promise<string>} - The transaction hash of the call to the revokeManagerAccess method
  */
 exports.RemoveAccessGroupManager = async function({contractAddress, memberAddress}) {
-  ValidateAddress(contractAddress);
-  ValidateAddress(memberAddress);
+  contractAddress = ValidateAddress(contractAddress);
+  memberAddress = ValidateAddress(memberAddress);
 
   return await this.AccessGroupMembershipMethod({
     contractAddress,
@@ -404,9 +404,7 @@ exports.ContentLibraryGroupPermissions = async function({libraryId, permissions=
  */
 exports.AddContentLibraryGroup = async function({libraryId, groupAddress, permission}) {
   ValidateLibrary(libraryId);
-  ValidateAddress(groupAddress);
-
-  groupAddress = this.utils.FormatAddress(groupAddress);
+  groupAddress = ValidateAddress(groupAddress);
 
   if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
     throw Error(`Invalid group type: ${permission}`);
@@ -427,7 +425,7 @@ exports.AddContentLibraryGroup = async function({libraryId, groupAddress, permis
   const event = await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
     methodName: `add${permission}Group`,
-    methodArgs: [this.utils.FormatAddress(groupAddress)]
+    methodArgs: [groupAddress]
   });
 
   const abi = await this.ContractAbi({id: libraryId});
@@ -450,7 +448,7 @@ exports.AddContentLibraryGroup = async function({libraryId, groupAddress, permis
  */
 exports.RemoveContentLibraryGroup = async function({libraryId, groupAddress, permission}) {
   ValidateLibrary(libraryId);
-  ValidateAddress(groupAddress);
+  groupAddress = ValidateAddress(groupAddress);
 
   if(!["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
     throw Error(`Invalid group type: ${permission}`);
@@ -471,7 +469,7 @@ exports.RemoveContentLibraryGroup = async function({libraryId, groupAddress, per
   const event = await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(libraryId),
     methodName: `remove${permission}Group`,
-    methodArgs: [this.utils.FormatAddress(groupAddress)]
+    methodArgs: [groupAddress]
   });
 
   const abi = await this.ContractAbi({id: libraryId});
@@ -555,10 +553,9 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
 exports.AddContentObjectGroupPermission = async function({objectId, groupAddress, permission}) {
   ValidatePresence("permission", permission);
   ValidateObject(objectId);
-  ValidateAddress(groupAddress);
+  groupAddress = ValidateAddress(groupAddress);
 
   permission = permission.toLowerCase();
-  groupAddress = this.utils.FormatAddress(groupAddress);
 
   if(!["see", "access", "manage"].includes(permission)) {
     throw Error(`Invalid permission type: ${permission}`);
@@ -600,10 +597,9 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
 exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddress, permission}) {
   ValidatePresence("permission", permission);
   ValidateObject(objectId);
-  ValidateAddress(groupAddress);
+  groupAddress = ValidateAddress(groupAddress);
 
   permission = permission.toLowerCase();
-  groupAddress = this.utils.FormatAddress(groupAddress);
 
   if(!["see", "access", "manage"].includes(permission)) {
     throw Error(`Invalid permission type: ${permission}`);

@@ -23,7 +23,7 @@ const {
  * @return {Promise<string>} - Name of the contract
  */
 exports.ContractName = async function({contractAddress}) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   return await this.ethClient.ContractName(contractAddress);
 };
@@ -101,7 +101,7 @@ exports.ContractEvents = async function({
   count=1000,
   includeTransaction=false
 }) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   if(!abi) { abi = await this.ContractAbi({contractAddress}); }
 
@@ -148,7 +148,7 @@ exports.CallContractMethod = async function({
   cacheContract=true,
   overrideCachedContract=false
 }) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   // Delete cached visibility value if it is being changed
   contractAddress = this.utils.FormatAddress(contractAddress);
@@ -203,7 +203,7 @@ exports.CallContractMethodAndWait = async function({
   cacheContract=true,
   overrideCachedContract=false
 }) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   // Delete cached visibility value if it is being changed
   contractAddress = this.utils.FormatAddress(contractAddress);
@@ -293,7 +293,7 @@ exports.SetCustomContentContract = async function({
   overrides={}
 }) {
   ValidateParameters({libraryId, objectId});
-  ValidateAddress(customContractAddress);
+  customContractAddress = ValidateAddress(customContractAddress);
 
   customContractAddress = this.utils.FormatAddress(customContractAddress);
 
@@ -438,7 +438,7 @@ exports.BlockNumber = async function() {
  * @returns {Promise<string>} - Balance of the account, in ether (as string)
  */
 exports.GetBalance = async function({address}) {
-  ValidateAddress(address);
+  address = ValidateAddress(address);
 
   const balance = await this.ethClient.MakeProviderCall({methodName: "getBalance", args: [address]});
 
@@ -456,7 +456,7 @@ exports.GetBalance = async function({address}) {
  * @returns {Promise<Object>} - The transaction receipt
  */
 exports.SendFunds = async function({recipient, ether}) {
-  ValidateAddress(recipient);
+  recipient = ValidateAddress(recipient);
 
   const transaction = await this.signer.sendTransaction({
     to: recipient,
@@ -469,7 +469,7 @@ exports.SendFunds = async function({recipient, ether}) {
 /*
 // TODO: Not implemented in contracts
 exports.WithdrawContractFunds = async function({contractAddress, abi, ether}) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   return await this.ethClient.CallContractMethodAndWait({
     contractAddress,
