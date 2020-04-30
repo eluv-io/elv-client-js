@@ -89,6 +89,8 @@ var Utils = {
       return "";
     }
 
+    address = address.trim();
+
     if (!address.startsWith("0x")) {
       address = "0x" + address;
     }

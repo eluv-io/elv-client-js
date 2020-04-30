@@ -30,7 +30,7 @@ exports.ContractName = function _callee(_ref) {
       switch (_context.prev = _context.next) {
         case 0:
           contractAddress = _ref.contractAddress;
-          ValidateAddress(contractAddress);
+          contractAddress = ValidateAddress(contractAddress);
           _context.next = 4;
           return _regeneratorRuntime.awrap(this.ethClient.ContractName(contractAddress));
 
@@ -177,7 +177,7 @@ exports.ContractEvents = function _callee4(_ref5) {
       switch (_context4.prev = _context4.next) {
         case 0:
           contractAddress = _ref5.contractAddress, abi = _ref5.abi, _ref5$fromBlock = _ref5.fromBlock, fromBlock = _ref5$fromBlock === void 0 ? 0 : _ref5$fromBlock, toBlock = _ref5.toBlock, _ref5$count = _ref5.count, count = _ref5$count === void 0 ? 1000 : _ref5$count, _ref5$includeTransact = _ref5.includeTransaction, includeTransaction = _ref5$includeTransact === void 0 ? false : _ref5$includeTransact;
-          ValidateAddress(contractAddress);
+          contractAddress = ValidateAddress(contractAddress);
 
           if (abi) {
             _context4.next = 6;
@@ -250,7 +250,7 @@ exports.CallContractMethod = function _callee5(_ref6) {
       switch (_context5.prev = _context5.next) {
         case 0:
           contractAddress = _ref6.contractAddress, abi = _ref6.abi, methodName = _ref6.methodName, _ref6$methodArgs = _ref6.methodArgs, methodArgs = _ref6$methodArgs === void 0 ? [] : _ref6$methodArgs, value = _ref6.value, _ref6$overrides = _ref6.overrides, overrides = _ref6$overrides === void 0 ? {} : _ref6$overrides, _ref6$formatArguments = _ref6.formatArguments, formatArguments = _ref6$formatArguments === void 0 ? true : _ref6$formatArguments, _ref6$cacheContract = _ref6.cacheContract, cacheContract = _ref6$cacheContract === void 0 ? true : _ref6$cacheContract, _ref6$overrideCachedC = _ref6.overrideCachedContract, overrideCachedContract = _ref6$overrideCachedC === void 0 ? false : _ref6$overrideCachedC;
-          ValidateAddress(contractAddress); // Delete cached visibility value if it is being changed
+          contractAddress = ValidateAddress(contractAddress); // Delete cached visibility value if it is being changed
 
           contractAddress = this.utils.FormatAddress(contractAddress);
 
@@ -326,7 +326,7 @@ exports.CallContractMethodAndWait = function _callee6(_ref7) {
       switch (_context6.prev = _context6.next) {
         case 0:
           contractAddress = _ref7.contractAddress, abi = _ref7.abi, methodName = _ref7.methodName, methodArgs = _ref7.methodArgs, value = _ref7.value, _ref7$overrides = _ref7.overrides, overrides = _ref7$overrides === void 0 ? {} : _ref7$overrides, _ref7$formatArguments = _ref7.formatArguments, formatArguments = _ref7$formatArguments === void 0 ? true : _ref7$formatArguments, _ref7$cacheContract = _ref7.cacheContract, cacheContract = _ref7$cacheContract === void 0 ? true : _ref7$cacheContract, _ref7$overrideCachedC = _ref7.overrideCachedContract, overrideCachedContract = _ref7$overrideCachedC === void 0 ? false : _ref7$overrideCachedC;
-          ValidateAddress(contractAddress); // Delete cached visibility value if it is being changed
+          contractAddress = ValidateAddress(contractAddress); // Delete cached visibility value if it is being changed
 
           contractAddress = this.utils.FormatAddress(contractAddress);
 
@@ -477,7 +477,7 @@ exports.SetCustomContentContract = function _callee8(_ref9) {
             libraryId: libraryId,
             objectId: objectId
           });
-          ValidateAddress(customContractAddress);
+          customContractAddress = ValidateAddress(customContractAddress);
           customContractAddress = this.utils.FormatAddress(customContractAddress);
           this.Log("Setting custom contract address: ".concat(objectId, " ").concat(customContractAddress));
           _context8.next = 7;
@@ -740,7 +740,7 @@ exports.GetBalance = function _callee12(_ref14) {
       switch (_context12.prev = _context12.next) {
         case 0:
           address = _ref14.address;
-          ValidateAddress(address);
+          address = ValidateAddress(address);
           _context12.next = 4;
           return _regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
             methodName: "getBalance",
@@ -777,7 +777,7 @@ exports.SendFunds = function _callee13(_ref15) {
       switch (_context13.prev = _context13.next) {
         case 0:
           recipient = _ref15.recipient, ether = _ref15.ether;
-          ValidateAddress(recipient);
+          recipient = ValidateAddress(recipient);
           _context13.next = 4;
           return _regeneratorRuntime.awrap(this.signer.sendTransaction({
             to: recipient,
@@ -802,7 +802,7 @@ exports.SendFunds = function _callee13(_ref15) {
 /*
 // TODO: Not implemented in contracts
 exports.WithdrawContractFunds = async function({contractAddress, abi, ether}) {
-  ValidateAddress(contractAddress);
+  contractAddress = ValidateAddress(contractAddress);
 
   return await this.ethClient.CallContractMethodAndWait({
     contractAddress,
