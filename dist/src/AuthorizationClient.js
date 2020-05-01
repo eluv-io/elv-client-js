@@ -701,7 +701,7 @@ function () {
             case 7:
               this.Log("Making state channel access request: ".concat(objectId));
               paramTypes = ["address", "address", "uint", "uint"];
-              params = [this.client.signer.address, Utils.HashToAddress(objectId), value, Date.now()];
+              params = [this.client.signer.address, Utils.HashToAddress(objectId), value, Date.now() - 1000];
               packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
               _context7.next = 13;
               return _regeneratorRuntime.awrap(this.Sign(packedHash));
