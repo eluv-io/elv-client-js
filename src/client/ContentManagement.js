@@ -5,6 +5,7 @@
  */
 
 const UrlJoin = require("url-join");
+const ImageType = require("image-type");
 
 /*
 const LibraryContract = require("../contracts/BaseLibrary");
@@ -269,13 +270,22 @@ exports.SetContentLibraryImage = async function({libraryId, writeToken, image, i
  * @param {string} writeToken - Write token of the draft
  * @param {Blob | ArrayBuffer | Buffer} image - Image to upload
  * @param {string=} imageName - Name of the image file
+ * @param {string=} imagePath=public/display_image - Metadata path of the image link (default is recommended)
  */
-exports.SetContentObjectImage = async function({libraryId, objectId, writeToken, image, imageName}) {
+exports.SetContentObjectImage = async function({libraryId, objectId, writeToken, image, imageName, imagePath="public/display_image"}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
   ValidatePresence("image", image);
 
   imageName = imageName || "display_image";
+
+  if(typeof image === "object") {
+    image = await new Response(image).arrayBuffer();
+  }
+
+  // Determine image type
+  const type = ImageType(image);
+  let mimeType = ["jpg", "jpeg", "png", "gif", "webp"].includes(type.ext) ? type.mime : "image/*";
 
   await this.UploadFiles({
     libraryId,
@@ -286,7 +296,7 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
     fileInfo: [
       {
         path: imageName,
-        mime_type: "image/*",
+        mime_type: mimeType,
         size: image.size || image.length || image.byteLength,
         data: image
       }
@@ -297,7 +307,7 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
     libraryId,
     objectId,
     writeToken,
-    metadataSubtree: "public/display_image",
+    metadataSubtree: imagePath,
     metadata: {
       "/": `./files/${imageName}`
     }

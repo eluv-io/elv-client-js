@@ -372,7 +372,7 @@ describe("Test ElvClient", () => {
       expect(libraryTypes).toEqual({});
     });
 
-    test("Test Content Library Group Permissions", async () => {
+    test("Content Library Group Permissions", async () => {
       await client.AddContentLibraryGroup({
         libraryId,
         groupAddress: accessGroupAddress,
@@ -385,16 +385,16 @@ describe("Test ElvClient", () => {
         permission: "reviewer"
       });
 
-      const permissions = await client.ContentLibraryGroupPermissions({libraryId});
-      expect(permissions[accessGroupAddress]).toBeDefined();
-      expect(permissions[accessGroupAddress]).toEqual(["contributor", "reviewer"]);
-
       // Maintain accessor permissions so accessClient has access to library
       await client.AddContentLibraryGroup({
         libraryId,
         groupAddress: accessGroupAddress,
         permission: "accessor"
       });
+
+      const permissions = await client.ContentLibraryGroupPermissions({libraryId});
+      expect(permissions[accessGroupAddress]).toBeDefined();
+      expect(permissions[accessGroupAddress]).toEqual(["accessor", "contributor", "reviewer"]);
 
       await client.RemoveContentLibraryGroup({
         libraryId,
@@ -2185,11 +2185,13 @@ describe("Test ElvClient", () => {
     });
 
     test("Rep URL", async () => {
+      const latestVersionHash = await client.LatestVersionHash({objectId});
+
       const repUrl = await client.Rep({libraryId, objectId, rep: "image"});
-      validateUrl(repUrl, UrlJoin("/q", versionHash, "rep", "image"));
+      validateUrl(repUrl, UrlJoin("/qlibs", libraryId, "q", latestVersionHash, "rep", "image"));
 
       const noAuthUrl = await client.Rep({libraryId, objectId, rep: "image", noAuth: true});
-      validateUrl(noAuthUrl, UrlJoin("/q", versionHash, "rep", "image"), {}, false);
+      validateUrl(noAuthUrl, UrlJoin("/qlibs", libraryId, "q", latestVersionHash, "rep", "image"), {}, false);
     });
 
     test("File URL", async () => {

@@ -14,7 +14,7 @@
     "{\"media_type\":\"video\",\"aspect_ratio_height\":9,\"aspect_ratio_width\":16}": {
       "rung_specs": [
         {
-          "bit_rate": 15000000,
+          "bit_rate": 20000000,
           "height": 2160,
           "media_type": "video",
           "pregenerate": true,
@@ -22,31 +22,31 @@
         },
         {
           "bit_rate": 9500000,
-          "height": 1920,
+          "height": 1080,
           "media_type": "video",
           "pregenerate": false,
-          "width": 1080
+          "width": 1920 
         },
         {
           "bit_rate": 4500000,
-          "height": 1280,
+          "height":720 ,
           "media_type": "video",
           "pregenerate": false,
-          "width": 720
+          "width": 1280 
         },
         {
           "bit_rate": 2000000,
-          "height": 960,
+          "height": 540,
           "media_type": "video",
           "pregenerate": false,
-          "width": 540
+          "width": 960 
         },
         {
           "bit_rate": 1100000,
-          "height": 768,
+          "height": 432,
           "media_type": "video",
           "pregenerate": false,
-          "width": 432
+          "width": 768 
         },
         {
           "bit_rate": 810000,

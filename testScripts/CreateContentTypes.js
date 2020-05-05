@@ -17,7 +17,7 @@ const MakeContentTypes = async(client) => {
 				      "bitcode_flags":"abrmaster"
 				    },
 				    bitcode: null});
-  console.log("Content type: " + JSON.stringify(ct1));
+  console.log("Content type Production Master: " + JSON.stringify(ct1));
 
   var ct2 = await client.CreateContentType({name: "ABR Master",
 				    metadata: {
@@ -25,16 +25,23 @@ const MakeContentTypes = async(client) => {
 				      "bitcode_flags":"abrmaster"
 				    },
 				    bitcode: null});
-  console.log("Content type: " + JSON.stringify(ct2));
+  console.log("Content type ABR Mezzanine (called ABR Master): " + JSON.stringify(ct2));
 
+  var ct3 = await client.CreateContentType({name: "AVLive",
+				    metadata: {
+				      "bitcode_format": "builtin",
+				      "bitcode_flags":"playout_live"
+				    },
+				    bitcode: null});
+  console.log("Content type AVLive: " + JSON.stringify(ct3));
 }
 
 const Tool = async () => {
 
   try {
-
-    //const client = await ElvClient.FromConfigurationUrl({configUrl: "https://main.net955210.contentfabric.io/config"});
-    const client = await ElvClient.FromConfigurationUrl({configUrl: "http://main.local:8008/config"});
+    const client = await ElvClient.FromConfigurationUrl({
+      configUrl: ClientConfiguration["config-url"]
+    });
 
     let wallet = client.GenerateWallet();
     let signer = wallet.AddAccount({

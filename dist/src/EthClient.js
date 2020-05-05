@@ -269,6 +269,9 @@ function () {
         case "bytes":
           return Ethers.utils.toUtf8Bytes(value);
 
+        case "address":
+          return Utils.FormatAddress(value);
+
         default:
           return value;
       }

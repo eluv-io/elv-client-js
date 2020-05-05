@@ -150,16 +150,16 @@ exports.CreateProductionMaster = function _callee(_ref) {
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
-            metadata: _objectSpread({
+            metadata: _objectSpread({}, metadata || {}, {
               name: name,
               description: description,
               reference: access && !copy,
-              "public": {
+              "public": _objectSpread({}, (metadata || {})["public"] || {}, {
                 name: name || "",
                 description: description || ""
-              },
+              }),
               elv_created_at: new Date().getTime()
-            }, metadata || {})
+            })
           }));
 
         case 25:

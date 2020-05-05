@@ -20,7 +20,8 @@ const RunTests = async () => {
   let count = {
     passed: 0,
     failed: 0,
-    skipped: 0
+    skipped: 0,
+    suites: {}
   };
 
   const startTime = performance.now();
@@ -33,6 +34,12 @@ const RunTests = async () => {
       const passed = stats[keys[i]].passed.length;
       const failed = stats[keys[i]].failed.length;
       const skipped = stats[keys[i]].skipped.length;
+
+      count.suites[keys[i]] = {
+        passed,
+        failed,
+        skipped
+      };
 
       count.passed += passed;
       count.failed += failed;

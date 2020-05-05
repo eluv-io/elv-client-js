@@ -4,6 +4,7 @@ const bs58 = require("bs58");
 const BigNumber = require("bignumber.js").default;
 const MultiHash = require("multihashes");
 const VarInt = require("varint");
+const URI = require("urijs");
 
 /**
  * @namespace
@@ -68,6 +69,8 @@ const Utils = {
     if(!address || typeof address !== "string") {
       return "";
     }
+
+    address = address.trim();
 
     if(!address.startsWith("0x")) {
       address = "0x" + address;
@@ -340,6 +343,31 @@ const Utils = {
       default:
         return response;
     }
+  },
+
+  /**
+   * Resize the image file or link URL to the specified maximum height. Can also be used to remove
+   * max height parameter(s) from a url if height is not specified.
+   *
+   * @param imageUrl - Url to an image file or link in the Fabric
+   * @param {number=} height - The maximum height for the image to be scaled to.
+   *
+   * @returns {string} - The modified URL with the height parameter
+   */
+  ResizeImage({imageUrl, height}) {
+    if(!imageUrl || (imageUrl && !imageUrl.startsWith("http"))) {
+      return imageUrl;
+    }
+
+    imageUrl = URI(imageUrl)
+      .removeSearch("height")
+      .removeSearch("header-x_image_height");
+
+    if(height && !isNaN(parseInt(height))) {
+      imageUrl.addSearch("height", parseInt(height));
+    }
+
+    return imageUrl.toString();
   },
 
   /**
