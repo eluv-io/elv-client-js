@@ -392,7 +392,7 @@ class AuthorizationClient {
       this.client.signer.address,
       Utils.HashToAddress(objectId),
       value,
-      Date.now()
+      Date.now() - 1000
     ];
 
     const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);

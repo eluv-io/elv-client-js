@@ -151,6 +151,8 @@ class EthClient {
         return Ethers.utils.formatBytes32String(value);
       case "bytes":
         return Ethers.utils.toUtf8Bytes(value);
+      case "address":
+        return Utils.FormatAddress(value);
       default:
         return value;
     }

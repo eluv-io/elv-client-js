@@ -1,5 +1,6 @@
 const Lodash = require("lodash");
 const { performance } = require("perf_hooks");
+const ReadLine = require("readline");
 
 // Incremental numerical IDs
 let __id = 0;
@@ -13,8 +14,8 @@ class Id {
 
 const Log = (message, rewrite=false) => {
   if(rewrite) {
-    process.stdout.clearLine();
-    process.stdout.cursorTo(0);
+    ReadLine.clearLine(process.stdout);
+    ReadLine.cursorTo(process.stdout, 0);
   }
 
   process.stdout.write(message);

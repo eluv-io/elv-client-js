@@ -1,4 +1,5 @@
 const {Initialize} = require("./utils/Utils");
+const OutputLogger = require("./utils/OutputLogger");
 const {
   describe,
   expect,
@@ -9,7 +10,8 @@ const {
 const {ElvClient} = require("../src/ElvClient");
 const {FrameClient} = require("../src/FrameClient");
 
-const Utils = require("../src/Utils");
+const Utils = OutputLogger(require("../src/Utils"), require("../src/Utils"));
+const URI = require("urijs");
 
 const {RandomBytes, RandomString} = require("./utils/Utils");
 
@@ -92,6 +94,31 @@ describe("Test Utils", () => {
 
     const wei = Utils.EtherToWei("1.0");
     expect(wei.eq(Utils.weiPerEther)).toBeTruthy();
+  });
+
+  test("Image URL Resizing", () => {
+    const imageUrl = "https://host-35-233-145-232.test.contentfabric.io/q/hq__GcEUxBe7JRZWMJDD3auYmb8r5BxwN9zrXtyUtMYWk2HFg958WZD1d4ZZqZJT9fUDWMsqn11Kfm/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDgxYTViMDU4ZGU3MTYxMzA4ZTE2YTQzYjQyN2YwMWY5ODhhOTNmYTUifQ%3D%3D.RVMyNTZLXzhlRnh5RVZqOFZkcTNyd3lpQjN2QThrTmg0dEJSaG95UFlyM2dyNHJvQ3BCWFJoTXo0aU1tN3dyb3JCTTVkZnpUR2NOaG03Ym5WZE5VU1ZXTUhIcU1mNzVt";
+
+    // Set height
+    const height500 = Utils.ResizeImage({
+      imageUrl: imageUrl,
+      height: 500
+    });
+
+    expect(URI(height500).search(true).height).toEqual("500");
+
+    // Change height
+    const height1000 = Utils.ResizeImage({
+      imageUrl: height500,
+      height: 1000
+    });
+
+    expect(URI(height1000).search(true).height).toEqual("1000");
+
+    // Remove height
+    const noHeight = Utils.ResizeImage({imageUrl: height1000});
+
+    expect(URI(noHeight).search(true).height).not.toBeDefined();
   });
 
   test("Cloneable", async () => {

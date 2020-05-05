@@ -44,7 +44,7 @@ exports.AccessGroupOwner = function _callee(_ref) {
       switch (_context.prev = _context.next) {
         case 0:
           contractAddress = _ref.contractAddress;
-          ValidateAddress(contractAddress);
+          contractAddress = ValidateAddress(contractAddress);
           this.Log("Retrieving owner of access group ".concat(contractAddress));
           _context.next = 5;
           return _regeneratorRuntime.awrap(this.authClient.Owner({
@@ -82,7 +82,7 @@ exports.AccessGroupMembers = function _callee3(_ref2) {
       switch (_context3.prev = _context3.next) {
         case 0:
           contractAddress = _ref2.contractAddress;
-          ValidateAddress(contractAddress);
+          contractAddress = ValidateAddress(contractAddress);
           this.Log("Retrieving members for group ".concat(contractAddress));
           _context3.next = 5;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
@@ -149,7 +149,7 @@ exports.AccessGroupManagers = function _callee5(_ref3) {
       switch (_context5.prev = _context5.next) {
         case 0:
           contractAddress = _ref3.contractAddress;
-          ValidateAddress(contractAddress);
+          contractAddress = ValidateAddress(contractAddress);
           this.Log("Retrieving managers for group ".concat(contractAddress));
           _context5.next = 5;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
@@ -298,7 +298,7 @@ exports.DeleteAccessGroup = function _callee7(_ref6) {
       switch (_context7.prev = _context7.next) {
         case 0:
           contractAddress = _ref6.contractAddress;
-          ValidateAddress(contractAddress);
+          contractAddress = ValidateAddress(contractAddress);
           this.Log("Deleting access group ".concat(contractAddress));
           _context7.next = 5;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
@@ -322,8 +322,8 @@ exports.AccessGroupMembershipMethod = function _callee8(_ref7) {
       switch (_context8.prev = _context8.next) {
         case 0:
           contractAddress = _ref7.contractAddress, memberAddress = _ref7.memberAddress, methodName = _ref7.methodName, eventName = _ref7.eventName;
-          ValidateAddress(contractAddress);
-          ValidateAddress(memberAddress); // Ensure caller is the member being acted upon or a manager/owner of the group
+          contractAddress = ValidateAddress(contractAddress);
+          memberAddress = ValidateAddress(memberAddress); // Ensure caller is the member being acted upon or a manager/owner of the group
 
           if (this.utils.EqualAddress(this.signer.address, memberAddress)) {
             _context8.next = 9;
@@ -353,7 +353,7 @@ exports.AccessGroupMembershipMethod = function _callee8(_ref7) {
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: contractAddress,
             methodName: methodName,
-            methodArgs: [this.utils.FormatAddress(memberAddress)],
+            methodArgs: [memberAddress],
             eventName: eventName,
             eventValue: "candidate"
           }));
@@ -414,8 +414,8 @@ exports.AddAccessGroupMember = function _callee9(_ref8) {
       switch (_context9.prev = _context9.next) {
         case 0:
           contractAddress = _ref8.contractAddress, memberAddress = _ref8.memberAddress;
-          ValidateAddress(contractAddress);
-          ValidateAddress(memberAddress);
+          contractAddress = ValidateAddress(contractAddress);
+          memberAddress = ValidateAddress(memberAddress);
           _context9.next = 5;
           return _regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
             contractAddress: contractAddress,
@@ -455,8 +455,8 @@ exports.RemoveAccessGroupMember = function _callee10(_ref9) {
       switch (_context10.prev = _context10.next) {
         case 0:
           contractAddress = _ref9.contractAddress, memberAddress = _ref9.memberAddress;
-          ValidateAddress(contractAddress);
-          ValidateAddress(memberAddress);
+          contractAddress = ValidateAddress(contractAddress);
+          memberAddress = ValidateAddress(memberAddress);
           _context10.next = 5;
           return _regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
             contractAddress: contractAddress,
@@ -496,8 +496,8 @@ exports.AddAccessGroupManager = function _callee11(_ref10) {
       switch (_context11.prev = _context11.next) {
         case 0:
           contractAddress = _ref10.contractAddress, memberAddress = _ref10.memberAddress;
-          ValidateAddress(contractAddress);
-          ValidateAddress(memberAddress);
+          contractAddress = ValidateAddress(contractAddress);
+          memberAddress = ValidateAddress(memberAddress);
           _context11.next = 5;
           return _regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
             contractAddress: contractAddress,
@@ -537,8 +537,8 @@ exports.RemoveAccessGroupManager = function _callee12(_ref11) {
       switch (_context12.prev = _context12.next) {
         case 0:
           contractAddress = _ref11.contractAddress, memberAddress = _ref11.memberAddress;
-          ValidateAddress(contractAddress);
-          ValidateAddress(memberAddress);
+          contractAddress = ValidateAddress(contractAddress);
+          memberAddress = ValidateAddress(memberAddress);
           _context12.next = 5;
           return _regeneratorRuntime.awrap(this.AccessGroupMembershipMethod({
             contractAddress: contractAddress,
@@ -693,61 +693,60 @@ exports.AddContentLibraryGroup = function _callee16(_ref13) {
         case 0:
           libraryId = _ref13.libraryId, groupAddress = _ref13.groupAddress, permission = _ref13.permission;
           ValidateLibrary(libraryId);
-          ValidateAddress(groupAddress);
-          groupAddress = this.utils.FormatAddress(groupAddress);
+          groupAddress = ValidateAddress(groupAddress);
 
           if (["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
-            _context16.next = 6;
+            _context16.next = 5;
             break;
           }
 
           throw Error("Invalid group type: ".concat(permission));
 
-        case 6:
+        case 5:
           this.Log("Adding ".concat(permission, " group ").concat(groupAddress, " to library ").concat(libraryId));
-          _context16.next = 9;
+          _context16.next = 8;
           return _regeneratorRuntime.awrap(this.ContentLibraryGroupPermissions({
             libraryId: libraryId,
             permissions: [permission]
           }));
 
-        case 9:
+        case 8:
           existingPermissions = _context16.sent;
 
           if (!existingPermissions[groupAddress]) {
-            _context16.next = 12;
+            _context16.next = 11;
             break;
           }
 
           return _context16.abrupt("return");
 
-        case 12:
+        case 11:
           // Capitalize permission to match method and event names
           permission = permission.charAt(0).toUpperCase() + permission.substr(1).toLowerCase();
-          _context16.next = 15;
+          _context16.next = 14;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(libraryId),
             methodName: "add".concat(permission, "Group"),
-            methodArgs: [this.utils.FormatAddress(groupAddress)]
+            methodArgs: [groupAddress]
           }));
 
-        case 15:
+        case 14:
           event = _context16.sent;
-          _context16.next = 18;
+          _context16.next = 17;
           return _regeneratorRuntime.awrap(this.ContractAbi({
             id: libraryId
           }));
 
-        case 18:
+        case 17:
           abi = _context16.sent;
-          _context16.next = 21;
+          _context16.next = 20;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: abi,
             event: event,
             eventName: "".concat(permission, "GroupAdded")
           }));
 
-        case 21:
+        case 20:
         case "end":
           return _context16.stop();
       }
@@ -774,7 +773,7 @@ exports.RemoveContentLibraryGroup = function _callee17(_ref14) {
         case 0:
           libraryId = _ref14.libraryId, groupAddress = _ref14.groupAddress, permission = _ref14.permission;
           ValidateLibrary(libraryId);
-          ValidateAddress(groupAddress);
+          groupAddress = ValidateAddress(groupAddress);
 
           if (["accessor", "contributor", "reviewer"].includes(permission.toLowerCase())) {
             _context17.next = 5;
@@ -808,7 +807,7 @@ exports.RemoveContentLibraryGroup = function _callee17(_ref14) {
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(libraryId),
             methodName: "remove".concat(permission, "Group"),
-            methodArgs: [this.utils.FormatAddress(groupAddress)]
+            methodArgs: [groupAddress]
           }));
 
         case 14:
@@ -960,53 +959,52 @@ exports.AddContentObjectGroupPermission = function _callee20(_ref16) {
           objectId = _ref16.objectId, groupAddress = _ref16.groupAddress, permission = _ref16.permission;
           ValidatePresence("permission", permission);
           ValidateObject(objectId);
-          ValidateAddress(groupAddress);
+          groupAddress = ValidateAddress(groupAddress);
           permission = permission.toLowerCase();
-          groupAddress = this.utils.FormatAddress(groupAddress);
 
           if (["see", "access", "manage"].includes(permission)) {
-            _context20.next = 8;
+            _context20.next = 7;
             break;
           }
 
           throw Error("Invalid permission type: ".concat(permission));
 
-        case 8:
+        case 7:
           this.Log("Adding ".concat(permission, " permission to group ").concat(groupAddress, " for ").concat(objectId));
-          _context20.next = 11;
+          _context20.next = 10;
           return _regeneratorRuntime.awrap(this.AccessType({
             id: objectId
           }));
 
-        case 11:
+        case 10:
           _context20.t0 = _context20.sent;
           _context20.t1 = this.authClient.ACCESS_TYPES.TYPE;
           isType = _context20.t0 === _context20.t1;
           methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
-          _context20.next = 17;
+          _context20.next = 16;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: groupAddress,
             methodName: methodName,
             methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, permission === "none" ? 0 : 2]
           }));
 
-        case 17:
+        case 16:
           event = _context20.sent;
-          _context20.next = 20;
+          _context20.next = 19;
           return _regeneratorRuntime.awrap(this.ContractAbi({
             contractAddress: groupAddress
           }));
 
-        case 20:
+        case 19:
           abi = _context20.sent;
-          _context20.next = 23;
+          _context20.next = 22;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: abi,
             event: event,
             eventName: "RightsChanged"
           }));
 
-        case 23:
+        case 22:
         case "end":
           return _context20.stop();
       }
@@ -1034,53 +1032,52 @@ exports.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
           objectId = _ref17.objectId, groupAddress = _ref17.groupAddress, permission = _ref17.permission;
           ValidatePresence("permission", permission);
           ValidateObject(objectId);
-          ValidateAddress(groupAddress);
+          groupAddress = ValidateAddress(groupAddress);
           permission = permission.toLowerCase();
-          groupAddress = this.utils.FormatAddress(groupAddress);
 
           if (["see", "access", "manage"].includes(permission)) {
-            _context21.next = 8;
+            _context21.next = 7;
             break;
           }
 
           throw Error("Invalid permission type: ".concat(permission));
 
-        case 8:
+        case 7:
           this.Log("Removing ".concat(permission, " permission from group ").concat(groupAddress, " for ").concat(objectId));
-          _context21.next = 11;
+          _context21.next = 10;
           return _regeneratorRuntime.awrap(this.AccessType({
             id: objectId
           }));
 
-        case 11:
+        case 10:
           _context21.t0 = _context21.sent;
           _context21.t1 = this.authClient.ACCESS_TYPES.TYPE;
           isType = _context21.t0 === _context21.t1;
           methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
-          _context21.next = 17;
+          _context21.next = 16;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: groupAddress,
             methodName: methodName,
             methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, 0]
           }));
 
-        case 17:
+        case 16:
           event = _context21.sent;
-          _context21.next = 20;
+          _context21.next = 19;
           return _regeneratorRuntime.awrap(this.ContractAbi({
             contractAddress: groupAddress
           }));
 
-        case 20:
+        case 19:
           abi = _context21.sent;
-          _context21.next = 23;
+          _context21.next = 22;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: abi,
             event: event,
             eventName: "RightsChanged"
           }));
 
-        case 23:
+        case 22:
         case "end":
           return _context21.stop();
       }

@@ -283,6 +283,7 @@ exports.ContentType = function _callee4(_ref3) {
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: typeId,
+            versionHash: versionHash,
             metadataSubtree: "public"
           }));
 
@@ -308,7 +309,8 @@ exports.ContentType = function _callee4(_ref3) {
           _context4.next = 36;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
-            objectId: typeId
+            objectId: typeId,
+            versionHash: versionHash
           }));
 
         case 36:
@@ -1316,7 +1318,7 @@ exports.ContentObjectVersions = function _callee20(_ref14) {
 
 
 exports.LatestVersionHash = function _callee21(_ref15) {
-  var objectId, versionHash;
+  var objectId, versionHash, latestHash, versions;
   return _regeneratorRuntime.async(function _callee21$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
@@ -1335,9 +1337,39 @@ exports.LatestVersionHash = function _callee21(_ref15) {
           }));
 
         case 5:
-          return _context21.abrupt("return", _context21.sent);
+          latestHash = _context21.sent;
 
-        case 6:
+          if (latestHash) {
+            _context21.next = 19;
+            break;
+          }
+
+          _context21.t0 = _regeneratorRuntime;
+          _context21.t1 = this;
+          _context21.next = 11;
+          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+            objectId: objectId
+          }));
+
+        case 11:
+          _context21.t2 = _context21.sent;
+          _context21.t3 = objectId;
+          _context21.t4 = {
+            libraryId: _context21.t2,
+            objectId: _context21.t3
+          };
+          _context21.t5 = _context21.t1.ContentObjectVersions.call(_context21.t1, _context21.t4);
+          _context21.next = 17;
+          return _context21.t0.awrap.call(_context21.t0, _context21.t5);
+
+        case 17:
+          versions = _context21.sent;
+          latestHash = versions.versions[0].hash;
+
+        case 19:
+          return _context21.abrupt("return", latestHash);
+
+        case 20:
         case "end":
           return _context21.stop();
       }
@@ -2221,18 +2253,23 @@ exports.FileUrl = function _callee29(_ref24) {
  * @param {string=} libraryId - ID of the library
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object -- if not specified, latest version is used
+ * @param {number=} height - If specified, the image will be scaled to the specified maximum height
+ * @param {string=} imagePath=public/display_image - Metadata path to the image link
+ *
+ * @see <a href="Utils.html#.ResizeImage">Utils#ResizeImage</a>
  *
  * @returns {Promise<string | undefined>} - If the object has an image, will return a URL for that image.
  */
 
 
 exports.ContentObjectImageUrl = function _callee30(_ref25) {
-  var libraryId, objectId, versionHash, imageMetadata;
+  var libraryId, objectId, versionHash, height, _ref25$imagePath, imagePath, imageMetadata, _queryParams;
+
   return _regeneratorRuntime.async(function _callee30$(_context30) {
     while (1) {
       switch (_context30.prev = _context30.next) {
         case 0:
-          libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash;
+          libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash, height = _ref25.height, _ref25$imagePath = _ref25.imagePath, imagePath = _ref25$imagePath === void 0 ? "public/display_image" : _ref25$imagePath;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2256,14 +2293,14 @@ exports.ContentObjectImageUrl = function _callee30(_ref25) {
           this.Log("Retrieving content object image url: ".concat(libraryId, " ").concat(objectId, " ").concat(versionHash));
 
           if (this.objectImageUrls[versionHash]) {
-            _context30.next = 17;
+            _context30.next = 19;
             break;
           }
 
           _context30.next = 10;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             versionHash: versionHash,
-            metadataSubtree: "public/display_image"
+            metadataSubtree: imagePath
           }));
 
         case 10:
@@ -2278,19 +2315,26 @@ exports.ContentObjectImageUrl = function _callee30(_ref25) {
           return _context30.abrupt("return");
 
         case 14:
-          _context30.next = 16;
+          _queryParams = {};
+
+          if (height && !isNaN(parseInt(height))) {
+            _queryParams["height"] = parseInt(height);
+          }
+
+          _context30.next = 18;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             versionHash: versionHash,
-            linkPath: "public/display_image"
+            linkPath: imagePath,
+            queryParams: _queryParams
           }));
 
-        case 16:
+        case 18:
           this.objectImageUrls[versionHash] = _context30.sent;
 
-        case 17:
+        case 19:
           return _context30.abrupt("return", this.objectImageUrls[versionHash]);
 
-        case 18:
+        case 20:
         case "end":
           return _context30.stop();
       }
@@ -2629,11 +2673,13 @@ exports.LinkUrl = function _callee34(_ref28) {
 
         case 8:
           visibility = _context34.sent;
-          noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
+          noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1; // TODO: Remove for authv3
+
+          noAuth = true;
           _context34.t0 = _objectSpread;
           _context34.t1 = {};
           _context34.t2 = queryParams;
-          _context34.next = 15;
+          _context34.next = 16;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -2641,7 +2687,7 @@ exports.LinkUrl = function _callee34(_ref28) {
             noAuth: noAuth
           }));
 
-        case 15:
+        case 16:
           _context34.t3 = _context34.sent;
           _context34.t4 = {
             resolve: true,
@@ -2658,7 +2704,7 @@ exports.LinkUrl = function _callee34(_ref28) {
             queryParams: queryParams
           }));
 
-        case 20:
+        case 21:
         case "end":
           return _context34.stop();
       }

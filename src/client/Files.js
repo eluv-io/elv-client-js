@@ -990,16 +990,38 @@ exports.FinalizePart = async function({libraryId, objectId, writeToken, partWrit
  * @param {(File | ArrayBuffer | Buffer)} data - Data to upload
  * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
  * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {function=} callback - If specified, will be periodically called with current upload status
+ * - Signature: ({bytesFinished, bytesTotal}) => {}
  *
  * @returns {Promise<Object>} - Response containing information about the uploaded part
  */
-exports.UploadPart = async function({libraryId, objectId, writeToken, data, encryption="none"}) {
+exports.UploadPart = async function({libraryId, objectId, writeToken, data, encryption="none", chunkSize=10000000, callback}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
   const partWriteToken = await this.CreatePart({libraryId, objectId, writeToken, encryption});
 
-  await this.UploadPartChunk({libraryId, objectId, writeToken, partWriteToken, chunk: data, encryption});
+  const size = data.length || data.byteLength || data.size;
+
+  if(callback) {
+    callback({bytesFinished: 0, bytesTotal: size});
+  }
+
+  for(let i = 0; i < size; i += chunkSize) {
+    const chunk = data.slice(i, i + chunkSize);
+    await this.UploadPartChunk({
+      libraryId,
+      objectId,
+      writeToken,
+      partWriteToken,
+      chunk,
+      encryption
+    });
+
+    if(callback) {
+      callback({bytesFinished: Math.min(i + chunkSize, size), bytesTotal: size});
+    }
+  }
 
   return await this.FinalizePart({libraryId, objectId, writeToken, partWriteToken, encryption});
 };

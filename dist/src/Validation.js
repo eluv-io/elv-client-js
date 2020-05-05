@@ -1,3 +1,5 @@
+var Utils = require("./Utils");
+
 exports.ValidatePresence = function (name, thing) {
   if (!thing) {
     throw Error("".concat(name, " not specified"));
@@ -60,7 +62,9 @@ exports.ValidateParameters = function (_ref) {
 exports.ValidateAddress = function (address) {
   if (!address) {
     throw "Address not specified";
-  } else if (address.toString().trim().replace("0x", "").length !== 40) {
+  } else if (!/^(0x)?[0-9a-f]{40}$/i.test(address.toLowerCase())) {
     throw "Invalid address: ".concat(address);
   }
+
+  return Utils.FormatAddress(address);
 };
