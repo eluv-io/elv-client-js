@@ -333,6 +333,7 @@ exports.CreateABRMezzanine = async function({
  * @param {string=} offeringKey=default - The offering to process
  * @param {Object=} access - (S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references
  * - Format: {region, bucket, accessKey, secret}
+ * @param {number[]} jobIndexes - Array of LRO job indexes to start. LROs are listed in a map under metadata key /abr_mezzanine/offerings/(offeringKey)/mez_prep_specs/, and job indexes start with 0, corresponding to map keys in alphabetical order
  *
  * @return {Promise<Object>} - A write token for the mezzanine object, as well as any logs, warnings and errors from the job initialization
  */
@@ -340,7 +341,8 @@ exports.StartABRMezzanineJobs = async function({
   libraryId,
   objectId,
   offeringKey="default",
-  access={}
+  access={},
+  jobIndexes = null
 }) {
   ValidateParameters({libraryId, objectId});
 
@@ -427,7 +429,8 @@ exports.StartABRMezzanineJobs = async function({
     constant: false,
     body: {
       access: accessParameter,
-      offering_key: offeringKey
+      offering_key: offeringKey,
+      job_indexes: jobIndexes
     }
   });
 
