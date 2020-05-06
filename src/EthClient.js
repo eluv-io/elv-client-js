@@ -443,8 +443,7 @@ class EthClient {
       contractAddress: contentObjectAddress,
       methodName: "commit",
       methodArgs: [versionHash],
-      eventName: "CommitPending",
-      eventValue: "pendingHash",
+      eventName: "CommitPending"
     });
   }
 
@@ -466,14 +465,20 @@ class EthClient {
   }
 
   // Get all logs for the specified contract in the specified range
-  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, includeTransaction=false}) {
+  async ContractEvents({contractAddress, abi, fromBlock=0, toBlock, topics, includeTransaction=false}) {
+    const filter = {
+      address: contractAddress,
+      fromBlock,
+      toBlock
+    };
+
+    if(topics) {
+      filter.topics = topics;
+    }
+
     const contractLogs = await this.MakeProviderCall({
       methodName: "getLogs",
-      args: [{
-        address: contractAddress,
-        fromBlock,
-        toBlock
-      }]
+      args: [filter]
     }) || [];
 
     if(!Array.isArray(contractLogs)) {
