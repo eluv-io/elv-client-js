@@ -1387,7 +1387,8 @@ exports.LatestVersionHash = function _callee21(_ref15) {
 
 
 exports.AvailableDRMs = function _callee22() {
-  var availableDRMs, config;
+  var availableDRMs, info, version, major, minor, _version, _major, _minor, config;
+
   return _regeneratorRuntime.async(function _callee22$(_context22) {
     while (1) {
       switch (_context22.prev = _context22.next) {
@@ -1402,15 +1403,45 @@ exports.AvailableDRMs = function _callee22() {
           return _context22.abrupt("return", availableDRMs);
 
         case 3:
+          // Detect iOS > 13.1 or Safari > 13.1 and replace aes-128 with sample-aes
+          if (window.navigator && window.navigator.userAgent) {
+            // Test iOS
+            info = window.navigator.userAgent.match(/(iPad|iPhone|iphone|iPod).*?(OS |os |OS_)(\d+((_|\.)\d)?((_|\.)\d)?)/);
+
+            if (info && info[3]) {
+              version = info[3].split("_");
+              major = parseInt(version[0]);
+              minor = parseInt(version[1]);
+
+              if (major > 13 || major === 13 && minor >= 1) {
+                availableDRMs[1] = "sample-aes";
+              }
+            } // Test Safari
+
+
+            if (/^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)) {
+              _version = window.navigator.userAgent.match(/\s+Version\/(\d+)\.(\d+)\s+/);
+
+              if (_version && _version[2]) {
+                _major = parseInt(_version[1]);
+                _minor = parseInt(_version[2]);
+
+                if (_major > 13 || _major === 13 && _minor >= 1) {
+                  availableDRMs[1] = "sample-aes";
+                }
+              }
+            }
+          }
+
           if (!(typeof window !== "undefined" && typeof window.navigator.requestMediaKeySystemAccess !== "function")) {
-            _context22.next = 5;
+            _context22.next = 6;
             break;
           }
 
           return _context22.abrupt("return", availableDRMs);
 
-        case 5:
-          _context22.prev = 5;
+        case 6:
+          _context22.prev = 6;
           config = [{
             initDataTypes: ["cenc"],
             audioCapabilities: [{
@@ -1420,28 +1451,28 @@ exports.AvailableDRMs = function _callee22() {
               contentType: "video/mp4;codecs=\"avc1.42E01E\""
             }]
           }];
-          _context22.next = 9;
+          _context22.next = 10;
           return _regeneratorRuntime.awrap(navigator.requestMediaKeySystemAccess("com.widevine.alpha", config));
 
-        case 9:
+        case 10:
           availableDRMs.push("widevine"); // eslint-disable-next-line no-empty
 
-          _context22.next = 14;
+          _context22.next = 15;
           break;
 
-        case 12:
-          _context22.prev = 12;
-          _context22.t0 = _context22["catch"](5);
-
-        case 14:
-          return _context22.abrupt("return", availableDRMs);
+        case 13:
+          _context22.prev = 13;
+          _context22.t0 = _context22["catch"](6);
 
         case 15:
+          return _context22.abrupt("return", availableDRMs);
+
+        case 16:
         case "end":
           return _context22.stop();
       }
     }
-  }, null, null, [[5, 12]]);
+  }, null, null, [[6, 13]]);
 };
 
 exports.AudienceData = function (_ref16) {
