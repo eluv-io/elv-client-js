@@ -774,6 +774,36 @@ exports.AvailableDRMs = async function() {
     return availableDRMs;
   }
 
+  // Detect iOS > 13.1 or Safari > 13.1 and replace aes-128 with sample-aes
+  if(window.navigator && window.navigator.userAgent) {
+    // Test iOS
+    const info = window.navigator.userAgent.match(/(iPad|iPhone|iphone|iPod).*?(OS |os |OS_)(\d+((_|\.)\d)?((_|\.)\d)?)/);
+
+    if(info && info[3]) {
+      const version = info[3].split("_");
+      const major = parseInt(version[0]);
+      const minor = parseInt(version[1]);
+
+      if(major > 13 || (major === 13 && minor >= 1)) {
+        availableDRMs[1] = "sample-aes";
+      }
+    }
+
+    // Test Safari
+    if(/^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)) {
+      const version = window.navigator.userAgent.match(/\s+Version\/(\d+)\.(\d+)\s+/);
+
+      if(version && version[2]) {
+        const major = parseInt(version[1]);
+        const minor = parseInt(version[2]);
+
+        if(major > 13 || (major === 13 && minor >= 1)) {
+          availableDRMs[1] = "sample-aes";
+        }
+      }
+    }
+  }
+
   if(typeof window !== "undefined" && typeof window.navigator.requestMediaKeySystemAccess !== "function") {
     return availableDRMs;
   }
