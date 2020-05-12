@@ -1136,7 +1136,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
           }
        }
 
-
+ * @param {boolean=} resolveIgnoreErrors=false - If specified, link errors within the requested metadata will not cause the entire response to result in an error
  * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
@@ -1147,13 +1147,13 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
+          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$resolveIgnoreE = _ref13.resolveIgnoreErrors, resolveIgnoreErrors = _ref13$resolveIgnoreE === void 0 ? false : _ref13$resolveIgnoreE, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1193,7 +1193,8 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             select: select,
             link_depth: linkDepthLimit,
             resolve: resolveLinks,
-            resolve_include_source: resolveIncludeSource
+            resolve_include_source: resolveIncludeSource,
+            resolve_ignore_errors: resolveIgnoreErrors
           };
           _context19.t5 = path;
           _context19.t6 = {
@@ -1387,7 +1388,8 @@ exports.LatestVersionHash = function _callee21(_ref15) {
 
 
 exports.AvailableDRMs = function _callee22() {
-  var availableDRMs, config;
+  var availableDRMs, info, version, major, minor, _version, _major, _minor, config;
+
   return _regeneratorRuntime.async(function _callee22$(_context22) {
     while (1) {
       switch (_context22.prev = _context22.next) {
@@ -1402,15 +1404,45 @@ exports.AvailableDRMs = function _callee22() {
           return _context22.abrupt("return", availableDRMs);
 
         case 3:
+          // Detect iOS > 13.1 or Safari > 13.1 and replace aes-128 with sample-aes
+          if (window.navigator && window.navigator.userAgent) {
+            // Test iOS
+            info = window.navigator.userAgent.match(/(iPad|iPhone|iphone|iPod).*?(OS |os |OS_)(\d+((_|\.)\d)?((_|\.)\d)?)/);
+
+            if (info && info[3]) {
+              version = info[3].split("_");
+              major = parseInt(version[0]);
+              minor = parseInt(version[1]);
+
+              if (major > 13 || major === 13 && minor >= 1) {
+                availableDRMs[1] = "sample-aes";
+              }
+            } // Test Safari
+
+
+            if (/^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)) {
+              _version = window.navigator.userAgent.match(/\s+Version\/(\d+)\.(\d+)\s+/);
+
+              if (_version && _version[2]) {
+                _major = parseInt(_version[1]);
+                _minor = parseInt(_version[2]);
+
+                if (_major > 13 || _major === 13 && _minor >= 1) {
+                  availableDRMs[1] = "sample-aes";
+                }
+              }
+            }
+          }
+
           if (!(typeof window !== "undefined" && typeof window.navigator.requestMediaKeySystemAccess !== "function")) {
-            _context22.next = 5;
+            _context22.next = 6;
             break;
           }
 
           return _context22.abrupt("return", availableDRMs);
 
-        case 5:
-          _context22.prev = 5;
+        case 6:
+          _context22.prev = 6;
           config = [{
             initDataTypes: ["cenc"],
             audioCapabilities: [{
@@ -1420,28 +1452,28 @@ exports.AvailableDRMs = function _callee22() {
               contentType: "video/mp4;codecs=\"avc1.42E01E\""
             }]
           }];
-          _context22.next = 9;
+          _context22.next = 10;
           return _regeneratorRuntime.awrap(navigator.requestMediaKeySystemAccess("com.widevine.alpha", config));
 
-        case 9:
+        case 10:
           availableDRMs.push("widevine"); // eslint-disable-next-line no-empty
 
-          _context22.next = 14;
+          _context22.next = 15;
           break;
 
-        case 12:
-          _context22.prev = 12;
-          _context22.t0 = _context22["catch"](5);
-
-        case 14:
-          return _context22.abrupt("return", availableDRMs);
+        case 13:
+          _context22.prev = 13;
+          _context22.t0 = _context22["catch"](6);
 
         case 15:
+          return _context22.abrupt("return", availableDRMs);
+
+        case 16:
         case "end":
           return _context22.stop();
       }
     }
-  }, null, null, [[5, 12]]);
+  }, null, null, [[6, 13]]);
 };
 
 exports.AudienceData = function (_ref16) {
@@ -1728,7 +1760,7 @@ exports.PlayoutOptions = function _callee23(_ref17) {
  * @param {string} versionHash - Version hash of the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
- * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} offering=default - The offering to play
  */
 
@@ -2293,53 +2325,64 @@ exports.ContentObjectImageUrl = function _callee30(_ref25) {
           this.Log("Retrieving content object image url: ".concat(libraryId, " ").concat(objectId, " ").concat(versionHash));
 
           if (this.objectImageUrls[versionHash]) {
-            _context30.next = 19;
+            _context30.next = 26;
             break;
           }
 
-          _context30.next = 10;
+          _context30.prev = 8;
+          _context30.next = 11;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             versionHash: versionHash,
             metadataSubtree: imagePath
           }));
 
-        case 10:
+        case 11:
           imageMetadata = _context30.sent;
 
           if (imageMetadata) {
-            _context30.next = 14;
+            _context30.next = 15;
             break;
           }
 
           this.Log("No image url set: ".concat(libraryId, " ").concat(objectId, " ").concat(versionHash));
           return _context30.abrupt("return");
 
-        case 14:
+        case 15:
+          _context30.next = 21;
+          break;
+
+        case 17:
+          _context30.prev = 17;
+          _context30.t0 = _context30["catch"](8);
+          this.Log("Unable to query for image metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(versionHash), true);
+          this.Log(_context30.t0, true);
+
+        case 21:
           _queryParams = {};
 
           if (height && !isNaN(parseInt(height))) {
             _queryParams["height"] = parseInt(height);
           }
 
-          _context30.next = 18;
+          _context30.next = 25;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             versionHash: versionHash,
             linkPath: imagePath,
             queryParams: _queryParams
           }));
 
-        case 18:
+        case 25:
           this.objectImageUrls[versionHash] = _context30.sent;
 
-        case 19:
+        case 26:
           return _context30.abrupt("return", this.objectImageUrls[versionHash]);
 
-        case 20:
+        case 27:
         case "end":
           return _context30.stop();
       }
     }
-  }, null, this);
+  }, null, this, [[8, 17]]);
 };
 /* Links */
 

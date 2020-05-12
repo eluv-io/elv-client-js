@@ -847,8 +847,7 @@ function () {
                 contractAddress: contentObjectAddress,
                 methodName: "commit",
                 methodArgs: [versionHash],
-                eventName: "CommitPending",
-                eventValue: "pendingHash"
+                eventName: "CommitPending"
               }));
 
             case 3:
@@ -917,46 +916,52 @@ function () {
     value: function ContractEvents(_ref19) {
       var _this3 = this;
 
-      var contractAddress, abi, _ref19$fromBlock, fromBlock, toBlock, _ref19$includeTransac, includeTransaction, contractLogs, blocks;
+      var contractAddress, abi, _ref19$fromBlock, fromBlock, toBlock, topics, _ref19$includeTransac, includeTransaction, filter, contractLogs, blocks;
 
       return _regeneratorRuntime.async(function ContractEvents$(_context17) {
         while (1) {
           switch (_context17.prev = _context17.next) {
             case 0:
-              contractAddress = _ref19.contractAddress, abi = _ref19.abi, _ref19$fromBlock = _ref19.fromBlock, fromBlock = _ref19$fromBlock === void 0 ? 0 : _ref19$fromBlock, toBlock = _ref19.toBlock, _ref19$includeTransac = _ref19.includeTransaction, includeTransaction = _ref19$includeTransac === void 0 ? false : _ref19$includeTransac;
-              _context17.next = 3;
+              contractAddress = _ref19.contractAddress, abi = _ref19.abi, _ref19$fromBlock = _ref19.fromBlock, fromBlock = _ref19$fromBlock === void 0 ? 0 : _ref19$fromBlock, toBlock = _ref19.toBlock, topics = _ref19.topics, _ref19$includeTransac = _ref19.includeTransaction, includeTransaction = _ref19$includeTransac === void 0 ? false : _ref19$includeTransac;
+              filter = {
+                address: contractAddress,
+                fromBlock: fromBlock,
+                toBlock: toBlock
+              };
+
+              if (topics) {
+                filter.topics = topics;
+              }
+
+              _context17.next = 5;
               return _regeneratorRuntime.awrap(this.MakeProviderCall({
                 methodName: "getLogs",
-                args: [{
-                  address: contractAddress,
-                  fromBlock: fromBlock,
-                  toBlock: toBlock
-                }]
+                args: [filter]
               }));
 
-            case 3:
+            case 5:
               _context17.t0 = _context17.sent;
 
               if (_context17.t0) {
-                _context17.next = 6;
+                _context17.next = 8;
                 break;
               }
 
               _context17.t0 = [];
 
-            case 6:
+            case 8:
               contractLogs = _context17.t0;
 
               if (Array.isArray(contractLogs)) {
-                _context17.next = 9;
+                _context17.next = 11;
                 break;
               }
 
               return _context17.abrupt("return", []);
 
-            case 9:
+            case 11:
               blocks = {};
-              _context17.next = 12;
+              _context17.next = 14;
               return _regeneratorRuntime.awrap(Utils.LimitedMap(5, contractLogs, function _callee2(log) {
                 var eventInterface, parsedLog;
                 return _regeneratorRuntime.async(function _callee2$(_context16) {
@@ -996,12 +1001,12 @@ function () {
                 });
               }));
 
-            case 12:
+            case 14:
               return _context17.abrupt("return", Object.values(blocks).sort(function (a, b) {
                 return a[0].blockNumber < b[0].blockNumber ? 1 : -1;
               }));
 
-            case 13:
+            case 15:
             case "end":
               return _context17.stop();
           }

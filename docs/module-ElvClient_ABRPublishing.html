@@ -1779,7 +1779,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line520">line 520</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line523">line 523</a>
         </li>
       </ul>
     </dd>
@@ -2134,7 +2134,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line455">line 455</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line458">line 458</a>
         </li>
       </ul>
     </dd>
@@ -2157,7 +2157,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".StartABRMezzanineJobs">
-      <span class="type-signature">static </span>StartABRMezzanineJobs<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">offeringKey<span class="signature-attributes">optional</span>,</div><div class="block-param">access<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+      <span class="type-signature">static </span>StartABRMezzanineJobs<span class="signature">({<div class="block-param">libraryId,</div><div class="block-param">objectId,</div><div class="block-param">offeringKey<span class="signature-attributes">optional</span>,</div><div class="block-param">access<span class="signature-attributes">optional</span>,</div><div class="block-param">jobIndexes</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -2385,6 +2385,47 @@
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>jobIndexes</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Array.&lt;number>
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>Array of LRO job indexes to start. LROs are listed in a map under metadata key /abr_mezzanine/offerings/(offeringKey)/mez_prep_specs/, and job indexes start with 0, corresponding to map keys in alphabetical order</p>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -2477,7 +2518,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line339">line 339</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line340">line 340</a>
         </li>
       </ul>
     </dd>

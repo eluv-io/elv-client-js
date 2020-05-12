@@ -630,7 +630,7 @@ exports.ProduceMetadataLinks = async function({
           }
        }
 
-
+ * @param {boolean=} resolveIgnoreErrors=false - If specified, link errors within the requested metadata will not cause the entire response to result in an error
  * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
@@ -647,6 +647,7 @@ exports.ContentObjectMetadata = async function({
   select=[],
   resolveLinks=false,
   resolveIncludeSource=false,
+  resolveIgnoreErrors=false,
   linkDepthLimit=1,
   produceLinkUrls=false
 }) {
@@ -675,7 +676,8 @@ exports.ContentObjectMetadata = async function({
           select,
           link_depth: linkDepthLimit,
           resolve: resolveLinks,
-          resolve_include_source: resolveIncludeSource
+          resolve_include_source: resolveIncludeSource,
+          resolve_ignore_errors: resolveIgnoreErrors
         },
         method: "GET",
         path: path
@@ -772,6 +774,36 @@ exports.AvailableDRMs = async function() {
 
   if(typeof window === "undefined") {
     return availableDRMs;
+  }
+
+  // Detect iOS > 13.1 or Safari > 13.1 and replace aes-128 with sample-aes
+  if(window.navigator && window.navigator.userAgent) {
+    // Test iOS
+    const info = window.navigator.userAgent.match(/(iPad|iPhone|iphone|iPod).*?(OS |os |OS_)(\d+((_|\.)\d)?((_|\.)\d)?)/);
+
+    if(info && info[3]) {
+      const version = info[3].split("_");
+      const major = parseInt(version[0]);
+      const minor = parseInt(version[1]);
+
+      if(major > 13 || (major === 13 && minor >= 1)) {
+        availableDRMs[1] = "sample-aes";
+      }
+    }
+
+    // Test Safari
+    if(/^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)) {
+      const version = window.navigator.userAgent.match(/\s+Version\/(\d+)\.(\d+)\s+/);
+
+      if(version && version[2]) {
+        const major = parseInt(version[1]);
+        const minor = parseInt(version[2]);
+
+        if(major > 13 || (major === 13 && minor >= 1)) {
+          availableDRMs[1] = "sample-aes";
+        }
+      }
+    }
   }
 
   if(typeof window !== "undefined" && typeof window.navigator.requestMediaKeySystemAccess !== "function") {
@@ -966,7 +998,7 @@ exports.PlayoutOptions = async function({
  * @param {string} versionHash - Version hash of the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
- * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} offering=default - The offering to play
  */
 exports.BitmovinPlayoutOptions = async function({
@@ -1335,11 +1367,16 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
   this.Log(`Retrieving content object image url: ${libraryId} ${objectId} ${versionHash}`);
 
   if(!this.objectImageUrls[versionHash]) {
-    const imageMetadata = await this.ContentObjectMetadata({versionHash, metadataSubtree: imagePath});
+    try {
+      const imageMetadata = await this.ContentObjectMetadata({versionHash, metadataSubtree: imagePath});
 
-    if(!imageMetadata) {
-      this.Log(`No image url set: ${libraryId} ${objectId} ${versionHash}`);
-      return;
+      if(!imageMetadata) {
+        this.Log(`No image url set: ${libraryId} ${objectId} ${versionHash}`);
+        return;
+      }
+    } catch(error) {
+      this.Log(`Unable to query for image metadata: ${libraryId} ${objectId} ${versionHash}`, true);
+      this.Log(error, true);
     }
 
     let queryParams = {};

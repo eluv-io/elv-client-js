@@ -448,6 +448,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
  * @param {string=} offeringKey=default - The offering to process
  * @param {Object=} access - (S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references
  * - Format: {region, bucket, accessKey, secret}
+ * @param {number[]} jobIndexes - Array of LRO job indexes to start. LROs are listed in a map under metadata key /abr_mezzanine/offerings/(offeringKey)/mez_prep_specs/, and job indexes start with 0, corresponding to map keys in alphabetical order
  *
  * @return {Promise<Object>} - A write token for the mezzanine object, as well as any logs, warnings and errors from the job initialization
  */
@@ -456,13 +457,13 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 exports.StartABRMezzanineJobs = function _callee4(_ref6) {
   var _this = this;
 
-  var libraryId, objectId, _ref6$offeringKey, offeringKey, _ref6$access, access, mezzanineMetadata, prepSpecs, masterVersionHashes, authorizationTokens, headers, accessParameter, region, bucket, accessKey, secret, processingDraft, lroInfo, statusDraft, _ref7, data, errors, warnings, logs;
+  var libraryId, objectId, _ref6$offeringKey, offeringKey, _ref6$access, access, _ref6$jobIndexes, jobIndexes, mezzanineMetadata, prepSpecs, masterVersionHashes, authorizationTokens, headers, accessParameter, region, bucket, accessKey, secret, processingDraft, lroInfo, statusDraft, _ref7, data, errors, warnings, logs;
 
   return _regeneratorRuntime.async(function _callee4$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          libraryId = _ref6.libraryId, objectId = _ref6.objectId, _ref6$offeringKey = _ref6.offeringKey, offeringKey = _ref6$offeringKey === void 0 ? "default" : _ref6$offeringKey, _ref6$access = _ref6.access, access = _ref6$access === void 0 ? {} : _ref6$access;
+          libraryId = _ref6.libraryId, objectId = _ref6.objectId, _ref6$offeringKey = _ref6.offeringKey, offeringKey = _ref6$offeringKey === void 0 ? "default" : _ref6$offeringKey, _ref6$access = _ref6.access, access = _ref6$access === void 0 ? {} : _ref6$access, _ref6$jobIndexes = _ref6.jobIndexes, jobIndexes = _ref6$jobIndexes === void 0 ? null : _ref6$jobIndexes;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -600,7 +601,8 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
             constant: false,
             body: {
               access: accessParameter,
-              offering_key: offeringKey
+              offering_key: offeringKey,
+              job_indexes: jobIndexes
             }
           }));
 

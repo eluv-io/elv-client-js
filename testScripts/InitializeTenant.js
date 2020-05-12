@@ -18,18 +18,36 @@ const argv = yargs
   )
   .argv;
 
-const AddLibraryToGroup = async (client, libraryId, groupAddress) => {
-  await client.AddContentLibraryGroup({
-    libraryId,
-    groupAddress,
-    permission: "accessor"
-  });
+const SetLibraryPermissions = async (client, libraryId, tenantAdmins, contentAdmins, contentUsers) => {
+  const promises = [
+    // Tenant admins
+    client.AddContentLibraryGroup({libraryId, groupAddress: tenantAdmins, permission: "accessor"}),
+    client.AddContentLibraryGroup({libraryId, groupAddress: tenantAdmins, permission: "contributor"}),
 
-  await client.AddContentLibraryGroup({
-    libraryId,
-    groupAddress,
-    permission: "contributor"
-  });
+    // Content admins
+    client.AddContentLibraryGroup({libraryId, groupAddress: contentAdmins, permission: "accessor"}),
+    client.AddContentLibraryGroup({libraryId, groupAddress: contentAdmins, permission: "contributor"}),
+
+    // Content users
+    client.AddContentLibraryGroup({libraryId, groupAddress: contentUsers, permission: "accessor"})
+  ];
+
+  await Promise.all(promises);
+};
+
+const SetObjectPermissions = async (client, objectId, tenantAdmins, contentAdmins, contentUsers) => {
+  const promises = [
+    // Tenant admins
+    client.AddContentObjectGroupPermission({objectId, groupAddress: tenantAdmins, permission: "manage"}),
+
+    // Content admins
+    client.AddContentObjectGroupPermission({objectId, groupAddress: contentAdmins, permission: "manage"}),
+
+    // Content users
+    client.AddContentObjectGroupPermission({objectId, groupAddress: contentUsers, permission: "access"})
+  ];
+
+  await Promise.all(promises);
 };
 
 const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
@@ -37,6 +55,8 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     if(!process.env.PRIVATE_KEY) {
       console.log("ERROR: 'PRIVATE_KEY' environment variable must be set");
     }
+
+    console.log(`\nSetting up tenant '${tenantName}'\n`);
 
     const client = await ElvClient.FromConfigurationUrl({configUrl});
     const wallet = client.GenerateWallet();
@@ -67,24 +87,46 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     console.log(`\t${tenantAdminSigner.signingKey.privateKey}`);
     console.log(`\t${mnemonic}`);
 
-    // Initialize admin group
-    const adminGroupAddress = await client.CreateAccessGroup({
+    /* Access groups - Create tenant admin, content admin and content user groups */
+    const tenantAdminGroupAddress = await client.CreateAccessGroup({
+      name: `${tenantName} Tenant Admins`
+    });
+
+    const contentAdminGroupAddress = await client.CreateAccessGroup({
       name: `${tenantName} Content Admins`
     });
 
+    const contentUserGroupAddress = await client.CreateAccessGroup({
+      name: `${tenantName} Content Users`
+    });
+
     await client.AddAccessGroupManager({
-      contractAddress: adminGroupAddress,
+      contractAddress: tenantAdminGroupAddress,
       memberAddress: tenantAdminSigner.address
     });
 
-    console.log("\nContent Admins Group:\n");
-    console.log(`\t${adminGroupAddress}`);
+    await client.AddAccessGroupManager({
+      contractAddress: contentAdminGroupAddress,
+      memberAddress: tenantAdminSigner.address
+    });
 
-    await client.userProfileClient.SetTenantId({address: adminGroupAddress});
+    await client.AddAccessGroupManager({
+      contractAddress: contentUserGroupAddress,
+      memberAddress: tenantAdminSigner.address
+    });
+
+    await client.userProfileClient.SetTenantId({address: tenantAdminGroupAddress});
+
     console.log("\nTenant ID:\n");
     console.log("\t", await client.userProfileClient.TenantId());
 
-    /* Content Types - Create Title, Title Collection and Production Master and add each to the group */
+    console.log("\nAccess Groups:\n");
+    console.log(`\tTenant Admins Group: ${tenantAdminGroupAddress}`);
+    console.log(`\tContent Admins Group: ${contentAdminGroupAddress}`);
+    console.log(`\tContent Users Group: ${contentUserGroupAddress}`);
+
+
+    /* Content Types - Create Title, Title Collection and Production Master and add each to the groups */
 
     const typeMetadata = {
       bitcode_flags: "abrmaster",
@@ -100,66 +142,63 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
       metadata: {...typeMetadata}
     });
 
-    await client.AddContentObjectGroupPermission({
-      objectId: titleTypeId,
-      groupAddress: adminGroupAddress,
-      permission: "manage"
-    });
+    await SetObjectPermissions(client, titleTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
     const titleCollectionTypeId = await client.CreateContentType({
       name: `${tenantName} - Title Collection`,
       metadata: {...typeMetadata}
     });
 
-    await client.AddContentObjectGroupPermission({
-      objectId: titleCollectionTypeId,
-      groupAddress: adminGroupAddress,
-      permission: "manage"
-    });
+    await SetObjectPermissions(client, titleCollectionTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
     const masterTypeId = await client.CreateContentType({
       name: `${tenantName} - Title Master`,
       metadata: {...typeMetadata}
     });
 
-    await client.AddContentObjectGroupPermission({
-      objectId: masterTypeId,
-      groupAddress: adminGroupAddress,
-      permission: "manage"
-    });
+    await SetObjectPermissions(client, masterTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
     console.log("\nTenant Types:\n");
     console.log(`\t${tenantName} - Title: ${titleTypeId}`);
     console.log(`\t${tenantName} - Title Collection: ${titleCollectionTypeId}`);
     console.log(`\t${tenantName} - Title Master: ${masterTypeId}`);
 
-    /* Create libraries - Properties, Title Masters, Title Mezzanines and add each to the group */
+
+    /* Create libraries - Properties, Title Masters, Title Mezzanines and add each to the groups */
 
     const propertiesLibraryId = await client.CreateContentLibrary({
       name: `${tenantName} - Properties`,
       kmsId
     });
 
-    await AddLibraryToGroup(client, propertiesLibraryId, adminGroupAddress);
+    await SetLibraryPermissions(client, propertiesLibraryId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
     const mastersLibraryId = await client.CreateContentLibrary({
       name: `${tenantName} - Title Masters`,
       kmsId
     });
 
-    await AddLibraryToGroup(client, mastersLibraryId, adminGroupAddress);
+    await SetLibraryPermissions(client, mastersLibraryId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
     const mezzanineLibraryId = await client.CreateContentLibrary({
       name: `${tenantName} - Title Mezzanines`,
       kmsId
     });
 
-    await AddLibraryToGroup(client, mezzanineLibraryId, adminGroupAddress);
+    await SetLibraryPermissions(client, mezzanineLibraryId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
+
+    const reportingLibraryId = await client.CreateContentLibrary({
+      name: `${tenantName} - Reports`,
+      kmsId
+    });
+
+    await SetLibraryPermissions(client, reportingLibraryId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
     console.log("\nTenant Libraries:\n");
     console.log(`\t${tenantName} - Properties: ${propertiesLibraryId}`);
     console.log(`\t${tenantName} - Title Masters: ${mastersLibraryId}`);
     console.log(`\t${tenantName} - Title Mezzanines: ${mezzanineLibraryId}`);
+    console.log(`\t${tenantName} - Reports: ${reportingLibraryId}`);
 
     /* Create a site object */
     const {id, write_token} = await client.CreateContentObject({
@@ -190,11 +229,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
       writeToken: write_token
     });
 
-    await client.AddContentObjectGroupPermission({
-      objectId: id,
-      groupAddress: adminGroupAddress,
-      permission: "manage"
-    });
+    await SetObjectPermissions(client, id, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
     console.log("\nSite Object: \n");
     console.log(`\tSite - ${tenantName}: ${id}\n\n`);
