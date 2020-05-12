@@ -1693,7 +1693,7 @@ exports.PlayoutOptions = function _callee23(_ref17) {
             versionHash: linkTargetHash || versionHash,
             rep: UrlJoin("playout", offering, playoutPath),
             channelAuth: true,
-            queryParams: hlsjsProfile && protocol === "hls" ? {
+            queryParams: hlsjsProfile && protocol === "hls" && drm === "aes-128" ? {
               player_profile: "hls-js"
             } : {}
           }));

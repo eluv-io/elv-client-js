@@ -959,7 +959,7 @@ exports.PlayoutOptions = async function({
             versionHash: linkTargetHash || versionHash,
             rep: UrlJoin("playout", offering, playoutPath),
             channelAuth: true,
-            queryParams: hlsjsProfile && protocol === "hls" ? {player_profile: "hls-js"} : {}
+            queryParams: (hlsjsProfile && protocol === "hls" && drm === "aes-128") ? {player_profile: "hls-js"} : {}
           }),
           drms: drm ? {[drm]: {licenseServers}} : undefined
         }
