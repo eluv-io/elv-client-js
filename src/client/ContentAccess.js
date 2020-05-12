@@ -630,7 +630,7 @@ exports.ProduceMetadataLinks = async function({
           }
        }
 
-
+ * @param {boolean=} resolveIgnoreErrors=false - If specified, link errors within the requested metadata will not cause the entire response to result in an error
  * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
@@ -647,6 +647,7 @@ exports.ContentObjectMetadata = async function({
   select=[],
   resolveLinks=false,
   resolveIncludeSource=false,
+  resolveIgnoreErrors=false,
   linkDepthLimit=1,
   produceLinkUrls=false
 }) {
@@ -675,7 +676,8 @@ exports.ContentObjectMetadata = async function({
           select,
           link_depth: linkDepthLimit,
           resolve: resolveLinks,
-          resolve_include_source: resolveIncludeSource
+          resolve_include_source: resolveIncludeSource,
+          resolve_ignore_errors: resolveIgnoreErrors
         },
         method: "GET",
         path: path
@@ -996,7 +998,7 @@ exports.PlayoutOptions = async function({
  * @param {string} versionHash - Version hash of the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
- * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} offering=default - The offering to play
  */
 exports.BitmovinPlayoutOptions = async function({
@@ -1365,11 +1367,16 @@ exports.ContentObjectImageUrl = async function({libraryId, objectId, versionHash
   this.Log(`Retrieving content object image url: ${libraryId} ${objectId} ${versionHash}`);
 
   if(!this.objectImageUrls[versionHash]) {
-    const imageMetadata = await this.ContentObjectMetadata({versionHash, metadataSubtree: imagePath});
+    try {
+      const imageMetadata = await this.ContentObjectMetadata({versionHash, metadataSubtree: imagePath});
 
-    if(!imageMetadata) {
-      this.Log(`No image url set: ${libraryId} ${objectId} ${versionHash}`);
-      return;
+      if(!imageMetadata) {
+        this.Log(`No image url set: ${libraryId} ${objectId} ${versionHash}`);
+        return;
+      }
+    } catch(error) {
+      this.Log(`Unable to query for image metadata: ${libraryId} ${objectId} ${versionHash}`, true);
+      this.Log(error, true);
     }
 
     let queryParams = {};
