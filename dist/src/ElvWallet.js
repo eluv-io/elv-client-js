@@ -186,7 +186,7 @@ function () {
      * @namedParams
      * @param {string=} accountName - Saved account to encrypt the private key of
      * @param {string=} signer - Signer to encrypt the private key of
-     * @params {string} password - Password to encrypt the private key with
+     * @param {string} password - Password to encrypt the private key with
      *
      * @returns {Promise<string>} - The encrypted private key (in Ethereum keystore format)
      */

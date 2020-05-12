@@ -1136,7 +1136,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
           }
        }
 
-
+ * @param {boolean=} resolveIgnoreErrors=false - If specified, link errors within the requested metadata will not cause the entire response to result in an error
  * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
@@ -1147,13 +1147,13 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
+          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$resolveIgnoreE = _ref13.resolveIgnoreErrors, resolveIgnoreErrors = _ref13$resolveIgnoreE === void 0 ? false : _ref13$resolveIgnoreE, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1193,7 +1193,8 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             select: select,
             link_depth: linkDepthLimit,
             resolve: resolveLinks,
-            resolve_include_source: resolveIncludeSource
+            resolve_include_source: resolveIncludeSource,
+            resolve_ignore_errors: resolveIgnoreErrors
           };
           _context19.t5 = path;
           _context19.t6 = {
@@ -1759,7 +1760,7 @@ exports.PlayoutOptions = function _callee23(_ref17) {
  * @param {string} versionHash - Version hash of the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
- * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} offering=default - The offering to play
  */
 
@@ -2324,53 +2325,64 @@ exports.ContentObjectImageUrl = function _callee30(_ref25) {
           this.Log("Retrieving content object image url: ".concat(libraryId, " ").concat(objectId, " ").concat(versionHash));
 
           if (this.objectImageUrls[versionHash]) {
-            _context30.next = 19;
+            _context30.next = 26;
             break;
           }
 
-          _context30.next = 10;
+          _context30.prev = 8;
+          _context30.next = 11;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             versionHash: versionHash,
             metadataSubtree: imagePath
           }));
 
-        case 10:
+        case 11:
           imageMetadata = _context30.sent;
 
           if (imageMetadata) {
-            _context30.next = 14;
+            _context30.next = 15;
             break;
           }
 
           this.Log("No image url set: ".concat(libraryId, " ").concat(objectId, " ").concat(versionHash));
           return _context30.abrupt("return");
 
-        case 14:
+        case 15:
+          _context30.next = 21;
+          break;
+
+        case 17:
+          _context30.prev = 17;
+          _context30.t0 = _context30["catch"](8);
+          this.Log("Unable to query for image metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(versionHash), true);
+          this.Log(_context30.t0, true);
+
+        case 21:
           _queryParams = {};
 
           if (height && !isNaN(parseInt(height))) {
             _queryParams["height"] = parseInt(height);
           }
 
-          _context30.next = 18;
+          _context30.next = 25;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             versionHash: versionHash,
             linkPath: imagePath,
             queryParams: _queryParams
           }));
 
-        case 18:
+        case 25:
           this.objectImageUrls[versionHash] = _context30.sent;
 
-        case 19:
+        case 26:
           return _context30.abrupt("return", this.objectImageUrls[versionHash]);
 
-        case 20:
+        case 27:
         case "end":
           return _context30.stop();
       }
     }
-  }, null, this);
+  }, null, this, [[8, 17]]);
 };
 /* Links */
 
