@@ -170,13 +170,13 @@ exports.DeployContract = function _callee3(_ref4) {
 
 
 exports.ContractEvents = function _callee4(_ref5) {
-  var contractAddress, abi, _ref5$fromBlock, fromBlock, toBlock, _ref5$count, count, _ref5$includeTransact, includeTransaction, blocks;
+  var contractAddress, abi, _ref5$fromBlock, fromBlock, toBlock, _ref5$count, count, topics, _ref5$includeTransact, includeTransaction, blocks;
 
   return _regeneratorRuntime.async(function _callee4$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          contractAddress = _ref5.contractAddress, abi = _ref5.abi, _ref5$fromBlock = _ref5.fromBlock, fromBlock = _ref5$fromBlock === void 0 ? 0 : _ref5$fromBlock, toBlock = _ref5.toBlock, _ref5$count = _ref5.count, count = _ref5$count === void 0 ? 1000 : _ref5$count, _ref5$includeTransact = _ref5.includeTransaction, includeTransaction = _ref5$includeTransact === void 0 ? false : _ref5$includeTransact;
+          contractAddress = _ref5.contractAddress, abi = _ref5.abi, _ref5$fromBlock = _ref5.fromBlock, fromBlock = _ref5$fromBlock === void 0 ? 0 : _ref5$fromBlock, toBlock = _ref5.toBlock, _ref5$count = _ref5.count, count = _ref5$count === void 0 ? 1000 : _ref5$count, topics = _ref5.topics, _ref5$includeTransact = _ref5.includeTransaction, includeTransaction = _ref5$includeTransact === void 0 ? false : _ref5$includeTransact;
           contractAddress = ValidateAddress(contractAddress);
 
           if (abi) {
@@ -209,6 +209,7 @@ exports.ContractEvents = function _callee4(_ref5) {
             abi: abi,
             fromBlock: blocks.fromBlock,
             toBlock: blocks.toBlock,
+            topics: topics,
             includeTransaction: includeTransaction
           }));
 

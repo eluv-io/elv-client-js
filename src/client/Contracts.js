@@ -99,6 +99,7 @@ exports.ContractEvents = async function({
   fromBlock=0,
   toBlock,
   count=1000,
+  topics,
   includeTransaction=false
 }) {
   contractAddress = ValidateAddress(contractAddress);
@@ -114,6 +115,7 @@ exports.ContractEvents = async function({
     abi,
     fromBlock: blocks.fromBlock,
     toBlock: blocks.toBlock,
+    topics,
     includeTransaction
   });
 };

@@ -26,7 +26,15 @@ var URI = require("urijs");
 /**
  * @namespace
  * @description This is a utility namespace mostly containing functions for managing
- * multiformat type conversions
+ * multiformat type conversions.
+ *
+ * Utils can be imported separately from the client:
+ *
+ * const Utils = require("@eluvio/elv-client-js/src/Utils)
+ *
+ * or
+ *
+ * import Utils from "@eluvio/elv-client-js/src/Utils"
  *
  *
  * It can be accessed from ElvClient and FrameClient as client.utils

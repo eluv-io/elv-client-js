@@ -674,22 +674,55 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  await this.ethClient.CommitContent({
+  const commit = await this.ethClient.CommitContent({
     contentObjectAddress: this.utils.HashToAddress(objectId),
     versionHash,
     signer: this.signer
   });
 
-  if(awaitCommitConfirmation) {
-    this.Log("Awaiting commit confirmation...");
+  const abi = await this.ContractAbi({id: objectId});
+  const fromBlock = commit.blockNumber + 1;
+  const objectHash = await this.ExtractValueFromEvent({
+    abi,
+    event: commit,
+    eventName: "CommitPending",
+    eventValue: "objectHash"
+  });
 
-    const abi = await this.ContractAbi({id: objectId});
-    await this.ethClient.AwaitEvent({
-      contractAddress: this.utils.HashToAddress(objectId),
-      abi,
-      eventName: "VersionConfirm",
-      signer: this.signer
-    });
+  const pendingHash = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "pendingHash",
+  });
+
+  if(pendingHash && pendingHash !== objectHash) {
+    throw Error(`Pending version hash mismatch on ${objectId}: expected ${objectHash}, currently ${pendingHash}`);
+  }
+
+  if(awaitCommitConfirmation) {
+    this.Log(`Awaiting commit confirmation for ${objectHash}`);
+    const pollingInterval = this.ethClient.Provider().pollingInterval || 500;
+
+    // eslint-disable-next-line no-constant-condition
+    while(true) {
+      await new Promise(resolve => setTimeout(resolve, pollingInterval));
+
+      const events = await this.ContractEvents({
+        contractAddress: this.utils.HashToAddress(objectId),
+        abi,
+        fromBlock,
+        count: 10000,
+        topics: ["0x482875da75e6d9f93f74a5c1a61f14cf08822057c01232f44cb92ae998e30d8e"]
+      });
+
+      const confirmEvent = events.find(blockEvents =>
+        blockEvents.find(event => objectHash === (event && event.values && event.values.objectHash))
+      );
+
+      if(confirmEvent) {
+        this.Log(`Commit confirmed: ${objectHash}`);
+        break;
+      }
+    }
   }
 };
 

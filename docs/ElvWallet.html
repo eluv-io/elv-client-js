@@ -994,7 +994,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="GenerateEncryptedPrivateKey">
-      <span class="type-signature">async </span>GenerateEncryptedPrivateKey<span class="signature">({<div class="block-param">accountName<span class="signature-attributes">optional</span>,</div><div class="block-param">signer<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">async </span>GenerateEncryptedPrivateKey<span class="signature">({<div class="block-param">accountName<span class="signature-attributes">optional</span>,</div><div class="block-param">signer<span class="signature-attributes">optional</span>,</div><div class="block-param">password</div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -1123,6 +1123,43 @@ the account name of a saved account</p>
 
         <td class="description last">
           <p>Signer to encrypt the private key of</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>password</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>Password to encrypt the private key with</p>
           
         </td>
       </tr>
