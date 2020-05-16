@@ -365,6 +365,7 @@ class FrameClient {
       "RemoveLibraryContentType",
       "Rep",
       "ReplaceMetadata",
+      "Request",
       "ResetRegion",
       "SendFunds",
       "SetAccessCharge",

@@ -1,6 +1,5 @@
 const HttpClient = require("./HttpClient");
 const Ethers = require("ethers");
-const Id = require("./Id");
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 
@@ -381,33 +380,19 @@ class AuthorizationClient {
 
     this.Log(`Making state channel access request: ${objectId}`);
 
-    const paramTypes = [
-      "address",
-      "address",
-      "uint",
-      "uint"
-    ];
-
-    let params = [
-      this.client.signer.address,
-      Utils.HashToAddress(objectId),
-      value,
-      Date.now() - 1000
-    ];
-
-    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-    params[4] = await this.Sign(packedHash);
-
     let stateChannelApi = "elv_channelContentRequest";
+    let additionalParams = [];
     if(audienceData) {
       stateChannelApi = "elv_channelContentRequestContext";
-      params[5] = JSON.stringify(audienceData);
+      additionalParams = [JSON.stringify(audienceData)];
     }
 
     const payload = await this.MakeKMSCall({
       objectId,
       methodName: stateChannelApi,
-      params
+      paramTypes: ["address", "address", "uint", "uint"],
+      params: [this.client.signer.address, Utils.HashToAddress(objectId), value, Date.now()],
+      additionalParams
     });
 
     const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
@@ -425,31 +410,12 @@ class AuthorizationClient {
   async ChannelContentFinalize({objectId, audienceData, percent=0}) {
     this.Log(`Making state channel finalize request: ${objectId}`);
 
-    const nonce = Date.now() + Id.next();
-
-    const paramTypes = [
-      "address",
-      "address",
-      "uint",
-      "uint"
-    ];
-
-    let params = [
-      this.client.signer.address,
-      Utils.HashToAddress(objectId),
-      percent,
-      nonce
-    ];
-
-    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-    params[4] = await this.Sign(packedHash);
-
-    params[5] = JSON.stringify(audienceData);
-
     const result = await this.MakeKMSCall({
       objectId,
       methodName: "elv_channelContentFinalizeContext",
-      params
+      paramTypes: ["address", "address", "uint", "uint"],
+      params: [this.client.signer.address, Utils.HashToAddress(objectId), percent, Date.now()],
+      additionalParams: [JSON.stringify(audienceData)]
     });
 
     this.channelContentTokens[objectId] = undefined;
@@ -466,18 +432,9 @@ class AuthorizationClient {
       return this.channelContentTokens[objectId];
     }
 
-    const kmsUrls = (await this.KMSInfo({objectId, versionHash})).urls;
-
-    if(!kmsUrls || !kmsUrls[0]) {
-      throw Error(`No KMS info set for ${versionHash || objectId}`);
-    }
-
-    const kmsHttpClient = new HttpClient({
-      uris: [kmsUrls[0]],
-      debug: this.debug
-    });
-
-    const fabricToken = await (await kmsHttpClient.Request({
+    const fabricToken = await (await this.MakeKMSRequest({
+      objectId,
+      versionHash,
       method: "GET",
       path: UrlJoin("ks", "jwt", "q", objectId),
       bodyType: "NONE",
@@ -803,23 +760,27 @@ class AuthorizationClient {
       metadataSubtree: kmsCapId
     });
 
-    const paramTypes = ["string", "string", "string", "string", "string"];
-    let params = [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""];
-
-    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-    params[5] = await this.Sign(packedHash);
-
     return await this.MakeKMSCall({
       objectId,
       methodName: "elv_getSymmetricKeyAuth",
-      params
+      paramTypes: ["string", "string", "string", "string", "string"],
+      params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
     });
   }
 
-  async MakeKMSCall({objectId, versionHash, methodName, params}) {
+  // Make an RPC call to the KMS with signed parameters
+  async MakeKMSCall({kmsId, objectId, versionHash, methodName, params, paramTypes, additionalParams=[]}) {
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
-    const KMSUrls = (await this.KMSInfo({objectId, versionHash})).urls;
+    if(!objectId) {
+      kmsId = `ikms${Utils.AddressToHash(await this.client.DefaultKMSAddress())}`;
+    }
+
+    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+    params.push(await this.Sign(packedHash));
+    params = params.concat(additionalParams);
+
+    const KMSUrls = (await this.KMSInfo({kmsId, objectId, versionHash})).urls;
 
     for(let i = 0; i < KMSUrls.length; i++) {
       try {
@@ -841,6 +802,37 @@ class AuthorizationClient {
         }
       }
     }
+  }
+
+  // Make an arbitrary HTTP call to the KMS
+  async MakeKMSRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers}) {
+    if(versionHash) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    if(!objectId) {
+      kmsId = `ikms${Utils.AddressToHash(await this.client.DefaultKMSAddress())}`;
+    }
+
+    const kmsUrls = (await this.KMSInfo({kmsId, objectId, versionHash})).urls;
+
+    if(!kmsUrls || !kmsUrls[0]) {
+      throw Error(`No KMS info set for ${versionHash || objectId || "default KMS"}`);
+    }
+
+    const kmsHttpClient = new HttpClient({
+      uris: [kmsUrls[0]],
+      debug: this.debug
+    });
+
+    return await kmsHttpClient.Request({
+      method,
+      path,
+      bodyType,
+      body,
+      headers,
+      queryParams
+    });
   }
 
   async ContractHasMethod({contractAddress, abi, methodName}) {

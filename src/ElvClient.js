@@ -514,6 +514,31 @@ class ElvClient {
     }
   }
 
+  /**
+   * Request the specified URL with the given method and body, and return the result in the specified format
+   *
+   * @param {string} url - URL to request
+   * @param {string=} format="json" - Format of response
+   * @param {string=} method="GET" - Request method
+   * @param {object=} body - Request body
+   * @param {object=} headers - Request headers
+   *
+   * @return {Promise<*>} - Response in the specified format
+   */
+  Request({url, format="json", method="GET", headers={}, body}) {
+    return this.utils.ResponseToFormat(
+      format,
+      HttpClient.Fetch(
+        url,
+        {
+          method,
+          headers,
+          body
+        }
+      )
+    );
+  }
+
   /* FrameClient related */
 
   // Whitelist of methods allowed to be called using the frame API
