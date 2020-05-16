@@ -626,6 +626,35 @@ function () {
         }
       }, null, this, [[4, 29]]);
     }
+    /**
+     * Request the specified URL with the given method and body, and return the result in the specified format
+     *
+     * @param {string} url - URL to request
+     * @param {string=} format="json" - Format of response
+     * @param {string=} method="GET" - Request method
+     * @param {object=} body - Request body
+     * @param {object=} headers - Request headers
+     *
+     * @return {Promise<*>} - Response in the specified format
+     */
+
+  }, {
+    key: "Request",
+    value: function Request(_ref12) {
+      var url = _ref12.url,
+          _ref12$format = _ref12.format,
+          format = _ref12$format === void 0 ? "json" : _ref12$format,
+          _ref12$method = _ref12.method,
+          method = _ref12$method === void 0 ? "GET" : _ref12$method,
+          _ref12$headers = _ref12.headers,
+          headers = _ref12$headers === void 0 ? {} : _ref12$headers,
+          body = _ref12.body;
+      return this.utils.ResponseToFormat(format, HttpClient.Fetch(url, {
+        method: method,
+        headers: headers,
+        body: body
+      }));
+    }
     /* FrameClient related */
     // Whitelist of methods allowed to be called using the frame API
 
@@ -739,14 +768,14 @@ function () {
     }
   }], [{
     key: "Configuration",
-    value: function Configuration(_ref12) {
-      var configUrl, _ref12$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
+    value: function Configuration(_ref13) {
+      var configUrl, _ref13$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
 
       return _regeneratorRuntime.async(function Configuration$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
-              configUrl = _ref12.configUrl, _ref12$kmsUrls = _ref12.kmsUrls, kmsUrls = _ref12$kmsUrls === void 0 ? [] : _ref12$kmsUrls, region = _ref12.region;
+              configUrl = _ref13.configUrl, _ref13$kmsUrls = _ref13.kmsUrls, kmsUrls = _ref13$kmsUrls === void 0 ? [] : _ref13$kmsUrls, region = _ref13.region;
               _context8.prev = 1;
               uri = new URI(configUrl);
 
@@ -817,14 +846,14 @@ function () {
 
   }, {
     key: "FromConfigurationUrl",
-    value: function FromConfigurationUrl(_ref13) {
-      var configUrl, region, trustAuthorityId, _ref13$noCache, noCache, _ref13$noAuth, noAuth, _ref14, contentSpaceId, fabricURIs, ethereumURIs, client;
+    value: function FromConfigurationUrl(_ref14) {
+      var configUrl, region, trustAuthorityId, _ref14$noCache, noCache, _ref14$noAuth, noAuth, _ref15, contentSpaceId, fabricURIs, ethereumURIs, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
-              configUrl = _ref13.configUrl, region = _ref13.region, trustAuthorityId = _ref13.trustAuthorityId, _ref13$noCache = _ref13.noCache, noCache = _ref13$noCache === void 0 ? false : _ref13$noCache, _ref13$noAuth = _ref13.noAuth, noAuth = _ref13$noAuth === void 0 ? false : _ref13$noAuth;
+              configUrl = _ref14.configUrl, region = _ref14.region, trustAuthorityId = _ref14.trustAuthorityId, _ref14$noCache = _ref14.noCache, noCache = _ref14$noCache === void 0 ? false : _ref14$noCache, _ref14$noAuth = _ref14.noAuth, noAuth = _ref14$noAuth === void 0 ? false : _ref14$noAuth;
               _context9.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
@@ -832,10 +861,10 @@ function () {
               }));
 
             case 3:
-              _ref14 = _context9.sent;
-              contentSpaceId = _ref14.contentSpaceId;
-              fabricURIs = _ref14.fabricURIs;
-              ethereumURIs = _ref14.ethereumURIs;
+              _ref15 = _context9.sent;
+              contentSpaceId = _ref15.contentSpaceId;
+              fabricURIs = _ref15.fabricURIs;
+              ethereumURIs = _ref15.ethereumURIs;
               client = new ElvClient({
                 contentSpaceId: contentSpaceId,
                 fabricURIs: fabricURIs,
