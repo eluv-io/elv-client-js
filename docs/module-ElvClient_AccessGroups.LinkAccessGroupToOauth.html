@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,7 +6,7 @@
   <link rel="shortcut icon" href="images/favicon.png" >
 
   <title>
-    FrameClient.js - Documentation
+    LinkAccessGroupToOauth - Documentation
   </title>
 
   <script src="scripts/prettify/prettify.js"></script>
@@ -52,436 +50,257 @@
       <div class="main-content">
         
         <h1 class="page-title">
-          FrameClient.js
+          LinkAccessGroupToOauth
         </h1>
         
 
         
+
+<section>
+  <header>
+    
+
+
+      
+    
+  </header>
+
+  <article>
+    <div class="container-overview">
+      
+        
+
+
+  
+
+  <span class='name-container'>
+    <a class="link-icon" href="#LinkAccessGroupToOauth">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+    </a>
+    <h4 class="name" id="LinkAccessGroupToOauth">
+      <span class="type-signature"></span>new LinkAccessGroupToOauth<span class="signature">(<div class="block-param">groupAddress,</div><div class="block-param">kmsId,</div><div class="block-param">oauthConfig</div>)</span><span class="type-signature"> &rarr;  Promise.&lt;void></span>
+    </h4>
+  </span>
+
+  
+
+
+
+  <div class="description">
+    <p>Link the specified group to an OAuth provider with the specified credentials</p>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <h5>Parameters:</h5>
+  
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
       
 
-<a class="button" href="FrameClient.html">Back</a>
-<div class="source-container">
-  <pre class="prettyprint source linenums"><code>const Id = require("./Id");
-const Utils = require("./Utils");
+      <th>Type</th>
 
-class FrameClient {
-  /**
-   * FrameClient is a client that looks to the user like an ElvClient, but works by passing messages
-   * to another frame with an actual ElvClient instead of making the calls itself.
-   *
-   * The purpose of this is to isolate users' private keys and the usage thereof in one trusted application,
-   * while still allowing other (possibly less trustworthy) applications to communicate with the content fabric
-   * on behalf of the user from a sandboxed IFrame.
-   *
-   * FrameClient has available almost all of the same methods as ElvClient, and should be transparently
-   * interchangable with it from a usage perspective.
-   *
-   * The methods available in FrameClient are generated automatically from ElvClient. These methods will use a
-   * messaging protocol to communicate intent to a specified frame, which can listen for such messages, perform
-   * the actions using the real ElvClient, and return the results via a response message.
-   *
-   * Because the privileged frame is doing the actual work, it may decide to allow or disallow any actions
-   * it sees fit - for example, limiting a dependent app to a few safe calls while preventing it from making any
-   * significant changes.
-   *
-   * The most important aspect of this architecture is to prevent leaking of users' private keys. Be careful when
-   * setting up a project using this architecture - make sure the untrusted app is properly contained in a sandboxed
-   * IFrame and served from a different origin than the privileged app.
-   *
-   * @see test/frames/Parent.html and test/frames/Client.html for an example setup using this scheme
-   *
-   * @namedParams
-   * @param {Object} target - The window or frame that will listen for messages produced by this client
-   * @param {number} timeout - How long to wait for a response after calling a method before giving up
-   * and generating a timeout error
-   */
-  constructor({target, timeout=30}={}) {
-    if(!target &amp;&amp; typeof window !== "undefined" &amp;&amp; window.parent) {
-      target = window.parent;
-    }
+      
 
-    this.target = target;
-    this.timeout = timeout;
+      
 
-    this.utils = Utils;
+      <th class="last">Description</th>
+    </tr>
+  </thead>
 
-    // Dynamically defined methods defined in AllowedMethods
-    for(const methodName of this.AllowedMethods()){
-      this[methodName] = async (args) => {
-        let callback = args &amp;&amp; args.callback;
-        if(callback) { delete args.callback; }
+  <tbody>
+    
+      <tr>
+        
+          <td class="name"><code>groupAddress</code></td>
+        
 
-        return await this.SendMessage({
-          options: {
-            calledMethod: methodName,
-            args: this.utils.MakeClonable(args)
-          },
-          callback
-        });
-      };
-    }
-
-    this.userProfileClient = {};
-    // Dynamically defined user profile methods defined in AllowedUserProfileMethods
-    for(const methodName of this.AllowedUserProfileMethods()) {
-      this.userProfileClient[methodName] = async (args) => {
-        let callback = args &amp;&amp; args.callback;
-        if(callback) { delete args.callback; }
-
-        return await this.SendMessage({
-          options: {
-            module: "userProfileClient",
-            calledMethod: methodName,
-            args: this.utils.MakeClonable(args),
-            prompted: FrameClient.PromptedMethods().includes(methodName)
-          },
-          callback
-        });
-      };
-    }
-  }
-
-  /**
-   * Pass an ElvFrameRequest to the target and receive a ElvFrameResponse.
-   * Useful when acting as an intermediate between a contained app and a parent app.
-   *
-   * @namedParams
-   * @param {object} request - An ElvFrameRequest
-   * @returns {object} - The resultant ElvFrameResponse
-   */
-  async PassRequest({request, Respond}) {
-    let response, error;
-    try {
-      let callback;
-      if(request.callbackId) {
-        callback = (result) => Respond({
-          type: "ElvFrameResponse",
-          requestId: request.callbackId,
-          response: result
-        });
-      }
-
-      response = await this.SendMessage({options: request, callback});
-    } catch(e) {
-      error = e;
-    }
-
-    return {
-      type: "ElvFrameResponse",
-      requestId: request.requestId,
-      response,
-      error
-    };
-  }
-
-  async SendMessage({options={}, callback, noResponse=false}) {
-    const requestId = Id.next();
-
-    let callbackId;
-    if(callback) { callbackId = Id.next(); }
-
-    this.target.postMessage({
-      ...options,
-      type: "ElvFrameRequest",
-      requestId,
-      callbackId
-    }, "*");
-
-    // No timeout for prompted methods
-    if(noResponse) { return; }
-
-    const operation = options.calledMethod || options.operation;
-    const isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
-    const timeout = options.prompted || isFileOperation ? 0 : this.timeout;
-    return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
-  }
-
-  async AwaitMessage(requestId, timeout, callback, callbackId, operation) {
-    return await new Promise((resolve, reject) => {
-      let methodListener;
-
-      // Initialize or reset timeout
-      let timeoutId;
-      const touchTimeout = () => {
-        if(timeoutId) {
-          clearTimeout(timeoutId);
-        }
-
-        if(timeout > 0) {
-          timeoutId = setTimeout(() => {
-            if(typeof window !== "undefined") {
-              window.removeEventListener("message", methodListener);
-
-              if(callbackListener) {
-                window.removeEventListener("message", callbackListener);
-              }
-            }
-            reject(`Request ${requestId} timed out (${operation})`);
-          }, timeout * 1000);
-        }
-      };
-
-      // Set up callback listener
-      let callbackListener;
-      if(callbackId) {
-        callbackListener = (event) => {
-          try {
-            touchTimeout();
-
-            const message = event.data;
-
-            if(message.type !== "ElvFrameResponse" || message.requestId !== callbackId) {
-              return;
-            }
-
-            callback(message.response);
-          } catch(error) {
-            // eslint-disable-next-line no-console
-            console.error(error);
-          }
-        };
-
-        window.addEventListener("message", callbackListener);
-      }
-
-      // Set up final method response listener
-      methodListener = async (event) => {
-        try {
-          const message = event.data;
-
-          if(message.type !== "ElvFrameResponse" || message.requestId !== requestId) {
-            return;
-          }
-
-          clearTimeout(timeoutId);
-
-          window.removeEventListener("message", methodListener);
-          if(callbackListener) { window.removeEventListener("message", callbackListener); }
-
-          if(message.error) {
-            reject(message.error);
-          } else {
-            resolve(message.response);
-          }
-        } catch(error){
-          clearTimeout(timeoutId);
-
-          window.removeEventListener("message", methodListener);
-          if(callbackListener) { window.removeEventListener("message", callbackListener); }
-
-          reject(error);
-        }
-      };
-
-      // Start the timeout
-      touchTimeout();
-
-      window.addEventListener("message", methodListener);
-    });
-  }
-
-  // List of methods that may require a prompt - these should have an unlimited timeout period
-  static PromptedMethods() {
-    return [
-      "CollectedTags",
-      "DeleteUserMetadata",
-      "MergeUserMetadata",
-      "ReplaceUserMetadata",
-      "UserMetadata"
-    ];
-  }
-
-  static MetadataMethods() {
-    return [
-      "DeleteUserMetadata",
-      "MergeUserMetadata",
-      "ReplaceUserMetadata",
-      "UserMetadata"
-    ];
-  }
-
-  static FileMethods() {
-    return [
-      "DownloadFile",
-      "DownloadPart",
-      "UploadFiles",
-      "UploadPart",
-      "UploadPartChunk"
-    ];
-  }
-
-  // List of allowed methods available to frames
-  // This should match ElvClient.FrameAvailableMethods()
-  // ElvClient will also reject any disallowed methods
-  /**
-   * @returns {Array&lt;string>} - List of ElvClient methods available to a FrameClient
-   */
-  AllowedMethods() {
-    return [
-      "AccessGroupManagers",
-      "AccessGroupMembers",
-      "AccessGroupOwner",
-      "AccessInfo",
-      "AccessRequest",
-      "AccessType",
-      "AddAccessGroupManager",
-      "AddAccessGroupMember",
-      "AddContentLibraryGroup",
-      "AddContentObjectGroupPermission",
-      "AddLibraryContentType",
-      "AudienceData",
-      "AvailableDRMs",
-      "AwaitPending",
-      "BitmovinPlayoutOptions",
-      "BlockNumber",
-      "CallBitcodeMethod",
-      "CallContractMethod",
-      "CallContractMethodAndWait",
-      "ClearCache",
-      "Collection",
-      "ContentLibraries",
-      "ContentLibrary",
-      "ContentLibraryGroupPermissions",
-      "ContentLibraryOwner",
-      "ContentObject",
-      "ContentObjectAccessComplete",
-      "ContentObjectGraph",
-      "ContentObjectGroupPermissions",
-      "ContentObjectImageUrl",
-      "ContentObjectLibraryId",
-      "ContentObjectMetadata",
-      "ContentObjectOwner",
-      "ContentObjectVersions",
-      "ContentObjects",
-      "ContentPart",
-      "ContentParts",
-      "ContentSpaceId",
-      "ContentType",
-      "ContentTypeOwner",
-      "ContentTypes",
-      "ContractAbi",
-      "ContractEvents",
-      "ContractName",
-      "CopyContentObject",
-      "CreateABRMezzanine",
-      "CreateAccessGroup",
-      "CreateContentLibrary",
-      "CreateContentObject",
-      "CreateContentType",
-      "CreateFileDirectories",
-      "CreateFileUploadJob",
-      "CreateLinks",
-      "CreatePart",
-      "CreateProductionMaster",
-      "CurrentAccountAddress",
-      "CustomContractAddress",
-      "Decrypt",
-      "DecryptECIES",
-      "DefaultKMSAddress",
-      "DeleteAccessGroup",
-      "DeleteContentLibrary",
-      "DeleteContentObject",
-      "DeleteContentVersion",
-      "DeleteFiles",
-      "DeleteMetadata",
-      "DeletePart",
-      "DeployContract",
-      "Download",
-      "DownloadEncrypted",
-      "DownloadFile",
-      "DownloadPart",
-      "EditContentObject",
-      "Encrypt",
-      "EncryptECIES",
-      "EncryptionConk",
-      "Events",
-      "ExtractEventFromLogs",
-      "ExtractValueFromEvent",
-      "FabricUrl",
-      "FileUrl",
-      "FinalizeABRMezzanine",
-      "FinalizeContentObject",
-      "FinalizePart",
-      "FinalizeStateChannelAccess",
-      "FinalizeUploadJob",
-      "FormatContractArguments",
-      "GenerateStateChannelToken",
-      "GetBalance",
-      "LatestVersionHash",
-      "LibraryContentTypes",
-      "LinkAccessGroupToOauth",
-      "LinkData",
-      "LinkTarget",
-      "LinkUrl",
-      "ListFiles",
-      "LROStatus",
-      "MergeMetadata",
-      "NodeId",
-      "Nodes",
-      "PlayoutOptions",
-      "ProduceMetadataLinks",
-      "Proofs",
-      "PublicRep",
-      "PublishContentVersion",
-      "QParts",
-      "RemoveAccessGroupManager",
-      "RemoveAccessGroupMember",
-      "RemoveContentObjectGroupPermission",
-      "RemoveContentLibraryGroup",
-      "RemoveLibraryContentType",
-      "Rep",
-      "ReplaceMetadata",
-      "Request",
-      "ResetRegion",
-      "SendFunds",
-      "SetAccessCharge",
-      "SetAuth",
-      "SetContentLibraryImage",
-      "SetContentObjectImage",
-      "SetCustomContentContract",
-      "SetNodes",
-      "SetOauthToken",
-      "SetSignerFromOauthToken",
-      "SetVisibility",
-      "StartABRMezzanineJobs",
-      "UpdateContentObjectGraph",
-      "UploadFileData",
-      "UploadFiles",
-      "UploadFilesFromS3",
-      "UploadJobStatus",
-      "UploadPart",
-      "UploadPartChunk",
-      "UploadStatus",
-      "UseRegion",
-      "VerifyContentObject",
-      "Visibility"
-    ];
-  }
-
-  AllowedUserProfileMethods() {
-    return [
-      "AccessLevel",
-      "CollectedTags",
-      "CreateWallet",
-      "DeleteUserMetadata",
-      "MergeUserMetadata",
-      "PublicUserMetadata",
-      "ReplaceUserMetadata",
-      "TenantId",
-      "UserMetadata",
-      "UserProfileImage",
-      "UserWalletAddress",
-      "UserWalletObjectInfo",
-      "WalletAddress"
-    ];
-  }
-}
-
-exports.FrameClient = FrameClient;
-</code></pre>
-</div>
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
 
     
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          <p>The address of the group</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>kmsId</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          <p>The ID of the KMS (or trust authority ID)</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>oauthConfig</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    |
+
+    <span class="param-type">
+      Object
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+
+        
+
+        <td class="description last">
+          <p>The configuration for the OAuth settings</p>
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source">
+      <ul class="dummy">
+        <li>
+          <a href="client_AccessGroups.js.html">client/AccessGroups.js</a>, <a href="client_AccessGroups.js.html#line640">line 640</a>
+        </li>
+      </ul>
+    </dd>
+  
+
+  
+
+  
+</dl>
+
+
+      
+    </div>
+
+    
+
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+
+    
+
+    
+  </article>
+</section>
+
+
 
 
 
