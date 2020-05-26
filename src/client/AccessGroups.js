@@ -637,7 +637,7 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
  * @return {Promise<void>}
  * @constructor
  */
-exports.LinkOauth = async function({groupAddress, kmsId, oauthConfig}) {
+exports.LinkAccessGroupToOauth = async function({groupAddress, kmsId, oauthConfig}) {
   ValidateAddress(groupAddress);
   ValidatePresence("kmsId", kmsId);
   ValidatePresence("oauthConfig", oauthConfig);

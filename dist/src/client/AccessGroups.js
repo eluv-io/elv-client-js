@@ -1095,7 +1095,7 @@ exports.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
  */
 
 
-exports.LinkOauth = function _callee22(_ref18) {
+exports.LinkAccessGroupToOauth = function _callee22(_ref18) {
   var groupAddress, kmsId, oauthConfig, _ref19, publicKey, config, kmsKey, kmsConfig, userKey, userConfig, objectId, writeToken;
 
   return _regeneratorRuntime.async(function _callee22$(_context22) {
