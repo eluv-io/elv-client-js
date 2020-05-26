@@ -91,20 +91,6 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "candidate",
-      "type": "address"
-    }],
-    "name": "canNodePublish",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [{
       "name": "",
       "type": "address"
     }],
@@ -283,6 +269,17 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "string"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "canEdit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
     }],
     "payable": false,
     "stateMutability": "view",

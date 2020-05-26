@@ -4,7 +4,7 @@ import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
 import {BaseContent} from "./base_content.sol";
-import {FactorySpace} from "./base_space_interfaces.sol";
+import {IFactorySpace, INodeSpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./meta_object.sol";
 
@@ -56,7 +56,8 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function canConfirm() public view returns (bool) {
-        return canNodePublish(msg.sender);
+        INodeSpace bcs = INodeSpace(contentSpace);
+        return bcs.canNodePublish(msg.sender);
     }
 
     function canPublish() public view returns (bool) {
@@ -64,7 +65,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
             return true;
         }
 
-        address userWallet = UserSpace(contentSpace).getUserWallet(tx.origin);
+        address userWallet = IUserSpace(contentSpace).userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT()) == true) {
@@ -284,7 +285,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function createContent(address content_type) public  returns (address) {
-        address content = FactorySpace(contentSpace).createContent(address(this), content_type);
+        address content = IFactorySpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type, contentSpace);
         return content;
     }
@@ -304,7 +305,7 @@ contract BaseLibrary is MetaObject, Accessible, Container {
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = UserSpace(contentSpace).getUserWallet(stakeholder);
+        address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

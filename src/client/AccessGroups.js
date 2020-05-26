@@ -627,3 +627,59 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
     eventName: "RightsChanged"
   });
 };
+
+/**
+ * Link the specified group to an OAuth provider with the specified credentials
+ *
+ * @param {string} groupAddress - The address of the group
+ * @param {string} kmsId - The ID of the KMS (or trust authority ID)
+ * @param {string | Object} oauthConfig - The configuration for the OAuth settings
+ * @return {Promise<void>}
+ * @constructor
+ */
+exports.LinkOauth = async function({groupAddress, kmsId, oauthConfig}) {
+  ValidateAddress(groupAddress);
+  ValidatePresence("kmsId", kmsId);
+  ValidatePresence("oauthConfig", oauthConfig);
+
+  if(typeof oauthConfig === "string") {
+    oauthConfig = JSON.parse(oauthConfig);
+  }
+
+  const { publicKey } = await this.authClient.KMSInfo({kmsId});
+
+  const config = JSON.stringify(oauthConfig);
+
+  const kmsKey = `eluv.jwtv.${kmsId}`;
+  const kmsConfig = await this.Crypto.EncryptConk(config, publicKey);
+
+  const userKey = `eluv.jwtv.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const userConfig = await this.EncryptECIES(config);
+
+  const objectId = this.utils.AddressToObjectId(groupAddress);
+  const writeToken = (await this.EditContentObject({libraryId: this.contentSpaceLibraryId, objectId})).write_token;
+
+  await this.ReplaceMetadata({
+    libraryId: this.contentSpaceLibraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: kmsKey,
+    metadata: kmsConfig
+  });
+
+  await this.ReplaceMetadata({
+    libraryId: this.contentSpaceLibraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: userKey,
+    metadata: userConfig
+  });
+
+  await this.FinalizeContentObject({libraryId: this.contentSpaceLibraryId, objectId, writeToken});
+
+  await this.CallContractMethodAndWait({
+    contractAddress: groupAddress,
+    methodName: "setOAuthEnabled",
+    methodArgs: [true]
+  });
+};

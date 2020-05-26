@@ -291,7 +291,6 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
     libraryId,
     objectId,
     writeToken,
-    data: image,
     encrypted: false,
     fileInfo: [
       {

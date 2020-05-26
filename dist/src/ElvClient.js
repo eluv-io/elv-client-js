@@ -29,6 +29,9 @@ var Utils = require("./Utils");
 
 var Crypto = require("./Crypto");
 
+var _require = require("./Validation"),
+    ValidatePresence = _require.ValidatePresence;
+
 if (Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
@@ -627,6 +630,78 @@ function () {
       }, null, this, [[4, 29]]);
     }
     /**
+     * Encrypt the given message with the current signer's public key
+     *
+     * @param {string} message - The message to encrypt
+     * @return {Promise<string>} - The encrypted message
+     */
+
+  }, {
+    key: "EncryptECIES",
+    value: function EncryptECIES(message) {
+      return _regeneratorRuntime.async(function EncryptECIES$(_context7) {
+        while (1) {
+          switch (_context7.prev = _context7.next) {
+            case 0:
+              if (this.signer) {
+                _context7.next = 2;
+                break;
+              }
+
+              throw "Signer not set";
+
+            case 2:
+              ValidatePresence("message", message);
+              _context7.next = 5;
+              return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(message, this.signer.signingKey.keyPair.publicKey));
+
+            case 5:
+              return _context7.abrupt("return", _context7.sent);
+
+            case 6:
+            case "end":
+              return _context7.stop();
+          }
+        }
+      }, null, this);
+    }
+    /**
+     * Decrypt the given encrypted message with the current signer's private key
+     *
+     * @param {string} message - The message to decrypt
+     * @return {Promise<string>} - The decrypted message
+     */
+
+  }, {
+    key: "DecryptECIES",
+    value: function DecryptECIES(message) {
+      return _regeneratorRuntime.async(function DecryptECIES$(_context8) {
+        while (1) {
+          switch (_context8.prev = _context8.next) {
+            case 0:
+              if (this.signer) {
+                _context8.next = 2;
+                break;
+              }
+
+              throw "Signer not set";
+
+            case 2:
+              ValidatePresence("message", message);
+              _context8.next = 5;
+              return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey));
+
+            case 5:
+              return _context8.abrupt("return", _context8.sent);
+
+            case 6:
+            case "end":
+              return _context8.stop();
+          }
+        }
+      }, null, this);
+    }
+    /**
      * Request the specified URL with the given method and body, and return the result in the specified format
      *
      * @param {string} url - URL to request
@@ -673,16 +748,16 @@ function () {
       var _this = this;
 
       var callback, method, methodResults, responseError;
-      return _regeneratorRuntime.async(function CallFromFrameMessage$(_context7) {
+      return _regeneratorRuntime.async(function CallFromFrameMessage$(_context9) {
         while (1) {
-          switch (_context7.prev = _context7.next) {
+          switch (_context9.prev = _context9.next) {
             case 0:
               if (!(message.type !== "ElvFrameRequest")) {
-                _context7.next = 2;
+                _context9.next = 2;
                 break;
               }
 
-              return _context7.abrupt("return");
+              return _context9.abrupt("return");
 
             case 2:
               if (message.callbackId) {
@@ -697,44 +772,44 @@ function () {
                 message.args.callback = callback;
               }
 
-              _context7.prev = 3;
+              _context9.prev = 3;
               method = message.calledMethod;
 
               if (!(message.module === "userProfileClient")) {
-                _context7.next = 13;
+                _context9.next = 13;
                 break;
               }
 
               if (this.userProfileClient.FrameAllowedMethods().includes(method)) {
-                _context7.next = 8;
+                _context9.next = 8;
                 break;
               }
 
               throw Error("Invalid user profile method: " + method);
 
             case 8:
-              _context7.next = 10;
+              _context9.next = 10;
               return _regeneratorRuntime.awrap(this.userProfileClient[method](message.args));
 
             case 10:
-              methodResults = _context7.sent;
-              _context7.next = 18;
+              methodResults = _context9.sent;
+              _context9.next = 18;
               break;
 
             case 13:
               if (this.FrameAllowedMethods().includes(method)) {
-                _context7.next = 15;
+                _context9.next = 15;
                 break;
               }
 
               throw Error("Invalid method: " + method);
 
             case 15:
-              _context7.next = 17;
+              _context9.next = 17;
               return _regeneratorRuntime.awrap(this[method](message.args));
 
             case 17:
-              methodResults = _context7.sent;
+              methodResults = _context9.sent;
 
             case 18:
               Respond(this.utils.MakeClonable({
@@ -742,17 +817,17 @@ function () {
                 requestId: message.requestId,
                 response: methodResults
               }));
-              _context7.next = 27;
+              _context9.next = 27;
               break;
 
             case 21:
-              _context7.prev = 21;
-              _context7.t0 = _context7["catch"](3);
+              _context9.prev = 21;
+              _context9.t0 = _context9["catch"](3);
               // eslint-disable-next-line no-console
-              this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2), "\n        Error: ").concat(_typeof(_context7.t0) === "object" ? JSON.stringify(_context7.t0, null, 2) : _context7.t0), true); // eslint-disable-next-line no-console
+              this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2), "\n        Error: ").concat(_typeof(_context9.t0) === "object" ? JSON.stringify(_context9.t0, null, 2) : _context9.t0), true); // eslint-disable-next-line no-console
 
-              console.error(_context7.t0);
-              responseError = _context7.t0 instanceof Error ? _context7.t0.message : _context7.t0;
+              console.error(_context9.t0);
+              responseError = _context9.t0 instanceof Error ? _context9.t0.message : _context9.t0;
               Respond(this.utils.MakeClonable({
                 type: "ElvFrameResponse",
                 requestId: message.requestId,
@@ -761,7 +836,7 @@ function () {
 
             case 27:
             case "end":
-              return _context7.stop();
+              return _context9.stop();
           }
         }
       }, null, this, [[3, 21]]);
@@ -771,23 +846,23 @@ function () {
     value: function Configuration(_ref13) {
       var configUrl, _ref13$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
 
-      return _regeneratorRuntime.async(function Configuration$(_context8) {
+      return _regeneratorRuntime.async(function Configuration$(_context10) {
         while (1) {
-          switch (_context8.prev = _context8.next) {
+          switch (_context10.prev = _context10.next) {
             case 0:
               configUrl = _ref13.configUrl, _ref13$kmsUrls = _ref13.kmsUrls, kmsUrls = _ref13$kmsUrls === void 0 ? [] : _ref13$kmsUrls, region = _ref13.region;
-              _context8.prev = 1;
+              _context10.prev = 1;
               uri = new URI(configUrl);
 
               if (region) {
                 uri.addSearch("elvgeo", region);
               }
 
-              _context8.next = 6;
+              _context10.next = 6;
               return _regeneratorRuntime.awrap(Utils.ResponseToJson(HttpClient.Fetch(uri.toString())));
 
             case 6:
-              fabricInfo = _context8.sent;
+              fabricInfo = _context10.sent;
 
               // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
               filterHTTPS = function filterHTTPS(uri) {
@@ -806,7 +881,7 @@ function () {
                 ethereumURIs = ethereumURIs.filter(filterHTTPS);
               }
 
-              return _context8.abrupt("return", {
+              return _context10.abrupt("return", {
                 nodeId: fabricInfo.node_id,
                 contentSpaceId: fabricInfo.qspace.id,
                 fabricURIs: fabricURIs,
@@ -815,17 +890,17 @@ function () {
               });
 
             case 15:
-              _context8.prev = 15;
-              _context8.t0 = _context8["catch"](1);
+              _context10.prev = 15;
+              _context10.t0 = _context10["catch"](1);
               // eslint-disable-next-line no-console
               console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
 
-              console.error(_context8.t0);
-              throw _context8.t0;
+              console.error(_context10.t0);
+              throw _context10.t0;
 
             case 20:
             case "end":
-              return _context8.stop();
+              return _context10.stop();
           }
         }
       }, null, null, [[1, 15]]);
@@ -849,19 +924,19 @@ function () {
     value: function FromConfigurationUrl(_ref14) {
       var configUrl, region, trustAuthorityId, _ref14$noCache, noCache, _ref14$noAuth, noAuth, _ref15, contentSpaceId, fabricURIs, ethereumURIs, client;
 
-      return _regeneratorRuntime.async(function FromConfigurationUrl$(_context9) {
+      return _regeneratorRuntime.async(function FromConfigurationUrl$(_context11) {
         while (1) {
-          switch (_context9.prev = _context9.next) {
+          switch (_context11.prev = _context11.next) {
             case 0:
               configUrl = _ref14.configUrl, region = _ref14.region, trustAuthorityId = _ref14.trustAuthorityId, _ref14$noCache = _ref14.noCache, noCache = _ref14$noCache === void 0 ? false : _ref14$noCache, _ref14$noAuth = _ref14.noAuth, noAuth = _ref14$noAuth === void 0 ? false : _ref14$noAuth;
-              _context9.next = 3;
+              _context11.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
                 region: region
               }));
 
             case 3:
-              _ref15 = _context9.sent;
+              _ref15 = _context11.sent;
               contentSpaceId = _ref15.contentSpaceId;
               fabricURIs = _ref15.fabricURIs;
               ethereumURIs = _ref15.ethereumURIs;
@@ -874,11 +949,11 @@ function () {
                 noAuth: noAuth
               });
               client.configUrl = configUrl;
-              return _context9.abrupt("return", client);
+              return _context11.abrupt("return", client);
 
             case 10:
             case "end":
-              return _context9.stop();
+              return _context11.stop();
           }
         }
       });
