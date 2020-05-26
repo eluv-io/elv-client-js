@@ -19,12 +19,14 @@ BaseContent20190605203200ML: Splits publish and confirm logic
 BaseContent20190724203300ML: Enforces access rights in access request
 BaseContent20190801141600ML: Fixes the access rights grant for paid content
 BaseContent20191029161700ML: Removed debug statements for accessRequest
+BaseContent20191219135200ML: Made content object updatable by non-owner
+BaseContent20200422180500ML: Version update to reflect changes made to editable to fix deletion
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20191202161700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200422180500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -195,7 +197,7 @@ contract BaseContent is Editable {
     }
 
     function getKMSInfo(bytes prefix) public view returns (string, string) {
-        KmsSpace kmsSpaceObj = KmsSpace(contentSpace);
+        IKmsSpace kmsSpaceObj = IKmsSpace(contentSpace);
         if (addressKMS == 0x0 || kmsSpaceObj.checkKMSAddr(addressKMS) == 0) {
             return ("", "");
         }
@@ -234,8 +236,8 @@ contract BaseContent is Editable {
         if ((tx.origin == owner) || (visibility >= CAN_EDIT) ){
             return (0, 0, accessCharge);
         }
-        UserSpace userSpaceObj = UserSpace(contentSpace);
-        address userWallet = userSpaceObj.getUserWallet(tx.origin);
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address userWallet = userSpaceObj.userWallets(tx.origin);
         if (userWallet != 0x0) {
             AccessIndexor wallet = AccessIndexor(userWallet);
             if (wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT()) == true) {
@@ -287,8 +289,8 @@ contract BaseContent is Editable {
         (visibilityCode, accessCode, levelAccessCharge) = getCustomInfo( level, custom_values, stakeholders);//broken out to reduce complexity (compiler failed)
 
         if ((visibilityCode == 255) || (accessCode == 255) ) {
-            UserSpace userSpaceObj = UserSpace(contentSpace);
-            address userWallet = userSpaceObj.getUserWallet(tx.origin);
+            IUserSpace userSpaceObj = IUserSpace(contentSpace);
+            address userWallet = userSpaceObj.userWallets(tx.origin);
             if (userWallet != 0x0) {
                 AccessIndexor wallet = AccessIndexor(userWallet);
                 if (visibilityCode == 255) { //No custom calculations
@@ -317,8 +319,8 @@ contract BaseContent is Editable {
     }
 
     function canEdit() public view returns (bool) {
-        UserSpace userSpaceObj = UserSpace(contentSpace);
-        address walletAddress = userSpaceObj.getUserWallet(tx.origin);
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address walletAddress = userSpaceObj.userWallets(tx.origin);
         AccessIndexor wallet = AccessIndexor(walletAddress);
         return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
     }
@@ -332,8 +334,8 @@ contract BaseContent is Editable {
     }
 
     function canConfirm() public view returns (bool) {
-        Container lib = Container(libraryAddress);
-        return lib.canNodePublish(msg.sender);
+        INodeSpace bcs = INodeSpace(contentSpace);
+        return bcs.canNodePublish(msg.sender);
     }
 
     // override from Editable
@@ -391,6 +393,22 @@ contract BaseContent is Editable {
         bool enough
     );
     event DbgAccessCode(uint8 code);
+
+    function updateRequest() public {
+        if (contentContractAddress == 0x0) {
+            super.updateRequest();
+        } else {
+            Content c = Content(contentContractAddress);
+            uint editCode = c.runEdit();
+            if (editCode == 100) {
+                super.updateRequest();
+            } else {
+                require(editCode == 0);
+                emit UpdateRequest(objectHash);
+            }
+        }
+    }
+
 
     //  level - the security group for which the access request is for
     //  pkeRequestor - ethereum public key of the requestor (ECIES)
@@ -548,13 +566,13 @@ contract BaseContent is Editable {
     }
 
     function setPaidRights() private {
-        address walletAddress = UserSpace(contentSpace).getUserWallet(msg.sender);
+        address walletAddress = IUserSpace(contentSpace).userWallets(msg.sender);
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
 
     function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = UserSpace(contentSpace).getUserWallet(stakeholder);
+        address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
         if (walletAddress == 0x0){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);

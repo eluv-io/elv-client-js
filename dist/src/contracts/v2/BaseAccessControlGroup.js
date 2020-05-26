@@ -103,6 +103,17 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
+    "inputs": [],
+    "name": "oauthEnabled",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
     "inputs": [{
       "name": "",
       "type": "uint256"
@@ -631,6 +642,17 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [],
+    "name": "canEdit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
     "name": "ACCESS_NONE",
     "outputs": [{
       "name": "",
@@ -1038,6 +1060,17 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_enabled",
+      "type": "bool"
+    }],
+    "name": "setOAuthEnabled",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [],
     "name": "getContractsLength",
@@ -1125,6 +1158,15 @@ var contract = {
       "type": "address"
     }],
     "name": "UnauthorizedOperation",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "enabled",
+      "type": "bool"
+    }],
+    "name": "OAuthStatusChanged",
     "type": "event"
   }, {
     "anonymous": false,

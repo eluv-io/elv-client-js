@@ -1084,3 +1084,102 @@ exports.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
     }
   }, null, this);
 };
+/**
+ * Link the specified group to an OAuth provider with the specified credentials
+ *
+ * @param {string} groupAddress - The address of the group
+ * @param {string} kmsId - The ID of the KMS (or trust authority ID)
+ * @param {string | Object} oauthConfig - The configuration for the OAuth settings
+ * @return {Promise<void>}
+ * @constructor
+ */
+
+
+exports.LinkOauth = function _callee22(_ref18) {
+  var groupAddress, kmsId, oauthConfig, _ref19, publicKey, config, kmsKey, kmsConfig, userKey, userConfig, objectId, writeToken;
+
+  return _regeneratorRuntime.async(function _callee22$(_context22) {
+    while (1) {
+      switch (_context22.prev = _context22.next) {
+        case 0:
+          groupAddress = _ref18.groupAddress, kmsId = _ref18.kmsId, oauthConfig = _ref18.oauthConfig;
+          ValidateAddress(groupAddress);
+          ValidatePresence("kmsId", kmsId);
+          ValidatePresence("oauthConfig", oauthConfig);
+
+          if (typeof oauthConfig === "string") {
+            oauthConfig = JSON.parse(oauthConfig);
+          }
+
+          _context22.next = 7;
+          return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
+            kmsId: kmsId
+          }));
+
+        case 7:
+          _ref19 = _context22.sent;
+          publicKey = _ref19.publicKey;
+          config = JSON.stringify(oauthConfig);
+          kmsKey = "eluv.jwtv.".concat(kmsId);
+          _context22.next = 13;
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(config, publicKey));
+
+        case 13:
+          kmsConfig = _context22.sent;
+          userKey = "eluv.jwtv.iusr".concat(this.utils.AddressToHash(this.signer.address));
+          _context22.next = 17;
+          return _regeneratorRuntime.awrap(this.EncryptECIES(config));
+
+        case 17:
+          userConfig = _context22.sent;
+          objectId = this.utils.AddressToObjectId(groupAddress);
+          _context22.next = 21;
+          return _regeneratorRuntime.awrap(this.EditContentObject({
+            libraryId: this.contentSpaceLibraryId,
+            objectId: objectId
+          }));
+
+        case 21:
+          writeToken = _context22.sent.write_token;
+          _context22.next = 24;
+          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
+            libraryId: this.contentSpaceLibraryId,
+            objectId: objectId,
+            writeToken: writeToken,
+            metadataSubtree: kmsKey,
+            metadata: kmsConfig
+          }));
+
+        case 24:
+          _context22.next = 26;
+          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
+            libraryId: this.contentSpaceLibraryId,
+            objectId: objectId,
+            writeToken: writeToken,
+            metadataSubtree: userKey,
+            metadata: userConfig
+          }));
+
+        case 26:
+          _context22.next = 28;
+          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
+            libraryId: this.contentSpaceLibraryId,
+            objectId: objectId,
+            writeToken: writeToken
+          }));
+
+        case 28:
+          _context22.next = 30;
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+            contractAddress: groupAddress,
+            methodName: "setOAuthEnabled",
+            methodArgs: [true]
+          }));
+
+        case 30:
+        case "end":
+          return _context22.stop();
+      }
+    }
+  }, null, this);
+};

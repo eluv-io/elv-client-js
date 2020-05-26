@@ -12,6 +12,8 @@ const HttpClient = require("./HttpClient");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 
+const { ValidatePresence } = require("./Validation");
+
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
@@ -512,6 +514,38 @@ class ElvClient {
 
       throw error;
     }
+  }
+
+  /**
+   * Encrypt the given message with the current signer's public key
+   *
+   * @param {string} message - The message to encrypt
+   * @return {Promise<string>} - The encrypted message
+   */
+  async EncryptECIES(message) {
+    if(!this.signer) {
+      throw "Signer not set";
+    }
+
+    ValidatePresence("message", message);
+
+    return await this.Crypto.EncryptConk(message, this.signer.signingKey.keyPair.publicKey);
+  }
+
+  /**
+   * Decrypt the given encrypted message with the current signer's private key
+   *
+   * @param {string} message - The message to decrypt
+   * @return {Promise<string>} - The decrypted message
+   */
+  async DecryptECIES(message) {
+    if(!this.signer) {
+      throw "Signer not set";
+    }
+
+    ValidatePresence("message", message);
+
+    return await this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
   }
 
   /**

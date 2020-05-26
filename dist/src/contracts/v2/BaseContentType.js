@@ -190,6 +190,17 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [],
+    "name": "canEdit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
     "name": "owner",
     "outputs": [{
       "name": "",
