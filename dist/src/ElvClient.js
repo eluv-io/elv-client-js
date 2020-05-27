@@ -630,9 +630,9 @@ function () {
       }, null, this, [[4, 29]]);
     }
     /**
-     * Encrypt the given message with the current signer's public key
+     * Encrypt the given string or object with the current signer's public key
      *
-     * @param {string} message - The message to encrypt
+     * @param {string | Object} message - The string or object to encrypt
      * @return {Promise<string>} - The encrypted message
      */
 
@@ -669,7 +669,7 @@ function () {
      * Decrypt the given encrypted message with the current signer's private key
      *
      * @param {string} message - The message to decrypt
-     * @return {Promise<string>} - The decrypted message
+     * @return {Promise<string | Object>} - The decrypted string or object
      */
 
   }, {

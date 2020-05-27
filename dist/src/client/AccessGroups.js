@@ -1090,13 +1090,11 @@ exports.RemoveContentObjectGroupPermission = function _callee21(_ref17) {
  * @param {string} groupAddress - The address of the group
  * @param {string} kmsId - The ID of the KMS (or trust authority ID)
  * @param {string | Object} oauthConfig - The configuration for the OAuth settings
- * @return {Promise<void>}
- * @constructor
  */
 
 
 exports.LinkAccessGroupToOauth = function _callee22(_ref18) {
-  var groupAddress, kmsId, oauthConfig, _ref19, publicKey, config, kmsKey, kmsConfig, userKey, userConfig, objectId, writeToken;
+  var groupAddress, kmsId, oauthConfig, _ref19, publicKey, kmsKey, kmsConfig, userKey, userConfig, objectId, writeToken;
 
   return _regeneratorRuntime.async(function _callee22$(_context22) {
     while (1) {
@@ -1119,29 +1117,28 @@ exports.LinkAccessGroupToOauth = function _callee22(_ref18) {
         case 7:
           _ref19 = _context22.sent;
           publicKey = _ref19.publicKey;
-          config = JSON.stringify(oauthConfig);
           kmsKey = "eluv.jwtv.".concat(kmsId);
-          _context22.next = 13;
-          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(config, publicKey));
+          _context22.next = 12;
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(oauthConfig, publicKey));
 
-        case 13:
+        case 12:
           kmsConfig = _context22.sent;
           userKey = "eluv.jwtv.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context22.next = 17;
-          return _regeneratorRuntime.awrap(this.EncryptECIES(config));
+          _context22.next = 16;
+          return _regeneratorRuntime.awrap(this.EncryptECIES(oauthConfig));
 
-        case 17:
+        case 16:
           userConfig = _context22.sent;
           objectId = this.utils.AddressToObjectId(groupAddress);
-          _context22.next = 21;
+          _context22.next = 20;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId
           }));
 
-        case 21:
+        case 20:
           writeToken = _context22.sent.write_token;
-          _context22.next = 24;
+          _context22.next = 23;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
@@ -1150,8 +1147,8 @@ exports.LinkAccessGroupToOauth = function _callee22(_ref18) {
             metadata: kmsConfig
           }));
 
-        case 24:
-          _context22.next = 26;
+        case 23:
+          _context22.next = 25;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
@@ -1160,25 +1157,62 @@ exports.LinkAccessGroupToOauth = function _callee22(_ref18) {
             metadata: userConfig
           }));
 
-        case 26:
-          _context22.next = 28;
+        case 25:
+          _context22.next = 27;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
             writeToken: writeToken
           }));
 
-        case 28:
-          _context22.next = 30;
+        case 27:
+          _context22.next = 29;
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+            contractAddress: groupAddress,
+            methodName: "setOAuthEnabled",
+            methodArgs: [false]
+          }));
+
+        case 29:
+          _context22.next = 31;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: groupAddress,
             methodName: "setOAuthEnabled",
             methodArgs: [true]
           }));
 
-        case 30:
+        case 31:
         case "end":
           return _context22.stop();
+      }
+    }
+  }, null, this);
+};
+/**
+ * Disable the OAuth linking on the specified access group
+ *
+ * @param {string} groupAddress - The address of the group
+ */
+
+
+exports.UnlinkAccessGroupFromOauth = function _callee23(_ref20) {
+  var groupAddress;
+  return _regeneratorRuntime.async(function _callee23$(_context23) {
+    while (1) {
+      switch (_context23.prev = _context23.next) {
+        case 0:
+          groupAddress = _ref20.groupAddress;
+          ValidateAddress(groupAddress);
+          _context23.next = 4;
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+            contractAddress: groupAddress,
+            methodName: "setOAuthEnabled",
+            methodArgs: [false]
+          }));
+
+        case 4:
+        case "end":
+          return _context23.stop();
       }
     }
   }, null, this);

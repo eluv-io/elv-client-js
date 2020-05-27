@@ -381,6 +381,7 @@ class FrameClient {
       "SetSignerFromOauthToken",
       "SetVisibility",
       "StartABRMezzanineJobs",
+      "UnlinkAccessGroupFromOauth",
       "UpdateContentObjectGraph",
       "UploadFileData",
       "UploadFiles",

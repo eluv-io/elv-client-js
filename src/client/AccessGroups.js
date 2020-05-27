@@ -634,8 +634,6 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
  * @param {string} groupAddress - The address of the group
  * @param {string} kmsId - The ID of the KMS (or trust authority ID)
  * @param {string | Object} oauthConfig - The configuration for the OAuth settings
- * @return {Promise<void>}
- * @constructor
  */
 exports.LinkAccessGroupToOauth = async function({groupAddress, kmsId, oauthConfig}) {
   ValidateAddress(groupAddress);
@@ -648,13 +646,11 @@ exports.LinkAccessGroupToOauth = async function({groupAddress, kmsId, oauthConfi
 
   const { publicKey } = await this.authClient.KMSInfo({kmsId});
 
-  const config = JSON.stringify(oauthConfig);
-
   const kmsKey = `eluv.jwtv.${kmsId}`;
-  const kmsConfig = await this.Crypto.EncryptConk(config, publicKey);
+  const kmsConfig = await this.Crypto.EncryptConk(oauthConfig, publicKey);
 
   const userKey = `eluv.jwtv.iusr${this.utils.AddressToHash(this.signer.address)}`;
-  const userConfig = await this.EncryptECIES(config);
+  const userConfig = await this.EncryptECIES(oauthConfig);
 
   const objectId = this.utils.AddressToObjectId(groupAddress);
   const writeToken = (await this.EditContentObject({libraryId: this.contentSpaceLibraryId, objectId})).write_token;
@@ -680,6 +676,27 @@ exports.LinkAccessGroupToOauth = async function({groupAddress, kmsId, oauthConfi
   await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
     methodName: "setOAuthEnabled",
+    methodArgs: [false]
+  });
+
+  await this.CallContractMethodAndWait({
+    contractAddress: groupAddress,
+    methodName: "setOAuthEnabled",
     methodArgs: [true]
+  });
+};
+
+/**
+ * Disable the OAuth linking on the specified access group
+ *
+ * @param {string} groupAddress - The address of the group
+ */
+exports.UnlinkAccessGroupFromOauth = async function({groupAddress}) {
+  ValidateAddress(groupAddress);
+
+  await this.CallContractMethodAndWait({
+    contractAddress: groupAddress,
+    methodName: "setOAuthEnabled",
+    methodArgs: [false]
   });
 };
