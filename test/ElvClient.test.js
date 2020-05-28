@@ -475,7 +475,7 @@ describe("Test ElvClient", () => {
       objectId = createResponse.id;
 
       const finalizeResponse = await client.FinalizeContentObject({libraryId, objectId, writeToken});
-
+      
       await expect(finalizeResponse).toBeDefined();
 
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
@@ -810,7 +810,7 @@ describe("Test ElvClient", () => {
     test("Encrypt and Decrypt", async () => {
       // Ensure encryption conk is set
       const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
-      await client.EncryptionConk({libraryId, objectId, writeToken});
+      await client.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
 
       const encrypted = await client.Encrypt({libraryId, objectId, chunk: testFile1});
