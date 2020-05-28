@@ -2803,6 +2803,152 @@ exports.LinkData = function _callee35(_ref29) {
 };
 /* Encryption */
 
+
+exports.CreateEncryptionConk = function _callee36(_ref30) {
+  var libraryId, objectId, writeToken, _ref30$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
+
+  return _regeneratorRuntime.async(function _callee36$(_context36) {
+    while (1) {
+      switch (_context36.prev = _context36.next) {
+        case 0:
+          libraryId = _ref30.libraryId, objectId = _ref30.objectId, writeToken = _ref30.writeToken, _ref30$createKMSConk = _ref30.createKMSConk, createKMSConk = _ref30$createKMSConk === void 0 ? true : _ref30$createKMSConk;
+          ValidateParameters({
+            libraryId: libraryId,
+            objectId: objectId
+          });
+          ValidateWriteToken(writeToken);
+          capKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
+          _context36.next = 6;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            writeToken: writeToken,
+            metadataSubtree: capKey
+          }));
+
+        case 6:
+          existingUserCap = _context36.sent;
+
+          if (!existingUserCap) {
+            _context36.next = 11;
+            break;
+          }
+
+          this.encryptionConks[objectId] = existingUserCap;
+          _context36.next = 27;
+          break;
+
+        case 11:
+          _context36.next = 13;
+          return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk());
+
+        case 13:
+          this.encryptionConks[objectId] = _context36.sent;
+          _context36.t0 = _regeneratorRuntime;
+          _context36.t1 = this;
+          _context36.t2 = libraryId;
+          _context36.t3 = objectId;
+          _context36.t4 = writeToken;
+          _context36.t5 = capKey;
+          _context36.next = 22;
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
+
+        case 22:
+          _context36.t6 = _context36.sent;
+          _context36.t7 = {
+            libraryId: _context36.t2,
+            objectId: _context36.t3,
+            writeToken: _context36.t4,
+            metadataSubtree: _context36.t5,
+            metadata: _context36.t6
+          };
+          _context36.t8 = _context36.t1.ReplaceMetadata.call(_context36.t1, _context36.t7);
+          _context36.next = 27;
+          return _context36.t0.awrap.call(_context36.t0, _context36.t8);
+
+        case 27:
+          if (!createKMSConk) {
+            _context36.next = 59;
+            break;
+          }
+
+          _context36.prev = 28;
+          _context36.next = 31;
+          return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
+            objectId: objectId
+          }));
+
+        case 31:
+          kmsAddress = _context36.sent;
+          _context36.next = 34;
+          return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
+            objectId: objectId
+          }));
+
+        case 34:
+          kmsPublicKey = _context36.sent.publicKey;
+          kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
+          _context36.next = 38;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            // Cap may only exist in draft
+            objectId: objectId,
+            writeToken: writeToken,
+            metadataSubtree: kmsCapKey
+          }));
+
+        case 38:
+          existingKMSCap = _context36.sent;
+
+          if (existingKMSCap) {
+            _context36.next = 53;
+            break;
+          }
+
+          _context36.t9 = _regeneratorRuntime;
+          _context36.t10 = this;
+          _context36.t11 = libraryId;
+          _context36.t12 = objectId;
+          _context36.t13 = writeToken;
+          _context36.t14 = kmsCapKey;
+          _context36.next = 48;
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey));
+
+        case 48:
+          _context36.t15 = _context36.sent;
+          _context36.t16 = {
+            libraryId: _context36.t11,
+            objectId: _context36.t12,
+            writeToken: _context36.t13,
+            metadataSubtree: _context36.t14,
+            metadata: _context36.t15
+          };
+          _context36.t17 = _context36.t10.ReplaceMetadata.call(_context36.t10, _context36.t16);
+          _context36.next = 53;
+          return _context36.t9.awrap.call(_context36.t9, _context36.t17);
+
+        case 53:
+          _context36.next = 59;
+          break;
+
+        case 55:
+          _context36.prev = 55;
+          _context36.t18 = _context36["catch"](28);
+          // eslint-disable-next-line no-console
+          console.error("Failed to create encryption cap for KMS:"); // eslint-disable-next-line no-console
+
+          console.error(_context36.t18);
+
+        case 59:
+          return _context36.abrupt("return", this.encryptionConks[objectId]);
+
+        case 60:
+        case "end":
+          return _context36.stop();
+      }
+    }
+  }, null, this, [[28, 55]]);
+};
 /**
  * Retrieve the encryption conk for the specified object. If one has not yet been created
  * and a writeToken has been specified, this method will create a new conk and
@@ -2819,14 +2965,13 @@ exports.LinkData = function _callee35(_ref29) {
  */
 
 
-exports.EncryptionConk = function _callee36(_ref30) {
-  var libraryId, objectId, writeToken, owner, capKey, existingUserCap, metadata, kmsAddress, _kmsPublicKey, kmsCapKey, existingKMSCap;
-
-  return _regeneratorRuntime.async(function _callee36$(_context36) {
+exports.EncryptionConk = function _callee37(_ref31) {
+  var libraryId, objectId, writeToken, owner, capKey, existingUserCap;
+  return _regeneratorRuntime.async(function _callee37$(_context37) {
     while (1) {
-      switch (_context36.prev = _context36.next) {
+      switch (_context37.prev = _context37.next) {
         case 0:
-          libraryId = _ref30.libraryId, objectId = _ref30.objectId, writeToken = _ref30.writeToken;
+          libraryId = _ref31.libraryId, objectId = _ref31.objectId, writeToken = _ref31.writeToken;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -2836,44 +2981,44 @@ exports.EncryptionConk = function _callee36(_ref30) {
             ValidateWriteToken(writeToken);
           }
 
-          _context36.next = 5;
+          _context37.next = 5;
           return _regeneratorRuntime.awrap(this.authClient.Owner({
             id: objectId
           }));
 
         case 5:
-          owner = _context36.sent;
+          owner = _context37.sent;
 
           if (this.utils.EqualAddress(owner, this.signer.address)) {
-            _context36.next = 12;
+            _context37.next = 12;
             break;
           }
 
           if (this.reencryptionConks[objectId]) {
-            _context36.next = 11;
+            _context37.next = 11;
             break;
           }
 
-          _context36.next = 10;
+          _context37.next = 10;
           return _regeneratorRuntime.awrap(this.authClient.ReEncryptionConk({
             libraryId: libraryId,
             objectId: objectId
           }));
 
         case 10:
-          this.reencryptionConks[objectId] = _context36.sent;
+          this.reencryptionConks[objectId] = _context37.sent;
 
         case 11:
-          return _context36.abrupt("return", this.reencryptionConks[objectId]);
+          return _context37.abrupt("return", this.reencryptionConks[objectId]);
 
         case 12:
           if (this.encryptionConks[objectId]) {
-            _context36.next = 53;
+            _context37.next = 29;
             break;
           }
 
           capKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context36.next = 16;
+          _context37.next = 16;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             // Cap may only exist in draft
@@ -2883,106 +3028,51 @@ exports.EncryptionConk = function _callee36(_ref30) {
           }));
 
         case 16:
-          existingUserCap = _context36.sent;
+          existingUserCap = _context37.sent;
 
           if (!existingUserCap) {
-            _context36.next = 23;
+            _context37.next = 23;
             break;
           }
 
-          _context36.next = 20;
+          _context37.next = 20;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
         case 20:
-          this.encryptionConks[objectId] = _context36.sent;
-          _context36.next = 53;
+          this.encryptionConks[objectId] = _context37.sent;
+          _context37.next = 29;
           break;
 
         case 23:
-          _context36.next = 25;
-          return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk());
-
-        case 25:
-          this.encryptionConks[objectId] = _context36.sent;
-
           if (!writeToken) {
-            _context36.next = 53;
+            _context37.next = 28;
             break;
           }
 
-          metadata = {};
-          _context36.next = 30;
-          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
-
-        case 30:
-          metadata[capKey] = _context36.sent;
-          _context36.prev = 31;
-          _context36.next = 34;
-          return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
-            objectId: objectId
-          }));
-
-        case 34:
-          kmsAddress = _context36.sent;
-          _context36.next = 37;
-          return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
-            objectId: objectId
-          }));
-
-        case 37:
-          _kmsPublicKey = _context36.sent.publicKey;
-          kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
-          _context36.next = 41;
-          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          _context37.next = 26;
+          return _regeneratorRuntime.awrap(this.CreateEncryptionConk({
             libraryId: libraryId,
-            // Cap may only exist in draft
             objectId: objectId,
             writeToken: writeToken,
-            metadataSubtree: kmsCapKey
+            createKMSConk: false
           }));
 
-        case 41:
-          existingKMSCap = _context36.sent;
-
-          if (existingKMSCap) {
-            _context36.next = 46;
-            break;
-          }
-
-          _context36.next = 45;
-          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], _kmsPublicKey));
-
-        case 45:
-          metadata[kmsCapKey] = _context36.sent;
-
-        case 46:
-          _context36.next = 51;
+        case 26:
+          _context37.next = 29;
           break;
 
-        case 48:
-          _context36.prev = 48;
-          _context36.t0 = _context36["catch"](31);
-          // eslint-disable-next-line no-console
-          console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
+        case 28:
+          throw "No encryption conk present for " + objectId;
 
-        case 51:
-          _context36.next = 53;
-          return _regeneratorRuntime.awrap(this.MergeMetadata({
-            libraryId: libraryId,
-            objectId: objectId,
-            writeToken: writeToken,
-            metadata: metadata
-          }));
+        case 29:
+          return _context37.abrupt("return", this.encryptionConks[objectId]);
 
-        case 53:
-          return _context36.abrupt("return", this.encryptionConks[objectId]);
-
-        case 54:
+        case 30:
         case "end":
-          return _context36.stop();
+          return _context37.stop();
       }
     }
-  }, null, this, [[31, 48]]);
+  }, null, this);
 };
 /**
  * Encrypt the specified chunk for the specified object or draft
@@ -2999,56 +3089,7 @@ exports.EncryptionConk = function _callee36(_ref30) {
  */
 
 
-exports.Encrypt = function _callee37(_ref31) {
-  var libraryId, objectId, writeToken, chunk, conk, data;
-  return _regeneratorRuntime.async(function _callee37$(_context37) {
-    while (1) {
-      switch (_context37.prev = _context37.next) {
-        case 0:
-          libraryId = _ref31.libraryId, objectId = _ref31.objectId, writeToken = _ref31.writeToken, chunk = _ref31.chunk;
-          ValidateParameters({
-            libraryId: libraryId,
-            objectId: objectId
-          });
-          _context37.next = 4;
-          return _regeneratorRuntime.awrap(this.EncryptionConk({
-            libraryId: libraryId,
-            objectId: objectId,
-            writeToken: writeToken
-          }));
-
-        case 4:
-          conk = _context37.sent;
-          _context37.next = 7;
-          return _regeneratorRuntime.awrap(this.Crypto.Encrypt(conk, chunk));
-
-        case 7:
-          data = _context37.sent;
-          return _context37.abrupt("return", data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
-
-        case 9:
-        case "end":
-          return _context37.stop();
-      }
-    }
-  }, null, this);
-};
-/**
- * Decrypt the specified chunk for the specified object or draft
- *
- * @methodGroup Encryption
- *
- * @namedParams
- * @param {string} libraryId - ID of the library
- * @param {string} objectId - ID of the object
- * @param {string} writeToken - Write token of the content object draft
- * @param {ArrayBuffer | Buffer} chunk - The data to decrypt
- *
- * @return {Promise<ArrayBuffer>}
- */
-
-
-exports.Decrypt = function _callee38(_ref32) {
+exports.Encrypt = function _callee38(_ref32) {
   var libraryId, objectId, writeToken, chunk, conk, data;
   return _regeneratorRuntime.async(function _callee38$(_context38) {
     while (1) {
@@ -3069,7 +3110,7 @@ exports.Decrypt = function _callee38(_ref32) {
         case 4:
           conk = _context38.sent;
           _context38.next = 7;
-          return _regeneratorRuntime.awrap(this.Crypto.Decrypt(conk, chunk));
+          return _regeneratorRuntime.awrap(this.Crypto.Encrypt(conk, chunk));
 
         case 7:
           data = _context38.sent;
@@ -3078,6 +3119,55 @@ exports.Decrypt = function _callee38(_ref32) {
         case 9:
         case "end":
           return _context38.stop();
+      }
+    }
+  }, null, this);
+};
+/**
+ * Decrypt the specified chunk for the specified object or draft
+ *
+ * @methodGroup Encryption
+ *
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the content object draft
+ * @param {ArrayBuffer | Buffer} chunk - The data to decrypt
+ *
+ * @return {Promise<ArrayBuffer>}
+ */
+
+
+exports.Decrypt = function _callee39(_ref33) {
+  var libraryId, objectId, writeToken, chunk, conk, data;
+  return _regeneratorRuntime.async(function _callee39$(_context39) {
+    while (1) {
+      switch (_context39.prev = _context39.next) {
+        case 0:
+          libraryId = _ref33.libraryId, objectId = _ref33.objectId, writeToken = _ref33.writeToken, chunk = _ref33.chunk;
+          ValidateParameters({
+            libraryId: libraryId,
+            objectId: objectId
+          });
+          _context39.next = 4;
+          return _regeneratorRuntime.awrap(this.EncryptionConk({
+            libraryId: libraryId,
+            objectId: objectId,
+            writeToken: writeToken
+          }));
+
+        case 4:
+          conk = _context39.sent;
+          _context39.next = 7;
+          return _regeneratorRuntime.awrap(this.Crypto.Decrypt(conk, chunk));
+
+        case 7:
+          data = _context39.sent;
+          return _context39.abrupt("return", data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength));
+
+        case 9:
+        case "end":
+          return _context39.stop();
       }
     }
   }, null, this);
@@ -3095,22 +3185,22 @@ exports.Decrypt = function _callee38(_ref32) {
  */
 
 
-exports.AccessType = function _callee39(_ref33) {
+exports.AccessType = function _callee40(_ref34) {
   var id;
-  return _regeneratorRuntime.async(function _callee39$(_context39) {
+  return _regeneratorRuntime.async(function _callee40$(_context40) {
     while (1) {
-      switch (_context39.prev = _context39.next) {
+      switch (_context40.prev = _context40.next) {
         case 0:
-          id = _ref33.id;
-          _context39.next = 3;
+          id = _ref34.id;
+          _context40.next = 3;
           return _regeneratorRuntime.awrap(this.authClient.AccessType(id));
 
         case 3:
-          return _context39.abrupt("return", _context39.sent);
+          return _context40.abrupt("return", _context40.sent);
 
         case 4:
         case "end":
-          return _context39.stop();
+          return _context40.stop();
       }
     }
   }, null, this);
@@ -3128,13 +3218,13 @@ exports.AccessType = function _callee39(_ref33) {
  * @return {Promise<Object>} - Info about the access charge and whether or not the object is accessible to the current user   */
 
 
-exports.AccessInfo = function _callee40(_ref34) {
+exports.AccessInfo = function _callee41(_ref35) {
   var objectId, args, info;
-  return _regeneratorRuntime.async(function _callee40$(_context40) {
+  return _regeneratorRuntime.async(function _callee41$(_context41) {
     while (1) {
-      switch (_context40.prev = _context40.next) {
+      switch (_context41.prev = _context41.next) {
         case 0:
-          objectId = _ref34.objectId, args = _ref34.args;
+          objectId = _ref35.objectId, args = _ref35.args;
           ValidateObject(objectId);
 
           if (!args) {
@@ -3145,7 +3235,7 @@ exports.AccessInfo = function _callee40(_ref34) {
           }
 
           this.Log("Retrieving access info: ".concat(objectId));
-          _context40.next = 6;
+          _context41.next = 6;
           return _regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
             contractAddress: this.utils.HashToAddress(objectId),
             methodName: "getAccessInfo",
@@ -3153,9 +3243,9 @@ exports.AccessInfo = function _callee40(_ref34) {
           }));
 
         case 6:
-          info = _context40.sent;
+          info = _context41.sent;
           this.Log(info);
-          return _context40.abrupt("return", {
+          return _context41.abrupt("return", {
             visibilityCode: info[0],
             visible: info[0] >= 1,
             accessible: info[0] >= 10,
@@ -3167,7 +3257,7 @@ exports.AccessInfo = function _callee40(_ref34) {
 
         case 9:
         case "end":
-          return _context40.stop();
+          return _context41.stop();
       }
     }
   }, null, this);
@@ -3197,14 +3287,14 @@ exports.AccessInfo = function _callee40(_ref34) {
  */
 
 
-exports.AccessRequest = function _callee41(_ref35) {
-  var libraryId, objectId, versionHash, _ref35$args, args, _ref35$update, update, _ref35$noCache, noCache;
+exports.AccessRequest = function _callee42(_ref36) {
+  var libraryId, objectId, versionHash, _ref36$args, args, _ref36$update, update, _ref36$noCache, noCache;
 
-  return _regeneratorRuntime.async(function _callee41$(_context41) {
+  return _regeneratorRuntime.async(function _callee42$(_context42) {
     while (1) {
-      switch (_context41.prev = _context41.next) {
+      switch (_context42.prev = _context42.next) {
         case 0:
-          libraryId = _ref35.libraryId, objectId = _ref35.objectId, versionHash = _ref35.versionHash, _ref35$args = _ref35.args, args = _ref35$args === void 0 ? [] : _ref35$args, _ref35$update = _ref35.update, update = _ref35$update === void 0 ? false : _ref35$update, _ref35$noCache = _ref35.noCache, noCache = _ref35$noCache === void 0 ? false : _ref35$noCache;
+          libraryId = _ref36.libraryId, objectId = _ref36.objectId, versionHash = _ref36.versionHash, _ref36$args = _ref36.args, args = _ref36$args === void 0 ? [] : _ref36$args, _ref36$update = _ref36.update, update = _ref36$update === void 0 ? false : _ref36$update, _ref36$noCache = _ref36.noCache, noCache = _ref36$noCache === void 0 ? false : _ref36$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3215,7 +3305,7 @@ exports.AccessRequest = function _callee41(_ref35) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
-          _context41.next = 5;
+          _context42.next = 5;
           return _regeneratorRuntime.awrap(this.authClient.MakeAccessRequest({
             libraryId: libraryId,
             objectId: objectId,
@@ -3227,11 +3317,11 @@ exports.AccessRequest = function _callee41(_ref35) {
           }));
 
         case 5:
-          return _context41.abrupt("return", _context41.sent);
+          return _context42.abrupt("return", _context42.sent);
 
         case 6:
         case "end":
-          return _context41.stop();
+          return _context42.stop();
       }
     }
   }, null, this);
@@ -3250,38 +3340,38 @@ exports.AccessRequest = function _callee41(_ref35) {
  */
 
 
-exports.GenerateStateChannelToken = function _callee42(_ref36) {
-  var objectId, versionHash, _ref36$noCache, noCache, audienceData;
+exports.GenerateStateChannelToken = function _callee43(_ref37) {
+  var objectId, versionHash, _ref37$noCache, noCache, audienceData;
 
-  return _regeneratorRuntime.async(function _callee42$(_context42) {
+  return _regeneratorRuntime.async(function _callee43$(_context43) {
     while (1) {
-      switch (_context42.prev = _context42.next) {
+      switch (_context43.prev = _context43.next) {
         case 0:
-          objectId = _ref36.objectId, versionHash = _ref36.versionHash, _ref36$noCache = _ref36.noCache, noCache = _ref36$noCache === void 0 ? false : _ref36$noCache;
+          objectId = _ref37.objectId, versionHash = _ref37.versionHash, _ref37$noCache = _ref37.noCache, noCache = _ref37$noCache === void 0 ? false : _ref37$noCache;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!versionHash) {
-            _context42.next = 6;
+            _context43.next = 6;
             break;
           }
 
           objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-          _context42.next = 10;
+          _context43.next = 10;
           break;
 
         case 6:
           if (this.stateChannelAccess[objectId]) {
-            _context42.next = 10;
+            _context43.next = 10;
             break;
           }
 
-          _context42.next = 9;
+          _context43.next = 9;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
         case 9:
-          versionHash = _context42.sent;
+          versionHash = _context43.sent;
 
         case 10:
           this.stateChannelAccess[objectId] = versionHash;
@@ -3289,7 +3379,7 @@ exports.GenerateStateChannelToken = function _callee42(_ref36) {
             objectId: objectId,
             versionHash: versionHash
           });
-          _context42.next = 14;
+          _context43.next = 14;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             objectId: objectId,
             channelAuth: true,
@@ -3299,11 +3389,11 @@ exports.GenerateStateChannelToken = function _callee42(_ref36) {
           }));
 
         case 14:
-          return _context42.abrupt("return", _context42.sent);
+          return _context43.abrupt("return", _context43.sent);
 
         case 15:
         case "end":
-          return _context42.stop();
+          return _context43.stop();
       }
     }
   }, null, this);
@@ -3319,42 +3409,42 @@ exports.GenerateStateChannelToken = function _callee42(_ref36) {
  */
 
 
-exports.FinalizeStateChannelAccess = function _callee43(_ref37) {
+exports.FinalizeStateChannelAccess = function _callee44(_ref38) {
   var objectId, versionHash, percentComplete, audienceData;
-  return _regeneratorRuntime.async(function _callee43$(_context43) {
+  return _regeneratorRuntime.async(function _callee44$(_context44) {
     while (1) {
-      switch (_context43.prev = _context43.next) {
+      switch (_context44.prev = _context44.next) {
         case 0:
-          objectId = _ref37.objectId, versionHash = _ref37.versionHash, percentComplete = _ref37.percentComplete;
+          objectId = _ref38.objectId, versionHash = _ref38.versionHash, percentComplete = _ref38.percentComplete;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!versionHash) {
-            _context43.next = 6;
+            _context44.next = 6;
             break;
           }
 
           objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-          _context43.next = 13;
+          _context44.next = 13;
           break;
 
         case 6:
           if (!this.stateChannelAccess[objectId]) {
-            _context43.next = 10;
+            _context44.next = 10;
             break;
           }
 
           versionHash = this.stateChannelAccess[objectId];
-          _context43.next = 13;
+          _context44.next = 13;
           break;
 
         case 10:
-          _context43.next = 12;
+          _context44.next = 12;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
         case 12:
-          versionHash = _context43.sent;
+          versionHash = _context44.sent;
 
         case 13:
           this.stateChannelAccess[objectId] = undefined;
@@ -3362,7 +3452,7 @@ exports.FinalizeStateChannelAccess = function _callee43(_ref37) {
             objectId: objectId,
             versionHash: versionHash
           });
-          _context43.next = 17;
+          _context44.next = 17;
           return _regeneratorRuntime.awrap(this.authClient.ChannelContentFinalize({
             objectId: objectId,
             audienceData: audienceData,
@@ -3371,7 +3461,7 @@ exports.FinalizeStateChannelAccess = function _callee43(_ref37) {
 
         case 17:
         case "end":
-          return _context43.stop();
+          return _context44.stop();
       }
     }
   }, null, this);
@@ -3390,36 +3480,36 @@ exports.FinalizeStateChannelAccess = function _callee43(_ref37) {
  */
 
 
-exports.ContentObjectAccessComplete = function _callee44(_ref38) {
-  var objectId, _ref38$score, score;
+exports.ContentObjectAccessComplete = function _callee45(_ref39) {
+  var objectId, _ref39$score, score;
 
-  return _regeneratorRuntime.async(function _callee44$(_context44) {
+  return _regeneratorRuntime.async(function _callee45$(_context45) {
     while (1) {
-      switch (_context44.prev = _context44.next) {
+      switch (_context45.prev = _context45.next) {
         case 0:
-          objectId = _ref38.objectId, _ref38$score = _ref38.score, score = _ref38$score === void 0 ? 100 : _ref38$score;
+          objectId = _ref39.objectId, _ref39$score = _ref39.score, score = _ref39$score === void 0 ? 100 : _ref39$score;
           ValidateObject(objectId);
 
           if (!(score < 0 || score > 100)) {
-            _context44.next = 4;
+            _context45.next = 4;
             break;
           }
 
           throw Error("Invalid AccessComplete score: " + score);
 
         case 4:
-          _context44.next = 6;
+          _context45.next = 6;
           return _regeneratorRuntime.awrap(this.authClient.AccessComplete({
             id: objectId,
             score: score
           }));
 
         case 6:
-          return _context44.abrupt("return", _context44.sent);
+          return _context45.abrupt("return", _context45.sent);
 
         case 7:
         case "end":
-          return _context44.stop();
+          return _context45.stop();
       }
     }
   }, null, this);
@@ -3443,17 +3533,17 @@ exports.ContentObjectAccessComplete = function _callee44(_ref38) {
  */
 
 
-exports.Collection = function _callee45(_ref39) {
+exports.Collection = function _callee46(_ref40) {
   var collectionType, validCollectionTypes, walletAddress;
-  return _regeneratorRuntime.async(function _callee45$(_context45) {
+  return _regeneratorRuntime.async(function _callee46$(_context46) {
     while (1) {
-      switch (_context45.prev = _context45.next) {
+      switch (_context46.prev = _context46.next) {
         case 0:
-          collectionType = _ref39.collectionType;
+          collectionType = _ref40.collectionType;
           validCollectionTypes = ["accessGroups", "contentObjects", "contentTypes", "contracts", "libraries"];
 
           if (validCollectionTypes.includes(collectionType)) {
-            _context45.next = 4;
+            _context46.next = 4;
             break;
           }
 
@@ -3461,26 +3551,26 @@ exports.Collection = function _callee45(_ref39) {
 
         case 4:
           if (!this.signer) {
-            _context45.next = 10;
+            _context46.next = 10;
             break;
           }
 
-          _context45.next = 7;
+          _context46.next = 7;
           return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
         case 7:
-          _context45.t0 = _context45.sent;
-          _context45.next = 11;
+          _context46.t0 = _context46.sent;
+          _context46.next = 11;
           break;
 
         case 10:
-          _context45.t0 = undefined;
+          _context46.t0 = undefined;
 
         case 11:
-          walletAddress = _context45.t0;
+          walletAddress = _context46.t0;
 
           if (walletAddress) {
-            _context45.next = 14;
+            _context46.next = 14;
             break;
           }
 
@@ -3488,18 +3578,18 @@ exports.Collection = function _callee45(_ref39) {
 
         case 14:
           this.Log("Retrieving ".concat(collectionType, " contract collection for user ").concat(this.signer.address));
-          _context45.next = 17;
+          _context46.next = 17;
           return _regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
             methodName: "send",
             args: ["elv_getWalletCollection", [this.contentSpaceId, "iusr".concat(this.utils.AddressToHash(this.signer.address)), collectionType]]
           }));
 
         case 17:
-          return _context45.abrupt("return", _context45.sent);
+          return _context46.abrupt("return", _context46.sent);
 
         case 18:
         case "end":
-          return _context45.stop();
+          return _context46.stop();
       }
     }
   }, null, this);
@@ -3519,19 +3609,19 @@ exports.Collection = function _callee45(_ref39) {
  */
 
 
-exports.VerifyContentObject = function _callee46(_ref40) {
+exports.VerifyContentObject = function _callee47(_ref41) {
   var libraryId, objectId, versionHash;
-  return _regeneratorRuntime.async(function _callee46$(_context46) {
+  return _regeneratorRuntime.async(function _callee47$(_context47) {
     while (1) {
-      switch (_context46.prev = _context46.next) {
+      switch (_context47.prev = _context47.next) {
         case 0:
-          libraryId = _ref40.libraryId, objectId = _ref40.objectId, versionHash = _ref40.versionHash;
+          libraryId = _ref41.libraryId, objectId = _ref41.objectId, versionHash = _ref41.versionHash;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash
           });
-          _context46.next = 4;
+          _context47.next = 4;
           return _regeneratorRuntime.awrap(ContentObjectVerification.VerifyContentObject({
             client: this,
             libraryId: libraryId,
@@ -3540,11 +3630,11 @@ exports.VerifyContentObject = function _callee46(_ref40) {
           }));
 
         case 4:
-          return _context46.abrupt("return", _context46.sent);
+          return _context47.abrupt("return", _context47.sent);
 
         case 5:
         case "end":
-          return _context46.stop();
+          return _context47.stop();
       }
     }
   }, null, this);
@@ -3563,13 +3653,13 @@ exports.VerifyContentObject = function _callee46(_ref40) {
  */
 
 
-exports.Proofs = function _callee47(_ref41) {
+exports.Proofs = function _callee48(_ref42) {
   var libraryId, objectId, versionHash, partHash, path;
-  return _regeneratorRuntime.async(function _callee47$(_context47) {
+  return _regeneratorRuntime.async(function _callee48$(_context48) {
     while (1) {
-      switch (_context47.prev = _context47.next) {
+      switch (_context48.prev = _context48.next) {
         case 0:
-          libraryId = _ref41.libraryId, objectId = _ref41.objectId, versionHash = _ref41.versionHash, partHash = _ref41.partHash;
+          libraryId = _ref42.libraryId, objectId = _ref42.objectId, versionHash = _ref42.versionHash, partHash = _ref42.partHash;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3582,9 +3672,9 @@ exports.Proofs = function _callee47(_ref41) {
           }
 
           path = UrlJoin("q", versionHash || objectId, "data", partHash, "proofs");
-          _context47.t0 = this.utils;
-          _context47.t1 = this.HttpClient;
-          _context47.next = 9;
+          _context48.t0 = this.utils;
+          _context48.t1 = this.HttpClient;
+          _context48.next = 9;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
@@ -3592,19 +3682,19 @@ exports.Proofs = function _callee47(_ref41) {
           }));
 
         case 9:
-          _context47.t2 = _context47.sent;
-          _context47.t3 = path;
-          _context47.t4 = {
-            headers: _context47.t2,
+          _context48.t2 = _context48.sent;
+          _context48.t3 = path;
+          _context48.t4 = {
+            headers: _context48.t2,
             method: "GET",
-            path: _context47.t3
+            path: _context48.t3
           };
-          _context47.t5 = _context47.t1.Request.call(_context47.t1, _context47.t4);
-          return _context47.abrupt("return", _context47.t0.ResponseToJson.call(_context47.t0, _context47.t5));
+          _context48.t5 = _context48.t1.Request.call(_context48.t1, _context48.t4);
+          return _context48.abrupt("return", _context48.t0.ResponseToJson.call(_context48.t0, _context48.t5));
 
         case 14:
         case "end":
-          return _context47.stop();
+          return _context48.stop();
       }
     }
   }, null, this);
@@ -3623,14 +3713,14 @@ exports.Proofs = function _callee47(_ref41) {
  */
 
 
-exports.QParts = function _callee48(_ref42) {
-  var libraryId, objectId, partHash, _ref42$format, format, path;
+exports.QParts = function _callee49(_ref43) {
+  var libraryId, objectId, partHash, _ref43$format, format, path;
 
-  return _regeneratorRuntime.async(function _callee48$(_context48) {
+  return _regeneratorRuntime.async(function _callee49$(_context49) {
     while (1) {
-      switch (_context48.prev = _context48.next) {
+      switch (_context49.prev = _context49.next) {
         case 0:
-          libraryId = _ref42.libraryId, objectId = _ref42.objectId, partHash = _ref42.partHash, _ref42$format = _ref42.format, format = _ref42$format === void 0 ? "blob" : _ref42$format;
+          libraryId = _ref43.libraryId, objectId = _ref43.objectId, partHash = _ref43.partHash, _ref43$format = _ref43.format, format = _ref43$format === void 0 ? "blob" : _ref43$format;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3638,10 +3728,10 @@ exports.QParts = function _callee48(_ref42) {
           });
           ValidatePartHash(partHash);
           path = UrlJoin("qparts", partHash);
-          _context48.t0 = this.utils;
-          _context48.t1 = format;
-          _context48.t2 = this.HttpClient;
-          _context48.next = 9;
+          _context49.t0 = this.utils;
+          _context49.t1 = format;
+          _context49.t2 = this.HttpClient;
+          _context49.next = 9;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
@@ -3649,19 +3739,19 @@ exports.QParts = function _callee48(_ref42) {
           }));
 
         case 9:
-          _context48.t3 = _context48.sent;
-          _context48.t4 = path;
-          _context48.t5 = {
-            headers: _context48.t3,
+          _context49.t3 = _context49.sent;
+          _context49.t4 = path;
+          _context49.t5 = {
+            headers: _context49.t3,
             method: "GET",
-            path: _context48.t4
+            path: _context49.t4
           };
-          _context48.t6 = _context48.t2.Request.call(_context48.t2, _context48.t5);
-          return _context48.abrupt("return", _context48.t0.ResponseToFormat.call(_context48.t0, _context48.t1, _context48.t6));
+          _context49.t6 = _context49.t2.Request.call(_context49.t2, _context49.t5);
+          return _context49.abrupt("return", _context49.t0.ResponseToFormat.call(_context49.t0, _context49.t1, _context49.t6));
 
         case 14:
         case "end":
-          return _context48.stop();
+          return _context49.stop();
       }
     }
   }, null, this);
