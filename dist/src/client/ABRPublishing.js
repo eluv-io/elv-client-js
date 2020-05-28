@@ -263,46 +263,55 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 
         case 20:
           _context2.next = 22;
+          return _regeneratorRuntime.awrap(this.CreateEncryptionConk({
+            libraryId: libraryId,
+            objectId: objectId,
+            writeToken: write_token,
+            createKMSConk: true
+          }));
+
+        case 22:
+          _context2.next = 24;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             versionHash: masterVersionHash,
             metadataSubtree: "public/name"
           }));
 
-        case 22:
+        case 24:
           masterName = _context2.sent;
           // Include authorization for library, master, and mezzanine
           authorizationTokens = [];
           _context2.t0 = authorizationTokens;
-          _context2.next = 27;
+          _context2.next = 29;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: id,
             update: true
           }));
 
-        case 27:
+        case 29:
           _context2.t1 = _context2.sent;
 
           _context2.t0.push.call(_context2.t0, _context2.t1);
 
           _context2.t2 = authorizationTokens;
-          _context2.next = 32;
+          _context2.next = 34;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId
           }));
 
-        case 32:
+        case 34:
           _context2.t3 = _context2.sent;
 
           _context2.t2.push.call(_context2.t2, _context2.t3);
 
           _context2.t4 = authorizationTokens;
-          _context2.next = 37;
+          _context2.next = 39;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             versionHash: masterVersionHash
           }));
 
-        case 37:
+        case 39:
           _context2.t5 = _context2.sent;
 
           _context2.t4.push.call(_context2.t4, _context2.t5);
@@ -320,41 +329,41 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           storeClear = false;
 
           if (!abrProfile) {
-            _context2.next = 47;
+            _context2.next = 49;
             break;
           }
 
           body.abr_profile = abrProfile;
           storeClear = abrProfile.store_clear;
-          _context2.next = 50;
+          _context2.next = 52;
           break;
 
-        case 47:
-          _context2.next = 49;
+        case 49:
+          _context2.next = 51;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: this.utils.AddressToObjectId(this.utils.HashToAddress(libraryId)),
             metadataSubtree: "abr_profile/store_clear"
           }));
 
-        case 49:
+        case 51:
           storeClear = _context2.sent;
 
-        case 50:
+        case 52:
           if (storeClear) {
-            _context2.next = 53;
+            _context2.next = 55;
             break;
           }
 
-          _context2.next = 53;
+          _context2.next = 55;
           return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token
           }));
 
-        case 53:
-          _context2.next = 55;
+        case 55:
+          _context2.next = 57;
           return _regeneratorRuntime.awrap(this.CallBitcodeMethod({
             libraryId: libraryId,
             objectId: id,
@@ -365,7 +374,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             constant: false
           }));
 
-        case 55:
+        case 57:
           _ref5 = _context2.sent;
           logs = _ref5.logs;
           errors = _ref5.errors;
@@ -407,7 +416,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             metadata["public"].description = description || "";
           }
 
-          _context2.next = 70;
+          _context2.next = 72;
           return _regeneratorRuntime.awrap(this.MergeMetadata({
             libraryId: libraryId,
             objectId: id,
@@ -415,15 +424,15 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             metadata: metadata
           }));
 
-        case 70:
-          _context2.next = 72;
+        case 72:
+          _context2.next = 74;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token
           }));
 
-        case 72:
+        case 74:
           finalizeResponse = _context2.sent;
           return _context2.abrupt("return", _objectSpread({
             logs: logs || [],
@@ -431,7 +440,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             errors: errors || []
           }, finalizeResponse));
 
-        case 74:
+        case 76:
         case "end":
           return _context2.stop();
       }

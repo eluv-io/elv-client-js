@@ -143,7 +143,7 @@ function () {
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {Array<string>} kmsUrls - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north na-west-south na-east eu-west
+   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
    *
    * @return {Promise<Object>} - Object containing content space ID and fabric and ethereum URLs
    */
@@ -199,7 +199,7 @@ function () {
      * @methodGroup Nodes
      * @namedParams
      * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
-     * - Available regions: na-west-north na-west-south na-east eu-west
+     * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
      *
      * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
      */
@@ -912,7 +912,7 @@ function () {
      * @namedParams
      * @param {string} configUrl - Full URL to the config endpoint
      * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-     * - Available regions: na-west-north na-west-south na-east eu-west
+     * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
      * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
      * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
      *
