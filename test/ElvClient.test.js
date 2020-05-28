@@ -475,7 +475,7 @@ describe("Test ElvClient", () => {
       objectId = createResponse.id;
 
       const finalizeResponse = await client.FinalizeContentObject({libraryId, objectId, writeToken});
-      
+
       await expect(finalizeResponse).toBeDefined();
 
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
