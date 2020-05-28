@@ -213,7 +213,7 @@ exports.CreateABRMezzanine = async function({
     write_token = createResponse.write_token;
   }
 
-  await this.CreateEncryptionConk({libraryId, objectId, writeToken: write_token, createKMSConk: true});
+  await this.CreateEncryptionConk({libraryId, objectId: id, writeToken: write_token, createKMSConk: true});
 
   const masterName = await this.ContentObjectMetadata({
     versionHash: masterVersionHash,
