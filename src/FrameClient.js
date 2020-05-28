@@ -305,6 +305,7 @@ class FrameClient {
       "CreateContentLibrary",
       "CreateContentObject",
       "CreateContentType",
+      "CreateEncryptionConk",
       "CreateFileDirectories",
       "CreateFileUploadJob",
       "CreateLinks",

@@ -1583,6 +1583,68 @@ exports.LinkData = async function({libraryId, objectId, versionHash, linkPath, f
 
 /* Encryption */
 
+exports.CreateEncryptionConk = async function({libraryId, objectId, writeToken, createKMSConk=true}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+
+  const existingUserCap =
+    await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: capKey
+    });
+
+  if(existingUserCap) {
+    this.encryptionConks[objectId] = existingUserCap;
+  } else {
+    this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: capKey,
+      metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey)
+    });
+  }
+
+  if(createKMSConk) {
+    try {
+      const kmsAddress = await this.authClient.KMSAddress({objectId});
+      const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
+      const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+      const existingKMSCap =
+        await this.ContentObjectMetadata({
+          libraryId,
+          // Cap may only exist in draft
+          objectId,
+          writeToken,
+          metadataSubtree: kmsCapKey
+        });
+
+      if(!existingKMSCap) {
+        await this.ReplaceMetadata({
+          libraryId,
+          objectId,
+          writeToken,
+          metadataSubtree: kmsCapKey,
+          metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey)
+        });
+      }
+    } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to create encryption cap for KMS:");
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  }
+
+  return this.encryptionConks[objectId];
+};
+
 /**
  * Retrieve the encryption conk for the specified object. If one has not yet been created
  * and a writeToken has been specified, this method will create a new conk and
@@ -1627,42 +1689,10 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
 
     if(existingUserCap) {
       this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+    } else if(writeToken) {
+      await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: false});
     } else {
-      this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
-
-      // If write token is specified, add it to the metadata
-      if(writeToken) {
-        let metadata = {};
-        metadata[capKey] = await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
-
-        try {
-          const kmsAddress = await this.authClient.KMSAddress({objectId});
-          const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
-          const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
-          const existingKMSCap =
-            await this.ContentObjectMetadata({
-              libraryId,
-              // Cap may only exist in draft
-              objectId,
-              writeToken,
-              metadataSubtree: kmsCapKey
-            });
-
-          if(!existingKMSCap) {
-            metadata[kmsCapKey] = await this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
-          }
-        } catch(error) {
-          // eslint-disable-next-line no-console
-          console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
-        }
-
-        await this.MergeMetadata({
-          libraryId,
-          objectId,
-          writeToken,
-          metadata
-        });
-      }
+      throw "No encryption conk present for " + objectId;
     }
   }
 
