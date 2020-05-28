@@ -265,7 +265,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           _context2.next = 22;
           return _regeneratorRuntime.awrap(this.CreateEncryptionConk({
             libraryId: libraryId,
-            objectId: objectId,
+            objectId: id,
             writeToken: write_token,
             createKMSConk: true
           }));
