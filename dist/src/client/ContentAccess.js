@@ -2830,19 +2830,23 @@ exports.CreateEncryptionConk = function _callee36(_ref30) {
           existingUserCap = _context36.sent;
 
           if (!existingUserCap) {
-            _context36.next = 11;
+            _context36.next = 13;
             break;
           }
 
-          this.encryptionConks[objectId] = existingUserCap;
-          _context36.next = 27;
+          _context36.next = 10;
+          return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
+
+        case 10:
+          this.encryptionConks[objectId] = _context36.sent;
+          _context36.next = 29;
           break;
 
-        case 11:
-          _context36.next = 13;
+        case 13:
+          _context36.next = 15;
           return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk());
 
-        case 13:
+        case 15:
           this.encryptionConks[objectId] = _context36.sent;
           _context36.t0 = _regeneratorRuntime;
           _context36.t1 = this;
@@ -2850,10 +2854,10 @@ exports.CreateEncryptionConk = function _callee36(_ref30) {
           _context36.t3 = objectId;
           _context36.t4 = writeToken;
           _context36.t5 = capKey;
-          _context36.next = 22;
+          _context36.next = 24;
           return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
 
-        case 22:
+        case 24:
           _context36.t6 = _context36.sent;
           _context36.t7 = {
             libraryId: _context36.t2,
@@ -2863,32 +2867,32 @@ exports.CreateEncryptionConk = function _callee36(_ref30) {
             metadata: _context36.t6
           };
           _context36.t8 = _context36.t1.ReplaceMetadata.call(_context36.t1, _context36.t7);
-          _context36.next = 27;
+          _context36.next = 29;
           return _context36.t0.awrap.call(_context36.t0, _context36.t8);
 
-        case 27:
+        case 29:
           if (!createKMSConk) {
-            _context36.next = 59;
+            _context36.next = 61;
             break;
           }
 
-          _context36.prev = 28;
-          _context36.next = 31;
+          _context36.prev = 30;
+          _context36.next = 33;
           return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
             objectId: objectId
           }));
 
-        case 31:
+        case 33:
           kmsAddress = _context36.sent;
-          _context36.next = 34;
+          _context36.next = 36;
           return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
             objectId: objectId
           }));
 
-        case 34:
+        case 36:
           kmsPublicKey = _context36.sent.publicKey;
           kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
-          _context36.next = 38;
+          _context36.next = 40;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             // Cap may only exist in draft
@@ -2897,11 +2901,11 @@ exports.CreateEncryptionConk = function _callee36(_ref30) {
             metadataSubtree: kmsCapKey
           }));
 
-        case 38:
+        case 40:
           existingKMSCap = _context36.sent;
 
           if (existingKMSCap) {
-            _context36.next = 53;
+            _context36.next = 55;
             break;
           }
 
@@ -2911,10 +2915,10 @@ exports.CreateEncryptionConk = function _callee36(_ref30) {
           _context36.t12 = objectId;
           _context36.t13 = writeToken;
           _context36.t14 = kmsCapKey;
-          _context36.next = 48;
+          _context36.next = 50;
           return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey));
 
-        case 48:
+        case 50:
           _context36.t15 = _context36.sent;
           _context36.t16 = {
             libraryId: _context36.t11,
@@ -2924,30 +2928,30 @@ exports.CreateEncryptionConk = function _callee36(_ref30) {
             metadata: _context36.t15
           };
           _context36.t17 = _context36.t10.ReplaceMetadata.call(_context36.t10, _context36.t16);
-          _context36.next = 53;
+          _context36.next = 55;
           return _context36.t9.awrap.call(_context36.t9, _context36.t17);
 
-        case 53:
-          _context36.next = 59;
+        case 55:
+          _context36.next = 61;
           break;
 
-        case 55:
-          _context36.prev = 55;
-          _context36.t18 = _context36["catch"](28);
+        case 57:
+          _context36.prev = 57;
+          _context36.t18 = _context36["catch"](30);
           // eslint-disable-next-line no-console
           console.error("Failed to create encryption cap for KMS:"); // eslint-disable-next-line no-console
 
           console.error(_context36.t18);
 
-        case 59:
+        case 61:
           return _context36.abrupt("return", this.encryptionConks[objectId]);
 
-        case 60:
+        case 62:
         case "end":
           return _context36.stop();
       }
     }
-  }, null, this, [[28, 55]]);
+  }, null, this, [[30, 57]]);
 };
 /**
  * Retrieve the encryption conk for the specified object. If one has not yet been created
