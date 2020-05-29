@@ -1660,7 +1660,7 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, writeToken, 
     });
 
   if(existingUserCap) {
-    this.encryptionConks[objectId] = existingUserCap;
+    this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
   } else {
     this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
 
