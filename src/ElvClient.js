@@ -244,6 +244,10 @@ class ElvClient {
     this.Crypto.ElvCrypto();
   }
 
+  ConfigUrl() {
+    return this.configUrl;
+  }
+
   SetAuth(auth) {
     this.noAuth = !auth;
     this.authClient.noAuth = !auth;

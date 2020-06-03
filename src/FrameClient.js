@@ -129,7 +129,14 @@ class FrameClient {
 
     const operation = options.calledMethod || options.operation;
     const isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
-    const timeout = options.prompted || isFileOperation ? 0 : this.timeout;
+
+    let timeout = this.timeout;
+    if(options.prompted || isFileOperation) {
+      timeout = 0;
+    } else if(options.args && options.args.fcTimeout) {
+      timeout = options.args.fcTimeout;
+    }
+
     return (await this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
   }
 
@@ -241,7 +248,9 @@ class FrameClient {
     return [
       "DownloadFile",
       "DownloadPart",
+      "UpdateContentObjectGraph",
       "UploadFiles",
+      "UploadFilesFromS3",
       "UploadPart",
       "UploadPartChunk"
     ];
@@ -268,6 +277,7 @@ class FrameClient {
       "AddLibraryContentType",
       "AudienceData",
       "AvailableDRMs",
+      "AvailableOfferings",
       "AwaitPending",
       "BitmovinPlayoutOptions",
       "BlockNumber",
@@ -276,6 +286,7 @@ class FrameClient {
       "CallContractMethodAndWait",
       "ClearCache",
       "Collection",
+      "ConfigUrl",
       "ContentLibraries",
       "ContentLibrary",
       "ContentLibraryGroupPermissions",
@@ -345,6 +356,7 @@ class FrameClient {
       "FormatContractArguments",
       "GenerateStateChannelToken",
       "GetBalance",
+      "GroupActionMethod",
       "LatestVersionHash",
       "LibraryContentTypes",
       "LinkAccessGroupToOauth",

@@ -1653,6 +1653,14 @@ describe("Test ElvClient", () => {
       await new Promise(resolve => setTimeout(resolve, 5000));
     });
 
+    test("Available Offerings", async () => {
+      const offerings = await accessClient.AvailableOfferings({objectId: mezzanineId});
+
+      expect(offerings).toBeDefined();
+      expect(offerings.default).toBeDefined();
+      expect(offerings.default.display_name).toEqual("default");
+    });
+
     test("Playout Options", async () => {
       const playoutOptions = await accessClient.PlayoutOptions({
         objectId: mezzanineId,
