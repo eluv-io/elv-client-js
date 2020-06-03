@@ -186,6 +186,11 @@ function () {
       this.Crypto.ElvCrypto();
     }
   }, {
+    key: "ConfigUrl",
+    value: function ConfigUrl() {
+      return this.configUrl;
+    }
+  }, {
     key: "SetAuth",
     value: function SetAuth(auth) {
       this.noAuth = !auth;

@@ -283,14 +283,21 @@ function () {
             case 6:
               operation = options.calledMethod || options.operation;
               isFileOperation = FrameClient.FileMethods().includes(options.calledMethod);
-              timeout = options.prompted || isFileOperation ? 0 : this.timeout;
-              _context4.next = 11;
+              timeout = this.timeout;
+
+              if (options.prompted || isFileOperation) {
+                timeout = 0;
+              } else if (options.args && options.args.fcTimeout) {
+                timeout = options.args.fcTimeout;
+              }
+
+              _context4.next = 12;
               return _regeneratorRuntime.awrap(this.AwaitMessage(requestId, timeout, callback, callbackId, operation));
 
-            case 11:
+            case 12:
               return _context4.abrupt("return", _context4.sent);
 
-            case 12:
+            case 13:
             case "end":
               return _context4.stop();
           }
@@ -434,7 +441,7 @@ function () {
      * @returns {Array<string>} - List of ElvClient methods available to a FrameClient
      */
     value: function AllowedMethods() {
-      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddContentLibraryGroup", "AddContentObjectGroupPermission", "AddLibraryContentType", "AudienceData", "AvailableDRMs", "AwaitPending", "BitmovinPlayoutOptions", "BlockNumber", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "ContentLibraries", "ContentLibrary", "ContentLibraryGroupPermissions", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectGraph", "ContentObjectGroupPermissions", "ContentObjectImageUrl", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractAbi", "ContractEvents", "ContractName", "CopyContentObject", "CreateABRMezzanine", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentType", "CreateEncryptionConk", "CreateFileDirectories", "CreateFileUploadJob", "CreateLinks", "CreatePart", "CreateProductionMaster", "CurrentAccountAddress", "CustomContractAddress", "Decrypt", "DecryptECIES", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeletePart", "DeployContract", "Download", "DownloadEncrypted", "DownloadFile", "DownloadPart", "EditContentObject", "Encrypt", "EncryptECIES", "EncryptionConk", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeABRMezzanine", "FinalizeContentObject", "FinalizePart", "FinalizeStateChannelAccess", "FinalizeUploadJob", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "LatestVersionHash", "LibraryContentTypes", "LinkAccessGroupToOauth", "LinkData", "LinkTarget", "LinkUrl", "ListFiles", "LROStatus", "MergeMetadata", "NodeId", "Nodes", "PlayoutOptions", "ProduceMetadataLinks", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveContentObjectGroupPermission", "RemoveContentLibraryGroup", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "Request", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "SetOauthToken", "SetSignerFromOauthToken", "SetVisibility", "StartABRMezzanineJobs", "UnlinkAccessGroupFromOauth", "UpdateContentObjectGraph", "UploadFileData", "UploadFiles", "UploadFilesFromS3", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UploadStatus", "UseRegion", "VerifyContentObject", "Visibility"];
+      return ["AccessGroupManagers", "AccessGroupMembers", "AccessGroupOwner", "AccessInfo", "AccessRequest", "AccessType", "AddAccessGroupManager", "AddAccessGroupMember", "AddContentLibraryGroup", "AddContentObjectGroupPermission", "AddLibraryContentType", "AudienceData", "AvailableDRMs", "AvailableOfferings", "AwaitPending", "BitmovinPlayoutOptions", "BlockNumber", "CallBitcodeMethod", "CallContractMethod", "CallContractMethodAndWait", "ClearCache", "Collection", "ConfigUrl", "ContentLibraries", "ContentLibrary", "ContentLibraryGroupPermissions", "ContentLibraryOwner", "ContentObject", "ContentObjectAccessComplete", "ContentObjectGraph", "ContentObjectGroupPermissions", "ContentObjectImageUrl", "ContentObjectLibraryId", "ContentObjectMetadata", "ContentObjectOwner", "ContentObjectVersions", "ContentObjects", "ContentPart", "ContentParts", "ContentSpaceId", "ContentType", "ContentTypeOwner", "ContentTypes", "ContractAbi", "ContractEvents", "ContractName", "CopyContentObject", "CreateABRMezzanine", "CreateAccessGroup", "CreateContentLibrary", "CreateContentObject", "CreateContentType", "CreateEncryptionConk", "CreateFileDirectories", "CreateFileUploadJob", "CreateLinks", "CreatePart", "CreateProductionMaster", "CurrentAccountAddress", "CustomContractAddress", "Decrypt", "DecryptECIES", "DefaultKMSAddress", "DeleteAccessGroup", "DeleteContentLibrary", "DeleteContentObject", "DeleteContentVersion", "DeleteFiles", "DeleteMetadata", "DeletePart", "DeployContract", "Download", "DownloadEncrypted", "DownloadFile", "DownloadPart", "EditContentObject", "Encrypt", "EncryptECIES", "EncryptionConk", "Events", "ExtractEventFromLogs", "ExtractValueFromEvent", "FabricUrl", "FileUrl", "FinalizeABRMezzanine", "FinalizeContentObject", "FinalizePart", "FinalizeStateChannelAccess", "FinalizeUploadJob", "FormatContractArguments", "GenerateStateChannelToken", "GetBalance", "GroupActionMethod", "LatestVersionHash", "LibraryContentTypes", "LinkAccessGroupToOauth", "LinkData", "LinkTarget", "LinkUrl", "ListFiles", "LROStatus", "MergeMetadata", "NodeId", "Nodes", "PlayoutOptions", "ProduceMetadataLinks", "Proofs", "PublicRep", "PublishContentVersion", "QParts", "RemoveAccessGroupManager", "RemoveAccessGroupMember", "RemoveContentObjectGroupPermission", "RemoveContentLibraryGroup", "RemoveLibraryContentType", "Rep", "ReplaceMetadata", "Request", "ResetRegion", "SendFunds", "SetAccessCharge", "SetAuth", "SetContentLibraryImage", "SetContentObjectImage", "SetCustomContentContract", "SetNodes", "SetOauthToken", "SetSignerFromOauthToken", "SetVisibility", "StartABRMezzanineJobs", "UnlinkAccessGroupFromOauth", "UpdateContentObjectGraph", "UploadFileData", "UploadFiles", "UploadFilesFromS3", "UploadJobStatus", "UploadPart", "UploadPartChunk", "UploadStatus", "UseRegion", "VerifyContentObject", "Visibility"];
     }
   }, {
     key: "AllowedUserProfileMethods",
@@ -454,7 +461,7 @@ function () {
   }, {
     key: "FileMethods",
     value: function FileMethods() {
-      return ["DownloadFile", "DownloadPart", "UploadFiles", "UploadPart", "UploadPartChunk"];
+      return ["DownloadFile", "DownloadPart", "UpdateContentObjectGraph", "UploadFiles", "UploadFilesFromS3", "UploadPart", "UploadPartChunk"];
     }
   }]);
 

@@ -755,7 +755,9 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
       objectId
     });
 
-    latestHash = versions.versions[0].hash;
+    if(versions && versions.versions && versions.versions[0]) {
+      latestHash = versions.versions[0].hash;
+    }
   }
 
   return latestHash;
@@ -853,6 +855,39 @@ exports.AudienceData = function({objectId, versionHash, protocols=[], drms=[]}) 
   this.Log(data);
 
   return data;
+};
+
+exports.AvailableOfferings = async function({objectId, versionHash}) {
+  if(!objectId) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
+  }
+
+  const path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
+
+  const audienceData = this.AudienceData({objectId, versionHash});
+
+  try {
+    return await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        path: path,
+        method: "GET",
+        headers: await this.authClient.AuthorizationHeader({
+          objectId,
+          channelAuth: true,
+          oauthToken: this.oauthToken,
+          audienceData
+        })
+      })
+    );
+  } catch(error) {
+    if(error.status && parseInt(error.status) === 500) {
+      return {};
+    }
+
+    throw error;
+  }
 };
 
 /**
