@@ -690,13 +690,22 @@ function () {
 
             case 5:
               if (!(!this.noCache && this.channelContentTokens[objectId])) {
-                _context7.next = 7;
+                _context7.next = 9;
                 break;
               }
 
-              return _context7.abrupt("return", this.channelContentTokens[objectId]);
+              if (!(this.channelContentTokens[objectId].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
+                _context7.next = 8;
+                break;
+              }
 
-            case 7:
+              return _context7.abrupt("return", this.channelContentTokens[objectId].token);
+
+            case 8:
+              // Token expired
+              this.channelContentTokens[objectId] = undefined;
+
+            case 9:
               this.Log("Making state channel access request: ".concat(objectId));
               stateChannelApi = "elv_channelContentRequest";
               additionalParams = [];
@@ -706,7 +715,7 @@ function () {
                 additionalParams = [JSON.stringify(audienceData)];
               }
 
-              _context7.next = 13;
+              _context7.next = 15;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: stateChannelApi,
@@ -715,23 +724,26 @@ function () {
                 additionalParams: additionalParams
               }));
 
-            case 13:
+            case 15:
               payload = _context7.sent;
-              _context7.next = 16;
+              _context7.next = 18;
               return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload))));
 
-            case 16:
+            case 18:
               signature = _context7.sent;
               multiSig = Utils.FormatSignature(signature);
               token = "".concat(payload, ".").concat(Utils.B64(multiSig));
 
               if (!this.noCache) {
-                this.channelContentTokens[objectId] = token;
+                this.channelContentTokens[objectId] = {
+                  token: token,
+                  issuedAt: Date.now()
+                };
               }
 
               return _context7.abrupt("return", token);
 
-            case 21:
+            case 23:
             case "end":
               return _context7.stop();
           }
@@ -785,15 +797,24 @@ function () {
               }
 
               if (!(!this.noCache && this.channelContentTokens[objectId])) {
-                _context9.next = 4;
+                _context9.next = 6;
                 break;
               }
 
-              return _context9.abrupt("return", this.channelContentTokens[objectId]);
+              if (!(this.channelContentTokens[objectId].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
+                _context9.next = 5;
+                break;
+              }
 
-            case 4:
+              return _context9.abrupt("return", this.channelContentTokens[objectId].token);
+
+            case 5:
+              // Token expired
+              this.channelContentTokens[objectId] = undefined;
+
+            case 6:
               _context9.t0 = _regeneratorRuntime;
-              _context9.next = 7;
+              _context9.next = 9;
               return _regeneratorRuntime.awrap(this.MakeKMSRequest({
                 objectId: objectId,
                 versionHash: versionHash,
@@ -805,21 +826,24 @@ function () {
                 }
               }));
 
-            case 7:
+            case 9:
               _context9.t1 = _context9.sent.text();
-              _context9.next = 10;
+              _context9.next = 12;
               return _context9.t0.awrap.call(_context9.t0, _context9.t1);
 
-            case 10:
+            case 12:
               fabricToken = _context9.sent;
 
               if (!this.noCache) {
-                this.channelContentTokens[objectId] = fabricToken;
+                this.channelContentTokens[objectId] = {
+                  token: fabricToken,
+                  issuedAt: Date.now()
+                };
               }
 
               return _context9.abrupt("return", fabricToken);
 
-            case 13:
+            case 15:
             case "end":
               return _context9.stop();
           }

@@ -375,7 +375,12 @@ class AuthorizationClient {
     }
 
     if(!this.noCache && this.channelContentTokens[objectId]) {
-      return this.channelContentTokens[objectId];
+      if(this.channelContentTokens[objectId].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
+        return this.channelContentTokens[objectId].token;
+      }
+
+      // Token expired
+      this.channelContentTokens[objectId] = undefined;
     }
 
     this.Log(`Making state channel access request: ${objectId}`);
@@ -401,7 +406,10 @@ class AuthorizationClient {
     const token = `${payload}.${Utils.B64(multiSig)}`;
 
     if(!this.noCache) {
-      this.channelContentTokens[objectId] = token;
+      this.channelContentTokens[objectId] = {
+        token,
+        issuedAt: Date.now()
+      };
     }
 
     return token;
@@ -429,7 +437,12 @@ class AuthorizationClient {
     }
 
     if(!this.noCache && this.channelContentTokens[objectId]) {
-      return this.channelContentTokens[objectId];
+      if(this.channelContentTokens[objectId].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
+        return this.channelContentTokens[objectId].token;
+      }
+
+      // Token expired
+      this.channelContentTokens[objectId] = undefined;
     }
 
     const fabricToken = await (await this.MakeKMSRequest({
@@ -444,7 +457,10 @@ class AuthorizationClient {
     })).text();
 
     if(!this.noCache) {
-      this.channelContentTokens[objectId] = fabricToken;
+      this.channelContentTokens[objectId] = {
+        token: fabricToken,
+        issuedAt: Date.now()
+      };
     }
 
     return fabricToken;

@@ -111,6 +111,7 @@ exports.ListFiles = function _callee(_ref) {
  * @param {Array<Object>} fileInfo - List of files to reference/copy
  * @param {string} accessKey - AWS access key
  * @param {string} secret - AWS secret
+ * @param {string} encryption="none" - Encryption for uploaded files (copy only) - cgck | none
  * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
  * @param {function=} callback - If specified, will be periodically called with current upload status
  * - Arguments (copy): { done: boolean, uploaded: number, total: number, uploadedFiles: number, totalFiles: number, fileStatus: Object }
@@ -119,20 +120,39 @@ exports.ListFiles = function _callee(_ref) {
 
 
 exports.UploadFilesFromS3 = function _callee2(_ref2) {
-  var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref2$copy, copy, callback, defaults, ops, _ref3, id, status, done, progress, _progress;
+  var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref2$encryption, encryption, _ref2$copy, copy, callback, encryption_key, conk, defaults, ops, _ref3, id, status, done, progress, _progress;
 
   return _regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
-          libraryId = _ref2.libraryId, objectId = _ref2.objectId, writeToken = _ref2.writeToken, region = _ref2.region, bucket = _ref2.bucket, fileInfo = _ref2.fileInfo, accessKey = _ref2.accessKey, secret = _ref2.secret, _ref2$copy = _ref2.copy, copy = _ref2$copy === void 0 ? false : _ref2$copy, callback = _ref2.callback;
+          libraryId = _ref2.libraryId, objectId = _ref2.objectId, writeToken = _ref2.writeToken, region = _ref2.region, bucket = _ref2.bucket, fileInfo = _ref2.fileInfo, accessKey = _ref2.accessKey, secret = _ref2.secret, _ref2$encryption = _ref2.encryption, encryption = _ref2$encryption === void 0 ? "none" : _ref2$encryption, _ref2$copy = _ref2.copy, copy = _ref2$copy === void 0 ? false : _ref2$copy, callback = _ref2.callback;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
           this.Log("Uploading files from S3: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
+
+          if (!(encryption === "cgck")) {
+            _context2.next = 9;
+            break;
+          }
+
+          _context2.next = 7;
+          return _regeneratorRuntime.awrap(this.EncryptionConk({
+            libraryId: libraryId,
+            objectId: objectId,
+            writeToken: writeToken
+          }));
+
+        case 7:
+          conk = _context2.sent;
+          encryption_key = conk.secret_key;
+
+        case 9:
           defaults = {
+            encryption_key: encryption_key,
             access: {
               protocol: "s3",
               platform: "aws",
@@ -168,7 +188,7 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             }
           }); // eslint-disable-next-line no-unused-vars
 
-          _context2.next = 8;
+          _context2.next = 13;
           return _regeneratorRuntime.awrap(this.CreateFileUploadJob({
             libraryId: libraryId,
             objectId: objectId,
@@ -177,23 +197,23 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             defaults: defaults
           }));
 
-        case 8:
+        case 13:
           _ref3 = _context2.sent;
           id = _ref3.id;
 
-        case 10:
+        case 15:
           if (!true) {
-            _context2.next = 33;
+            _context2.next = 38;
             break;
           }
 
-          _context2.next = 13;
+          _context2.next = 18;
           return _regeneratorRuntime.awrap(new Promise(function (resolve) {
             return setTimeout(resolve, 1000);
           }));
 
-        case 13:
-          _context2.next = 15;
+        case 18:
+          _context2.next = 20;
           return _regeneratorRuntime.awrap(this.UploadStatus({
             libraryId: libraryId,
             objectId: objectId,
@@ -201,34 +221,34 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             uploadId: id
           }));
 
-        case 15:
+        case 20:
           status = _context2.sent;
 
           if (!(status.errors && status.errors.length > 1)) {
-            _context2.next = 20;
+            _context2.next = 25;
             break;
           }
 
           throw status.errors.join("\n");
 
-        case 20:
+        case 25:
           if (!status.error) {
-            _context2.next = 25;
+            _context2.next = 30;
             break;
           }
 
           this.Log("S3 file upload failed:\n".concat(JSON.stringify(status, null, 2)));
           throw status.error;
 
-        case 25:
+        case 30:
           if (!(status.status.toLowerCase() === "failed")) {
-            _context2.next = 27;
+            _context2.next = 32;
             break;
           }
 
           throw "File upload failed";
 
-        case 27:
+        case 32:
           done = false;
 
           if (copy) {
@@ -259,17 +279,17 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
           }
 
           if (!done) {
-            _context2.next = 31;
+            _context2.next = 36;
             break;
           }
 
-          return _context2.abrupt("break", 33);
+          return _context2.abrupt("break", 38);
 
-        case 31:
-          _context2.next = 10;
+        case 36:
+          _context2.next = 15;
           break;
 
-        case 33:
+        case 38:
         case "end":
           return _context2.stop();
       }
