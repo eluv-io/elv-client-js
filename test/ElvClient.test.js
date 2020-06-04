@@ -1116,6 +1116,65 @@ describe("Test ElvClient", () => {
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
     });
 
+    test("Copy Files From S3 With Encryption", async () => {
+      if(!(s3Access.accessKey && s3Access.bucket && s3Access.region && s3Access.secret)) {
+        throw Error("S3 info and credentials not specified");
+      }
+
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      /* Example callback:
+        {
+          "done": true,
+          "uploaded": 97944174,
+          "total": 97944174,
+          "uploadedFiles": 1,
+          "totalFiles": 1,
+          "fileStatus": {
+            "/eluvio-mez-test/ENTIRE_CREED_2min_.mp4": {
+              "size": 97944174,
+              "written": 83757796,
+              "percent": 85.51585314303635
+            }
+          }
+        }
+      */
+      const callback = ({done, uploaded, total, uploadedFiles, totalFiles, fileStatus}) => {
+        expect(done).toBeDefined();
+        expect(uploaded).toBeDefined();
+        expect(total).toBeDefined();
+        expect(uploadedFiles).toBeDefined();
+        expect(totalFiles).toBeDefined();
+        expect(totalFiles).toEqual(1);
+
+        if(done) {
+          expect(uploaded).toEqual(total);
+          expect(uploadedFiles).toEqual(totalFiles);
+        } else {
+          expect(Object.keys(fileStatus).length).toEqual(1);
+        }
+      };
+
+      await client.UploadFilesFromS3({
+        libraryId,
+        objectId,
+        writeToken,
+        encryption: "cgck",
+        fileInfo: [{
+          path: "s3-copy",
+          source: s3Access.testFile
+        }],
+        region: s3Access.region,
+        bucket: s3Access.bucket,
+        accessKey: s3Access.accessKey,
+        secret: s3Access.secret,
+        copy: true,
+        callback
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
     test("Reference Files From S3", async () => {
       if(!(s3Access.accessKey && s3Access.bucket && s3Access.region && s3Access.secret)) {
         throw Error("S3 info and credentials not specified");
