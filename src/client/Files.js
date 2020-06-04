@@ -5,6 +5,7 @@
  */
 
 const Utils = require("../Utils");
+const bs58 = require("bs58");
 
 let fs;
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
@@ -101,13 +102,18 @@ exports.UploadFilesFromS3 = async function({
 
   let encryption_key;
   if(encryption === "cgck") {
-    const conk = await this.EncryptionConk({
+    let conk = await this.EncryptionConk({
       libraryId,
       objectId,
       writeToken
     });
 
-    encryption_key = conk.secret_key;
+    conk = {
+      ...conk,
+      secret_key: ""
+    };
+
+    encryption_key = `kp__${bs58.encode(Buffer.from(JSON.stringify(conk)))}`;
   }
 
   const defaults = {
@@ -131,6 +137,9 @@ exports.UploadFilesFromS3 = async function({
       return {
         op: "ingest-copy",
         path: info.path,
+        encryption: {
+          scheme: encryption === "cgck" ? "cgck" : "none",
+        },
         ingest: {
           type: "key",
           path: info.source,

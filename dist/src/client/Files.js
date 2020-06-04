@@ -13,6 +13,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
  */
 var Utils = require("../Utils");
 
+var bs58 = require("bs58");
+
 var fs;
 
 if (Utils.Platform() === Utils.PLATFORM_NODE) {
@@ -135,7 +137,7 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
           this.Log("Uploading files from S3: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
 
           if (!(encryption === "cgck")) {
-            _context2.next = 9;
+            _context2.next = 10;
             break;
           }
 
@@ -148,9 +150,12 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
 
         case 7:
           conk = _context2.sent;
-          encryption_key = conk.secret_key;
+          conk = _objectSpread({}, conk, {
+            secret_key: ""
+          });
+          encryption_key = "kp__".concat(bs58.encode(Buffer.from(JSON.stringify(conk))));
 
-        case 9:
+        case 10:
           defaults = {
             encryption_key: encryption_key,
             access: {
@@ -171,6 +176,9 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
               return {
                 op: "ingest-copy",
                 path: info.path,
+                encryption: {
+                  scheme: encryption === "cgck" ? "cgck" : "none"
+                },
                 ingest: {
                   type: "key",
                   path: info.source
@@ -188,7 +196,7 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             }
           }); // eslint-disable-next-line no-unused-vars
 
-          _context2.next = 13;
+          _context2.next = 14;
           return _regeneratorRuntime.awrap(this.CreateFileUploadJob({
             libraryId: libraryId,
             objectId: objectId,
@@ -197,23 +205,23 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             defaults: defaults
           }));
 
-        case 13:
+        case 14:
           _ref3 = _context2.sent;
           id = _ref3.id;
 
-        case 15:
+        case 16:
           if (!true) {
-            _context2.next = 38;
+            _context2.next = 39;
             break;
           }
 
-          _context2.next = 18;
+          _context2.next = 19;
           return _regeneratorRuntime.awrap(new Promise(function (resolve) {
             return setTimeout(resolve, 1000);
           }));
 
-        case 18:
-          _context2.next = 20;
+        case 19:
+          _context2.next = 21;
           return _regeneratorRuntime.awrap(this.UploadStatus({
             libraryId: libraryId,
             objectId: objectId,
@@ -221,34 +229,34 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             uploadId: id
           }));
 
-        case 20:
+        case 21:
           status = _context2.sent;
 
           if (!(status.errors && status.errors.length > 1)) {
-            _context2.next = 25;
+            _context2.next = 26;
             break;
           }
 
           throw status.errors.join("\n");
 
-        case 25:
+        case 26:
           if (!status.error) {
-            _context2.next = 30;
+            _context2.next = 31;
             break;
           }
 
           this.Log("S3 file upload failed:\n".concat(JSON.stringify(status, null, 2)));
           throw status.error;
 
-        case 30:
+        case 31:
           if (!(status.status.toLowerCase() === "failed")) {
-            _context2.next = 32;
+            _context2.next = 33;
             break;
           }
 
           throw "File upload failed";
 
-        case 32:
+        case 33:
           done = false;
 
           if (copy) {
@@ -279,17 +287,17 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
           }
 
           if (!done) {
-            _context2.next = 36;
+            _context2.next = 37;
             break;
           }
 
-          return _context2.abrupt("break", 38);
+          return _context2.abrupt("break", 39);
 
-        case 36:
-          _context2.next = 15;
+        case 37:
+          _context2.next = 16;
           break;
 
-        case 38:
+        case 39:
         case "end":
           return _context2.stop();
       }

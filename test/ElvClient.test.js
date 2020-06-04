@@ -519,7 +519,7 @@ describe("Test ElvClient", () => {
       expect(invalidMetadata).not.toBeDefined();
     });
 
-    test("Edit content object", async () => {
+    test("Edit Content Object", async () => {
       const editResponse = await client.EditContentObject({libraryId, objectId});
       const writeToken = editResponse.write_token;
 
@@ -581,7 +581,7 @@ describe("Test ElvClient", () => {
 
       let objectNames = [];
       // Create a bunch of objects
-      for(let i = 0; i < 10; i++) {
+      for(let i = 0; i < 5; i++) {
         const name = `Test Object ${10 - i}`;
         objectNames.push(name);
         const createResponse = await client.CreateContentObject({
@@ -615,7 +615,7 @@ describe("Test ElvClient", () => {
 
       expect(unfiltered).toBeDefined();
       expect(unfiltered.contents).toBeDefined();
-      expect(unfiltered.contents.length).toEqual(10);
+      expect(unfiltered.contents.length).toEqual(5);
       expect(unfiltered.paging).toBeDefined();
 
       /* Sorting */
@@ -652,15 +652,15 @@ describe("Test ElvClient", () => {
           select: ["/public"],
           sort: ["/public/name"],
           filter: [
-            {key: "/public/name", type: "gte", filter: objectNames[3]},
-            {key: "/public/name", type: "lte", filter: objectNames[7]}
+            {key: "/public/name", type: "gte", filter: objectNames[1]},
+            {key: "/public/name", type: "lte", filter: objectNames[3]}
           ]
         }
       });
 
-      expect(filtered.contents.length).toEqual(5);
+      expect(filtered.contents.length).toEqual(3);
       const filteredNames = filtered.contents.map(object => object.versions[0].meta.public.name);
-      expect(filteredNames).toEqual(objectNames.slice(3, 8));
+      expect(filteredNames).toEqual(objectNames.slice(1, 4));
 
       /* Selecting metadata fields */
       const selected = await client.ContentObjects({
@@ -1161,7 +1161,7 @@ describe("Test ElvClient", () => {
         writeToken,
         encryption: "cgck",
         fileInfo: [{
-          path: "s3-copy",
+          path: "s3-copy-encrypted",
           source: s3Access.testFile
         }],
         region: s3Access.region,
@@ -1280,6 +1280,9 @@ describe("Test ElvClient", () => {
     test("Download S3 Files", async () => {
       const s3CopyData = await client.DownloadFile({libraryId, objectId, filePath: "s3-copy", format: "arrayBuffer"});
       expect(s3CopyData).toBeDefined();
+
+      const s3CopyDataDecrypted = await client.DownloadFile({libraryId, objectId, filePath: "s3-copy-encrypted", format: "arrayBuffer"});
+      expect(s3CopyDataDecrypted).toBeDefined();
     });
 
     test("Create File Directories", async () => {
