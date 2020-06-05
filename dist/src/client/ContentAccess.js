@@ -1506,6 +1506,16 @@ exports.AudienceData = function (_ref16) {
   this.Log(data);
   return data;
 };
+/**
+ * Retrieve available playout offerings for the specified content
+ *
+ * @methodGroup Media
+ * @param {string=} objectId - Id of the content
+ * @param {string=} versionHash - Version hash of the content
+ *
+ * @return {Promise<Object>} - The available offerings
+ */
+
 
 exports.AvailableOfferings = function _callee23(_ref17) {
   var objectId, versionHash, path, audienceData;
