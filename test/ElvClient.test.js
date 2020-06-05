@@ -519,7 +519,7 @@ describe("Test ElvClient", () => {
       expect(invalidMetadata).not.toBeDefined();
     });
 
-    test("Edit content object", async () => {
+    test("Edit Content Object", async () => {
       const editResponse = await client.EditContentObject({libraryId, objectId});
       const writeToken = editResponse.write_token;
 
@@ -581,7 +581,7 @@ describe("Test ElvClient", () => {
 
       let objectNames = [];
       // Create a bunch of objects
-      for(let i = 0; i < 10; i++) {
+      for(let i = 0; i < 5; i++) {
         const name = `Test Object ${10 - i}`;
         objectNames.push(name);
         const createResponse = await client.CreateContentObject({
@@ -615,7 +615,7 @@ describe("Test ElvClient", () => {
 
       expect(unfiltered).toBeDefined();
       expect(unfiltered.contents).toBeDefined();
-      expect(unfiltered.contents.length).toEqual(10);
+      expect(unfiltered.contents.length).toEqual(5);
       expect(unfiltered.paging).toBeDefined();
 
       /* Sorting */
@@ -652,15 +652,15 @@ describe("Test ElvClient", () => {
           select: ["/public"],
           sort: ["/public/name"],
           filter: [
-            {key: "/public/name", type: "gte", filter: objectNames[3]},
-            {key: "/public/name", type: "lte", filter: objectNames[7]}
+            {key: "/public/name", type: "gte", filter: objectNames[1]},
+            {key: "/public/name", type: "lte", filter: objectNames[3]}
           ]
         }
       });
 
-      expect(filtered.contents.length).toEqual(5);
+      expect(filtered.contents.length).toEqual(3);
       const filteredNames = filtered.contents.map(object => object.versions[0].meta.public.name);
-      expect(filteredNames).toEqual(objectNames.slice(3, 8));
+      expect(filteredNames).toEqual(objectNames.slice(1, 4));
 
       /* Selecting metadata fields */
       const selected = await client.ContentObjects({
@@ -810,7 +810,7 @@ describe("Test ElvClient", () => {
     test("Encrypt and Decrypt", async () => {
       // Ensure encryption conk is set
       const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
-      await client.EncryptionConk({libraryId, objectId, writeToken});
+      await client.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
 
       const encrypted = await client.Encrypt({libraryId, objectId, chunk: testFile1});
@@ -1116,6 +1116,65 @@ describe("Test ElvClient", () => {
       await client.FinalizeContentObject({libraryId, objectId, writeToken});
     });
 
+    test("Copy Files From S3 With Encryption", async () => {
+      if(!(s3Access.accessKey && s3Access.bucket && s3Access.region && s3Access.secret)) {
+        throw Error("S3 info and credentials not specified");
+      }
+
+      const writeToken = (await client.EditContentObject({libraryId, objectId})).write_token;
+
+      /* Example callback:
+        {
+          "done": true,
+          "uploaded": 97944174,
+          "total": 97944174,
+          "uploadedFiles": 1,
+          "totalFiles": 1,
+          "fileStatus": {
+            "/eluvio-mez-test/ENTIRE_CREED_2min_.mp4": {
+              "size": 97944174,
+              "written": 83757796,
+              "percent": 85.51585314303635
+            }
+          }
+        }
+      */
+      const callback = ({done, uploaded, total, uploadedFiles, totalFiles, fileStatus}) => {
+        expect(done).toBeDefined();
+        expect(uploaded).toBeDefined();
+        expect(total).toBeDefined();
+        expect(uploadedFiles).toBeDefined();
+        expect(totalFiles).toBeDefined();
+        expect(totalFiles).toEqual(1);
+
+        if(done) {
+          expect(uploaded).toEqual(total);
+          expect(uploadedFiles).toEqual(totalFiles);
+        } else {
+          expect(Object.keys(fileStatus).length).toEqual(1);
+        }
+      };
+
+      await client.UploadFilesFromS3({
+        libraryId,
+        objectId,
+        writeToken,
+        encryption: "cgck",
+        fileInfo: [{
+          path: "s3-copy-encrypted",
+          source: s3Access.testFile
+        }],
+        region: s3Access.region,
+        bucket: s3Access.bucket,
+        accessKey: s3Access.accessKey,
+        secret: s3Access.secret,
+        copy: true,
+        callback
+      });
+
+      await client.FinalizeContentObject({libraryId, objectId, writeToken});
+    });
+
     test("Reference Files From S3", async () => {
       if(!(s3Access.accessKey && s3Access.bucket && s3Access.region && s3Access.secret)) {
         throw Error("S3 info and credentials not specified");
@@ -1221,6 +1280,9 @@ describe("Test ElvClient", () => {
     test("Download S3 Files", async () => {
       const s3CopyData = await client.DownloadFile({libraryId, objectId, filePath: "s3-copy", format: "arrayBuffer"});
       expect(s3CopyData).toBeDefined();
+
+      const s3CopyDataDecrypted = await client.DownloadFile({libraryId, objectId, filePath: "s3-copy-encrypted", format: "arrayBuffer"});
+      expect(s3CopyDataDecrypted).toBeDefined();
     });
 
     test("Create File Directories", async () => {
@@ -1651,6 +1713,14 @@ describe("Test ElvClient", () => {
       });
 
       await new Promise(resolve => setTimeout(resolve, 5000));
+    });
+
+    test("Available Offerings", async () => {
+      const offerings = await accessClient.AvailableOfferings({objectId: mezzanineId});
+
+      expect(offerings).toBeDefined();
+      expect(offerings.default).toBeDefined();
+      expect(offerings.default.display_name).toEqual("default");
     });
 
     test("Playout Options", async () => {

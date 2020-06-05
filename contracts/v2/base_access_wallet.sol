@@ -4,9 +4,11 @@ import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
 import {Container} from "./container.sol";
 import {BaseContent} from "./base_content.sol";
-import {KmsSpace} from "./user_space.sol";
+import {IKmsSpace, INodeSpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./transactable.sol";
+import {ExternalUserWallet} from "./external_user_wallet.sol";
+import "./meta_object.sol";
 
 /* -- Revision history --
 BaseAccessWallet20190320114000ML: First versioned released
@@ -19,7 +21,7 @@ BsAccessWallet20191203102900ML: Bumped up to reflect change in the access_indexo
 
 // abigen --sol base_access_wallet.sol --pkg=contracts --out build/base_access_wallet.go
 
-contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable {
+contract BaseAccessWallet is MetaObject, Accessible, Container, AccessIndexor, Transactable {
     bytes32 public version = "BsAccessWallet20191203102900ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     constructor(address content_space)  public payable {
@@ -27,7 +29,8 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     }
 
     function canConfirm() public view returns (bool) {
-        return canNodePublish(msg.sender);
+        INodeSpace bcs = INodeSpace(contentSpace);
+        return bcs.canNodePublish(msg.sender);
     }
 
     function accessRequestMsg(
@@ -130,7 +133,7 @@ contract BaseAccessWallet is Accessible, Container, AccessIndexor, Transactable 
     external
     returns (bool) {
 
-        KmsSpace spc = KmsSpace(contentSpace);
+        IKmsSpace spc = IKmsSpace(contentSpace);
         require(msg.sender == contentSpace || spc.checkKMSAddr(msg.sender) > 0);
         require(spc.checkKMSAddr(_guarantor) > 0);
 
@@ -177,8 +180,6 @@ contract BaseAccessWalletFactory is Ownable {
     bytes32 public version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     function createAccessWallet() public returns (address) {
-        return  (new BaseAccessWallet(msg.sender));
+        return (new BaseAccessWallet(msg.sender));
     }
-
-
 }

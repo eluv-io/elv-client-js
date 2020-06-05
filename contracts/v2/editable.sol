@@ -11,13 +11,15 @@ Editable20190522154000SS: Changed hash bytes32 to string
 Editable20190605144500ML: Renamed publish to confirm to avoid confusion in the case of the content-objects
 Editable20190715105600PO
 Editable20190801135500ML: Made explicit the definition of parentAddress method
+Editable20191219134600ML: Made updateRequest contingent on canEdit rather than ownership
+Editable20200422180400ML: Fixed deletion of latest version
 */
 
 
 contract Editable is Ownable {
     using strings for *;
 
-    bytes32 public version ="Editable20190801135500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20200422180400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -52,6 +54,11 @@ contract Editable is Ownable {
 
     function countVersionHashes() public view returns (uint256) {
         return versionHashes.length;
+    }
+
+    //This function is meant to be overloaded. By default the owner is the only editor
+    function canEdit() public view returns (bool) {
+        return (msg.sender == owner);
     }
 
     // intended to be overridden
@@ -100,34 +107,55 @@ contract Editable is Ownable {
     }
 
     function updateRequest() public {
-        require(msg.sender == owner || canConfirm());
+        require(canEdit() || canConfirm());
         emit UpdateRequest(objectHash);
+    }
+
+  function removeVersionIdx(uint idx) internal {
+        delete versionHashes[idx];
+        delete versionTimestamp[idx];
+        if (idx != (versionHashes.length - 1)) {
+            versionHashes[idx] = versionHashes[versionHashes.length - 1];
+            versionTimestamp[idx] = versionTimestamp[versionTimestamp.length - 1];
+        }
+        versionHashes.length--;
+        versionTimestamp.length--;
+        return;
     }
 
     function deleteVersion(string _versionHash) public returns (int256) {
         require(canCommit());
-        
+
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
         bytes32 objHash = keccak256(abi.encodePacked(objectHash));
         if (findHash == objHash) {
-            objectHash = "";
-            objectTimestamp = 0;
+           if (versionHashes.length == 0) {
+              objectHash = "";
+              objectTimestamp = 0;
+            } else {
+              //find the most recent
+               uint256 mostRecent = 0;
+               uint latestStamp = 0;
+                for (uint256 x = 0; x < versionHashes.length; x++) {
+                  if (versionTimestamp[x] > latestStamp) {
+                      mostRecent = x;
+                      latestStamp = versionTimestamp[x];
+                  }
+                }
+                //assign most recent version as object version and delete from versions array
+                objectHash = versionHashes[mostRecent];
+                objectTimestamp = latestStamp;
+                removeVersionIdx(mostRecent);
+            }
             emit VersionDelete(contentSpace, _versionHash, 0);
             return 0;
         }
-        
+
         int256 foundIdx = -1;
         for (uint256 i = 0; i < versionHashes.length; i++) {
             bytes32 checkHash = keccak256(abi.encodePacked(versionHashes[i]));
             if (findHash == checkHash) {
-                delete versionHashes[i];
-                delete versionTimestamp[i];
-                if (i != (versionHashes.length - 1)) {
-                    versionHashes[i] = versionHashes[versionHashes.length - 1];
-                    versionTimestamp[i] = versionTimestamp[versionTimestamp.length - 1];
-                }
-                versionHashes.length--;
-                versionTimestamp.length--;
+                removeVersionIdx(i);
                 foundIdx = int256(i);
                 break;
             }
@@ -137,4 +165,5 @@ contract Editable is Ownable {
         emit VersionDelete(contentSpace, _versionHash, foundIdx);
         return foundIdx;
     }
+
 }

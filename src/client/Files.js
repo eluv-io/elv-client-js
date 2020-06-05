@@ -5,6 +5,7 @@
  */
 
 const Utils = require("../Utils");
+const bs58 = require("bs58");
 
 let fs;
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
@@ -75,6 +76,7 @@ exports.ListFiles = async function({libraryId, objectId, versionHash}) {
  * @param {Array<Object>} fileInfo - List of files to reference/copy
  * @param {string} accessKey - AWS access key
  * @param {string} secret - AWS secret
+ * @param {string} encryption="none" - Encryption for uploaded files (copy only) - cgck | none
  * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
  * @param {function=} callback - If specified, will be periodically called with current upload status
  * - Arguments (copy): { done: boolean, uploaded: number, total: number, uploadedFiles: number, totalFiles: number, fileStatus: Object }
@@ -89,6 +91,7 @@ exports.UploadFilesFromS3 = async function({
   fileInfo,
   accessKey,
   secret,
+  encryption="none",
   copy=false,
   callback
 }) {
@@ -97,7 +100,24 @@ exports.UploadFilesFromS3 = async function({
 
   this.Log(`Uploading files from S3: ${libraryId} ${objectId} ${writeToken}`);
 
+  let encryption_key;
+  if(encryption === "cgck") {
+    let conk = await this.EncryptionConk({
+      libraryId,
+      objectId,
+      writeToken
+    });
+
+    conk = {
+      ...conk,
+      secret_key: ""
+    };
+
+    encryption_key = `kp__${bs58.encode(Buffer.from(JSON.stringify(conk)))}`;
+  }
+
   const defaults = {
+    encryption_key,
     access: {
       protocol: "s3",
       platform: "aws",
@@ -117,6 +137,9 @@ exports.UploadFilesFromS3 = async function({
       return {
         op: "ingest-copy",
         path: info.path,
+        encryption: {
+          scheme: encryption === "cgck" ? "cgck" : "none",
+        },
         ingest: {
           type: "key",
           path: info.source,

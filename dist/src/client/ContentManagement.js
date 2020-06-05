@@ -433,7 +433,6 @@ exports.SetContentObjectImage = function _callee5(_ref7) {
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
-            data: image,
             encrypted: false,
             fileInfo: [{
               path: imageName,

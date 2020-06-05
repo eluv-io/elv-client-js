@@ -12,11 +12,47 @@ var contract = {
     "type": "function"
   }, {
     "constant": false,
+    "inputs": [{
+      "name": "addr",
+      "type": "address"
+    }],
+    "name": "isContract",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
     "inputs": [],
     "name": "kill",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "OP_ACCESS_COMPLETE",
+    "outputs": [{
+      "name": "",
+      "type": "uint32"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "OP_ACCESS_REQUEST",
+    "outputs": [{
+      "name": "",
+      "type": "uint32"
+    }],
+    "payable": false,
+    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -36,6 +72,32 @@ var contract = {
       "type": "address"
     }],
     "name": "transferCreatorship",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_opCodes",
+      "type": "uint32[]"
+    }, {
+      "name": "_contentAddrs",
+      "type": "address[]"
+    }, {
+      "name": "_userAddrs",
+      "type": "address[]"
+    }, {
+      "name": "_ctxHashes",
+      "type": "bytes32[]"
+    }, {
+      "name": "_ts",
+      "type": "uint256[]"
+    }, {
+      "name": "_amt",
+      "type": "uint256[]"
+    }],
+    "name": "executeAccessBatch",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -94,6 +156,64 @@ var contract = {
     "payable": true,
     "stateMutability": "payable",
     "type": "fallback"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "timestamp",
+      "type": "uint256"
+    }, {
+      "indexed": false,
+      "name": "libraryAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "contentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "userAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "contextHash",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "request_timestamp",
+      "type": "uint64"
+    }],
+    "name": "AccessRequest",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "timestamp",
+      "type": "uint256"
+    }, {
+      "indexed": false,
+      "name": "libraryAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "contentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "userAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "contextHash",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "request_timestamp",
+      "type": "uint64"
+    }],
+    "name": "AccessComplete",
+    "type": "event"
   }]
 };
 module.exports = contract;

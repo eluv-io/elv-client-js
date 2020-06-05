@@ -110,6 +110,19 @@ var topics = {
     }],
     "ambiguous": true
   },
+  "0x04c71e53d136838eea703132a77007b0526b9a7691cdb7a6017a93673f865cbb": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "enabled",
+        "type": "bool"
+      }],
+      "name": "OAuthStatusChanged",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
   "0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75": {
     "abi": [{
       "anonymous": false,
@@ -234,6 +247,19 @@ var topics = {
       "anonymous": false,
       "inputs": [],
       "name": "AccessRequest",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0xe2b310ec9dabdc05229a748e07666c3bc9c46c6ef465cce30d0aa3aa64a0644c": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "key",
+        "type": "bytes"
+      }],
+      "name": "ObjectMetaChanged",
       "type": "event"
     }],
     "ambiguous": true
@@ -600,7 +626,7 @@ var topics = {
       "name": "AccessRequest",
       "type": "event"
     }],
-    "contract": "BaseContentFactoryExt"
+    "contract": "BaseContentFactory"
   },
   "0x078326d18c0223483393342523f51da024ddcb0f1e929aa1f142100381c794f5": {
     "abi": [{
@@ -633,7 +659,7 @@ var topics = {
       "name": "AccessComplete",
       "type": "event"
     }],
-    "contract": "BaseContentFactoryExt"
+    "contract": "BaseContentFactory"
   },
   "0x9e69777f30c55126be256664fa7beff4b796ac32ebceab94df5071b0148017f8": {
     "abi": [{
@@ -1281,6 +1307,23 @@ var topics = {
     }],
     "ambiguous": true
   },
+  "0x786a1cca426afc9bf7b81ff1382a573ebc21b93bddf4784c49f56a3ae8a691c8": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "contentSpace",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "extUserAddr",
+        "type": "address"
+      }],
+      "name": "CreateExtUserWallet",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
   "0xe36c3ab835cea1a8af00f744c77bb77bbbd33d20062bee3f9aceb6518d08e45e": {
     "abi": [{
       "anonymous": false,
@@ -1831,19 +1874,6 @@ var topics = {
     }],
     "ambiguous": true
   },
-  "0x04c71e53d136838eea703132a77007b0526b9a7691cdb7a6017a93673f865cbb": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "enabled",
-        "type": "bool"
-      }],
-      "name": "OAuthStatusChanged",
-      "type": "event"
-    }],
-    "contract": "BaseAccessControlGroup"
-  },
   "0x79f778ed0728e9eb0e0ceb581a3f1f01fa09306a34abb3feb08c692623269152": {
     "abi": [{
       "anonymous": false,
@@ -1930,23 +1960,6 @@ var topics = {
       "type": "event"
     }],
     "contract": "BaseContent"
-  },
-  "0x786a1cca426afc9bf7b81ff1382a573ebc21b93bddf4784c49f56a3ae8a691c8": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "contentSpace",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "extUserAddr",
-        "type": "address"
-      }],
-      "name": "CreateExtUserWallet",
-      "type": "event"
-    }],
-    "contract": "ExternalUserWallet"
   },
   "0x96e7956254fc1ae7e734e5a3bfe07f165a07bb8774482d302680b5a093c0f936": {
     "abi": [{

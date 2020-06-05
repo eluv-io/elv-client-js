@@ -18,6 +18,19 @@ const {
   ValidateAddress
 } = require("../Validation");
 
+exports.GroupActionMethod = async function(objectId, set=false) {
+  switch(await this.AccessType({id: objectId})) {
+    case this.authClient.ACCESS_TYPES.OBJECT:
+      return set ? "setContentObjectRights" : "getContentObjectRights";
+    case this.authClient.ACCESS_TYPES.TYPE:
+      return set ? "setContentTypeRights" : "getContentTypeRights";
+    case this.authClient.ACCESS_TYPES.GROUP:
+      return set ? "setAccessGroupRights" : "getAccessGroupRights";
+    case this.authClient.ACCESS_TYPES.LIBRARY:
+      return set ? "setLibraryRights" : "getLibraryRights";
+  }
+};
+
 /**
  * Returns the address of the owner of the specified content object
  *
@@ -503,9 +516,6 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
 
   const groupAddresses = await this.Collection({collectionType: "accessGroups"});
 
-  const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
-  const methodName = isType ? "getContentTypeRights" : "getContentObjectRights";
-
   const groupPermissions = {};
   await Promise.all(
     groupAddresses.map(async groupAddress => {
@@ -513,7 +523,7 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
 
       let permission = await this.CallContractMethod({
         contractAddress: groupAddress,
-        methodName,
+        methodName: await this.GroupActionMethod(objectId, false),
         methodArgs: [contractAddress]
       });
 
@@ -555,6 +565,10 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
   ValidateObject(objectId);
   groupAddress = ValidateAddress(groupAddress);
 
+  if(this.utils.EqualAddress(groupAddress, this.utils.HashToAddress(objectId))) {
+    throw Error("Group rights cannot be set on the same group");
+  }
+
   permission = permission.toLowerCase();
 
   if(!["see", "access", "manage"].includes(permission)) {
@@ -563,12 +577,9 @@ exports.AddContentObjectGroupPermission = async function({objectId, groupAddress
 
   this.Log(`Adding ${permission} permission to group ${groupAddress} for ${objectId}`);
 
-  const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
-  const methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
-
   const event = await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
-    methodName,
+    methodName: await this.GroupActionMethod(objectId, true),
     methodArgs: [
       this.utils.HashToAddress(objectId),
       permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
@@ -607,12 +618,9 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
 
   this.Log(`Removing ${permission} permission from group ${groupAddress} for ${objectId}`);
 
-  const isType = (await this.AccessType({id: objectId})) === this.authClient.ACCESS_TYPES.TYPE;
-  const methodName = isType ? "setContentTypeRights" : "setContentObjectRights";
-
   const event = await this.CallContractMethodAndWait({
     contractAddress: groupAddress,
-    methodName,
+    methodName: await this.GroupActionMethod(objectId, true),
     methodArgs: [
       this.utils.HashToAddress(objectId),
       permission === "manage" ? 2 : (permission === "access" ? 1 : 0),
@@ -625,5 +633,78 @@ exports.RemoveContentObjectGroupPermission = async function({objectId, groupAddr
     abi,
     event,
     eventName: "RightsChanged"
+  });
+};
+
+/**
+ * Link the specified group to an OAuth provider with the specified credentials
+ *
+ * @param {string} groupAddress - The address of the group
+ * @param {string} kmsId - The ID of the KMS (or trust authority ID)
+ * @param {string | Object} oauthConfig - The configuration for the OAuth settings
+ */
+exports.LinkAccessGroupToOauth = async function({groupAddress, kmsId, oauthConfig}) {
+  ValidateAddress(groupAddress);
+  ValidatePresence("kmsId", kmsId);
+  ValidatePresence("oauthConfig", oauthConfig);
+
+  if(typeof oauthConfig === "string") {
+    oauthConfig = JSON.parse(oauthConfig);
+  }
+
+  const { publicKey } = await this.authClient.KMSInfo({kmsId});
+
+  const kmsKey = `eluv.jwtv.${kmsId}`;
+  const kmsConfig = await this.Crypto.EncryptConk(oauthConfig, publicKey);
+
+  const userKey = `eluv.jwtv.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const userConfig = await this.EncryptECIES(oauthConfig);
+
+  const objectId = this.utils.AddressToObjectId(groupAddress);
+  const writeToken = (await this.EditContentObject({libraryId: this.contentSpaceLibraryId, objectId})).write_token;
+
+  await this.ReplaceMetadata({
+    libraryId: this.contentSpaceLibraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: kmsKey,
+    metadata: kmsConfig
+  });
+
+  await this.ReplaceMetadata({
+    libraryId: this.contentSpaceLibraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: userKey,
+    metadata: userConfig
+  });
+
+  await this.FinalizeContentObject({libraryId: this.contentSpaceLibraryId, objectId, writeToken});
+
+  await this.CallContractMethodAndWait({
+    contractAddress: groupAddress,
+    methodName: "setOAuthEnabled",
+    methodArgs: [false]
+  });
+
+  await this.CallContractMethodAndWait({
+    contractAddress: groupAddress,
+    methodName: "setOAuthEnabled",
+    methodArgs: [true]
+  });
+};
+
+/**
+ * Disable the OAuth linking on the specified access group
+ *
+ * @param {string} groupAddress - The address of the group
+ */
+exports.UnlinkAccessGroupFromOauth = async function({groupAddress}) {
+  ValidateAddress(groupAddress);
+
+  await this.CallContractMethodAndWait({
+    contractAddress: groupAddress,
+    methodName: "setOAuthEnabled",
+    methodArgs: [false]
   });
 };

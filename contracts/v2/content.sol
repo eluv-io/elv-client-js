@@ -10,11 +10,12 @@ Content20190315171500ML: Migrated to 0.4.24
 Content20190506155000ML: Makes the default for runAccess match content object behavior that does not have custom contract
 Content20190510151600ML: Modified API for runAccessInfo to add Access information
 Content20191031162000ML: Adds finalize method for state channel
+Content20191219134300ML: Adds hook to be used to override standard behavior for authorization to edit
 */
 
 contract Content is Ownable {
 
-    bytes32 public version ="Content20191031162000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Content20191219134300ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     uint8 public constant DEFAULT_SEE  = 1;
     uint8 public constant DEFAULT_ACCESS  = 2;
@@ -43,6 +44,13 @@ contract Content is Ownable {
     function runCreate() public payable returns (uint) {
         return 0;
     }
+
+
+   //0 indicates edit can proceed
+   //100 indicates that custom contract does not modify default behavior
+   function runEdit() public returns (uint) {
+       return 100;
+   }
 
     //0 indicates that the deletion/inactivation can proceed.
     //100 indicates that the deletion can proceed and the custom contract should be killed too

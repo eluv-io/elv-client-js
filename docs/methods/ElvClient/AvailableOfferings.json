@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async AvailableOfferings({\n  \"objectId\": \"iq__3GYT4vZdpN1E6Btt6s56BmDMjut2\"\n});",
+    "result": "{\n  \"default\": {\n    \"display_name\": \"default\"\n  }\n}"
+  }
+]

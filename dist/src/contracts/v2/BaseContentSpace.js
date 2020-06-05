@@ -393,7 +393,7 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "",
+      "name": "_userAddr",
       "type": "address"
     }],
     "name": "userWallets",
@@ -547,6 +547,17 @@ var contract = {
     "stateMutability": "nonpayable",
     "type": "function"
   }, {
+    "constant": true,
+    "inputs": [],
+    "name": "canEdit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
     "constant": false,
     "inputs": [{
       "name": "new_factory",
@@ -647,20 +658,6 @@ var contract = {
       "type": "uint256"
     }],
     "name": "contentTypes",
-    "outputs": [{
-      "name": "",
-      "type": "address"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [{
-      "name": "_userAddr",
-      "type": "address"
-    }],
-    "name": "getUserWallet",
     "outputs": [{
       "name": "",
       "type": "address"
@@ -1340,6 +1337,15 @@ var contract = {
     "anonymous": false,
     "inputs": [],
     "name": "AccessRequest",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
     "type": "event"
   }]
 };
