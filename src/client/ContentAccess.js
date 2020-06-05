@@ -755,7 +755,9 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
       objectId
     });
 
-    latestHash = versions.versions[0].hash;
+    if(versions && versions.versions && versions.versions[0]) {
+      latestHash = versions.versions[0].hash;
+    }
   }
 
   return latestHash;
@@ -853,6 +855,39 @@ exports.AudienceData = function({objectId, versionHash, protocols=[], drms=[]}) 
   this.Log(data);
 
   return data;
+};
+
+exports.AvailableOfferings = async function({objectId, versionHash}) {
+  if(!objectId) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
+  }
+
+  const path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
+
+  const audienceData = this.AudienceData({objectId, versionHash});
+
+  try {
+    return await this.utils.ResponseToJson(
+      this.HttpClient.Request({
+        path: path,
+        method: "GET",
+        headers: await this.authClient.AuthorizationHeader({
+          objectId,
+          channelAuth: true,
+          oauthToken: this.oauthToken,
+          audienceData
+        })
+      })
+    );
+  } catch(error) {
+    if(error.status && parseInt(error.status) === 500) {
+      return {};
+    }
+
+    throw error;
+  }
 };
 
 /**
@@ -959,7 +994,7 @@ exports.PlayoutOptions = async function({
             versionHash: linkTargetHash || versionHash,
             rep: UrlJoin("playout", offering, playoutPath),
             channelAuth: true,
-            queryParams: hlsjsProfile && protocol === "hls" ? {player_profile: "hls-js"} : {}
+            queryParams: (hlsjsProfile && protocol === "hls" && drm === "aes-128") ? {player_profile: "hls-js"} : {}
           }),
           drms: drm ? {[drm]: {licenseServers}} : undefined
         }
@@ -1583,6 +1618,68 @@ exports.LinkData = async function({libraryId, objectId, versionHash, linkPath, f
 
 /* Encryption */
 
+exports.CreateEncryptionConk = async function({libraryId, objectId, writeToken, createKMSConk=true}) {
+  ValidateParameters({libraryId, objectId});
+  ValidateWriteToken(writeToken);
+
+  const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+
+  const existingUserCap =
+    await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: capKey
+    });
+
+  if(existingUserCap) {
+    this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+  } else {
+    this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
+
+    await this.ReplaceMetadata({
+      libraryId,
+      objectId,
+      writeToken,
+      metadataSubtree: capKey,
+      metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey)
+    });
+  }
+
+  if(createKMSConk) {
+    try {
+      const kmsAddress = await this.authClient.KMSAddress({objectId});
+      const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
+      const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+      const existingKMSCap =
+        await this.ContentObjectMetadata({
+          libraryId,
+          // Cap may only exist in draft
+          objectId,
+          writeToken,
+          metadataSubtree: kmsCapKey
+        });
+
+      if(!existingKMSCap) {
+        await this.ReplaceMetadata({
+          libraryId,
+          objectId,
+          writeToken,
+          metadataSubtree: kmsCapKey,
+          metadata: await this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey)
+        });
+      }
+    } catch(error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to create encryption cap for KMS:");
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
+  }
+
+  return this.encryptionConks[objectId];
+};
+
 /**
  * Retrieve the encryption conk for the specified object. If one has not yet been created
  * and a writeToken has been specified, this method will create a new conk and
@@ -1627,42 +1724,10 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
 
     if(existingUserCap) {
       this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
+    } else if(writeToken) {
+      await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: false});
     } else {
-      this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
-
-      // If write token is specified, add it to the metadata
-      if(writeToken) {
-        let metadata = {};
-        metadata[capKey] = await this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey);
-
-        try {
-          const kmsAddress = await this.authClient.KMSAddress({objectId});
-          const kmsPublicKey = (await this.authClient.KMSInfo({objectId})).publicKey;
-          const kmsCapKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
-          const existingKMSCap =
-            await this.ContentObjectMetadata({
-              libraryId,
-              // Cap may only exist in draft
-              objectId,
-              writeToken,
-              metadataSubtree: kmsCapKey
-            });
-
-          if(!existingKMSCap) {
-            metadata[kmsCapKey] = await this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey);
-          }
-        } catch(error) {
-          // eslint-disable-next-line no-console
-          console.error("Failed to create encryption cap for KMS with public key " + kmsPublicKey);
-        }
-
-        await this.MergeMetadata({
-          libraryId,
-          objectId,
-          writeToken,
-          metadata
-        });
-      }
+      throw "No encryption conk present for " + objectId;
     }
   }
 

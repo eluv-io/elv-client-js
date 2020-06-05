@@ -87,6 +87,15 @@
         "type": "ProtoHls"
       }
     },
+    "hls-sample-aes": {
+      "drm": {
+        "enc_scheme_name": "cbcs",
+        "type": "DrmSampleAes"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
+    },
     "dash-clear": {
       "drm": null,
       "protocol": {

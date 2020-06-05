@@ -1,0 +1,10 @@
+[
+  {
+    "signature": "async GroupActionMethod(\"iq__o9iWmU9vyVkQZTh36CaApRj4SQq\", true);",
+    "result": "\"setContentObjectRights\""
+  },
+  {
+    "signature": "async GroupActionMethod(\"iq__o9iWmU9vyVkQZTh36CaApRj4SQq\", false);",
+    "result": "\"getContentObjectRights\""
+  }
+]

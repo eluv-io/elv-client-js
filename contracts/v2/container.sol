@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 import {Editable} from "./editable.sol";
 import {BaseContent} from "./base_content.sol";
-import {NodeSpace} from "./node_space.sol";
+import {INodeSpace} from "./node_space.sol";
 
 /**
  * Container
@@ -114,14 +114,6 @@ contract Container is Editable {
     function canReview(address /*_candidate*/) public view returns (bool) {
         return false;
     }
-
-
-    // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
-    function canNodePublish(address candidate) public view returns (bool) {
-        NodeSpace bcs = NodeSpace(contentSpace);
-        return bcs.canNodePublish(candidate);
-    }
-
 
     function publish(address contentObj) public returns (bool) {
         require(msg.sender == contentObj);

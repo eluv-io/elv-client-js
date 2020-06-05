@@ -623,6 +623,15 @@
         "type": "ProtoDash"
       }
     },
+    "hls-sample-aes": {
+      "drm": {
+        "enc_scheme_name": "cbcs",
+        "type": "DrmSampleAes"
+      },
+      "protocol": {
+        "type": "ProtoHls"
+      }
+    },
     "hls-aes128": {
       "drm": {
         "enc_scheme_name": "aes-128",

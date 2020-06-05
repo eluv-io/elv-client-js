@@ -13,7 +13,7 @@ import "./base_space_interfaces.sol";
 NodeSpace20190528170100ML: First versioned released
 */
 
-contract NodeSpaceImpl is Ownable {
+contract NodeSpace is Ownable, INodeSpace {
 
     bytes32 public version ="NodeSpace20190528170100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -107,7 +107,7 @@ contract NodeSpaceImpl is Ownable {
     }
 
     // check whether an address - which should represent a content fabric node - can confirm (publish?) a content object
-    function canNodePublish(address candidate) public view returns (bool) {
+    function canNodePublish(address candidate) external view returns (bool) {
         for (uint i = 0; i < activeNodeAddresses.length; i++) {
             if (activeNodeAddresses[i] == candidate) {
                 return true;

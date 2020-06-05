@@ -269,6 +269,17 @@ var contract = {
     "type": "function"
   }, {
     "constant": false,
+    "inputs": [],
+    "name": "runEdit",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
     "inputs": [{
       "name": "",
       "type": "uint256"

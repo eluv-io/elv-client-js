@@ -484,6 +484,17 @@ var contract = {
     "stateMutability": "nonpayable",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [],
+    "name": "runEdit",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [],
     "name": "canRecord",

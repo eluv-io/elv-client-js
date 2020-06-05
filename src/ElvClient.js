@@ -12,6 +12,8 @@ const HttpClient = require("./HttpClient");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 
+const { ValidatePresence } = require("./Validation");
+
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
@@ -117,7 +119,7 @@ class ElvClient {
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {Array<string>} kmsUrls - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north na-west-south na-east eu-west
+   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
    *
    * @return {Promise<Object>} - Object containing content space ID and fabric and ethereum URLs
    */
@@ -174,7 +176,7 @@ class ElvClient {
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north na-west-south na-east eu-west
+   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
@@ -242,6 +244,10 @@ class ElvClient {
     this.Crypto.ElvCrypto();
   }
 
+  ConfigUrl() {
+    return this.configUrl;
+  }
+
   SetAuth(auth) {
     this.noAuth = !auth;
     this.authClient.noAuth = !auth;
@@ -255,7 +261,7 @@ class ElvClient {
    * @methodGroup Nodes
    * @namedParams
    * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north na-west-south na-east eu-west
+   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
    *
    * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
    */
@@ -512,6 +518,63 @@ class ElvClient {
 
       throw error;
     }
+  }
+
+  /**
+   * Encrypt the given string or object with the current signer's public key
+   *
+   * @param {string | Object} message - The string or object to encrypt
+   * @return {Promise<string>} - The encrypted message
+   */
+  async EncryptECIES(message) {
+    if(!this.signer) {
+      throw "Signer not set";
+    }
+
+    ValidatePresence("message", message);
+
+    return await this.Crypto.EncryptConk(message, this.signer.signingKey.keyPair.publicKey);
+  }
+
+  /**
+   * Decrypt the given encrypted message with the current signer's private key
+   *
+   * @param {string} message - The message to decrypt
+   * @return {Promise<string | Object>} - The decrypted string or object
+   */
+  async DecryptECIES(message) {
+    if(!this.signer) {
+      throw "Signer not set";
+    }
+
+    ValidatePresence("message", message);
+
+    return await this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
+  }
+
+  /**
+   * Request the specified URL with the given method and body, and return the result in the specified format
+   *
+   * @param {string} url - URL to request
+   * @param {string=} format="json" - Format of response
+   * @param {string=} method="GET" - Request method
+   * @param {object=} body - Request body
+   * @param {object=} headers - Request headers
+   *
+   * @return {Promise<*>} - Response in the specified format
+   */
+  Request({url, format="json", method="GET", headers={}, body}) {
+    return this.utils.ResponseToFormat(
+      format,
+      HttpClient.Fetch(
+        url,
+        {
+          method,
+          headers,
+          body
+        }
+      )
+    );
   }
 
   /* FrameClient related */

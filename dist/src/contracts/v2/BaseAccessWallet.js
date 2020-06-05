@@ -281,20 +281,6 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "candidate",
-      "type": "address"
-    }],
-    "name": "canNodePublish",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [{
       "name": "",
       "type": "address"
     }],
@@ -845,6 +831,17 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [],
+    "name": "canEdit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
     "name": "ACCESS_NONE",
     "outputs": [{
       "name": "",
@@ -1150,6 +1147,20 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
+    "inputs": [{
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "getMeta",
+    "outputs": [{
+      "name": "",
+      "type": "bytes"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
     "inputs": [],
     "name": "contentSpace",
     "outputs": [{
@@ -1294,6 +1305,20 @@ var contract = {
       "name": "",
       "type": "int256"
     }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "key",
+      "type": "bytes"
+    }, {
+      "name": "value",
+      "type": "bytes"
+    }],
+    "name": "putMeta",
+    "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1569,6 +1594,15 @@ var contract = {
     "anonymous": false,
     "inputs": [],
     "name": "AccessRequest",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
     "type": "event"
   }]
 };

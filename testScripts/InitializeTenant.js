@@ -121,7 +121,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     console.log("\t", await client.userProfileClient.TenantId());
 
     console.log("\nAccess Groups:\n");
-    console.log(`\tTenant Admins Group: ${tenantAdminGroupAddress}`);
+    console.log(`\tOrganization Admins Group: ${tenantAdminGroupAddress}`);
     console.log(`\tContent Admins Group: ${contentAdminGroupAddress}`);
     console.log(`\tContent Users Group: ${contentUserGroupAddress}`);
 
@@ -158,10 +158,54 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
     await SetObjectPermissions(client, masterTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
+    const channelTypeId = await client.CreateContentType({
+      name: `${tenantName} - Channel`,
+      metadata: {
+        ...typeMetadata,
+        public: {
+          ...typeMetadata.public,
+          title_configuration: {
+            "controls":[
+              "credits",
+              "playlists",
+              "gallery",
+              "channel"
+            ],
+          }
+        }
+      }
+    });
+
+    await SetObjectPermissions(client, channelTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
+
+    const streamTypeId = await client.CreateContentType({
+      name: `${tenantName} - Live Stream`,
+      metadata: {
+        metadata: {
+          ...typeMetadata,
+          public: {
+            ...typeMetadata.public,
+            title_configuration: {
+              "controls":[
+                "credits",
+                "playlists",
+                "gallery",
+                "live_stream"
+              ],
+            }
+          }
+        }
+      }
+    });
+
+    await SetObjectPermissions(client, streamTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
+
     console.log("\nTenant Types:\n");
     console.log(`\t${tenantName} - Title: ${titleTypeId}`);
     console.log(`\t${tenantName} - Title Collection: ${titleCollectionTypeId}`);
     console.log(`\t${tenantName} - Title Master: ${masterTypeId}`);
+    console.log(`\t${tenantName} - Channel ${channelTypeId}`);
+    console.log(`\t${tenantName} - Live Stream ${streamTypeId}`);
 
 
     /* Create libraries - Properties, Title Masters, Title Mezzanines and add each to the groups */

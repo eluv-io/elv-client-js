@@ -49,7 +49,7 @@ const argv = yargs
   })
   .option("elv-geo", {
     type: "string",
-    description: "Geographic region for the fabric nodes. Available regions: na-west-north|na-west-south|na-east|eu-west"
+    description: "Geographic region for the fabric nodes. Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east"
   })
   .option("config-url", {
     type: "string",

@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import "./ownable.sol";
-import {UserSpace} from "./user_space.sol";
+import {IUserSpace} from "./base_space_interfaces.sol";
 
 /* -- Revision history --
 AccessIndexor20190423111800ML: First versioned release
@@ -261,8 +261,8 @@ contract AccessIndexor is Ownable {
 
         bool isIndexorManager = hasManagerAccess(tx.origin);
         bool isObjRightHolder = false;
-        UserSpace space = UserSpace(contentSpace);
-        address walletAddress = space.getUserWallet(tx.origin);
+        IUserSpace space = IUserSpace(contentSpace);
+        address walletAddress = space.userWallets(tx.origin);
         /*
         if  (walletAddress == 0x0) {
             Ownable instance = Ownable(obj);

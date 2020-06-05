@@ -7,6 +7,8 @@ contract MetaObject is Ownable {
     mapping(bytes32 => bytes) mapSmallKeys;
     mapping(bytes => bytes) mapBigKeys;
 
+    event ObjectMetaChanged(bytes key);
+
     function putMeta(bytes key, bytes value) public onlyOwner {
         if (key.length <= 32) {
             bytes32 smallKey;
@@ -18,6 +20,7 @@ contract MetaObject is Ownable {
         } else {
             mapBigKeys[key] = value;
         }
+        emit ObjectMetaChanged(key);
     }
 
     function getMeta(bytes key) public constant returns (bytes) {

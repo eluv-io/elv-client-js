@@ -211,20 +211,6 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "candidate",
-      "type": "address"
-    }],
-    "name": "canNodePublish",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [{
       "name": "_candidate",
       "type": "address"
     }],
@@ -478,6 +464,17 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "string"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "canEdit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -1029,6 +1026,15 @@ var contract = {
     "anonymous": false,
     "inputs": [],
     "name": "AccessRequest",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
     "type": "event"
   }]
 };
