@@ -857,6 +857,15 @@ exports.AudienceData = function({objectId, versionHash, protocols=[], drms=[]}) 
   return data;
 };
 
+/**
+ * Retrieve available playout offerings for the specified content
+ *
+ * @methodGroup Media
+ * @param {string=} objectId - Id of the content
+ * @param {string=} versionHash - Version hash of the content
+ *
+ * @return {Promise<Object>} - The available offerings
+ */
 exports.AvailableOfferings = async function({objectId, versionHash}) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;

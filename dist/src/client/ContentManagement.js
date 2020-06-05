@@ -58,7 +58,7 @@ exports.SetVisibility = function _callee(_ref) {
 
         case 7:
           _context.next = 9;
-          return _regeneratorRuntime.awrap(this.CallContractMethod({
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(id),
             methodName: "setVisibility",
             methodArgs: [visibility]
