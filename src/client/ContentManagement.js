@@ -35,7 +35,7 @@ exports.SetVisibility = async function({id, visibility}) {
     return;
   }
 
-  return await this.CallContractMethod({
+  return await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(id),
     methodName: "setVisibility",
     methodArgs: [visibility],
