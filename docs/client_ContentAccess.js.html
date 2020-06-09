@@ -925,14 +925,21 @@ exports.AudienceData = function({objectId, versionHash, protocols=[], drms=[]}) 
  * @methodGroup Media
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} linkPath - If playing from a link, the path to the link
  *
  * @return {Promise&lt;Object>} - The available offerings
  */
-exports.AvailableOfferings = async function({objectId, versionHash}) {
+exports.AvailableOfferings = async function({objectId, versionHash, linkPath}) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   } else if(!versionHash) {
     versionHash = await this.LatestVersionHash({objectId});
+  }
+
+  // If link path specified, switch object ID + version hash to link target
+  if(linkPath) {
+    versionHash = await this.LinkTarget({versionHash, linkPath});
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
 
   const path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
@@ -1573,7 +1580,7 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
 };
 
 /**
- * Retrieve the version hash of the specified link's target. If the target is the same as the specified
+ * Retrieve the version hash of the target of the specified link. If the target is the same as the specified
  * object and versionHash is not specified, will return the latest version hash.
  *
  * @methodGroup Links
@@ -1588,32 +1595,67 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
 exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}) {
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  const linkInfo = await this.ContentObjectMetadata({
+  // Assume linkPath points directly at a link - retrieve unresolved link and extract hash
+  let linkInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
     versionHash,
-    metadataSubtree: UrlJoin(linkPath),
-    resolveLinks: false
+    metadataSubtree: linkPath,
+    resolveLinks: false,
+    resolveIgnoreErrors: true,
+    resolveIncludeSource: true
   });
 
-  if(!linkInfo || !linkInfo["/"]) {
-    throw Error(`No valid link at ${linkPath}`);
+  if(linkInfo &amp;&amp; linkInfo["/"]) {
+    /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
+    let targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
+    if(!targetHash) {
+      targetHash = linkInfo["."].container;
+    }
+
+    if(targetHash) {
+      return targetHash;
+    } else if(versionHash) {
+      return versionHash;
+    }
+
+    // Link points to this object - get latest version
+    return versionHash || await this.LatestVersionHash({objectId});
   }
 
-  /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
-  let targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
-  if(!targetHash) {
-    targetHash = linkInfo["."].container;
+  // linkPath does not point at a link - try to resolve the metadata and extract the source
+  linkInfo = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    versionHash,
+    metadataSubtree: linkPath,
+    resolveIncludeSource: true
+  });
+
+  if(!linkInfo || !linkInfo["."]) {
+    // If metadata is not a literal value, it must be within the original object
+    if(typeof linkInfo === "object") {
+      return versionHash || await this.LatestVersionHash({objectId});
+    }
+
+    // linkPath is not a direct link, but points to a literal value - back up one path element to find the container
+    const subPath = linkPath.split("/").slice(0, -1).join("/");
+
+    if(!subPath) {
+      return versionHash || await this.LatestVersionHash({objectId});
+    }
+
+    // linkPath does not point at a link - try to resolve the metadata and extract the source
+    linkInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      metadataSubtree: subPath,
+      resolveIncludeSource: true
+    });
   }
 
-  if(targetHash) {
-    return targetHash;
-  } else if(versionHash) {
-    return versionHash;
-  }
-
-  // Link points to this object - get latest version
-  return await this.LatestVersionHash({objectId});
+  return linkInfo["."].source;
 };
 
 /**

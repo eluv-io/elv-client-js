@@ -1512,18 +1512,19 @@ exports.AudienceData = function (_ref16) {
  * @methodGroup Media
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} linkPath - If playing from a link, the path to the link
  *
  * @return {Promise<Object>} - The available offerings
  */
 
 
 exports.AvailableOfferings = function _callee23(_ref17) {
-  var objectId, versionHash, path, audienceData;
+  var objectId, versionHash, linkPath, path, audienceData;
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
-          objectId = _ref17.objectId, versionHash = _ref17.versionHash;
+          objectId = _ref17.objectId, versionHash = _ref17.versionHash, linkPath = _ref17.linkPath;
 
           if (objectId) {
             _context23.next = 5;
@@ -1549,17 +1550,33 @@ exports.AvailableOfferings = function _callee23(_ref17) {
           versionHash = _context23.sent;
 
         case 9:
+          if (!linkPath) {
+            _context23.next = 14;
+            break;
+          }
+
+          _context23.next = 12;
+          return _regeneratorRuntime.awrap(this.LinkTarget({
+            versionHash: versionHash,
+            linkPath: linkPath
+          }));
+
+        case 12:
+          versionHash = _context23.sent;
+          objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+
+        case 14:
           path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
           audienceData = this.AudienceData({
             objectId: objectId,
             versionHash: versionHash
           });
-          _context23.prev = 11;
+          _context23.prev = 16;
           _context23.t0 = _regeneratorRuntime;
           _context23.t1 = this.utils;
           _context23.t2 = this.HttpClient;
           _context23.t3 = path;
-          _context23.next = 18;
+          _context23.next = 23;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             objectId: objectId,
             channelAuth: true,
@@ -1567,7 +1584,7 @@ exports.AvailableOfferings = function _callee23(_ref17) {
             audienceData: audienceData
           }));
 
-        case 18:
+        case 23:
           _context23.t4 = _context23.sent;
           _context23.t5 = {
             path: _context23.t3,
@@ -1576,32 +1593,32 @@ exports.AvailableOfferings = function _callee23(_ref17) {
           };
           _context23.t6 = _context23.t2.Request.call(_context23.t2, _context23.t5);
           _context23.t7 = _context23.t1.ResponseToJson.call(_context23.t1, _context23.t6);
-          _context23.next = 24;
+          _context23.next = 29;
           return _context23.t0.awrap.call(_context23.t0, _context23.t7);
 
-        case 24:
+        case 29:
           return _context23.abrupt("return", _context23.sent);
 
-        case 27:
-          _context23.prev = 27;
-          _context23.t8 = _context23["catch"](11);
+        case 32:
+          _context23.prev = 32;
+          _context23.t8 = _context23["catch"](16);
 
           if (!(_context23.t8.status && parseInt(_context23.t8.status) === 500)) {
-            _context23.next = 31;
+            _context23.next = 36;
             break;
           }
 
           return _context23.abrupt("return", {});
 
-        case 31:
+        case 36:
           throw _context23.t8;
 
-        case 32:
+        case 37:
         case "end":
           return _context23.stop();
       }
     }
-  }, null, this, [[11, 27]]);
+  }, null, this, [[16, 32]]);
 };
 /**
  * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
@@ -2675,7 +2692,7 @@ exports.ContentObjectGraph = function _callee33(_ref27) {
   }, null, this, [[5, 22], [24, 34]]);
 };
 /**
- * Retrieve the version hash of the specified link's target. If the target is the same as the specified
+ * Retrieve the version hash of the target of the specified link. If the target is the same as the specified
  * object and versionHash is not specified, will return the latest version hash.
  *
  * @methodGroup Links
@@ -2690,7 +2707,7 @@ exports.ContentObjectGraph = function _callee33(_ref27) {
 
 
 exports.LinkTarget = function _callee34(_ref28) {
-  var libraryId, objectId, versionHash, linkPath, linkInfo, targetHash;
+  var libraryId, objectId, versionHash, linkPath, linkInfo, targetHash, subPath;
   return _regeneratorRuntime.async(function _callee34$(_context34) {
     while (1) {
       switch (_context34.prev = _context34.next) {
@@ -2699,28 +2716,28 @@ exports.LinkTarget = function _callee34(_ref28) {
 
           if (versionHash) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-          }
+          } // Assume linkPath points directly at a link - retrieve unresolved link and extract hash
+
 
           _context34.next = 4;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            metadataSubtree: UrlJoin(linkPath),
-            resolveLinks: false
+            metadataSubtree: linkPath,
+            resolveLinks: false,
+            resolveIgnoreErrors: true,
+            resolveIncludeSource: true
           }));
 
         case 4:
           linkInfo = _context34.sent;
 
-          if (!(!linkInfo || !linkInfo["/"])) {
-            _context34.next = 7;
+          if (!(linkInfo && linkInfo["/"])) {
+            _context34.next = 20;
             break;
           }
 
-          throw Error("No valid link at ".concat(linkPath));
-
-        case 7:
           /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
           targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
 
@@ -2729,30 +2746,124 @@ exports.LinkTarget = function _callee34(_ref28) {
           }
 
           if (!targetHash) {
-            _context34.next = 13;
+            _context34.next = 12;
             break;
           }
 
           return _context34.abrupt("return", targetHash);
 
-        case 13:
+        case 12:
           if (!versionHash) {
-            _context34.next = 15;
+            _context34.next = 14;
             break;
           }
 
           return _context34.abrupt("return", versionHash);
 
-        case 15:
-          _context34.next = 17;
+        case 14:
+          _context34.t0 = versionHash;
+
+          if (_context34.t0) {
+            _context34.next = 19;
+            break;
+          }
+
+          _context34.next = 18;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 17:
-          return _context34.abrupt("return", _context34.sent);
-
         case 18:
+          _context34.t0 = _context34.sent;
+
+        case 19:
+          return _context34.abrupt("return", _context34.t0);
+
+        case 20:
+          _context34.next = 22;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            metadataSubtree: linkPath,
+            resolveIncludeSource: true
+          }));
+
+        case 22:
+          linkInfo = _context34.sent;
+
+          if (!(!linkInfo || !linkInfo["."])) {
+            _context34.next = 42;
+            break;
+          }
+
+          if (!(_typeof(linkInfo) === "object")) {
+            _context34.next = 31;
+            break;
+          }
+
+          _context34.t1 = versionHash;
+
+          if (_context34.t1) {
+            _context34.next = 30;
+            break;
+          }
+
+          _context34.next = 29;
+          return _regeneratorRuntime.awrap(this.LatestVersionHash({
+            objectId: objectId
+          }));
+
+        case 29:
+          _context34.t1 = _context34.sent;
+
+        case 30:
+          return _context34.abrupt("return", _context34.t1);
+
+        case 31:
+          // linkPath is not a direct link, but points to a literal value - back up one path element to find the container
+          subPath = linkPath.split("/").slice(0, -1).join("/");
+
+          if (subPath) {
+            _context34.next = 39;
+            break;
+          }
+
+          _context34.t2 = versionHash;
+
+          if (_context34.t2) {
+            _context34.next = 38;
+            break;
+          }
+
+          _context34.next = 37;
+          return _regeneratorRuntime.awrap(this.LatestVersionHash({
+            objectId: objectId
+          }));
+
+        case 37:
+          _context34.t2 = _context34.sent;
+
+        case 38:
+          return _context34.abrupt("return", _context34.t2);
+
+        case 39:
+          _context34.next = 41;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            metadataSubtree: subPath,
+            resolveIncludeSource: true
+          }));
+
+        case 41:
+          linkInfo = _context34.sent;
+
+        case 42:
+          return _context34.abrupt("return", linkInfo["."].source);
+
+        case 43:
         case "end":
           return _context34.stop();
       }
