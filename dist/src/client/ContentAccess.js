@@ -1634,6 +1634,7 @@ exports.AvailableOfferings = function _callee23(_ref17) {
  * @namedParams
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
@@ -1642,13 +1643,13 @@ exports.AvailableOfferings = function _callee23(_ref17) {
 
 
 exports.PlayoutOptions = function _callee24(_ref18) {
-  var objectId, versionHash, linkPath, _ref18$protocols, protocols, _ref18$offering, offering, _ref18$drms, drms, _ref18$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
+  var objectId, versionHash, writeToken, linkPath, _ref18$protocols, protocols, _ref18$offering, offering, _ref18$drms, drms, _ref18$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee24$(_context24) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
-          objectId = _ref18.objectId, versionHash = _ref18.versionHash, linkPath = _ref18.linkPath, _ref18$protocols = _ref18.protocols, protocols = _ref18$protocols === void 0 ? ["dash", "hls"] : _ref18$protocols, _ref18$offering = _ref18.offering, offering = _ref18$offering === void 0 ? "default" : _ref18$offering, _ref18$drms = _ref18.drms, drms = _ref18$drms === void 0 ? [] : _ref18$drms, _ref18$hlsjsProfile = _ref18.hlsjsProfile, hlsjsProfile = _ref18$hlsjsProfile === void 0 ? true : _ref18$hlsjsProfile;
+          objectId = _ref18.objectId, versionHash = _ref18.versionHash, writeToken = _ref18.writeToken, linkPath = _ref18.linkPath, _ref18$protocols = _ref18.protocols, protocols = _ref18$protocols === void 0 ? ["dash", "hls"] : _ref18$protocols, _ref18$offering = _ref18.offering, offering = _ref18$offering === void 0 ? "default" : _ref18$offering, _ref18$drms = _ref18.drms, drms = _ref18$drms === void 0 ? [] : _ref18$drms, _ref18$hlsjsProfile = _ref18.hlsjsProfile, hlsjsProfile = _ref18$hlsjsProfile === void 0 ? true : _ref18$hlsjsProfile;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
           protocols = protocols.map(function (p) {
             return p.toLowerCase();
@@ -1699,6 +1700,7 @@ exports.PlayoutOptions = function _callee24(_ref18) {
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
+            writeToken: writeToken,
             linkPath: linkPath
           }));
 
@@ -1712,7 +1714,13 @@ exports.PlayoutOptions = function _callee24(_ref18) {
 
         case 22:
           linkTargetLibraryId = _context24.sent;
-          path = UrlJoin("q", versionHash, "meta", linkPath);
+
+          if (writeToken) {
+            path = UrlJoin("qlibs", libraryId, "q", writeToken, "meta", linkPath);
+          } else {
+            path = UrlJoin("q", versionHash, "meta", linkPath);
+          }
+
           _context24.next = 27;
           break;
 
@@ -2700,6 +2708,7 @@ exports.ContentObjectGraph = function _callee33(_ref27) {
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  *
  * @returns {Promise<string>} - Version hash of the link's target
@@ -2707,34 +2716,44 @@ exports.ContentObjectGraph = function _callee33(_ref27) {
 
 
 exports.LinkTarget = function _callee34(_ref28) {
-  var libraryId, objectId, versionHash, linkPath, linkInfo, targetHash, subPath;
+  var libraryId, objectId, versionHash, writeToken, linkPath, linkInfo, targetHash, subPath;
   return _regeneratorRuntime.async(function _callee34$(_context34) {
     while (1) {
       switch (_context34.prev = _context34.next) {
         case 0:
-          libraryId = _ref28.libraryId, objectId = _ref28.objectId, versionHash = _ref28.versionHash, linkPath = _ref28.linkPath;
+          libraryId = _ref28.libraryId, objectId = _ref28.objectId, versionHash = _ref28.versionHash, writeToken = _ref28.writeToken, linkPath = _ref28.linkPath;
+          ValidateParameters({
+            libraryId: libraryId,
+            objectId: objectId,
+            writeToken: writeToken
+          });
+
+          if (writeToken) {
+            ValidateWriteToken(writeToken);
+          }
 
           if (versionHash) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           } // Assume linkPath points directly at a link - retrieve unresolved link and extract hash
 
 
-          _context34.next = 4;
+          _context34.next = 6;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
+            writeToken: writeToken,
             metadataSubtree: linkPath,
             resolveLinks: false,
             resolveIgnoreErrors: true,
             resolveIncludeSource: true
           }));
 
-        case 4:
+        case 6:
           linkInfo = _context34.sent;
 
           if (!(linkInfo && linkInfo["/"])) {
-            _context34.next = 20;
+            _context34.next = 22;
             break;
           }
 
@@ -2746,124 +2765,126 @@ exports.LinkTarget = function _callee34(_ref28) {
           }
 
           if (!targetHash) {
-            _context34.next = 12;
+            _context34.next = 14;
             break;
           }
 
           return _context34.abrupt("return", targetHash);
 
-        case 12:
+        case 14:
           if (!versionHash) {
-            _context34.next = 14;
+            _context34.next = 16;
             break;
           }
 
           return _context34.abrupt("return", versionHash);
 
-        case 14:
+        case 16:
           _context34.t0 = versionHash;
 
           if (_context34.t0) {
-            _context34.next = 19;
+            _context34.next = 21;
             break;
           }
 
-          _context34.next = 18;
+          _context34.next = 20;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 18:
+        case 20:
           _context34.t0 = _context34.sent;
 
-        case 19:
+        case 21:
           return _context34.abrupt("return", _context34.t0);
 
-        case 20:
-          _context34.next = 22;
+        case 22:
+          _context34.next = 24;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
+            writeToken: writeToken,
             metadataSubtree: linkPath,
             resolveIncludeSource: true
           }));
 
-        case 22:
+        case 24:
           linkInfo = _context34.sent;
 
           if (!(!linkInfo || !linkInfo["."])) {
-            _context34.next = 42;
+            _context34.next = 44;
             break;
           }
 
           if (!(_typeof(linkInfo) === "object")) {
-            _context34.next = 31;
+            _context34.next = 33;
             break;
           }
 
           _context34.t1 = versionHash;
 
           if (_context34.t1) {
-            _context34.next = 30;
+            _context34.next = 32;
             break;
           }
 
-          _context34.next = 29;
+          _context34.next = 31;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 29:
+        case 31:
           _context34.t1 = _context34.sent;
 
-        case 30:
+        case 32:
           return _context34.abrupt("return", _context34.t1);
 
-        case 31:
+        case 33:
           // linkPath is not a direct link, but points to a literal value - back up one path element to find the container
           subPath = linkPath.split("/").slice(0, -1).join("/");
 
           if (subPath) {
-            _context34.next = 39;
+            _context34.next = 41;
             break;
           }
 
           _context34.t2 = versionHash;
 
           if (_context34.t2) {
-            _context34.next = 38;
+            _context34.next = 40;
             break;
           }
 
-          _context34.next = 37;
+          _context34.next = 39;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 37:
+        case 39:
           _context34.t2 = _context34.sent;
 
-        case 38:
+        case 40:
           return _context34.abrupt("return", _context34.t2);
 
-        case 39:
-          _context34.next = 41;
+        case 41:
+          _context34.next = 43;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
+            writeToken: writeToken,
             metadataSubtree: subPath,
             resolveIncludeSource: true
           }));
 
-        case 41:
+        case 43:
           linkInfo = _context34.sent;
 
-        case 42:
+        case 44:
           return _context34.abrupt("return", linkInfo["."].source);
 
-        case 43:
+        case 45:
         case "end":
           return _context34.stop();
       }
@@ -2878,6 +2899,7 @@ exports.LinkTarget = function _callee34(_ref28) {
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
@@ -2889,43 +2911,47 @@ exports.LinkTarget = function _callee34(_ref28) {
 
 
 exports.LinkUrl = function _callee35(_ref29) {
-  var libraryId, objectId, versionHash, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee35$(_context35) {
     while (1) {
       switch (_context35.prev = _context35.next) {
         case 0:
-          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, linkPath = _ref29.linkPath, mimeType = _ref29.mimeType, _ref29$queryParams = _ref29.queryParams, queryParams = _ref29$queryParams === void 0 ? {} : _ref29$queryParams, _ref29$noCache = _ref29.noCache, noCache = _ref29$noCache === void 0 ? false : _ref29$noCache;
+          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, writeToken = _ref29.writeToken, linkPath = _ref29.linkPath, mimeType = _ref29.mimeType, _ref29$queryParams = _ref29.queryParams, queryParams = _ref29$queryParams === void 0 ? {} : _ref29$queryParams, _ref29$noCache = _ref29.noCache, noCache = _ref29$noCache === void 0 ? false : _ref29$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash
           });
 
+          if (writeToken) {
+            ValidateWriteToken(writeToken);
+          }
+
           if (linkPath) {
-            _context35.next = 4;
+            _context35.next = 5;
             break;
           }
 
           throw Error("Link path not specified");
 
-        case 4:
+        case 5:
           if (versionHash) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
           if (libraryId) {
-            path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
+            path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "meta", linkPath);
           } else {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
 
-          _context35.next = 8;
+          _context35.next = 9;
           return _regeneratorRuntime.awrap(this.Visibility({
             id: objectId
           }));
 
-        case 8:
+        case 9:
           visibility = _context35.sent;
           noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1; // TODO: Remove for authv3
 
@@ -2933,7 +2959,7 @@ exports.LinkUrl = function _callee35(_ref29) {
           _context35.t0 = _objectSpread;
           _context35.t1 = {};
           _context35.t2 = queryParams;
-          _context35.next = 16;
+          _context35.next = 17;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -2941,7 +2967,7 @@ exports.LinkUrl = function _callee35(_ref29) {
             noAuth: noAuth
           }));
 
-        case 16:
+        case 17:
           _context35.t3 = _context35.sent;
           _context35.t4 = {
             resolve: true,
@@ -2958,7 +2984,7 @@ exports.LinkUrl = function _callee35(_ref29) {
             queryParams: queryParams
           }));
 
-        case 21:
+        case 22:
         case "end":
           return _context35.stop();
       }
@@ -2973,24 +2999,26 @@ exports.LinkUrl = function _callee35(_ref29) {
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  * @param {string=} format=json - Format of the response
  */
 
 
 exports.LinkData = function _callee36(_ref30) {
-  var libraryId, objectId, versionHash, linkPath, _ref30$format, format, linkUrl;
+  var libraryId, objectId, versionHash, writeToken, linkPath, _ref30$format, format, linkUrl;
 
   return _regeneratorRuntime.async(function _callee36$(_context36) {
     while (1) {
       switch (_context36.prev = _context36.next) {
         case 0:
-          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, linkPath = _ref30.linkPath, _ref30$format = _ref30.format, format = _ref30$format === void 0 ? "json" : _ref30$format;
+          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, writeToken = _ref30.writeToken, linkPath = _ref30.linkPath, _ref30$format = _ref30.format, format = _ref30$format === void 0 ? "json" : _ref30$format;
           _context36.next = 3;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
+            writeToken: writeToken,
             linkPath: linkPath
           }));
 
