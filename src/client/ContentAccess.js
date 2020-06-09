@@ -920,6 +920,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, linkPath}) {
  * @namedParams
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
@@ -928,6 +929,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, linkPath}) {
 exports.PlayoutOptions = async function({
   objectId,
   versionHash,
+  writeToken,
   linkPath,
   protocols=["dash", "hls"],
   offering="default",
@@ -949,10 +951,14 @@ exports.PlayoutOptions = async function({
 
   let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
   if(linkPath) {
-    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, writeToken, linkPath});
     linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
     linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
-    path = UrlJoin("q", versionHash, "meta", linkPath);
+    if(writeToken) {
+      path = UrlJoin("qlibs", libraryId, "q", writeToken, "meta", linkPath);
+    } else {
+      path = UrlJoin("q", versionHash, "meta", linkPath);
+    }
   } else {
     path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
   }
@@ -1526,11 +1532,15 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  *
  * @returns {Promise<string>} - Version hash of the link's target
  */
-exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}) {
+exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToken, linkPath}) {
+  ValidateParameters({libraryId, objectId, writeToken});
+  if(writeToken) { ValidateWriteToken(writeToken); }
+
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
   // Assume linkPath points directly at a link - retrieve unresolved link and extract hash
@@ -1538,6 +1548,7 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}
     libraryId,
     objectId,
     versionHash,
+    writeToken,
     metadataSubtree: linkPath,
     resolveLinks: false,
     resolveIgnoreErrors: true,
@@ -1566,6 +1577,7 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}
     libraryId,
     objectId,
     versionHash,
+    writeToken,
     metadataSubtree: linkPath,
     resolveIncludeSource: true
   });
@@ -1588,6 +1600,7 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}
       libraryId,
       objectId,
       versionHash,
+      writeToken,
       metadataSubtree: subPath,
       resolveIncludeSource: true
     });
@@ -1604,6 +1617,7 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
@@ -1612,8 +1626,9 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
  */
-exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mimeType, queryParams={}, noCache=false}) {
+exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, linkPath, mimeType, queryParams={}, noCache=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
+  if(writeToken) { ValidateWriteToken(writeToken); }
 
   if(!linkPath) { throw Error("Link path not specified"); }
 
@@ -1621,7 +1636,7 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mi
 
   let path;
   if(libraryId) {
-    path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
+    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "meta", linkPath);
   } else {
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
@@ -1654,11 +1669,12 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mi
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  * @param {string=} format=json - Format of the response
  */
-exports.LinkData = async function({libraryId, objectId, versionHash, linkPath, format="json"}) {
-  const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, linkPath});
+exports.LinkData = async function({libraryId, objectId, versionHash, writeToken, linkPath, format="json"}) {
+  const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, writeToken, linkPath});
 
   return this.utils.ResponseToFormat(
     format,
