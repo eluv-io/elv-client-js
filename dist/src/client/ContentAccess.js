@@ -2725,7 +2725,7 @@ exports.LinkTarget = function _callee34(_ref28) {
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
-            writeToken: writeToken
+            versionHash: versionHash
           });
 
           if (writeToken) {

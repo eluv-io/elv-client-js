@@ -1600,7 +1600,7 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
  * @returns {Promise&lt;string>} - Version hash of the link's target
  */
 exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToken, linkPath}) {
-  ValidateParameters({libraryId, objectId, writeToken});
+  ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
