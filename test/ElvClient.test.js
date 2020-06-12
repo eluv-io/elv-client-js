@@ -113,7 +113,7 @@ describe("Test ElvClient", () => {
       expect(bootstrapClient.ContentSpaceId()).toBeDefined();
     });
 
-    test("Initialization with region", async () => {
+    test("Initialization With Region", async () => {
       const bootstrapClient = await ElvClient.FromConfigurationUrl({
         configUrl: ClientConfiguration["config-url"],
         region: "eu-west"
@@ -276,7 +276,7 @@ describe("Test ElvClient", () => {
   });
 
   describe("Content Libraries", () => {
-    test("Set tenant ID for user", async () => {
+    test("Set Tenant ID For User", async () => {
       const tenantId = `iten${client.utils.AddressToHash(accessGroupAddress)}`;
 
       await client.userProfileClient.SetTenantId({id: tenantId});
@@ -321,6 +321,49 @@ describe("Test ElvClient", () => {
       const libraryTenantId = Buffer.from(libraryTenant.replace("0x", ""), "hex").toString("utf8");
 
       expect(libraryTenantId).toEqual(tenantId);
+
+      console.log(`\n\nTenant ID: ${tenantId}\n\n`);
+    });
+
+    test("Clear Tenancy", async () => {
+      // Remove the tenant ID from the library
+      await client.CallContractMethodAndWait({
+        contractAddress: client.utils.HashToAddress(libraryId),
+        methodName: "putMeta",
+        methodArgs: [
+          "_tenantId",
+          ""
+        ]
+      });
+
+      const libraryTenant = await client.CallContractMethod({
+        contractAddress: client.utils.HashToAddress(libraryId),
+        methodName: "getMeta",
+        methodArgs: [
+          "_tenantId"
+        ]
+      });
+
+      expect(libraryTenant).toEqual("0x");
+
+      // Remove tenantId from user metadata
+      await client.userProfileClient.DeleteUserMetadata({metadataSubtree: "tenantId"});
+      client.userProfileClient.tenantId = undefined;
+
+      const userMetadata = client.userProfileClient.UserMetadata();
+      expect(userMetadata.tenantId).not.toBeDefined();
+
+      // Create a new library and ensure tenant ID is not set
+      const newLibraryId = await client.CreateContentLibrary({name: "No Tenant ID"});
+      const newLibraryTenant = await client.CallContractMethod({
+        contractAddress: client.utils.HashToAddress(newLibraryId),
+        methodName: "getMeta",
+        methodArgs: [
+          "_tenantId"
+        ]
+      });
+
+      expect(newLibraryTenant).toEqual("0x");
     });
 
     test("List Content Libraries", async () => {
