@@ -322,7 +322,7 @@ describe("Test ElvClient", () => {
 
       expect(libraryTenantId).toEqual(tenantId);
 
-      console.log(`\n\nTenant ID: ${tenantId}\n\n`);
+      console.log(`\n\nLibraryId: ${libraryId}\nTenant ID: ${tenantId}\n`);
     });
 
     test("Clear Tenancy", async () => {
