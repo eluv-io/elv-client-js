@@ -20,11 +20,11 @@ const argv = yargs
   })
   .demandOption(
     ["objectId"],
-    "\nUsage: PRIVATE_KEY=<private-key> node MezzanineStatus.js --objectId <mezzanine-object-id> (--finalize) (--variant \"default\")\n"
+    "\nUsage: PRIVATE_KEY=<private-key> node MezzanineStatus.js --objectId <mezzanine-object-id> (--finalize) (--offeringKey \"default\")\n"
   )
   .argv;
 
-const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 
 
 const Status = async (objectId, offeringKey="default", finalize) => {
@@ -61,7 +61,7 @@ const Status = async (objectId, offeringKey="default", finalize) => {
       console.log(JSON.stringify(status, null, 2));
     }
   } catch(error) {
-    console.error("Error creating mezzanine:");
+    console.error("Error getting mezzanine status:");
     console.error(error.body ? JSON.stringify(error, null, 2): error);
   }
 };
