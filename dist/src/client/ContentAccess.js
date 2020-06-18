@@ -1512,6 +1512,7 @@ exports.AudienceData = function (_ref16) {
  * @methodGroup Media
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  *
  * @return {Promise<Object>} - The available offerings
@@ -1519,12 +1520,12 @@ exports.AudienceData = function (_ref16) {
 
 
 exports.AvailableOfferings = function _callee23(_ref17) {
-  var objectId, versionHash, linkPath, path, audienceData;
+  var objectId, versionHash, writeToken, linkPath, path, audienceData;
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
-          objectId = _ref17.objectId, versionHash = _ref17.versionHash, linkPath = _ref17.linkPath;
+          objectId = _ref17.objectId, versionHash = _ref17.versionHash, writeToken = _ref17.writeToken, linkPath = _ref17.linkPath;
 
           if (objectId) {
             _context23.next = 5;
@@ -1557,7 +1558,9 @@ exports.AvailableOfferings = function _callee23(_ref17) {
 
           _context23.next = 12;
           return _regeneratorRuntime.awrap(this.LinkTarget({
+            objectId: objectId,
             versionHash: versionHash,
+            writeToken: writeToken,
             linkPath: linkPath
           }));
 
@@ -2734,10 +2737,23 @@ exports.LinkTarget = function _callee34(_ref28) {
 
           if (versionHash) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-          } // Assume linkPath points directly at a link - retrieve unresolved link and extract hash
+          }
 
+          if (!(writeToken && !libraryId)) {
+            _context34.next = 8;
+            break;
+          }
 
-          _context34.next = 6;
+          _context34.next = 7;
+          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+            objectId: objectId
+          }));
+
+        case 7:
+          libraryId = _context34.sent;
+
+        case 8:
+          _context34.next = 10;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -2749,11 +2765,11 @@ exports.LinkTarget = function _callee34(_ref28) {
             resolveIncludeSource: true
           }));
 
-        case 6:
+        case 10:
           linkInfo = _context34.sent;
 
           if (!(linkInfo && linkInfo["/"])) {
-            _context34.next = 22;
+            _context34.next = 26;
             break;
           }
 
@@ -2765,41 +2781,41 @@ exports.LinkTarget = function _callee34(_ref28) {
           }
 
           if (!targetHash) {
-            _context34.next = 14;
+            _context34.next = 18;
             break;
           }
 
           return _context34.abrupt("return", targetHash);
 
-        case 14:
+        case 18:
           if (!versionHash) {
-            _context34.next = 16;
+            _context34.next = 20;
             break;
           }
 
           return _context34.abrupt("return", versionHash);
 
-        case 16:
+        case 20:
           _context34.t0 = versionHash;
 
           if (_context34.t0) {
-            _context34.next = 21;
+            _context34.next = 25;
             break;
           }
 
-          _context34.next = 20;
+          _context34.next = 24;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 20:
+        case 24:
           _context34.t0 = _context34.sent;
 
-        case 21:
+        case 25:
           return _context34.abrupt("return", _context34.t0);
 
-        case 22:
-          _context34.next = 24;
+        case 26:
+          _context34.next = 28;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -2809,66 +2825,66 @@ exports.LinkTarget = function _callee34(_ref28) {
             resolveIncludeSource: true
           }));
 
-        case 24:
+        case 28:
           linkInfo = _context34.sent;
 
           if (!(!linkInfo || !linkInfo["."])) {
-            _context34.next = 44;
+            _context34.next = 48;
             break;
           }
 
           if (!(_typeof(linkInfo) === "object")) {
-            _context34.next = 33;
+            _context34.next = 37;
             break;
           }
 
           _context34.t1 = versionHash;
 
           if (_context34.t1) {
-            _context34.next = 32;
+            _context34.next = 36;
             break;
           }
 
-          _context34.next = 31;
+          _context34.next = 35;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 31:
+        case 35:
           _context34.t1 = _context34.sent;
 
-        case 32:
+        case 36:
           return _context34.abrupt("return", _context34.t1);
 
-        case 33:
+        case 37:
           // linkPath is not a direct link, but points to a literal value - back up one path element to find the container
           subPath = linkPath.split("/").slice(0, -1).join("/");
 
           if (subPath) {
-            _context34.next = 41;
+            _context34.next = 45;
             break;
           }
 
           _context34.t2 = versionHash;
 
           if (_context34.t2) {
-            _context34.next = 40;
+            _context34.next = 44;
             break;
           }
 
-          _context34.next = 39;
+          _context34.next = 43;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 39:
+        case 43:
           _context34.t2 = _context34.sent;
 
-        case 40:
+        case 44:
           return _context34.abrupt("return", _context34.t2);
 
-        case 41:
-          _context34.next = 43;
+        case 45:
+          _context34.next = 47;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -2878,13 +2894,13 @@ exports.LinkTarget = function _callee34(_ref28) {
             resolveIncludeSource: true
           }));
 
-        case 43:
+        case 47:
           linkInfo = _context34.sent;
 
-        case 44:
+        case 48:
           return _context34.abrupt("return", linkInfo["."].source);
 
-        case 45:
+        case 49:
         case "end":
           return _context34.stop();
       }
