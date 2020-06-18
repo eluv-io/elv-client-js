@@ -925,11 +925,12 @@ exports.AudienceData = function({objectId, versionHash, protocols=[], drms=[]}) 
  * @methodGroup Media
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  *
  * @return {Promise&lt;Object>} - The available offerings
  */
-exports.AvailableOfferings = async function({objectId, versionHash, linkPath}) {
+exports.AvailableOfferings = async function({objectId, versionHash, writeToken, linkPath}) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   } else if(!versionHash) {
@@ -938,7 +939,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, linkPath}) {
 
   // If link path specified, switch object ID + version hash to link target
   if(linkPath) {
-    versionHash = await this.LinkTarget({versionHash, linkPath});
+    versionHash = await this.LinkTarget({objectId, versionHash, writeToken, linkPath});
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
 
@@ -1604,6 +1605,10 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
   if(writeToken) { ValidateWriteToken(writeToken); }
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  if(writeToken &amp;&amp; !libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
 
   // Assume linkPath points directly at a link - retrieve unresolved link and extract hash
   let linkInfo = await this.ContentObjectMetadata({
