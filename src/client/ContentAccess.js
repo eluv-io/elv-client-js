@@ -1382,21 +1382,39 @@ exports.FileUrl = async function({libraryId, objectId, versionHash, writeToken, 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
   let path;
-
   if(libraryId) {
-    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "files", filePath);
+    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId);
   } else {
-    path = UrlJoin("q", versionHash, "files", filePath);
+    path = UrlJoin("q", versionHash);
   }
 
   const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
 
+  queryParams = {
+    ...queryParams,
+    authorization: authorizationToken
+  };
+
+  const fileInfo = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    metadataSubtree: UrlJoin("files", filePath)
+  });
+
+  const encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
+
+  if(encrypted) {
+    path = UrlJoin(path, "rep", "files_download", filePath);
+    queryParams["header-x_decryption_mode"] = "decrypt";
+  } else {
+    path = UrlJoin(path, "files", filePath);
+  }
+
   return this.HttpClient.URL({
     path: path,
-    queryParams: {
-      ...queryParams,
-      authorization: authorizationToken
-    }
+    queryParams
   });
 };
 
@@ -1690,9 +1708,17 @@ exports.LinkData = async function({libraryId, objectId, versionHash, writeToken,
 
 /* Encryption */
 
-exports.CreateEncryptionConk = async function({libraryId, objectId, writeToken, createKMSConk=true}) {
-  ValidateParameters({libraryId, objectId});
+exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash, writeToken, createKMSConk=true}) {
+  ValidateParameters({libraryId, objectId, versionHash});
   ValidateWriteToken(writeToken);
+
+  if(!objectId) {
+    objectId = client.DecodeVersionHash(versionHash).objectId;
+  }
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
 
   const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
@@ -1762,13 +1788,18 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, writeToken, 
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
+ * @param {string} objectId - Version hash of the object
  * @param {string=} writeToken - Write token of the content object draft
  *
  * @return Promise<Object> - The encryption conk for the object
  */
-exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
-  ValidateParameters({libraryId, objectId});
+exports.EncryptionConk = async function({libraryId, objectId, versionHash, writeToken}) {
+  ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
+
+  if(!objectId) {
+    objectId = client.DecodeVersionHash(versionHash).objectId;
+  }
 
   const owner = await this.authClient.Owner({id: objectId});
 
@@ -1788,8 +1819,9 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
     const existingUserCap =
       await this.ContentObjectMetadata({
         libraryId,
-        // Cap may only exist in draft
         objectId,
+        versionHash,
+        // Cap may only exist in draft
         writeToken,
         metadataSubtree: capKey
       });
@@ -1797,7 +1829,7 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
     if(existingUserCap) {
       this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
     } else if(writeToken) {
-      await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: false});
+      await this.CreateEncryptionConk({libraryId, objectId, versionHash, writeToken, createKMSConk: false});
     } else {
       throw "No encryption conk present for " + objectId;
     }

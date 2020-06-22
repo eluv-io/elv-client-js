@@ -2351,7 +2351,7 @@ exports.FabricUrl = function _callee29(_ref24) {
 
 
 exports.FileUrl = function _callee30(_ref25) {
-  var libraryId, objectId, versionHash, writeToken, filePath, _ref25$queryParams, queryParams, _ref25$noCache, noCache, path, authorizationToken;
+  var libraryId, objectId, versionHash, writeToken, filePath, _ref25$queryParams, queryParams, _ref25$noCache, noCache, path, authorizationToken, fileInfo, encrypted;
 
   return _regeneratorRuntime.async(function _callee30$(_context30) {
     while (1) {
@@ -2377,9 +2377,9 @@ exports.FileUrl = function _callee30(_ref25) {
           }
 
           if (libraryId) {
-            path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "files", filePath);
+            path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId);
           } else {
-            path = UrlJoin("q", versionHash, "files", filePath);
+            path = UrlJoin("q", versionHash);
           }
 
           _context30.next = 8;
@@ -2391,14 +2391,35 @@ exports.FileUrl = function _callee30(_ref25) {
 
         case 8:
           authorizationToken = _context30.sent;
-          return _context30.abrupt("return", this.HttpClient.URL({
-            path: path,
-            queryParams: _objectSpread({}, queryParams, {
-              authorization: authorizationToken
-            })
+          queryParams = _objectSpread({}, queryParams, {
+            authorization: authorizationToken
+          });
+          _context30.next = 12;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            writeToken: writeToken,
+            metadataSubtree: UrlJoin("files", filePath)
           }));
 
-        case 10:
+        case 12:
+          fileInfo = _context30.sent;
+          encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
+
+          if (encrypted) {
+            path = UrlJoin(path, "rep", "files_download", filePath);
+            queryParams["header-x_decryption_mode"] = "decrypt";
+          } else {
+            path = UrlJoin(path, "files", filePath);
+          }
+
+          return _context30.abrupt("return", this.HttpClient.URL({
+            path: path,
+            queryParams: queryParams
+          }));
+
+        case 16:
         case "end":
           return _context30.stop();
       }
@@ -3060,20 +3081,40 @@ exports.LinkData = function _callee36(_ref30) {
 
 
 exports.CreateEncryptionConk = function _callee37(_ref31) {
-  var libraryId, objectId, writeToken, _ref31$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
+  var libraryId, objectId, versionHash, writeToken, _ref31$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
 
   return _regeneratorRuntime.async(function _callee37$(_context37) {
     while (1) {
       switch (_context37.prev = _context37.next) {
         case 0:
-          libraryId = _ref31.libraryId, objectId = _ref31.objectId, writeToken = _ref31.writeToken, _ref31$createKMSConk = _ref31.createKMSConk, createKMSConk = _ref31$createKMSConk === void 0 ? true : _ref31$createKMSConk;
+          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, _ref31$createKMSConk = _ref31.createKMSConk, createKMSConk = _ref31$createKMSConk === void 0 ? true : _ref31$createKMSConk;
           ValidateParameters({
             libraryId: libraryId,
-            objectId: objectId
+            objectId: objectId,
+            versionHash: versionHash
           });
           ValidateWriteToken(writeToken);
+
+          if (!objectId) {
+            objectId = client.DecodeVersionHash(versionHash).objectId;
+          }
+
+          if (libraryId) {
+            _context37.next = 8;
+            break;
+          }
+
+          _context37.next = 7;
+          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+            objectId: objectId
+          }));
+
+        case 7:
+          libraryId = _context37.sent;
+
+        case 8:
           capKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context37.next = 6;
+          _context37.next = 11;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -3081,27 +3122,27 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
             metadataSubtree: capKey
           }));
 
-        case 6:
+        case 11:
           existingUserCap = _context37.sent;
 
           if (!existingUserCap) {
-            _context37.next = 13;
+            _context37.next = 18;
             break;
           }
 
-          _context37.next = 10;
+          _context37.next = 15;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
-        case 10:
+        case 15:
           this.encryptionConks[objectId] = _context37.sent;
-          _context37.next = 29;
+          _context37.next = 34;
           break;
 
-        case 13:
-          _context37.next = 15;
+        case 18:
+          _context37.next = 20;
           return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk());
 
-        case 15:
+        case 20:
           this.encryptionConks[objectId] = _context37.sent;
           _context37.t0 = _regeneratorRuntime;
           _context37.t1 = this;
@@ -3109,10 +3150,10 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
           _context37.t3 = objectId;
           _context37.t4 = writeToken;
           _context37.t5 = capKey;
-          _context37.next = 24;
+          _context37.next = 29;
           return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
 
-        case 24:
+        case 29:
           _context37.t6 = _context37.sent;
           _context37.t7 = {
             libraryId: _context37.t2,
@@ -3122,32 +3163,32 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
             metadata: _context37.t6
           };
           _context37.t8 = _context37.t1.ReplaceMetadata.call(_context37.t1, _context37.t7);
-          _context37.next = 29;
+          _context37.next = 34;
           return _context37.t0.awrap.call(_context37.t0, _context37.t8);
 
-        case 29:
+        case 34:
           if (!createKMSConk) {
-            _context37.next = 61;
+            _context37.next = 66;
             break;
           }
 
-          _context37.prev = 30;
-          _context37.next = 33;
+          _context37.prev = 35;
+          _context37.next = 38;
           return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
             objectId: objectId
           }));
 
-        case 33:
+        case 38:
           kmsAddress = _context37.sent;
-          _context37.next = 36;
+          _context37.next = 41;
           return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
             objectId: objectId
           }));
 
-        case 36:
+        case 41:
           kmsPublicKey = _context37.sent.publicKey;
           kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
-          _context37.next = 40;
+          _context37.next = 45;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             // Cap may only exist in draft
@@ -3156,11 +3197,11 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
             metadataSubtree: kmsCapKey
           }));
 
-        case 40:
+        case 45:
           existingKMSCap = _context37.sent;
 
           if (existingKMSCap) {
-            _context37.next = 55;
+            _context37.next = 60;
             break;
           }
 
@@ -3170,10 +3211,10 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
           _context37.t12 = objectId;
           _context37.t13 = writeToken;
           _context37.t14 = kmsCapKey;
-          _context37.next = 50;
+          _context37.next = 55;
           return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey));
 
-        case 50:
+        case 55:
           _context37.t15 = _context37.sent;
           _context37.t16 = {
             libraryId: _context37.t11,
@@ -3183,30 +3224,30 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
             metadata: _context37.t15
           };
           _context37.t17 = _context37.t10.ReplaceMetadata.call(_context37.t10, _context37.t16);
-          _context37.next = 55;
+          _context37.next = 60;
           return _context37.t9.awrap.call(_context37.t9, _context37.t17);
 
-        case 55:
-          _context37.next = 61;
+        case 60:
+          _context37.next = 66;
           break;
 
-        case 57:
-          _context37.prev = 57;
-          _context37.t18 = _context37["catch"](30);
+        case 62:
+          _context37.prev = 62;
+          _context37.t18 = _context37["catch"](35);
           // eslint-disable-next-line no-console
           console.error("Failed to create encryption cap for KMS:"); // eslint-disable-next-line no-console
 
           console.error(_context37.t18);
 
-        case 61:
+        case 66:
           return _context37.abrupt("return", this.encryptionConks[objectId]);
 
-        case 62:
+        case 67:
         case "end":
           return _context37.stop();
       }
     }
-  }, null, this, [[30, 57]]);
+  }, null, this, [[35, 62]]);
 };
 /**
  * Retrieve the encryption conk for the specified object. If one has not yet been created
@@ -3218,6 +3259,7 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
+ * @param {string} objectId - Version hash of the object
  * @param {string=} writeToken - Write token of the content object draft
  *
  * @return Promise<Object> - The encryption conk for the object
@@ -3225,108 +3267,115 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
 
 
 exports.EncryptionConk = function _callee38(_ref32) {
-  var libraryId, objectId, writeToken, owner, capKey, existingUserCap;
+  var libraryId, objectId, versionHash, writeToken, owner, capKey, existingUserCap;
   return _regeneratorRuntime.async(function _callee38$(_context38) {
     while (1) {
       switch (_context38.prev = _context38.next) {
         case 0:
-          libraryId = _ref32.libraryId, objectId = _ref32.objectId, writeToken = _ref32.writeToken;
+          libraryId = _ref32.libraryId, objectId = _ref32.objectId, versionHash = _ref32.versionHash, writeToken = _ref32.writeToken;
           ValidateParameters({
             libraryId: libraryId,
-            objectId: objectId
+            objectId: objectId,
+            versionHash: versionHash
           });
 
           if (writeToken) {
             ValidateWriteToken(writeToken);
           }
 
-          _context38.next = 5;
+          if (!objectId) {
+            objectId = client.DecodeVersionHash(versionHash).objectId;
+          }
+
+          _context38.next = 6;
           return _regeneratorRuntime.awrap(this.authClient.Owner({
             id: objectId
           }));
 
-        case 5:
+        case 6:
           owner = _context38.sent;
 
           if (this.utils.EqualAddress(owner, this.signer.address)) {
-            _context38.next = 12;
+            _context38.next = 13;
             break;
           }
 
           if (this.reencryptionConks[objectId]) {
-            _context38.next = 11;
+            _context38.next = 12;
             break;
           }
 
-          _context38.next = 10;
+          _context38.next = 11;
           return _regeneratorRuntime.awrap(this.authClient.ReEncryptionConk({
             libraryId: libraryId,
             objectId: objectId
           }));
 
-        case 10:
+        case 11:
           this.reencryptionConks[objectId] = _context38.sent;
 
-        case 11:
+        case 12:
           return _context38.abrupt("return", this.reencryptionConks[objectId]);
 
-        case 12:
+        case 13:
           if (this.encryptionConks[objectId]) {
-            _context38.next = 29;
+            _context38.next = 30;
             break;
           }
 
           capKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context38.next = 16;
+          _context38.next = 17;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
-            // Cap may only exist in draft
             objectId: objectId,
+            versionHash: versionHash,
+            // Cap may only exist in draft
             writeToken: writeToken,
             metadataSubtree: capKey
           }));
 
-        case 16:
+        case 17:
           existingUserCap = _context38.sent;
 
           if (!existingUserCap) {
-            _context38.next = 23;
+            _context38.next = 24;
             break;
           }
 
-          _context38.next = 20;
+          _context38.next = 21;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
-        case 20:
+        case 21:
           this.encryptionConks[objectId] = _context38.sent;
-          _context38.next = 29;
+          _context38.next = 30;
           break;
 
-        case 23:
+        case 24:
           if (!writeToken) {
-            _context38.next = 28;
+            _context38.next = 29;
             break;
           }
 
-          _context38.next = 26;
+          _context38.next = 27;
           return _regeneratorRuntime.awrap(this.CreateEncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
+            versionHash: versionHash,
             writeToken: writeToken,
             createKMSConk: false
           }));
 
-        case 26:
-          _context38.next = 29;
+        case 27:
+          _context38.next = 30;
           break;
 
-        case 28:
+        case 29:
           throw "No encryption conk present for " + objectId;
 
-        case 29:
+        case 30:
           return _context38.abrupt("return", this.encryptionConks[objectId]);
 
-        case 30:
+        case 31:
         case "end":
           return _context38.stop();
       }
