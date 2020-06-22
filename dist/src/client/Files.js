@@ -95,12 +95,12 @@ exports.ListFiles = function _callee(_ref) {
  *
  * Expected format of fileInfo:
  *
- [
- {
-       path: string,
-       source: string
-     }
- ]
+     [
+       {
+         path: string,
+         source: string
+       }
+     ]
  *
  * @memberof module:ElvClient/Files+Parts
  * @methodGroup Files
@@ -370,7 +370,9 @@ exports.UploadFiles = function _callee4(_ref4) {
           fileDataMap = {};
 
           for (i = 0; i < fileInfo.length; i++) {
-            entry = fileInfo[i];
+            entry = _objectSpread({}, fileInfo[i], {
+              data: undefined
+            });
             entry.path = entry.path.replace(/^\/+/, "");
 
             if (encryption === "cgck") {
@@ -379,7 +381,7 @@ exports.UploadFiles = function _callee4(_ref4) {
               };
             }
 
-            fileDataMap[entry.path] = entry.data;
+            fileDataMap[entry.path] = fileInfo[i].data;
             delete entry.data;
             entry.type = "file";
             progress[entry.path] = {

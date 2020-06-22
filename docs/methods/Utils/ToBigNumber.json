@@ -1,26 +1,10 @@
 [
   {
-    "signature": " ToBigNumber({\n  \"s\": 1,\n  \"e\": 18,\n  \"c\": [\n    10000\n  ]\n});",
+    "signature": " ToBigNumber(1000000000000000000);",
     "result": "\"1000000000000000000\""
   },
   {
-    "signature": " ToBigNumber(\"1.0\");",
+    "signature": " ToBigNumber(1.0);",
     "result": "\"1\""
-  },
-  {
-    "signature": " ToBigNumber({\n  \"_hex\": \"0x00\"\n});",
-    "result": "\"0\""
-  },
-  {
-    "signature": " ToBigNumber(\"0\");",
-    "result": "\"0\""
-  },
-  {
-    "signature": " ToBigNumber(\"0.5\");",
-    "result": "\"0.5\""
-  },
-  {
-    "signature": " ToBigNumber({\n  \"_hex\": \"0x06f05b59d3b20000\"\n});",
-    "result": "\"500000000000000000\""
   }
 ]

@@ -1,8 +1,11 @@
 [
   {
-    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\",\n  \"writeToken\": \"tqw_62qe8v9GZJ4ad4ADjo9fV1ocjNzEdckeU\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-copy\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": true,\n  \"callback\": \"<function>\"\n});"
+    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"writeToken\": \"tqw_ESwjhjYPFVGRPD3kAeP9nbtVrfSQC5Jts\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-copy\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": true,\n  \"callback\": \"<function>\"\n});"
   },
   {
-    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\",\n  \"writeToken\": \"tqw_6nU6FyRxixJZvSthbne2Czg3rcg3uJ9Kz\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-reference\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": false,\n  \"callback\": \"<function>\"\n});"
+    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"writeToken\": \"tqw_7uQMvV7YVgUg4qtrP2TBXtUCL9e6eitNY\",\n  \"encryption\": \"cgck\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-copy-encrypted\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": true,\n  \"callback\": \"<function>\"\n});"
+  },
+  {
+    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"writeToken\": \"tqw_EFirWAtsDRDxXLX6ShEV5zordnnkD4zDi\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-reference\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": false,\n  \"callback\": \"<function>\"\n});"
   }
 ]

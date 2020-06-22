@@ -1,5 +1,8 @@
 [
   {
-    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\",\n  \"writeToken\": \"tqw_G4cN2sKYn5zX66AeKu2Rbs52TGdMe2SRQ\",\n  \"metadataSubtree\": \"toDelete\"\n});"
+    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1\",\n  \"objectId\": \"iq__4Kq3bCuaesopTzoyUUgtEWBmn5if\",\n  \"writeToken\": \"tqw_PiEXTe9Cftyw1c5X1BTQvZQMcRkf4XNWP\",\n  \"metadataSubtree\": \"tenantId\"\n});"
+  },
+  {
+    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"writeToken\": \"tqw_FgMdmSkApaPqsGtjDUb3VgCzbLhT2iDB9\",\n  \"metadataSubtree\": \"toDelete\"\n});"
   }
 ]

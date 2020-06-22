@@ -1,14 +1,14 @@
 [
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x087b4db474f24495E93F551BE20553a31122FC6c\"\n});",
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x3Bf223E425Eec6038233d8983312721De965be72\"\n});",
     "result": "{\n  \"meta\": \"data\"\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x087b4db474f24495E93F551BE20553a31122FC6c\",\n  \"metadataSubtree\": \"profile_image\"\n});",
-    "result": "{\n  \".\": {\n    \"container\": \"hq__CogdbCiF7qrJgQZMVZNnMJcRCW7ME9giNQmD1sfKed9izfbzCwuw7veEzwp1sFTxPjtvqu5ux5\"\n  },\n  \"/\": \"./files/profile_image\"\n}"
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x3Bf223E425Eec6038233d8983312721De965be72\",\n  \"metadataSubtree\": \"profile_image\"\n});",
+    "result": "{\n  \".\": {\n    \"container\": \"hq__9cuFhS5ULzHzbRYL8uKPT4YgVsFKVo4yhrEnGMhz96DsDYVDd8pcNPLiGtDU6GRSCVMpSFeRn\"\n  },\n  \"/\": \"./files/profile_image\"\n}"
   },
   {
-    "signature": "async PublicUserMetadata({\n  \"address\": \"0x087b4db474f24495E93F551BE20553a31122FC6c\",\n  \"metadataSubtree\": \"profile_image\"\n});",
-    "result": "{\n  \".\": {\n    \"container\": \"hq__6KSuAhvAbVkkCtab5Ag5PuqgMWTWXWSAnx1zdCZzz8NWyPkKRNhoaF9bmneWvBSd6jiB2QbW5F\"\n  },\n  \"/\": \"./files/profile_image\"\n}"
+    "signature": "async PublicUserMetadata({\n  \"address\": \"0x3Bf223E425Eec6038233d8983312721De965be72\",\n  \"metadataSubtree\": \"profile_image\"\n});",
+    "result": "{\n  \".\": {\n    \"container\": \"hq__KjoCHSE9qSpqvu3WiBSEy3oDtSB5kEBhhbMkBGcTRV3JPZNT2u2KMUYyB1s38sanRXEj4Cu3Nx\"\n  },\n  \"/\": \"./files/profile_image\"\n}"
   }
 ]

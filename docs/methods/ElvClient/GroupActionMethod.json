@@ -1,10 +1,10 @@
 [
   {
-    "signature": "async GroupActionMethod(\"iq__o9iWmU9vyVkQZTh36CaApRj4SQq\", true);",
+    "signature": "async GroupActionMethod(\"iq__3MSitmDdND4E5WuMWhqvPXkr7BeM\", true);",
     "result": "\"setContentObjectRights\""
   },
   {
-    "signature": "async GroupActionMethod(\"iq__o9iWmU9vyVkQZTh36CaApRj4SQq\", false);",
+    "signature": "async GroupActionMethod(\"iq__3MSitmDdND4E5WuMWhqvPXkr7BeM\", false);",
     "result": "\"getContentObjectRights\""
   }
 ]

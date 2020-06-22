@@ -58,12 +58,12 @@ exports.ListFiles = async function({libraryId, objectId, versionHash}) {
  *
  * Expected format of fileInfo:
  *
- [
- {
-       path: string,
-       source: string
-     }
- ]
+     [
+       {
+         path: string,
+         source: string
+       }
+     ]
  *
  * @memberof module:ElvClient/Files+Parts
  * @methodGroup Files
@@ -251,7 +251,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
   let fileDataMap = {};
 
   for(let i = 0; i < fileInfo.length; i++) {
-    let entry = fileInfo[i];
+    let entry = { ...fileInfo[i], data: undefined };
 
     entry.path = entry.path.replace(/^\/+/, "");
 
@@ -261,7 +261,7 @@ exports.UploadFiles = async function({libraryId, objectId, writeToken, fileInfo,
       };
     }
 
-    fileDataMap[entry.path] = entry.data;
+    fileDataMap[entry.path] = fileInfo[i].data;
 
     delete entry.data;
     entry.type = "file";
