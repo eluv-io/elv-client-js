@@ -98,10 +98,9 @@ const OutputLogger = (klass, instance, exclude=[]) => {
     const originalMethod = instance[methodName].bind(instance);
 
     const writeOutput = (args, result, async=false) => {
-      const formattedArgs = args.map(arg => FormatArgs(arg)).join(", ");
       const formattedResult = FormatResult(result);
       let output = {
-        signature: `${(async ? "async" : "")} ${methodName}(${formattedArgs});`,
+        signature: `${(async ? "async" : "")} ${methodName}(${args});`,
         result: formattedResult !== undefined ? `${formattedResult}` : undefined
       };
 
@@ -128,8 +127,9 @@ const OutputLogger = (klass, instance, exclude=[]) => {
 
     if(originalMethod.constructor.name === "AsyncFunction") {
       instance[methodName] = async (...args) => {
+        const formattedArgs = args.map(arg => FormatArgs(arg)).join(", ");
         const result = await originalMethod(...args);
-        writeOutput(args, result, true);
+        writeOutput(formattedArgs, result, true);
         return result;
       };
     } else {

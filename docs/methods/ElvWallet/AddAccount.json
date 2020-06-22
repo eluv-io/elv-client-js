@@ -1,18 +1,6 @@
 [
   {
-    "signature": " AddAccount({\n  \"accountName\": \"test\",\n  \"privateKey\": \"<filtered>\"\n});",
-    "result": "<Ethers#Wallet>"
-  },
-  {
-    "signature": " AddAccount({\n  \"accountName\": \"mnemonic\",\n  \"privateKey\": \"<filtered>\"\n});",
-    "result": "<Ethers#Wallet>"
-  },
-  {
-    "signature": " AddAccount({\n  \"accountName\": \"private key\",\n  \"privateKey\": \"<filtered>\"\n});",
-    "result": "<Ethers#Wallet>"
-  },
-  {
-    "signature": " AddAccount({\n  \"privateKey\": \"<filtered>\"\n});",
+    "signature": " AddAccount([object Object]);",
     "result": "<Ethers#Wallet>"
   }
 ]

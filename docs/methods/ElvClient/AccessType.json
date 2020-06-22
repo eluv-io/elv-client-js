@@ -1,10 +1,14 @@
 [
   {
-    "signature": "async AccessType({\n  \"id\": \"iq__2qmkwyG1YUK4ZL58oR7y7EYBbPuK\"\n});",
+    "signature": "async AccessType({\n  \"id\": \"iq__2scZkRjTCP98MjiSa9abBAf3mq6b\"\n});",
     "result": "\"wallet\""
   },
   {
-    "signature": "async AccessType({\n  \"id\": \"iq__3xJbD7yD5o6Jr4mLcMtSoVLziceR\"\n});",
+    "signature": "async AccessType({\n  \"id\": \"iten2xf3y26kxGvqxCmBvFdCXzNHDMiR\"\n});",
+    "result": "\"group\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__3MSitmDdND4E5WuMWhqvPXkr7BeM\"\n});",
     "result": "\"object\""
   }
 ]
