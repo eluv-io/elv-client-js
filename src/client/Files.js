@@ -566,6 +566,8 @@ exports.DeleteFiles = async function({libraryId, objectId, writeToken, filePaths
  * specified callback will be invoked on completion of each chunk. This is recommended for large files.
  * @param {number=} chunkSize=1000000 - Size of file chunks to request for download
  * - NOTE: If the file is encrypted, the size of the chunks returned via the callback function will not be affected by this value
+ * @param {boolean=} clientSideDecryption=false - If specified, decryption of the file (if necessary) will be done by the client
+ * instead of on the fabric node
  * @param {function=} callback - If specified, will be periodically called with current download status - Required if `chunked` is true
  * - Signature: ({bytesFinished, bytesTotal}) => {}
  * - Signature (chunked): ({bytesFinished, bytesTotal, chunk}) => {}
@@ -580,7 +582,8 @@ exports.DownloadFile = async function({
   filePath,
   format="arrayBuffer",
   chunked=false,
-  chunkSize=1000000,
+  chunkSize,
+  clientSideDecryption=false,
   callback
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
@@ -598,29 +601,44 @@ exports.DownloadFile = async function({
 
   const encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
   const encryption = encrypted ? "cgck" : undefined;
-  const path = UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
+  const path =
+    encrypted && !clientSideDecryption ?
+      UrlJoin("q", writeToken || versionHash || objectId, "rep", "files_download", filePath) :
+      UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
 
   const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
   headers.Accept = "*/*";
 
   // If not owner, indicate re-encryption
-  if(!this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId}))) {
+  if(encrypted && !this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId}))) {
     headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
+  }
+
+  // If using server side decryption, specify in header
+  if(encrypted && !clientSideDecryption) {
+    headers["X-Content-Fabric-Decryption-Mode"] = "decrypt";
+    // rep/files_download endpoint doesn't currently support Range header
+    chunkSize = Number.MAX_SAFE_INTEGER;
   }
 
   const bytesTotal = fileInfo["."].size;
 
-  if(encrypted) {
+  if(encrypted && clientSideDecryption) {
     return await this.DownloadEncrypted({
-      conk: await this.EncryptionConk({libraryId, objectId}),
+      conk: await this.EncryptionConk({libraryId, objectId, versionHash}),
       downloadPath: path,
       bytesTotal,
       headers,
       callback,
       format,
+      clientSideDecryption,
       chunked
     });
   } else {
+    if(!chunkSize) {
+      chunkSize = 10000000;
+    }
+
     return await this.Download({
       downloadPath: path,
       bytesTotal,
@@ -800,13 +818,13 @@ exports.Download = async function({
     if(chunked) {
       callback({bytesFinished, bytesTotal, chunk: await this.utils.ResponseToFormat(format, response)});
     } else {
-      if(callback) {
-        callback({bytesFinished, bytesTotal});
-      }
-
       outputChunks.push(
         Buffer.from(await response.arrayBuffer())
       );
+
+      if(callback) {
+        callback({bytesFinished, bytesTotal});
+      }
     }
   }
 
