@@ -1,6 +1,6 @@
 [
   {
-    "signature": " ToBytes32(\"Hello World!\");",
+    "signature": " ToBytes32(Hello World!);",
     "result": "\"0x48656c6c6f20576f726c64210000000000000000000000000000000000000000\""
   }
 ]

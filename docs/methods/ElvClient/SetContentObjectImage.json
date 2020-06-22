@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async SetContentObjectImage({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"writeToken\": \"tqw_8fWNsfTqQMZsVgzJKkM7fKKmebA7Ukhqy\",\n  \"image\": \"<ArrayBuffer 101254>\"\n});"
+    "signature": "async SetContentObjectImage({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"writeToken\": \"tqw_7Q5EKSSCyjFYfXR6CDgr7vPVUsggnZZe6\",\n  \"image\": \"<ArrayBuffer 101254>\"\n});"
   }
 ]

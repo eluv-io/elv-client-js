@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async DeleteFiles({\n  \"libraryId\": \"ilib3wpbycgg5PWTYAiTaZQG24LqL2xL\",\n  \"objectId\": \"iq__3WDfMNH5BGayTAGj9GijcwiAJdGx\",\n  \"writeToken\": \"tqw_rRSokE63S9u2dPUHESq8wBrMdr2btWD7\",\n  \"filePaths\": [\n    \"new-directory-1\",\n    \"new-directory-2\",\n    \"testDirectory/File 2\"\n  ]\n});"
+    "signature": "async DeleteFiles({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"writeToken\": \"tqw_JddXKFZr78K9mGDnQKAKsJmQ6EyxF3zkt\",\n  \"filePaths\": [\n    \"new-directory-1\",\n    \"new-directory-2\",\n    \"testDirectory/File 2\"\n  ]\n});"
   }
 ]

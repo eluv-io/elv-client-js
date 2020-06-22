@@ -5,6 +5,10 @@ const Min = require("../../dist/ElvClient-node-min");
 const ClientConfiguration = require("../../TestConfiguration");
 const ElvCrypto = require("../../src/Crypto");
 
+if(process.env["CONFIG_URL"]) {
+  ClientConfiguration["config-url"] = process.env["CONFIG_URL"];
+}
+
 // Uses source by default. If USE_BUILD is specified, uses the minified node version
 const ElvClient = process.env["USE_BUILD"] ? Min.ElvClient : Source.ElvClient;
 

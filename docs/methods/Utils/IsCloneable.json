@@ -1,6 +1,6 @@
 [
   {
-    "signature": " IsCloneable(\"value\");",
+    "signature": " IsCloneable(value);",
     "result": "true"
   },
   {
@@ -8,103 +8,111 @@
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"something\");",
+    "signature": " IsCloneable(something);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable({\n  \"value\": \"something\"\n});",
+    "signature": " IsCloneable([object Object]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(1,0,1,2,a,[object Object]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(2, 1, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(2,1,1,2,a,[object Object]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"a\", 2, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(a,2,1,2,a,[object Object]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"b\");",
+    "signature": " IsCloneable(b);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable({\n  \"a\": \"b\"\n}, 3, {\n  \"0\": 1,\n  \"1\": 2,\n  \"2\": \"a\",\n  \"3\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable([object Object],3,1,2,a,[object Object]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable({});",
+    "signature": " IsCloneable([object Set]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "signature": " IsCloneable(1,0,1,a,obj);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"a\", 1, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "signature": " IsCloneable(a,1,1,a,obj);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"obj\", 2, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\"\n});",
+    "signature": " IsCloneable(obj,2,1,a,obj);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(2, 0, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(2,0,2,b,[object Object]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"b\", 1, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable(b,1,2,b,[object Object]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable({\n  \"a\": \"b\"\n}, 2, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  }\n});",
+    "signature": " IsCloneable([object Object],2,2,b,[object Object]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"set\": \"<Set>\",\n  \"map\": \"<Map>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\"\n});",
+    "signature": " IsCloneable([object Map]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(1, 0, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "signature": " IsCloneable([object ArrayBuffer]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"a\", 1, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "signature": " IsCloneable([object Blob]);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"obj\", 2, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "signature": " IsCloneable(1,0,1,a,obj,fn);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"fn\", 3, {\n  \"0\": 1,\n  \"1\": \"a\",\n  \"2\": \"obj\",\n  \"3\": \"fn\"\n});",
+    "signature": " IsCloneable(a,1,1,a,obj,fn);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(2, 0, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  },\n  \"3\": \"<function>\"\n});",
+    "signature": " IsCloneable(obj,2,1,a,obj,fn);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(\"b\", 1, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  },\n  \"3\": \"<function>\"\n});",
+    "signature": " IsCloneable(fn,3,1,a,obj,fn);",
     "result": "true"
   },
   {
-    "signature": " IsCloneable({\n  \"a\": \"b\"\n}, 2, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  },\n  \"3\": \"<function>\"\n});",
+    "signature": " IsCloneable(2,0,2,b,[object Object],() => {});",
     "result": "true"
   },
   {
-    "signature": " IsCloneable(, 3, {\n  \"0\": 2,\n  \"1\": \"b\",\n  \"2\": {\n    \"a\": \"b\"\n  },\n  \"3\": \"<function>\"\n});",
+    "signature": " IsCloneable(b,1,2,b,[object Object],() => {});",
+    "result": "true"
+  },
+  {
+    "signature": " IsCloneable([object Object],2,2,b,[object Object],() => {});",
+    "result": "true"
+  },
+  {
+    "signature": " IsCloneable(() => {},3,2,b,[object Object],() => {});",
     "result": "false"
   },
   {
-    "signature": " IsCloneable({});",
+    "signature": " IsCloneable([object Map]);",
     "result": "false"
   },
   {
-    "signature": " IsCloneable({\n  \"string\": \"value\",\n  \"number\": 0.5,\n  \"nested\": {\n    \"value\": \"something\"\n  },\n  \"map\": \"<Map>\",\n  \"set\": \"<Set>\",\n  \"buffer\": \"<Buffer 40>\",\n  \"arrayBuffer\": \"<ArrayBuffer 20>\",\n  \"blob\": \"<Blob>\",\n  \"response\": \"<Response 0>\",\n  \"function\": \"<function>\",\n  \"error\": {}\n});",
+    "signature": " IsCloneable([object Object]);",
     "result": "false"
   },
   {
@@ -112,391 +120,19 @@
     "result": "true"
   },
   {
-    "signature": " IsCloneable({\n  \"a\": \"b\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable();",
+    "signature": " IsCloneable(() => {});",
     "result": "false"
   },
   {
-    "signature": " IsCloneable({\n  \"0\": 97,\n  \"1\": 48,\n  \"2\": 49,\n  \"3\": 100,\n  \"4\": 102,\n  \"5\": 56,\n  \"6\": 97,\n  \"7\": 56,\n  \"8\": 55,\n  \"9\": 49,\n  \"10\": 97,\n  \"11\": 98,\n  \"12\": 56,\n  \"13\": 99,\n  \"14\": 100,\n  \"15\": 100,\n  \"16\": 97,\n  \"17\": 101,\n  \"18\": 50,\n  \"19\": 98,\n  \"20\": 54,\n  \"21\": 55,\n  \"22\": 100,\n  \"23\": 50,\n  \"24\": 98,\n  \"25\": 98,\n  \"26\": 98,\n  \"27\": 49,\n  \"28\": 57,\n  \"29\": 49,\n  \"30\": 97,\n  \"31\": 55,\n  \"32\": 54,\n  \"33\": 52,\n  \"34\": 54,\n  \"35\": 50,\n  \"36\": 55,\n  \"37\": 51,\n  \"38\": 51,\n  \"39\": 49\n});",
+    "signature": " IsCloneable(cbf68028ba0a5003d6ff06d11c75b9641d7ffbae);",
     "result": "false"
   },
   {
-    "signature": " IsCloneable({\n  \"size\": 0,\n  \"timeout\": 0\n});",
+    "signature": " IsCloneable([object Response]);",
     "result": "false"
   },
   {
-    "signature": " IsCloneable();",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"ElvFrameResponse\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(1);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 1,\n  \"response\": []\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"test library\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"name\": \"test library\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 2,\n  \"response\": \"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"libraryId\": \"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(3);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"iq__2y6v85cxZXTMhN6WXdTqWcDmcKDU\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"id\": \"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\",\n  \"qid\": \"iq__2y6v85cxZXTMhN6WXdTqWcDmcKDU\",\n  \"meta\": {}\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 3,\n  \"response\": {\n    \"id\": \"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\",\n    \"qid\": \"iq__2y6v85cxZXTMhN6WXdTqWcDmcKDU\",\n    \"meta\": {}\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(4);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"0x901fb17a1a6eb3fa29bdb038499bf1593b152673\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 4,\n  \"response\": \"0x901fb17a1a6eb3fa29bdb038499bf1593b152673\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(5);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"prompt\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 5,\n  \"response\": \"prompt\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(6);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"0\": \"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 6,\n  \"response\": [\n    \"ilib2y6v85cxZXTMhN6WXdTqWcDmcKDU\"\n  ]\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"test frame client\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"name\": \"test frame client\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(7);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"ilibQvAT8oVoxSHuMPeoLivUi4NSDAR\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 7,\n  \"response\": \"ilibQvAT8oVoxSHuMPeoLivUi4NSDAR\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"libraryId\": \"ilibQvAT8oVoxSHuMPeoLivUi4NSDAR\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(8);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"id\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n  \"write_token\": \"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\",\n  \"type\": \"\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 8,\n  \"response\": {\n    \"id\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n    \"write_token\": \"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\",\n    \"type\": \"\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(10000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"libraryId\": \"ilibQvAT8oVoxSHuMPeoLivUi4NSDAR\",\n  \"objectId\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n  \"writeToken\": \"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\",\n  \"data\": \"<ArrayBuffer 100000>\",\n  \"chunkSize\": 10000\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(9);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"hqp_6N7KWpVQS9ngN4xwjkGoqJBLRUBren1V7bcCG7MHv49qT9MF\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(100000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"hash\": \"hqp_6N7KWpVQS9ngN4xwjkGoqJBLRUBren1V7bcCG7MHv49qT9MF\",\n  \"size\": 100000\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"content\": {\n    \"id\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n    \"write_token\": \"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\",\n    \"type\": \"\"\n  },\n  \"part\": {\n    \"hash\": \"hqp_6N7KWpVQS9ngN4xwjkGoqJBLRUBren1V7bcCG7MHv49qT9MF\",\n    \"size\": 100000\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 9,\n  \"response\": {\n    \"content\": {\n      \"id\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n      \"write_token\": \"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\",\n      \"type\": \"\"\n    },\n    \"part\": {\n      \"hash\": \"hqp_6N7KWpVQS9ngN4xwjkGoqJBLRUBren1V7bcCG7MHv49qT9MF\",\n      \"size\": 100000\n    }\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"libraryId\": \"ilibQvAT8oVoxSHuMPeoLivUi4NSDAR\",\n  \"objectId\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n  \"writeToken\": \"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(10);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(\"hq__7vY8dVNTcXmz94SLaYR5m1g4CgjpTekMnxNh5gZkmAzpJMCyTozS8L1zkKaKtH7n7YbdRjixDN\");",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"id\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n  \"hash\": \"hq__7vY8dVNTcXmz94SLaYR5m1g4CgjpTekMnxNh5gZkmAzpJMCyTozS8L1zkKaKtH7n7YbdRjixDN\",\n  \"write_token\": \"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\",\n  \"type\": \"\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 10,\n  \"response\": {\n    \"id\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n    \"hash\": \"hq__7vY8dVNTcXmz94SLaYR5m1g4CgjpTekMnxNh5gZkmAzpJMCyTozS8L1zkKaKtH7n7YbdRjixDN\",\n    \"write_token\": \"tqw_LKvWdibpNCitvsVJzfDmREc7m6qnDGSKz\",\n    \"type\": \"\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(true);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"libraryId\": \"ilibQvAT8oVoxSHuMPeoLivUi4NSDAR\",\n  \"objectId\": \"iq__2Yi8tcpW3Bo2AUhUDTGzW8pRCEXS\",\n  \"partHash\": \"hqp_6N7KWpVQS9ngN4xwjkGoqJBLRUBren1V7bcCG7MHv49qT9MF\",\n  \"chunked\": true,\n  \"chunkSize\": 10000\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(12);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 10000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 10000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(20000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 20000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 20000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(30000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 30000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 30000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(40000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 40000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 40000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(50000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 50000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 50000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(60000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 60000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 60000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(70000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 70000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 70000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(80000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 80000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 80000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(90000);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 90000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 90000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"bytesFinished\": 100000,\n  \"bytesTotal\": 100000,\n  \"chunk\": \"<ArrayBuffer 10000>\"\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 12,\n  \"response\": {\n    \"bytesFinished\": 100000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(11);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 11\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(14);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 10000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 20000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 30000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 40000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 50000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 60000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 70000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 80000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 90000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 14,\n  \"response\": {\n    \"bytesFinished\": 100000,\n    \"bytesTotal\": 100000,\n    \"chunk\": \"<ArrayBuffer 10000>\"\n  }\n});",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable(13);",
-    "result": "true"
-  },
-  {
-    "signature": " IsCloneable({\n  \"type\": \"ElvFrameResponse\",\n  \"requestId\": 13\n});",
-    "result": "true"
+    "signature": " IsCloneable(Error: Error);",
+    "result": "false"
   }
 ]

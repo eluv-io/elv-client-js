@@ -95,12 +95,12 @@ exports.ListFiles = function _callee(_ref) {
  *
  * Expected format of fileInfo:
  *
- [
- {
-       path: string,
-       source: string
-     }
- ]
+     [
+       {
+         path: string,
+         source: string
+       }
+     ]
  *
  * @memberof module:ElvClient/Files+Parts
  * @methodGroup Files
@@ -370,7 +370,9 @@ exports.UploadFiles = function _callee4(_ref4) {
           fileDataMap = {};
 
           for (i = 0; i < fileInfo.length; i++) {
-            entry = fileInfo[i];
+            entry = _objectSpread({}, fileInfo[i], {
+              data: undefined
+            });
             entry.path = entry.path.replace(/^\/+/, "");
 
             if (encryption === "cgck") {
@@ -379,7 +381,7 @@ exports.UploadFiles = function _callee4(_ref4) {
               };
             }
 
-            fileDataMap[entry.path] = entry.data;
+            fileDataMap[entry.path] = fileInfo[i].data;
             delete entry.data;
             entry.type = "file";
             progress[entry.path] = {
@@ -1014,6 +1016,8 @@ exports.DeleteFiles = function _callee11(_ref12) {
  * specified callback will be invoked on completion of each chunk. This is recommended for large files.
  * @param {number=} chunkSize=1000000 - Size of file chunks to request for download
  * - NOTE: If the file is encrypted, the size of the chunks returned via the callback function will not be affected by this value
+ * @param {boolean=} clientSideDecryption=false - If specified, decryption of the file (if necessary) will be done by the client
+ * instead of on the fabric node
  * @param {function=} callback - If specified, will be periodically called with current download status - Required if `chunked` is true
  * - Signature: ({bytesFinished, bytesTotal}) => {}
  * - Signature (chunked): ({bytesFinished, bytesTotal, chunk}) => {}
@@ -1023,13 +1027,13 @@ exports.DeleteFiles = function _callee11(_ref12) {
 
 
 exports.DownloadFile = function _callee12(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, filePath, _ref13$format, format, _ref13$chunked, chunked, _ref13$chunkSize, chunkSize, callback, fileInfo, encrypted, encryption, path, headers, bytesTotal;
+  var libraryId, objectId, versionHash, writeToken, filePath, _ref13$format, format, _ref13$chunked, chunked, chunkSize, _ref13$clientSideDecr, clientSideDecryption, callback, fileInfo, encrypted, encryption, path, headers, bytesTotal;
 
   return _regeneratorRuntime.async(function _callee12$(_context14) {
     while (1) {
       switch (_context14.prev = _context14.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, filePath = _ref13.filePath, _ref13$format = _ref13.format, format = _ref13$format === void 0 ? "arrayBuffer" : _ref13$format, _ref13$chunked = _ref13.chunked, chunked = _ref13$chunked === void 0 ? false : _ref13$chunked, _ref13$chunkSize = _ref13.chunkSize, chunkSize = _ref13$chunkSize === void 0 ? 1000000 : _ref13$chunkSize, callback = _ref13.callback;
+          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, filePath = _ref13.filePath, _ref13$format = _ref13.format, format = _ref13$format === void 0 ? "arrayBuffer" : _ref13$format, _ref13$chunked = _ref13.chunked, chunked = _ref13$chunked === void 0 ? false : _ref13$chunked, chunkSize = _ref13.chunkSize, _ref13$clientSideDecr = _ref13.clientSideDecryption, clientSideDecryption = _ref13$clientSideDecr === void 0 ? false : _ref13$clientSideDecr, callback = _ref13.callback;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1054,7 +1058,7 @@ exports.DownloadFile = function _callee12(_ref13) {
           fileInfo = _context14.sent;
           encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
           encryption = encrypted ? "cgck" : undefined;
-          path = UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
+          path = encrypted && !clientSideDecryption ? UrlJoin("q", writeToken || versionHash || objectId, "rep", "files_download", filePath) : UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
           _context14.next = 12;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
@@ -1067,65 +1071,88 @@ exports.DownloadFile = function _callee12(_ref13) {
           headers = _context14.sent;
           headers.Accept = "*/*"; // If not owner, indicate re-encryption
 
-          _context14.t0 = this.utils;
-          _context14.t1 = this.signer.address;
-          _context14.next = 18;
+          _context14.t0 = encrypted;
+
+          if (!_context14.t0) {
+            _context14.next = 22;
+            break;
+          }
+
+          _context14.t1 = this.utils;
+          _context14.t2 = this.signer.address;
+          _context14.next = 20;
           return _regeneratorRuntime.awrap(this.ContentObjectOwner({
             objectId: objectId
           }));
 
-        case 18:
-          _context14.t2 = _context14.sent;
+        case 20:
+          _context14.t3 = _context14.sent;
+          _context14.t0 = !_context14.t1.EqualAddress.call(_context14.t1, _context14.t2, _context14.t3);
 
-          if (_context14.t0.EqualAddress.call(_context14.t0, _context14.t1, _context14.t2)) {
-            _context14.next = 21;
+        case 22:
+          if (!_context14.t0) {
+            _context14.next = 24;
             break;
           }
 
           headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
 
-        case 21:
+        case 24:
+          // If using server side decryption, specify in header
+          if (encrypted && !clientSideDecryption) {
+            headers["X-Content-Fabric-Decryption-Mode"] = "decrypt"; // rep/files_download endpoint doesn't currently support Range header
+
+            chunkSize = Number.MAX_SAFE_INTEGER;
+          }
+
           bytesTotal = fileInfo["."].size;
 
-          if (!encrypted) {
-            _context14.next = 41;
+          if (!(encrypted && clientSideDecryption)) {
+            _context14.next = 46;
             break;
           }
 
-          _context14.t3 = _regeneratorRuntime;
-          _context14.t4 = this;
-          _context14.next = 27;
+          _context14.t4 = _regeneratorRuntime;
+          _context14.t5 = this;
+          _context14.next = 31;
           return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
-            objectId: objectId
+            objectId: objectId,
+            versionHash: versionHash
           }));
 
-        case 27:
-          _context14.t5 = _context14.sent;
-          _context14.t6 = path;
-          _context14.t7 = bytesTotal;
-          _context14.t8 = headers;
-          _context14.t9 = callback;
-          _context14.t10 = format;
-          _context14.t11 = chunked;
-          _context14.t12 = {
-            conk: _context14.t5,
-            downloadPath: _context14.t6,
-            bytesTotal: _context14.t7,
-            headers: _context14.t8,
-            callback: _context14.t9,
-            format: _context14.t10,
-            chunked: _context14.t11
+        case 31:
+          _context14.t6 = _context14.sent;
+          _context14.t7 = path;
+          _context14.t8 = bytesTotal;
+          _context14.t9 = headers;
+          _context14.t10 = callback;
+          _context14.t11 = format;
+          _context14.t12 = clientSideDecryption;
+          _context14.t13 = chunked;
+          _context14.t14 = {
+            conk: _context14.t6,
+            downloadPath: _context14.t7,
+            bytesTotal: _context14.t8,
+            headers: _context14.t9,
+            callback: _context14.t10,
+            format: _context14.t11,
+            clientSideDecryption: _context14.t12,
+            chunked: _context14.t13
           };
-          _context14.t13 = _context14.t4.DownloadEncrypted.call(_context14.t4, _context14.t12);
-          _context14.next = 38;
-          return _context14.t3.awrap.call(_context14.t3, _context14.t13);
+          _context14.t15 = _context14.t5.DownloadEncrypted.call(_context14.t5, _context14.t14);
+          _context14.next = 43;
+          return _context14.t4.awrap.call(_context14.t4, _context14.t15);
 
-        case 38:
+        case 43:
           return _context14.abrupt("return", _context14.sent);
 
-        case 41:
-          _context14.next = 43;
+        case 46:
+          if (!chunkSize) {
+            chunkSize = 10000000;
+          }
+
+          _context14.next = 49;
           return _regeneratorRuntime.awrap(this.Download({
             downloadPath: path,
             bytesTotal: bytesTotal,
@@ -1136,10 +1163,10 @@ exports.DownloadFile = function _callee12(_ref13) {
             chunkSize: chunkSize
           }));
 
-        case 43:
+        case 49:
           return _context14.abrupt("return", _context14.sent);
 
-        case 44:
+        case 50:
         case "end":
           return _context14.stop();
       }
@@ -1479,23 +1506,23 @@ exports.Download = function _callee16(_ref17) {
           break;
 
         case 24:
+          _context18.t5 = outputChunks;
+          _context18.t6 = Buffer;
+          _context18.next = 28;
+          return _regeneratorRuntime.awrap(response.arrayBuffer());
+
+        case 28:
+          _context18.t7 = _context18.sent;
+          _context18.t8 = _context18.t6.from.call(_context18.t6, _context18.t7);
+
+          _context18.t5.push.call(_context18.t5, _context18.t8);
+
           if (callback) {
             callback({
               bytesFinished: bytesFinished,
               bytesTotal: bytesTotal
             });
           }
-
-          _context18.t5 = outputChunks;
-          _context18.t6 = Buffer;
-          _context18.next = 29;
-          return _regeneratorRuntime.awrap(response.arrayBuffer());
-
-        case 29:
-          _context18.t7 = _context18.sent;
-          _context18.t8 = _context18.t6.from.call(_context18.t6, _context18.t7);
-
-          _context18.t5.push.call(_context18.t5, _context18.t8);
 
         case 32:
           i++;

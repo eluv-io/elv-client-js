@@ -863,14 +863,22 @@ exports.AudienceData = function({objectId, versionHash, protocols=[], drms=[]}) 
  * @methodGroup Media
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
+ * @param {string=} linkPath - If playing from a link, the path to the link
  *
  * @return {Promise<Object>} - The available offerings
  */
-exports.AvailableOfferings = async function({objectId, versionHash}) {
+exports.AvailableOfferings = async function({objectId, versionHash, writeToken, linkPath}) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   } else if(!versionHash) {
     versionHash = await this.LatestVersionHash({objectId});
+  }
+
+  // If link path specified, switch object ID + version hash to link target
+  if(linkPath) {
+    versionHash = await this.LinkTarget({objectId, versionHash, writeToken, linkPath});
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
 
   const path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
@@ -913,6 +921,7 @@ exports.AvailableOfferings = async function({objectId, versionHash}) {
  * @namedParams
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
@@ -921,6 +930,7 @@ exports.AvailableOfferings = async function({objectId, versionHash}) {
 exports.PlayoutOptions = async function({
   objectId,
   versionHash,
+  writeToken,
   linkPath,
   protocols=["dash", "hls"],
   offering="default",
@@ -942,10 +952,14 @@ exports.PlayoutOptions = async function({
 
   let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
   if(linkPath) {
-    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
+    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, writeToken, linkPath});
     linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
     linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
-    path = UrlJoin("q", versionHash, "meta", linkPath);
+    if(writeToken) {
+      path = UrlJoin("qlibs", libraryId, "q", writeToken, "meta", linkPath);
+    } else {
+      path = UrlJoin("q", versionHash, "meta", linkPath);
+    }
   } else {
     path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
   }
@@ -1368,21 +1382,39 @@ exports.FileUrl = async function({libraryId, objectId, versionHash, writeToken, 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
   let path;
-
   if(libraryId) {
-    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "files", filePath);
+    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId);
   } else {
-    path = UrlJoin("q", versionHash, "files", filePath);
+    path = UrlJoin("q", versionHash);
   }
 
   const authorizationToken = await this.authClient.AuthorizationToken({libraryId, objectId, noCache});
 
+  queryParams = {
+    ...queryParams,
+    authorization: authorizationToken
+  };
+
+  const fileInfo = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    metadataSubtree: UrlJoin("files", filePath)
+  });
+
+  const encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
+
+  if(encrypted) {
+    path = UrlJoin(path, "rep", "files_download", filePath);
+    queryParams["header-x_decryption_mode"] = "decrypt";
+  } else {
+    path = UrlJoin(path, "files", filePath);
+  }
+
   return this.HttpClient.URL({
     path: path,
-    queryParams: {
-      ...queryParams,
-      authorization: authorizationToken
-    }
+    queryParams
   });
 };
 
@@ -1511,7 +1543,7 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
 };
 
 /**
- * Retrieve the version hash of the specified link's target. If the target is the same as the specified
+ * Retrieve the version hash of the target of the specified link. If the target is the same as the specified
  * object and versionHash is not specified, will return the latest version hash.
  *
  * @methodGroup Links
@@ -1519,39 +1551,85 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  *
  * @returns {Promise<string>} - Version hash of the link's target
  */
-exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}) {
+exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToken, linkPath}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+  if(writeToken) { ValidateWriteToken(writeToken); }
+
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  const linkInfo = await this.ContentObjectMetadata({
+  if(writeToken && !libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  // Assume linkPath points directly at a link - retrieve unresolved link and extract hash
+  let linkInfo = await this.ContentObjectMetadata({
     libraryId,
     objectId,
     versionHash,
-    metadataSubtree: UrlJoin(linkPath),
-    resolveLinks: false
+    writeToken,
+    metadataSubtree: linkPath,
+    resolveLinks: false,
+    resolveIgnoreErrors: true,
+    resolveIncludeSource: true
   });
 
-  if(!linkInfo || !linkInfo["/"]) {
-    throw Error(`No valid link at ${linkPath}`);
+  if(linkInfo && linkInfo["/"]) {
+    /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
+    let targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
+    if(!targetHash) {
+      targetHash = linkInfo["."].container;
+    }
+
+    if(targetHash) {
+      return targetHash;
+    } else if(versionHash) {
+      return versionHash;
+    }
+
+    // Link points to this object - get latest version
+    return versionHash || await this.LatestVersionHash({objectId});
   }
 
-  /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
-  let targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
-  if(!targetHash) {
-    targetHash = linkInfo["."].container;
+  // linkPath does not point at a link - try to resolve the metadata and extract the source
+  linkInfo = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    metadataSubtree: linkPath,
+    resolveIncludeSource: true
+  });
+
+  if(!linkInfo || !linkInfo["."]) {
+    // If metadata is not a literal value, it must be within the original object
+    if(typeof linkInfo === "object") {
+      return versionHash || await this.LatestVersionHash({objectId});
+    }
+
+    // linkPath is not a direct link, but points to a literal value - back up one path element to find the container
+    const subPath = linkPath.split("/").slice(0, -1).join("/");
+
+    if(!subPath) {
+      return versionHash || await this.LatestVersionHash({objectId});
+    }
+
+    // linkPath does not point at a link - try to resolve the metadata and extract the source
+    linkInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      writeToken,
+      metadataSubtree: subPath,
+      resolveIncludeSource: true
+    });
   }
 
-  if(targetHash) {
-    return targetHash;
-  } else if(versionHash) {
-    return versionHash;
-  }
-
-  // Link points to this object - get latest version
-  return await this.LatestVersionHash({objectId});
+  return linkInfo["."].source;
 };
 
 /**
@@ -1562,6 +1640,7 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
@@ -1570,8 +1649,9 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, linkPath}
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
  */
-exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mimeType, queryParams={}, noCache=false}) {
+exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, linkPath, mimeType, queryParams={}, noCache=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
+  if(writeToken) { ValidateWriteToken(writeToken); }
 
   if(!linkPath) { throw Error("Link path not specified"); }
 
@@ -1579,7 +1659,7 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mi
 
   let path;
   if(libraryId) {
-    path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
+    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "meta", linkPath);
   } else {
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
@@ -1612,11 +1692,12 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, linkPath, mi
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  * @param {string=} format=json - Format of the response
  */
-exports.LinkData = async function({libraryId, objectId, versionHash, linkPath, format="json"}) {
-  const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, linkPath});
+exports.LinkData = async function({libraryId, objectId, versionHash, writeToken, linkPath, format="json"}) {
+  const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, writeToken, linkPath});
 
   return this.utils.ResponseToFormat(
     format,
@@ -1627,9 +1708,17 @@ exports.LinkData = async function({libraryId, objectId, versionHash, linkPath, f
 
 /* Encryption */
 
-exports.CreateEncryptionConk = async function({libraryId, objectId, writeToken, createKMSConk=true}) {
-  ValidateParameters({libraryId, objectId});
+exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash, writeToken, createKMSConk=true}) {
+  ValidateParameters({libraryId, objectId, versionHash});
   ValidateWriteToken(writeToken);
+
+  if(!objectId) {
+    objectId = client.DecodeVersionHash(versionHash).objectId;
+  }
+
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
 
   const capKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
@@ -1699,13 +1788,18 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, writeToken, 
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
+ * @param {string} objectId - Version hash of the object
  * @param {string=} writeToken - Write token of the content object draft
  *
  * @return Promise<Object> - The encryption conk for the object
  */
-exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
-  ValidateParameters({libraryId, objectId});
+exports.EncryptionConk = async function({libraryId, objectId, versionHash, writeToken}) {
+  ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
+
+  if(!objectId) {
+    objectId = client.DecodeVersionHash(versionHash).objectId;
+  }
 
   const owner = await this.authClient.Owner({id: objectId});
 
@@ -1725,8 +1819,9 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
     const existingUserCap =
       await this.ContentObjectMetadata({
         libraryId,
-        // Cap may only exist in draft
         objectId,
+        versionHash,
+        // Cap may only exist in draft
         writeToken,
         metadataSubtree: capKey
       });
@@ -1734,7 +1829,7 @@ exports.EncryptionConk = async function({libraryId, objectId, writeToken}) {
     if(existingUserCap) {
       this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
     } else if(writeToken) {
-      await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: false});
+      await this.CreateEncryptionConk({libraryId, objectId, versionHash, writeToken, createKMSConk: false});
     } else {
       throw "No encryption conk present for " + objectId;
     }

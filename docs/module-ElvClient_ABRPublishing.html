@@ -688,8 +688,8 @@
 
 
   <pre>async CreateABRMezzanine({
-  "libraryId": "ilib3ssRA4rhPP9noEyVqwTykvGLgAPk",
-  "masterVersionHash": "hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w",
+  "libraryId": "ilib31MnG9224pFjY6rirwrkwGAtmbta",
+  "masterVersionHash": "hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm",
   "type": "ABR Master",
   "name": "Mezzanine Test",
   "description": "Mezzanine Test Description",
@@ -701,21 +701,23 @@
 
 {
   "logs": [
-    "2020-04-03 20:09:52 Debug: apiAbrMezzanineInit()",
-    "2020-04-03 20:09:52 Info: Get abr.Profile from lib",
-    "2020-04-03 20:09:52 Info: Get production.Master",
-    "2020-04-03 20:09:52 Debug: getProductionVariantCtx(hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w,default)",
-    "2020-04-03 20:09:52 Debug: getting production.Master: hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w",
-    "2020-04-03 20:09:52 Debug: Get production.Variant 'default' from production.Master",
-    "2020-04-03 20:09:52 Info: Generate abr.Offering",
-    "2020-04-03 20:09:52 Info: Saving metadata"
+    "2020-06-19 18:36:03 Debug: apiAbrMezzanineInit()",
+    "2020-06-19 18:36:03 Info: Get abr.Profile from lib",
+    "2020-06-19 18:36:03 Info: Get abr.Profile from lib metadata /abr_profile",
+    "2020-06-19 18:36:03 Info: Get production.Master",
+    "2020-06-19 18:36:03 Debug: getProductionVariantCtx(hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm,default)",
+    "2020-06-19 18:36:03 Debug: getting production.Master: hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm",
+    "2020-06-19 18:36:03 Debug: Get production.Variant 'default' from production.Master",
+    "2020-06-19 18:36:03 Info: Generate abr.Offering",
+    "2020-06-19 18:36:03 Info: Saving metadata"
   ],
   "warnings": [],
   "errors": [],
-  "id": "iq__3CtRu5DwpgwHK4pJSyiu68RGeae8",
-  "hash": "hq__JtRoWU76WviiwYPVKGAFiSqr2TeGa9fyjjfB6UFLD4WhCBfS2oGdYZ73b2bfch2ai3ED4Z2L4c",
-  "write_token": "tqw_9FgWz6arUKpGXqYRAPzi8hmNrTdZyMYWt",
-  "type": "hq__Ao12z3jCK5c7uM4BagSsCrPxNi6su4nA63bHEuUR2U43q9QFLCXmbYZWkQ6H6Aq3THmR4JgpRv"
+  "id": "iq__2qXmASFyWJDAEnxw2nTZw4r6hDDM",
+  "hash": "hq__D4uBkwbp7EpUrTvB1NJHMx7xPPFa9HcVQ16UdeUmUupW14jXh2hdMr6kZZp9zu8E1UM2ESmyb9",
+  "write_token": "tqw_D8aoKgaLqSCzHaVd8bXntG14ko1fjZR1R",
+  "type": "hq__Ao12z3jCK5c7uM4BagSsCrPxNi6su4nA63bHEuUR2U43q9QFLCXmbYZWkQ6H6Aq3THmR4JgpRv",
+  "qlib_id": "ilib31MnG9224pFjY6rirwrkwGAtmbta"
 }</pre>
 
 
@@ -1372,7 +1374,7 @@
 
 
   <pre>async CreateProductionMaster({
-  "libraryId": "ilib3ssRA4rhPP9noEyVqwTykvGLgAPk",
+  "libraryId": "ilib31MnG9224pFjY6rirwrkwGAtmbta",
   "type": "Production Master",
   "name": "Production Master Test",
   "description": "Production Master Test Description",
@@ -1384,7 +1386,7 @@
       "path": "Video.mp4",
       "mime_type": "video/mp4",
       "size": 3738907,
-      "type": "file"
+      "data": "&lt;ArrayBuffer 3738907>"
     }
   ]
 });
@@ -1393,19 +1395,20 @@
 {
   "errors": [],
   "logs": [
-    "2020-04-03 20:09:44 Debug: avtest.initProdMaster()",
-    "2020-04-03 20:09:44 Info: Get list of files from object",
-    "2020-04-03 20:09:44 Info: 2 item(s) found in file list.",
-    "2020-04-03 20:09:44 Info: Skipping '.'",
-    "2020-04-03 20:09:44 Info: Analyzing Video.mp4",
-    "2020-04-03 20:09:44 Debug: getAvpReqCtx filePath=Video.mp4 qhot=tqw_ByfEdL6Hgigd23TefiqtxZsCBdTvC3ZE2 key=tqw_ByfEdL6Hgigd23TefiqtxZsCBdTvC3ZE2.txAll.Video.mp4",
-    "2020-04-03 20:09:44 Info: Successfully generated default variant"
+    "2020-06-19 18:35:52 Debug: avtest.initProdMaster()",
+    "2020-06-19 18:35:52 Info: Get list of files from object",
+    "2020-06-19 18:35:52 Info: 2 item(s) found in file list.",
+    "2020-06-19 18:35:52 Info: Skipping '.'",
+    "2020-06-19 18:35:52 Info: Analyzing Video.mp4",
+    "2020-06-19 18:35:52 Debug: getAvpReqCtx filePath=Video.mp4 qhot=tqw_K6vUWcE3iFiHYq4th8sF9nPjy8tFJPxA9 key=tqw_K6vUWcE3iFiHYq4th8sF9nPjy8tFJPxA9.txAll.Video.mp4",
+    "2020-06-19 18:35:52 Info: Successfully generated default variant"
   ],
   "warnings": [],
-  "id": "iq__kEtfnzPjvxrLPKWiVFq3vroSKf1",
-  "hash": "hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w",
-  "write_token": "tqw_ByfEdL6Hgigd23TefiqtxZsCBdTvC3ZE2",
-  "type": "hq__KV1Xqp2oXfKyM6SxrSDfkxhak8zKM2pqp3WwUrShNgPu5NFi6KPkVkw7w4oZAy48bAp423yWfs"
+  "id": "iq__HuhHukBBkqZaVC9TWsSutKU4G19",
+  "hash": "hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm",
+  "write_token": "tqw_K6vUWcE3iFiHYq4th8sF9nPjy8tFJPxA9",
+  "type": "hq__8bYjtACoAUfNc8xLNftMuaUuDS3xdUnD3LZMxeEy6wNpmZp6ez1hMLvuiCdV2AG5T5VtkyX7KR",
+  "qlib_id": "ilib31MnG9224pFjY6rirwrkwGAtmbta"
 }</pre>
 
 
@@ -1721,24 +1724,25 @@
 
 
   <pre>async FinalizeABRMezzanine({
-  "libraryId": "ilib3ssRA4rhPP9noEyVqwTykvGLgAPk",
-  "objectId": "iq__3CtRu5DwpgwHK4pJSyiu68RGeae8",
+  "libraryId": "ilib31MnG9224pFjY6rirwrkwGAtmbta",
+  "objectId": "iq__2qXmASFyWJDAEnxw2nTZw4r6hDDM",
   "offeringKey": "default"
 });
 
 
 {
   "logs": [
-    "2020-04-03 20:10:15 Debug: getProductionVariantCtx(hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w,default)",
-    "2020-04-03 20:10:15 Debug: getting production.Master: hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w",
-    "2020-04-03 20:10:15 Debug: Get production.Variant 'default' from production.Master"
+    "2020-06-19 18:36:30 Debug: getProductionVariantCtx(hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm,default)",
+    "2020-06-19 18:36:30 Debug: getting production.Master: hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm",
+    "2020-06-19 18:36:30 Debug: Get production.Variant 'default' from production.Master"
   ],
   "warnings": [],
   "errors": [],
-  "id": "iq__3CtRu5DwpgwHK4pJSyiu68RGeae8",
-  "hash": "hq__HJcu1Tu6JSLEE66mhujTUH2xvYUjDtWgSfrESdoHLt29UcQgahMcZhLABom24fHbFwzPMA7HHe",
-  "write_token": "tqw_Fvvm9Cgzjw5VVX5urPhMM1iozUYrygYTW",
-  "type": "hq__Ao12z3jCK5c7uM4BagSsCrPxNi6su4nA63bHEuUR2U43q9QFLCXmbYZWkQ6H6Aq3THmR4JgpRv"
+  "id": "iq__2qXmASFyWJDAEnxw2nTZw4r6hDDM",
+  "hash": "hq__LiwgU3UYxaWS4SmaSZ6o4T5H91qnij2L7tRjXEARGfE3gvpkACXwAyi52bfhkHKHHcwy6eALgK",
+  "write_token": "tqw_9zK14M5i18pgW6c6AgbJZfwExvyGfnmBs",
+  "type": "hq__Ao12z3jCK5c7uM4BagSsCrPxNi6su4nA63bHEuUR2U43q9QFLCXmbYZWkQ6H6Aq3THmR4JgpRv",
+  "qlib_id": "ilib31MnG9224pFjY6rirwrkwGAtmbta"
 }</pre>
 
 
@@ -2013,86 +2017,86 @@
 
 
   <pre>async LROStatus({
-  "libraryId": "ilib3ssRA4rhPP9noEyVqwTykvGLgAPk",
-  "objectId": "iq__3CtRu5DwpgwHK4pJSyiu68RGeae8"
+  "libraryId": "ilib31MnG9224pFjY6rirwrkwGAtmbta",
+  "objectId": "iq__2qXmASFyWJDAEnxw2nTZw4r6hDDM"
 });
 
 
 {
-  "86fbcf89-5da6-4bc1-b1af-aeae5e46d46f": {
-    "duration": 270,
+  "da427356-86a6-4409-b60a-944a4309bb3e": {
+    "duration": 0,
     "duration_ms": 0,
     "progress": {
       "percentage": 0
     },
     "run_state": "running",
-    "start": "2020-04-03T20:09:59Z"
+    "start": "2020-06-19T18:36:13Z"
   },
-  "f8e98123-ce5d-4495-8f68-c05c3902397d": {
-    "duration": 337,
+  "f28c9dcf-04e1-44c4-9247-ddc2d592c977": {
+    "duration": 0,
     "duration_ms": 0,
     "progress": {
       "percentage": 0
     },
     "run_state": "running",
-    "start": "2020-04-03T20:09:59Z"
+    "start": "2020-06-19T18:36:13Z"
   }
 }</pre>
 
   <pre>async LROStatus({
-  "libraryId": "ilib3ssRA4rhPP9noEyVqwTykvGLgAPk",
-  "objectId": "iq__3CtRu5DwpgwHK4pJSyiu68RGeae8"
+  "libraryId": "ilib31MnG9224pFjY6rirwrkwGAtmbta",
+  "objectId": "iq__2qXmASFyWJDAEnxw2nTZw4r6hDDM"
 });
 
 
 {
-  "86fbcf89-5da6-4bc1-b1af-aeae5e46d46f": {
-    "duration": 4319823713,
-    "duration_ms": 4319,
-    "end": "2020-04-03T20:10:03Z",
+  "da427356-86a6-4409-b60a-944a4309bb3e": {
+    "duration": 3560000000,
+    "duration_ms": 3560,
+    "end": "2020-06-19T18:36:16Z",
     "progress": {
       "percentage": 100
     },
     "run_state": "finished",
-    "start": "2020-04-03T20:09:59Z"
+    "start": "2020-06-19T18:36:13Z"
   },
-  "f8e98123-ce5d-4495-8f68-c05c3902397d": {
-    "duration": 337,
+  "f28c9dcf-04e1-44c4-9247-ddc2d592c977": {
+    "duration": 0,
     "duration_ms": 0,
     "progress": {
       "percentage": 0
     },
     "run_state": "running",
-    "start": "2020-04-03T20:09:59Z"
+    "start": "2020-06-19T18:36:13Z"
   }
 }</pre>
 
   <pre>async LROStatus({
-  "libraryId": "ilib3ssRA4rhPP9noEyVqwTykvGLgAPk",
-  "objectId": "iq__3CtRu5DwpgwHK4pJSyiu68RGeae8"
+  "libraryId": "ilib31MnG9224pFjY6rirwrkwGAtmbta",
+  "objectId": "iq__2qXmASFyWJDAEnxw2nTZw4r6hDDM"
 });
 
 
 {
-  "86fbcf89-5da6-4bc1-b1af-aeae5e46d46f": {
-    "duration": 4319823713,
-    "duration_ms": 4319,
-    "end": "2020-04-03T20:10:03Z",
+  "da427356-86a6-4409-b60a-944a4309bb3e": {
+    "duration": 3560000000,
+    "duration_ms": 3560,
+    "end": "2020-06-19T18:36:16Z",
     "progress": {
       "percentage": 100
     },
     "run_state": "finished",
-    "start": "2020-04-03T20:09:59Z"
+    "start": "2020-06-19T18:36:13Z"
   },
-  "f8e98123-ce5d-4495-8f68-c05c3902397d": {
-    "duration": 13878194780,
-    "duration_ms": 13878,
-    "end": "2020-04-03T20:10:13Z",
+  "f28c9dcf-04e1-44c4-9247-ddc2d592c977": {
+    "duration": 13047000000,
+    "duration_ms": 13047,
+    "end": "2020-06-19T18:36:26Z",
     "progress": {
       "percentage": 100
     },
     "run_state": "finished",
-    "start": "2020-04-03T20:09:59Z"
+    "start": "2020-06-19T18:36:13Z"
   }
 }</pre>
 
@@ -2455,26 +2459,26 @@
 
 
   <pre>async StartABRMezzanineJobs({
-  "libraryId": "ilib3ssRA4rhPP9noEyVqwTykvGLgAPk",
-  "objectId": "iq__3CtRu5DwpgwHK4pJSyiu68RGeae8",
+  "libraryId": "ilib31MnG9224pFjY6rirwrkwGAtmbta",
+  "objectId": "iq__2qXmASFyWJDAEnxw2nTZw4r6hDDM",
   "offeringKey": "default"
 });
 
 
 {
   "lro_draft": {
-    "write_token": "tqw_Fvvm9Cgzjw5VVX5urPhMM1iozUYrygYTW",
+    "write_token": "tqw_9zK14M5i18pgW6c6AgbJZfwExvyGfnmBs",
     "node": "https://host-35-233-145-232.test.contentfabric.io/",
     "offering": "default"
   },
-  "writeToken": "tqw_Fvvm9Cgzjw5VVX5urPhMM1iozUYrygYTW",
+  "writeToken": "tqw_9zK14M5i18pgW6c6AgbJZfwExvyGfnmBs",
   "data": [
-    "86fbcf89-5da6-4bc1-b1af-aeae5e46d46f",
-    "f8e98123-ce5d-4495-8f68-c05c3902397d"
+    "da427356-86a6-4409-b60a-944a4309bb3e",
+    "f28c9dcf-04e1-44c4-9247-ddc2d592c977"
   ],
   "logs": [
-    "2020-04-03 20:09:59 Debug: getAvpReqCtx filePath=Video.mp4 qhot=hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w key=hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w.txAudio.Video.mp4",
-    "2020-04-03 20:09:59 Debug: getAvpReqCtx filePath=Video.mp4 qhot=hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w key=hq__EhaUcNKQ32f1PdxXRU7fpcs5ZWBf8CdgrBoJMjBjXY2r6bGnuDfMiuFFhinDDrAUytrN9aVt2w.txVideo.Video.mp4"
+    "2020-06-19 18:36:13 Debug: getAvpReqCtx filePath=Video.mp4 qhot=hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm key=hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm.txAudio.Video.mp4",
+    "2020-06-19 18:36:13 Debug: getAvpReqCtx filePath=Video.mp4 qhot=hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm key=hq__dDrNEEfbhgmqQLndfwoaBDP1Ni2vypEKqBeVzgTwuGTQGiKSFqC5Td1Zd9o5ww6qbkmmQtzbm.txVideo.Video.mp4"
   ],
   "warnings": [],
   "errors": []
