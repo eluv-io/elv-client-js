@@ -1,5 +1,5 @@
 [
   {
-    "signature": " RemoveAccount({\n  \"accountName\": \"test\"\n});"
+    "signature": " RemoveAccount([object Object]);"
   }
 ]

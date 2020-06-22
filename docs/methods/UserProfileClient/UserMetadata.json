@@ -1,7 +1,7 @@
 [
   {
     "signature": "async UserMetadata();",
-    "result": "{\n  \"bitcode_flags\": \"abrmaster\",\n  \"bitcode_format\": \"builtin\",\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
+    "result": "{\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
   },
   {
     "signature": "async UserMetadata({\n  \"metadataSubtree\": \"toMerge\"\n});",
@@ -9,7 +9,10 @@
   },
   {
     "signature": "async UserMetadata();",
-    "result": "{\n  \"bitcode_flags\": \"abrmaster\",\n  \"bitcode_format\": \"builtin\",\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\",\n    \"new\": \"metadata\"\n  },\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
+    "result": "{\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\",\n    \"new\": \"metadata\"\n  },\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"tenantId\"\n});"
   },
   {
     "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/links/metadataLink\",\n  \"resolveLinks\": true\n});",

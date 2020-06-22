@@ -1,13 +1,9 @@
 [
   {
-    "signature": " GetAccount({\n  \"accountName\": \"test\"\n});",
+    "signature": " GetAccount([object Object]);",
     "result": "<Ethers#Wallet>"
   },
   {
-    "signature": " GetAccount({\n  \"accountName\": \"test\"\n});"
-  },
-  {
-    "signature": " GetAccount({\n  \"accountName\": \"mnemonic\"\n});",
-    "result": "<Ethers#Wallet>"
+    "signature": " GetAccount([object Object]);"
   }
 ]

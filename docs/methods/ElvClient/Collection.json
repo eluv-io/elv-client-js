@@ -5,19 +5,11 @@
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"contentTypes\"\n});",
-    "result": "[\n  \"0xE56689D824ee9B848Ff692984ed408bAb954bA23\",\n  \"0x4359672476972bA0B351944eD383Fe6DF5292cad\",\n  \"0x99FF3Cc52101402E9CA9D0c938b45e15F33d7fA2\"\n]"
-  },
-  {
-    "signature": "async Collection({\n  \"collectionType\": \"contentTypes\"\n});",
-    "result": "[\n  \"0x4359672476972bA0B351944eD383Fe6DF5292cad\",\n  \"0x99FF3Cc52101402E9CA9D0c938b45e15F33d7fA2\",\n  \"0xE56689D824ee9B848Ff692984ed408bAb954bA23\"\n]"
+    "result": "[\n  \"0xaf941e4cDaeaC1498cB5E0E078eCA57bF4BF1102\"\n]"
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"libraries\"\n});",
-    "result": "[\n  \"0xd366E999ca0a202412009f7717377D4cD87C42c5\"\n]"
-  },
-  {
-    "signature": "async Collection({\n  \"collectionType\": \"contentTypes\"\n});",
-    "result": "[\n  \"0x99FF3Cc52101402E9CA9D0c938b45e15F33d7fA2\",\n  \"0xE56689D824ee9B848Ff692984ed408bAb954bA23\",\n  \"0x4359672476972bA0B351944eD383Fe6DF5292cad\"\n]"
+    "result": "[\n  \"0x7cf88667ee6cE31A976D6f51cD24199dFC66d32e\",\n  \"0xd2bDfD74efb7A98DD63c2aBD0b715143B652235e\"\n]"
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"accessGroups\"\n});",
@@ -25,6 +17,6 @@
   },
   {
     "signature": "async Collection({\n  \"collectionType\": \"accessGroups\"\n});",
-    "result": "[\n  \"0xC3833582b86aEb6f5a9DeAecC1123661D6130237\"\n]"
+    "result": "[\n  \"0x48Fd25bBa27A9A34Df9D76bEE05c4fE31FA09726\"\n]"
   }
 ]

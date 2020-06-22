@@ -1,14 +1,6 @@
 [
   {
-    "signature": " EtherToWei(\"1.0\");",
+    "signature": " EtherToWei(1.0);",
     "result": "\"1000000000000000000\""
-  },
-  {
-    "signature": " EtherToWei(\"0\");",
-    "result": "\"0\""
-  },
-  {
-    "signature": " EtherToWei(\"0.5\");",
-    "result": "\"500000000000000000\""
   }
 ]

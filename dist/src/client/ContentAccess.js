@@ -1512,18 +1512,20 @@ exports.AudienceData = function (_ref16) {
  * @methodGroup Media
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
+ * @param {string=} linkPath - If playing from a link, the path to the link
  *
  * @return {Promise<Object>} - The available offerings
  */
 
 
 exports.AvailableOfferings = function _callee23(_ref17) {
-  var objectId, versionHash, path, audienceData;
+  var objectId, versionHash, writeToken, linkPath, path, audienceData;
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
-          objectId = _ref17.objectId, versionHash = _ref17.versionHash;
+          objectId = _ref17.objectId, versionHash = _ref17.versionHash, writeToken = _ref17.writeToken, linkPath = _ref17.linkPath;
 
           if (objectId) {
             _context23.next = 5;
@@ -1549,17 +1551,35 @@ exports.AvailableOfferings = function _callee23(_ref17) {
           versionHash = _context23.sent;
 
         case 9:
+          if (!linkPath) {
+            _context23.next = 14;
+            break;
+          }
+
+          _context23.next = 12;
+          return _regeneratorRuntime.awrap(this.LinkTarget({
+            objectId: objectId,
+            versionHash: versionHash,
+            writeToken: writeToken,
+            linkPath: linkPath
+          }));
+
+        case 12:
+          versionHash = _context23.sent;
+          objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+
+        case 14:
           path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
           audienceData = this.AudienceData({
             objectId: objectId,
             versionHash: versionHash
           });
-          _context23.prev = 11;
+          _context23.prev = 16;
           _context23.t0 = _regeneratorRuntime;
           _context23.t1 = this.utils;
           _context23.t2 = this.HttpClient;
           _context23.t3 = path;
-          _context23.next = 18;
+          _context23.next = 23;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             objectId: objectId,
             channelAuth: true,
@@ -1567,7 +1587,7 @@ exports.AvailableOfferings = function _callee23(_ref17) {
             audienceData: audienceData
           }));
 
-        case 18:
+        case 23:
           _context23.t4 = _context23.sent;
           _context23.t5 = {
             path: _context23.t3,
@@ -1576,32 +1596,32 @@ exports.AvailableOfferings = function _callee23(_ref17) {
           };
           _context23.t6 = _context23.t2.Request.call(_context23.t2, _context23.t5);
           _context23.t7 = _context23.t1.ResponseToJson.call(_context23.t1, _context23.t6);
-          _context23.next = 24;
+          _context23.next = 29;
           return _context23.t0.awrap.call(_context23.t0, _context23.t7);
 
-        case 24:
+        case 29:
           return _context23.abrupt("return", _context23.sent);
 
-        case 27:
-          _context23.prev = 27;
-          _context23.t8 = _context23["catch"](11);
+        case 32:
+          _context23.prev = 32;
+          _context23.t8 = _context23["catch"](16);
 
           if (!(_context23.t8.status && parseInt(_context23.t8.status) === 500)) {
-            _context23.next = 31;
+            _context23.next = 36;
             break;
           }
 
           return _context23.abrupt("return", {});
 
-        case 31:
+        case 36:
           throw _context23.t8;
 
-        case 32:
+        case 37:
         case "end":
           return _context23.stop();
       }
     }
-  }, null, this, [[11, 27]]);
+  }, null, this, [[16, 32]]);
 };
 /**
  * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
@@ -1617,6 +1637,7 @@ exports.AvailableOfferings = function _callee23(_ref17) {
  * @namedParams
  * @param {string=} objectId - Id of the content
  * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
@@ -1625,13 +1646,13 @@ exports.AvailableOfferings = function _callee23(_ref17) {
 
 
 exports.PlayoutOptions = function _callee24(_ref18) {
-  var objectId, versionHash, linkPath, _ref18$protocols, protocols, _ref18$offering, offering, _ref18$drms, drms, _ref18$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
+  var objectId, versionHash, writeToken, linkPath, _ref18$protocols, protocols, _ref18$offering, offering, _ref18$drms, drms, _ref18$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee24$(_context24) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
-          objectId = _ref18.objectId, versionHash = _ref18.versionHash, linkPath = _ref18.linkPath, _ref18$protocols = _ref18.protocols, protocols = _ref18$protocols === void 0 ? ["dash", "hls"] : _ref18$protocols, _ref18$offering = _ref18.offering, offering = _ref18$offering === void 0 ? "default" : _ref18$offering, _ref18$drms = _ref18.drms, drms = _ref18$drms === void 0 ? [] : _ref18$drms, _ref18$hlsjsProfile = _ref18.hlsjsProfile, hlsjsProfile = _ref18$hlsjsProfile === void 0 ? true : _ref18$hlsjsProfile;
+          objectId = _ref18.objectId, versionHash = _ref18.versionHash, writeToken = _ref18.writeToken, linkPath = _ref18.linkPath, _ref18$protocols = _ref18.protocols, protocols = _ref18$protocols === void 0 ? ["dash", "hls"] : _ref18$protocols, _ref18$offering = _ref18.offering, offering = _ref18$offering === void 0 ? "default" : _ref18$offering, _ref18$drms = _ref18.drms, drms = _ref18$drms === void 0 ? [] : _ref18$drms, _ref18$hlsjsProfile = _ref18.hlsjsProfile, hlsjsProfile = _ref18$hlsjsProfile === void 0 ? true : _ref18$hlsjsProfile;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
           protocols = protocols.map(function (p) {
             return p.toLowerCase();
@@ -1682,6 +1703,7 @@ exports.PlayoutOptions = function _callee24(_ref18) {
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
+            writeToken: writeToken,
             linkPath: linkPath
           }));
 
@@ -1695,7 +1717,13 @@ exports.PlayoutOptions = function _callee24(_ref18) {
 
         case 22:
           linkTargetLibraryId = _context24.sent;
-          path = UrlJoin("q", versionHash, "meta", linkPath);
+
+          if (writeToken) {
+            path = UrlJoin("qlibs", libraryId, "q", writeToken, "meta", linkPath);
+          } else {
+            path = UrlJoin("q", versionHash, "meta", linkPath);
+          }
+
           _context24.next = 27;
           break;
 
@@ -2323,7 +2351,7 @@ exports.FabricUrl = function _callee29(_ref24) {
 
 
 exports.FileUrl = function _callee30(_ref25) {
-  var libraryId, objectId, versionHash, writeToken, filePath, _ref25$queryParams, queryParams, _ref25$noCache, noCache, path, authorizationToken;
+  var libraryId, objectId, versionHash, writeToken, filePath, _ref25$queryParams, queryParams, _ref25$noCache, noCache, path, authorizationToken, fileInfo, encrypted;
 
   return _regeneratorRuntime.async(function _callee30$(_context30) {
     while (1) {
@@ -2349,9 +2377,9 @@ exports.FileUrl = function _callee30(_ref25) {
           }
 
           if (libraryId) {
-            path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "files", filePath);
+            path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId);
           } else {
-            path = UrlJoin("q", versionHash, "files", filePath);
+            path = UrlJoin("q", versionHash);
           }
 
           _context30.next = 8;
@@ -2363,14 +2391,35 @@ exports.FileUrl = function _callee30(_ref25) {
 
         case 8:
           authorizationToken = _context30.sent;
-          return _context30.abrupt("return", this.HttpClient.URL({
-            path: path,
-            queryParams: _objectSpread({}, queryParams, {
-              authorization: authorizationToken
-            })
+          queryParams = _objectSpread({}, queryParams, {
+            authorization: authorizationToken
+          });
+          _context30.next = 12;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            writeToken: writeToken,
+            metadataSubtree: UrlJoin("files", filePath)
           }));
 
-        case 10:
+        case 12:
+          fileInfo = _context30.sent;
+          encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
+
+          if (encrypted) {
+            path = UrlJoin(path, "rep", "files_download", filePath);
+            queryParams["header-x_decryption_mode"] = "decrypt";
+          } else {
+            path = UrlJoin(path, "files", filePath);
+          }
+
+          return _context30.abrupt("return", this.HttpClient.URL({
+            path: path,
+            queryParams: queryParams
+          }));
+
+        case 16:
         case "end":
           return _context30.stop();
       }
@@ -2675,7 +2724,7 @@ exports.ContentObjectGraph = function _callee33(_ref27) {
   }, null, this, [[5, 22], [24, 34]]);
 };
 /**
- * Retrieve the version hash of the specified link's target. If the target is the same as the specified
+ * Retrieve the version hash of the target of the specified link. If the target is the same as the specified
  * object and versionHash is not specified, will return the latest version hash.
  *
  * @methodGroup Links
@@ -2683,6 +2732,7 @@ exports.ContentObjectGraph = function _callee33(_ref27) {
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  *
  * @returns {Promise<string>} - Version hash of the link's target
@@ -2690,37 +2740,60 @@ exports.ContentObjectGraph = function _callee33(_ref27) {
 
 
 exports.LinkTarget = function _callee34(_ref28) {
-  var libraryId, objectId, versionHash, linkPath, linkInfo, targetHash;
+  var libraryId, objectId, versionHash, writeToken, linkPath, linkInfo, targetHash, subPath;
   return _regeneratorRuntime.async(function _callee34$(_context34) {
     while (1) {
       switch (_context34.prev = _context34.next) {
         case 0:
-          libraryId = _ref28.libraryId, objectId = _ref28.objectId, versionHash = _ref28.versionHash, linkPath = _ref28.linkPath;
+          libraryId = _ref28.libraryId, objectId = _ref28.objectId, versionHash = _ref28.versionHash, writeToken = _ref28.writeToken, linkPath = _ref28.linkPath;
+          ValidateParameters({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash
+          });
+
+          if (writeToken) {
+            ValidateWriteToken(writeToken);
+          }
 
           if (versionHash) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
-          _context34.next = 4;
+          if (!(writeToken && !libraryId)) {
+            _context34.next = 8;
+            break;
+          }
+
+          _context34.next = 7;
+          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+            objectId: objectId
+          }));
+
+        case 7:
+          libraryId = _context34.sent;
+
+        case 8:
+          _context34.next = 10;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            metadataSubtree: UrlJoin(linkPath),
-            resolveLinks: false
+            writeToken: writeToken,
+            metadataSubtree: linkPath,
+            resolveLinks: false,
+            resolveIgnoreErrors: true,
+            resolveIncludeSource: true
           }));
 
-        case 4:
+        case 10:
           linkInfo = _context34.sent;
 
-          if (!(!linkInfo || !linkInfo["/"])) {
-            _context34.next = 7;
+          if (!(linkInfo && linkInfo["/"])) {
+            _context34.next = 26;
             break;
           }
 
-          throw Error("No valid link at ".concat(linkPath));
-
-        case 7:
           /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
           targetHash = ((linkInfo["/"] || "").match(/^\/?qfab\/([\w]+)\/?.+/) || [])[1];
 
@@ -2729,30 +2802,126 @@ exports.LinkTarget = function _callee34(_ref28) {
           }
 
           if (!targetHash) {
-            _context34.next = 13;
+            _context34.next = 18;
             break;
           }
 
           return _context34.abrupt("return", targetHash);
 
-        case 13:
+        case 18:
           if (!versionHash) {
-            _context34.next = 15;
+            _context34.next = 20;
             break;
           }
 
           return _context34.abrupt("return", versionHash);
 
-        case 15:
-          _context34.next = 17;
+        case 20:
+          _context34.t0 = versionHash;
+
+          if (_context34.t0) {
+            _context34.next = 25;
+            break;
+          }
+
+          _context34.next = 24;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 17:
-          return _context34.abrupt("return", _context34.sent);
+        case 24:
+          _context34.t0 = _context34.sent;
 
-        case 18:
+        case 25:
+          return _context34.abrupt("return", _context34.t0);
+
+        case 26:
+          _context34.next = 28;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            writeToken: writeToken,
+            metadataSubtree: linkPath,
+            resolveIncludeSource: true
+          }));
+
+        case 28:
+          linkInfo = _context34.sent;
+
+          if (!(!linkInfo || !linkInfo["."])) {
+            _context34.next = 48;
+            break;
+          }
+
+          if (!(_typeof(linkInfo) === "object")) {
+            _context34.next = 37;
+            break;
+          }
+
+          _context34.t1 = versionHash;
+
+          if (_context34.t1) {
+            _context34.next = 36;
+            break;
+          }
+
+          _context34.next = 35;
+          return _regeneratorRuntime.awrap(this.LatestVersionHash({
+            objectId: objectId
+          }));
+
+        case 35:
+          _context34.t1 = _context34.sent;
+
+        case 36:
+          return _context34.abrupt("return", _context34.t1);
+
+        case 37:
+          // linkPath is not a direct link, but points to a literal value - back up one path element to find the container
+          subPath = linkPath.split("/").slice(0, -1).join("/");
+
+          if (subPath) {
+            _context34.next = 45;
+            break;
+          }
+
+          _context34.t2 = versionHash;
+
+          if (_context34.t2) {
+            _context34.next = 44;
+            break;
+          }
+
+          _context34.next = 43;
+          return _regeneratorRuntime.awrap(this.LatestVersionHash({
+            objectId: objectId
+          }));
+
+        case 43:
+          _context34.t2 = _context34.sent;
+
+        case 44:
+          return _context34.abrupt("return", _context34.t2);
+
+        case 45:
+          _context34.next = 47;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            writeToken: writeToken,
+            metadataSubtree: subPath,
+            resolveIncludeSource: true
+          }));
+
+        case 47:
+          linkInfo = _context34.sent;
+
+        case 48:
+          return _context34.abrupt("return", linkInfo["."].source);
+
+        case 49:
         case "end":
           return _context34.stop();
       }
@@ -2767,6 +2936,7 @@ exports.LinkTarget = function _callee34(_ref28) {
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
@@ -2778,43 +2948,47 @@ exports.LinkTarget = function _callee34(_ref28) {
 
 
 exports.LinkUrl = function _callee35(_ref29) {
-  var libraryId, objectId, versionHash, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path, visibility, noAuth;
 
   return _regeneratorRuntime.async(function _callee35$(_context35) {
     while (1) {
       switch (_context35.prev = _context35.next) {
         case 0:
-          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, linkPath = _ref29.linkPath, mimeType = _ref29.mimeType, _ref29$queryParams = _ref29.queryParams, queryParams = _ref29$queryParams === void 0 ? {} : _ref29$queryParams, _ref29$noCache = _ref29.noCache, noCache = _ref29$noCache === void 0 ? false : _ref29$noCache;
+          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, writeToken = _ref29.writeToken, linkPath = _ref29.linkPath, mimeType = _ref29.mimeType, _ref29$queryParams = _ref29.queryParams, queryParams = _ref29$queryParams === void 0 ? {} : _ref29$queryParams, _ref29$noCache = _ref29.noCache, noCache = _ref29$noCache === void 0 ? false : _ref29$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash
           });
 
+          if (writeToken) {
+            ValidateWriteToken(writeToken);
+          }
+
           if (linkPath) {
-            _context35.next = 4;
+            _context35.next = 5;
             break;
           }
 
           throw Error("Link path not specified");
 
-        case 4:
+        case 5:
           if (versionHash) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
           if (libraryId) {
-            path = UrlJoin("qlibs", libraryId, "q", versionHash || objectId, "meta", linkPath);
+            path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash || objectId, "meta", linkPath);
           } else {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
 
-          _context35.next = 8;
+          _context35.next = 9;
           return _regeneratorRuntime.awrap(this.Visibility({
             id: objectId
           }));
 
-        case 8:
+        case 9:
           visibility = _context35.sent;
           noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1; // TODO: Remove for authv3
 
@@ -2822,7 +2996,7 @@ exports.LinkUrl = function _callee35(_ref29) {
           _context35.t0 = _objectSpread;
           _context35.t1 = {};
           _context35.t2 = queryParams;
-          _context35.next = 16;
+          _context35.next = 17;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -2830,7 +3004,7 @@ exports.LinkUrl = function _callee35(_ref29) {
             noAuth: noAuth
           }));
 
-        case 16:
+        case 17:
           _context35.t3 = _context35.sent;
           _context35.t4 = {
             resolve: true,
@@ -2847,7 +3021,7 @@ exports.LinkUrl = function _callee35(_ref29) {
             queryParams: queryParams
           }));
 
-        case 21:
+        case 22:
         case "end":
           return _context35.stop();
       }
@@ -2862,24 +3036,26 @@ exports.LinkUrl = function _callee35(_ref29) {
  * @param {string=} libraryId - ID of an library
  * @param {string=} objectId - ID of an object
  * @param {string=} versionHash - Hash of an object version
+ * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
  * @param {string=} format=json - Format of the response
  */
 
 
 exports.LinkData = function _callee36(_ref30) {
-  var libraryId, objectId, versionHash, linkPath, _ref30$format, format, linkUrl;
+  var libraryId, objectId, versionHash, writeToken, linkPath, _ref30$format, format, linkUrl;
 
   return _regeneratorRuntime.async(function _callee36$(_context36) {
     while (1) {
       switch (_context36.prev = _context36.next) {
         case 0:
-          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, linkPath = _ref30.linkPath, _ref30$format = _ref30.format, format = _ref30$format === void 0 ? "json" : _ref30$format;
+          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, writeToken = _ref30.writeToken, linkPath = _ref30.linkPath, _ref30$format = _ref30.format, format = _ref30$format === void 0 ? "json" : _ref30$format;
           _context36.next = 3;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
+            writeToken: writeToken,
             linkPath: linkPath
           }));
 
@@ -2905,20 +3081,40 @@ exports.LinkData = function _callee36(_ref30) {
 
 
 exports.CreateEncryptionConk = function _callee37(_ref31) {
-  var libraryId, objectId, writeToken, _ref31$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
+  var libraryId, objectId, versionHash, writeToken, _ref31$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
 
   return _regeneratorRuntime.async(function _callee37$(_context37) {
     while (1) {
       switch (_context37.prev = _context37.next) {
         case 0:
-          libraryId = _ref31.libraryId, objectId = _ref31.objectId, writeToken = _ref31.writeToken, _ref31$createKMSConk = _ref31.createKMSConk, createKMSConk = _ref31$createKMSConk === void 0 ? true : _ref31$createKMSConk;
+          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, _ref31$createKMSConk = _ref31.createKMSConk, createKMSConk = _ref31$createKMSConk === void 0 ? true : _ref31$createKMSConk;
           ValidateParameters({
             libraryId: libraryId,
-            objectId: objectId
+            objectId: objectId,
+            versionHash: versionHash
           });
           ValidateWriteToken(writeToken);
+
+          if (!objectId) {
+            objectId = client.DecodeVersionHash(versionHash).objectId;
+          }
+
+          if (libraryId) {
+            _context37.next = 8;
+            break;
+          }
+
+          _context37.next = 7;
+          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+            objectId: objectId
+          }));
+
+        case 7:
+          libraryId = _context37.sent;
+
+        case 8:
           capKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context37.next = 6;
+          _context37.next = 11;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -2926,27 +3122,27 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
             metadataSubtree: capKey
           }));
 
-        case 6:
+        case 11:
           existingUserCap = _context37.sent;
 
           if (!existingUserCap) {
-            _context37.next = 13;
+            _context37.next = 18;
             break;
           }
 
-          _context37.next = 10;
+          _context37.next = 15;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
-        case 10:
+        case 15:
           this.encryptionConks[objectId] = _context37.sent;
-          _context37.next = 29;
+          _context37.next = 34;
           break;
 
-        case 13:
-          _context37.next = 15;
+        case 18:
+          _context37.next = 20;
           return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk());
 
-        case 15:
+        case 20:
           this.encryptionConks[objectId] = _context37.sent;
           _context37.t0 = _regeneratorRuntime;
           _context37.t1 = this;
@@ -2954,10 +3150,10 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
           _context37.t3 = objectId;
           _context37.t4 = writeToken;
           _context37.t5 = capKey;
-          _context37.next = 24;
+          _context37.next = 29;
           return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], this.signer.signingKey.publicKey));
 
-        case 24:
+        case 29:
           _context37.t6 = _context37.sent;
           _context37.t7 = {
             libraryId: _context37.t2,
@@ -2967,32 +3163,32 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
             metadata: _context37.t6
           };
           _context37.t8 = _context37.t1.ReplaceMetadata.call(_context37.t1, _context37.t7);
-          _context37.next = 29;
+          _context37.next = 34;
           return _context37.t0.awrap.call(_context37.t0, _context37.t8);
 
-        case 29:
+        case 34:
           if (!createKMSConk) {
-            _context37.next = 61;
+            _context37.next = 66;
             break;
           }
 
-          _context37.prev = 30;
-          _context37.next = 33;
+          _context37.prev = 35;
+          _context37.next = 38;
           return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
             objectId: objectId
           }));
 
-        case 33:
+        case 38:
           kmsAddress = _context37.sent;
-          _context37.next = 36;
+          _context37.next = 41;
           return _regeneratorRuntime.awrap(this.authClient.KMSInfo({
             objectId: objectId
           }));
 
-        case 36:
+        case 41:
           kmsPublicKey = _context37.sent.publicKey;
           kmsCapKey = "eluv.caps.ikms".concat(this.utils.AddressToHash(kmsAddress));
-          _context37.next = 40;
+          _context37.next = 45;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             // Cap may only exist in draft
@@ -3001,11 +3197,11 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
             metadataSubtree: kmsCapKey
           }));
 
-        case 40:
+        case 45:
           existingKMSCap = _context37.sent;
 
           if (existingKMSCap) {
-            _context37.next = 55;
+            _context37.next = 60;
             break;
           }
 
@@ -3015,10 +3211,10 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
           _context37.t12 = objectId;
           _context37.t13 = writeToken;
           _context37.t14 = kmsCapKey;
-          _context37.next = 50;
+          _context37.next = 55;
           return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(this.encryptionConks[objectId], kmsPublicKey));
 
-        case 50:
+        case 55:
           _context37.t15 = _context37.sent;
           _context37.t16 = {
             libraryId: _context37.t11,
@@ -3028,30 +3224,30 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
             metadata: _context37.t15
           };
           _context37.t17 = _context37.t10.ReplaceMetadata.call(_context37.t10, _context37.t16);
-          _context37.next = 55;
+          _context37.next = 60;
           return _context37.t9.awrap.call(_context37.t9, _context37.t17);
 
-        case 55:
-          _context37.next = 61;
+        case 60:
+          _context37.next = 66;
           break;
 
-        case 57:
-          _context37.prev = 57;
-          _context37.t18 = _context37["catch"](30);
+        case 62:
+          _context37.prev = 62;
+          _context37.t18 = _context37["catch"](35);
           // eslint-disable-next-line no-console
           console.error("Failed to create encryption cap for KMS:"); // eslint-disable-next-line no-console
 
           console.error(_context37.t18);
 
-        case 61:
+        case 66:
           return _context37.abrupt("return", this.encryptionConks[objectId]);
 
-        case 62:
+        case 67:
         case "end":
           return _context37.stop();
       }
     }
-  }, null, this, [[30, 57]]);
+  }, null, this, [[35, 62]]);
 };
 /**
  * Retrieve the encryption conk for the specified object. If one has not yet been created
@@ -3063,6 +3259,7 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
+ * @param {string} objectId - Version hash of the object
  * @param {string=} writeToken - Write token of the content object draft
  *
  * @return Promise<Object> - The encryption conk for the object
@@ -3070,108 +3267,115 @@ exports.CreateEncryptionConk = function _callee37(_ref31) {
 
 
 exports.EncryptionConk = function _callee38(_ref32) {
-  var libraryId, objectId, writeToken, owner, capKey, existingUserCap;
+  var libraryId, objectId, versionHash, writeToken, owner, capKey, existingUserCap;
   return _regeneratorRuntime.async(function _callee38$(_context38) {
     while (1) {
       switch (_context38.prev = _context38.next) {
         case 0:
-          libraryId = _ref32.libraryId, objectId = _ref32.objectId, writeToken = _ref32.writeToken;
+          libraryId = _ref32.libraryId, objectId = _ref32.objectId, versionHash = _ref32.versionHash, writeToken = _ref32.writeToken;
           ValidateParameters({
             libraryId: libraryId,
-            objectId: objectId
+            objectId: objectId,
+            versionHash: versionHash
           });
 
           if (writeToken) {
             ValidateWriteToken(writeToken);
           }
 
-          _context38.next = 5;
+          if (!objectId) {
+            objectId = client.DecodeVersionHash(versionHash).objectId;
+          }
+
+          _context38.next = 6;
           return _regeneratorRuntime.awrap(this.authClient.Owner({
             id: objectId
           }));
 
-        case 5:
+        case 6:
           owner = _context38.sent;
 
           if (this.utils.EqualAddress(owner, this.signer.address)) {
-            _context38.next = 12;
+            _context38.next = 13;
             break;
           }
 
           if (this.reencryptionConks[objectId]) {
-            _context38.next = 11;
+            _context38.next = 12;
             break;
           }
 
-          _context38.next = 10;
+          _context38.next = 11;
           return _regeneratorRuntime.awrap(this.authClient.ReEncryptionConk({
             libraryId: libraryId,
             objectId: objectId
           }));
 
-        case 10:
+        case 11:
           this.reencryptionConks[objectId] = _context38.sent;
 
-        case 11:
+        case 12:
           return _context38.abrupt("return", this.reencryptionConks[objectId]);
 
-        case 12:
+        case 13:
           if (this.encryptionConks[objectId]) {
-            _context38.next = 29;
+            _context38.next = 30;
             break;
           }
 
           capKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context38.next = 16;
+          _context38.next = 17;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
-            // Cap may only exist in draft
             objectId: objectId,
+            versionHash: versionHash,
+            // Cap may only exist in draft
             writeToken: writeToken,
             metadataSubtree: capKey
           }));
 
-        case 16:
+        case 17:
           existingUserCap = _context38.sent;
 
           if (!existingUserCap) {
-            _context38.next = 23;
+            _context38.next = 24;
             break;
           }
 
-          _context38.next = 20;
+          _context38.next = 21;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
-        case 20:
+        case 21:
           this.encryptionConks[objectId] = _context38.sent;
-          _context38.next = 29;
+          _context38.next = 30;
           break;
 
-        case 23:
+        case 24:
           if (!writeToken) {
-            _context38.next = 28;
+            _context38.next = 29;
             break;
           }
 
-          _context38.next = 26;
+          _context38.next = 27;
           return _regeneratorRuntime.awrap(this.CreateEncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
+            versionHash: versionHash,
             writeToken: writeToken,
             createKMSConk: false
           }));
 
-        case 26:
-          _context38.next = 29;
+        case 27:
+          _context38.next = 30;
           break;
 
-        case 28:
+        case 29:
           throw "No encryption conk present for " + objectId;
 
-        case 29:
+        case 30:
           return _context38.abrupt("return", this.encryptionConks[objectId]);
 
-        case 30:
+        case 31:
         case "end":
           return _context38.stop();
       }
