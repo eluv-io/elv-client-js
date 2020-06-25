@@ -230,7 +230,7 @@ exports.CreateContentType = function _callee2(_ref2) {
 
 
 exports.CreateContentLibrary = function _callee3(_ref4) {
-  var name, description, image, imageName, _ref4$metadata, metadata, kmsId, _ref5, contractAddress, tenantId, libraryId, objectId, editResponse;
+  var name, description, image, imageName, _ref4$metadata, metadata, kmsId, _ref5, contractAddress, tenantId, libraryId, objectId, libraryType, editResponse;
 
   return _regeneratorRuntime.async(function _callee3$(_context3) {
     while (1) {
@@ -297,17 +297,24 @@ exports.CreateContentLibrary = function _callee3(_ref4) {
 
           objectId = libraryId.replace("ilib", "iq__");
           _context3.next = 28;
+          return _regeneratorRuntime.awrap(this.ContentType({
+            name: "library"
+          }));
+
+        case 28:
+          libraryType = _context3.sent;
+          _context3.next = 31;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId,
             options: {
-              type: "library"
+              type: libraryType ? libraryType.id : undefined
             }
           }));
 
-        case 28:
+        case 31:
           editResponse = _context3.sent;
-          _context3.next = 31;
+          _context3.next = 34;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -315,32 +322,32 @@ exports.CreateContentLibrary = function _callee3(_ref4) {
             writeToken: editResponse.write_token
           }));
 
-        case 31:
-          _context3.next = 33;
+        case 34:
+          _context3.next = 36;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: editResponse.write_token
           }));
 
-        case 33:
+        case 36:
           if (!image) {
-            _context3.next = 36;
+            _context3.next = 39;
             break;
           }
 
-          _context3.next = 36;
+          _context3.next = 39;
           return _regeneratorRuntime.awrap(this.SetContentLibraryImage({
             libraryId: libraryId,
             image: image,
             imageName: imageName
           }));
 
-        case 36:
+        case 39:
           this.Log("Library ".concat(libraryId, " created"));
           return _context3.abrupt("return", libraryId);
 
-        case 38:
+        case 41:
         case "end":
           return _context3.stop();
       }
