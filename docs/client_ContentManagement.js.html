@@ -263,11 +263,13 @@ exports.CreateContentLibrary = async function({
   // Set library content object type and metadata on automatically created library object
   const objectId = libraryId.replace("ilib", "iq__");
 
+  const libraryType = await this.ContentType({name: "library"});
+
   const editResponse = await this.EditContentObject({
     libraryId,
     objectId,
     options: {
-      type: "library"
+      type: libraryType ? libraryType.id : undefined
     }
   });
 
