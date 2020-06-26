@@ -726,14 +726,30 @@ exports.ContentObjectMetadata = async function({
 
   let metadata;
   try {
+    /*
     const visibility = await this.Visibility({id: objectId});
     let noAuth = visibility >= 10 ||
       ((metadataSubtree || "").replace(/^\/+/, "").startsWith("public") &amp;&amp; visibility >= 1);
-    noAuth = true;
+
+     */
+
+    let headers;
+    if(this.oauthToken) {
+      headers = await this.authClient.AuthorizationHeader({
+        libraryId,
+        objectId,
+        versionHash,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+        audienceData: await this.AudienceData({objectId, versionHash})
+      });
+    } else {
+      headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true});
+    }
 
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
+        headers,
         queryParams: {
           select,
           link_depth: linkDepthLimit,
@@ -1726,16 +1742,26 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
 
+  /*
   const visibility = await this.Visibility({id: objectId});
   let noAuth = visibility >= 10 ||
     ((linkPath || "").replace(/^\/+/, "").startsWith("public") &amp;&amp; visibility >= 1);
   // TODO: Remove for authv3
   noAuth = true;
 
+   */
+
   queryParams = {
     ...queryParams,
     resolve: true,
-    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth})
+    authorization: await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      noCache,
+      noAuth: !this.oauthToken,
+      channelAuth: !!this.oauthToken,
+      oauthToken: this.oauthToken
+    })
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }

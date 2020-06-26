@@ -1147,7 +1147,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, headers;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
@@ -1167,76 +1167,99 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
 
           path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
           _context19.prev = 5;
-          _context19.next = 8;
-          return _regeneratorRuntime.awrap(this.Visibility({
-            id: objectId
+
+          if (!this.oauthToken) {
+            _context19.next = 23;
+            break;
+          }
+
+          _context19.t0 = _regeneratorRuntime;
+          _context19.t1 = this.authClient;
+          _context19.t2 = libraryId;
+          _context19.t3 = objectId;
+          _context19.t4 = versionHash;
+          _context19.t5 = this.oauthToken;
+          _context19.next = 15;
+          return _regeneratorRuntime.awrap(this.AudienceData({
+            objectId: objectId,
+            versionHash: versionHash
           }));
 
-        case 8:
-          visibility = _context19.sent;
-          noAuth = visibility >= 10 || (metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
-          noAuth = true;
-          _context19.t0 = _regeneratorRuntime;
-          _context19.t1 = this.utils;
-          _context19.t2 = this.HttpClient;
-          _context19.next = 16;
+        case 15:
+          _context19.t6 = _context19.sent;
+          _context19.t7 = {
+            libraryId: _context19.t2,
+            objectId: _context19.t3,
+            versionHash: _context19.t4,
+            channelAuth: true,
+            oauthToken: _context19.t5,
+            audienceData: _context19.t6
+          };
+          _context19.t8 = _context19.t1.AuthorizationHeader.call(_context19.t1, _context19.t7);
+          _context19.next = 20;
+          return _context19.t0.awrap.call(_context19.t0, _context19.t8);
+
+        case 20:
+          headers = _context19.sent;
+          _context19.next = 26;
+          break;
+
+        case 23:
+          _context19.next = 25;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            noAuth: noAuth
+            noAuth: true
           }));
 
-        case 16:
-          _context19.t3 = _context19.sent;
-          _context19.t4 = {
-            select: select,
-            link_depth: linkDepthLimit,
-            resolve: resolveLinks,
-            resolve_include_source: resolveIncludeSource,
-            resolve_ignore_errors: resolveIgnoreErrors
-          };
-          _context19.t5 = path;
-          _context19.t6 = {
-            headers: _context19.t3,
-            queryParams: _context19.t4,
-            method: "GET",
-            path: _context19.t5
-          };
-          _context19.t7 = _context19.t2.Request.call(_context19.t2, _context19.t6);
-          _context19.t8 = _context19.t1.ResponseToJson.call(_context19.t1, _context19.t7);
-          _context19.next = 24;
-          return _context19.t0.awrap.call(_context19.t0, _context19.t8);
+        case 25:
+          headers = _context19.sent;
 
-        case 24:
+        case 26:
+          _context19.next = 28;
+          return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
+            headers: headers,
+            queryParams: {
+              select: select,
+              link_depth: linkDepthLimit,
+              resolve: resolveLinks,
+              resolve_include_source: resolveIncludeSource,
+              resolve_ignore_errors: resolveIgnoreErrors
+            },
+            method: "GET",
+            path: path
+          })));
+
+        case 28:
           metadata = _context19.sent;
-          _context19.next = 32;
+          _context19.next = 36;
           break;
 
-        case 27:
-          _context19.prev = 27;
+        case 31:
+          _context19.prev = 31;
           _context19.t9 = _context19["catch"](5);
 
           if (!(_context19.t9.status !== 404)) {
-            _context19.next = 31;
+            _context19.next = 35;
             break;
           }
 
           throw _context19.t9;
 
-        case 31:
+        case 35:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 32:
+        case 36:
           if (produceLinkUrls) {
-            _context19.next = 34;
+            _context19.next = 38;
             break;
           }
 
           return _context19.abrupt("return", metadata);
 
-        case 34:
-          _context19.next = 36;
+        case 38:
+          _context19.next = 40;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
@@ -1245,15 +1268,15 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             metadata: metadata
           }));
 
-        case 36:
+        case 40:
           return _context19.abrupt("return", _context19.sent);
 
-        case 37:
+        case 41:
         case "end":
           return _context19.stop();
       }
     }
-  }, null, this, [[5, 27]]);
+  }, null, this, [[5, 31]]);
 };
 /**
  * List the versions of a content object
@@ -2948,7 +2971,7 @@ exports.LinkTarget = function _callee34(_ref28) {
 
 
 exports.LinkUrl = function _callee35(_ref29) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path;
 
   return _regeneratorRuntime.async(function _callee35$(_context35) {
     while (1) {
@@ -2982,29 +3005,29 @@ exports.LinkUrl = function _callee35(_ref29) {
           } else {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
-
-          _context35.next = 9;
-          return _regeneratorRuntime.awrap(this.Visibility({
-            id: objectId
-          }));
-
-        case 9:
-          visibility = _context35.sent;
-          noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1; // TODO: Remove for authv3
-
+          /*
+          const visibility = await this.Visibility({id: objectId});
+          let noAuth = visibility >= 10 ||
+            ((linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
+          // TODO: Remove for authv3
           noAuth = true;
+            */
+
+
           _context35.t0 = _objectSpread;
           _context35.t1 = {};
           _context35.t2 = queryParams;
-          _context35.next = 17;
+          _context35.next = 12;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
             noCache: noCache,
-            noAuth: noAuth
+            noAuth: !this.oauthToken,
+            channelAuth: !!this.oauthToken,
+            oauthToken: this.oauthToken
           }));
 
-        case 17:
+        case 12:
           _context35.t3 = _context35.sent;
           _context35.t4 = {
             resolve: true,
@@ -3021,7 +3044,7 @@ exports.LinkUrl = function _callee35(_ref29) {
             queryParams: queryParams
           }));
 
-        case 22:
+        case 17:
         case "end":
           return _context35.stop();
       }
