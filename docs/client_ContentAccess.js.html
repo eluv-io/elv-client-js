@@ -735,15 +735,22 @@ exports.ContentObjectMetadata = async function({
 
     let headers;
     if(this.oauthToken) {
-      headers = await this.authClient.AuthorizationHeader({
-        libraryId,
-        objectId,
-        versionHash,
-        channelAuth: true,
-        oauthToken: this.oauthToken,
-        audienceData: await this.AudienceData({objectId, versionHash})
-      });
-    } else {
+      // Check that KMS is set on this object
+      const kmsAddress = await this.authClient.KMSAddress({objectId, versionHash});
+
+      if(kmsAddress &amp;&amp; !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress)) {
+        headers = await this.authClient.AuthorizationHeader({
+          libraryId,
+          objectId,
+          versionHash,
+          channelAuth: true,
+          oauthToken: this.oauthToken,
+          audienceData: await this.AudienceData({objectId, versionHash})
+        });
+      }
+    }
+
+    if(!headers) {
       headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true});
     }
 
@@ -1751,6 +1758,11 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
 
    */
 
+  // Check that KMS is set on this object
+  const kmsAddress = await this.authClient.KMSAddress({objectId, versionHash});
+  const hasKMSAddress = kmsAddress &amp;&amp; !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress);
+  const useOAuth = this.oauthToken &amp;&amp; hasKMSAddress;
+
   queryParams = {
     ...queryParams,
     resolve: true,
@@ -1758,8 +1770,8 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
       libraryId,
       objectId,
       noCache,
-      noAuth: !this.oauthToken,
-      channelAuth: !!this.oauthToken,
+      noAuth: !useOAuth,
+      channelAuth: useOAuth,
       oauthToken: this.oauthToken
     })
   };

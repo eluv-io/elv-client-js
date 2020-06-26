@@ -1147,7 +1147,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, headers;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, headers, kmsAddress;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
@@ -1169,7 +1169,21 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
           _context19.prev = 5;
 
           if (!this.oauthToken) {
-            _context19.next = 23;
+            _context19.next = 25;
+            break;
+          }
+
+          _context19.next = 9;
+          return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
+            objectId: objectId,
+            versionHash: versionHash
+          }));
+
+        case 9:
+          kmsAddress = _context19.sent;
+
+          if (!(kmsAddress && !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress))) {
+            _context19.next = 25;
             break;
           }
 
@@ -1179,13 +1193,13 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
           _context19.t3 = objectId;
           _context19.t4 = versionHash;
           _context19.t5 = this.oauthToken;
-          _context19.next = 15;
+          _context19.next = 19;
           return _regeneratorRuntime.awrap(this.AudienceData({
             objectId: objectId,
             versionHash: versionHash
           }));
 
-        case 15:
+        case 19:
           _context19.t6 = _context19.sent;
           _context19.t7 = {
             libraryId: _context19.t2,
@@ -1196,16 +1210,19 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             audienceData: _context19.t6
           };
           _context19.t8 = _context19.t1.AuthorizationHeader.call(_context19.t1, _context19.t7);
-          _context19.next = 20;
+          _context19.next = 24;
           return _context19.t0.awrap.call(_context19.t0, _context19.t8);
 
-        case 20:
+        case 24:
           headers = _context19.sent;
-          _context19.next = 26;
-          break;
 
-        case 23:
-          _context19.next = 25;
+        case 25:
+          if (headers) {
+            _context19.next = 29;
+            break;
+          }
+
+          _context19.next = 28;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
@@ -1213,11 +1230,11 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             noAuth: true
           }));
 
-        case 25:
+        case 28:
           headers = _context19.sent;
 
-        case 26:
-          _context19.next = 28;
+        case 29:
+          _context19.next = 31;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             headers: headers,
             queryParams: {
@@ -1231,35 +1248,35 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             path: path
           })));
 
-        case 28:
+        case 31:
           metadata = _context19.sent;
-          _context19.next = 36;
+          _context19.next = 39;
           break;
 
-        case 31:
-          _context19.prev = 31;
+        case 34:
+          _context19.prev = 34;
           _context19.t9 = _context19["catch"](5);
 
           if (!(_context19.t9.status !== 404)) {
-            _context19.next = 35;
+            _context19.next = 38;
             break;
           }
 
           throw _context19.t9;
 
-        case 35:
+        case 38:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 36:
+        case 39:
           if (produceLinkUrls) {
-            _context19.next = 38;
+            _context19.next = 41;
             break;
           }
 
           return _context19.abrupt("return", metadata);
 
-        case 38:
-          _context19.next = 40;
+        case 41:
+          _context19.next = 43;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
@@ -1268,15 +1285,15 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             metadata: metadata
           }));
 
-        case 40:
+        case 43:
           return _context19.abrupt("return", _context19.sent);
 
-        case 41:
+        case 44:
         case "end":
           return _context19.stop();
       }
     }
-  }, null, this, [[5, 31]]);
+  }, null, this, [[5, 34]]);
 };
 /**
  * List the versions of a content object
@@ -2971,7 +2988,7 @@ exports.LinkTarget = function _callee34(_ref28) {
 
 
 exports.LinkUrl = function _callee35(_ref29) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path;
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path, kmsAddress, hasKMSAddress, useOAuth;
 
   return _regeneratorRuntime.async(function _callee35$(_context35) {
     while (1) {
@@ -3012,22 +3029,33 @@ exports.LinkUrl = function _callee35(_ref29) {
           // TODO: Remove for authv3
           noAuth = true;
             */
+          // Check that KMS is set on this object
 
 
+          _context35.next = 9;
+          return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
+            objectId: objectId,
+            versionHash: versionHash
+          }));
+
+        case 9:
+          kmsAddress = _context35.sent;
+          hasKMSAddress = kmsAddress && !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress);
+          useOAuth = this.oauthToken && hasKMSAddress;
           _context35.t0 = _objectSpread;
           _context35.t1 = {};
           _context35.t2 = queryParams;
-          _context35.next = 12;
+          _context35.next = 17;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
             noCache: noCache,
-            noAuth: !this.oauthToken,
-            channelAuth: !!this.oauthToken,
+            noAuth: !useOAuth,
+            channelAuth: useOAuth,
             oauthToken: this.oauthToken
           }));
 
-        case 12:
+        case 17:
           _context35.t3 = _context35.sent;
           _context35.t4 = {
             resolve: true,
@@ -3044,7 +3072,7 @@ exports.LinkUrl = function _callee35(_ref29) {
             queryParams: queryParams
           }));
 
-        case 17:
+        case 22:
         case "end":
           return _context35.stop();
       }
