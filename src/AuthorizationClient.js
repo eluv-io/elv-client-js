@@ -132,6 +132,10 @@ class AuthorizationClient {
     noCache=false,
     noAuth=false
   }) {
+    if(this.client.staticToken) {
+      return this.client.staticToken;
+    }
+
     const initialNoCache = this.noCache;
 
     try {
