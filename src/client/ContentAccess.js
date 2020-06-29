@@ -611,6 +611,7 @@ exports.ProduceMetadataLinks = async function({
  * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
  * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
  * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {Object=} queryParams={} - Additional query params for the call
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
@@ -644,6 +645,7 @@ exports.ContentObjectMetadata = async function({
   versionHash,
   writeToken,
   metadataSubtree="/",
+  queryParams={},
   select=[],
   resolveLinks=false,
   resolveIncludeSource=false,
@@ -696,11 +698,12 @@ exports.ContentObjectMetadata = async function({
       this.HttpClient.Request({
         headers,
         queryParams: {
+          ...queryParams,
           select,
           link_depth: linkDepthLimit,
           resolve: resolveLinks,
           resolve_include_source: resolveIncludeSource,
-          resolve_ignore_errors: resolveIgnoreErrors
+          resolve_ignore_errors: resolveIgnoreErrors,
         },
         method: "GET",
         path: path

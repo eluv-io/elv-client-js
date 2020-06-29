@@ -1117,6 +1117,7 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
  * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
  * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
  * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {Object=} queryParams={} - Additional query params for the call
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
@@ -1147,13 +1148,13 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, headers, kmsAddress;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$queryParams, queryParams, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, headers, kmsAddress;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$resolveIgnoreE = _ref13.resolveIgnoreErrors, resolveIgnoreErrors = _ref13$resolveIgnoreE === void 0 ? false : _ref13$resolveIgnoreE, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
+          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$queryParams = _ref13.queryParams, queryParams = _ref13$queryParams === void 0 ? {} : _ref13$queryParams, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$resolveIgnoreE = _ref13.resolveIgnoreErrors, resolveIgnoreErrors = _ref13$resolveIgnoreE === void 0 ? false : _ref13$resolveIgnoreE, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1237,13 +1238,13 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
           _context19.next = 31;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             headers: headers,
-            queryParams: {
+            queryParams: _objectSpread({}, queryParams, {
               select: select,
               link_depth: linkDepthLimit,
               resolve: resolveLinks,
               resolve_include_source: resolveIncludeSource,
               resolve_ignore_errors: resolveIgnoreErrors
-            },
+            }),
             method: "GET",
             path: path
           })));
