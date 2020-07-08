@@ -798,7 +798,7 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
  * @return {Promise<Array<string>>}
  */
 exports.AvailableDRMs = async function() {
-  const availableDRMs = ["clear", "aes-128"];
+  let availableDRMs = ["clear", "aes-128"];
 
   if(typeof window === "undefined") {
     return availableDRMs;
@@ -821,7 +821,7 @@ exports.AvailableDRMs = async function() {
 
     // Test Safari
     if(/^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)) {
-      const version = window.navigator.userAgent.match(/\s+Version\/(\d+)\.(\d+)\s+/);
+      const version = window.navigator.userAgent.match(/.+Version\/(\d+)\.(\d+)/);
 
       if(version && version[2]) {
         const major = parseInt(version[1]);
