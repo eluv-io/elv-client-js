@@ -1465,7 +1465,7 @@ exports.AvailableDRMs = function _callee22() {
 
 
             if (/^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)) {
-              _version = window.navigator.userAgent.match(/\s+Version\/(\d+)\.(\d+)\s+/);
+              _version = window.navigator.userAgent.match(/.+Version\/(\d+)\.(\d+)/);
 
               if (_version && _version[2]) {
                 _major = parseInt(_version[1]);
