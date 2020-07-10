@@ -63,16 +63,20 @@ const argv = yargs
     type: "string",
     description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
   })
+  .option("credentials", {
+    type: "string",
+    description: "Path to JSON file containing credential sets for files stored in cloud"
+  })
   .demandOption(
     ["library", "masterHash", "type"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
   )
   .argv;
 
-const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 
 const Slugify = str =>
-  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g,"");
+  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g,"");
 
 const Report = response => {
   if(response.errors.length > 0) {
@@ -103,6 +107,7 @@ const Create = async ({
   existingMezzId,
   abrProfile,
   elvGeo,
+  credentials,
   wait=false
 }) => {
   try {
@@ -188,12 +193,28 @@ const Create = async ({
 
     name = name || metadata.public.name || metadata.public.asset_metadata.title + " MEZ";
 
-    const access = {
-      region: process.env.AWS_REGION,
-      bucket: process.env.AWS_BUCKET,
-      accessKey: process.env.AWS_KEY,
-      secret: process.env.AWS_SECRET
-    };
+    let access;
+    if(credentials) {
+      access = JSON.parse(fs.readFileSync(credentials));
+    } else {
+      access = [
+        {
+          path_matchers: [".*"],
+          remote_access: {
+            protocol: "s3",
+            platform: "aws",
+            path: process.env.AWS_BUCKET + "/",
+            storage_endpoint: {
+              region: process.env.AWS_REGION
+            },
+            cloud_credentials: {
+              access_key_id: process.env.AWS_KEY,
+              secret_access_key: process.env.AWS_SECRET
+            }
+          }
+        }
+      ];
+    }
 
     const originalType = type;
     if(type.startsWith("iq__")) {
@@ -220,8 +241,7 @@ const Create = async ({
       variant,
       offeringKey: offeringKey,
       metadata,
-      abrProfile,
-      access
+      abrProfile
     });
 
     Report(createResponse);
