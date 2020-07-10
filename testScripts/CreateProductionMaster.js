@@ -55,15 +55,19 @@ const argv = yargs
     type: "string",
     description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
   })
+  .option("credentials", {
+    type: "string",
+    description: "Path to JSON file containing credential sets for files stored in cloud"
+  })
   .demandOption(
     ["library", "type", "title", "files"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateProductionMaster.js --library <master-library-id> --title <title> --metadata '<metadata-json>' --files <file1> (<file2>...) (--s3-copy || --s3-reference)\n"
   )
   .argv;
-const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]}
+const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 
 const Slugify = str =>
-  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9\-]/g,"");
+  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g,"");
 
 const Create = async ({
   elvGeo,
@@ -78,7 +82,8 @@ const Create = async ({
   files,
   encrypt=false,
   s3Reference,
-  s3Copy
+  s3Copy,
+  credentials
 }) => {
   try {
     const privateKey = process.env.PRIVATE_KEY;
@@ -89,16 +94,30 @@ const Create = async ({
 
     let access;
     if(s3Reference || s3Copy) {
-      access = {
-        region: process.env.AWS_REGION,
-        bucket: process.env.AWS_BUCKET,
-        accessKey: process.env.AWS_KEY,
-        secret: process.env.AWS_SECRET
-      };
-
-      if(!access.region || !access.bucket || !access.accessKey || !access.secret) {
-        console.error("Missing required S3 environment variables: AWS_REGION AWS_BUCKET AWS_KEY AWS_SECRET");
-        return;
+      if(credentials) {
+        access = JSON.parse(fs.readFileSync(credentials));
+      } else {
+        if(!process.env.AWS_REGION || !process.env.AWS_BUCKET || !process.env.AWS_KEY || !process.env.AWS_SECRET) {
+          console.error("Missing required S3 environment variables: AWS_REGION AWS_BUCKET AWS_KEY AWS_SECRET");
+          return;
+        }
+        access = [
+          {
+            path_matchers: [".*"],
+            remote_access: {
+              protocol: "s3",
+              platform: "aws",
+              path: process.env.AWS_BUCKET + "/",
+              storage_endpoint: {
+                region: process.env.AWS_REGION
+              },
+              cloud_credentials: {
+                access_key_id: process.env.AWS_KEY,
+                secret_access_key: process.env.AWS_SECRET
+              }
+            }
+          }
+        ];
       }
     }
 
@@ -170,7 +189,6 @@ const Create = async ({
 
     console.log("\nCreating Production Master");
 
-    console.log(type);
     const originalType = type;
     if(type.startsWith("iq__")) {
       type = await client.ContentType({typeId: type});

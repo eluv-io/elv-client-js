@@ -29,12 +29,38 @@ const {
  * @param {string=} description - Description of the content
  * @param {string} contentTypeName - Name of the content type to use
  * @param {Object=} metadata - Additional metadata for the content object
- * @param {Object=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
+ * @param {Object[]=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
  * @param {boolean=} encrypt=false - (Local files only) - If specified, files will be encrypted
  * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
  * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
- * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
- * - Format: {region, bucket, accessKey, secret}
+ * @param {Object[]=} access=[] - Array of cloud credentials, along with path matching regex strings - Required if any files in the masters are cloud references (currently only AWS S3 is supported)
+ * - If this parameter is non-empty, all items in fileInfo are assumed to be items in cloud storage
+ * - Format: [
+ * -           {
+ * -             path_matchers: ["FILE_PATH_MATCH_REGEX_1", "FILE_PATH_MATCH_REGEX_2" ...],
+ * -             remote_access: {
+ * -               protocol: "s3",
+ * -               platform: "aws",
+ * -               path: "YOUR_AWS_S3_BUCKET_NAME" + "/",
+ * -               storage_endpoint: {
+ * -                 region: "YOUR_AWS_REGION_NAME"
+ * -               },
+ * -               cloud_credentials: {
+ * -                 access_key_id: "YOUR_AWS_S3_ACCESS_KEY",
+ * -                 secret_access_key: "YOUR_AWS_S3_SECRET"
+ * -               }
+ * -             }
+ * -           },
+ * -           {
+ * -             path_matchers: [".*"], // <-- catch-all for any remaining unmatched items in fileInfo
+ * -             remote_access: {
+ * -               ...
+ * -             }
+ * -           },
+ * -           ...
+ * -         ]
+ * -
+ * - The simplest case is a one element array with .path_matchers == [".*"], in which case the same credentials will be used for all items in fileInfo
  *
  * @throws {Object} error - If the initialization of the master fails, error details can be found in error.body
  * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the master initialization
@@ -47,7 +73,7 @@ exports.CreateProductionMaster = async function({
   metadata={},
   fileInfo,
   encrypt=false,
-  access,
+  access=[],
   copy=false,
   callback
 }) {
@@ -58,42 +84,75 @@ exports.CreateProductionMaster = async function({
     options: type ? { type } : {}
   });
 
-  let accessParameter;
+  // any files specified?
   if(fileInfo) {
-    if(access) {
+    // are they stored in cloud?
+    if(access.length > 0) {
       // S3 Upload
-      const {region, bucket, accessKey, secret} = access;
 
-      await this.UploadFilesFromS3({
-        libraryId,
-        objectId: id,
-        writeToken: write_token,
-        fileInfo,
-        region,
-        bucket,
-        accessKey,
-        secret,
-        copy,
-        callback
-      });
+      const s3prefixRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
 
-      accessParameter = [
-        {
-          path_matchers: [".*"],
-          remote_access: {
-            protocol: "s3",
-            platform: "aws",
-            path: bucket + "/",
-            storage_endpoint: {
-              region
-            },
-            cloud_credentials: {
-              access_key_id: accessKey,
-              secret_access_key: secret
+      // batch the cloud storage files by matching credential set, check each file's source path against credential set path_matchers
+      for(let i = 0; i < fileInfo.length; i++) {
+        const oneFileInfo = fileInfo[i];
+        let matched = false;
+        for(let j = 0; !matched && j < access.length; j++) {
+          let credentialSet = access[j];
+          // strip trailing slash to get bucket name for credential set
+          const credentialSetBucket = credentialSet.remote_access.path.replace(/\/$/, "");
+          const matchers = credentialSet.path_matchers;
+          for(let k = 0; !matched && k < matchers.length; k++) {
+            const matcher = new RegExp(matchers[k]);
+            const fileSourcePath = oneFileInfo.source;
+            if(matcher.test(fileSourcePath)) {
+              matched = true;
+              // if full s3 path supplied, check bucket name
+              const s3prefixMatch = (s3prefixRegex.exec(fileSourcePath));
+              if(s3prefixMatch) {
+                const bucketName = s3prefixMatch[1];
+                if(bucketName !== credentialSetBucket) {
+                  throw Error("Full S3 file path \"" + fileSourcePath + "\" matched to credential set with different bucket name '" + credentialSetBucket + "'");
+                }
+              }
+              if(credentialSet.hasOwnProperty("matched")) {
+                credentialSet.matched.push(oneFileInfo);
+              } else {
+                // first matching file path for this credential set,
+                // initialize new 'matched' property to 1-element array
+                credentialSet.matched = [oneFileInfo];
+              }
             }
           }
         }
-      ];
+        if(!matched) {
+          throw Error("no credential set found for file path: \"" + filePath + "\"");
+        }
+      }
+
+      // iterate over credential sets, if any matching files were found, upload them using that credential set
+      for(let i = 0; i < access.length; i++) {
+        const credentialSet = access[i];
+        if(credentialSet.hasOwnProperty("matched") && credentialSet.matched.length > 0) {
+          const region = credentialSet.remote_access.storage_endpoint.region;
+          const bucket = credentialSet.remote_access.path.replace(/\/$/, "");
+          const accessKey = credentialSet.remote_access.cloud_credentials.access_key_id;
+          const secret = credentialSet.remote_access.cloud_credentials.secret_access_key;
+
+          await this.UploadFilesFromS3({
+            libraryId,
+            objectId: id,
+            writeToken: write_token,
+            fileInfo: credentialSet.matched,
+            region,
+            bucket,
+            accessKey,
+            secret,
+            copy,
+            callback
+          });
+        }
+      }
+
     } else {
       await this.UploadFiles({
         libraryId,
@@ -112,7 +171,7 @@ exports.CreateProductionMaster = async function({
     writeToken: write_token,
     method: UrlJoin("media", "production_master", "init"),
     body: {
-      access: accessParameter
+      access
     },
     constant: false
   });
@@ -333,7 +392,7 @@ exports.CreateABRMezzanine = async function({
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} objectId - ID of the mezzanine object
  * @param {string=} offeringKey=default - The offering to process
- * @param {Object=} access - (S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references
+ * @param {Object[]=} access - Array of S3 credentials, along with path matching regexes - Required if any files in the masters are S3 references (See CreateProductionMaster method)
  * - Format: {region, bucket, accessKey, secret}
  * @param {number[]} jobIndexes - Array of LRO job indexes to start. LROs are listed in a map under metadata key /abr_mezzanine/offerings/(offeringKey)/mez_prep_specs/, and job indexes start with 0, corresponding to map keys in alphabetical order
  *
@@ -343,7 +402,7 @@ exports.StartABRMezzanineJobs = async function({
   libraryId,
   objectId,
   offeringKey="default",
-  access={},
+  access=[],
   jobIndexes = null
 }) {
   ValidateParameters({libraryId, objectId});
@@ -381,28 +440,6 @@ exports.StartABRMezzanineJobs = async function({
     Authorization: authorizationTokens.map(token => `Bearer ${token}`).join(",")
   };
 
-  let accessParameter;
-  if(access && Object.keys(access).length > 0) {
-    const {region, bucket, accessKey, secret} = access;
-    accessParameter = [
-      {
-        path_matchers: [".*"],
-        remote_access: {
-          protocol: "s3",
-          platform: "aws",
-          path: bucket + "/",
-          storage_endpoint: {
-            region
-          },
-          cloud_credentials: {
-            access_key_id: accessKey,
-            secret_access_key: secret
-          }
-        }
-      }
-    ];
-  }
-
   const processingDraft = await this.EditContentObject({libraryId, objectId});
 
   const lroInfo = {
@@ -430,7 +467,7 @@ exports.StartABRMezzanineJobs = async function({
     method: UrlJoin("media", "abr_mezzanine", "prep_start"),
     constant: false,
     body: {
-      access: accessParameter,
+      access,
       offering_key: offeringKey,
       job_indexes: jobIndexes
     }
@@ -548,7 +585,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
       metadataSubtree: UrlJoin("abr_mezzanine", "offerings")
     });
 
-    const masterHash = mezzanineMetadata.default.prod_master_hash;
+    const masterHash = mezzanineMetadata[offeringKey].prod_master_hash;
 
     // Authorization token for mezzanine and master
     let authorizationTokens = [
