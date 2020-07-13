@@ -758,7 +758,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line171">line 171</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line230">line 230</a>
         </li>
       </ul>
     </dd>
@@ -1101,7 +1101,7 @@
           
             
     <span class="param-type">
-      Object
+      Array.&lt;Object>
     </span>
 
     
@@ -1277,7 +1277,7 @@
           
             
     <span class="param-type">
-      Object
+      Array.&lt;Object>
     </span>
 
     
@@ -1301,13 +1301,110 @@
         
           <td class="default">
             
+              [
+            
           </td>
         
 
         <td class="description last">
-          <p>(S3) Region, bucket, access key and secret for S3</p>
+          <p>Array of cloud credentials, along with path matching regex strings - Required if any files in the masters are cloud references (currently only AWS S3 is supported)</p>
 <ul>
-<li>Format: {region, bucket, accessKey, secret}</li>
+<li>If this parameter is non-empty, all items in fileInfo are assumed to be items in cloud storage</li>
+<li>Format: [</li>
+<li>
+<pre><code>      {
+</code></pre>
+</li>
+<li>
+<pre><code>        path_matchers: [&quot;FILE_PATH_MATCH_REGEX_1&quot;, &quot;FILE_PATH_MATCH_REGEX_2&quot; ...],
+</code></pre>
+</li>
+<li>
+<pre><code>        remote_access: {
+</code></pre>
+</li>
+<li>
+<pre><code>          protocol: &quot;s3&quot;,
+</code></pre>
+</li>
+<li>
+<pre><code>          platform: &quot;aws&quot;,
+</code></pre>
+</li>
+<li>
+<pre><code>          path: &quot;YOUR_AWS_S3_BUCKET_NAME&quot; + &quot;/&quot;,
+</code></pre>
+</li>
+<li>
+<pre><code>          storage_endpoint: {
+</code></pre>
+</li>
+<li>
+<pre><code>            region: &quot;YOUR_AWS_REGION_NAME&quot;
+</code></pre>
+</li>
+<li>
+<pre><code>          },
+</code></pre>
+</li>
+<li>
+<pre><code>          cloud_credentials: {
+</code></pre>
+</li>
+<li>
+<pre><code>            access_key_id: &quot;YOUR_AWS_S3_ACCESS_KEY&quot;,
+</code></pre>
+</li>
+<li>
+<pre><code>            secret_access_key: &quot;YOUR_AWS_S3_SECRET&quot;
+</code></pre>
+</li>
+<li>
+<pre><code>          }
+</code></pre>
+</li>
+<li>
+<pre><code>        }
+</code></pre>
+</li>
+<li>
+<pre><code>      },
+</code></pre>
+</li>
+<li>
+<pre><code>      {
+</code></pre>
+</li>
+<li>
+<pre><code>        path_matchers: [&quot;.*&quot;], // &lt;-- catch-all for any remaining unmatched items in fileInfo
+</code></pre>
+</li>
+<li>
+<pre><code>        remote_access: {
+</code></pre>
+</li>
+<li>
+<pre><code>          ...
+</code></pre>
+</li>
+<li>
+<pre><code>        }
+</code></pre>
+</li>
+<li>
+<pre><code>      },
+</code></pre>
+</li>
+<li>
+<pre><code>      ...
+</code></pre>
+</li>
+<li>
+<pre><code>    ]
+</code></pre>
+</li>
+<li></li>
+<li>The simplest case is a one element array with .path_matchers == [&quot;.*&quot;], in which case the same credentials will be used for all items in fileInfo</li>
 </ul>
           
         </td>
@@ -1449,7 +1546,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line42">line 42</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line68">line 68</a>
         </li>
       </ul>
     </dd>
@@ -1783,7 +1880,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line525">line 525</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line562">line 562</a>
         </li>
       </ul>
     </dd>
@@ -2138,7 +2235,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line460">line 460</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line497">line 497</a>
         </li>
       </ul>
     </dd>
@@ -2352,7 +2449,7 @@
           
             
     <span class="param-type">
-      Object
+      Array.&lt;Object>
     </span>
 
     
@@ -2380,7 +2477,7 @@
         
 
         <td class="description last">
-          <p>(S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references</p>
+          <p>Array of S3 credentials, along with path matching regexes - Required if any files in the masters are S3 references (See CreateProductionMaster method)</p>
 <ul>
 <li>Format: {region, bucket, accessKey, secret}</li>
 </ul>
@@ -2522,7 +2619,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line342">line 342</a>
+          <a href="client_ABRPublishing.js.html">client/ABRPublishing.js</a>, <a href="client_ABRPublishing.js.html#line401">line 401</a>
         </li>
       </ul>
     </dd>

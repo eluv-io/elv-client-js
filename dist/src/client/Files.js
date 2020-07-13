@@ -98,7 +98,7 @@ exports.ListFiles = function _callee(_ref) {
      [
        {
          path: string,
-         source: string
+         source: string // either a full path e.g. "s3://BUCKET_NAME/path..." or just the path part without "s3://BUCKET_NAME/"
        }
      ]
  *
@@ -122,7 +122,7 @@ exports.ListFiles = function _callee(_ref) {
 
 
 exports.UploadFilesFromS3 = function _callee2(_ref2) {
-  var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref2$encryption, encryption, _ref2$copy, copy, callback, encryption_key, conk, defaults, ops, _ref3, id, status, done, progress, _progress;
+  var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref2$encryption, encryption, _ref2$copy, copy, callback, s3prefixRegex, i, fileSourcePath, s3prefixMatch, bucketName, encryption_key, conk, defaults, ops, _ref3, id, status, done, progress, _progress;
 
   return _regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
@@ -134,28 +134,66 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
-          this.Log("Uploading files from S3: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
+          s3prefixRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
+          // if fileInfo source paths start with s3://bucketName/, check against bucket arg passed in, and strip
 
-          if (!(encryption === "cgck")) {
-            _context2.next = 10;
+          i = 0;
+
+        case 5:
+          if (!(i < fileInfo.length)) {
+            _context2.next = 18;
             break;
           }
 
-          _context2.next = 7;
+          fileSourcePath = fileInfo[i].source;
+          s3prefixMatch = s3prefixRegex.exec(fileSourcePath);
+
+          if (!s3prefixMatch) {
+            _context2.next = 15;
+            break;
+          }
+
+          bucketName = s3prefixMatch[1];
+
+          if (!(bucketName !== bucket)) {
+            _context2.next = 14;
+            break;
+          }
+
+          throw Error("Full S3 file path \"" + fileSourcePath + "\" specified, but does not match provided bucket name '" + bucket + "'");
+
+        case 14:
+          // strip prefix
+          fileInfo[i].source = fileSourcePath.replace(s3prefixRegex, "");
+
+        case 15:
+          i++;
+          _context2.next = 5;
+          break;
+
+        case 18:
+          this.Log("Uploading files from S3: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
+
+          if (!(encryption === "cgck")) {
+            _context2.next = 25;
+            break;
+          }
+
+          _context2.next = 22;
           return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken
           }));
 
-        case 7:
+        case 22:
           conk = _context2.sent;
           conk = _objectSpread({}, conk, {
             secret_key: ""
           });
           encryption_key = "kp__".concat(bs58.encode(Buffer.from(JSON.stringify(conk))));
 
-        case 10:
+        case 25:
           defaults = {
             encryption_key: encryption_key,
             access: {
@@ -196,7 +234,7 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             }
           }); // eslint-disable-next-line no-unused-vars
 
-          _context2.next = 14;
+          _context2.next = 29;
           return _regeneratorRuntime.awrap(this.CreateFileUploadJob({
             libraryId: libraryId,
             objectId: objectId,
@@ -205,23 +243,23 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             defaults: defaults
           }));
 
-        case 14:
+        case 29:
           _ref3 = _context2.sent;
           id = _ref3.id;
 
-        case 16:
+        case 31:
           if (!true) {
-            _context2.next = 39;
+            _context2.next = 54;
             break;
           }
 
-          _context2.next = 19;
+          _context2.next = 34;
           return _regeneratorRuntime.awrap(new Promise(function (resolve) {
             return setTimeout(resolve, 1000);
           }));
 
-        case 19:
-          _context2.next = 21;
+        case 34:
+          _context2.next = 36;
           return _regeneratorRuntime.awrap(this.UploadStatus({
             libraryId: libraryId,
             objectId: objectId,
@@ -229,34 +267,34 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             uploadId: id
           }));
 
-        case 21:
+        case 36:
           status = _context2.sent;
 
           if (!(status.errors && status.errors.length > 1)) {
-            _context2.next = 26;
+            _context2.next = 41;
             break;
           }
 
           throw status.errors.join("\n");
 
-        case 26:
+        case 41:
           if (!status.error) {
-            _context2.next = 31;
+            _context2.next = 46;
             break;
           }
 
           this.Log("S3 file upload failed:\n".concat(JSON.stringify(status, null, 2)));
           throw status.error;
 
-        case 31:
+        case 46:
           if (!(status.status.toLowerCase() === "failed")) {
-            _context2.next = 33;
+            _context2.next = 48;
             break;
           }
 
           throw "File upload failed";
 
-        case 33:
+        case 48:
           done = false;
 
           if (copy) {
@@ -287,17 +325,17 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
           }
 
           if (!done) {
-            _context2.next = 37;
+            _context2.next = 52;
             break;
           }
 
-          return _context2.abrupt("break", 39);
+          return _context2.abrupt("break", 54);
 
-        case 37:
-          _context2.next = 16;
+        case 52:
+          _context2.next = 31;
           break;
 
-        case 39:
+        case 54:
         case "end":
           return _context2.stop();
       }
