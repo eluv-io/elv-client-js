@@ -90,10 +90,12 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
         update: true
       }),
       method: "POST",
-      path: path,
-      failover: false
+      path: path
     })
   );
+
+  // Record the node used in creating this write token
+  this.HttpClient.RecordWriteToken(createResponse.write_token);
 
   await this.ReplaceMetadata({
     libraryId: this.contentSpaceLibraryId,
@@ -491,15 +493,22 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
 
   const path = UrlJoin("qid", objectId);
 
-  return await this.utils.ResponseToJson(
+  let createResponse = await this.utils.ResponseToJson(
     this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "POST",
       path: path,
-      body: options,
-      failover: false
+      body: options
     })
   );
+
+  // Record the node used in creating this write token
+  this.HttpClient.RecordWriteToken(createResponse.write_token);
+
+  createResponse.writetoken = createResponse.write_token;
+  createResponse.objectId = createResponse.id;
+
+  return createResponse;
 };
 
 /**
@@ -562,15 +571,22 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
 
   let path = UrlJoin("qid", objectId);
 
-  return this.utils.ResponseToJson(
+  let editResponse = await this.utils.ResponseToJson(
     this.HttpClient.Request({
       headers: await this.authClient.AuthorizationHeader({libraryId, objectId, update: true}),
       method: "POST",
       path: path,
-      body: options,
-      failover: false
+      body: options
     })
   );
+
+  // Record the node used in creating this write token
+  this.HttpClient.RecordWriteToken(editResponse.write_token);
+
+  editResponse.writeToken = editResponse.write_token;
+  editResponse.objectId = editResponse.id;
+
+  return editResponse;
 };
 
 exports.AwaitPending = async function(objectId) {
