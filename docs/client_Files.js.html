@@ -123,7 +123,7 @@ exports.ListFiles = async function({libraryId, objectId, versionHash}) {
      [
        {
          path: string,
-         source: string
+         source: string // either a full path e.g. "s3://BUCKET_NAME/path..." or just the path part without "s3://BUCKET_NAME/"
        }
      ]
  *
@@ -159,6 +159,22 @@ exports.UploadFilesFromS3 = async function({
 }) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
+
+  const s3prefixRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
+  // if fileInfo source paths start with s3://bucketName/, check against bucket arg passed in, and strip
+  for(let i = 0; i &lt; fileInfo.length; i++) {
+    const fileSourcePath = fileInfo[i].source;
+    const s3prefixMatch = (s3prefixRegex.exec(fileSourcePath));
+    if(s3prefixMatch) {
+      const bucketName = s3prefixMatch[1];
+      if(bucketName !== bucket) {
+        throw Error("Full S3 file path \"" + fileSourcePath + "\" specified, but does not match provided bucket name '" + bucket + "'");
+      } else {
+        // strip prefix
+        fileInfo[i].source = fileSourcePath.replace(s3prefixRegex,"");
+      }
+    }
+  }
 
   this.Log(`Uploading files from S3: ${libraryId} ${objectId} ${writeToken}`);
 

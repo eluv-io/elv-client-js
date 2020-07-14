@@ -614,6 +614,7 @@ exports.ProduceMetadataLinks = async function({
  * @param {Object=} queryParams={} - Additional query params for the call
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
+ * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -647,6 +648,7 @@ exports.ContentObjectMetadata = async function({
   metadataSubtree="/",
   queryParams={},
   select=[],
+  remove=[],
   resolveLinks=false,
   resolveIncludeSource=false,
   resolveIgnoreErrors=false,
@@ -700,6 +702,7 @@ exports.ContentObjectMetadata = async function({
         queryParams: {
           ...queryParams,
           select,
+          remove,
           link_depth: linkDepthLimit,
           resolve: resolveLinks,
           resolve_include_source: resolveIncludeSource,

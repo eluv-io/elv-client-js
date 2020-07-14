@@ -43,12 +43,18 @@ function () {
     this.uris = uris;
     this.uriIndex = 0;
     this.debug = debug;
+    this.draftURIs = {};
   }
 
   _createClass(HttpClient, [{
     key: "BaseURI",
     value: function BaseURI() {
       return new URI(this.uris[this.uriIndex]);
+    }
+  }, {
+    key: "RecordWriteToken",
+    value: function RecordWriteToken(writeToken) {
+      this.draftURIs[writeToken] = this.BaseURI();
     }
   }, {
     key: "RequestHeaders",
@@ -70,14 +76,29 @@ function () {
   }, {
     key: "Request",
     value: function Request(_ref2) {
-      var method, path, _ref2$queryParams, queryParams, _ref2$body, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, _ref2$forceFailover, forceFailover, uri, fetchParameters, response, responseType, errorBody, error;
+      var method, path, _ref2$queryParams, queryParams, _ref2$body, body, _ref2$bodyType, bodyType, _ref2$headers, headers, _ref2$attempts, attempts, _ref2$failover, failover, _ref2$forceFailover, forceFailover, baseURI, writeTokenMatch, writeToken, uri, fetchParameters, response, responseType, errorBody, error;
 
       return _regeneratorRuntime.async(function Request$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
               method = _ref2.method, path = _ref2.path, _ref2$queryParams = _ref2.queryParams, queryParams = _ref2$queryParams === void 0 ? {} : _ref2$queryParams, _ref2$body = _ref2.body, body = _ref2$body === void 0 ? {} : _ref2$body, _ref2$bodyType = _ref2.bodyType, bodyType = _ref2$bodyType === void 0 ? "JSON" : _ref2$bodyType, _ref2$headers = _ref2.headers, headers = _ref2$headers === void 0 ? {} : _ref2$headers, _ref2$attempts = _ref2.attempts, attempts = _ref2$attempts === void 0 ? 0 : _ref2$attempts, _ref2$failover = _ref2.failover, failover = _ref2$failover === void 0 ? true : _ref2$failover, _ref2$forceFailover = _ref2.forceFailover, forceFailover = _ref2$forceFailover === void 0 ? false : _ref2$forceFailover;
-              uri = this.BaseURI().path(path).query(queryParams).hash("");
+              baseURI = this.BaseURI(); // If URL contains a write token, it must go to the correct server and can not fail over
+
+              writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw_[a-zA-Z0-9]+)/);
+              writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
+
+              if (writeToken) {
+                if (this.draftURIs[writeToken]) {
+                  // Use saved write token URI
+                  baseURI = this.draftURIs[writeToken];
+                } else {
+                  // Save current URI for all future requests involving this write token
+                  this.draftURIs[writeToken] = baseURI;
+                }
+              }
+
+              uri = baseURI.path(path).query(queryParams).hash("");
               fetchParameters = {
                 method: method,
                 headers: this.RequestHeaders(bodyType, headers)
@@ -91,18 +112,18 @@ function () {
                 }
               }
 
-              _context.prev = 4;
-              _context.next = 7;
+              _context.prev = 8;
+              _context.next = 11;
               return _regeneratorRuntime.awrap(HttpClient.Fetch(uri.toString(), fetchParameters));
 
-            case 7:
+            case 11:
               response = _context.sent;
-              _context.next = 13;
+              _context.next = 17;
               break;
 
-            case 10:
-              _context.prev = 10;
-              _context.t0 = _context["catch"](4);
+            case 14:
+              _context.prev = 14;
+              _context.t0 = _context["catch"](8);
               response = {
                 ok: false,
                 status: 500,
@@ -111,21 +132,21 @@ function () {
                 stack: _context.t0.stack
               };
 
-            case 13:
+            case 17:
               if (response.ok) {
-                _context.next = 36;
+                _context.next = 40;
                 break;
               }
 
-              if (!((failover && parseInt(response.status) >= 500 || forceFailover) && attempts < this.uris.length)) {
-                _context.next = 20;
+              if (!(!writeToken && (failover && parseInt(response.status) >= 500 || forceFailover) && attempts < this.uris.length)) {
+                _context.next = 24;
                 break;
               }
 
               // Server error - Try next node
               this.uriIndex = (this.uriIndex + 1) % this.uris.length;
               this.Log("HttpClient failing over: ".concat(attempts + 1, " attempts"), true);
-              _context.next = 19;
+              _context.next = 23;
               return _regeneratorRuntime.awrap(this.Request({
                 method: method,
                 path: path,
@@ -137,43 +158,43 @@ function () {
                 forceFailover: forceFailover
               }));
 
-            case 19:
+            case 23:
               return _context.abrupt("return", _context.sent);
 
-            case 20:
+            case 24:
               // Parse JSON error if headers indicate JSON
               responseType = response.headers ? response.headers.get("content-type") : "";
               errorBody = "";
 
               if (!(response.text && response.json)) {
-                _context.next = 33;
+                _context.next = 37;
                 break;
               }
 
               if (!responseType.includes("application/json")) {
-                _context.next = 29;
+                _context.next = 33;
                 break;
               }
 
-              _context.next = 26;
+              _context.next = 30;
               return _regeneratorRuntime.awrap(response.json());
 
-            case 26:
+            case 30:
               _context.t1 = _context.sent;
-              _context.next = 32;
+              _context.next = 36;
               break;
 
-            case 29:
-              _context.next = 31;
+            case 33:
+              _context.next = 35;
               return _regeneratorRuntime.awrap(response.text());
 
-            case 31:
+            case 35:
               _context.t1 = _context.sent;
 
-            case 32:
+            case 36:
               errorBody = _context.t1;
 
-            case 33:
+            case 37:
               error = {
                 name: "ElvHttpClientError",
                 status: response.status,
@@ -186,16 +207,16 @@ function () {
               this.Log(JSON.stringify(error, null, 2), true);
               throw error;
 
-            case 36:
+            case 40:
               this.Log("".concat(response.status, " - ").concat(method, " ").concat(uri.toString()));
               return _context.abrupt("return", response);
 
-            case 38:
+            case 42:
             case "end":
               return _context.stop();
           }
         }
-      }, null, this, [[4, 10]]);
+      }, null, this, [[8, 14]]);
     }
   }, {
     key: "URL",

@@ -20,6 +20,7 @@ class HttpClient {
     this.uris = uris;
     this.uriIndex = 0;
     this.debug = debug;
+    this.draftURIs = {};
   }
 
   BaseURI() {
@@ -28,6 +29,10 @@ class HttpClient {
 
   static Fetch(url, params={}) {
     return Fetch(url, params);
+  }
+
+  RecordWriteToken(writeToken) {
+    this.draftURIs[writeToken] = this.BaseURI();
   }
 
   RequestHeaders(bodyType, headers={}) {
@@ -55,7 +60,23 @@ class HttpClient {
     failover=true,
     forceFailover=false
   }) {
-    let uri = this.BaseURI()
+    let baseURI = this.BaseURI();
+
+    // If URL contains a write token, it must go to the correct server and can not fail over
+    const writeTokenMatch = path.replace(/^\//, "").match(/(qlibs\/ilib[a-zA-Z0-9]+|q|qid)\/(tqw_[a-zA-Z0-9]+)/);
+    const writeToken = writeTokenMatch ? writeTokenMatch[2] : undefined;
+
+    if(writeToken) {
+      if(this.draftURIs[writeToken]) {
+        // Use saved write token URI
+        baseURI = this.draftURIs[writeToken];
+      } else {
+        // Save current URI for all future requests involving this write token
+        this.draftURIs[writeToken] = baseURI;
+      }
+    }
+
+    let uri = baseURI
       .path(path)
       .query(queryParams)
       .hash("");
@@ -92,7 +113,8 @@ class HttpClient {
     }
 
     if(!response.ok) {
-      if(((failover && parseInt(response.status) >= 500) || forceFailover) && attempts < this.uris.length) {
+      // Fail over if not a write token request, the response was a server error, and we haven't tried all available nodes
+      if(!writeToken && ((failover && parseInt(response.status) >= 500) || forceFailover) && attempts < this.uris.length) {
         // Server error - Try next node
         this.uriIndex = (this.uriIndex + 1) % this.uris.length;
 
