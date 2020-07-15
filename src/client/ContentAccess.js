@@ -611,8 +611,10 @@ exports.ProduceMetadataLinks = async function({
  * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
  * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
  * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {Object=} queryParams={} - Additional query params for the call
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
+ * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -644,7 +646,9 @@ exports.ContentObjectMetadata = async function({
   versionHash,
   writeToken,
   metadataSubtree="/",
+  queryParams={},
   select=[],
+  remove=[],
   resolveLinks=false,
   resolveIncludeSource=false,
   resolveIgnoreErrors=false,
@@ -664,20 +668,45 @@ exports.ContentObjectMetadata = async function({
 
   let metadata;
   try {
+    /*
     const visibility = await this.Visibility({id: objectId});
     let noAuth = visibility >= 10 ||
       ((metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
-    noAuth = true;
+
+     */
+
+    let headers;
+    if(this.oauthToken) {
+      // Check that KMS is set on this object
+      const kmsAddress = await this.authClient.KMSAddress({objectId, versionHash});
+
+      if(kmsAddress && !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress)) {
+        headers = await this.authClient.AuthorizationHeader({
+          libraryId,
+          objectId,
+          versionHash,
+          channelAuth: true,
+          oauthToken: this.oauthToken,
+          audienceData: await this.AudienceData({objectId, versionHash})
+        });
+      }
+    }
+
+    if(!headers) {
+      headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true});
+    }
 
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth}),
+        headers,
         queryParams: {
+          ...queryParams,
           select,
+          remove,
           link_depth: linkDepthLimit,
           resolve: resolveLinks,
           resolve_include_source: resolveIncludeSource,
-          resolve_ignore_errors: resolveIgnoreErrors
+          resolve_ignore_errors: resolveIgnoreErrors,
         },
         method: "GET",
         path: path
@@ -772,7 +801,7 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
  * @return {Promise<Array<string>>}
  */
 exports.AvailableDRMs = async function() {
-  const availableDRMs = ["clear", "aes-128"];
+  let availableDRMs = ["clear", "aes-128"];
 
   if(typeof window === "undefined") {
     return availableDRMs;
@@ -795,7 +824,7 @@ exports.AvailableDRMs = async function() {
 
     // Test Safari
     if(/^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)) {
-      const version = window.navigator.userAgent.match(/\s+Version\/(\d+)\.(\d+)\s+/);
+      const version = window.navigator.userAgent.match(/.+Version\/(\d+)\.(\d+)/);
 
       if(version && version[2]) {
         const major = parseInt(version[1]);
@@ -1664,16 +1693,31 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
 
+  /*
   const visibility = await this.Visibility({id: objectId});
   let noAuth = visibility >= 10 ||
     ((linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
   // TODO: Remove for authv3
   noAuth = true;
 
+   */
+
+  // Check that KMS is set on this object
+  const kmsAddress = await this.authClient.KMSAddress({objectId, versionHash});
+  const hasKMSAddress = kmsAddress && !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress);
+  const useOAuth = this.oauthToken && hasKMSAddress;
+
   queryParams = {
     ...queryParams,
     resolve: true,
-    authorization: await this.authClient.AuthorizationToken({libraryId, objectId, noCache, noAuth})
+    authorization: await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      noCache,
+      noAuth: !useOAuth,
+      channelAuth: useOAuth,
+      oauthToken: this.oauthToken
+    })
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }

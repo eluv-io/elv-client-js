@@ -1117,8 +1117,10 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
  * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
  * @param {string=} writeToken - Write token of an object draft - if specified, will read metadata from the draft
  * @param {string=} metadataSubtree - Subtree of the object metadata to retrieve
+ * @param {Object=} queryParams={} - Additional query params for the call
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
+ * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -1147,13 +1149,13 @@ exports.ProduceMetadataLinks = function _callee18(_ref12) {
 
 
 exports.ContentObjectMetadata = function _callee19(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$select, select, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, _ref13$metadataSubtre, metadataSubtree, _ref13$queryParams, queryParams, _ref13$select, select, _ref13$remove, remove, _ref13$resolveLinks, resolveLinks, _ref13$resolveInclude, resolveIncludeSource, _ref13$resolveIgnoreE, resolveIgnoreErrors, _ref13$linkDepthLimit, linkDepthLimit, _ref13$produceLinkUrl, produceLinkUrls, path, metadata, headers, kmsAddress;
 
   return _regeneratorRuntime.async(function _callee19$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$resolveIgnoreE = _ref13.resolveIgnoreErrors, resolveIgnoreErrors = _ref13$resolveIgnoreE === void 0 ? false : _ref13$resolveIgnoreE, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
+          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, writeToken = _ref13.writeToken, _ref13$metadataSubtre = _ref13.metadataSubtree, metadataSubtree = _ref13$metadataSubtre === void 0 ? "/" : _ref13$metadataSubtre, _ref13$queryParams = _ref13.queryParams, queryParams = _ref13$queryParams === void 0 ? {} : _ref13$queryParams, _ref13$select = _ref13.select, select = _ref13$select === void 0 ? [] : _ref13$select, _ref13$remove = _ref13.remove, remove = _ref13$remove === void 0 ? [] : _ref13$remove, _ref13$resolveLinks = _ref13.resolveLinks, resolveLinks = _ref13$resolveLinks === void 0 ? false : _ref13$resolveLinks, _ref13$resolveInclude = _ref13.resolveIncludeSource, resolveIncludeSource = _ref13$resolveInclude === void 0 ? false : _ref13$resolveInclude, _ref13$resolveIgnoreE = _ref13.resolveIgnoreErrors, resolveIgnoreErrors = _ref13$resolveIgnoreE === void 0 ? false : _ref13$resolveIgnoreE, _ref13$linkDepthLimit = _ref13.linkDepthLimit, linkDepthLimit = _ref13$linkDepthLimit === void 0 ? 1 : _ref13$linkDepthLimit, _ref13$produceLinkUrl = _ref13.produceLinkUrls, produceLinkUrls = _ref13$produceLinkUrl === void 0 ? false : _ref13$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1167,76 +1169,117 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
 
           path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
           _context19.prev = 5;
-          _context19.next = 8;
-          return _regeneratorRuntime.awrap(this.Visibility({
-            id: objectId
-          }));
 
-        case 8:
-          visibility = _context19.sent;
-          noAuth = visibility >= 10 || (metadataSubtree || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1;
-          noAuth = true;
-          _context19.t0 = _regeneratorRuntime;
-          _context19.t1 = this.utils;
-          _context19.t2 = this.HttpClient;
-          _context19.next = 16;
-          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
-            libraryId: libraryId,
+          if (!this.oauthToken) {
+            _context19.next = 25;
+            break;
+          }
+
+          _context19.next = 9;
+          return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
             objectId: objectId,
-            versionHash: versionHash,
-            noAuth: noAuth
+            versionHash: versionHash
           }));
 
-        case 16:
-          _context19.t3 = _context19.sent;
-          _context19.t4 = {
-            select: select,
-            link_depth: linkDepthLimit,
-            resolve: resolveLinks,
-            resolve_include_source: resolveIncludeSource,
-            resolve_ignore_errors: resolveIgnoreErrors
+        case 9:
+          kmsAddress = _context19.sent;
+
+          if (!(kmsAddress && !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress))) {
+            _context19.next = 25;
+            break;
+          }
+
+          _context19.t0 = _regeneratorRuntime;
+          _context19.t1 = this.authClient;
+          _context19.t2 = libraryId;
+          _context19.t3 = objectId;
+          _context19.t4 = versionHash;
+          _context19.t5 = this.oauthToken;
+          _context19.next = 19;
+          return _regeneratorRuntime.awrap(this.AudienceData({
+            objectId: objectId,
+            versionHash: versionHash
+          }));
+
+        case 19:
+          _context19.t6 = _context19.sent;
+          _context19.t7 = {
+            libraryId: _context19.t2,
+            objectId: _context19.t3,
+            versionHash: _context19.t4,
+            channelAuth: true,
+            oauthToken: _context19.t5,
+            audienceData: _context19.t6
           };
-          _context19.t5 = path;
-          _context19.t6 = {
-            headers: _context19.t3,
-            queryParams: _context19.t4,
-            method: "GET",
-            path: _context19.t5
-          };
-          _context19.t7 = _context19.t2.Request.call(_context19.t2, _context19.t6);
-          _context19.t8 = _context19.t1.ResponseToJson.call(_context19.t1, _context19.t7);
+          _context19.t8 = _context19.t1.AuthorizationHeader.call(_context19.t1, _context19.t7);
           _context19.next = 24;
           return _context19.t0.awrap.call(_context19.t0, _context19.t8);
 
         case 24:
+          headers = _context19.sent;
+
+        case 25:
+          if (headers) {
+            _context19.next = 29;
+            break;
+          }
+
+          _context19.next = 28;
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            noAuth: true
+          }));
+
+        case 28:
+          headers = _context19.sent;
+
+        case 29:
+          _context19.next = 31;
+          return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
+            headers: headers,
+            queryParams: _objectSpread({}, queryParams, {
+              select: select,
+              remove: remove,
+              link_depth: linkDepthLimit,
+              resolve: resolveLinks,
+              resolve_include_source: resolveIncludeSource,
+              resolve_ignore_errors: resolveIgnoreErrors
+            }),
+            method: "GET",
+            path: path
+          })));
+
+        case 31:
           metadata = _context19.sent;
-          _context19.next = 32;
+          _context19.next = 39;
           break;
 
-        case 27:
-          _context19.prev = 27;
+        case 34:
+          _context19.prev = 34;
           _context19.t9 = _context19["catch"](5);
 
           if (!(_context19.t9.status !== 404)) {
-            _context19.next = 31;
+            _context19.next = 38;
             break;
           }
 
           throw _context19.t9;
 
-        case 31:
+        case 38:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 32:
+        case 39:
           if (produceLinkUrls) {
-            _context19.next = 34;
+            _context19.next = 41;
             break;
           }
 
           return _context19.abrupt("return", metadata);
 
-        case 34:
-          _context19.next = 36;
+        case 41:
+          _context19.next = 43;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
@@ -1245,15 +1288,15 @@ exports.ContentObjectMetadata = function _callee19(_ref13) {
             metadata: metadata
           }));
 
-        case 36:
+        case 43:
           return _context19.abrupt("return", _context19.sent);
 
-        case 37:
+        case 44:
         case "end":
           return _context19.stop();
       }
     }
-  }, null, this, [[5, 27]]);
+  }, null, this, [[5, 34]]);
 };
 /**
  * List the versions of a content object
@@ -1424,7 +1467,7 @@ exports.AvailableDRMs = function _callee22() {
 
 
             if (/^((?!chrome|android).)*safari/i.test(window.navigator.userAgent)) {
-              _version = window.navigator.userAgent.match(/\s+Version\/(\d+)\.(\d+)\s+/);
+              _version = window.navigator.userAgent.match(/.+Version\/(\d+)\.(\d+)/);
 
               if (_version && _version[2]) {
                 _major = parseInt(_version[1]);
@@ -2948,7 +2991,7 @@ exports.LinkTarget = function _callee34(_ref28) {
 
 
 exports.LinkUrl = function _callee35(_ref29) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path, visibility, noAuth;
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref29$queryParams, queryParams, _ref29$noCache, noCache, path, kmsAddress, hasKMSAddress, useOAuth;
 
   return _regeneratorRuntime.async(function _callee35$(_context35) {
     while (1) {
@@ -2982,17 +3025,26 @@ exports.LinkUrl = function _callee35(_ref29) {
           } else {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
+          /*
+          const visibility = await this.Visibility({id: objectId});
+          let noAuth = visibility >= 10 ||
+            ((linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1);
+          // TODO: Remove for authv3
+          noAuth = true;
+            */
+          // Check that KMS is set on this object
+
 
           _context35.next = 9;
-          return _regeneratorRuntime.awrap(this.Visibility({
-            id: objectId
+          return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
+            objectId: objectId,
+            versionHash: versionHash
           }));
 
         case 9:
-          visibility = _context35.sent;
-          noAuth = visibility >= 10 || (linkPath || "").replace(/^\/+/, "").startsWith("public") && visibility >= 1; // TODO: Remove for authv3
-
-          noAuth = true;
+          kmsAddress = _context35.sent;
+          hasKMSAddress = kmsAddress && !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress);
+          useOAuth = this.oauthToken && hasKMSAddress;
           _context35.t0 = _objectSpread;
           _context35.t1 = {};
           _context35.t2 = queryParams;
@@ -3001,7 +3053,9 @@ exports.LinkUrl = function _callee35(_ref29) {
             libraryId: libraryId,
             objectId: objectId,
             noCache: noCache,
-            noAuth: noAuth
+            noAuth: !useOAuth,
+            channelAuth: useOAuth,
+            oauthToken: this.oauthToken
           }));
 
         case 17:

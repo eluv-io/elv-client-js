@@ -3,7 +3,9 @@
 // initialize production master without uploading any files
 // - use to turn a manually created object into a production master
 
-// still need to pass in cloud credentials via env vars if files are remote
+// still need to pass in cloud credentials via env vars or --credentials if files are remote
+
+const fs = require("fs");
 
 const { ElvClient } = require("../src/ElvClient");
 
@@ -22,6 +24,10 @@ const argv = yargs
   .option("config-url", {
     type: "string",
     description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
+  })
+  .option("credentials", {
+    type: "string",
+    description: "Path to JSON file containing credential sets for files stored in cloud"
   })
   .demandOption(
     ["libraryId", "objectId"],
@@ -68,8 +74,6 @@ const ProductionMasterInit = async ({libraryId, objectId, access, elvGeo}) => {
         awaitCommitConfirmation: false
       });
 
-      console.log(JSON.stringify(data, null, 2));
-
       if(errors && errors.length > 0) {
         console.error("Errors:");
         console.error(errors.join("\n"), "\n");
@@ -85,6 +89,8 @@ const ProductionMasterInit = async ({libraryId, objectId, access, elvGeo}) => {
         console.log(logs.join("\n"), "\n");
       }
 
+      console.log("New version hash: " + finalizeResponse.hash + "\n");
+
     } catch(error) {
       console.error("Unrecoverable error:");
       console.error(error.body ? error.body : error);
@@ -94,27 +100,30 @@ const ProductionMasterInit = async ({libraryId, objectId, access, elvGeo}) => {
   }
 };
 
-let {libraryId, objectId, elvGeo} = argv;
+let {libraryId, objectId, elvGeo, credentials} = argv;
 
-// Example access if all files in filePaths are in S3 bucket
-//
-const access = [
-  {
-    "path_matchers": [".*"],
-    "remote_access": {
-      "protocol": "s3",
-      "platform": "aws",
-      "path": process.env.AWS_BUCKET + "/",
-      "storage_endpoint": {
-        "region":  process.env.AWS_REGION
-      },
-      "cloud_credentials": {
-        "access_key_id": process.env.AWS_KEY,
-        "secret_access_key": process.env.AWS_SECRET
+let access;
+
+if(credentials) {
+  access = JSON.parse(fs.readFileSync(credentials));
+} else {
+  access = [
+    {
+      "path_matchers": [".*"],
+      "remote_access": {
+        "protocol": "s3",
+        "platform": "aws",
+        "path": process.env.AWS_BUCKET + "/",
+        "storage_endpoint": {
+          "region":  process.env.AWS_REGION
+        },
+        "cloud_credentials": {
+          "access_key_id": process.env.AWS_KEY,
+          "secret_access_key": process.env.AWS_SECRET
+        }
       }
     }
-  }
-];
-
+  ];
+}
 
 ProductionMasterInit({libraryId, objectId, elvGeo, access});

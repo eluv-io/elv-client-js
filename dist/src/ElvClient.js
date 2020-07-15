@@ -102,6 +102,7 @@ function () {
      * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
      * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
      * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
+     * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
      * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
      * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
      *
@@ -115,6 +116,7 @@ function () {
         fabricURIs = _ref.fabricURIs,
         ethereumURIs = _ref.ethereumURIs,
         trustAuthorityId = _ref.trustAuthorityId,
+        staticToken = _ref.staticToken,
         _ref$noCache = _ref.noCache,
         noCache = _ref$noCache === void 0 ? false : _ref$noCache,
         _ref$noAuth = _ref.noAuth,
@@ -130,6 +132,7 @@ function () {
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
     this.trustAuthorityId = trustAuthorityId;
+    this.staticToken = staticToken;
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.debug = false;
@@ -919,6 +922,8 @@ function () {
      * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
      * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
      * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+     * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
+     *
      * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
      *
      * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
@@ -927,13 +932,13 @@ function () {
   }, {
     key: "FromConfigurationUrl",
     value: function FromConfigurationUrl(_ref14) {
-      var configUrl, region, trustAuthorityId, _ref14$noCache, noCache, _ref14$noAuth, noAuth, _ref15, contentSpaceId, fabricURIs, ethereumURIs, client;
+      var configUrl, region, trustAuthorityId, staticToken, _ref14$noCache, noCache, _ref14$noAuth, noAuth, _ref15, contentSpaceId, fabricURIs, ethereumURIs, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              configUrl = _ref14.configUrl, region = _ref14.region, trustAuthorityId = _ref14.trustAuthorityId, _ref14$noCache = _ref14.noCache, noCache = _ref14$noCache === void 0 ? false : _ref14$noCache, _ref14$noAuth = _ref14.noAuth, noAuth = _ref14$noAuth === void 0 ? false : _ref14$noAuth;
+              configUrl = _ref14.configUrl, region = _ref14.region, trustAuthorityId = _ref14.trustAuthorityId, staticToken = _ref14.staticToken, _ref14$noCache = _ref14.noCache, noCache = _ref14$noCache === void 0 ? false : _ref14$noCache, _ref14$noAuth = _ref14.noAuth, noAuth = _ref14$noAuth === void 0 ? false : _ref14$noAuth;
               _context11.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
@@ -950,6 +955,7 @@ function () {
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
                 trustAuthorityId: trustAuthorityId,
+                staticToken: staticToken,
                 noCache: noCache,
                 noAuth: noAuth
               });

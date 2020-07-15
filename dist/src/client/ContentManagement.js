@@ -143,8 +143,7 @@ exports.CreateContentType = function _callee2(_ref2) {
           _context2.t5 = {
             headers: _context2.t3,
             method: "POST",
-            path: _context2.t4,
-            failover: false
+            path: _context2.t4
           };
           _context2.t6 = _context2.t2.Request.call(_context2.t2, _context2.t5);
           _context2.t7 = _context2.t1.ResponseToJson.call(_context2.t1, _context2.t6);
@@ -153,7 +152,9 @@ exports.CreateContentType = function _callee2(_ref2) {
 
         case 25:
           createResponse = _context2.sent;
-          _context2.next = 28;
+          // Record the node used in creating this write token
+          this.HttpClient.RecordWriteToken(createResponse.write_token);
+          _context2.next = 29;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
@@ -161,13 +162,13 @@ exports.CreateContentType = function _callee2(_ref2) {
             metadata: metadata
           }));
 
-        case 28:
+        case 29:
           if (!bitcode) {
-            _context2.next = 34;
+            _context2.next = 35;
             break;
           }
 
-          _context2.next = 31;
+          _context2.next = 32;
           return _regeneratorRuntime.awrap(this.UploadPart({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
@@ -176,9 +177,9 @@ exports.CreateContentType = function _callee2(_ref2) {
             encrypted: false
           }));
 
-        case 31:
+        case 32:
           uploadResponse = _context2.sent;
-          _context2.next = 34;
+          _context2.next = 35;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
@@ -187,18 +188,18 @@ exports.CreateContentType = function _callee2(_ref2) {
             metadata: uploadResponse.part.hash
           }));
 
-        case 34:
-          _context2.next = 36;
+        case 35:
+          _context2.next = 37;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
             writeToken: createResponse.write_token
           }));
 
-        case 36:
+        case 37:
           return _context2.abrupt("return", objectId);
 
-        case 37:
+        case 38:
         case "end":
           return _context2.stop();
       }
@@ -230,7 +231,7 @@ exports.CreateContentType = function _callee2(_ref2) {
 
 
 exports.CreateContentLibrary = function _callee3(_ref4) {
-  var name, description, image, imageName, _ref4$metadata, metadata, kmsId, _ref5, contractAddress, tenantId, libraryId, objectId, editResponse;
+  var name, description, image, imageName, _ref4$metadata, metadata, kmsId, _ref5, contractAddress, tenantId, libraryId, objectId, libraryType, editResponse;
 
   return _regeneratorRuntime.async(function _callee3$(_context3) {
     while (1) {
@@ -297,17 +298,24 @@ exports.CreateContentLibrary = function _callee3(_ref4) {
 
           objectId = libraryId.replace("ilib", "iq__");
           _context3.next = 28;
+          return _regeneratorRuntime.awrap(this.ContentType({
+            name: "library"
+          }));
+
+        case 28:
+          libraryType = _context3.sent;
+          _context3.next = 31;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId,
             options: {
-              type: "library"
+              type: libraryType ? libraryType.id : undefined
             }
           }));
 
-        case 28:
+        case 31:
           editResponse = _context3.sent;
-          _context3.next = 31;
+          _context3.next = 34;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -315,32 +323,32 @@ exports.CreateContentLibrary = function _callee3(_ref4) {
             writeToken: editResponse.write_token
           }));
 
-        case 31:
-          _context3.next = 33;
+        case 34:
+          _context3.next = 36;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: editResponse.write_token
           }));
 
-        case 33:
+        case 36:
           if (!image) {
-            _context3.next = 36;
+            _context3.next = 39;
             break;
           }
 
-          _context3.next = 36;
+          _context3.next = 39;
           return _regeneratorRuntime.awrap(this.SetContentLibraryImage({
             libraryId: libraryId,
             image: image,
             imageName: imageName
           }));
 
-        case 36:
+        case 39:
           this.Log("Library ".concat(libraryId, " created"));
           return _context3.abrupt("return", libraryId);
 
-        case 38:
+        case 41:
         case "end":
           return _context3.stop();
       }
@@ -664,7 +672,7 @@ exports.RemoveLibraryContentType = function _callee8(_ref10) {
 
 
 exports.CreateContentObject = function _callee9(_ref11) {
-  var libraryId, objectId, _ref11$options, options, typeId, type, _ref12, contractAddress, path;
+  var libraryId, objectId, _ref11$options, options, typeId, type, _ref12, contractAddress, path, createResponse;
 
   return _regeneratorRuntime.async(function _callee9$(_context9) {
     while (1) {
@@ -807,8 +815,7 @@ exports.CreateContentObject = function _callee9(_ref11) {
             headers: _context9.t7,
             method: "POST",
             path: _context9.t8,
-            body: _context9.t9,
-            failover: false
+            body: _context9.t9
           };
           _context9.t11 = _context9.t6.Request.call(_context9.t6, _context9.t10);
           _context9.t12 = _context9.t5.ResponseToJson.call(_context9.t5, _context9.t11);
@@ -816,9 +823,14 @@ exports.CreateContentObject = function _callee9(_ref11) {
           return _context9.t4.awrap.call(_context9.t4, _context9.t12);
 
         case 61:
-          return _context9.abrupt("return", _context9.sent);
+          createResponse = _context9.sent;
+          // Record the node used in creating this write token
+          this.HttpClient.RecordWriteToken(createResponse.write_token);
+          createResponse.writetoken = createResponse.write_token;
+          createResponse.objectId = createResponse.id;
+          return _context9.abrupt("return", createResponse);
 
-        case 62:
+        case 66:
         case "end":
           return _context9.stop();
       }
@@ -888,7 +900,7 @@ exports.CopyContentObject = function _callee10(_ref13) {
 
 
 exports.EditContentObject = function _callee11(_ref14) {
-  var libraryId, objectId, _ref14$options, options, path;
+  var libraryId, objectId, _ref14$options, options, path, editResponse;
 
   return _regeneratorRuntime.async(function _callee11$(_context11) {
     while (1) {
@@ -948,30 +960,40 @@ exports.EditContentObject = function _callee11(_ref14) {
 
         case 19:
           path = UrlJoin("qid", objectId);
-          _context11.t0 = this.utils;
-          _context11.t1 = this.HttpClient;
-          _context11.next = 24;
+          _context11.t0 = _regeneratorRuntime;
+          _context11.t1 = this.utils;
+          _context11.t2 = this.HttpClient;
+          _context11.next = 25;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true
           }));
 
-        case 24:
-          _context11.t2 = _context11.sent;
-          _context11.t3 = path;
-          _context11.t4 = options;
-          _context11.t5 = {
-            headers: _context11.t2,
+        case 25:
+          _context11.t3 = _context11.sent;
+          _context11.t4 = path;
+          _context11.t5 = options;
+          _context11.t6 = {
+            headers: _context11.t3,
             method: "POST",
-            path: _context11.t3,
-            body: _context11.t4,
-            failover: false
+            path: _context11.t4,
+            body: _context11.t5
           };
-          _context11.t6 = _context11.t1.Request.call(_context11.t1, _context11.t5);
-          return _context11.abrupt("return", _context11.t0.ResponseToJson.call(_context11.t0, _context11.t6));
+          _context11.t7 = _context11.t2.Request.call(_context11.t2, _context11.t6);
+          _context11.t8 = _context11.t1.ResponseToJson.call(_context11.t1, _context11.t7);
+          _context11.next = 33;
+          return _context11.t0.awrap.call(_context11.t0, _context11.t8);
 
-        case 30:
+        case 33:
+          editResponse = _context11.sent;
+          // Record the node used in creating this write token
+          this.HttpClient.RecordWriteToken(editResponse.write_token);
+          editResponse.writeToken = editResponse.write_token;
+          editResponse.objectId = editResponse.id;
+          return _context11.abrupt("return", editResponse);
+
+        case 38:
         case "end":
           return _context11.stop();
       }
