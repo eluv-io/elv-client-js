@@ -37,12 +37,38 @@ var _require = require("../Validation"),
  * @param {string=} description - Description of the content
  * @param {string} contentTypeName - Name of the content type to use
  * @param {Object=} metadata - Additional metadata for the content object
- * @param {Object=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
+ * @param {Array<Object>=} fileInfo - Files to upload (See UploadFiles/UploadFilesFromS3 method)
  * @param {boolean=} encrypt=false - (Local files only) - If specified, files will be encrypted
  * @param {boolean=} copy=false - (S3) If specified, files will be copied from S3
  * @param {function=} callback - Progress callback for file upload (See UploadFiles/UploadFilesFromS3 method)
- * @param {Object=} access - (S3) Region, bucket, access key and secret for S3
- * - Format: {region, bucket, accessKey, secret}
+ * @param {Array<Object>=} access=[] - Array of cloud credentials, along with path matching regex strings - Required if any files in the masters are cloud references (currently only AWS S3 is supported)
+ * - If this parameter is non-empty, all items in fileInfo are assumed to be items in cloud storage
+ * - Format: [
+ * -           {
+ * -             path_matchers: ["FILE_PATH_MATCH_REGEX_1", "FILE_PATH_MATCH_REGEX_2" ...],
+ * -             remote_access: {
+ * -               protocol: "s3",
+ * -               platform: "aws",
+ * -               path: "YOUR_AWS_S3_BUCKET_NAME" + "/",
+ * -               storage_endpoint: {
+ * -                 region: "YOUR_AWS_REGION_NAME"
+ * -               },
+ * -               cloud_credentials: {
+ * -                 access_key_id: "YOUR_AWS_S3_ACCESS_KEY",
+ * -                 secret_access_key: "YOUR_AWS_S3_SECRET"
+ * -               }
+ * -             }
+ * -           },
+ * -           {
+ * -             path_matchers: [".*"], // <-- catch-all for any remaining unmatched items in fileInfo
+ * -             remote_access: {
+ * -               ...
+ * -             }
+ * -           },
+ * -           ...
+ * -         ]
+ * -
+ * - The simplest case is a one element array with .path_matchers == [".*"], in which case the same credentials will be used for all items in fileInfo
  *
  * @throws {Object} error - If the initialization of the master fails, error details can be found in error.body
  * @return {Object} - The finalize response for the object, as well as logs, warnings and errors from the master initialization
@@ -50,13 +76,13 @@ var _require = require("../Validation"),
 
 
 exports.CreateProductionMaster = function _callee(_ref) {
-  var libraryId, type, name, description, _ref$metadata, metadata, fileInfo, _ref$encrypt, encrypt, access, _ref$copy, copy, callback, _ref2, id, write_token, accessParameter, region, bucket, accessKey, secret, _ref3, logs, errors, warnings, finalizeResponse;
+  var libraryId, type, name, description, _ref$metadata, metadata, fileInfo, _ref$encrypt, encrypt, _ref$access, access, _ref$copy, copy, callback, _ref2, id, write_token, s3prefixRegex, i, oneFileInfo, matched, j, credentialSet, credentialSetBucket, matchers, k, matcher, fileSourcePath, s3prefixMatch, bucketName, _i, _credentialSet, region, bucket, accessKey, secret, _ref3, logs, errors, warnings, finalizeResponse;
 
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          libraryId = _ref.libraryId, type = _ref.type, name = _ref.name, description = _ref.description, _ref$metadata = _ref.metadata, metadata = _ref$metadata === void 0 ? {} : _ref$metadata, fileInfo = _ref.fileInfo, _ref$encrypt = _ref.encrypt, encrypt = _ref$encrypt === void 0 ? false : _ref$encrypt, access = _ref.access, _ref$copy = _ref.copy, copy = _ref$copy === void 0 ? false : _ref$copy, callback = _ref.callback;
+          libraryId = _ref.libraryId, type = _ref.type, name = _ref.name, description = _ref.description, _ref$metadata = _ref.metadata, metadata = _ref$metadata === void 0 ? {} : _ref$metadata, fileInfo = _ref.fileInfo, _ref$encrypt = _ref.encrypt, encrypt = _ref$encrypt === void 0 ? false : _ref$encrypt, _ref$access = _ref.access, access = _ref$access === void 0 ? [] : _ref$access, _ref$copy = _ref.copy, copy = _ref$copy === void 0 ? false : _ref$copy, callback = _ref.callback;
           ValidateLibrary(libraryId);
           _context.next = 4;
           return _regeneratorRuntime.awrap(this.CreateContentObject({
@@ -72,23 +98,133 @@ exports.CreateProductionMaster = function _callee(_ref) {
           write_token = _ref2.write_token;
 
           if (!fileInfo) {
-            _context.next = 17;
+            _context.next = 59;
             break;
           }
 
-          if (!access) {
-            _context.next = 15;
+          if (!(access.length > 0)) {
+            _context.next = 57;
             break;
           }
 
           // S3 Upload
-          region = access.region, bucket = access.bucket, accessKey = access.accessKey, secret = access.secret;
-          _context.next = 12;
+          s3prefixRegex = /^s3:\/\/([^/]+)\//i; // for matching and extracting bucket name when full s3:// path is specified
+          // batch the cloud storage files by matching credential set, check each file's source path against credential set path_matchers
+
+          i = 0;
+
+        case 11:
+          if (!(i < fileInfo.length)) {
+            _context.next = 42;
+            break;
+          }
+
+          oneFileInfo = fileInfo[i];
+          matched = false;
+          j = 0;
+
+        case 15:
+          if (!(!matched && j < access.length)) {
+            _context.next = 37;
+            break;
+          }
+
+          credentialSet = access[j]; // strip trailing slash to get bucket name for credential set
+
+          credentialSetBucket = credentialSet.remote_access.path.replace(/\/$/, "");
+          matchers = credentialSet.path_matchers;
+          k = 0;
+
+        case 20:
+          if (!(!matched && k < matchers.length)) {
+            _context.next = 34;
+            break;
+          }
+
+          matcher = new RegExp(matchers[k]);
+          fileSourcePath = oneFileInfo.source;
+
+          if (!matcher.test(fileSourcePath)) {
+            _context.next = 31;
+            break;
+          }
+
+          matched = true; // if full s3 path supplied, check bucket name
+
+          s3prefixMatch = s3prefixRegex.exec(fileSourcePath);
+
+          if (!s3prefixMatch) {
+            _context.next = 30;
+            break;
+          }
+
+          bucketName = s3prefixMatch[1];
+
+          if (!(bucketName !== credentialSetBucket)) {
+            _context.next = 30;
+            break;
+          }
+
+          throw Error("Full S3 file path \"" + fileSourcePath + "\" matched to credential set with different bucket name '" + credentialSetBucket + "'");
+
+        case 30:
+          if (credentialSet.hasOwnProperty("matched")) {
+            credentialSet.matched.push(oneFileInfo);
+          } else {
+            // first matching file path for this credential set,
+            // initialize new 'matched' property to 1-element array
+            credentialSet.matched = [oneFileInfo];
+          }
+
+        case 31:
+          k++;
+          _context.next = 20;
+          break;
+
+        case 34:
+          j++;
+          _context.next = 15;
+          break;
+
+        case 37:
+          if (matched) {
+            _context.next = 39;
+            break;
+          }
+
+          throw Error("no credential set found for file path: \"" + filePath + "\"");
+
+        case 39:
+          i++;
+          _context.next = 11;
+          break;
+
+        case 42:
+          _i = 0;
+
+        case 43:
+          if (!(_i < access.length)) {
+            _context.next = 55;
+            break;
+          }
+
+          _credentialSet = access[_i];
+
+          if (!(_credentialSet.hasOwnProperty("matched") && _credentialSet.matched.length > 0)) {
+            _context.next = 52;
+            break;
+          }
+
+          region = _credentialSet.remote_access.storage_endpoint.region;
+          bucket = _credentialSet.remote_access.path.replace(/\/$/, "");
+          accessKey = _credentialSet.remote_access.cloud_credentials.access_key_id;
+          secret = _credentialSet.remote_access.cloud_credentials.secret_access_key;
+          _context.next = 52;
           return _regeneratorRuntime.awrap(this.UploadFilesFromS3({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
-            fileInfo: fileInfo,
+            fileInfo: _credentialSet.matched,
             region: region,
             bucket: bucket,
             accessKey: accessKey,
@@ -97,27 +233,17 @@ exports.CreateProductionMaster = function _callee(_ref) {
             callback: callback
           }));
 
-        case 12:
-          accessParameter = [{
-            path_matchers: [".*"],
-            remote_access: {
-              protocol: "s3",
-              platform: "aws",
-              path: bucket + "/",
-              storage_endpoint: {
-                region: region
-              },
-              cloud_credentials: {
-                access_key_id: accessKey,
-                secret_access_key: secret
-              }
-            }
-          }];
-          _context.next = 17;
+        case 52:
+          _i++;
+          _context.next = 43;
           break;
 
-        case 15:
-          _context.next = 17;
+        case 55:
+          _context.next = 59;
+          break;
+
+        case 57:
+          _context.next = 59;
           return _regeneratorRuntime.awrap(this.UploadFiles({
             libraryId: libraryId,
             objectId: id,
@@ -127,25 +253,25 @@ exports.CreateProductionMaster = function _callee(_ref) {
             encryption: encrypt ? "cgck" : "none"
           }));
 
-        case 17:
-          _context.next = 19;
+        case 59:
+          _context.next = 61;
           return _regeneratorRuntime.awrap(this.CallBitcodeMethod({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
             method: UrlJoin("media", "production_master", "init"),
             body: {
-              access: accessParameter
+              access: access
             },
             constant: false
           }));
 
-        case 19:
+        case 61:
           _ref3 = _context.sent;
           logs = _ref3.logs;
           errors = _ref3.errors;
           warnings = _ref3.warnings;
-          _context.next = 25;
+          _context.next = 67;
           return _regeneratorRuntime.awrap(this.MergeMetadata({
             libraryId: libraryId,
             objectId: id,
@@ -162,8 +288,8 @@ exports.CreateProductionMaster = function _callee(_ref) {
             })
           }));
 
-        case 25:
-          _context.next = 27;
+        case 67:
+          _context.next = 69;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
@@ -171,7 +297,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
             awaitCommitConfirmation: false
           }));
 
-        case 27:
+        case 69:
           finalizeResponse = _context.sent;
           return _context.abrupt("return", _objectSpread({
             errors: errors || [],
@@ -179,7 +305,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
             warnings: warnings || []
           }, finalizeResponse));
 
-        case 29:
+        case 71:
         case "end":
           return _context.stop();
       }
@@ -455,7 +581,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
  * @param {string} libraryId - ID of the mezzanine library
  * @param {string} objectId - ID of the mezzanine object
  * @param {string=} offeringKey=default - The offering to process
- * @param {Object=} access - (S3) Region, bucket, access key and secret for S3 - Required if any files in the masters are S3 references
+ * @param {Array<Object>=} access - Array of S3 credentials, along with path matching regexes - Required if any files in the masters are S3 references (See CreateProductionMaster method)
  * - Format: {region, bucket, accessKey, secret}
  * @param {number[]} jobIndexes - Array of LRO job indexes to start. LROs are listed in a map under metadata key /abr_mezzanine/offerings/(offeringKey)/mez_prep_specs/, and job indexes start with 0, corresponding to map keys in alphabetical order
  *
@@ -466,13 +592,13 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
 exports.StartABRMezzanineJobs = function _callee4(_ref6) {
   var _this = this;
 
-  var libraryId, objectId, _ref6$offeringKey, offeringKey, _ref6$access, access, _ref6$jobIndexes, jobIndexes, mezzanineMetadata, prepSpecs, masterVersionHashes, authorizationTokens, headers, accessParameter, region, bucket, accessKey, secret, processingDraft, lroInfo, statusDraft, _ref7, data, errors, warnings, logs;
+  var libraryId, objectId, _ref6$offeringKey, offeringKey, _ref6$access, access, _ref6$jobIndexes, jobIndexes, mezzanineMetadata, prepSpecs, masterVersionHashes, authorizationTokens, headers, processingDraft, lroInfo, statusDraft, _ref7, data, errors, warnings, logs;
 
   return _regeneratorRuntime.async(function _callee4$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          libraryId = _ref6.libraryId, objectId = _ref6.objectId, _ref6$offeringKey = _ref6.offeringKey, offeringKey = _ref6$offeringKey === void 0 ? "default" : _ref6$offeringKey, _ref6$access = _ref6.access, access = _ref6$access === void 0 ? {} : _ref6$access, _ref6$jobIndexes = _ref6.jobIndexes, jobIndexes = _ref6$jobIndexes === void 0 ? null : _ref6$jobIndexes;
+          libraryId = _ref6.libraryId, objectId = _ref6.objectId, _ref6$offeringKey = _ref6.offeringKey, offeringKey = _ref6$offeringKey === void 0 ? "default" : _ref6$offeringKey, _ref6$access = _ref6.access, access = _ref6$access === void 0 ? [] : _ref6$access, _ref6$jobIndexes = _ref6.jobIndexes, jobIndexes = _ref6$jobIndexes === void 0 ? null : _ref6$jobIndexes;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -540,33 +666,13 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
               return "Bearer ".concat(token);
             }).join(",")
           };
-
-          if (access && Object.keys(access).length > 0) {
-            region = access.region, bucket = access.bucket, accessKey = access.accessKey, secret = access.secret;
-            accessParameter = [{
-              path_matchers: [".*"],
-              remote_access: {
-                protocol: "s3",
-                platform: "aws",
-                path: bucket + "/",
-                storage_endpoint: {
-                  region: region
-                },
-                cloud_credentials: {
-                  access_key_id: accessKey,
-                  secret_access_key: secret
-                }
-              }
-            }];
-          }
-
-          _context4.next = 20;
+          _context4.next = 19;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
 
-        case 20:
+        case 19:
           processingDraft = _context4.sent;
           lroInfo = {
             write_token: processingDraft.write_token,
@@ -574,15 +680,15 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
             offering: offeringKey
           }; // Update metadata with LRO version write token
 
-          _context4.next = 24;
+          _context4.next = 23;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
 
-        case 24:
+        case 23:
           statusDraft = _context4.sent;
-          _context4.next = 27;
+          _context4.next = 26;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -591,16 +697,16 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
             metadata: lroInfo
           }));
 
-        case 27:
-          _context4.next = 29;
+        case 26:
+          _context4.next = 28;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: statusDraft.write_token
           }));
 
-        case 29:
-          _context4.next = 31;
+        case 28:
+          _context4.next = 30;
           return _regeneratorRuntime.awrap(this.CallBitcodeMethod({
             libraryId: libraryId,
             objectId: objectId,
@@ -609,13 +715,13 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
             method: UrlJoin("media", "abr_mezzanine", "prep_start"),
             constant: false,
             body: {
-              access: accessParameter,
+              access: access,
               offering_key: offeringKey,
               job_indexes: jobIndexes
             }
           }));
 
-        case 31:
+        case 30:
           _ref7 = _context4.sent;
           data = _ref7.data;
           errors = _ref7.errors;
@@ -630,7 +736,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
             errors: errors || []
           });
 
-        case 37:
+        case 36:
         case "end":
           return _context4.stop();
       }
@@ -825,7 +931,7 @@ exports.FinalizeABRMezzanine = function _callee6(_ref9) {
 
         case 12:
           mezzanineMetadata = _context6.sent;
-          masterHash = mezzanineMetadata["default"].prod_master_hash; // Authorization token for mezzanine and master
+          masterHash = mezzanineMetadata[offeringKey].prod_master_hash; // Authorization token for mezzanine and master
 
           _context6.next = 16;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({

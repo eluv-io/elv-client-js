@@ -149,11 +149,17 @@ const EditContent = async ({
         // S3 Upload
         const {region, bucket, accessKey, secret} = access;
 
+        let fileInfo = [];
+        for(let i = 0; i < files.length; i++) {
+          const oneFilePath = files[i];
+          fileInfo.push({source: oneFilePath, path: Path.basename(oneFilePath)});
+        }
+
         await client.UploadFilesFromS3({
           libraryId,
           objectId,
           writeToken: write_token,
-          filePaths: files,
+          fileInfo,
           region,
           bucket,
           accessKey,

@@ -159,8 +159,17 @@ function () {
           switch (_context2.prev = _context2.next) {
             case 0:
               libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, encryption = _ref2.encryption, audienceData = _ref2.audienceData, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, oauthToken = _ref2.oauthToken, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
+
+              if (!this.client.staticToken) {
+                _context2.next = 3;
+                break;
+              }
+
+              return _context2.abrupt("return", this.client.staticToken);
+
+            case 3:
               initialNoCache = this.noCache;
-              _context2.prev = 2;
+              _context2.prev = 4;
 
               // noCache enabled for this call
               if (noCache && !this.noCache) {
@@ -168,24 +177,24 @@ function () {
               }
 
               if (!channelAuth) {
-                _context2.next = 10;
+                _context2.next = 12;
                 break;
               }
 
-              _context2.next = 7;
+              _context2.next = 9;
               return _regeneratorRuntime.awrap(this.GenerateChannelContentToken({
                 objectId: objectId,
                 audienceData: audienceData,
                 oauthToken: oauthToken
               }));
 
-            case 7:
+            case 9:
               authorizationToken = _context2.sent;
-              _context2.next = 13;
+              _context2.next = 15;
               break;
 
-            case 10:
-              _context2.next = 12;
+            case 12:
+              _context2.next = 14;
               return _regeneratorRuntime.awrap(this.GenerateAuthorizationToken({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -196,28 +205,28 @@ function () {
                 noAuth: noAuth
               }));
 
-            case 12:
+            case 14:
               authorizationToken = _context2.sent;
 
-            case 13:
+            case 15:
               return _context2.abrupt("return", authorizationToken);
 
-            case 16:
-              _context2.prev = 16;
-              _context2.t0 = _context2["catch"](2);
+            case 18:
+              _context2.prev = 18;
+              _context2.t0 = _context2["catch"](4);
               throw _context2.t0;
 
-            case 19:
-              _context2.prev = 19;
+            case 21:
+              _context2.prev = 21;
               this.noCache = initialNoCache;
-              return _context2.finish(19);
+              return _context2.finish(21);
 
-            case 22:
+            case 24:
             case "end":
               return _context2.stop();
           }
         }
-      }, null, this, [[2, 16, 19, 22]]);
+      }, null, this, [[4, 18, 21, 24]]);
     }
   }, {
     key: "GenerateAuthorizationToken",

@@ -79,6 +79,7 @@ class ElvClient {
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
+   * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
@@ -89,6 +90,7 @@ class ElvClient {
     fabricURIs,
     ethereumURIs,
     trustAuthorityId,
+    staticToken,
     noCache=false,
     noAuth=false
   }) {
@@ -101,7 +103,9 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+
     this.trustAuthorityId = trustAuthorityId;
+    this.staticToken = staticToken;
 
     this.noCache = noCache;
     this.noAuth = noAuth;
@@ -178,6 +182,8 @@ class ElvClient {
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
    * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
+   *
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
    * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
@@ -186,6 +192,7 @@ class ElvClient {
     configUrl,
     region,
     trustAuthorityId,
+    staticToken,
     noCache=false,
     noAuth=false
   }) {
@@ -203,6 +210,7 @@ class ElvClient {
       fabricURIs,
       ethereumURIs,
       trustAuthorityId,
+      staticToken,
       noCache,
       noAuth
     });

@@ -414,18 +414,25 @@ function () {
      * @namedParams
      * @param {string=} address - The address of the user
      * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
+     * @param {Object=} queryParams={} - Additional query params for the call
+     * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
+     * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
      * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
      * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
-        Example:
-         {
+          Example:
+          {
             "resolved-link": {
               ".": {
                 "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
               },
+              "public": {
+                "name": "My Linked Object",
+              }
               ...
             }
          }
-     *
+      * @param {boolean=} resolveIgnoreErrors=false - If specified, link errors within the requested metadata will not cause the entire response to result in an error
+     * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
      *
      * @return {Promise<Object|string>}
      */
@@ -433,13 +440,13 @@ function () {
   }, {
     key: "PublicUserMetadata",
     value: function PublicUserMetadata(_ref4) {
-      var address, _ref4$metadataSubtree, metadataSubtree, _ref4$resolveLinks, resolveLinks, _ref4$resolveIncludeS, resolveIncludeSource, walletAddress, _ref5, libraryId, objectId;
+      var address, _ref4$metadataSubtree, metadataSubtree, _ref4$queryParams, queryParams, _ref4$select, select, _ref4$resolveLinks, resolveLinks, _ref4$resolveIncludeS, resolveIncludeSource, _ref4$resolveIgnoreEr, resolveIgnoreErrors, _ref4$linkDepthLimit, linkDepthLimit, walletAddress, _ref5, libraryId, objectId;
 
       return _regeneratorRuntime.async(function PublicUserMetadata$(_context5) {
         while (1) {
           switch (_context5.prev = _context5.next) {
             case 0:
-              address = _ref4.address, _ref4$metadataSubtree = _ref4.metadataSubtree, metadataSubtree = _ref4$metadataSubtree === void 0 ? "/" : _ref4$metadataSubtree, _ref4$resolveLinks = _ref4.resolveLinks, resolveLinks = _ref4$resolveLinks === void 0 ? false : _ref4$resolveLinks, _ref4$resolveIncludeS = _ref4.resolveIncludeSource, resolveIncludeSource = _ref4$resolveIncludeS === void 0 ? false : _ref4$resolveIncludeS;
+              address = _ref4.address, _ref4$metadataSubtree = _ref4.metadataSubtree, metadataSubtree = _ref4$metadataSubtree === void 0 ? "/" : _ref4$metadataSubtree, _ref4$queryParams = _ref4.queryParams, queryParams = _ref4$queryParams === void 0 ? {} : _ref4$queryParams, _ref4$select = _ref4.select, select = _ref4$select === void 0 ? [] : _ref4$select, _ref4$resolveLinks = _ref4.resolveLinks, resolveLinks = _ref4$resolveLinks === void 0 ? false : _ref4$resolveLinks, _ref4$resolveIncludeS = _ref4.resolveIncludeSource, resolveIncludeSource = _ref4$resolveIncludeS === void 0 ? false : _ref4$resolveIncludeS, _ref4$resolveIgnoreEr = _ref4.resolveIgnoreErrors, resolveIgnoreErrors = _ref4$resolveIgnoreEr === void 0 ? false : _ref4$resolveIgnoreEr, _ref4$linkDepthLimit = _ref4.linkDepthLimit, linkDepthLimit = _ref4$linkDepthLimit === void 0 ? 1 : _ref4$linkDepthLimit;
 
               if (address) {
                 _context5.next = 3;
@@ -488,9 +495,13 @@ function () {
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
+                queryParams: queryParams,
+                select: select,
                 metadataSubtree: metadataSubtree,
                 resolveLinks: resolveLinks,
-                resolveIncludeSource: resolveIncludeSource
+                resolveIncludeSource: resolveIncludeSource,
+                resolveIgnoreErrors: resolveIgnoreErrors,
+                linkDepthLimit: linkDepthLimit
               }));
 
             case 18:
@@ -512,17 +523,25 @@ function () {
      *
      * @namedParams
      * @param {string=} metadataSubtree - Subtree of the metadata to retrieve
+     * @param {Object=} queryParams={} - Additional query params for the call
+     * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
+     * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
      * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
      * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
-        Example:
-         {
+          Example:
+          {
             "resolved-link": {
               ".": {
                 "source": "hq__HPXNia6UtXyuUr6G3Lih8PyUhvYYHuyLTt3i7qSfYgYBB7sF1suR7ky7YRXsUARUrTB1Um1x5a"
               },
+              "public": {
+                "name": "My Linked Object",
+              }
               ...
             }
          }
+      * @param {boolean=} resolveIgnoreErrors=false - If specified, link errors within the requested metadata will not cause the entire response to result in an error
+     * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
      *
      * @return {Promise<Object|string>} - The user's profile metadata - returns undefined if no metadata set or subtree doesn't exist
      */
@@ -533,10 +552,18 @@ function () {
       var _ref6,
           _ref6$metadataSubtree,
           metadataSubtree,
+          _ref6$queryParams,
+          queryParams,
+          _ref6$select,
+          select,
           _ref6$resolveLinks,
           resolveLinks,
           _ref6$resolveIncludeS,
           resolveIncludeSource,
+          _ref6$resolveIgnoreEr,
+          resolveIgnoreErrors,
+          _ref6$linkDepthLimit,
+          linkDepthLimit,
           _ref7,
           libraryId,
           objectId,
@@ -546,7 +573,7 @@ function () {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              _ref6 = _args6.length > 0 && _args6[0] !== undefined ? _args6[0] : {}, _ref6$metadataSubtree = _ref6.metadataSubtree, metadataSubtree = _ref6$metadataSubtree === void 0 ? "/" : _ref6$metadataSubtree, _ref6$resolveLinks = _ref6.resolveLinks, resolveLinks = _ref6$resolveLinks === void 0 ? false : _ref6$resolveLinks, _ref6$resolveIncludeS = _ref6.resolveIncludeSource, resolveIncludeSource = _ref6$resolveIncludeS === void 0 ? false : _ref6$resolveIncludeS;
+              _ref6 = _args6.length > 0 && _args6[0] !== undefined ? _args6[0] : {}, _ref6$metadataSubtree = _ref6.metadataSubtree, metadataSubtree = _ref6$metadataSubtree === void 0 ? "/" : _ref6$metadataSubtree, _ref6$queryParams = _ref6.queryParams, queryParams = _ref6$queryParams === void 0 ? {} : _ref6$queryParams, _ref6$select = _ref6.select, select = _ref6$select === void 0 ? [] : _ref6$select, _ref6$resolveLinks = _ref6.resolveLinks, resolveLinks = _ref6$resolveLinks === void 0 ? false : _ref6$resolveLinks, _ref6$resolveIncludeS = _ref6.resolveIncludeSource, resolveIncludeSource = _ref6$resolveIncludeS === void 0 ? false : _ref6$resolveIncludeS, _ref6$resolveIgnoreEr = _ref6.resolveIgnoreErrors, resolveIgnoreErrors = _ref6$resolveIgnoreEr === void 0 ? false : _ref6$resolveIgnoreEr, _ref6$linkDepthLimit = _ref6.linkDepthLimit, linkDepthLimit = _ref6$linkDepthLimit === void 0 ? 1 : _ref6$linkDepthLimit;
               this.Log("Accessing private user metadata at ".concat(metadataSubtree));
               _context6.next = 4;
               return _regeneratorRuntime.awrap(this.UserWalletObjectInfo());
@@ -560,8 +587,12 @@ function () {
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: metadataSubtree,
+                queryParams: queryParams,
+                select: select,
                 resolveLinks: resolveLinks,
-                resolveIncludeSource: resolveIncludeSource
+                resolveIncludeSource: resolveIncludeSource,
+                resolveIgnoreErrors: resolveIgnoreErrors,
+                linkDepthLimit: linkDepthLimit
               }));
 
             case 9:
