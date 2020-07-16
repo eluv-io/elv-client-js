@@ -1,3 +1,5 @@
+<link rel="stylesheet" type="text/css" media="all" href="index.css" />
+
 # Eluvio Content Fabric: Sample Commands for Master File and IMF ingest
 
 *last revised: 2020-07-15*
@@ -30,7 +32,6 @@ In the instructions below there are a number of operations done via browser. The
 * Navigate to the directory where you would like to install **elv-client-js**
 	* `git clone https://github.com/eluv-io/elv-client-js`
 	* `cd elv-client-js`
-	* `git checkout develop`
 	* `npm install`
 	* `npm audit fix`
 * At this point, you may still see some warnings about package vulnerabilities. As we are only running local command line scripts (rather than using node.js to run a web app that accepts input from the outside world) these are safe to disregard.
