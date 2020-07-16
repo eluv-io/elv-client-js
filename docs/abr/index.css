@@ -1,0 +1,46 @@
+body {
+  color: #3e3c42;
+  font-family: Helvetica Neue, sans-serif;
+  padding: 3rem 10rem;
+  font-size: 16px;
+}
+
+h1 {
+  font-size: 1.8rem;
+}
+
+h2 {
+  margin-top: 3rem;
+}
+
+h3 {
+  margin-top: 1.5rem;
+}
+
+code,
+pre {
+  font-size: 14px;
+  background: #e5e5e5;
+  border: 1px solid lightgray;
+  overflow: hidden;
+  max-width: 70vw;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+pre {
+  padding: 1rem;
+}
+
+code {
+  padding: 0 0.5rem;
+}
+
+pre code {
+  border: 0;
+  padding: 0;
+}
+
+ul {
+  list-style-type: none;
+}
