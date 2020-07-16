@@ -1,6 +1,6 @@
 <p><link rel="stylesheet" type="text/css" media="all" href="index.css" /></p>
 <h1 id="eluviocontentfabricsamplecommandsformasterfileandimfingest">Eluvio Content Fabric: Sample Commands for Master File and IMF ingest</h1>
-<p><em>last revised: 2020-07-15</em></p>
+<p><em>last revised: 2020-07-16</em></p>
 <p>In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.</p>
 <h2 id="preparation">Preparation</h2>
 <h3 id="findyourcontentfabricprivatekeyandrecorditinasafeplace">Find your Content Fabric private key and record it in a safe place:</h3>
@@ -282,6 +282,93 @@ Write Node: https://host-38-142-50-110.contentfabric.io/
   --objectId YOUR_MEZ_OBJECT_ID \
   --offeringKey THE_OFFERING_NAME
 </code></pre>
+<h3 id="displayingtheresolutionladderforanoffering">Displaying the resolution ladder for an Offering</h3>
+<p>The <code>OfferingListRungs.js</code> script will display the resolution ladder for an existing Offering:</p>
+<pre><code>node testScripts/OfferingListRungs.js \
+  --libraryId YOUR_TITLE_LIBRARY_ID \
+  --objectId YOUR_MEZ_OBJECT_ID \
+  --offeringKey THE_OFFERING_NAME
+</code></pre>
+<p>If <code>--offeringKey</code> is omitted then <code>default</code> will be assumed.</p>
+<p>Sample output:</p>
+<pre><code>Listing resolution ladder rungs for all streams in offering 'default'
+{
+  "audio": {
+    "representations": {
+      "audio@128000": {
+        "bit_rate": 128000,
+        "media_struct_stream_key": "audio",
+        "type": "RepAudio"
+      }
+    }
+  },
+  "video": {
+    "representations": {
+      "video_1452x1080@4900000": {
+        "bit_rate": 4900000,
+        "crf": 0,
+        "height": 1080,
+        "media_struct_stream_key": "video",
+        "type": "RepVideo",
+        "width": 1452
+      }
+      "video_726x540@1500000": {
+        "bit_rate": 1500000,
+        "crf": 0,
+        "height": 540,
+        "media_struct_stream_key": "video",
+        "type": "RepVideo",
+        "width": 726
+      },
+      "video_968x720@3375000": {
+        "bit_rate": 3375000,
+        "crf": 0,
+        "height": 720,
+        "media_struct_stream_key": "video",
+        "type": "RepVideo",
+        "width": 968
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="addingarungtoanofferingsvideoplayoutresolutionladder">Adding a rung to an Offering's video playout resolution ladder</h3>
+<p>The <code>OfferingAddVideoRung.js</code> script will allow you to add a new rung to an Offering's video resolution ladder:</p>
+<pre><code>node testScripts/OfferingAddVideoRung.js \
+  --libraryId YOUR_TITLE_LIBRARY_ID \
+  --objectId YOUR_MEZ_OBJECT_ID \
+  --offeringKey THE_OFFERING_NAME \
+  --width THE_NEW_WIDTH \ 
+  --height THE_NEW_HEIGHT \
+  --bitrate THE_NEW_BITRATE
+</code></pre>
+<p>If you omit <code>--offeringKey</code> then <code>default</code> will be assumed.</p>
+<p>Optionally, the <code>--width</code>  and/or <code>--bitrate</code> options can be omitted, and the script will scale the existing top rung based on <code>--height</code>.</p>
+<p>Note that if you supply both <code>--width</code> and <code>--height</code> but the resulting aspect ratio would differ more than 5% from the existing top rung's aspect ratio the script will halt with an error. If you would like to add anyway, add <code>--ignoreAspectRatio</code> to the command.</p>
+<p>Note also that only <em>lower quality</em> rungs can be added to an existing Offering. The new rung's bitrate must be lower than the existing top rung, and height and width must be less than or equal to the existing top rung. </p>
+<p>For example, if your top rung is 1920x1080 @ 9,500,000 bps:</p>
+<ul>
+<li><p>OK:</p></li>
+<li><p>1920x1080 @ 7,000,000 bps </p></li>
+<li><p>1280x720 @ 7,000,000 bps </p></li>
+<li><p>Not OK:</p></li>
+<li><p>1920x1080 @ 12,000,000 bps (bitrate must be less than top rung)</p></li>
+<li><p>3840x2160 @ 7,000,000 bps (height and width must be equal to or smaller than top rung)</p></li>
+<li><p>1280x720 @ 9,500,000 bps (bitrate must be less than top rung)</p>
+<p>Note that in special cases, your Offering's video stream may not be named <code>video</code> - if this is the case, use <code>--streamKey STREAM_NAME</code> to specify the actual name of the stream. (You can use the <code>OfferingListRungs.js</code> script to see the names of your Offering's streams)</p></li>
+</ul>
+<h3 id="removingarungfromanofferingsvideoplayoutresolutionladder">Removing a rung from an Offering's video playout resolution ladder</h3>
+<p>The <code>OfferingRemoveVideoRung.js</code> script will allow you to remove an existing rung from an Offering's video resolution ladder:</p>
+<pre><code>node testScripts/OfferingRemoveVideoRung.js \
+  --libraryId YOUR_TITLE_LIBRARY_ID \
+  --objectId YOUR_MEZ_OBJECT_ID \
+  --offeringKey THE_OFFERING_NAME \
+  --rungKey THE_RUNG_NAME
+</code></pre>
+<p>If you omit <code>--offeringKey</code> then <code>default</code> will be assumed.</p>
+<p>To look up the value of <code>--rungKey</code>, use the <code>OfferingListRungs.js</code> script (see above). Video rungs are generally named "video_<em>WIDTH</em>x<em>HEIGHT</em>@<em>BITRATE</em>", e.g.: <code>video_1280x720@4500000</code>, but this is not guaranteed - use the <code>OfferingListRungs.js</code> script to show all the rung names.</p>
+<p>You are not allowed to remove the top rung from the ladder, if you try the script will halt with an error.</p>
+<p>Note that in special cases, your Offering's video stream may not be named <code>video</code> - if this is the case, use <code>--streamKey STREAM_NAME</code> to specify the actual name of the stream. (You can use the <code>OfferingListRungs.js</code> script to see the names of your Offering's streams)</p>
 <h2 id="examplescenarioaddingaclearplayoutofferingtoadrmprotectedmezzanine">Example Scenario: Adding a 'clear playout' Offering to a DRM-protected Mezzanine</h2>
 <p>The following assumes that you created your Mezzanine using the <code>abr_profile_drm.json</code> profile, which will result in a <code>default</code> Offering that only offers DRM playback:</p>
 <pre><code> node testScripts/OfferingCopy.js \
