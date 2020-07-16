@@ -2,7 +2,7 @@
 
 # Eluvio Content Fabric: Sample Commands for Master File and IMF ingest
 
-*last revised: 2020-07-15*
+*last revised: 2020-07-16*
 
 
 In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.
@@ -400,6 +400,109 @@ The `OfferingRemoveDRM.js` script will remove DRM-protected playout options from
       --objectId YOUR_MEZ_OBJECT_ID \
       --offeringKey THE_OFFERING_NAME
 
+### Displaying the resolution ladder for an Offering
+
+The `OfferingListRungs.js` script will display the resolution ladder for an existing Offering:
+
+    node testScripts/OfferingListRungs.js \
+      --libraryId YOUR_TITLE_LIBRARY_ID \
+      --objectId YOUR_MEZ_OBJECT_ID \
+      --offeringKey THE_OFFERING_NAME
+
+If `--offeringKey` is omitted then `default` will be assumed.
+
+Sample output:
+
+    Listing resolution ladder rungs for all streams in offering 'default'
+    {
+      "audio": {
+        "representations": {
+          "audio@128000": {
+            "bit_rate": 128000,
+            "media_struct_stream_key": "audio",
+            "type": "RepAudio"
+          }
+        }
+      },
+      "video": {
+        "representations": {
+          "video_1452x1080@4900000": {
+            "bit_rate": 4900000,
+            "crf": 0,
+            "height": 1080,
+            "media_struct_stream_key": "video",
+            "type": "RepVideo",
+            "width": 1452
+          }
+          "video_726x540@1500000": {
+            "bit_rate": 1500000,
+            "crf": 0,
+            "height": 540,
+            "media_struct_stream_key": "video",
+            "type": "RepVideo",
+            "width": 726
+          },
+          "video_968x720@3375000": {
+            "bit_rate": 3375000,
+            "crf": 0,
+            "height": 720,
+            "media_struct_stream_key": "video",
+            "type": "RepVideo",
+            "width": 968
+          }
+        }
+      }
+    }
+
+### Adding a rung to an Offering's video playout resolution ladder
+
+The `OfferingAddVideoRung.js` script will allow you to add a new rung to an Offering's video resolution ladder:
+
+    node testScripts/OfferingAddVideoRung.js \
+      --libraryId YOUR_TITLE_LIBRARY_ID \
+      --objectId YOUR_MEZ_OBJECT_ID \
+      --offeringKey THE_OFFERING_NAME \
+      --width THE_NEW_WIDTH \ 
+      --height THE_NEW_HEIGHT \
+      --bitrate THE_NEW_BITRATE
+
+If you omit `--offeringKey` then `default` will be assumed.
+
+Optionally, the `--width`  and/or `--bitrate` options can be omitted, and the script will scale the existing top rung based on `--height`.
+      
+Note that if you supply both `--width` and `--height` but the resulting aspect ratio would differ more than 5% from the existing top rung's aspect ratio the script will halt with an error. If you would like to add anyway, add `--ignoreAspectRatio` to the command.
+
+Note also that only *lower quality* rungs can be added to an existing Offering. The new rung's bitrate must be lower than the existing top rung, and height and width must be less than or equal to the existing top rung. 
+
+For example, if your top rung is 1920x1080 @ 9,500,000 bps:
+
+* OK:
+  * 1920x1080 @ 7,000,000 bps 
+  * 1280x720 @ 7,000,000 bps 
+* Not OK:
+  * 1920x1080 @ 12,000,000 bps (bitrate must be less than top rung)
+  * 3840x2160 @ 7,000,000 bps (height and width must be equal to or smaller than top rung)
+  * 1280x720 @ 9,500,000 bps (bitrate must be less than top rung)
+ 
+ Note that in special cases, your Offering's video stream may not be named `video` - if this is the case, use `--streamKey STREAM_NAME` to specify the actual name of the stream. (You can use the `OfferingListRungs.js` script to see the names of your Offering's streams)
+ 
+### Removing a rung from an Offering's video playout resolution ladder
+
+The `OfferingRemoveVideoRung.js` script will allow you to remove an existing rung from an Offering's video resolution ladder:
+
+    node testScripts/OfferingRemoveVideoRung.js \
+      --libraryId YOUR_TITLE_LIBRARY_ID \
+      --objectId YOUR_MEZ_OBJECT_ID \
+      --offeringKey THE_OFFERING_NAME \
+      --rungKey THE_RUNG_NAME
+
+If you omit `--offeringKey` then `default` will be assumed.
+
+To look up the value of `--rungKey`, use the `OfferingListRungs.js` script (see above). Video rungs are generally named "video_*WIDTH*x*HEIGHT*@*BITRATE*", e.g.: `video_1280x720@4500000`, but this is not guaranteed - use the `OfferingListRungs.js` script to show all the rung names.
+
+You are not allowed to remove the top rung from the ladder, if you try the script will halt with an error.
+
+Note that in special cases, your Offering's video stream may not be named `video` - if this is the case, use `--streamKey STREAM_NAME` to specify the actual name of the stream. (You can use the `OfferingListRungs.js` script to see the names of your Offering's streams)
 
 ## Example Scenario: Adding a 'clear playout' Offering to a DRM-protected Mezzanine
 

@@ -24,12 +24,12 @@ class OfferingAddSampleAes extends ScriptOffering {
 
     // make sure key '/offerings/OFFERING_KEY/playout/playout_formats/hls-aes128' exists
     if(!metadata.offerings[offeringKey].playout.playout_formats.hasOwnProperty("hls-aes128")) {
-      throw new Error("Offering '" + offeringKey + "' does not contain playout_format 'hls-aes128'");
+      this.throwError("Offering '" + offeringKey + "' does not contain playout_format 'hls-aes128'");
     }
 
     // make sure 'hls-sample-aes' does not exist already
     if(metadata.offerings[offeringKey].playout.playout_formats.hasOwnProperty("hls-sample-aes")) {
-      throw new Error("Offering '" + offeringKey + "' already has playout_format 'hls-sample-aes'");
+      this.throwError("Offering '" + offeringKey + "' already has playout_format 'hls-sample-aes'");
     }
 
     console.log("Playout format 'hls-aes128' found, using as basis to create hls-sample-aes playout format...");
