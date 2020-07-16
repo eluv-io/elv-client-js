@@ -15,7 +15,7 @@ module.exports = class ScriptBase {
   constructor(testArgs = null) {
     // make sure env var PRIVATE_KEY is set
     if(!process.env.PRIVATE_KEY) {
-      throw new Error("Please set environment variable PRIVATE_KEY");
+      this.throwError("Please set environment variable PRIVATE_KEY");
     }
 
     // if testArgs is present, we are running a test, use testArgs instead of yargs
@@ -34,7 +34,7 @@ module.exports = class ScriptBase {
 
   // actual work specific to individual script
   async body() {
-    throw new Error("call to abstract base class method body()");
+    this.throwError("call to abstract base class method body()");
   }
 
   async client() {
@@ -60,7 +60,12 @@ module.exports = class ScriptBase {
   }
 
   header() {
-    throw new Error("call to abstract base class method header()");
+    this.throwError("call to abstract base class method header()");
+  }
+
+  // utility method, add new lines above and below error message for greater visibility
+  throwError(msg) {
+    throw new Error("\n\n" + msg + "\n");
   }
 
   // Returns yargs to allow extension
@@ -107,5 +112,38 @@ module.exports = class ScriptBase {
     } catch(err) {
       console.error(err);
     }
+  }
+
+  // validate that a number is an integer
+  validateInt(i, valueDescription) {
+    if(i !== Math.trunc(i)) {
+      this.throwError("Bad " + valueDescription + " (" + i + "): must be an integer");
+    }
+  }
+
+  // validate that a number is zero or positive
+  validateNonNegative(i, valueDescription) {
+    if(i < 0) {
+      this.throwError("Bad " + valueDescription + " (" + i + "): must be non-negative");
+    }
+  }
+
+  // validate that a number is zero or positive and an integer
+  validateNonNegativeInt(i, valueDescription) {
+    this.validateNonNegative(i, valueDescription);
+    this.validateInt(i, valueDescription);
+  }
+
+  // validate that number is greater than zero
+  validatePositive(i, valueDescription) {
+    if(i <= 0) {
+      this.throwError("Bad " + valueDescription + " (" + i + "): must be positive");
+    }
+  }
+
+  // validate that number is greater than zero and an integer
+  validatePositiveInt(i, valueDescription) {
+    this.validatePositive(i, valueDescription);
+    this.validateInt(i, valueDescription);
   }
 };

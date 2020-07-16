@@ -32,12 +32,12 @@ module.exports = class ScriptOffering extends MetadataMixin(ScriptBase) {
   validateOffering(metadata, offeringKey) {
     // check to make sure we have offerings
     if(!metadata.offerings) {
-      throw new Error("No offerings found in mezzanine metadata");
+      this.throwError("No offerings found in mezzanine metadata");
     }
 
     // check for specified offering key
     if(!metadata.offerings.hasOwnProperty(offeringKey)) {
-      throw new Error("Offering '" + offeringKey + "' not found in mezzanine metadata");
+      this.throwError("Offering '" + offeringKey + "' not found in mezzanine metadata");
     }
   }
 };
