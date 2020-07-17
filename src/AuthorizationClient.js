@@ -309,10 +309,15 @@ class AuthorizationClient {
       const owner = await this.Owner({id, abi});
       // Owner doesn't have to pay
       if(!Utils.EqualAddress(this.client.signer.address, owner)) {
-        // Extract level, custom values and stakeholders from accessRequest arguments
-        const accessChargeArgs = [args[0], args[3], args[4]];
-        // Access charge is in wei, but methods take ether - convert to charge to ether
-        accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
+        try {
+          // Extract level, custom values and stakeholders from accessRequest arguments
+          const accessChargeArgs = isV3 ? [0, [], []] : [args[0], args[3], args[4]];
+          // Access charge is in wei, but methods take ether - convert to charge to ether
+          accessCharge = Utils.WeiToEther(await this.GetAccessCharge({objectId: id, args: accessChargeArgs}));
+        } catch(error) {
+          this.Log("Failed to get access charge for", id);
+          this.Log(error);
+        }
       }
     }
 
