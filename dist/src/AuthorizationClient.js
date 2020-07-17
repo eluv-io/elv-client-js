@@ -536,7 +536,7 @@ function () {
               accessCharge = 0;
 
               if (!(checkAccessCharge && accessType === ACCESS_TYPES.OBJECT)) {
-                _context5.next = 19;
+                _context5.next = 26;
                 break;
               }
 
@@ -550,25 +550,34 @@ function () {
               owner = _context5.sent;
 
               if (Utils.EqualAddress(this.client.signer.address, owner)) {
-                _context5.next = 19;
+                _context5.next = 26;
                 break;
               }
 
+              _context5.prev = 13;
               // Extract level, custom values and stakeholders from accessRequest arguments
-              accessChargeArgs = [args[0], args[3], args[4]]; // Access charge is in wei, but methods take ether - convert to charge to ether
+              accessChargeArgs = isV3 ? [0, [], []] : [args[0], args[3], args[4]]; // Access charge is in wei, but methods take ether - convert to charge to ether
 
               _context5.t0 = Utils;
-              _context5.next = 17;
+              _context5.next = 18;
               return _regeneratorRuntime.awrap(this.GetAccessCharge({
                 objectId: id,
                 args: accessChargeArgs
               }));
 
-            case 17:
+            case 18:
               _context5.t1 = _context5.sent;
               accessCharge = _context5.t0.WeiToEther.call(_context5.t0, _context5.t1);
+              _context5.next = 26;
+              break;
 
-            case 19:
+            case 22:
+              _context5.prev = 22;
+              _context5.t2 = _context5["catch"](13);
+              this.Log("Failed to get access charge for", id);
+              this.Log(_context5.t2);
+
+            case 26:
               if (accessCharge > 0) {
                 this.Log("Access charge: ".concat(accessCharge));
               }
@@ -581,16 +590,16 @@ function () {
                 methodName = "accessRequest";
               }
 
-              _context5.next = 24;
+              _context5.next = 31;
               return _regeneratorRuntime.awrap(this.ContractHasMethod({
                 contractAddress: contractAddress,
                 abi: abi,
                 methodName: methodName
               }));
 
-            case 24:
+            case 31:
               if (_context5.sent) {
-                _context5.next = 27;
+                _context5.next = 34;
                 break;
               }
 
@@ -600,8 +609,8 @@ function () {
                 logs: []
               });
 
-            case 27:
-              _context5.next = 29;
+            case 34:
+              _context5.next = 36;
               return _regeneratorRuntime.awrap(this.client.CallContractMethodAndWait({
                 contractAddress: contractAddress,
                 abi: abi,
@@ -610,25 +619,25 @@ function () {
                 value: accessCharge
               }));
 
-            case 29:
+            case 36:
               event = _context5.sent;
 
               if (!(event.logs.length === 0)) {
-                _context5.next = 32;
+                _context5.next = 39;
                 break;
               }
 
               throw Error("Access denied");
 
-            case 32:
+            case 39:
               return _context5.abrupt("return", event);
 
-            case 33:
+            case 40:
             case "end":
               return _context5.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[13, 22]]);
     }
   }, {
     key: "UpdateRequest",

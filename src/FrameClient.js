@@ -365,6 +365,7 @@ class FrameClient {
       "ListFiles",
       "LROStatus",
       "MergeMetadata",
+      "MetadataAuth",
       "NodeId",
       "Nodes",
       "PlayoutOptions",
