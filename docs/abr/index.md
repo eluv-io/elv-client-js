@@ -1,15 +1,50 @@
 <link rel="stylesheet" type="text/css" media="all" href="index.css" />
 
-# Eluvio Content Fabric: Sample Commands for Master File and IMF ingest
+# Eluvio Content Fabric: Ingesting Media for Adjustable Bit Rate (ABR) Streaming
 
-*last revised: 2020-07-16*
+*last revised: 2020-07-17*
 
+## Basic Concepts
 
-In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.
+In the Content Fabric, ingesting video for streaming involves two kinds of objects, **Production Masters** and **ABR Mezzanines**:
 
+* **Production Masters**
+	* Usually very high bitrate/resolution
+	* Often encoded with Prores / JPEG2000 video and PCM (raw) Audio
+	* Accessible only to content owners / admins
+	* Not directly viewable from Content Fabric (yet)
+	* Made up of 1 or more media files (referred to as **Sources**) that are often kept in AWS S3, although if desired they can also be uploaded to the Content Fabric and stored there
+	* Defines 1 or more **Variants**, e.g.:
+		* Theatrical release version
+		* TV broadcast version
+		* In-flight version
+		* Market- or country-specific version(s)
+	* Unless otherwise specified, on initial creation always starts with one **Variant** named `default`
+	* A **Variant** specifies which files (**Sources**) to use and which stream(s) to include from each.
+* **ABR Mezzanines**
+	* Generally lower bitrate and/or resolution than Production Masters
+	* Encoded with h264 or h265 video and AAC audio
+	* Directly viewable from the Content Fabric
+	* Stored in the Content Fabric
+	* Optimized for low-latency streaming
+	* Contains any custom metadata, including internal asset ID (if any)
+	* Defines 1 or more **Offerings**. Each **Offering** specifies the following:
+		* What **Production Master** and **Variant** within to stream
+		* What resolutions and bitrates to offer
+		* What streaming protocol(s) to offer (DASH and/or HLS) and what kind(s) of DRM to use for each (an **Offering** can include both DRM and clear playout options if desired)
+		* Watermark text or image (if any)
+		* Caption/subtitle streams (if any)
+		* Whether to trim the from beginning and/or end of the **Production Master**'s **Variant** and if so how much
+
+The ingest process consists of the following steps:
+
+1. Creating a **Production Master** object that points to your master source files (alternately, local master source files can be uploaded to the fabric)
+2. Creating an **ABR Mezzanine** object that points to the **Production Master** and adds streaming resolutions / bitrates as well as any DRM / watermarking. Once you create the mezzanine, the Content Fabric will begin transcoding.
+3. Finalizing the **ABR Mezzanine** after transcoding has finished.
+
+_NOTE: Currently caption/subtitle files are added to **ABR Mezzanines** separately after creation. In the near future this will be changed so that they are part of the original **Production Master** instead._
 
 ## Preparation
-
 
 ### Find your Content Fabric private key and record it in a safe place:
 
@@ -65,7 +100,6 @@ If you need to update to the latest version of elv-client-js, you can do so with
     git pull
     npm install
 
-
 ## Creating a Production Master object
 
 The **Production Master** object contains links to your original source material. It is not directly playable, but is used to generate a playable **Mezzanine** object.
@@ -91,6 +125,7 @@ If you click on this item, you will see a detail screen where you can select and
  
  `--type iq__...` *(your 'Title Master' content type ID - content type IDs start with "iq__")*
 
+*NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.*
 
 ### Get your Production Master Library ID
 
@@ -199,6 +234,8 @@ To create a Mezzanine, you will need the following:
 * A JSON file containing an ABR Profile specifying bit rates, playout formats, and DRM information
 * (optional) An asset ID (generally your internal ID for a title)  
 
+*NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.*
+
 ### Get your Mezzanine Content Type name and/or ID
 
 Click on **Content Types** on the left side and click on the one named "*COMPANY_NAME* - Title".
@@ -226,16 +263,16 @@ An **ABR Profile** contains information on what formats, resolutions and bitrate
 
 There are JSON files containing commonly used profiles in elv-client-js/testScripts/
 
-* abr_profile_4k_clear.json
-* abr_profile_4k_drm.json
-* abr_profile_clear.json
-* abr_profile_drm.json
+* `abr_profile_4k_clear.json`
+* `abr_profile_4k_drm.json`
+* `abr_profile_clear.json`
+* `abr_profile_drm.json`
 
 The 4k files are specifically for offering 16:9 material at 3840x2160 resolution.
 
-For most content we recommend using the abr_profile_drm.json file, which contains resolution ladders for a variety of aspect ratios. (For material with 16:9 aspect ratio, this file's top ladder rung is 1920x1080 @ 9.5 mbps)
+For most content we recommend using the `abr_profile_drm.json` file, which contains resolution ladders for a variety of aspect ratios. (For material with 16:9 aspect ratio, this file's top ladder rung is 1920x1080 @ 9.5 mbps)
 
-The *_clear files are for publishing without DRM.
+The `*_clear` files are for publishing without DRM.
 
 ### Create the Mezzanine object
 
