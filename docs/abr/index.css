@@ -1,19 +1,37 @@
+html {
+  display: flex;
+  justify-content: center;
+}
+
 body {
   color: #3e3c42;
   font-family: Helvetica Neue, sans-serif;
-  padding: 3rem 10rem;
   font-size: 16px;
+  max-width: 1000px;
+  padding: 3% 5% 10%;
+}
+
+img {
+  max-width: 100%;
 }
 
 h1 {
-  font-size: 1.8rem;
+  font-weight: 500;
+  font-size: 1.7rem;
+  margin: 0;
+}
+
+h1 + p {
+  margin: 0.5rem 0;
 }
 
 h2 {
+  font-weight: 500;
   margin-top: 3rem;
 }
 
 h3 {
+  font-weight: 500;
   margin-top: 1.5rem;
 }
 
