@@ -1,7 +1,44 @@
 <p><link rel="stylesheet" type="text/css" media="all" href="index.css" /></p>
-<h1 id="eluviocontentfabricsamplecommandsformasterfileandimfingest">Eluvio Content Fabric: Sample Commands for Master File and IMF ingest</h1>
-<p><em>last revised: 2020-07-15</em></p>
-<p>In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.</p>
+<h1 id="eluviocontentfabricingestingmediaforadjustablebitrateabrstreaming">Eluvio Content Fabric: Ingesting Media for Adjustable Bit Rate (ABR) Streaming</h1>
+<p><em>last revised: 2020-07-17</em></p>
+<h2 id="basicconcepts">Basic Concepts</h2>
+<p>In the Content Fabric, ingesting video for streaming involves two kinds of objects, <strong>Production Masters</strong> and <strong>ABR Mezzanines</strong>:</p>
+<ul>
+<li><strong>Production Masters</strong><ul>
+<li>Usually very high bitrate/resolution</li>
+<li>Often encoded with Prores / JPEG2000 video and PCM (raw) Audio</li>
+<li>Accessible only to content owners / admins</li>
+<li>Not directly viewable from Content Fabric (yet)</li>
+<li>Made up of 1 or more media files (referred to as <strong>Sources</strong>) that are often kept in AWS S3, although if desired they can also be uploaded to the Content Fabric and stored there</li>
+<li>Defines 1 or more <strong>Variants</strong>, e.g.:<ul>
+<li>Theatrical release version</li>
+<li>TV broadcast version</li>
+<li>In-flight version</li>
+<li>Market- or country-specific version(s)</li></ul></li>
+<li>Unless otherwise specified, on initial creation always starts with one <strong>Variant</strong> named <code>default</code></li>
+<li>A <strong>Variant</strong> specifies which files (<strong>Sources</strong>) to use and which stream(s) to include from each.</li></ul></li>
+<li><strong>ABR Mezzanines</strong><ul>
+<li>Generally lower bitrate and/or resolution than Production Masters</li>
+<li>Encoded with h264 or h265 video and AAC audio</li>
+<li>Directly viewable from the Content Fabric</li>
+<li>Stored in the Content Fabric</li>
+<li>Optimized for low-latency streaming</li>
+<li>Contains any custom metadata, including internal asset ID (if any)</li>
+<li>Defines 1 or more <strong>Offerings</strong>. Each <strong>Offering</strong> specifies the following:<ul>
+<li>What <strong>Production Master</strong> and <strong>Variant</strong> within to stream</li>
+<li>What resolutions and bitrates to offer</li>
+<li>What streaming protocol(s) to offer (DASH and/or HLS) and what kind(s) of DRM to use for each (an <strong>Offering</strong> can include both DRM and clear playout options if desired)</li>
+<li>Watermark text or image (if any)</li>
+<li>Caption/subtitle streams (if any)</li>
+<li>Whether to trim the from beginning and/or end of the <strong>Production Master</strong>'s <strong>Variant</strong> and if so how much</li></ul></li></ul></li>
+</ul>
+<p>The ingest process consists of the following steps:</p>
+<ol>
+<li>Creating a <strong>Production Master</strong> object that points to your master source files (alternately, local master source files can be uploaded to the fabric)</li>
+<li>Creating an <strong>ABR Mezzanine</strong> object that points to the <strong>Production Master</strong> and adds streaming resolutions / bitrates as well as any DRM / watermarking. Once you create the mezzanine, the Content Fabric will begin transcoding.</li>
+<li>Finalizing the <strong>ABR Mezzanine</strong> after transcoding has finished.</li>
+</ol>
+<p><em>NOTE: Currently caption/subtitle files are added to <strong>ABR Mezzanines</strong> separately after creation. In the near future this will be changed so that they are part of the original <strong>Production Master</strong> instead.</em></p>
 <h2 id="preparation">Preparation</h2>
 <h3 id="findyourcontentfabricprivatekeyandrecorditinasafeplace">Find your Content Fabric private key and record it in a safe place:</h3>
 <ol>
@@ -70,6 +107,7 @@ npm install
 <p><code>--type "YOUR_COMPANY_NAME - Title Master"</code></p>
 <p>or </p>
 <p><code>--type iq__...</code> <em>(your 'Title Master' content type ID - content type IDs start with "iq__")</em></p>
+<p><em>NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.</em></p>
 <h3 id="getyourproductionmasterlibraryid">Get your Production Master Library ID</h3>
 <p>Click on <strong>Content</strong> in the left sidebar to get to your list of libraries.</p>
 <p>Each tenant also has a number of libraries created for them, including one to hold Production Masters - it should be labeled "<em>COMPANY_NAME</em> - Title Masters". Click on this item to see a list of objects currently in the library (initially it may be empty).</p>
@@ -145,6 +183,7 @@ Production master object created:
 <li>A JSON file containing an ABR Profile specifying bit rates, playout formats, and DRM information</li>
 <li>(optional) An asset ID (generally your internal ID for a title)  </li>
 </ul>
+<p><em>NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.</em></p>
 <h3 id="getyourmezzaninecontenttypenameandorid">Get your Mezzanine Content Type name and/or ID</h3>
 <p>Click on <strong>Content Types</strong> on the left side and click on the one named "<em>COMPANY_NAME</em> - Title".</p>
 <p>You will see a detail screen where you can select and copy the <strong>Name</strong> and <strong>Object ID</strong> for this Content Type. When you run commands to create Mezzanines, you will need to supply either the name or the ID of this content type, e.g.:</p>
@@ -159,14 +198,14 @@ Production master object created:
 <p>An <strong>ABR Profile</strong> contains information on what formats, resolutions and bitrates to offer for streaming playout, as well as any DRM and/or watermarking information.</p>
 <p>There are JSON files containing commonly used profiles in elv-client-js/testScripts/</p>
 <ul>
-<li>abr<em>profile</em>4k_clear.json</li>
-<li>abr<em>profile</em>4k_drm.json</li>
-<li>abr<em>profile</em>clear.json</li>
-<li>abr<em>profile</em>drm.json</li>
+<li><code>abr_profile_4k_clear.json</code></li>
+<li><code>abr_profile_4k_drm.json</code></li>
+<li><code>abr_profile_clear.json</code></li>
+<li><code>abr_profile_drm.json</code></li>
 </ul>
 <p>The 4k files are specifically for offering 16:9 material at 3840x2160 resolution.</p>
-<p>For most content we recommend using the abr<em>profile</em>drm.json file, which contains resolution ladders for a variety of aspect ratios. (For material with 16:9 aspect ratio, this file's top ladder rung is 1920x1080 @ 9.5 mbps)</p>
-<p>The *_clear files are for publishing without DRM.</p>
+<p>For most content we recommend using the <code>abr_profile_drm.json</code> file, which contains resolution ladders for a variety of aspect ratios. (For material with 16:9 aspect ratio, this file's top ladder rung is 1920x1080 @ 9.5 mbps)</p>
+<p>The <code>*_clear</code> files are for publishing without DRM.</p>
 <h3 id="createthemezzanineobject">Create the Mezzanine object</h3>
 <p>Once you have the required information, substitute it into the sample command below (if you do not need to attach an asset ID, you can omit the <code>--ip-title-id</code> line):</p>
 <pre><code>node testScripts/CreateABRMezzanine.js --library ilib4JFY7hontNKJJmM4XnZaweTbH9tq \
@@ -282,6 +321,93 @@ Write Node: https://host-38-142-50-110.contentfabric.io/
   --objectId YOUR_MEZ_OBJECT_ID \
   --offeringKey THE_OFFERING_NAME
 </code></pre>
+<h3 id="displayingtheresolutionladderforanoffering">Displaying the resolution ladder for an Offering</h3>
+<p>The <code>OfferingListRungs.js</code> script will display the resolution ladder for an existing Offering:</p>
+<pre><code>node testScripts/OfferingListRungs.js \
+  --libraryId YOUR_TITLE_LIBRARY_ID \
+  --objectId YOUR_MEZ_OBJECT_ID \
+  --offeringKey THE_OFFERING_NAME
+</code></pre>
+<p>If <code>--offeringKey</code> is omitted then <code>default</code> will be assumed.</p>
+<p>Sample output:</p>
+<pre><code>Listing resolution ladder rungs for all streams in offering 'default'
+{
+  "audio": {
+    "representations": {
+      "audio@128000": {
+        "bit_rate": 128000,
+        "media_struct_stream_key": "audio",
+        "type": "RepAudio"
+      }
+    }
+  },
+  "video": {
+    "representations": {
+      "video_1452x1080@4900000": {
+        "bit_rate": 4900000,
+        "crf": 0,
+        "height": 1080,
+        "media_struct_stream_key": "video",
+        "type": "RepVideo",
+        "width": 1452
+      }
+      "video_726x540@1500000": {
+        "bit_rate": 1500000,
+        "crf": 0,
+        "height": 540,
+        "media_struct_stream_key": "video",
+        "type": "RepVideo",
+        "width": 726
+      },
+      "video_968x720@3375000": {
+        "bit_rate": 3375000,
+        "crf": 0,
+        "height": 720,
+        "media_struct_stream_key": "video",
+        "type": "RepVideo",
+        "width": 968
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="addingarungtoanofferingsvideoplayoutresolutionladder">Adding a rung to an Offering's video playout resolution ladder</h3>
+<p>The <code>OfferingAddVideoRung.js</code> script will allow you to add a new rung to an Offering's video resolution ladder:</p>
+<pre><code>node testScripts/OfferingAddVideoRung.js \
+  --libraryId YOUR_TITLE_LIBRARY_ID \
+  --objectId YOUR_MEZ_OBJECT_ID \
+  --offeringKey THE_OFFERING_NAME \
+  --width THE_NEW_WIDTH \ 
+  --height THE_NEW_HEIGHT \
+  --bitrate THE_NEW_BITRATE
+</code></pre>
+<p>If you omit <code>--offeringKey</code> then <code>default</code> will be assumed.</p>
+<p>Optionally, the <code>--width</code>  and/or <code>--bitrate</code> options can be omitted, and the script will scale the existing top rung based on <code>--height</code>.</p>
+<p>Note that if you supply both <code>--width</code> and <code>--height</code> but the resulting aspect ratio would differ more than 5% from the existing top rung's aspect ratio the script will halt with an error. If you would like to add anyway, add <code>--ignoreAspectRatio</code> to the command.</p>
+<p>Note also that only <em>lower quality</em> rungs can be added to an existing Offering. The new rung's bitrate must be lower than the existing top rung, and height and width must be less than or equal to the existing top rung. </p>
+<p>For example, if your top rung is 1920x1080 @ 9,500,000 bps:</p>
+<ul>
+<li><p>OK:</p></li>
+<li><p>1920x1080 @ 7,000,000 bps </p></li>
+<li><p>1280x720 @ 7,000,000 bps </p></li>
+<li><p>Not OK:</p></li>
+<li><p>1920x1080 @ 12,000,000 bps (bitrate must be less than top rung)</p></li>
+<li><p>3840x2160 @ 7,000,000 bps (height and width must be equal to or smaller than top rung)</p></li>
+<li><p>1280x720 @ 9,500,000 bps (bitrate must be less than top rung)</p>
+<p>Note that in special cases, your Offering's video stream may not be named <code>video</code> - if this is the case, use <code>--streamKey STREAM_NAME</code> to specify the actual name of the stream. (You can use the <code>OfferingListRungs.js</code> script to see the names of your Offering's streams)</p></li>
+</ul>
+<h3 id="removingarungfromanofferingsvideoplayoutresolutionladder">Removing a rung from an Offering's video playout resolution ladder</h3>
+<p>The <code>OfferingRemoveVideoRung.js</code> script will allow you to remove an existing rung from an Offering's video resolution ladder:</p>
+<pre><code>node testScripts/OfferingRemoveVideoRung.js \
+  --libraryId YOUR_TITLE_LIBRARY_ID \
+  --objectId YOUR_MEZ_OBJECT_ID \
+  --offeringKey THE_OFFERING_NAME \
+  --rungKey THE_RUNG_NAME
+</code></pre>
+<p>If you omit <code>--offeringKey</code> then <code>default</code> will be assumed.</p>
+<p>To look up the value of <code>--rungKey</code>, use the <code>OfferingListRungs.js</code> script (see above). Video rungs are generally named "video_<em>WIDTH</em>x<em>HEIGHT</em>@<em>BITRATE</em>", e.g.: <code>video_1280x720@4500000</code>, but this is not guaranteed - use the <code>OfferingListRungs.js</code> script to show all the rung names.</p>
+<p>You are not allowed to remove the top rung from the ladder, if you try the script will halt with an error.</p>
+<p>Note that in special cases, your Offering's video stream may not be named <code>video</code> - if this is the case, use <code>--streamKey STREAM_NAME</code> to specify the actual name of the stream. (You can use the <code>OfferingListRungs.js</code> script to see the names of your Offering's streams)</p>
 <h2 id="examplescenarioaddingaclearplayoutofferingtoadrmprotectedmezzanine">Example Scenario: Adding a 'clear playout' Offering to a DRM-protected Mezzanine</h2>
 <p>The following assumes that you created your Mezzanine using the <code>abr_profile_drm.json</code> profile, which will result in a <code>default</code> Offering that only offers DRM playback:</p>
 <pre><code> node testScripts/OfferingCopy.js \
