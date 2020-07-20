@@ -33,7 +33,7 @@ var _require = require("../Validation"),
     ValidatePresence = _require.ValidatePresence;
 
 exports.SetVisibility = function _callee(_ref) {
-  var id, visibility, hasSetVisibility;
+  var id, visibility, hasSetVisibility, event;
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -65,9 +65,16 @@ exports.SetVisibility = function _callee(_ref) {
           }));
 
         case 9:
-          return _context.abrupt("return", _context.sent);
+          event = _context.sent;
+          _context.next = 12;
+          return _regeneratorRuntime.awrap(new Promise(function (resolve) {
+            return setTimeout(resolve, 5000);
+          }));
 
-        case 10:
+        case 12:
+          return _context.abrupt("return", event);
+
+        case 13:
         case "end":
           return _context.stop();
       }
@@ -231,7 +238,7 @@ exports.CreateContentType = function _callee2(_ref2) {
 
 
 exports.CreateContentLibrary = function _callee3(_ref4) {
-  var name, description, image, imageName, _ref4$metadata, metadata, kmsId, _ref5, contractAddress, tenantId, libraryId, objectId, libraryType, editResponse;
+  var name, description, image, imageName, _ref4$metadata, metadata, kmsId, _ref5, contractAddress, tenantId, libraryId, objectId, editResponse;
 
   return _regeneratorRuntime.async(function _callee3$(_context3) {
     while (1) {
@@ -298,24 +305,14 @@ exports.CreateContentLibrary = function _callee3(_ref4) {
 
           objectId = libraryId.replace("ilib", "iq__");
           _context3.next = 28;
-          return _regeneratorRuntime.awrap(this.ContentType({
-            name: "library"
+          return _regeneratorRuntime.awrap(this.EditContentObject({
+            libraryId: libraryId,
+            objectId: objectId
           }));
 
         case 28:
-          libraryType = _context3.sent;
-          _context3.next = 31;
-          return _regeneratorRuntime.awrap(this.EditContentObject({
-            libraryId: libraryId,
-            objectId: objectId,
-            options: {
-              type: libraryType ? libraryType.id : undefined
-            }
-          }));
-
-        case 31:
           editResponse = _context3.sent;
-          _context3.next = 34;
+          _context3.next = 31;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -323,32 +320,32 @@ exports.CreateContentLibrary = function _callee3(_ref4) {
             writeToken: editResponse.write_token
           }));
 
-        case 34:
-          _context3.next = 36;
+        case 31:
+          _context3.next = 33;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: editResponse.write_token
           }));
 
-        case 36:
+        case 33:
           if (!image) {
-            _context3.next = 39;
+            _context3.next = 36;
             break;
           }
 
-          _context3.next = 39;
+          _context3.next = 36;
           return _regeneratorRuntime.awrap(this.SetContentLibraryImage({
             libraryId: libraryId,
             image: image,
             imageName: imageName
           }));
 
-        case 39:
+        case 36:
           this.Log("Library ".concat(libraryId, " created"));
           return _context3.abrupt("return", libraryId);
 
-        case 41:
+        case 38:
         case "end":
           return _context3.stop();
       }
@@ -1304,8 +1301,7 @@ exports.PublishContentVersion = function _callee15(_ref16) {
                       contractAddress: _this2.utils.HashToAddress(objectId),
                       abi: abi,
                       fromBlock: fromBlock,
-                      count: 10000,
-                      topics: ["0x482875da75e6d9f93f74a5c1a61f14cf08822057c01232f44cb92ae998e30d8e"]
+                      count: 1000
                     }));
 
                   case 7:
@@ -1321,6 +1317,7 @@ exports.PublishContentVersion = function _callee15(_ref16) {
                       break;
                     }
 
+                    // Found confirmation
                     _this2.Log("Commit confirmed: ".concat(objectHash));
 
                     return _context15.abrupt("break", 14);

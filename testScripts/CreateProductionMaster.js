@@ -59,6 +59,10 @@ const argv = yargs
     type: "string",
     description: "Path to JSON file containing credential sets for files stored in cloud"
   })
+  .option("debug", {
+    type: "boolean",
+    description: "Enable client logging"
+  })
   .demandOption(
     ["library", "type", "title", "files"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateProductionMaster.js --library <master-library-id> --title <title> --metadata '<metadata-json>' --files <file1> (<file2>...) (--s3-copy || --s3-reference)\n"
@@ -83,7 +87,8 @@ const Create = async ({
   encrypt=false,
   s3Reference,
   s3Copy,
-  credentials
+  credentials,
+  debug
 }) => {
   try {
     const privateKey = process.env.PRIVATE_KEY;
@@ -162,6 +167,10 @@ const Create = async ({
       privateKey: process.env.PRIVATE_KEY
     });
     await client.SetSigner({signer});
+
+    if(debug) {
+      client.ToggleLogging(true);
+    }
 
     let fileInfo;
     let fileHandles=[];

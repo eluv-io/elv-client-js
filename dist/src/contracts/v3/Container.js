@@ -666,6 +666,10 @@ var contract = {
       "type": "address"
     }, {
       "indexed": false,
+      "name": "parentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
       "name": "objectHash",
       "type": "string"
     }],

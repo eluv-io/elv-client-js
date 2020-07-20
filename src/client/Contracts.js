@@ -467,18 +467,3 @@ exports.SendFunds = async function({recipient, ether}) {
 
   return await transaction.wait();
 };
-
-/*
-// TODO: Not implemented in contracts
-exports.WithdrawContractFunds = async function({contractAddress, abi, ether}) {
-  contractAddress = ValidateAddress(contractAddress);
-
-  return await this.ethClient.CallContractMethodAndWait({
-    contractAddress,
-    abi,
-    methodName: "transfer",
-    methodArgs: [this.signer.address, Ethers.utils.parseEther(ether.toString())],
-    signer: this.signer
-  });
-}
-*/

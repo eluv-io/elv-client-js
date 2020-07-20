@@ -800,17 +800,3 @@ exports.SendFunds = function _callee13(_ref15) {
     }
   }, null, this);
 };
-/*
-// TODO: Not implemented in contracts
-exports.WithdrawContractFunds = async function({contractAddress, abi, ether}) {
-  contractAddress = ValidateAddress(contractAddress);
-
-  return await this.ethClient.CallContractMethodAndWait({
-    contractAddress,
-    abi,
-    methodName: "transfer",
-    methodArgs: [this.signer.address, Ethers.utils.parseEther(ether.toString())],
-    signer: this.signer
-  });
-}
-*/
