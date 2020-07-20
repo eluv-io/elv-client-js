@@ -30,12 +30,13 @@ BaseContent20200205142000ML: Closes vulnerability allowing alien external object
 BaseContent20200211163800ML: Modified to conform to authV3 API
 BaseContent20200212101200ML: Disambiguatea getAccessInfo vs getAccessInfoV3 to reflect API changes
 BaseContent20200316135000ML: Leverages inherited hasAccess
+BaseContent20200422180500ML: Version update to reflect changes made to editable to fix deletion
 */
 
 
 contract BaseContent is Editable {
 
-    bytes32 public version ="BaseContent20200316135000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200422180500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;

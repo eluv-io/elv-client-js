@@ -83,7 +83,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="ElvClient">
-      <span class="type-signature"></span>new ElvClient<span class="signature">({<div class="block-param">contentSpaceId,</div><div class="block-param">fabricURIs,</div><div class="block-param">ethereumURIs,</div><div class="block-param">trustAuthorityId<span class="signature-attributes">optional</span>,</div><div class="block-param">staticToken<span class="signature-attributes">optional</span>,</div><div class="block-param">noCache<span class="signature-attributes">optional</span>,</div><div class="block-param">noAuth<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  <a href="ElvClient.html">ElvClient</a></span>
+      <span class="type-signature"></span>new ElvClient<span class="signature">({<div class="block-param">contentSpaceId,</div><div class="block-param">fabricVersion,</div><div class="block-param">fabricURIs,</div><div class="block-param">ethereumURIs,</div><div class="block-param">trustAuthorityId<span class="signature-attributes">optional</span>,</div><div class="block-param">staticToken<span class="signature-attributes">optional</span>,</div><div class="block-param">noCache<span class="signature-attributes">optional</span>,</div><div class="block-param">noAuth<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  <a href="ElvClient.html">ElvClient</a></span>
     </h4>
   </span>
 
@@ -176,6 +176,47 @@ automatically import the client settings from the fabric</p>
 
         <td class="description last">
           <p>ID of the content space</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>fabricVersion</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      number
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The version of the target content fabric</p>
           
         </td>
       </tr>
@@ -489,7 +530,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line88">line 88</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line89">line 89</a>
         </li>
       </ul>
     </dd>
@@ -749,7 +790,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line130">line 130</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line134">line 134</a>
         </li>
       </ul>
     </dd>
@@ -1095,7 +1136,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line191">line 191</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line198">line 198</a>
         </li>
       </ul>
     </dd>
@@ -1186,7 +1227,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line406">line 406</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line415">line 415</a>
         </li>
       </ul>
     </dd>
@@ -1277,7 +1318,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line395">line 395</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line404">line 404</a>
         </li>
       </ul>
     </dd>
@@ -1375,7 +1416,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line449">line 449</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line458">line 458</a>
         </li>
       </ul>
     </dd>
@@ -1528,7 +1569,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line553">line 553</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line562">line 562</a>
         </li>
       </ul>
     </dd>
@@ -1687,7 +1728,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line537">line 537</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line546">line 546</a>
         </li>
       </ul>
     </dd>
@@ -1829,7 +1870,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line386">line 386</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line395">line 395</a>
         </li>
       </ul>
     </dd>
@@ -1983,7 +2024,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line330">line 330</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line339">line 339</a>
         </li>
       </ul>
     </dd>
@@ -2081,7 +2122,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line346">line 346</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line355">line 355</a>
         </li>
       </ul>
     </dd>
@@ -2426,7 +2467,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line574">line 574</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line583">line 583</a>
         </li>
       </ul>
     </dd>
@@ -2525,7 +2566,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line310">line 310</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line319">line 319</a>
         </li>
       </ul>
     </dd>
@@ -2722,7 +2763,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line362">line 362</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line371">line 371</a>
         </li>
       </ul>
     </dd>
@@ -2868,7 +2909,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line458">line 458</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line467">line 467</a>
         </li>
       </ul>
     </dd>
@@ -3014,7 +3055,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line417">line 417</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line426">line 426</a>
         </li>
       </ul>
     </dd>
@@ -3162,7 +3203,7 @@ for the user's private key using the KMS specified in the configuration.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line475">line 475</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line484">line 484</a>
         </li>
       </ul>
     </dd>
@@ -3322,7 +3363,7 @@ Useful for integrating with MetaMask</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line435">line 435</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line444">line 444</a>
         </li>
       </ul>
     </dd>
@@ -3625,7 +3666,7 @@ Useful for integrating with MetaMask</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line276">line 276</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line285">line 285</a>
         </li>
       </ul>
     </dd>

@@ -1,3 +1,5 @@
+var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
+
 var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 var _typeof = require("@babel/runtime/helpers/typeof");
@@ -99,6 +101,7 @@ function () {
      *
      * @namedParams
      * @param {string} contentSpaceId - ID of the content space
+     * @param {number} fabricVersion - The version of the target content fabric
      * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
      * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
      * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
@@ -113,6 +116,7 @@ function () {
 
   function ElvClient(_ref) {
     var contentSpaceId = _ref.contentSpaceId,
+        fabricVersion = _ref.fabricVersion,
         fabricURIs = _ref.fabricURIs,
         ethereumURIs = _ref.ethereumURIs,
         trustAuthorityId = _ref.trustAuthorityId,
@@ -129,6 +133,7 @@ function () {
     this.contentSpaceAddress = this.utils.HashToAddress(contentSpaceId);
     this.contentSpaceLibraryId = this.utils.AddressToLibraryId(this.contentSpaceAddress);
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
+    this.fabricVersion = fabricVersion;
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
     this.trustAuthorityId = trustAuthorityId;
@@ -852,7 +857,7 @@ function () {
   }], [{
     key: "Configuration",
     value: function Configuration(_ref13) {
-      var configUrl, _ref13$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs;
+      var configUrl, _ref13$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, fabricVersion;
 
       return _regeneratorRuntime.async(function Configuration$(_context10) {
         while (1) {
@@ -889,16 +894,18 @@ function () {
                 ethereumURIs = ethereumURIs.filter(filterHTTPS);
               }
 
+              fabricVersion = Math.max.apply(Math, _toConsumableArray(fabricInfo.network.api_versions || [2]));
               return _context10.abrupt("return", {
                 nodeId: fabricInfo.node_id,
                 contentSpaceId: fabricInfo.qspace.id,
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
-                kmsURIs: kmsUrls
+                kmsURIs: kmsUrls,
+                fabricVersion: fabricVersion
               });
 
-            case 15:
-              _context10.prev = 15;
+            case 16:
+              _context10.prev = 16;
               _context10.t0 = _context10["catch"](1);
               // eslint-disable-next-line no-console
               console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
@@ -906,12 +913,12 @@ function () {
               console.error(_context10.t0);
               throw _context10.t0;
 
-            case 20:
+            case 21:
             case "end":
               return _context10.stop();
           }
         }
-      }, null, null, [[1, 15]]);
+      }, null, null, [[1, 16]]);
     }
     /**
      * Create a new ElvClient from the specified configuration URL
@@ -932,7 +939,7 @@ function () {
   }, {
     key: "FromConfigurationUrl",
     value: function FromConfigurationUrl(_ref14) {
-      var configUrl, region, trustAuthorityId, staticToken, _ref14$noCache, noCache, _ref14$noAuth, noAuth, _ref15, contentSpaceId, fabricURIs, ethereumURIs, client;
+      var configUrl, region, trustAuthorityId, staticToken, _ref14$noCache, noCache, _ref14$noAuth, noAuth, _ref15, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context11) {
         while (1) {
@@ -950,8 +957,10 @@ function () {
               contentSpaceId = _ref15.contentSpaceId;
               fabricURIs = _ref15.fabricURIs;
               ethereumURIs = _ref15.ethereumURIs;
+              fabricVersion = _ref15.fabricVersion;
               client = new ElvClient({
                 contentSpaceId: contentSpaceId,
+                fabricVersion: fabricVersion,
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
                 trustAuthorityId: trustAuthorityId,
@@ -962,7 +971,7 @@ function () {
               client.configUrl = configUrl;
               return _context11.abrupt("return", client);
 
-            case 10:
+            case 11:
             case "end":
               return _context11.stop();
           }

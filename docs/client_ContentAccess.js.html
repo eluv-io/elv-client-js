@@ -91,7 +91,8 @@ exports.Visibility = async function({id}) {
       });
 
       if(!hasVisibility) {
-        return 10;
+        // TODO: Fabric should be changed so this is equivalent to 1
+        return 0;
       }
 
       this.visibilityInfo[address] = await this.CallContractMethod({
@@ -663,6 +664,51 @@ exports.ProduceMetadataLinks = async function({
   return result;
 };
 
+exports.MetadataAuth = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  path="/",
+}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  const visibility = await this.Visibility({id: objectId});
+  const accessType = await this.AccessType({id: objectId});
+  const isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
+
+  let noAuth = true;
+  if(this.fabricVersion >= 3) {
+    noAuth = visibility >= 10 || (isPublic &amp;&amp; visibility >= 1);
+  }
+
+  if(this.oauthToken) {
+    // Check that KMS is set on this object
+    const kmsAddress = await this.authClient.KMSAddress({objectId, versionHash});
+
+    if(kmsAddress &amp;&amp; !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress)) {
+      return await this.authClient.AuthorizationToken({
+        libraryId,
+        objectId,
+        versionHash,
+        channelAuth: true,
+        oauthToken: this.oauthToken
+      });
+    }
+  }
+
+  if(isPublic &amp;&amp; accessType === this.authClient.ACCESS_TYPES.OBJECT) {
+    // Content object public metadata can be accessed using library access request
+    return await this.authClient.AuthorizationToken({
+      libraryId: libraryId || await this.ContentObjectLibraryId({objectId, versionHash}),
+      noAuth
+    });
+  } else {
+    return await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noAuth});
+  }
+};
+
 /**
  * Get the metadata of a content object
  *
@@ -730,37 +776,11 @@ exports.ContentObjectMetadata = async function({
 
   let metadata;
   try {
-    /*
-    const visibility = await this.Visibility({id: objectId});
-    let noAuth = visibility >= 10 ||
-      ((metadataSubtree || "").replace(/^\/+/, "").startsWith("public") &amp;&amp; visibility >= 1);
-
-     */
-
-    let headers;
-    if(this.oauthToken) {
-      // Check that KMS is set on this object
-      const kmsAddress = await this.authClient.KMSAddress({objectId, versionHash});
-
-      if(kmsAddress &amp;&amp; !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress)) {
-        headers = await this.authClient.AuthorizationHeader({
-          libraryId,
-          objectId,
-          versionHash,
-          channelAuth: true,
-          oauthToken: this.oauthToken,
-          audienceData: await this.AudienceData({objectId, versionHash})
-        });
-      }
-    }
-
-    if(!headers) {
-      headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true});
-    }
+    const authToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
 
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers,
+        headers: { "Authorization": `Bearer ${authToken}` },
         queryParams: {
           ...queryParams,
           select,
@@ -1588,13 +1608,13 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
   try {
     return await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: true}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: this.fabricVersion &lt; 3}),
         queryParams: {
           auto_update: autoUpdate,
           select
         },
         method: "GET",
-        path: path
+        path: path,
       })
     );
   } catch(error) {
@@ -1735,12 +1755,10 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
- * @param {boolean=} noCache=false - If specified, a new access request will be made for the authorization regardless of
- * whether such a request exists in the client cache. This request will not be cached.
  *
  * @returns {Promise&lt;string>} - URL to the specified file with authorization token
  */
-exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, linkPath, mimeType, queryParams={}, noCache=false}) {
+exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, linkPath, mimeType, queryParams={}}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
@@ -1755,31 +1773,10 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
 
-  /*
-  const visibility = await this.Visibility({id: objectId});
-  let noAuth = visibility >= 10 ||
-    ((linkPath || "").replace(/^\/+/, "").startsWith("public") &amp;&amp; visibility >= 1);
-  // TODO: Remove for authv3
-  noAuth = true;
-
-   */
-
-  // Check that KMS is set on this object
-  const kmsAddress = await this.authClient.KMSAddress({objectId, versionHash});
-  const hasKMSAddress = kmsAddress &amp;&amp; !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress);
-  const useOAuth = this.oauthToken &amp;&amp; hasKMSAddress;
-
   queryParams = {
     ...queryParams,
     resolve: true,
-    authorization: await this.authClient.AuthorizationToken({
-      libraryId,
-      objectId,
-      noCache,
-      noAuth: !useOAuth,
-      channelAuth: useOAuth,
-      oauthToken: this.oauthToken
-    })
+    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath})
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }
