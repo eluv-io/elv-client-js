@@ -115,11 +115,11 @@ To create a Production Master, you will need the following:
 
 Each tenant of the Content Fabric has a number **Content Types** created for them. These provide a way of customizing the structure of your fabric objects.
 
-If you click on **Content Types** on the left side you will see a list of these types, among which should be one named "*COMPANY_NAME* - Title Master".
+If you click on **Content Types** on the left side you will see a list of these types, among which should be one named "*TENANT_NAME* - Title Master".
 
 If you click on this item, you will see a detail screen where you can select and copy the **Name** and **Object ID** for this Content Type. When you run commands to create Production Masters, you will need to supply either the name or the ID of this content type, e.g.:
 
- `--type "COMPANY_NAME - Title Master"`
+ `--type "TENANT_NAME - Title Master"`
  
  or 
  
@@ -131,7 +131,7 @@ If you click on this item, you will see a detail screen where you can select and
 
 Click on **Content** in the left sidebar to get to your list of libraries.
 
-Each tenant also has a number of libraries created for them, including one to hold Production Masters - it should be labeled "*COMPANY_NAME* - Title Masters". Click on this item to see a list of objects currently in the library (initially it may be empty).
+Each tenant also has a number of libraries created for them, including one to hold Production Masters - it should be labeled "*TENANT_NAME* - Title Masters". Click on this item to see a list of objects currently in the library (initially it may be empty).
 
 On the next screen, click on the **Library Info** tab to find the Library ID. When you run commands to create Production Masters, you will need to supply this ID, e.g.:
 
@@ -147,7 +147,7 @@ Here is a sample command line to generate a Production Master using a file on AW
           --library ilib3xDQU7yDgZZQsmMwUrHTwzAEbbdu \
           --title "Big Buck Bunny (master)" \
           --s3-reference \
-          --type "COMPANY_NAME - Title Master" \
+          --type "TENANT_NAME - Title Master" \
           --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
           --files bbb_sunflower_1080p_60fps_stereo_abl.mp4
 
@@ -163,7 +163,7 @@ Here is a sample command line to generate a Production Master using a local file
         node testScripts/CreateProductionMaster.js \
           --library ilib3xDQU7yDgZZQsmMwUrHTwzAEbbdu \ 
           --title "Big Buck Bunny (master)" \
-          --type "COMPANY_NAME - Title Master" \
+          --type "TENANT_NAME - Title Master" \
           --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
           --files PATH_TO_YOUR_DIRECTORY/bbb_sunflower_1080p_60fps_stereo_abl.mp4
 
@@ -201,7 +201,7 @@ Clicking on the **Show Metadata** button and drilling down into *production_mast
 
 In order to let other users work with your object, you must grant permissions to an **Access Group**.
 
-From the object details page, click the blue **Groups** button at top - you should see a screen with the *Access Group* field already chosen for you, set to "*COMPANY_NAME* Content Admins".
+From the object details page, click the blue **Groups** button at top - you should see a screen with the *Access Group* field already chosen for you, set to "*TENANT_NAME* Content Admins".
 
 Check all 3 boxes (**See**, **Access**, and **Manage**), then click **Submit**.
 
@@ -211,7 +211,7 @@ Check all 3 boxes (**See**, **Access**, and **Manage**), then click **Submit**.
 In order to grant permissions via the command line, you will need to know the following:
 
 * The ID of your Production Master object (starts with "iq__")
-* The Address of your "*COMPANY_NAME* Content Admins" group (starts with "0x")
+* The Address of your "*TENANT_NAME* Content Admins" group (starts with "0x")
 
 You can find the Address of your group by clicking on the blue **Groups** button at top when you are browsing the details of any object. You can choose a group from the **Access Group** dropdown, then double-click the **Address** field to select it and copy to your clipboard.
 
@@ -238,11 +238,11 @@ To create a Mezzanine, you will need the following:
 
 ### Get your Mezzanine Content Type name and/or ID
 
-Click on **Content Types** on the left side and click on the one named "*COMPANY_NAME* - Title".
+Click on **Content Types** on the left side and click on the one named "*TENANT_NAME* - Title".
 
 You will see a detail screen where you can select and copy the **Name** and **Object ID** for this Content Type. When you run commands to create Mezzanines, you will need to supply either the name or the ID of this content type, e.g.:
 
- `--type "COMPANY_NAME - Title"`
+ `--type "TENANT_NAME - Title"`
  
  or 
  
@@ -253,7 +253,7 @@ You will see a detail screen where you can select and copy the **Name** and **Ob
 
 Click on **Content** in the left sidebar to get to your list of libraries.
 
-Click on the one labeled "*COMPANY_NAME* - Titles", then click on the **Library Info** tab to find the Library ID. When you run commands to create Mezzanines, you will need to supply this ID, e.g.:
+Click on the one labeled "*TENANT_NAME* - Titles", then click on the **Library Info** tab to find the Library ID. When you run commands to create Mezzanines, you will need to supply this ID, e.g.:
 
 `--library ilib...` *(your 'Titles' library ID - library IDs start with "ilib")*
 
@@ -281,7 +281,7 @@ Once you have the required information, substitute it into the sample command be
     node testScripts/CreateABRMezzanine.js --library ilib4JFY7hontNKJJmM4XnZaweTbH9tq \
       --masterHash hq__9v2JY21ESnsvNdwWwgJrjiw7jHWv5nXik6quVn6FUgDxbgTgJT8toxBVb1ShZZH4mcFSFcJUJJ \
       --title "Big Buck Bunny" \
-      --type "COMPANY_NAME - Title" \
+      --type "TENANT_NAME - Title" \
       --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
       --abr-profile testScripts/abr_profile_drm.json
 
@@ -307,7 +307,7 @@ The **Object ID** identifies your new Mezzanine, you will need this value for su
 In your browser, if you click on **Content** in the left sidebar, then click on your Titles library, you should see your new Mezzanine object. 
 (If you are already on the page that lists objects in the library you may need to click the refresh icon ![image for refresh icon](images/icon_reload.png) to see the new object)
 
-If you go into the "COMPANY_NAME - Title Mezzanines" library in your browser you should see the new mezzanine object.
+If you go into the "TENANT_NAME - Title Mezzanines" library in your browser you should see the new mezzanine object.
 
 
 (If you are already on the object list page you may need to click the refresh icon to see the new object)
@@ -372,7 +372,7 @@ In the browser, click the refresh icon ![image for refresh icon](images/icon_rel
 
 (Identical process as for the Production Master object)
 
-From the object details page, click the blue **Groups** button at top - you should see a screen with the *Access Group* field already chosen for you, set to "*COMPANY_NAME* Content Admins".
+From the object details page, click the blue **Groups** button at top - you should see a screen with the *Access Group* field already chosen for you, set to "*TENANT_NAME* Content Admins".
 
 Check all 3 boxes (**See**, **Access**, and **Manage**), then click **Submit**.
 
