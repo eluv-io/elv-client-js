@@ -1,6 +1,6 @@
 <link rel="stylesheet" type="text/css" media="all" href="index.css" />
 
-# Eluvio Content Fabric: Ingesting Media for Adjustable Bit Rate (ABR) Streaming
+# Eluvio Content Fabric: Ingesting Media for Adaptive Bit Rate (ABR) Streaming
 
 *last revised: 2020-07-17*
 
@@ -52,7 +52,7 @@ _NOTE: Currently caption/subtitle files are added to **ABR Mezzanines** separate
 1. Navigate to the Content Fabric Browser page
 	* 	If you have been set up on our **demo** network, go to: [https://core.demov3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/](https://core.demov3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/)
 	* 	If you have been set up on our **production** network, go to:
-[https://core.v3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/](https://core.demov3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/)
+[https://core.v3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/](https://core.v3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/)
 1. Enter the password you chose when first setting up your account
 1. Click on the **eluv.io** logo at top left
 1. Click on **Profile**
@@ -80,7 +80,7 @@ _NOTE: Currently caption/subtitle files are added to **ABR Mezzanines** separate
 	* To connect to our **production** network, the file should be set to contain the following:
 
             {
-              "config-url": "https://host-66-220-3-85.contentfabric.io/config/config"
+              "config-url": "https://main.net955305.contentfabric.io/config"
             }
 
 * Configure the private key environment variable:
@@ -119,7 +119,7 @@ If you click on **Content Types** on the left side you will see a list of these 
 
 If you click on this item, you will see a detail screen where you can select and copy the **Name** and **Object ID** for this Content Type. When you run commands to create Production Masters, you will need to supply either the name or the ID of this content type, e.g.:
 
- `--type "YOUR_COMPANY_NAME - Title Master"`
+ `--type "COMPANY_NAME - Title Master"`
  
  or 
  
@@ -147,7 +147,7 @@ Here is a sample command line to generate a Production Master using a file on AW
           --library ilib3xDQU7yDgZZQsmMwUrHTwzAEbbdu \
           --title "Big Buck Bunny (master)" \
           --s3-reference \
-          --type "YourCompanyName - Title Master" \
+          --type "COMPANY_NAME - Title Master" \
           --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
           --files bbb_sunflower_1080p_60fps_stereo_abl.mp4
 
@@ -163,7 +163,7 @@ Here is a sample command line to generate a Production Master using a local file
         node testScripts/CreateProductionMaster.js \
           --library ilib3xDQU7yDgZZQsmMwUrHTwzAEbbdu \ 
           --title "Big Buck Bunny (master)" \
-          --type "MyCompanyName - Title Master" \
+          --type "COMPANY_NAME - Title Master" \
           --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
           --files PATH_TO_YOUR_DIRECTORY/bbb_sunflower_1080p_60fps_stereo_abl.mp4
 
@@ -224,7 +224,7 @@ The command to add permissions is then:
 
 ## Creating a Mezzanine object
 
-A **Mezzanine** object contains transcoded media optimized for adjustable bitrate (ABR) streaming. Depending on the ABR profile you choose, it is playable via HLS and/or DASH with DRM (you also have the option to offer playout in the clear).
+A **Mezzanine** object contains transcoded media optimized for adaptive bitrate (ABR) streaming. Depending on the ABR profile you choose, it is playable via HLS and/or DASH with DRM (you also have the option to offer playout in the clear).
 
 To create a Mezzanine, you will need the following:
 
@@ -242,7 +242,7 @@ Click on **Content Types** on the left side and click on the one named "*COMPANY
 
 You will see a detail screen where you can select and copy the **Name** and **Object ID** for this Content Type. When you run commands to create Mezzanines, you will need to supply either the name or the ID of this content type, e.g.:
 
- `--type "YOUR_COMPANY_NAME - Title"`
+ `--type "COMPANY_NAME - Title"`
  
  or 
  
