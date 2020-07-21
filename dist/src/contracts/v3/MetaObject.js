@@ -116,6 +116,15 @@ var contract = {
     "payable": true,
     "stateMutability": "payable",
     "type": "fallback"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
+    "type": "event"
   }]
 };
 module.exports = contract;

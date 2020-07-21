@@ -55,10 +55,8 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
     }
 
     function setOAuthEnabled(bool _enabled) public onlyOwner {
-        if (oauthEnabled != _enabled) {
-            oauthEnabled = _enabled;
-            emit OAuthStatusChanged(_enabled);
-        }
+        oauthEnabled = _enabled;
+        emit OAuthStatusChanged(_enabled);
     }
 
     function grantManagerAccess(address manager) public onlyOwner {

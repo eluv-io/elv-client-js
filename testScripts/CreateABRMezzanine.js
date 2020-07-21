@@ -67,6 +67,10 @@ const argv = yargs
     type: "string",
     description: "Path to JSON file containing credential sets for files stored in cloud"
   })
+  .option("debug", {
+    type: "boolean",
+    description: "Enable client logging"
+  })
   .demandOption(
     ["library", "masterHash", "type"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
@@ -108,6 +112,7 @@ const Create = async ({
   abrProfile,
   elvGeo,
   credentials,
+  debug,
   wait=false
 }) => {
   try {
@@ -131,6 +136,10 @@ const Create = async ({
     });
 
     await client.SetSigner({signer});
+
+    if(debug) {
+      client.ToggleLogging(true);
+    }
 
     if(metadata) {
       try {

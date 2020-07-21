@@ -15,10 +15,6 @@ const {RandomBytes, CreateClient, ReturnBalance} = require("./utils/Utils");
 
 let frameClient, client, libraryId, objectId, partHash;
 
-if(!global.window) {
-  global.window = new (require("window"))();
-}
-
 const CompareMethods = (frameClientMethods, elvClientMethods) => {
   const differentKeys = frameClientMethods
     .filter(x => !elvClientMethods.includes(x))
@@ -37,6 +33,9 @@ const CompareMethods = (frameClientMethods, elvClientMethods) => {
 
 describe("Test FrameClient", () => {
   beforeAll(async () => {
+    // Initialize fake window object to test the frame client
+    global.window = new (require("window"))();
+
     frameClient = OutputLogger(
       FrameClient,
       new FrameClient(),
@@ -66,6 +65,9 @@ describe("Test FrameClient", () => {
 
   afterAll(async () => {
     await ReturnBalance(client);
+
+    // Unset fake window object
+    global.window = undefined;
   });
 
   test("FrameClient methods match expected ElvClient methods", () => {

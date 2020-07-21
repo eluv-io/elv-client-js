@@ -87,6 +87,10 @@ const CreateClient = async (name, bux="2") => {
       global.window.crypto = global.crypto;
     }
 
+    if(process.env["DEBUG"]) {
+      client.ToggleLogging(true);
+    }
+
     return client;
   } catch(error) {
     console.error("ERROR INITIALIZING TEST CLIENT: ");
