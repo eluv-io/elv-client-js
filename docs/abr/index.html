@@ -102,15 +102,15 @@ npm install
 </ul>
 <h3 id="getyourproductionmastercontenttypenameandorid">Get your Production Master Content Type name and/or ID</h3>
 <p>Each tenant of the Content Fabric has a number <strong>Content Types</strong> created for them. These provide a way of customizing the structure of your fabric objects.</p>
-<p>If you click on <strong>Content Types</strong> on the left side you will see a list of these types, among which should be one named "<em>COMPANY_NAME</em> - Title Master".</p>
+<p>If you click on <strong>Content Types</strong> on the left side you will see a list of these types, among which should be one named "<em>TENANT_NAME</em> - Title Master".</p>
 <p>If you click on this item, you will see a detail screen where you can select and copy the <strong>Name</strong> and <strong>Object ID</strong> for this Content Type. When you run commands to create Production Masters, you will need to supply either the name or the ID of this content type, e.g.:</p>
-<p><code>--type "COMPANY_NAME - Title Master"</code></p>
+<p><code>--type "TENANT_NAME - Title Master"</code></p>
 <p>or </p>
 <p><code>--type iq__...</code> <em>(your 'Title Master' content type ID - content type IDs start with "iq__")</em></p>
 <p><em>NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.</em></p>
 <h3 id="getyourproductionmasterlibraryid">Get your Production Master Library ID</h3>
 <p>Click on <strong>Content</strong> in the left sidebar to get to your list of libraries.</p>
-<p>Each tenant also has a number of libraries created for them, including one to hold Production Masters - it should be labeled "<em>COMPANY_NAME</em> - Title Masters". Click on this item to see a list of objects currently in the library (initially it may be empty).</p>
+<p>Each tenant also has a number of libraries created for them, including one to hold Production Masters - it should be labeled "<em>TENANT_NAME</em> - Title Masters". Click on this item to see a list of objects currently in the library (initially it may be empty).</p>
 <p>On the next screen, click on the <strong>Library Info</strong> tab to find the Library ID. When you run commands to create Production Masters, you will need to supply this ID, e.g.:</p>
 <p><code>--library ilib...</code> <em>(your 'Title Masters' library ID - library IDs start with "ilib")</em></p>
 <h3 id="creatingfromafileonawss3">Creating from a file on AWS S3</h3>
@@ -121,7 +121,7 @@ npm install
       --library ilib3xDQU7yDgZZQsmMwUrHTwzAEbbdu \
       --title "Big Buck Bunny (master)" \
       --s3-reference \
-      --type "COMPANY_NAME - Title Master" \
+      --type "TENANT_NAME - Title Master" \
       --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
       --files bbb_sunflower_1080p_60fps_stereo_abl.mp4
 </code></pre>
@@ -133,7 +133,7 @@ npm install
     node testScripts/CreateProductionMaster.js \
       --library ilib3xDQU7yDgZZQsmMwUrHTwzAEbbdu \ 
       --title "Big Buck Bunny (master)" \
-      --type "COMPANY_NAME - Title Master" \
+      --type "TENANT_NAME - Title Master" \
       --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
       --files PATH_TO_YOUR_DIRECTORY/bbb_sunflower_1080p_60fps_stereo_abl.mp4
 </code></pre>
@@ -158,13 +158,13 @@ Production master object created:
 <p>Clicking on the <strong>Show Metadata</strong> button and drilling down into <em>production_master</em> → <em>variants</em> → <em>default</em> → <em>streams</em> will reveal what files and stream indexes the server has chosen to include in this "default" Variant.</p>
 <h3 id="grantpermissionsonproductionmasterobjectviabrowser">Grant Permissions on Production Master object - via browser</h3>
 <p>In order to let other users work with your object, you must grant permissions to an <strong>Access Group</strong>.</p>
-<p>From the object details page, click the blue <strong>Groups</strong> button at top - you should see a screen with the <em>Access Group</em> field already chosen for you, set to "<em>COMPANY_NAME</em> Content Admins".</p>
+<p>From the object details page, click the blue <strong>Groups</strong> button at top - you should see a screen with the <em>Access Group</em> field already chosen for you, set to "<em>TENANT_NAME</em> Content Admins".</p>
 <p>Check all 3 boxes (<strong>See</strong>, <strong>Access</strong>, and <strong>Manage</strong>), then click <strong>Submit</strong>.</p>
 <h3 id="grantpermissionsonproductionmasterobjectviacommandline">Grant Permissions on Production Master object - via command line</h3>
 <p>In order to grant permissions via the command line, you will need to know the following:</p>
 <ul>
 <li>The ID of your Production Master object (starts with "iq__")</li>
-<li>The Address of your "<em>COMPANY_NAME</em> Content Admins" group (starts with "0x")</li>
+<li>The Address of your "<em>TENANT_NAME</em> Content Admins" group (starts with "0x")</li>
 </ul>
 <p>You can find the Address of your group by clicking on the blue <strong>Groups</strong> button at top when you are browsing the details of any object. You can choose a group from the <strong>Access Group</strong> dropdown, then double-click the <strong>Address</strong> field to select it and copy to your clipboard.</p>
 <p>The command to add permissions is then:</p>
@@ -185,14 +185,14 @@ Production master object created:
 </ul>
 <p><em>NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.</em></p>
 <h3 id="getyourmezzaninecontenttypenameandorid">Get your Mezzanine Content Type name and/or ID</h3>
-<p>Click on <strong>Content Types</strong> on the left side and click on the one named "<em>COMPANY_NAME</em> - Title".</p>
+<p>Click on <strong>Content Types</strong> on the left side and click on the one named "<em>TENANT_NAME</em> - Title".</p>
 <p>You will see a detail screen where you can select and copy the <strong>Name</strong> and <strong>Object ID</strong> for this Content Type. When you run commands to create Mezzanines, you will need to supply either the name or the ID of this content type, e.g.:</p>
-<p><code>--type "COMPANY_NAME - Title"</code></p>
+<p><code>--type "TENANT_NAME - Title"</code></p>
 <p>or </p>
 <p><code>--type iq__...</code> <em>(your 'Title' content type ID - content type IDs start with "iq__")</em></p>
 <h3 id="getyourmezzaninelibraryid">Get your Mezzanine Library ID</h3>
 <p>Click on <strong>Content</strong> in the left sidebar to get to your list of libraries.</p>
-<p>Click on the one labeled "<em>COMPANY_NAME</em> - Titles", then click on the <strong>Library Info</strong> tab to find the Library ID. When you run commands to create Mezzanines, you will need to supply this ID, e.g.:</p>
+<p>Click on the one labeled "<em>TENANT_NAME</em> - Titles", then click on the <strong>Library Info</strong> tab to find the Library ID. When you run commands to create Mezzanines, you will need to supply this ID, e.g.:</p>
 <p><code>--library ilib...</code> <em>(your 'Titles' library ID - library IDs start with "ilib")</em></p>
 <h3 id="chooseanabrprofile">Choose an ABR Profile</h3>
 <p>An <strong>ABR Profile</strong> contains information on what formats, resolutions and bitrates to offer for streaming playout, as well as any DRM and/or watermarking information.</p>
@@ -211,7 +211,7 @@ Production master object created:
 <pre><code>node testScripts/CreateABRMezzanine.js --library ilib4JFY7hontNKJJmM4XnZaweTbH9tq \
   --masterHash hq__9v2JY21ESnsvNdwWwgJrjiw7jHWv5nXik6quVn6FUgDxbgTgJT8toxBVb1ShZZH4mcFSFcJUJJ \
   --title "Big Buck Bunny" \
-  --type "COMPANY_NAME - Title" \
+  --type "TENANT_NAME - Title" \
   --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
   --abr-profile testScripts/abr_profile_drm.json
 </code></pre>
@@ -230,7 +230,7 @@ Write Node: https://host-38-142-50-110.contentfabric.io/
 <p>The <strong>Object ID</strong> identifies your new Mezzanine, you will need this value for subsequent commands.</p>
 <p>In your browser, if you click on <strong>Content</strong> in the left sidebar, then click on your Titles library, you should see your new Mezzanine object. 
 (If you are already on the page that lists objects in the library you may need to click the refresh icon <img src="images/icon_reload.png" alt="image for refresh icon" /> to see the new object)</p>
-<p>If you go into the "COMPANY_NAME - Title Mezzanines" library in your browser you should see the new mezzanine object.</p>
+<p>If you go into the "TENANT_NAME - Title Mezzanines" library in your browser you should see the new mezzanine object.</p>
 <p>(If you are already on the object list page you may need to click the refresh icon to see the new object)</p>
 <p>Drilling down into it, you should see some information about transcoding progress (you will not be able to play it until transcoding has finished and you have finalized the object):</p>
 <p><img src="images/mez_progress.png" alt="image for transcoding progress" /></p>
@@ -274,7 +274,7 @@ Write Node: https://host-38-142-50-110.contentfabric.io/
 <p>In the browser, click the refresh icon <img src="images/icon_reload.png" alt="image for refresh icon" /> to update your view, then click on the <strong>Display</strong> tab to see the finalized content.</p>
 <h3 id="grantpermissionsonmezzanineobject">Grant Permissions on Mezzanine object</h3>
 <p>(Identical process as for the Production Master object)</p>
-<p>From the object details page, click the blue <strong>Groups</strong> button at top - you should see a screen with the <em>Access Group</em> field already chosen for you, set to "<em>COMPANY_NAME</em> Content Admins".</p>
+<p>From the object details page, click the blue <strong>Groups</strong> button at top - you should see a screen with the <em>Access Group</em> field already chosen for you, set to "<em>TENANT_NAME</em> Content Admins".</p>
 <p>Check all 3 boxes (<strong>See</strong>, <strong>Access</strong>, and <strong>Manage</strong>), then click <strong>Submit</strong>.</p>
 <h2 id="addinganotherofferingtoamezzanineobject">Adding another Offering to a Mezzanine object</h2>
 <p>A <strong>Mezzanine</strong> object contains one or more <strong>Offerings</strong>. Each <strong>Offering</strong> specifies the following information:</p>
