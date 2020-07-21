@@ -1108,6 +1108,10 @@ var contract = {
       "type": "address"
     }, {
       "indexed": false,
+      "name": "parentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
       "name": "objectHash",
       "type": "string"
     }],
@@ -1154,6 +1158,15 @@ var contract = {
       "type": "uint256"
     }],
     "name": "AccessRequestV3",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
     "type": "event"
   }]
 };

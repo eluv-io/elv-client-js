@@ -586,13 +586,12 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
     }
   }
 
-  const httpClient = this.HttpClient;
   let error, result;
+  const fabricURIs = this.fabricURIs;
   try {
-    // Point directly to the node containing the draft
-    this.HttpClient = new HttpClient({uris: [lroDraft.node], debug: httpClient.debug});
+    this.SetNodes({fabricURIs: [lroDraft.node, ...fabricURIs]});
 
-    result = await this.ContentObjectMetadata({
+    result = await client.ContentObjectMetadata({
       libraryId,
       objectId,
       writeToken: lroDraft.write_token,
@@ -601,7 +600,7 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
   } catch(err) {
     error = err;
   } finally {
-    this.HttpClient = httpClient;
+    this.SetNodes({fabricURIs});
   }
 
   if(error) { throw error; }

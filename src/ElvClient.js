@@ -76,6 +76,7 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
+   * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
@@ -87,6 +88,7 @@ class ElvClient {
    */
   constructor({
     contentSpaceId,
+    fabricVersion,
     fabricURIs,
     ethereumURIs,
     trustAuthorityId,
@@ -100,6 +102,8 @@ class ElvClient {
     this.contentSpaceAddress = this.utils.HashToAddress(contentSpaceId);
     this.contentSpaceLibraryId = this.utils.AddressToLibraryId(this.contentSpaceAddress);
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
+
+    this.fabricVersion = fabricVersion;
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
@@ -156,12 +160,15 @@ class ElvClient {
         ethereumURIs = ethereumURIs.filter(filterHTTPS);
       }
 
+      const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
+
       return {
         nodeId: fabricInfo.node_id,
         contentSpaceId: fabricInfo.qspace.id,
         fabricURIs,
         ethereumURIs,
-        kmsURIs: kmsUrls
+        kmsURIs: kmsUrls,
+        fabricVersion
       };
     } catch(error) {
       // eslint-disable-next-line no-console
@@ -199,7 +206,8 @@ class ElvClient {
     const {
       contentSpaceId,
       fabricURIs,
-      ethereumURIs
+      ethereumURIs,
+      fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
       region
@@ -207,6 +215,7 @@ class ElvClient {
 
     const client = new ElvClient({
       contentSpaceId,
+      fabricVersion,
       fabricURIs,
       ethereumURIs,
       trustAuthorityId,

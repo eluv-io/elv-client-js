@@ -757,7 +757,7 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
 
 
 exports.LROStatus = function _callee5(_ref8) {
-  var libraryId, objectId, _ref8$offeringKey, offeringKey, lroDraft, ready, httpClient, error, result;
+  var libraryId, objectId, _ref8$offeringKey, offeringKey, lroDraft, ready, error, result, fabricURIs;
 
   return _regeneratorRuntime.async(function _callee5$(_context5) {
     while (1) {
@@ -822,15 +822,13 @@ exports.LROStatus = function _callee5(_ref8) {
           throw Error("No LRO draft found for this mezzanine");
 
         case 19:
-          httpClient = this.HttpClient;
+          fabricURIs = this.fabricURIs;
           _context5.prev = 20;
-          // Point directly to the node containing the draft
-          this.HttpClient = new HttpClient({
-            uris: [lroDraft.node],
-            debug: httpClient.debug
+          this.SetNodes({
+            fabricURIs: [lroDraft.node].concat(_toConsumableArray(fabricURIs))
           });
           _context5.next = 24;
-          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(client.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: lroDraft.write_token,
@@ -849,7 +847,9 @@ exports.LROStatus = function _callee5(_ref8) {
 
         case 30:
           _context5.prev = 30;
-          this.HttpClient = httpClient;
+          this.SetNodes({
+            fabricURIs: fabricURIs
+          });
           return _context5.finish(30);
 
         case 33:

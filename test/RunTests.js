@@ -1,5 +1,6 @@
 const fs = require("fs");
 const { performance } = require("perf_hooks");
+const ClientConfiguration = require("../TestConfiguration");
 
 const Tests = {
   Utils: require("./Utils.test"),
@@ -10,6 +11,8 @@ const Tests = {
 };
 
 const RunTests = async () => {
+  console.log(`\nUsing Configuration URL '${process.env["CONFIG_URL"] || ClientConfiguration["config-url"]}'\n`);
+
   let keys = Object.keys(Tests);
 
   if(process.argv.length > 2) {

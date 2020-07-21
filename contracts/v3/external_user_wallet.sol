@@ -2,8 +2,9 @@ pragma solidity 0.4.24;
 
 import {Ownable} from "./ownable.sol";
 import {Editable} from "./editable.sol";
+import {Accessible} from "./accessible.sol";
 
-contract ExternalUserWallet is Editable {
+contract ExternalUserWallet is Accessible, Editable {
 
     address public addressTA; // trusted authority of the user - aka KMS
     address public addressExtUser;

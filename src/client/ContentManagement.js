@@ -35,11 +35,17 @@ exports.SetVisibility = async function({id, visibility}) {
     return;
   }
 
-  return await this.CallContractMethodAndWait({
+  const event = await this.CallContractMethodAndWait({
     contractAddress: this.utils.HashToAddress(id),
     methodName: "setVisibility",
     methodArgs: [visibility],
   });
+
+  // TODO: Get rid of this when fabric is changed
+  // Wait to ensure fabric cache expires
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
+  return event;
 };
 
 /* Content Type Creation */
@@ -203,14 +209,9 @@ exports.CreateContentLibrary = async function({
   // Set library content object type and metadata on automatically created library object
   const objectId = libraryId.replace("ilib", "iq__");
 
-  const libraryType = await this.ContentType({name: "library"});
-
   const editResponse = await this.EditContentObject({
     libraryId,
-    objectId,
-    options: {
-      type: libraryType ? libraryType.id : undefined
-    }
+    objectId
   });
 
   await this.ReplaceMetadata({
@@ -727,8 +728,7 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
         contractAddress: this.utils.HashToAddress(objectId),
         abi,
         fromBlock,
-        count: 10000,
-        topics: ["0x482875da75e6d9f93f74a5c1a61f14cf08822057c01232f44cb92ae998e30d8e"]
+        count: 1000
       });
 
       const confirmEvent = events.find(blockEvents =>
@@ -736,6 +736,7 @@ exports.PublishContentVersion = async function({objectId, versionHash, awaitComm
       );
 
       if(confirmEvent) {
+        // Found confirmation
         this.Log(`Commit confirmed: ${objectHash}`);
         break;
       }
