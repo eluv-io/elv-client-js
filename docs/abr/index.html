@@ -1,5 +1,5 @@
 <p><link rel="stylesheet" type="text/css" media="all" href="index.css" /></p>
-<h1 id="eluviocontentfabricingestingmediaforadjustablebitrateabrstreaming">Eluvio Content Fabric: Ingesting Media for Adjustable Bit Rate (ABR) Streaming</h1>
+<h1 id="eluviocontentfabricingestingmediaforadaptivebitrateabrstreaming">Eluvio Content Fabric: Ingesting Media for Adaptive Bit Rate (ABR) Streaming</h1>
 <p><em>last revised: 2020-07-17</em></p>
 <h2 id="basicconcepts">Basic Concepts</h2>
 <p>In the Content Fabric, ingesting video for streaming involves two kinds of objects, <strong>Production Masters</strong> and <strong>ABR Mezzanines</strong>:</p>
@@ -45,7 +45,7 @@
 <li>Navigate to the Content Fabric Browser page<ul>
 <li>If you have been set up on our <strong>demo</strong> network, go to: <a href="https://core.demov3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/">https://core.demov3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/</a></li>
 <li>If you have been set up on our <strong>production</strong> network, go to:
-<a href="https://core.demov3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/">https://core.v3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/</a></li></ul></li>
+<a href="https://core.v3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/">https://core.v3.contentfabric.io/#/apps/Eluvio%20Fabric%20Browser/#/</a></li></ul></li>
 <li>Enter the password you chose when first setting up your account</li>
 <li>Click on the <strong>eluv.io</strong> logo at top left</li>
 <li>Click on <strong>Profile</strong></li>
@@ -72,7 +72,7 @@
 </code></pre></li>
 <li><p>To connect to our <strong>production</strong> network, the file should be set to contain the following:</p>
 <pre><code>{
-  "config-url": "https://host-66-220-3-85.contentfabric.io/config/config"
+  "config-url": "https://main.net955305.contentfabric.io/config"
 }
 </code></pre></li></ul></li>
 <li><p>Configure the private key environment variable:</p>
@@ -104,7 +104,7 @@ npm install
 <p>Each tenant of the Content Fabric has a number <strong>Content Types</strong> created for them. These provide a way of customizing the structure of your fabric objects.</p>
 <p>If you click on <strong>Content Types</strong> on the left side you will see a list of these types, among which should be one named "<em>COMPANY_NAME</em> - Title Master".</p>
 <p>If you click on this item, you will see a detail screen where you can select and copy the <strong>Name</strong> and <strong>Object ID</strong> for this Content Type. When you run commands to create Production Masters, you will need to supply either the name or the ID of this content type, e.g.:</p>
-<p><code>--type "YOUR_COMPANY_NAME - Title Master"</code></p>
+<p><code>--type "COMPANY_NAME - Title Master"</code></p>
 <p>or </p>
 <p><code>--type iq__...</code> <em>(your 'Title Master' content type ID - content type IDs start with "iq__")</em></p>
 <p><em>NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.</em></p>
@@ -121,7 +121,7 @@ npm install
       --library ilib3xDQU7yDgZZQsmMwUrHTwzAEbbdu \
       --title "Big Buck Bunny (master)" \
       --s3-reference \
-      --type "YourCompanyName - Title Master" \
+      --type "COMPANY_NAME - Title Master" \
       --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
       --files bbb_sunflower_1080p_60fps_stereo_abl.mp4
 </code></pre>
@@ -133,7 +133,7 @@ npm install
     node testScripts/CreateProductionMaster.js \
       --library ilib3xDQU7yDgZZQsmMwUrHTwzAEbbdu \ 
       --title "Big Buck Bunny (master)" \
-      --type "MyCompanyName - Title Master" \
+      --type "COMPANY_NAME - Title Master" \
       --ip-title-id "YOUR_INTERNAL_ASSET_ID" \
       --files PATH_TO_YOUR_DIRECTORY/bbb_sunflower_1080p_60fps_stereo_abl.mp4
 </code></pre>
@@ -174,7 +174,7 @@ Production master object created:
   --permissions see access manage
 </code></pre>
 <h2 id="creatingamezzanineobject">Creating a Mezzanine object</h2>
-<p>A <strong>Mezzanine</strong> object contains transcoded media optimized for adjustable bitrate (ABR) streaming. Depending on the ABR profile you choose, it is playable via HLS and/or DASH with DRM (you also have the option to offer playout in the clear).</p>
+<p>A <strong>Mezzanine</strong> object contains transcoded media optimized for adaptive bitrate (ABR) streaming. Depending on the ABR profile you choose, it is playable via HLS and/or DASH with DRM (you also have the option to offer playout in the clear).</p>
 <p>To create a Mezzanine, you will need the following:</p>
 <ul>
 <li>Your Mezzanine Content Type name or ID</li>
@@ -187,7 +187,7 @@ Production master object created:
 <h3 id="getyourmezzaninecontenttypenameandorid">Get your Mezzanine Content Type name and/or ID</h3>
 <p>Click on <strong>Content Types</strong> on the left side and click on the one named "<em>COMPANY_NAME</em> - Title".</p>
 <p>You will see a detail screen where you can select and copy the <strong>Name</strong> and <strong>Object ID</strong> for this Content Type. When you run commands to create Mezzanines, you will need to supply either the name or the ID of this content type, e.g.:</p>
-<p><code>--type "YOUR_COMPANY_NAME - Title"</code></p>
+<p><code>--type "COMPANY_NAME - Title"</code></p>
 <p>or </p>
 <p><code>--type iq__...</code> <em>(your 'Title' content type ID - content type IDs start with "iq__")</em></p>
 <h3 id="getyourmezzaninelibraryid">Get your Mezzanine Library ID</h3>
