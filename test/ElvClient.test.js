@@ -2083,22 +2083,12 @@ describe("Test ElvClient", () => {
         visibility: 10
       });
 
-      await client.SetAccessCharge({objectId, accessCharge: "0.25"});
+      await client.SetAccessCharge({objectId, accessCharge: "0.5"});
 
-      const accessInfo = await accessClient.AccessInfo({
+      const {accessCharge} = await accessClient.AccessInfo({
         objectId,
       });
 
-      console.log("\nACCESS INFO:");
-      console.log(JSON.stringify(accessInfo, null, 2));
-      console.log("\n");
-
-      const {accessible, accessCode, accessCharge} = await accessClient.AccessInfo({
-        objectId,
-      });
-
-      expect(accessible).toBeTruthy();
-      expect(accessCode).toEqual(10);
       expect(accessCharge).toEqual("0.5");
 
       const initialBalance = parseFloat(await accessClient.GetBalance({address: accessClient.signer.address}));

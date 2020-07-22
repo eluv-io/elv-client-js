@@ -529,7 +529,7 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
   try {
     this.SetNodes({fabricURIs: [lroDraft.node, ...fabricURIs]});
 
-    result = await client.ContentObjectMetadata({
+    result = await this.ContentObjectMetadata({
       libraryId,
       objectId,
       writeToken: lroDraft.write_token,

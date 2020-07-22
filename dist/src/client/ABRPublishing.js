@@ -828,7 +828,7 @@ exports.LROStatus = function _callee5(_ref8) {
             fabricURIs: [lroDraft.node].concat(_toConsumableArray(fabricURIs))
           });
           _context5.next = 24;
-          return _regeneratorRuntime.awrap(client.ContentObjectMetadata({
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             writeToken: lroDraft.write_token,
