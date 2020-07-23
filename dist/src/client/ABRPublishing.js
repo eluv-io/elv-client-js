@@ -255,6 +255,15 @@ exports.CreateProductionMaster = function _callee(_ref) {
 
         case 59:
           _context.next = 61;
+          return _regeneratorRuntime.awrap(this.CreateEncryptionConk({
+            libraryId: libraryId,
+            objectId: id,
+            writeToken: write_token,
+            createKMSConk: true
+          }));
+
+        case 61:
+          _context.next = 63;
           return _regeneratorRuntime.awrap(this.CallBitcodeMethod({
             libraryId: libraryId,
             objectId: id,
@@ -266,12 +275,12 @@ exports.CreateProductionMaster = function _callee(_ref) {
             constant: false
           }));
 
-        case 61:
+        case 63:
           _ref3 = _context.sent;
           logs = _ref3.logs;
           errors = _ref3.errors;
           warnings = _ref3.warnings;
-          _context.next = 67;
+          _context.next = 69;
           return _regeneratorRuntime.awrap(this.MergeMetadata({
             libraryId: libraryId,
             objectId: id,
@@ -288,8 +297,8 @@ exports.CreateProductionMaster = function _callee(_ref) {
             })
           }));
 
-        case 67:
-          _context.next = 69;
+        case 69:
+          _context.next = 71;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
@@ -297,7 +306,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
             awaitCommitConfirmation: false
           }));
 
-        case 69:
+        case 71:
           finalizeResponse = _context.sent;
           return _context.abrupt("return", _objectSpread({
             errors: errors || [],
@@ -305,7 +314,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
             warnings: warnings || []
           }, finalizeResponse));
 
-        case 71:
+        case 73:
         case "end":
           return _context.stop();
       }
