@@ -1304,11 +1304,11 @@ exports.CallBitcodeMethod = async function({
     `Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
       ${constant ? "GET" : "POST"} ${path}
       Query Params:
-      ${queryParams}
+      ${JSON.stringify(queryParams || "")}
       Body:
-      ${body}
+      ${JSON.stringify(body || "")}
       Headers
-      ${headers}`
+      ${JSON.stringify(headers || "")}`
   );
 
   return this.utils.ResponseToFormat(
