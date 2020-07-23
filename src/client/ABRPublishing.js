@@ -165,6 +165,8 @@ exports.CreateProductionMaster = async function({
     }
   }
 
+  await this.CreateEncryptionConk({libraryId, objectId: id, writeToken: write_token, createKMSConk: true});
+
   const { logs, errors, warnings } = await this.CallBitcodeMethod({
     libraryId,
     objectId: id,
