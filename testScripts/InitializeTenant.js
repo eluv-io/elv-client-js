@@ -131,7 +131,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     await client.userProfileClient.SetTenantId({address: tenantAdminGroupAddress});
 
     // Add KMS to tenant admins group
-    await client.AddAccessGroupManager({
+    await client.AddAccessGroupMember({
       contractAddress: tenantAdminGroupAddress,
       memberAddress: client.utils.HashToAddress(kmsId)
     });
