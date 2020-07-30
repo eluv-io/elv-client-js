@@ -615,7 +615,7 @@ class ElvClient {
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-      .filter(method => !forbiddenMethods.includes(method));
+      .filter(method => typeof this[method] === "function" && !forbiddenMethods.includes(method));
   }
 
   // Call a method specified in a message from a frame

@@ -1,5 +1,6 @@
 const Id = require("./Id");
 const Utils = require("./Utils");
+const permissionLevels = require("./client/ContentAccess").permissionLevels;
 
 class FrameClient {
   /**
@@ -33,6 +34,8 @@ class FrameClient {
    * and generating a timeout error
    */
   constructor({target, timeout=30}={}) {
+    this.permissionLevels = permissionLevels;
+
     if(!target && typeof window !== "undefined" && window.parent) {
       target = window.parent;
     }
@@ -313,6 +316,7 @@ class FrameClient {
       "CopyContentObject",
       "CreateABRMezzanine",
       "CreateAccessGroup",
+      "CreateAndFinalizeContentObject",
       "CreateContentLibrary",
       "CreateContentObject",
       "CreateContentType",
@@ -339,6 +343,7 @@ class FrameClient {
       "DownloadEncrypted",
       "DownloadFile",
       "DownloadPart",
+      "EditAndFinalizeContentObject",
       "EditContentObject",
       "Encrypt",
       "EncryptECIES",
@@ -368,6 +373,7 @@ class FrameClient {
       "MetadataAuth",
       "NodeId",
       "Nodes",
+      "Permission",
       "PlayoutOptions",
       "ProduceMetadataLinks",
       "Proofs",
@@ -394,6 +400,7 @@ class FrameClient {
       "SetOauthToken",
       "SetSignerFromOauthToken",
       "SetVisibility",
+      "SetPermission",
       "StartABRMezzanineJobs",
       "UnlinkAccessGroupFromOauth",
       "UpdateContentObjectGraph",
