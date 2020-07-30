@@ -84,6 +84,7 @@ exports.Visibility = async function({id}) {
  *
  * Note: This method is only intended for normal content objects, not types, libraries, etc.
  *
+ * @methodGroup Content Objects
  * @param {string} objectId - The ID of the object
  *
  * @return {string} - Key for the permission of the object - Use this to retrieve more details from client.permissionLevels
