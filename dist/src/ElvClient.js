@@ -749,16 +749,18 @@ function () {
   }, {
     key: "FrameAllowedMethods",
     value: function FrameAllowedMethods() {
+      var _this = this;
+
       var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "SetSigner", "SetSignerFromWeb3Provider", "ToggleLogging"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
-        return !forbiddenMethods.includes(method);
+        return typeof _this[method] === "function" && !forbiddenMethods.includes(method);
       });
     } // Call a method specified in a message from a frame
 
   }, {
     key: "CallFromFrameMessage",
     value: function CallFromFrameMessage(message, Respond) {
-      var _this = this;
+      var _this2 = this;
 
       var callback, method, methodResults, responseError;
       return _regeneratorRuntime.async(function CallFromFrameMessage$(_context9) {
@@ -775,7 +777,7 @@ function () {
             case 2:
               if (message.callbackId) {
                 callback = function callback(result) {
-                  Respond(_this.utils.MakeClonable({
+                  Respond(_this2.utils.MakeClonable({
                     type: "ElvFrameResponse",
                     requestId: message.callbackId,
                     response: result
