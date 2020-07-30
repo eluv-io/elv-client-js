@@ -18,6 +18,35 @@ const {
 } = require("../Validation");
 
 
+// Note: Keep these ordered by most-restrictive to least-restrictive
+exports.permissionLevels = {
+  "owner": {
+    short: "Owner Only",
+    description: "Only the owner has access to the object and ability to change permissions",
+    settings: { visibility: 0, statusCode: -1, kmsConk: false }
+  },
+  "editable": {
+    short: "Editable",
+    description: "Members of the editors group have full access to the object and the ability to change permissions",
+    settings: { visibility: 0, statusCode: -1, kmsConk: true }
+  },
+  "viewable": {
+    short: "Viewable",
+    description: "In addition to editors, members of the 'accessor' group can have read-only access to the object including playing video and retrieving metadata, images and documents",
+    settings: { visibility: 0, statusCode: 0, kmsConk: true }
+  },
+  "listable": {
+    short: "Publicly Listable",
+    description: "Anyone can list the public portion of this object but only accounts with specific rights can access",
+    settings: { visibility: 1, statusCode: 0, kmsConk: true }
+  },
+  "public": {
+    short: "Public",
+    description: "Anyone can access this object",
+    settings: { visibility: 10, statusCode: 0, kmsConk: true }
+  }
+};
+
 exports.Visibility = async function({id}) {
   try {
     const address = this.utils.HashToAddress(id);
@@ -48,6 +77,59 @@ exports.Visibility = async function({id}) {
 
     throw error;
   }
+};
+
+/**
+ * Get the current permission level for the specified object. See client.permissionLevels for all available permissions.
+ *
+ * Note: This method is only intended for normal content objects, not types, libraries, etc.
+ *
+ * @param {string} objectId - The ID of the object
+ *
+ * @return {string} - Key for the permission of the object - Use this to retrieve more details from client.permissionLevels
+ */
+exports.Permission = async function({objectId}) {
+  ValidateObject(objectId);
+
+  if((await this.AccessType({id: objectId})) !== this.authClient.ACCESS_TYPES.OBJECT) {
+    throw Error("Permission only valid for normal content objects: " + objectId);
+  }
+
+  const visibility = await this.Visibility({id: objectId});
+
+  const kmsAddress = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "addressKMS"
+  });
+
+  const kmsId = kmsAddress && `ikms${this.utils.AddressToHash(kmsAddress)}`;
+
+  let hasKmsConk = false;
+  if(kmsId) {
+    hasKmsConk = !!(await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId}),
+      objectId,
+      metadataSubtree: `eluv.caps.${kmsId}`
+    }));
+  }
+
+  let statusCode = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "statusCode"
+  });
+  statusCode = parseInt(statusCode._hex, 16);
+
+  let permission = Object.keys(this.permissionLevels).filter(permissionKey => {
+    const settings = this.permissionLevels[permissionKey].settings;
+
+    return visibility >= settings.visibility && statusCode >= settings.statusCode && hasKmsConk === settings.kmsConk;
+  });
+
+  if(!permission) {
+    permission = hasKmsConk ? ["editable"] : ["owner"];
+  }
+
+  return permission.slice(-1)[0];
 };
 
 /* Content Spaces */
