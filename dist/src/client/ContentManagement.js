@@ -86,6 +86,7 @@ exports.SetVisibility = function _callee(_ref) {
  *
  * Note: This method is only intended for normal content objects, not types, libraries, etc.
  *
+ * @methodGroup Content Objects
  * @param {string} objectId - The ID of the object
  * @param {string} permission - The key for the permission to set - See client.permissionLevels for available permissions
  */

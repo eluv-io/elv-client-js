@@ -196,7 +196,9 @@ class AuthorizationClient {
         noAuth: this.noAuth || noAuth
       });
 
-      token.tx_id = transactionHash;
+      if(token.tx_id) {
+        token.tx_id = transactionHash;
+      }
     }
 
     if(libraryId) {
