@@ -313,7 +313,10 @@ function () {
             case 22:
               _ref4 = _context3.sent;
               transactionHash = _ref4.transactionHash;
-              token.tx_id = transactionHash;
+
+              if (token.tx_id) {
+                token.tx_id = transactionHash;
+              }
 
             case 25:
               if (libraryId) {
