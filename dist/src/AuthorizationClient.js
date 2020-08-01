@@ -314,7 +314,7 @@ function () {
               _ref4 = _context3.sent;
               transactionHash = _ref4.transactionHash;
 
-              if (token.tx_id) {
+              if (transactionHash) {
                 token.tx_id = transactionHash;
               }
 
