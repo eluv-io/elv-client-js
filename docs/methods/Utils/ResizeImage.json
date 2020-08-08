@@ -1,14 +1,14 @@
 [
   {
-    "signature": " ResizeImage([object Object]);",
+    "signature": " ResizeImage({\n  \"imageUrl\": \"https://host-35-233-145-232.test.contentfabric.io/q/hq__GcEUxBe7JRZWMJDD3auYmb8r5BxwN9zrXtyUtMYWk2HFg958WZD1d4ZZqZJT9fUDWMsqn11Kfm/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDgxYTViMDU4ZGU3MTYxMzA4ZTE2YTQzYjQyN2YwMWY5ODhhOTNmYTUifQ%3D%3D.RVMyNTZLXzhlRnh5RVZqOFZkcTNyd3lpQjN2QThrTmg0dEJSaG95UFlyM2dyNHJvQ3BCWFJoTXo0aU1tN3dyb3JCTTVkZnpUR2NOaG03Ym5WZE5VU1ZXTUhIcU1mNzVt\",\n  \"height\": 500\n});",
     "result": "\"https://host-35-233-145-232.test.contentfabric.io/q/hq__GcEUxBe7JRZWMJDD3auYmb8r5BxwN9zrXtyUtMYWk2HFg958WZD1d4ZZqZJT9fUDWMsqn11Kfm/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDgxYTViMDU4ZGU3MTYxMzA4ZTE2YTQzYjQyN2YwMWY5ODhhOTNmYTUifQ%3D%3D.RVMyNTZLXzhlRnh5RVZqOFZkcTNyd3lpQjN2QThrTmg0dEJSaG95UFlyM2dyNHJvQ3BCWFJoTXo0aU1tN3dyb3JCTTVkZnpUR2NOaG03Ym5WZE5VU1ZXTUhIcU1mNzVt&height=500\""
   },
   {
-    "signature": " ResizeImage([object Object]);",
+    "signature": " ResizeImage({\n  \"imageUrl\": \"https://host-35-233-145-232.test.contentfabric.io/q/hq__GcEUxBe7JRZWMJDD3auYmb8r5BxwN9zrXtyUtMYWk2HFg958WZD1d4ZZqZJT9fUDWMsqn11Kfm/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDgxYTViMDU4ZGU3MTYxMzA4ZTE2YTQzYjQyN2YwMWY5ODhhOTNmYTUifQ%3D%3D.RVMyNTZLXzhlRnh5RVZqOFZkcTNyd3lpQjN2QThrTmg0dEJSaG95UFlyM2dyNHJvQ3BCWFJoTXo0aU1tN3dyb3JCTTVkZnpUR2NOaG03Ym5WZE5VU1ZXTUhIcU1mNzVt&height=500\",\n  \"height\": 1000\n});",
     "result": "\"https://host-35-233-145-232.test.contentfabric.io/q/hq__GcEUxBe7JRZWMJDD3auYmb8r5BxwN9zrXtyUtMYWk2HFg958WZD1d4ZZqZJT9fUDWMsqn11Kfm/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDgxYTViMDU4ZGU3MTYxMzA4ZTE2YTQzYjQyN2YwMWY5ODhhOTNmYTUifQ%3D%3D.RVMyNTZLXzhlRnh5RVZqOFZkcTNyd3lpQjN2QThrTmg0dEJSaG95UFlyM2dyNHJvQ3BCWFJoTXo0aU1tN3dyb3JCTTVkZnpUR2NOaG03Ym5WZE5VU1ZXTUhIcU1mNzVt&height=1000\""
   },
   {
-    "signature": " ResizeImage([object Object]);",
+    "signature": " ResizeImage({\n  \"imageUrl\": \"https://host-35-233-145-232.test.contentfabric.io/q/hq__GcEUxBe7JRZWMJDD3auYmb8r5BxwN9zrXtyUtMYWk2HFg958WZD1d4ZZqZJT9fUDWMsqn11Kfm/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDgxYTViMDU4ZGU3MTYxMzA4ZTE2YTQzYjQyN2YwMWY5ODhhOTNmYTUifQ%3D%3D.RVMyNTZLXzhlRnh5RVZqOFZkcTNyd3lpQjN2QThrTmg0dEJSaG95UFlyM2dyNHJvQ3BCWFJoTXo0aU1tN3dyb3JCTTVkZnpUR2NOaG03Ym5WZE5VU1ZXTUhIcU1mNzVt&height=1000\"\n});",
     "result": "\"https://host-35-233-145-232.test.contentfabric.io/q/hq__GcEUxBe7JRZWMJDD3auYmb8r5BxwN9zrXtyUtMYWk2HFg958WZD1d4ZZqZJT9fUDWMsqn11Kfm/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDgxYTViMDU4ZGU3MTYxMzA4ZTE2YTQzYjQyN2YwMWY5ODhhOTNmYTUifQ%3D%3D.RVMyNTZLXzhlRnh5RVZqOFZkcTNyd3lpQjN2QThrTmg0dEJSaG95UFlyM2dyNHJvQ3BCWFJoTXo0aU1tN3dyb3JCTTVkZnpUR2NOaG03Ym5WZE5VU1ZXTUhIcU1mNzVt\""
   }
 ]

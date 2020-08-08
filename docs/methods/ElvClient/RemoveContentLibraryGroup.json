@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async RemoveContentLibraryGroup({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"groupAddress\": \"0x8ca82b1c63a6d49b018ecacd17f58bf889c43372\",\n  \"permission\": \"reviewer\"\n});"
+    "signature": "async RemoveContentLibraryGroup({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"groupAddress\": \"0xc1afc5e29d872ebc4be5559593a48a4bba016556\",\n  \"permission\": \"reviewer\"\n});"
   }
 ]

@@ -2100,7 +2100,7 @@ describe("Test ElvClient", () => {
 
     test("Make Manual Access Request", async () => {
       let accessRequest;
-      if(client.fabricVersion >= 3) {
+      if(await client.authClient.IsV3({id: objectId})) {
         accessRequest = await client.AccessRequest({
           versionHash,
           args: [
@@ -2151,6 +2151,34 @@ describe("Test ElvClient", () => {
       });
 
       expect(client.stateChannelAccess[objectId]).not.toBeDefined();
+    });
+
+    test("Audience Data", async () => {
+      const audienceData = client.authClient.AudienceData({
+        objectId,
+        versionHash
+      });
+
+      expect(audienceData).toBeDefined();
+      expect(audienceData.user_address).toEqual(client.utils.FormatAddress(client.signer.address));
+      expect(audienceData.content_id).toEqual(objectId);
+      expect(audienceData.content_hash).toEqual(versionHash);
+
+      client.SetAuthContext({context: {custom: "attribute"}});
+      const audienceDataGlobalContext = client.authClient.AudienceData({
+        objectId,
+        versionHash
+      });
+
+      expect(audienceDataGlobalContext.custom).toEqual("attribute");
+
+      const audienceDataSpecificContext = client.authClient.AudienceData({
+        objectId,
+        versionHash,
+        context: {custom: "attribute"}
+      });
+
+      expect(audienceDataSpecificContext.custom).toEqual("attribute");
     });
   });
 

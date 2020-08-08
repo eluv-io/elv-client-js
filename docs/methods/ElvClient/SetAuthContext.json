@@ -1,0 +1,5 @@
+[
+  {
+    "signature": " SetAuthContext({\n  \"context\": {\n    \"custom\": \"attribute\"\n  }\n});"
+  }
+]
