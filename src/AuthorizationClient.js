@@ -118,7 +118,6 @@ class AuthorizationClient {
     return headers;
   }
 
-  // Wrapper for GenerateAuthorizationHeader to allow for per-call disabling of cache
   async AuthorizationToken({
     libraryId,
     objectId,
@@ -126,6 +125,7 @@ class AuthorizationClient {
     partHash,
     encryption,
     audienceData,
+    context,
     update=false,
     channelAuth=false,
     oauthToken,
@@ -146,7 +146,13 @@ class AuthorizationClient {
 
       let authorizationToken;
       if(channelAuth) {
-        authorizationToken = await this.GenerateChannelContentToken({objectId, audienceData, oauthToken});
+        authorizationToken = await this.GenerateChannelContentToken({
+          objectId,
+          versionHash,
+          audienceData,
+          context,
+          oauthToken
+        });
       } else {
         authorizationToken = await this.GenerateAuthorizationToken({
           libraryId,
@@ -377,7 +383,36 @@ class AuthorizationClient {
     return event;
   }
 
-  async GenerateChannelContentToken({objectId, audienceData, oauthToken, value=0}) {
+  AudienceData({objectId, versionHash, protocols=[], drms=[], context}) {
+    this.Log(`Retrieving audience data: ${objectId}`);
+
+    context = context || this.client.authContext || {};
+    if(Object.values(context).find(value => typeof value !== "string")) {
+      throw Error("Context must be a map of string->string");
+    }
+
+    let data = {
+      user_address: Utils.FormatAddress(this.client.signer.address),
+      content_id: objectId || Utils.DecodeVersionHash(versionHash).id,
+      content_hash: versionHash,
+      hostname: this.client.HttpClient.BaseURI().hostname(),
+      access_time: Math.round(new Date().getTime()).toString(),
+      format: protocols.join(","),
+      drm: drms.join(","),
+      ...context
+    };
+
+    if(typeof window !== "undefined" && window.navigator) {
+      data.user_string = window.navigator.userAgent;
+      data.language = window.navigator.language;
+    }
+
+    this.Log(data);
+
+    return data;
+  }
+
+  async GenerateChannelContentToken({objectId, versionHash, audienceData, context, oauthToken, value=0}) {
     if(oauthToken) {
       return await this.GenerateOauthChannelToken({
         objectId,
@@ -396,12 +431,12 @@ class AuthorizationClient {
 
     this.Log(`Making state channel access request: ${objectId}`);
 
-    let stateChannelApi = "elv_channelContentRequest";
-    let additionalParams = [];
-    if(audienceData) {
-      stateChannelApi = "elv_channelContentRequestContext";
-      additionalParams = [JSON.stringify(audienceData)];
+    if(!audienceData) {
+      audienceData = this.AudienceData({objectId, versionHash, context});
     }
+
+    const stateChannelApi = "elv_channelContentRequestContext";
+    const additionalParams = [JSON.stringify(audienceData)];
 
     const payload = await this.MakeKMSCall({
       objectId,
@@ -426,7 +461,7 @@ class AuthorizationClient {
     return token;
   }
 
-  async ChannelContentFinalize({objectId, audienceData, percent=0}) {
+  async ChannelContentFinalize({objectId, versionHash, percent=0}) {
     this.Log(`Making state channel finalize request: ${objectId}`);
 
     const result = await this.MakeKMSCall({
@@ -434,7 +469,7 @@ class AuthorizationClient {
       methodName: "elv_channelContentFinalizeContext",
       paramTypes: ["address", "address", "uint", "uint"],
       params: [this.client.signer.address, Utils.HashToAddress(objectId), percent, Date.now()],
-      additionalParams: [JSON.stringify(audienceData)]
+      additionalParams: [JSON.stringify(this.AudienceData({objectId, versionHash}))]
     });
 
     this.channelContentTokens[objectId] = undefined;

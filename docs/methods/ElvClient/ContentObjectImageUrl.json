@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ContentObjectImageUrl({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__2jyuPkhc3LErd56iASoaCr9Wj2Nh\"\n});",
-    "result": "\"https://host-35-233-145-232.test.contentfabric.io/q/hq__BoQX56agC8WsrpAKtWPN4VQkSn7LwURwNypzRKkgAysFNL2BeKeMMrEi8EFycfA6ZN47KCHG3o/meta/public/display_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDQ4YjZiNmE5OGJjZTU2NDM5NGRhZDllOThkYzdhODdjNWJiYmYzZmUifQ%3D%3D.RVMyNTZLX2NjZUJadGFWdzVVR2txSktkOUo4NkZMZkpWRmlMRzV0NEZCN1gxZFR4Qk1NRHVmUkpzU3p2dUV5bVRtUVBxcG0xRnYyUnVlVFp3RUh1WnZmTEZCTmozV2E%3D\""
+    "signature": "async ContentObjectImageUrl({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__3NWYmfT3JZZFTcv4Amy1athfduDx\"\n});",
+    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__Gvbu8yjNB3yhjkkrLHYLDgSVqpoSEisb8hbC4TLV5DPaKguiYqoTD6eVADka6cDkUPk4NTotzz/meta/public/display_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweGQ0M2UwMDYzNWYwODE2NTgwOTUwMmQ5MjlmZWNiNjgyMjgyY2NjNWMiLCJ0eF9pZCI6IjB4OWYwZWQ1Njk5NzZmMGEzM2JlM2YyYjg5MzFhNjg2NmM1Zjc0OGQzY2RiNTA1M2E5MTZiMDA1MzVhNTM2Y2M2MiJ9.RVMyNTZLX0FZU2Y2TWgyVkpMc2s0QWJwY0N1MVZFUnVMM3pvd3pocGgyZVpqNEZGVnIxazhaNXlOOUtqQThtVFo3NllzeUNQWEVVazR3cjV6OHRRZUUyM0FvamhicXdH\""
   }
 ]

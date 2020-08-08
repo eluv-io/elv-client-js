@@ -1,11 +1,14 @@
 [
   {
-    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__3MSitmDdND4E5WuMWhqvPXkr7BeM\",\n  \"groupAddress\": \"0x48fd25bba27a9a34df9d76bee05c4fe31fa09726\",\n  \"permission\": \"manage\"\n});"
+    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__LRjqBh8TrM8zUrWvrNQpCj7JDFG\",\n  \"groupAddress\": \"0x4cc6fda9e589325e23d8268d4f43e21b908fc159\",\n  \"permission\": \"manage\"\n});",
+    "result": "{\n  \"decode\": \"<function>\",\n  \"name\": \"RightsChanged\",\n  \"signature\": \"RightsChanged(address,address,uint8)\",\n  \"topic\": \"0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4\",\n  \"values\": {\n    \"0\": \"0x4CC6fda9E589325e23D8268d4F43e21B908FC159\",\n    \"1\": \"0x180Aa734a54e34d0bcA4537E51afC77E0E53Df73\",\n    \"2\": 22,\n    \"principal\": \"0x4CC6fda9E589325e23D8268d4F43e21B908FC159\",\n    \"entity\": \"0x180Aa734a54e34d0bcA4537E51afC77E0E53Df73\",\n    \"aggregate\": 22,\n    \"length\": 3\n  }\n}"
   },
   {
-    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__3MSitmDdND4E5WuMWhqvPXkr7BeM\",\n  \"groupAddress\": \"0x48fd25bba27a9a34df9d76bee05c4fe31fa09726\",\n  \"permission\": \"access\"\n});"
+    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__LRjqBh8TrM8zUrWvrNQpCj7JDFG\",\n  \"groupAddress\": \"0x4cc6fda9e589325e23d8268d4f43e21b908fc159\",\n  \"permission\": \"access\"\n});",
+    "result": "{\n  \"decode\": \"<function>\",\n  \"name\": \"RightsChanged\",\n  \"signature\": \"RightsChanged(address,address,uint8)\",\n  \"topic\": \"0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4\",\n  \"values\": {\n    \"0\": \"0x4CC6fda9E589325e23D8268d4F43e21B908FC159\",\n    \"1\": \"0x180Aa734a54e34d0bcA4537E51afC77E0E53Df73\",\n    \"2\": 2,\n    \"principal\": \"0x4CC6fda9E589325e23D8268d4F43e21B908FC159\",\n    \"entity\": \"0x180Aa734a54e34d0bcA4537E51afC77E0E53Df73\",\n    \"aggregate\": 2,\n    \"length\": 3\n  }\n}"
   },
   {
-    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__3MSitmDdND4E5WuMWhqvPXkr7BeM\",\n  \"groupAddress\": \"0x48fd25bba27a9a34df9d76bee05c4fe31fa09726\",\n  \"permission\": \"see\"\n});"
+    "signature": "async RemoveContentObjectGroupPermission({\n  \"objectId\": \"iq__LRjqBh8TrM8zUrWvrNQpCj7JDFG\",\n  \"groupAddress\": \"0x4cc6fda9e589325e23d8268d4f43e21b908fc159\",\n  \"permission\": \"see\"\n});",
+    "result": "{\n  \"decode\": \"<function>\",\n  \"name\": \"RightsChanged\",\n  \"signature\": \"RightsChanged(address,address,uint8)\",\n  \"topic\": \"0x23dcae6acc296731e3679d01e7cd963988e5a372850a0a1db2b9b01539e19ff4\",\n  \"values\": {\n    \"0\": \"0x4CC6fda9E589325e23D8268d4F43e21B908FC159\",\n    \"1\": \"0x180Aa734a54e34d0bcA4537E51afC77E0E53Df73\",\n    \"2\": 0,\n    \"principal\": \"0x4CC6fda9E589325e23D8268d4F43e21B908FC159\",\n    \"entity\": \"0x180Aa734a54e34d0bcA4537E51afC77E0E53Df73\",\n    \"aggregate\": 0,\n    \"length\": 3\n  }\n}"
   }
 ]

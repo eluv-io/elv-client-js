@@ -1,14 +1,14 @@
 [
   {
-    "signature": "async LinkData({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"linkPath\": \"myLink\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async LinkData({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"linkPath\": \"myLink\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   },
   {
-    "signature": "async LinkData({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"linkPath\": \"links/myLink2\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async LinkData({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"linkPath\": \"links/myLink2\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   },
   {
-    "signature": "async LinkData({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"linkPath\": \"links/metadataLink\",\n  \"format\": \"json\"\n});",
+    "signature": "async LinkData({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"linkPath\": \"links/metadataLink\",\n  \"format\": \"json\"\n});",
     "result": "{\n  \"data\": {\n    \"to\": \"show\"\n  },\n  \"some\": \"meta\"\n}"
   }
 ]

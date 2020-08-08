@@ -1,14 +1,78 @@
 [
   {
-    "signature": "async AccessType({\n  \"id\": \"iq__2scZkRjTCP98MjiSa9abBAf3mq6b\"\n});",
+    "signature": "async AccessType({\n  \"id\": \"iq__4PmBK1k2isQ9VTdphCB2gPv8wejz\"\n});",
     "result": "\"wallet\""
   },
   {
-    "signature": "async AccessType({\n  \"id\": \"iten2xf3y26kxGvqxCmBvFdCXzNHDMiR\"\n});",
+    "signature": "async AccessType({\n  \"id\": \"iq__4BRmonTig9QSD87MRWP8F5iLfdct\"\n});",
+    "result": "\"space\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__3tCKL1zJ2a2XqG5xktRDCoEMzVZv\"\n});",
+    "result": "\"type\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__RCFsiwubUs5bqeCwohR2wv1P4Q5\"\n});",
+    "result": "\"type\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__fTEG7r9sPawZpWqmyNxGMbdm5WR\"\n});",
+    "result": "\"type\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__T3CydLkQyiCDz3MrAumhRW7uazH\"\n});",
+    "result": "\"type\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__y8YShB4kZWb2vQq2tvHx7wg3TLy\"\n});",
+    "result": "\"type\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__wkpaYK5tZwEBHdNyjyhw5SxRnYy\"\n});",
+    "result": "\"type\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__3hWMLEHskJKgEirNr9BHjWMKZPiM\"\n});",
     "result": "\"group\""
   },
   {
-    "signature": "async AccessType({\n  \"id\": \"iq__3MSitmDdND4E5WuMWhqvPXkr7BeM\"\n});",
+    "signature": "async AccessType({\n  \"id\": \"iq__uRxGdvPm5MnEhzdDdTqSPFKDQCq\"\n});",
+    "result": "\"type\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iten3hWMLEHskJKgEirNr9BHjWMKZPiM\"\n});",
+    "result": "\"group\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__3NWYmfT3JZZFTcv4Amy1athfduDx\"\n});",
+    "result": "\"library\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__3pK1gj4a3JuUksXzEwe4FjuDryht\"\n});",
+    "result": "\"wallet\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\"\n});",
+    "result": "\"object\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__LRjqBh8TrM8zUrWvrNQpCj7JDFG\"\n});",
+    "result": "\"object\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__Mbk5Cy5fzJUd6FL2uHHTysbRDWN\"\n});",
+    "result": "\"object\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__32ZmB1ekWQZLhpPE8fzJmnUjPJJ6\"\n});",
+    "result": "\"object\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__33EoyrgaFph9hFMVNqcz1ZvsqBAm\"\n});",
+    "result": "\"library\""
+  },
+  {
+    "signature": "async AccessType({\n  \"id\": \"iq__fLdzZhKoE9V5gZ3nRBGic35nyMS\"\n});",
     "result": "\"object\""
   }
 ]
