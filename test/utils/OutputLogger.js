@@ -134,8 +134,9 @@ const OutputLogger = (klass, instance, exclude=[]) => {
       };
     } else {
       instance[methodName] = (...args) => {
+        const formattedArgs = args.map(arg => FormatArgs(arg)).join(", ");
         const result = originalMethod(...args);
-        writeOutput(args, result, false);
+        writeOutput(formattedArgs, result, false);
         return result;
       };
     }

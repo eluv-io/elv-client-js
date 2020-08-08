@@ -1,6 +1,18 @@
 [
   {
-    "signature": "async ContentObjectLibraryId({\n  \"versionHash\": \"hq__FYrvDqhH8ZRhQytRaEDkSA9MSju8iT7DbL7Mf8BkrzdGQLx8UqT6uVa7zcjouNbiW6T7FiJhj1\"\n});",
-    "result": "\"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\""
+    "signature": "async ContentObjectLibraryId({\n  \"objectId\": \"iq__32ZmB1ekWQZLhpPE8fzJmnUjPJJ6\"\n});",
+    "result": "\"ilib33EoyrgaFph9hFMVNqcz1ZvsqBAm\""
+  },
+  {
+    "signature": "async ContentObjectLibraryId({\n  \"objectId\": \"iq__32ZmB1ekWQZLhpPE8fzJmnUjPJJ6\",\n  \"versionHash\": \"hq__4oreiKQknHFcEy4cpAU8e7rDiJZRSXqWeCwk8mczDYy2byNFBzRG5zLvnvfNgX5eSS5XejxC5g\"\n});",
+    "result": "\"ilib33EoyrgaFph9hFMVNqcz1ZvsqBAm\""
+  },
+  {
+    "signature": "async ContentObjectLibraryId({\n  \"objectId\": \"iq__fLdzZhKoE9V5gZ3nRBGic35nyMS\"\n});",
+    "result": "\"ilib3j7DvNVcwkq5qTKXmZkEhViXW7Go\""
+  },
+  {
+    "signature": "async ContentObjectLibraryId({\n  \"versionHash\": \"hq__2J6QU3fcowD3CXa4JF9CuX7RHzURRPsyPzwf4cPfHTp2oqJ84ztsDxGqi97qAt1mGUX95RJwTG\"\n});",
+    "result": "\"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\""
   }
 ]

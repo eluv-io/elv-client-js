@@ -1,8 +1,8 @@
 [
   {
-    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib2zqa4gZ8N3DH1QWakR2e5UowDLF1\",\n  \"objectId\": \"iq__4Kq3bCuaesopTzoyUUgtEWBmn5if\",\n  \"writeToken\": \"tqw_PiEXTe9Cftyw1c5X1BTQvZQMcRkf4XNWP\",\n  \"metadataSubtree\": \"tenantId\"\n});"
+    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib4BRmonTig9QSD87MRWP8F5iLfdct\",\n  \"objectId\": \"iq__3pK1gj4a3JuUksXzEwe4FjuDryht\",\n  \"writeToken\": \"tqw_7nNEhwfJMyqV3QHvrEn1DpbEAzp7gNYFz\",\n  \"metadataSubtree\": \"tenantId\"\n});"
   },
   {
-    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"writeToken\": \"tqw_FgMdmSkApaPqsGtjDUb3VgCzbLhT2iDB9\",\n  \"metadataSubtree\": \"toDelete\"\n});"
+    "signature": "async DeleteMetadata({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"writeToken\": \"tqw_Pzn1VWUJqtQPNNfYw3ywgLX3RFvJhzi9\",\n  \"metadataSubtree\": \"toDelete\"\n});"
   }
 ]

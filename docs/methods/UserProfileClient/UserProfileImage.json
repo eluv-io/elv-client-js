@@ -1,10 +1,10 @@
 [
   {
     "signature": "async UserProfileImage();",
-    "result": "\"https://host-35-233-145-232.test.contentfabric.io/q/hq__9cuFhS5ULzHzbRYL8uKPT4YgVsFKVo4yhrEnGMhz96DsDYVDd8pcNPLiGtDU6GRSCVMpSFeRn/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDNiZjIyM2U0MjVlZWM2MDM4MjMzZDg5ODMzMTI3MjFkZTk2NWJlNzIifQ%3D%3D.RVMyNTZLX01HMTV0UWhoRnR1M1FlMlg2ODV3bnUyZmU2czV0dW95NDhLUkNrVVlCYURxUVZrUFNMTUNXTGhZNGU5Zlg3c042aFVMQkN4NnFTRXlkNXlnbjNSTlR5dVVu\""
+    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__HWPD8zoqeHPumG9QtX7QEcQR9KxkDGPvPMYL5uSvNxFCuUdGQYp5obJwaQ28tt5yVUnN33Br6F/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDU4ZDdkMWJkYWE1MWU4NTI0MDlmN2Y5YTcyMmFmZTc2MjlmZDZhZjkiLCJ0eF9pZCI6IjB4Mjc4NTVhM2Q4YmIxZjJjYzNiMzEzYWNlMTdiNzhhNjNkYTNkYzQzZGUyODEzYjk1NTZjYzhlZWVlMTlkZDBjMyJ9.RVMyNTZLX0ZmRnJZZkJnVDZSUDZzNkduQTVxN05LQUhZTEF1VG5QTTkyd0pWdnZXWVJIdnA3R21yV1kxY3N6UmN5NjV5eXRtNGR4cmV4Y01vMlRlM3Y0ZmNlOE1lZDlN\""
   },
   {
-    "signature": "async UserProfileImage({\n  \"address\": \"0x3Bf223E425Eec6038233d8983312721De965be72\"\n});",
-    "result": "\"https://host-35-233-145-232.test.contentfabric.io/q/hq__KjoCHSE9qSpqvu3WiBSEy3oDtSB5kEBhhbMkBGcTRV3JPZNT2u2KMUYyB1s38sanRXEj4Cu3Nx/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjMnpxYTRnWjhOM0RIMVFXYWtSMmU1VW93RExGMSIsImFkZHIiOiIweDNiZjIyM2U0MjVlZWM2MDM4MjMzZDg5ODMzMTI3MjFkZTk2NWJlNzIifQ%3D%3D.RVMyNTZLX01HMTV0UWhoRnR1M1FlMlg2ODV3bnUyZmU2czV0dW95NDhLUkNrVVlCYURxUVZrUFNMTUNXTGhZNGU5Zlg3c042aFVMQkN4NnFTRXlkNXlnbjNSTlR5dVVu\""
+    "signature": "async UserProfileImage({\n  \"address\": \"0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9\"\n});",
+    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__3su8yvzRBiS4bDCTvJmcawsRaSHuZEFvZDV55uSzXXVEDDgZiBtJnXd3FxAmP1YVkuyHj6WJ6f/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDU4ZDdkMWJkYWE1MWU4NTI0MDlmN2Y5YTcyMmFmZTc2MjlmZDZhZjkiLCJ0eF9pZCI6IjB4Mjc4NTVhM2Q4YmIxZjJjYzNiMzEzYWNlMTdiNzhhNjNkYTNkYzQzZGUyODEzYjk1NTZjYzhlZWVlMTlkZDBjMyJ9.RVMyNTZLX0ZmRnJZZkJnVDZSUDZzNkduQTVxN05LQUhZTEF1VG5QTTkyd0pWdnZXWVJIdnA3R21yV1kxY3N6UmN5NjV5eXRtNGR4cmV4Y01vMlRlM3Y0ZmNlOE1lZDlN\""
   }
 ]

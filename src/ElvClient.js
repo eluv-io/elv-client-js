@@ -12,7 +12,10 @@ const HttpClient = require("./HttpClient");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 
-const { ValidatePresence } = require("./Validation");
+const {
+  ValidateObject,
+  ValidatePresence
+} = require("./Validation");
 
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
@@ -462,6 +465,7 @@ class ElvClient {
   /**
    * Set the OAuth token for use in state channel calls
    *
+   * @methodGroup Authorization
    * @param {string} token - The OAuth ID token
    */
   async SetOauthToken({token}) {
@@ -479,6 +483,7 @@ class ElvClient {
    *
    * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl)
    *
+   * @methodGroup Authorization
    * @param {string} token - The OAuth ID
    */
   async SetSignerFromOauthToken({token}) {
@@ -535,6 +540,58 @@ class ElvClient {
 
       throw error;
     }
+  }
+
+  /**
+   * Redeem the specified code to authorize the client
+   *
+   * @methodGroup Authorization
+   * @param {string} issuer - Issuer to authorize against
+   * @param {string} code - Access code
+   *
+   * @return {Promise<Object>} - Identifying address, list of accessible sites, and additional info about the authorized user
+   */
+  async RedeemCode({issuer, code}) {
+    ValidateObject(issuer);
+
+    const wallet = this.GenerateWallet();
+    this.SetSigner({
+      signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
+    });
+
+    const objectId = issuer;
+    const libraryId = await this.ContentObjectLibraryId({objectId});
+
+    const Hash = (code) => {
+      const chars = code.split("").map(code => code.charCodeAt(0));
+      return chars.reduce((sum, char, i) => (chars[i + 1] ? (sum * 2) + char * chars[i+1] * (i + 1) : sum + char), 0).toString();
+    };
+
+    const codeHash = Hash(code);
+    const codeInfo = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: `public/codes/${codeHash}`});
+
+    if(!codeInfo){
+      this.Log(`Code redemption failed:\n\t${ticket}\n\t${code}`);
+      throw Error("Invalid code: " + code);
+    }
+
+    const { ak, sites, info } = codeInfo;
+
+    const signer = await wallet.AddAccountFromEncryptedPK({
+      encryptedPrivateKey: this.utils.FromB64(ak),
+      password: code
+    });
+
+    this.SetSigner({signer});
+
+    // Ensure wallet is initialized
+    await this.userProfileClient.WalletAddress();
+
+    return {
+      addr: this.utils.FormatAddress(signer.address),
+      sites,
+      info: info || {}
+    };
   }
 
   /**
@@ -615,7 +672,7 @@ class ElvClient {
     ];
 
     return Object.getOwnPropertyNames(Object.getPrototypeOf(this))
-      .filter(method => !forbiddenMethods.includes(method));
+      .filter(method => typeof this[method] === "function" && !forbiddenMethods.includes(method));
   }
 
   // Call a method specified in a message from a frame

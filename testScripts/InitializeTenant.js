@@ -1,6 +1,19 @@
 /* eslint-disable no-console */
 const { ElvClient } = require("../src/ElvClient");
 
+const reportTypes = [
+  "Platform Percentages",
+  "Summary by Date",
+  "Summary by Month",
+  "Summary by Title",
+  "Title Playout Session Details",
+  "Title Playout Session Details by Auth Address",
+  "Title Playout Starts Detail",
+  "Title Playout Summary",
+  "Total Video Seconds by Month",
+  "Views Over Program Duration"
+];
+
 const yargs = require("yargs");
 const argv = yargs
   .option("configUrl", {
@@ -36,7 +49,7 @@ const SetLibraryPermissions = async (client, libraryId, tenantAdmins, contentAdm
 };
 
 const SetObjectPermissions = async (client, objectId, tenantAdmins, contentAdmins, contentUsers) => {
-  const promises = [
+  let promises = [
     // Tenant admins
     client.AddContentObjectGroupPermission({objectId, groupAddress: tenantAdmins, permission: "manage"}),
 
@@ -116,6 +129,12 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     });
 
     await client.userProfileClient.SetTenantId({address: tenantAdminGroupAddress});
+
+    // Add KMS to tenant admins group
+    await client.AddAccessGroupMember({
+      contractAddress: tenantAdminGroupAddress,
+      memberAddress: client.utils.HashToAddress(kmsId)
+    });
 
     console.log("\nTenant ID:\n");
     console.log("\t", await client.userProfileClient.TenantId());
@@ -277,6 +296,51 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
     console.log("\nSite Object: \n");
     console.log(`\tSite - ${tenantName}: ${id}\n\n`);
+
+
+    /* Create report objects */
+
+    console.log("\nCreating Reporting Objects...\n");
+
+    for(let i = 0; i < reportTypes.length; i++) {
+      const report = reportTypes[i];
+
+      console.log(`\t${report}`);
+
+      const {id, write_token} = await client.CreateContentObject({
+        libraryId: reportingLibraryId,
+      });
+
+      await client.CreateEncryptionConk({
+        libraryId: reportingLibraryId,
+        objectId: id,
+        writeToken: write_token,
+        createKMSConk: true
+      });
+
+      await client.ReplaceMetadata({
+        libraryId: reportingLibraryId,
+        objectId: id,
+        writeToken: write_token,
+        metadataSubtree: "public",
+        metadata: {
+          name: `Org Internal - ${report}`,
+        }
+      });
+
+      await client.FinalizeContentObject({
+        libraryId: reportingLibraryId,
+        objectId: id,
+        writeToken: write_token
+      });
+
+      await client.SetVisibility({id, visibility: 0});
+
+      await client.AddContentObjectGroupPermission({objectId: id, groupAddress: tenantAdminGroupAddress, permission: "manage"});
+    }
+
+    console.log();
+
   } catch(error) {
     console.log("Error initializing tenant:");
     console.log(error);

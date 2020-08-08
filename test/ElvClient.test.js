@@ -2083,22 +2083,12 @@ describe("Test ElvClient", () => {
         visibility: 10
       });
 
-      await client.SetAccessCharge({objectId, accessCharge: "0.25"});
+      await client.SetAccessCharge({objectId, accessCharge: "0.5"});
 
-      const accessInfo = await accessClient.AccessInfo({
+      const {accessCharge} = await accessClient.AccessInfo({
         objectId,
       });
 
-      console.log("\nACCESS INFO:");
-      console.log(JSON.stringify(accessInfo, null, 2));
-      console.log("\n");
-
-      const {accessible, accessCode, accessCharge} = await accessClient.AccessInfo({
-        objectId,
-      });
-
-      expect(accessible).toBeTruthy();
-      expect(accessCode).toEqual(10);
       expect(accessCharge).toEqual("0.5");
 
       const initialBalance = parseFloat(await accessClient.GetBalance({address: accessClient.signer.address}));
@@ -2110,7 +2100,7 @@ describe("Test ElvClient", () => {
 
     test("Make Manual Access Request", async () => {
       let accessRequest;
-      if(client.fabricVersion >= 3) {
+      if(await client.authClient.IsV3({id: objectId})) {
         accessRequest = await client.AccessRequest({
           versionHash,
           args: [
@@ -2161,6 +2151,34 @@ describe("Test ElvClient", () => {
       });
 
       expect(client.stateChannelAccess[objectId]).not.toBeDefined();
+    });
+
+    test("Audience Data", async () => {
+      const audienceData = client.authClient.AudienceData({
+        objectId,
+        versionHash
+      });
+
+      expect(audienceData).toBeDefined();
+      expect(audienceData.user_address).toEqual(client.utils.FormatAddress(client.signer.address));
+      expect(audienceData.content_id).toEqual(objectId);
+      expect(audienceData.content_hash).toEqual(versionHash);
+
+      client.SetAuthContext({context: {custom: "attribute"}});
+      const audienceDataGlobalContext = client.authClient.AudienceData({
+        objectId,
+        versionHash
+      });
+
+      expect(audienceDataGlobalContext.custom).toEqual("attribute");
+
+      const audienceDataSpecificContext = client.authClient.AudienceData({
+        objectId,
+        versionHash,
+        context: {custom: "attribute"}
+      });
+
+      expect(audienceDataSpecificContext.custom).toEqual("attribute");
     });
   });
 
