@@ -1,6 +1,16 @@
 [
   {
-    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"partHash\": \"hqpe2kihPC4rixx1kzo3RaR94TyvAGFn2q3aUHvQNK8hYTXqXZqw\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"partHash\": \"hqp_KCLxLrUFXbPDkbW1hfGRUiUxbNuamgni7r8eArjXeHPEFcXF\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
+  },
+  {
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"partHash\": \"hqpetcjFafGRytddkTSPVeMfCbQEG2HYmk2Webzr3EeipjA5reH\",\n  \"format\": \"arrayBuffer\"\n});",
+    "result": "<ArrayBuffer 100000>"
+  },
+  {
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"partHash\": \"hqp_4VkWpxuTQoWdTg5LV4LD49UGp5Ag7GYQpbSUiuNGMNuppM1o\",\n  \"chunked\": true,\n  \"chunkSize\": 10000,\n  \"callback\": \"<function>\"\n});"
+  },
+  {
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"partHash\": \"hqpeA6zR28EpcgizVm6mV9pQJg3UQVgdhXGFneEY2i4rx4oQHnHb\",\n  \"chunked\": true,\n  \"chunkSize\": 10000,\n  \"callback\": \"<function>\"\n});"
   }
 ]

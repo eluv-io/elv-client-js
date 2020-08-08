@@ -1,5 +1,5 @@
 [
   {
-    "signature": "async CreateFileDirectories({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"writeToken\": \"tqw_D7isMJ417FtnXep19JMPADFcdNopvShxs\",\n  \"filePaths\": [\n    \"new-directory-1\",\n    \"new-directory-2\",\n    \"new-directory-3\"\n  ]\n});"
+    "signature": "async CreateFileDirectories({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"writeToken\": \"tqw_Mt94zh7SFrdz8gJCcynx9PWdxpQhKdCRJ\",\n  \"filePaths\": [\n    \"new-directory-1\",\n    \"new-directory-2\",\n    \"new-directory-3\"\n  ]\n});"
   }
 ]

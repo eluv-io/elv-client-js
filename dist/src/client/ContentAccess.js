@@ -1756,34 +1756,6 @@ exports.AvailableDRMs = function _callee24() {
     }
   }, null, null, [[6, 13]]);
 };
-
-exports.AudienceData = function (_ref18) {
-  var objectId = _ref18.objectId,
-      versionHash = _ref18.versionHash,
-      _ref18$protocols = _ref18.protocols,
-      protocols = _ref18$protocols === void 0 ? [] : _ref18$protocols,
-      _ref18$drms = _ref18.drms,
-      drms = _ref18$drms === void 0 ? [] : _ref18$drms;
-  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
-  this.Log("Retrieving audience data: ".concat(objectId));
-  var data = {
-    user_address: this.utils.FormatAddress(this.signer.address),
-    content_id: objectId || this.utils.DecodeVersionHash(versionHash).id,
-    content_hash: versionHash,
-    hostname: this.HttpClient.BaseURI().hostname(),
-    access_time: Math.round(new Date().getTime()).toString(),
-    format: protocols.join(","),
-    drm: drms.join(",")
-  };
-
-  if (typeof window !== "undefined" && window.navigator) {
-    data.user_string = window.navigator.userAgent;
-    data.language = window.navigator.language;
-  }
-
-  this.Log(data);
-  return data;
-};
 /**
  * Retrieve available playout offerings for the specified content
  *
@@ -1797,13 +1769,13 @@ exports.AudienceData = function (_ref18) {
  */
 
 
-exports.AvailableOfferings = function _callee25(_ref19) {
-  var objectId, versionHash, writeToken, linkPath, path, audienceData;
+exports.AvailableOfferings = function _callee25(_ref18) {
+  var objectId, versionHash, writeToken, linkPath, path;
   return _regeneratorRuntime.async(function _callee25$(_context25) {
     while (1) {
       switch (_context25.prev = _context25.next) {
         case 0:
-          objectId = _ref19.objectId, versionHash = _ref19.versionHash, writeToken = _ref19.writeToken, linkPath = _ref19.linkPath;
+          objectId = _ref18.objectId, versionHash = _ref18.versionHash, writeToken = _ref18.writeToken, linkPath = _ref18.linkPath;
 
           if (objectId) {
             _context25.next = 5;
@@ -1848,24 +1820,19 @@ exports.AvailableOfferings = function _callee25(_ref19) {
 
         case 14:
           path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
-          audienceData = this.AudienceData({
-            objectId: objectId,
-            versionHash: versionHash
-          });
-          _context25.prev = 16;
+          _context25.prev = 15;
           _context25.t0 = _regeneratorRuntime;
           _context25.t1 = this.utils;
           _context25.t2 = this.HttpClient;
           _context25.t3 = path;
-          _context25.next = 23;
+          _context25.next = 22;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             objectId: objectId,
             channelAuth: true,
-            oauthToken: this.oauthToken,
-            audienceData: audienceData
+            oauthToken: this.oauthToken
           }));
 
-        case 23:
+        case 22:
           _context25.t4 = _context25.sent;
           _context25.t5 = {
             path: _context25.t3,
@@ -1874,32 +1841,32 @@ exports.AvailableOfferings = function _callee25(_ref19) {
           };
           _context25.t6 = _context25.t2.Request.call(_context25.t2, _context25.t5);
           _context25.t7 = _context25.t1.ResponseToJson.call(_context25.t1, _context25.t6);
-          _context25.next = 29;
+          _context25.next = 28;
           return _context25.t0.awrap.call(_context25.t0, _context25.t7);
 
-        case 29:
+        case 28:
           return _context25.abrupt("return", _context25.sent);
 
-        case 32:
-          _context25.prev = 32;
-          _context25.t8 = _context25["catch"](16);
+        case 31:
+          _context25.prev = 31;
+          _context25.t8 = _context25["catch"](15);
 
           if (!(_context25.t8.status && parseInt(_context25.t8.status) === 500)) {
-            _context25.next = 36;
+            _context25.next = 35;
             break;
           }
 
           return _context25.abrupt("return", {});
 
-        case 36:
+        case 35:
           throw _context25.t8;
 
-        case 37:
+        case 36:
         case "end":
           return _context25.stop();
       }
     }
-  }, null, this, [[16, 32]]);
+  }, null, this, [[15, 31]]);
 };
 /**
  * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
@@ -1920,17 +1887,19 @@ exports.AvailableOfferings = function _callee25(_ref19) {
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
  * @param {string=} offering=default - The offering to play
+ * @param {Object=} context - Additional audience data to include in the authorization request.
+ * - Note: Context must be a map of string->string
  */
 
 
-exports.PlayoutOptions = function _callee26(_ref20) {
-  var objectId, versionHash, writeToken, linkPath, _ref20$protocols, protocols, _ref20$offering, offering, _ref20$drms, drms, _ref20$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
+exports.PlayoutOptions = function _callee26(_ref19) {
+  var objectId, versionHash, writeToken, linkPath, _ref19$protocols, protocols, _ref19$offering, offering, _ref19$drms, drms, context, _ref19$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee26$(_context26) {
     while (1) {
       switch (_context26.prev = _context26.next) {
         case 0:
-          objectId = _ref20.objectId, versionHash = _ref20.versionHash, writeToken = _ref20.writeToken, linkPath = _ref20.linkPath, _ref20$protocols = _ref20.protocols, protocols = _ref20$protocols === void 0 ? ["dash", "hls"] : _ref20$protocols, _ref20$offering = _ref20.offering, offering = _ref20$offering === void 0 ? "default" : _ref20$offering, _ref20$drms = _ref20.drms, drms = _ref20$drms === void 0 ? [] : _ref20$drms, _ref20$hlsjsProfile = _ref20.hlsjsProfile, hlsjsProfile = _ref20$hlsjsProfile === void 0 ? true : _ref20$hlsjsProfile;
+          objectId = _ref19.objectId, versionHash = _ref19.versionHash, writeToken = _ref19.writeToken, linkPath = _ref19.linkPath, _ref19$protocols = _ref19.protocols, protocols = _ref19$protocols === void 0 ? ["dash", "hls"] : _ref19$protocols, _ref19$offering = _ref19.offering, offering = _ref19$offering === void 0 ? "default" : _ref19$offering, _ref19$drms = _ref19.drms, drms = _ref19$drms === void 0 ? [] : _ref19$drms, context = _ref19.context, _ref19$hlsjsProfile = _ref19.hlsjsProfile, hlsjsProfile = _ref19$hlsjsProfile === void 0 ? true : _ref19$hlsjsProfile;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
           protocols = protocols.map(function (p) {
             return p.toLowerCase();
@@ -2009,7 +1978,7 @@ exports.PlayoutOptions = function _callee26(_ref20) {
           path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
 
         case 27:
-          _context26.t0 = this;
+          _context26.t0 = this.authClient;
           _context26.t1 = linkTargetId || objectId;
           _context26.t2 = linkTargetHash || versionHash;
 
@@ -2030,14 +1999,16 @@ exports.PlayoutOptions = function _callee26(_ref20) {
           _context26.t3 = _context26.t2;
           _context26.t4 = protocols;
           _context26.t5 = drms;
-          _context26.t6 = {
+          _context26.t6 = context;
+          _context26.t7 = {
             objectId: _context26.t1,
             versionHash: _context26.t3,
             protocols: _context26.t4,
-            drms: _context26.t5
+            drms: _context26.t5,
+            context: _context26.t6
           };
-          audienceData = _context26.t0.AudienceData.call(_context26.t0, _context26.t6);
-          _context26.next = 41;
+          audienceData = _context26.t0.AudienceData.call(_context26.t0, _context26.t7);
+          _context26.next = 42;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
@@ -2046,33 +2017,33 @@ exports.PlayoutOptions = function _callee26(_ref20) {
             audienceData: audienceData
           }));
 
-        case 41:
-          _context26.t7 = _context26.sent;
+        case 42:
+          _context26.t8 = _context26.sent;
           queryParams = {
-            authorization: _context26.t7
+            authorization: _context26.t8
           };
 
           if (linkPath) {
             queryParams.resolve = true;
           }
 
-          _context26.t8 = Object;
-          _context26.next = 47;
+          _context26.t9 = Object;
+          _context26.next = 48;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             path: path,
             method: "GET",
             queryParams: queryParams
           })));
 
-        case 47:
-          _context26.t9 = _context26.sent;
-          playoutOptions = _context26.t8.values.call(_context26.t8, _context26.t9);
+        case 48:
+          _context26.t10 = _context26.sent;
+          playoutOptions = _context26.t9.values.call(_context26.t9, _context26.t10);
           playoutMap = {};
           i = 0;
 
-        case 51:
+        case 52:
           if (!(i < playoutOptions.length)) {
-            _context26.next = 83;
+            _context26.next = 84;
             break;
           }
 
@@ -2083,16 +2054,16 @@ exports.PlayoutOptions = function _callee26(_ref20) {
           playoutPath = option.uri.split("?")[0];
           licenseServers = option.properties.license_servers; // Create full playout URLs for this protocol / drm combo
 
-          _context26.t10 = _objectSpread;
-          _context26.t11 = {};
-          _context26.t12 = playoutMap[protocol] || {};
-          _context26.t13 = _objectSpread;
-          _context26.t14 = {};
-          _context26.t15 = (playoutMap[protocol] || {}).playoutMethods || {};
-          _context26.t16 = _defineProperty;
-          _context26.t17 = {};
-          _context26.t18 = drm || "clear";
-          _context26.next = 68;
+          _context26.t11 = _objectSpread;
+          _context26.t12 = {};
+          _context26.t13 = playoutMap[protocol] || {};
+          _context26.t14 = _objectSpread;
+          _context26.t15 = {};
+          _context26.t16 = (playoutMap[protocol] || {}).playoutMethods || {};
+          _context26.t17 = _defineProperty;
+          _context26.t18 = {};
+          _context26.t19 = drm || "clear";
+          _context26.next = 69;
           return _regeneratorRuntime.awrap(this.Rep({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
@@ -2104,49 +2075,49 @@ exports.PlayoutOptions = function _callee26(_ref20) {
             } : {}
           }));
 
-        case 68:
-          _context26.t19 = _context26.sent;
-          _context26.t20 = drm ? _defineProperty({}, drm, {
+        case 69:
+          _context26.t20 = _context26.sent;
+          _context26.t21 = drm ? _defineProperty({}, drm, {
             licenseServers: licenseServers
           }) : undefined;
-          _context26.t21 = {
-            playoutUrl: _context26.t19,
-            drms: _context26.t20
+          _context26.t22 = {
+            playoutUrl: _context26.t20,
+            drms: _context26.t21
           };
-          _context26.t22 = (0, _context26.t16)(_context26.t17, _context26.t18, _context26.t21);
-          _context26.t23 = (0, _context26.t13)(_context26.t14, _context26.t15, _context26.t22);
-          _context26.t24 = {
-            playoutMethods: _context26.t23
+          _context26.t23 = (0, _context26.t17)(_context26.t18, _context26.t19, _context26.t22);
+          _context26.t24 = (0, _context26.t14)(_context26.t15, _context26.t16, _context26.t23);
+          _context26.t25 = {
+            playoutMethods: _context26.t24
           };
-          playoutMap[protocol] = (0, _context26.t10)(_context26.t11, _context26.t12, _context26.t24);
+          playoutMap[protocol] = (0, _context26.t11)(_context26.t12, _context26.t13, _context26.t25);
           // Exclude any options that do not satisfy the specified protocols and/or DRMs
           protocolMatch = protocols.includes(protocol);
           drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
           if (!(!protocolMatch || !drmMatch)) {
-            _context26.next = 79;
+            _context26.next = 80;
             break;
           }
 
-          return _context26.abrupt("continue", 80);
+          return _context26.abrupt("continue", 81);
 
-        case 79:
+        case 80:
           // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
           if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
             playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
             playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
           }
 
-        case 80:
+        case 81:
           i++;
-          _context26.next = 51;
+          _context26.next = 52;
           break;
 
-        case 83:
+        case 84:
           this.Log(playoutMap);
           return _context26.abrupt("return", playoutMap);
 
-        case 85:
+        case 86:
         case "end":
           return _context26.stop();
       }
@@ -2168,17 +2139,19 @@ exports.PlayoutOptions = function _callee26(_ref20) {
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} offering=default - The offering to play
+ * @param {Object=} context - Additional audience data to include in the authorization request
+ * - Note: Context must be a map of string->string
  */
 
 
-exports.BitmovinPlayoutOptions = function _callee27(_ref22) {
-  var objectId, versionHash, linkPath, _ref22$protocols, protocols, _ref22$drms, drms, _ref22$offering, offering, playoutOptions, linkTargetId, linkTargetHash, libraryId, authToken, config;
+exports.BitmovinPlayoutOptions = function _callee27(_ref21) {
+  var objectId, versionHash, linkPath, _ref21$protocols, protocols, _ref21$drms, drms, _ref21$offering, offering, context, playoutOptions, linkTargetId, linkTargetHash, libraryId, authToken, config;
 
   return _regeneratorRuntime.async(function _callee27$(_context27) {
     while (1) {
       switch (_context27.prev = _context27.next) {
         case 0:
-          objectId = _ref22.objectId, versionHash = _ref22.versionHash, linkPath = _ref22.linkPath, _ref22$protocols = _ref22.protocols, protocols = _ref22$protocols === void 0 ? ["dash", "hls"] : _ref22$protocols, _ref22$drms = _ref22.drms, drms = _ref22$drms === void 0 ? [] : _ref22$drms, _ref22$offering = _ref22.offering, offering = _ref22$offering === void 0 ? "default" : _ref22$offering;
+          objectId = _ref21.objectId, versionHash = _ref21.versionHash, linkPath = _ref21.linkPath, _ref21$protocols = _ref21.protocols, protocols = _ref21$protocols === void 0 ? ["dash", "hls"] : _ref21$protocols, _ref21$drms = _ref21.drms, drms = _ref21$drms === void 0 ? [] : _ref21$drms, _ref21$offering = _ref21.offering, offering = _ref21$offering === void 0 ? "default" : _ref21$offering, context = _ref21.context;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!objectId) {
@@ -2193,7 +2166,8 @@ exports.BitmovinPlayoutOptions = function _callee27(_ref22) {
             protocols: protocols,
             drms: drms,
             offering: offering,
-            hlsjsProfile: false
+            hlsjsProfile: false,
+            context: context
           }));
 
         case 5:
@@ -2306,14 +2280,14 @@ exports.BitmovinPlayoutOptions = function _callee27(_ref22) {
  */
 
 
-exports.CallBitcodeMethod = function _callee28(_ref23) {
-  var libraryId, objectId, versionHash, writeToken, method, _ref23$queryParams, queryParams, _ref23$body, body, _ref23$headers, headers, _ref23$constant, constant, _ref23$format, format, path, authHeader;
+exports.CallBitcodeMethod = function _callee28(_ref22) {
+  var libraryId, objectId, versionHash, writeToken, method, _ref22$queryParams, queryParams, _ref22$body, body, _ref22$headers, headers, _ref22$constant, constant, _ref22$format, format, path, authHeader;
 
   return _regeneratorRuntime.async(function _callee28$(_context28) {
     while (1) {
       switch (_context28.prev = _context28.next) {
         case 0:
-          libraryId = _ref23.libraryId, objectId = _ref23.objectId, versionHash = _ref23.versionHash, writeToken = _ref23.writeToken, method = _ref23.method, _ref23$queryParams = _ref23.queryParams, queryParams = _ref23$queryParams === void 0 ? {} : _ref23$queryParams, _ref23$body = _ref23.body, body = _ref23$body === void 0 ? {} : _ref23$body, _ref23$headers = _ref23.headers, headers = _ref23$headers === void 0 ? {} : _ref23$headers, _ref23$constant = _ref23.constant, constant = _ref23$constant === void 0 ? true : _ref23$constant, _ref23$format = _ref23.format, format = _ref23$format === void 0 ? "json" : _ref23$format;
+          libraryId = _ref22.libraryId, objectId = _ref22.objectId, versionHash = _ref22.versionHash, writeToken = _ref22.writeToken, method = _ref22.method, _ref22$queryParams = _ref22.queryParams, queryParams = _ref22$queryParams === void 0 ? {} : _ref22$queryParams, _ref22$body = _ref22.body, body = _ref22$body === void 0 ? {} : _ref22$body, _ref22$headers = _ref22.headers, headers = _ref22$headers === void 0 ? {} : _ref22$headers, _ref22$constant = _ref22.constant, constant = _ref22$constant === void 0 ? true : _ref22$constant, _ref22$format = _ref22.format, format = _ref22$format === void 0 ? "json" : _ref22$format;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2404,14 +2378,14 @@ exports.CallBitcodeMethod = function _callee28(_ref23) {
  */
 
 
-exports.Rep = function _callee29(_ref24) {
-  var libraryId, objectId, versionHash, rep, _ref24$queryParams, queryParams, _ref24$channelAuth, channelAuth, _ref24$noAuth, noAuth, _ref24$noCache, noCache;
+exports.Rep = function _callee29(_ref23) {
+  var libraryId, objectId, versionHash, rep, _ref23$queryParams, queryParams, _ref23$channelAuth, channelAuth, _ref23$noAuth, noAuth, _ref23$noCache, noCache;
 
   return _regeneratorRuntime.async(function _callee29$(_context29) {
     while (1) {
       switch (_context29.prev = _context29.next) {
         case 0:
-          libraryId = _ref24.libraryId, objectId = _ref24.objectId, versionHash = _ref24.versionHash, rep = _ref24.rep, _ref24$queryParams = _ref24.queryParams, queryParams = _ref24$queryParams === void 0 ? {} : _ref24$queryParams, _ref24$channelAuth = _ref24.channelAuth, channelAuth = _ref24$channelAuth === void 0 ? false : _ref24$channelAuth, _ref24$noAuth = _ref24.noAuth, noAuth = _ref24$noAuth === void 0 ? false : _ref24$noAuth, _ref24$noCache = _ref24.noCache, noCache = _ref24$noCache === void 0 ? false : _ref24$noCache;
+          libraryId = _ref23.libraryId, objectId = _ref23.objectId, versionHash = _ref23.versionHash, rep = _ref23.rep, _ref23$queryParams = _ref23.queryParams, queryParams = _ref23$queryParams === void 0 ? {} : _ref23$queryParams, _ref23$channelAuth = _ref23.channelAuth, channelAuth = _ref23$channelAuth === void 0 ? false : _ref23$channelAuth, _ref23$noAuth = _ref23.noAuth, noAuth = _ref23$noAuth === void 0 ? false : _ref23$noAuth, _ref23$noCache = _ref23.noCache, noCache = _ref23$noCache === void 0 ? false : _ref23$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2463,14 +2437,14 @@ exports.Rep = function _callee29(_ref24) {
  */
 
 
-exports.PublicRep = function _callee30(_ref25) {
-  var libraryId, objectId, versionHash, rep, _ref25$queryParams, queryParams;
+exports.PublicRep = function _callee30(_ref24) {
+  var libraryId, objectId, versionHash, rep, _ref24$queryParams, queryParams;
 
   return _regeneratorRuntime.async(function _callee30$(_context30) {
     while (1) {
       switch (_context30.prev = _context30.next) {
         case 0:
-          libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash, rep = _ref25.rep, _ref25$queryParams = _ref25.queryParams, queryParams = _ref25$queryParams === void 0 ? {} : _ref25$queryParams;
+          libraryId = _ref24.libraryId, objectId = _ref24.objectId, versionHash = _ref24.versionHash, rep = _ref24.rep, _ref24$queryParams = _ref24.queryParams, queryParams = _ref24$queryParams === void 0 ? {} : _ref24$queryParams;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2525,14 +2499,14 @@ exports.PublicRep = function _callee30(_ref25) {
  */
 
 
-exports.FabricUrl = function _callee31(_ref26) {
-  var libraryId, objectId, versionHash, writeToken, partHash, rep, publicRep, call, _ref26$queryParams, queryParams, _ref26$channelAuth, channelAuth, _ref26$noAuth, noAuth, _ref26$noCache, noCache, path;
+exports.FabricUrl = function _callee31(_ref25) {
+  var libraryId, objectId, versionHash, writeToken, partHash, rep, publicRep, call, _ref25$queryParams, queryParams, _ref25$channelAuth, channelAuth, _ref25$noAuth, noAuth, _ref25$noCache, noCache, path;
 
   return _regeneratorRuntime.async(function _callee31$(_context31) {
     while (1) {
       switch (_context31.prev = _context31.next) {
         case 0:
-          libraryId = _ref26.libraryId, objectId = _ref26.objectId, versionHash = _ref26.versionHash, writeToken = _ref26.writeToken, partHash = _ref26.partHash, rep = _ref26.rep, publicRep = _ref26.publicRep, call = _ref26.call, _ref26$queryParams = _ref26.queryParams, queryParams = _ref26$queryParams === void 0 ? {} : _ref26$queryParams, _ref26$channelAuth = _ref26.channelAuth, channelAuth = _ref26$channelAuth === void 0 ? false : _ref26$channelAuth, _ref26$noAuth = _ref26.noAuth, noAuth = _ref26$noAuth === void 0 ? false : _ref26$noAuth, _ref26$noCache = _ref26.noCache, noCache = _ref26$noCache === void 0 ? false : _ref26$noCache;
+          libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash, writeToken = _ref25.writeToken, partHash = _ref25.partHash, rep = _ref25.rep, publicRep = _ref25.publicRep, call = _ref25.call, _ref25$queryParams = _ref25.queryParams, queryParams = _ref25$queryParams === void 0 ? {} : _ref25$queryParams, _ref25$channelAuth = _ref25.channelAuth, channelAuth = _ref25$channelAuth === void 0 ? false : _ref25$channelAuth, _ref25$noAuth = _ref25.noAuth, noAuth = _ref25$noAuth === void 0 ? false : _ref25$noAuth, _ref25$noCache = _ref25.noCache, noCache = _ref25$noCache === void 0 ? false : _ref25$noCache;
 
           if (objectId || versionHash) {
             ValidateParameters({
@@ -2628,14 +2602,14 @@ exports.FabricUrl = function _callee31(_ref26) {
  */
 
 
-exports.FileUrl = function _callee32(_ref27) {
-  var libraryId, objectId, versionHash, writeToken, filePath, _ref27$queryParams, queryParams, _ref27$noCache, noCache, path, authorizationToken, fileInfo, encrypted;
+exports.FileUrl = function _callee32(_ref26) {
+  var libraryId, objectId, versionHash, writeToken, filePath, _ref26$queryParams, queryParams, _ref26$noCache, noCache, path, authorizationToken, fileInfo, encrypted;
 
   return _regeneratorRuntime.async(function _callee32$(_context32) {
     while (1) {
       switch (_context32.prev = _context32.next) {
         case 0:
-          libraryId = _ref27.libraryId, objectId = _ref27.objectId, versionHash = _ref27.versionHash, writeToken = _ref27.writeToken, filePath = _ref27.filePath, _ref27$queryParams = _ref27.queryParams, queryParams = _ref27$queryParams === void 0 ? {} : _ref27$queryParams, _ref27$noCache = _ref27.noCache, noCache = _ref27$noCache === void 0 ? false : _ref27$noCache;
+          libraryId = _ref26.libraryId, objectId = _ref26.objectId, versionHash = _ref26.versionHash, writeToken = _ref26.writeToken, filePath = _ref26.filePath, _ref26$queryParams = _ref26.queryParams, queryParams = _ref26$queryParams === void 0 ? {} : _ref26$queryParams, _ref26$noCache = _ref26.noCache, noCache = _ref26$noCache === void 0 ? false : _ref26$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2721,14 +2695,14 @@ exports.FileUrl = function _callee32(_ref27) {
  */
 
 
-exports.ContentObjectImageUrl = function _callee33(_ref28) {
-  var libraryId, objectId, versionHash, height, _ref28$imagePath, imagePath, imageMetadata, _queryParams;
+exports.ContentObjectImageUrl = function _callee33(_ref27) {
+  var libraryId, objectId, versionHash, height, _ref27$imagePath, imagePath, imageMetadata, _queryParams;
 
   return _regeneratorRuntime.async(function _callee33$(_context33) {
     while (1) {
       switch (_context33.prev = _context33.next) {
         case 0:
-          libraryId = _ref28.libraryId, objectId = _ref28.objectId, versionHash = _ref28.versionHash, height = _ref28.height, _ref28$imagePath = _ref28.imagePath, imagePath = _ref28$imagePath === void 0 ? "public/display_image" : _ref28$imagePath;
+          libraryId = _ref27.libraryId, objectId = _ref27.objectId, versionHash = _ref27.versionHash, height = _ref27.height, _ref27$imagePath = _ref27.imagePath, imagePath = _ref27$imagePath === void 0 ? "public/display_image" : _ref27$imagePath;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2828,16 +2802,16 @@ exports.ContentObjectImageUrl = function _callee33(_ref28) {
  */
 
 
-exports.ContentObjectGraph = function _callee35(_ref29) {
+exports.ContentObjectGraph = function _callee35(_ref28) {
   var _this6 = this;
 
-  var libraryId, objectId, versionHash, _ref29$autoUpdate, autoUpdate, select, path, errorInfo, cycles, info;
+  var libraryId, objectId, versionHash, _ref28$autoUpdate, autoUpdate, select, path, errorInfo, cycles, info;
 
   return _regeneratorRuntime.async(function _callee35$(_context35) {
     while (1) {
       switch (_context35.prev = _context35.next) {
         case 0:
-          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, _ref29$autoUpdate = _ref29.autoUpdate, autoUpdate = _ref29$autoUpdate === void 0 ? false : _ref29$autoUpdate, select = _ref29.select;
+          libraryId = _ref28.libraryId, objectId = _ref28.objectId, versionHash = _ref28.versionHash, _ref28$autoUpdate = _ref28.autoUpdate, autoUpdate = _ref28$autoUpdate === void 0 ? false : _ref28$autoUpdate, select = _ref28.select;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3017,13 +2991,13 @@ exports.ContentObjectGraph = function _callee35(_ref29) {
  */
 
 
-exports.LinkTarget = function _callee36(_ref30) {
+exports.LinkTarget = function _callee36(_ref29) {
   var libraryId, objectId, versionHash, writeToken, linkPath, linkInfo, targetHash, subPath;
   return _regeneratorRuntime.async(function _callee36$(_context36) {
     while (1) {
       switch (_context36.prev = _context36.next) {
         case 0:
-          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, writeToken = _ref30.writeToken, linkPath = _ref30.linkPath;
+          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, writeToken = _ref29.writeToken, linkPath = _ref29.linkPath;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3223,14 +3197,14 @@ exports.LinkTarget = function _callee36(_ref30) {
  */
 
 
-exports.LinkUrl = function _callee37(_ref31) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref31$queryParams, queryParams, path;
+exports.LinkUrl = function _callee37(_ref30) {
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref30$queryParams, queryParams, path;
 
   return _regeneratorRuntime.async(function _callee37$(_context37) {
     while (1) {
       switch (_context37.prev = _context37.next) {
         case 0:
-          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath, mimeType = _ref31.mimeType, _ref31$queryParams = _ref31.queryParams, queryParams = _ref31$queryParams === void 0 ? {} : _ref31$queryParams;
+          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, writeToken = _ref30.writeToken, linkPath = _ref30.linkPath, mimeType = _ref30.mimeType, _ref30$queryParams = _ref30.queryParams, queryParams = _ref30$queryParams === void 0 ? {} : _ref30$queryParams;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3308,14 +3282,14 @@ exports.LinkUrl = function _callee37(_ref31) {
  */
 
 
-exports.LinkData = function _callee38(_ref32) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, _ref32$format, format, linkUrl;
+exports.LinkData = function _callee38(_ref31) {
+  var libraryId, objectId, versionHash, writeToken, linkPath, _ref31$format, format, linkUrl;
 
   return _regeneratorRuntime.async(function _callee38$(_context38) {
     while (1) {
       switch (_context38.prev = _context38.next) {
         case 0:
-          libraryId = _ref32.libraryId, objectId = _ref32.objectId, versionHash = _ref32.versionHash, writeToken = _ref32.writeToken, linkPath = _ref32.linkPath, _ref32$format = _ref32.format, format = _ref32$format === void 0 ? "json" : _ref32$format;
+          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath, _ref31$format = _ref31.format, format = _ref31$format === void 0 ? "json" : _ref31$format;
           _context38.next = 3;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             libraryId: libraryId,
@@ -3346,14 +3320,14 @@ exports.LinkData = function _callee38(_ref32) {
 /* Encryption */
 
 
-exports.CreateEncryptionConk = function _callee39(_ref33) {
-  var libraryId, objectId, versionHash, writeToken, _ref33$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
+exports.CreateEncryptionConk = function _callee39(_ref32) {
+  var libraryId, objectId, versionHash, writeToken, _ref32$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
 
   return _regeneratorRuntime.async(function _callee39$(_context39) {
     while (1) {
       switch (_context39.prev = _context39.next) {
         case 0:
-          libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, writeToken = _ref33.writeToken, _ref33$createKMSConk = _ref33.createKMSConk, createKMSConk = _ref33$createKMSConk === void 0 ? true : _ref33$createKMSConk;
+          libraryId = _ref32.libraryId, objectId = _ref32.objectId, versionHash = _ref32.versionHash, writeToken = _ref32.writeToken, _ref32$createKMSConk = _ref32.createKMSConk, createKMSConk = _ref32$createKMSConk === void 0 ? true : _ref32$createKMSConk;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3532,13 +3506,13 @@ exports.CreateEncryptionConk = function _callee39(_ref33) {
  */
 
 
-exports.EncryptionConk = function _callee40(_ref34) {
+exports.EncryptionConk = function _callee40(_ref33) {
   var libraryId, objectId, versionHash, writeToken, owner, capKey, existingUserCap;
   return _regeneratorRuntime.async(function _callee40$(_context40) {
     while (1) {
       switch (_context40.prev = _context40.next) {
         case 0:
-          libraryId = _ref34.libraryId, objectId = _ref34.objectId, versionHash = _ref34.versionHash, writeToken = _ref34.writeToken;
+          libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, writeToken = _ref33.writeToken;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3663,13 +3637,13 @@ exports.EncryptionConk = function _callee40(_ref34) {
  */
 
 
-exports.Encrypt = function _callee41(_ref35) {
+exports.Encrypt = function _callee41(_ref34) {
   var libraryId, objectId, writeToken, chunk, conk, data;
   return _regeneratorRuntime.async(function _callee41$(_context41) {
     while (1) {
       switch (_context41.prev = _context41.next) {
         case 0:
-          libraryId = _ref35.libraryId, objectId = _ref35.objectId, writeToken = _ref35.writeToken, chunk = _ref35.chunk;
+          libraryId = _ref34.libraryId, objectId = _ref34.objectId, writeToken = _ref34.writeToken, chunk = _ref34.chunk;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -3712,13 +3686,13 @@ exports.Encrypt = function _callee41(_ref35) {
  */
 
 
-exports.Decrypt = function _callee42(_ref36) {
+exports.Decrypt = function _callee42(_ref35) {
   var libraryId, objectId, writeToken, chunk, conk, data;
   return _regeneratorRuntime.async(function _callee42$(_context42) {
     while (1) {
       switch (_context42.prev = _context42.next) {
         case 0:
-          libraryId = _ref36.libraryId, objectId = _ref36.objectId, writeToken = _ref36.writeToken, chunk = _ref36.chunk;
+          libraryId = _ref35.libraryId, objectId = _ref35.objectId, writeToken = _ref35.writeToken, chunk = _ref35.chunk;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -3759,13 +3733,13 @@ exports.Decrypt = function _callee42(_ref36) {
  */
 
 
-exports.AccessType = function _callee43(_ref37) {
+exports.AccessType = function _callee43(_ref36) {
   var id;
   return _regeneratorRuntime.async(function _callee43$(_context43) {
     while (1) {
       switch (_context43.prev = _context43.next) {
         case 0:
-          id = _ref37.id;
+          id = _ref36.id;
           _context43.next = 3;
           return _regeneratorRuntime.awrap(this.authClient.AccessType(id));
 
@@ -3792,13 +3766,13 @@ exports.AccessType = function _callee43(_ref37) {
  * @return {Promise<Object>} - Info about the access charge and whether or not the object is accessible to the current user   */
 
 
-exports.AccessInfo = function _callee44(_ref38) {
+exports.AccessInfo = function _callee44(_ref37) {
   var objectId, args, info;
   return _regeneratorRuntime.async(function _callee44$(_context44) {
     while (1) {
       switch (_context44.prev = _context44.next) {
         case 0:
-          objectId = _ref38.objectId, args = _ref38.args;
+          objectId = _ref37.objectId, args = _ref37.args;
           ValidateObject(objectId);
 
           if (!args) {
@@ -3861,14 +3835,14 @@ exports.AccessInfo = function _callee44(_ref38) {
  */
 
 
-exports.AccessRequest = function _callee45(_ref39) {
-  var libraryId, objectId, versionHash, _ref39$args, args, _ref39$update, update, _ref39$noCache, noCache;
+exports.AccessRequest = function _callee45(_ref38) {
+  var libraryId, objectId, versionHash, _ref38$args, args, _ref38$update, update, _ref38$noCache, noCache;
 
   return _regeneratorRuntime.async(function _callee45$(_context45) {
     while (1) {
       switch (_context45.prev = _context45.next) {
         case 0:
-          libraryId = _ref39.libraryId, objectId = _ref39.objectId, versionHash = _ref39.versionHash, _ref39$args = _ref39.args, args = _ref39$args === void 0 ? [] : _ref39$args, _ref39$update = _ref39.update, update = _ref39$update === void 0 ? false : _ref39$update, _ref39$noCache = _ref39.noCache, noCache = _ref39$noCache === void 0 ? false : _ref39$noCache;
+          libraryId = _ref38.libraryId, objectId = _ref38.objectId, versionHash = _ref38.versionHash, _ref38$args = _ref38.args, args = _ref38$args === void 0 ? [] : _ref38$args, _ref38$update = _ref38.update, update = _ref38$update === void 0 ? false : _ref38$update, _ref38$noCache = _ref38.noCache, noCache = _ref38$noCache === void 0 ? false : _ref38$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3901,12 +3875,35 @@ exports.AccessRequest = function _callee45(_ref39) {
   }, null, this);
 };
 /**
+ * Specify additional context to include in all state channel requests made by the client (e.g. for playout)
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {Object=} context - Additional context to include in state channel requests
+ * - Note: Context must be a map of string->string
+ */
+
+
+exports.SetAuthContext = function (_ref39) {
+  var context = _ref39.context;
+
+  if (context && Object.values(context).find(function (value) {
+    return typeof value !== "string";
+  })) {
+    throw Error("Context must be a map of string->string");
+  }
+
+  this.authContext = context;
+};
+/**
  * Generate a state channel token.
  *
  * @methodGroup Access Requests
  * @namedParams
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object
+ * @param {Object=} context - Additional audience data to include in the authorization request
+ * - Note: Context must be a map of string->string
  * @param {boolean=} noCache=false - If specified, a new state channel token will be generated
  * regardless whether or not one has been previously cached
  *
@@ -3915,13 +3912,13 @@ exports.AccessRequest = function _callee45(_ref39) {
 
 
 exports.GenerateStateChannelToken = function _callee46(_ref40) {
-  var objectId, versionHash, _ref40$noCache, noCache, audienceData;
+  var objectId, versionHash, context, _ref40$noCache, noCache;
 
   return _regeneratorRuntime.async(function _callee46$(_context46) {
     while (1) {
       switch (_context46.prev = _context46.next) {
         case 0:
-          objectId = _ref40.objectId, versionHash = _ref40.versionHash, _ref40$noCache = _ref40.noCache, noCache = _ref40$noCache === void 0 ? false : _ref40$noCache;
+          objectId = _ref40.objectId, versionHash = _ref40.versionHash, context = _ref40.context, _ref40$noCache = _ref40.noCache, noCache = _ref40$noCache === void 0 ? false : _ref40$noCache;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!versionHash) {
@@ -3949,23 +3946,19 @@ exports.GenerateStateChannelToken = function _callee46(_ref40) {
 
         case 10:
           this.stateChannelAccess[objectId] = versionHash;
-          audienceData = this.AudienceData({
-            objectId: objectId,
-            versionHash: versionHash
-          });
-          _context46.next = 14;
+          _context46.next = 13;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             objectId: objectId,
             channelAuth: true,
             oauthToken: this.oauthToken,
-            audienceData: audienceData,
+            context: context,
             noCache: noCache
           }));
 
-        case 14:
+        case 13:
           return _context46.abrupt("return", _context46.sent);
 
-        case 15:
+        case 14:
         case "end":
           return _context46.stop();
       }
@@ -3984,7 +3977,7 @@ exports.GenerateStateChannelToken = function _callee46(_ref40) {
 
 
 exports.FinalizeStateChannelAccess = function _callee47(_ref41) {
-  var objectId, versionHash, percentComplete, audienceData;
+  var objectId, versionHash, percentComplete;
   return _regeneratorRuntime.async(function _callee47$(_context47) {
     while (1) {
       switch (_context47.prev = _context47.next) {
@@ -4022,18 +4015,14 @@ exports.FinalizeStateChannelAccess = function _callee47(_ref41) {
 
         case 13:
           this.stateChannelAccess[objectId] = undefined;
-          audienceData = this.AudienceData({
-            objectId: objectId,
-            versionHash: versionHash
-          });
-          _context47.next = 17;
+          _context47.next = 16;
           return _regeneratorRuntime.awrap(this.authClient.ChannelContentFinalize({
             objectId: objectId,
-            audienceData: audienceData,
+            versionHash: versionHash,
             percent: percentComplete
           }));
 
-        case 17:
+        case 16:
         case "end":
           return _context47.stop();
       }

@@ -1,6 +1,6 @@
 [
   {
     "signature": " GenerateWallet();",
-    "result": "{\n  \"provider\": {\n    \"ready\": \"<Promise>\",\n    \"_lastBlockNumber\": -2,\n    \"_balances\": {},\n    \"_events\": [],\n    \"_pollingInterval\": 500,\n    \"_emitted\": {\n      \"block\": -2\n    },\n    \"_fastQueryDate\": 1592591603671,\n    \"connection\": {\n      \"url\": \"https://host-35-233-145-232.test.contentfabric.io/eth/\"\n    },\n    \"getCode\": \"<function>\",\n    \"_network\": {\n      \"chainId\": 955210,\n      \"name\": \"unknown\"\n    },\n    \"_fastBlockNumberPromise\": \"<Promise>\",\n    \"_fastBlockNumber\": 904161\n  },\n  \"signers\": {}\n}"
+    "result": "{\n  \"provider\": {\n    \"ready\": \"<Promise>\",\n    \"_lastBlockNumber\": -2,\n    \"_balances\": {},\n    \"_events\": [],\n    \"_pollingInterval\": 500,\n    \"_emitted\": {\n      \"block\": -2\n    },\n    \"_fastQueryDate\": 1596922821233,\n    \"connection\": {\n      \"url\": \"https://host-34-105-49-255.testv2.contentfabric.io/eth/\"\n    },\n    \"getCode\": \"<function>\",\n    \"_network\": {\n      \"chainId\": 955203,\n      \"name\": \"unknown\"\n    },\n    \"_fastBlockNumberPromise\": \"<Promise>\",\n    \"_fastBlockNumber\": 60606\n  },\n  \"signers\": {}\n}"
   }
 ]
