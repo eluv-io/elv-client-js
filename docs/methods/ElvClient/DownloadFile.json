@@ -1,18 +1,18 @@
 [
   {
-    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"filePath\": \"testDirectory/File 1\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"filePath\": \"testDirectory/File 1\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   },
   {
-    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"filePath\": \"testDirectory/File 2\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"filePath\": \"testDirectory/File 2\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   },
   {
-    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"filePath\": \"s3-copy\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"filePath\": \"s3-copy\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 97944174>"
   },
   {
-    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib2jyuPkhc3LErd56iASoaCr9Wj2Nh\",\n  \"objectId\": \"iq__26LhSe9vNhqqjHv6ghtNwyzG6pp3\",\n  \"filePath\": \"s3-copy-encrypted\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadFile({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"filePath\": \"s3-copy-encrypted\",\n  \"format\": \"arrayBuffer\",\n  \"clientSideDecryption\": true\n});",
     "result": "<ArrayBuffer 97944174>"
   }
 ]

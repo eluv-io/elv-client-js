@@ -165,6 +165,8 @@ exports.CreateProductionMaster = async function({
     }
   }
 
+  await this.CreateEncryptionConk({libraryId, objectId: id, writeToken: write_token, createKMSConk: true});
+
   const { logs, errors, warnings } = await this.CallBitcodeMethod({
     libraryId,
     objectId: id,
@@ -529,7 +531,7 @@ exports.LROStatus = async function({libraryId, objectId, offeringKey="default"})
   try {
     this.SetNodes({fabricURIs: [lroDraft.node, ...fabricURIs]});
 
-    result = await client.ContentObjectMetadata({
+    result = await this.ContentObjectMetadata({
       libraryId,
       objectId,
       writeToken: lroDraft.write_token,

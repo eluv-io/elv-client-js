@@ -1,6 +1,6 @@
 [
   {
-    "signature": " AddAccountFromMnemonic([object Object]);",
+    "signature": " AddAccountFromMnemonic({\n  \"accountName\": \"mnemonic\",\n  \"mnemonic\": \"express recycle cotton comfort crisp erupt expose exhaust transfer lumber mountain border\"\n});",
     "result": "<Ethers#Wallet>"
   }
 ]

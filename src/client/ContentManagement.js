@@ -48,6 +48,84 @@ exports.SetVisibility = async function({id, visibility}) {
   return event;
 };
 
+
+/**
+ * Set the current permission level for the specified object. See client.permissionLevels for all available permissions.
+ *
+ * Note: This method is only intended for normal content objects, not types, libraries, etc.
+ *
+ * @methodGroup Content Objects
+ * @param {string} objectId - The ID of the object
+ * @param {string} permission - The key for the permission to set - See client.permissionLevels for available permissions
+ */
+exports.SetPermission = async function({objectId, permission}) {
+  ValidateObject(objectId);
+  ValidatePresence("permission", permission);
+
+  let permissionSettings = this.permissionLevels[permission];
+  if(!permissionSettings) {
+    throw Error("Unknown permission level: " + permission);
+  }
+
+  if((await this.AccessType({id: objectId})) !== this.authClient.ACCESS_TYPES.OBJECT) {
+    throw Error("Permission only valid for normal content objects: " + objectId);
+  }
+
+  const settings = permissionSettings.settings;
+
+  const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  // Visibility
+  await this.SetVisibility({id: objectId, visibility: settings.visibility});
+
+  const statusCode = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "statusCode"
+  });
+
+  if(statusCode !== settings.statusCode) {
+    if(settings.statusCode < 0) {
+      await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(objectId),
+        methodName: "setStatusCode",
+        methodArgs: [-1]
+      });
+    } else {
+      await this.CallContractMethod({
+        contractAddress: this.utils.HashToAddress(objectId),
+        methodName: "publish"
+      });
+    }
+  }
+
+  // KMS Conk
+  const kmsAddress = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "addressKMS"
+  });
+  const kmsConkKey = `eluv.caps.ikms${this.utils.AddressToHash(kmsAddress)}`;
+
+  const kmsConk = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: kmsConkKey});
+
+  if(kmsConk && !settings.kmsConk) {
+    await this.EditAndFinalizeContentObject({
+      libraryId,
+      objectId,
+      callback: async ({writeToken}) => {
+        await this.DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree: kmsConkKey});
+      }
+    });
+  } else if(!kmsConk && settings.kmsConk) {
+    await this.EditAndFinalizeContentObject({
+      libraryId,
+      objectId,
+      callback: async ({writeToken}) => {
+        await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
+      }
+    });
+  }
+};
+
 /* Content Type Creation */
 
 /**
@@ -588,6 +666,73 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
   editResponse.objectId = editResponse.id;
 
   return editResponse;
+};
+
+/**
+ * Create and finalize new content object draft from an existing object.
+ *
+ * Equivalent to:
+ *
+ * CreateContentObject()
+ *
+ * callback({objectId, writeToken})
+ *
+ * FinalizeContentObject()
+ *
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {function} callback - Async function to perform after creating the content draft and before finalizing. Object ID and write token are passed as named parameters.
+ * @param {object=} options -
+ * meta: New metadata for the object - will be merged into existing metadata if specified
+ * type: New type for the object - Object ID, version hash or name of type
+ * @param {boolean=} publish=true - If specified, the object will also be published
+ * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
+ * Irrelevant if not publishing.
+ *
+ * @returns {Promise<object>} - Response from FinalizeContentObject
+ */
+exports.CreateAndFinalizeContentObject = async function({libraryId, callback, options={}, publish=true, awaitCommitConfirmation=true}) {
+  const {id, writeToken} = await this.CreateContentObject({libraryId, objectId, options});
+
+  await callback({objectId: id, writeToken});
+
+  await this.FinalizeContentObject({libraryId, objectId: id, writeToken, publish, awaitCommitConfirmation});
+};
+
+/**
+ * Create and finalize new content object draft from an existing object.
+ *
+ * Equivalent to:
+ *
+ * EditContentObject()
+ *
+ * callback({writeToken})
+ *
+ * FinalizeContentObject()
+ *
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {function} callback - Async function to perform after creating the content draft and before finalizing. Write token is passed as a named parameter.
+ * @param {object=} options -
+ * meta: New metadata for the object - will be merged into existing metadata if specified
+ * type: New type for the object - Object ID, version hash or name of type
+ * @param {boolean=} publish=true - If specified, the object will also be published
+ * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
+ * Irrelevant if not publishing.
+ *
+ * @returns {Promise<object>} - Response from FinalizeContentObject
+ */
+exports.EditAndFinalizeContentObject = async function({libraryId, objectId, callback, options={}, publish=true, awaitCommitConfirmation=true}) {
+  const {writeToken} = await this.EditContentObject({libraryId, objectId, options});
+
+  await callback({writeToken});
+
+  return await this.FinalizeContentObject({libraryId, objectId, writeToken, publish, awaitCommitConfirmation});
 };
 
 exports.AwaitPending = async function(objectId) {

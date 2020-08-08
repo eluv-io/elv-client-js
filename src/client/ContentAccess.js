@@ -18,6 +18,35 @@ const {
 } = require("../Validation");
 
 
+// Note: Keep these ordered by most-restrictive to least-restrictive
+exports.permissionLevels = {
+  "owner": {
+    short: "Owner Only",
+    description: "Only the owner has access to the object and ability to change permissions",
+    settings: { visibility: 0, statusCode: -1, kmsConk: false }
+  },
+  "editable": {
+    short: "Editable",
+    description: "Members of the editors group have full access to the object and the ability to change permissions",
+    settings: { visibility: 0, statusCode: -1, kmsConk: true }
+  },
+  "viewable": {
+    short: "Viewable",
+    description: "In addition to editors, members of the 'accessor' group can have read-only access to the object including playing video and retrieving metadata, images and documents",
+    settings: { visibility: 0, statusCode: 0, kmsConk: true }
+  },
+  "listable": {
+    short: "Publicly Listable",
+    description: "Anyone can list the public portion of this object but only accounts with specific rights can access",
+    settings: { visibility: 1, statusCode: 0, kmsConk: true }
+  },
+  "public": {
+    short: "Public",
+    description: "Anyone can access this object",
+    settings: { visibility: 10, statusCode: 0, kmsConk: true }
+  }
+};
+
 exports.Visibility = async function({id}) {
   try {
     const address = this.utils.HashToAddress(id);
@@ -48,6 +77,60 @@ exports.Visibility = async function({id}) {
 
     throw error;
   }
+};
+
+/**
+ * Get the current permission level for the specified object. See client.permissionLevels for all available permissions.
+ *
+ * Note: This method is only intended for normal content objects, not types, libraries, etc.
+ *
+ * @methodGroup Content Objects
+ * @param {string} objectId - The ID of the object
+ *
+ * @return {string} - Key for the permission of the object - Use this to retrieve more details from client.permissionLevels
+ */
+exports.Permission = async function({objectId}) {
+  ValidateObject(objectId);
+
+  if((await this.AccessType({id: objectId})) !== this.authClient.ACCESS_TYPES.OBJECT) {
+    throw Error("Permission only valid for normal content objects: " + objectId);
+  }
+
+  const visibility = await this.Visibility({id: objectId});
+
+  const kmsAddress = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "addressKMS"
+  });
+
+  const kmsId = kmsAddress && `ikms${this.utils.AddressToHash(kmsAddress)}`;
+
+  let hasKmsConk = false;
+  if(kmsId) {
+    hasKmsConk = !!(await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId}),
+      objectId,
+      metadataSubtree: `eluv.caps.${kmsId}`
+    }));
+  }
+
+  let statusCode = await this.CallContractMethod({
+    contractAddress: this.utils.HashToAddress(objectId),
+    methodName: "statusCode"
+  });
+  statusCode = parseInt(statusCode._hex, 16);
+
+  let permission = Object.keys(this.permissionLevels).filter(permissionKey => {
+    const settings = this.permissionLevels[permissionKey].settings;
+
+    return visibility >= settings.visibility && statusCode >= settings.statusCode && hasKmsConk === settings.kmsConk;
+  });
+
+  if(!permission) {
+    permission = hasKmsConk ? ["editable"] : ["owner"];
+  }
+
+  return permission.slice(-1)[0];
 };
 
 /* Content Spaces */
@@ -881,31 +964,6 @@ exports.AvailableDRMs = async function() {
   return availableDRMs;
 };
 
-exports.AudienceData = function({objectId, versionHash, protocols=[], drms=[]}) {
-  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
-
-  this.Log(`Retrieving audience data: ${objectId}`);
-
-  let data = {
-    user_address: this.utils.FormatAddress(this.signer.address),
-    content_id: objectId || this.utils.DecodeVersionHash(versionHash).id,
-    content_hash: versionHash,
-    hostname: this.HttpClient.BaseURI().hostname(),
-    access_time: Math.round(new Date().getTime()).toString(),
-    format: protocols.join(","),
-    drm: drms.join(",")
-  };
-
-  if(typeof window !== "undefined" && window.navigator) {
-    data.user_string = window.navigator.userAgent;
-    data.language = window.navigator.language;
-  }
-
-  this.Log(data);
-
-  return data;
-};
-
 /**
  * Retrieve available playout offerings for the specified content
  *
@@ -932,8 +990,6 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
 
   const path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
 
-  const audienceData = this.AudienceData({objectId, versionHash});
-
   try {
     return await this.utils.ResponseToJson(
       this.HttpClient.Request({
@@ -942,8 +998,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
         headers: await this.authClient.AuthorizationHeader({
           objectId,
           channelAuth: true,
-          oauthToken: this.oauthToken,
-          audienceData
+          oauthToken: this.oauthToken
         })
       })
     );
@@ -975,6 +1030,8 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
  * @param {string=} offering=default - The offering to play
+ * @param {Object=} context - Additional audience data to include in the authorization request.
+ * - Note: Context must be a map of string->string
  */
 exports.PlayoutOptions = async function({
   objectId,
@@ -984,6 +1041,7 @@ exports.PlayoutOptions = async function({
   protocols=["dash", "hls"],
   offering="default",
   drms=[],
+  context,
   hlsjsProfile=true
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
@@ -1013,11 +1071,12 @@ exports.PlayoutOptions = async function({
     path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
   }
 
-  const audienceData = this.AudienceData({
+  const audienceData = this.authClient.AudienceData({
     objectId: linkTargetId || objectId,
     versionHash: linkTargetHash || versionHash || await this.LatestVersionHash({objectId}),
     protocols,
-    drms
+    drms,
+    context
   });
 
   // Add authorization token to playout URLs
@@ -1107,6 +1166,8 @@ exports.PlayoutOptions = async function({
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} offering=default - The offering to play
+ * @param {Object=} context - Additional audience data to include in the authorization request
+ * - Note: Context must be a map of string->string
  */
 exports.BitmovinPlayoutOptions = async function({
   objectId,
@@ -1114,7 +1175,8 @@ exports.BitmovinPlayoutOptions = async function({
   linkPath,
   protocols=["dash", "hls"],
   drms=[],
-  offering="default"
+  offering="default",
+  context
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
@@ -1129,7 +1191,8 @@ exports.BitmovinPlayoutOptions = async function({
     protocols,
     drms,
     offering,
-    hlsjsProfile: false
+    hlsjsProfile: false,
+    context
   });
 
   delete playoutOptions.playoutMethods;
@@ -1242,11 +1305,11 @@ exports.CallBitcodeMethod = async function({
     `Calling bitcode method: ${libraryId || ""} ${objectId || versionHash} ${writeToken || ""}
       ${constant ? "GET" : "POST"} ${path}
       Query Params:
-      ${queryParams}
+      ${JSON.stringify(queryParams || "")}
       Body:
-      ${body}
+      ${JSON.stringify(body || "")}
       Headers
-      ${headers}`
+      ${JSON.stringify(headers || "")}`
   );
 
   return this.utils.ResponseToFormat(
@@ -1376,7 +1439,14 @@ exports.FabricUrl = async function({
   // Clone queryParams to avoid modification of the original
   queryParams = {...queryParams};
 
-  queryParams.authorization = await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, channelAuth, noAuth, noCache});
+  queryParams.authorization = await this.authClient.AuthorizationToken({
+    libraryId,
+    objectId,
+    versionHash,
+    channelAuth,
+    noAuth,
+    noCache
+  });
 
   if((rep || publicRep) && objectId && !versionHash) {
     versionHash = await this.LatestVersionHash({objectId});
@@ -2023,18 +2093,36 @@ exports.AccessRequest = async function({libraryId, objectId, versionHash, args=[
 };
 
 /**
+ * Specify additional context to include in all state channel requests made by the client (e.g. for playout)
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {Object=} context - Additional context to include in state channel requests
+ * - Note: Context must be a map of string->string
+ */
+exports.SetAuthContext = function({context}) {
+  if(context && Object.values(context).find(value => typeof value !== "string")) {
+    throw Error("Context must be a map of string->string");
+  }
+
+  this.authContext = context;
+};
+
+/**
  * Generate a state channel token.
  *
  * @methodGroup Access Requests
  * @namedParams
  * @param {string=} objectId - ID of the object
  * @param {string=} versionHash - Version hash of the object
+ * @param {Object=} context - Additional audience data to include in the authorization request
+ * - Note: Context must be a map of string->string
  * @param {boolean=} noCache=false - If specified, a new state channel token will be generated
  * regardless whether or not one has been previously cached
  *
  * @return {Promise<string>} - The state channel token
  */
-exports.GenerateStateChannelToken = async function({objectId, versionHash, noCache=false}) {
+exports.GenerateStateChannelToken = async function({objectId, versionHash, context, noCache=false}) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
   if(versionHash) {
@@ -2045,13 +2133,11 @@ exports.GenerateStateChannelToken = async function({objectId, versionHash, noCac
 
   this.stateChannelAccess[objectId] = versionHash;
 
-  const audienceData = this.AudienceData({objectId, versionHash});
-
   return await this.authClient.AuthorizationToken({
     objectId,
     channelAuth: true,
     oauthToken: this.oauthToken,
-    audienceData,
+    context,
     noCache
   });
 };
@@ -2080,11 +2166,9 @@ exports.FinalizeStateChannelAccess = async function({objectId, versionHash, perc
 
   this.stateChannelAccess[objectId] = undefined;
 
-  const audienceData = this.AudienceData({objectId, versionHash});
-
   await this.authClient.ChannelContentFinalize({
     objectId,
-    audienceData,
+    versionHash,
     percent: percentComplete
   });
 };
