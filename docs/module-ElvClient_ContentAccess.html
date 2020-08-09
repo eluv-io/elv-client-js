@@ -386,7 +386,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2024">line 2024</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2039">line 2039</a>
         </li>
       </ul>
     </dd>
@@ -869,7 +869,7 @@ that content object will be authorized with that AccessRequest transaction.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2079">line 2079</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2094">line 2094</a>
         </li>
       </ul>
     </dd>
@@ -1171,7 +1171,7 @@ that content object will be authorized with that AccessRequest transaction.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2009">line 2009</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2024">line 2024</a>
         </li>
       </ul>
     </dd>
@@ -1594,7 +1594,7 @@ that content object will be authorized with that AccessRequest transaction.</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".BitmovinPlayoutOptions">
-      <span class="type-signature">static </span>BitmovinPlayoutOptions<span class="signature">({<div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash,</div><div class="block-param">linkPath<span class="signature-attributes">optional</span>,</div><div class="block-param">protocols,</div><div class="block-param">drms,</div><div class="block-param">offering<span class="signature-attributes">optional</span>,</div><div class="block-param">context<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
+      <span class="type-signature">static </span>BitmovinPlayoutOptions<span class="signature">({<div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash,</div><div class="block-param">linkPath<span class="signature-attributes">optional</span>,</div><div class="block-param">protocols,</div><div class="block-param">drms,</div><div class="block-param">handler<span class="signature-attributes">optional</span>,</div><div class="block-param">offering<span class="signature-attributes">optional</span>,</div><div class="block-param">playoutType<span class="signature-attributes">optional</span>,</div><div class="block-param">context<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -1858,6 +1858,51 @@ a specific version of the content, provide the versionHash parameter (in which c
     
       <tr>
         
+          <td class="name"><code>handler</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              playout
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The handler to use for playout</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
           <td class="name"><code>offering</code></td>
         
 
@@ -1896,6 +1941,49 @@ a specific version of the content, provide the versionHash parameter (in which c
 
         <td class="description last">
           <p>The offering to play</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>playoutType</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The type of playout</p>
           
         </td>
       </tr>
@@ -2063,7 +2151,7 @@ a specific version of the content, provide the versionHash parameter (in which c
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1172">line 1172</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1183">line 1183</a>
         </li>
       </ul>
     </dd>
@@ -2743,7 +2831,7 @@ Otherwise, a POST with an UpdateRequest will be performed</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1270">line 1270</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1285">line 1285</a>
         </li>
       </ul>
     </dd>
@@ -2962,7 +3050,7 @@ to through both their user wallet and through access groups</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2213">line 2213</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2228">line 2228</a>
         </li>
       </ul>
     </dd>
@@ -3986,7 +4074,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2188">line 2188</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2203">line 2203</a>
         </li>
       </ul>
     </dd>
@@ -4578,7 +4666,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1607">line 1607</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1622">line 1622</a>
         </li>
       </ul>
     </dd>
@@ -4960,7 +5048,7 @@ object by this client instance.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1555">line 1555</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1570">line 1570</a>
         </li>
       </ul>
     </dd>
@@ -9796,7 +9884,7 @@ full URL</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1988">line 1988</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2003">line 2003</a>
         </li>
       </ul>
     </dd>
@@ -10179,7 +10267,7 @@ full URL</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1965">line 1965</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1980">line 1980</a>
         </li>
       </ul>
     </dd>
@@ -10524,7 +10612,7 @@ save it to the draft metadata</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1907">line 1907</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1922">line 1922</a>
         </li>
       </ul>
     </dd>
@@ -11306,7 +11394,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1403">line 1403</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1418">line 1418</a>
         </li>
       </ul>
     </dd>
@@ -11793,7 +11881,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1498">line 1498</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1513">line 1513</a>
         </li>
       </ul>
     </dd>
@@ -12051,7 +12139,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2154">line 2154</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2169">line 2169</a>
         </li>
       </ul>
     </dd>
@@ -12380,7 +12468,7 @@ regardless whether or not one has been previously cached</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2125">line 2125</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2140">line 2140</a>
         </li>
       </ul>
     </dd>
@@ -13282,7 +13370,7 @@ regardless whether or not one has been previously cached</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1810">line 1810</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1825">line 1825</a>
         </li>
       </ul>
     </dd>
@@ -13647,7 +13735,7 @@ object and versionHash is not specified, will return the latest version hash.</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1678">line 1678</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1693">line 1693</a>
         </li>
       </ul>
     </dd>
@@ -14134,7 +14222,7 @@ object and versionHash is not specified, will return the latest version hash.</p
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1769">line 1769</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1784">line 1784</a>
         </li>
       </ul>
     </dd>
@@ -14311,7 +14399,7 @@ object and versionHash is not specified, will return the latest version hash.</p
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".PlayoutOptions">
-      <span class="type-signature">static </span>PlayoutOptions<span class="signature">({<div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">writeToken<span class="signature-attributes">optional</span>,</div><div class="block-param">linkPath<span class="signature-attributes">optional</span>,</div><div class="block-param">protocols,</div><div class="block-param">drms,</div><div class="block-param">offering<span class="signature-attributes">optional</span>,</div><div class="block-param">context<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
+      <span class="type-signature">static </span>PlayoutOptions<span class="signature">({<div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">writeToken<span class="signature-attributes">optional</span>,</div><div class="block-param">linkPath<span class="signature-attributes">optional</span>,</div><div class="block-param">protocols,</div><div class="block-param">drms,</div><div class="block-param">handler<span class="signature-attributes">optional</span>,</div><div class="block-param">offering<span class="signature-attributes">optional</span>,</div><div class="block-param">playoutType<span class="signature-attributes">optional</span>,</div><div class="block-param">context<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -14622,6 +14710,51 @@ a specific version of the content, provide the versionHash parameter (in which c
     
       <tr>
         
+          <td class="name"><code>handler</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              playout
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The handler to use for playout</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
           <td class="name"><code>offering</code></td>
         
 
@@ -14660,6 +14793,49 @@ a specific version of the content, provide the versionHash parameter (in which c
 
         <td class="description last">
           <p>The offering to play</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>playoutType</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>The type of playout</p>
           
         </td>
       </tr>
@@ -14962,7 +15138,7 @@ a specific version of the content, provide the versionHash parameter (in which c
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1036">line 1036</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1038">line 1038</a>
         </li>
       </ul>
     </dd>
@@ -15281,7 +15457,7 @@ a specific version of the content, provide the versionHash parameter (in which c
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2283">line 2283</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2298">line 2298</a>
         </li>
       </ul>
     </dd>
@@ -15614,7 +15790,7 @@ a specific version of the content, provide the versionHash parameter (in which c
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1374">line 1374</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1389">line 1389</a>
         </li>
       </ul>
     </dd>
@@ -15854,7 +16030,7 @@ a specific version of the content, provide the versionHash parameter (in which c
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2312">line 2312</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2327">line 2327</a>
         </li>
       </ul>
     </dd>
@@ -16381,7 +16557,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1350">line 1350</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line1365">line 1365</a>
         </li>
       </ul>
     </dd>
@@ -16567,7 +16743,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2103">line 2103</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2118">line 2118</a>
         </li>
       </ul>
     </dd>
@@ -16778,7 +16954,7 @@ whether such a request exists in the client cache. This request will not be cach
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2260">line 2260</a>
+          <a href="client_ContentAccess.js.html">client/ContentAccess.js</a>, <a href="client_ContentAccess.js.html#line2275">line 2275</a>
         </li>
       </ul>
     </dd>
