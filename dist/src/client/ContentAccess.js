@@ -1886,20 +1886,22 @@ exports.AvailableOfferings = function _callee25(_ref18) {
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
+ * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
  */
 
 
 exports.PlayoutOptions = function _callee26(_ref19) {
-  var objectId, versionHash, writeToken, linkPath, _ref19$protocols, protocols, _ref19$offering, offering, _ref19$drms, drms, context, _ref19$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
+  var objectId, versionHash, writeToken, linkPath, _ref19$protocols, protocols, _ref19$handler, handler, _ref19$offering, offering, playoutType, _ref19$drms, drms, context, _ref19$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee26$(_context26) {
     while (1) {
       switch (_context26.prev = _context26.next) {
         case 0:
-          objectId = _ref19.objectId, versionHash = _ref19.versionHash, writeToken = _ref19.writeToken, linkPath = _ref19.linkPath, _ref19$protocols = _ref19.protocols, protocols = _ref19$protocols === void 0 ? ["dash", "hls"] : _ref19$protocols, _ref19$offering = _ref19.offering, offering = _ref19$offering === void 0 ? "default" : _ref19$offering, _ref19$drms = _ref19.drms, drms = _ref19$drms === void 0 ? [] : _ref19$drms, context = _ref19.context, _ref19$hlsjsProfile = _ref19.hlsjsProfile, hlsjsProfile = _ref19$hlsjsProfile === void 0 ? true : _ref19$hlsjsProfile;
+          objectId = _ref19.objectId, versionHash = _ref19.versionHash, writeToken = _ref19.writeToken, linkPath = _ref19.linkPath, _ref19$protocols = _ref19.protocols, protocols = _ref19$protocols === void 0 ? ["dash", "hls"] : _ref19$protocols, _ref19$handler = _ref19.handler, handler = _ref19$handler === void 0 ? "playout" : _ref19$handler, _ref19$offering = _ref19.offering, offering = _ref19$offering === void 0 ? "default" : _ref19$offering, playoutType = _ref19.playoutType, _ref19$drms = _ref19.drms, drms = _ref19$drms === void 0 ? [] : _ref19$drms, context = _ref19.context, _ref19$hlsjsProfile = _ref19.hlsjsProfile, hlsjsProfile = _ref19$hlsjsProfile === void 0 ? true : _ref19$hlsjsProfile;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
           protocols = protocols.map(function (p) {
             return p.toLowerCase();
@@ -2043,7 +2045,7 @@ exports.PlayoutOptions = function _callee26(_ref19) {
 
         case 52:
           if (!(i < playoutOptions.length)) {
-            _context26.next = 84;
+            _context26.next = 85;
             break;
           }
 
@@ -2052,6 +2054,11 @@ exports.PlayoutOptions = function _callee26(_ref19) {
           drm = option.properties.drm; // Remove authorization parameter from playout path - it's re-added by Rep
 
           playoutPath = option.uri.split("?")[0];
+
+          if (playoutType) {
+            playoutPath = playoutPath.replace("playlist", "playlist-".concat(playoutType));
+          }
+
           licenseServers = option.properties.license_servers; // Create full playout URLs for this protocol / drm combo
 
           _context26.t11 = _objectSpread;
@@ -2063,19 +2070,19 @@ exports.PlayoutOptions = function _callee26(_ref19) {
           _context26.t17 = _defineProperty;
           _context26.t18 = {};
           _context26.t19 = drm || "clear";
-          _context26.next = 69;
+          _context26.next = 70;
           return _regeneratorRuntime.awrap(this.Rep({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
             versionHash: linkTargetHash || versionHash,
-            rep: UrlJoin("playout", offering, playoutPath),
+            rep: UrlJoin(handler, offering, playoutPath),
             channelAuth: true,
             queryParams: hlsjsProfile && protocol === "hls" && drm === "aes-128" ? {
               player_profile: "hls-js"
             } : {}
           }));
 
-        case 69:
+        case 70:
           _context26.t20 = _context26.sent;
           _context26.t21 = drm ? _defineProperty({}, drm, {
             licenseServers: licenseServers
@@ -2095,29 +2102,29 @@ exports.PlayoutOptions = function _callee26(_ref19) {
           drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
           if (!(!protocolMatch || !drmMatch)) {
-            _context26.next = 80;
+            _context26.next = 81;
             break;
           }
 
-          return _context26.abrupt("continue", 81);
+          return _context26.abrupt("continue", 82);
 
-        case 80:
+        case 81:
           // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
           if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
             playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
             playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
           }
 
-        case 81:
+        case 82:
           i++;
           _context26.next = 52;
           break;
 
-        case 84:
+        case 85:
           this.Log(playoutMap);
           return _context26.abrupt("return", playoutMap);
 
-        case 86:
+        case 87:
         case "end":
           return _context26.stop();
       }
@@ -2138,20 +2145,22 @@ exports.PlayoutOptions = function _callee26(_ref19) {
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
+ * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
+ * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
  */
 
 
 exports.BitmovinPlayoutOptions = function _callee27(_ref21) {
-  var objectId, versionHash, linkPath, _ref21$protocols, protocols, _ref21$drms, drms, _ref21$offering, offering, context, playoutOptions, linkTargetId, linkTargetHash, libraryId, authToken, config;
+  var objectId, versionHash, linkPath, _ref21$protocols, protocols, _ref21$drms, drms, _ref21$handler, handler, _ref21$offering, offering, playoutType, context, playoutOptions, linkTargetId, linkTargetHash, libraryId, authToken, config;
 
   return _regeneratorRuntime.async(function _callee27$(_context27) {
     while (1) {
       switch (_context27.prev = _context27.next) {
         case 0:
-          objectId = _ref21.objectId, versionHash = _ref21.versionHash, linkPath = _ref21.linkPath, _ref21$protocols = _ref21.protocols, protocols = _ref21$protocols === void 0 ? ["dash", "hls"] : _ref21$protocols, _ref21$drms = _ref21.drms, drms = _ref21$drms === void 0 ? [] : _ref21$drms, _ref21$offering = _ref21.offering, offering = _ref21$offering === void 0 ? "default" : _ref21$offering, context = _ref21.context;
+          objectId = _ref21.objectId, versionHash = _ref21.versionHash, linkPath = _ref21.linkPath, _ref21$protocols = _ref21.protocols, protocols = _ref21$protocols === void 0 ? ["dash", "hls"] : _ref21$protocols, _ref21$drms = _ref21.drms, drms = _ref21$drms === void 0 ? [] : _ref21$drms, _ref21$handler = _ref21.handler, handler = _ref21$handler === void 0 ? "playout" : _ref21$handler, _ref21$offering = _ref21.offering, offering = _ref21$offering === void 0 ? "default" : _ref21$offering, playoutType = _ref21.playoutType, context = _ref21.context;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!objectId) {
@@ -2165,7 +2174,9 @@ exports.BitmovinPlayoutOptions = function _callee27(_ref21) {
             linkPath: linkPath,
             protocols: protocols,
             drms: drms,
+            handler: handler,
             offering: offering,
+            playoutType: playoutType,
             hlsjsProfile: false,
             context: context
           }));
