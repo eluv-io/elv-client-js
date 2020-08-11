@@ -469,41 +469,6 @@ var contract = {
     "stateMutability": "nonpayable",
     "type": "function"
   }, {
-    "constant": false,
-    "inputs": [{
-      "name": "_contentType",
-      "type": "address"
-    }, {
-      "name": "_addressKMS",
-      "type": "address"
-    }, {
-      "name": "_contentContractAddress",
-      "type": "address"
-    }, {
-      "name": "_accessCharge",
-      "type": "uint256"
-    }, {
-      "name": "_statusCode",
-      "type": "int256"
-    }, {
-      "name": "_requestID",
-      "type": "uint256"
-    }, {
-      "name": "_visibility",
-      "type": "uint8"
-    }, {
-      "name": "_objectHash",
-      "type": "string"
-    }, {
-      "name": "_versionHashes",
-      "type": "string"
-    }],
-    "name": "migrate",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
     "constant": true,
     "inputs": [],
     "name": "owner",
@@ -603,6 +568,20 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
+    "inputs": [{
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "getMeta",
+    "outputs": [{
+      "name": "",
+      "type": "bytes"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
     "inputs": [],
     "name": "contentSpace",
     "outputs": [{
@@ -696,6 +675,20 @@ var contract = {
       "type": "address"
     }],
     "name": "setContentContractAddress",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "key",
+      "type": "bytes"
+    }, {
+      "name": "value",
+      "type": "bytes"
+    }],
+    "name": "putMeta",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -1017,36 +1010,6 @@ var contract = {
     "anonymous": false,
     "inputs": [{
       "indexed": false,
-      "name": "charged",
-      "type": "uint256"
-    }, {
-      "indexed": false,
-      "name": "received",
-      "type": "uint256"
-    }, {
-      "indexed": false,
-      "name": "converted",
-      "type": "uint256"
-    }, {
-      "indexed": false,
-      "name": "enough",
-      "type": "bool"
-    }],
-    "name": "DbgAccess",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "code",
-      "type": "uint8"
-    }],
-    "name": "DbgAccessCode",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
       "name": "spaceAddress",
       "type": "address"
     }, {
@@ -1098,6 +1061,15 @@ var contract = {
       "type": "int256"
     }],
     "name": "VersionDelete",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
     "type": "event"
   }]
 };

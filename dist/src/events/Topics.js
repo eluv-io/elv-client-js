@@ -557,44 +557,6 @@ var topics = {
     }],
     "ambiguous": true
   },
-  "0xfdcd1c148f180968772efab9ef7e26a2ec7a58d82572587ad224c36c91236175": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "charged",
-        "type": "uint256"
-      }, {
-        "indexed": false,
-        "name": "received",
-        "type": "uint256"
-      }, {
-        "indexed": false,
-        "name": "converted",
-        "type": "uint256"
-      }, {
-        "indexed": false,
-        "name": "enough",
-        "type": "bool"
-      }],
-      "name": "DbgAccess",
-      "type": "event"
-    }],
-    "contract": "BaseContent"
-  },
-  "0x14c078593b5fe597db0b1293557c1a5315f2b7e708477ea38b41929534d96bdd": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "code",
-        "type": "uint8"
-      }],
-      "name": "DbgAccessCode",
-      "type": "event"
-    }],
-    "contract": "BaseContent"
-  },
   "0x8354ff8c2c210fd53709db56438bb45d36a62de8bcc95c8459d80ce933d47680": {
     "abi": [{
       "anonymous": false,
