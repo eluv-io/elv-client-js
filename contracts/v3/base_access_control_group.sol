@@ -6,6 +6,7 @@ import {AccessIndexor} from "./access_indexor.sol";
 import {Editable} from "./editable.sol";
 import {Container} from "./container.sol";
 import {IUserSpace, INodeSpace} from "./base_space_interfaces.sol";
+import {MetaObject, CounterObject} from "./meta_object.sol";
 
 
 /* -- Revision history --
@@ -23,12 +24,9 @@ BsAccessCtrlGrp20200316121700ML: Leverages inherited hasAccess
 */
 
 
-contract BaseAccessControlGroup is AccessIndexor, Editable {
+contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Editable {
 
     bytes32 public version ="BsAccessCtrlGrp20200316121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    //mapping (address => bool) public members;
-    //mapping (address => bool) public managers;
 
     address[] public membersList;
     uint256 public membersNum;
@@ -45,8 +43,8 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
 
     bool public oauthEnabled;
 
-    constructor(address content_space) public {
-        contentSpace = content_space;
+    constructor(address _contentSpace) public {
+        contentSpace = _contentSpace;
         membersNum = 0;
         managersList.push(creator);
         managersNum = 1;
@@ -96,10 +94,28 @@ contract BaseAccessControlGroup is AccessIndexor, Editable {
         setRights(manager, TYPE_EDIT, ACCESS_NONE);
     }
 
-    function hasManagerAccess(address candidate) public view returns (bool) {
-        return hasEditorRight(candidate);
+    function isAdmin(address _candidate) public view returns (bool) {
+        if (_candidate == owner) {
+            return true;
+        }
+        for (uint256 i = 0; i < managersList.length; i++) {
+            if (managersList[i] == _candidate) {
+                return true;
+            }
+        }
+        return false;
     }
 
+    address public tenant; // (optional?) address of tenant contract
+
+    function setTenant(address _tenantAddr) public {
+        require(isAdmin(msg.sender));
+        tenant = _tenantAddr;
+    }
+
+    function hasManagerAccess(address _candidate) public view returns (bool) {
+        return _candidate == tenant || hasEditorRight(_candidate);
+    }
 
     function hasAccessRight(address candidate, bool mgr) public view returns (bool) {
         if (mgr == true) {

@@ -221,6 +221,23 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [{
+      "name": "obj",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setContractRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
       "name": "group",
       "type": "address"
     }, {
@@ -232,6 +249,37 @@ var contract = {
     }],
     "name": "setGroupRights",
     "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_candidate",
+      "type": "address"
+    }],
+    "name": "isAdmin",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "setAndGetBit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -259,6 +307,17 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_tenantAddr",
+      "type": "address"
+    }],
+    "name": "setTenant",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,
@@ -313,6 +372,23 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "getBit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
     "inputs": [],
     "name": "countVersionHashes",
     "outputs": [{
@@ -321,6 +397,23 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "setAndGetBitInternal",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,
@@ -332,6 +425,23 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "obj",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setContentObjectRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,
@@ -355,7 +465,7 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "candidate",
+      "name": "_candidate",
       "type": "address"
     }],
     "name": "hasManagerAccess",
@@ -621,6 +731,20 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "incrementCounter",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
       "name": "manager",
       "type": "address"
     }],
@@ -670,6 +794,23 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "lib",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setLibraryRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,
@@ -731,6 +872,23 @@ var contract = {
       "type": "address"
     }],
     "name": "revokeAccess",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "obj",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setContentTypeRights",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -893,6 +1051,31 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
+    "inputs": [{
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "getMeta",
+    "outputs": [{
+      "name": "",
+      "type": "bytes"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "tenant",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
     "inputs": [],
     "name": "contentSpace",
     "outputs": [{
@@ -1033,6 +1216,23 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "getCounter",
+    "outputs": [{
+      "name": "",
+      "type": "uint32"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
     "constant": false,
     "inputs": [{
       "name": "_versionHash",
@@ -1043,6 +1243,31 @@ var contract = {
       "name": "",
       "type": "int256"
     }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "key",
+      "type": "bytes"
+    }, {
+      "name": "value",
+      "type": "bytes"
+    }],
+    "name": "putMeta",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }],
+    "name": "deleteGroup",
+    "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1067,6 +1292,23 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "group",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setAccessGroupRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,
@@ -1117,7 +1359,7 @@ var contract = {
     "type": "function"
   }, {
     "inputs": [{
-      "name": "content_space",
+      "name": "_contentSpace",
       "type": "address"
     }],
     "payable": false,
@@ -1250,7 +1492,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "parentAddress",
@@ -1274,6 +1516,23 @@ var contract = {
     "anonymous": false,
     "inputs": [{
       "indexed": false,
+      "name": "contentSpace",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "parentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "visibility",
+      "type": "uint8"
+    }],
+    "name": "VisibilityChanged",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
       "name": "principal",
       "type": "address"
     }, {
@@ -1286,6 +1545,58 @@ var contract = {
       "type": "uint8"
     }],
     "name": "RightsChanged",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "slot",
+      "type": "uint8"
+    }, {
+      "indexed": false,
+      "name": "val",
+      "type": "uint32"
+    }],
+    "name": "CounterIncremented",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "ord",
+      "type": "uint8"
+    }, {
+      "indexed": false,
+      "name": "prev",
+      "type": "bool"
+    }],
+    "name": "BitSetAndGet",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }],
+    "name": "WordGroupDeleted",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
     "type": "event"
   }]
 };

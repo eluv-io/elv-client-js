@@ -103,8 +103,8 @@ contract LvRecordableStream is Content {
     event DeleteRecording(uint256 timestamp, address accessor, address recObj, address recContract);
     event SetRecordingTimes(uint256 timestamp, address accessor, address recObj, uint recStartTime, uint recEndTime);
     event SetRecordingStatus(uint256 timestamp, address accessor, address recObj, string recStatus);
-    event RecordingPlaybackStarted(uint256 timestamp, address accessor, address recObj, bytes32 requestNonce, uint256 accessTimestamp);
-    event RecordingPlaybackCompleted(uint256 timestamp, address accessor, address recObj, bytes32 requestNonce, uint8 percentPlayed, uint256 finalizeTimestamp);
+    event RecordingPlaybackStarted(uint256 timestamp, address accessor, address recObj, uint256 requestNonce, uint256 accessTimestamp);
+    event RecordingPlaybackCompleted(uint256 timestamp, address accessor, address recObj, uint256 requestNonce, uint8 percentPlayed, uint256 finalizeTimestamp);
     event RecordedProgramId(uint256 timestamp, address accessor, address recObj, string programId, uint256 programStart, uint256 programEnd, string programTitle);
 
     event MembershipGroupRemoved(uint256 timestamp, address group);
@@ -319,12 +319,12 @@ contract LvRecordableStream is Content {
         emit SetRecordingTimes(now, tx.origin, rec.contentAddress(), rec.startTime(), rec.endTime());
     }
 
-    function logRecordingPlaybackStarted(bytes32 requestNonce, address originator, uint256 requestTimestamp) public {
+    function logRecordingPlaybackStarted(uint256 requestNonce, address originator, uint256 requestTimestamp) public {
         LvRecording rec = LvRecording(msg.sender);
         emit RecordingPlaybackStarted(now, originator, rec.contentAddress(), requestNonce, requestTimestamp);
     }
 
-    function logRecordingPlaybackCompleted(bytes32 requestNonce, uint8 percentPlayed, address originator, uint256 requestTimestamp) public {
+    function logRecordingPlaybackCompleted(uint256 requestNonce, uint8 percentPlayed, address originator, uint256 requestTimestamp) public {
         LvRecording rec = LvRecording(msg.sender);
         emit RecordingPlaybackCompleted(now, originator, rec.contentAddress(), requestNonce, percentPlayed, requestTimestamp);
     }
@@ -430,7 +430,7 @@ contract LvRecording is Content {
     }
 
     //timestamp of original request can be passed in customValues[0] state-channel
-    function runAccess(bytes32 requestNonce,  bytes32[] customValues, address[] stakeholders, address accessor) public payable returns(uint) {
+    function runAccess(uint256 requestNonce,  bytes32[] customValues, address[] stakeholders, address accessor) public payable returns(uint) {
         LvRecordableStream stream = LvRecordableStream(recordingStreamContract);
         if (customValues.length ==  0) {
             stream.logRecordingPlaybackStarted(requestNonce, accessor, now);
@@ -451,7 +451,7 @@ contract LvRecording is Content {
 
     //timestamp of original request can be passed in customValues[1] state-channel, prc_complete is passed in customValues[0]
     function runFinalize(
-        bytes32 requestNonce,
+        uint256 requestNonce,
         bytes32[] customValues,
         address[], /*stakeholders*/
         address accessor

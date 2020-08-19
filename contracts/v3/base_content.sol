@@ -6,6 +6,7 @@ import {Content} from "./content.sol";
 import {Container} from "./container.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import "./user_space.sol";
+import "./meta_object.sol";
 
 /* -- Revision history --
 BaseContent20190221101600ML: First versioned released
@@ -34,9 +35,9 @@ BaseContent20200422180500ML: Version update to reflect changes made to editable 
 */
 
 
-contract BaseContent is Editable {
+contract BaseContent is MetaObject, Editable {
 
-    bytes32 public version ="BaseContent20200422180500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200626180500PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -60,43 +61,13 @@ contract BaseContent is Editable {
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
     }
 
-    function migrate(address _contentType,
-            address _addressKMS,
-            address _contentContractAddress,
-            // address _libraryAddress,
-            uint256 _accessCharge,
-            int _statusCode,
-            // uint256 _requestID,
-            uint8 _visibility,
-            string _objectHash,
-            string _versionHashes
-        ) public {
-
-        Ownable space = Ownable(contentSpace);
-	      require(msg.sender == space.owner());
-
-        contentType = _contentType;
-        addressKMS = _addressKMS;
-        contentContractAddress = _contentContractAddress;
-        // libraryAddress = _libraryAddress; // TODO: set by library factory method?
-
-        accessCharge = _accessCharge;
-        statusCode = _statusCode;
-        // requestID = _requestID;
-        visibility = _visibility;
-
-        super.migrate(_objectHash, _versionHashes);
-
-        return;
-    }
-
     // TODO: remove?
-    mapping(bytes32 => RequestData) public requestMap;
+    mapping(uint256 => RequestData) public requestMap;
 
     event ContentObjectCreate(address containingLibrary);
     event SetContentType(address contentType, address contentContractAddress);
 
-    event LogPayment(bytes32 requestNonce, string label, address payee, uint256 amount);
+    event LogPayment(uint256 requestNonce, string label, address payee, uint256 amount);
     event AccessRequestValue(bytes32 customValue);
     event AccessRequestStakeholder(address stakeholder);
     event AccessRequest( //For backward compatibility
@@ -110,7 +81,7 @@ contract BaseContent is Editable {
    event AccessComplete(uint256 requestID, uint256 scorePct, bool customContractResult);
 
    event AccessCompleteV3(
-       bytes32 requestNonce,
+       uint256 requestNonce,
        bool customContractResult,
        address parentAddress,
        bytes32 contextHash,
@@ -148,6 +119,11 @@ contract BaseContent is Editable {
 
     function statusDescription() public constant returns (bytes32) {
         return statusCodeDescription(statusCode);
+    }
+
+    function setVisibility(uint8 _visibility_code) public onlyEditor {
+        visibility = _visibility_code;
+        emit VisibilityChanged(contentSpace, libraryAddress, visibility);
     }
 
     function statusCodeDescription(int status_code) public constant returns (bytes32) {
@@ -403,12 +379,12 @@ contract BaseContent is Editable {
 
 
     //this function allows custom content contract to call makeRequestPayment
-    function processRequestPayment(bytes32 requestNonce, address payee, string label, uint256 amount) public returns (bool) {
+    function processRequestPayment(uint256 requestNonce, address payee, string label, uint256 amount) public returns (bool) {
         require((contentContractAddress != 0x0) && (msg.sender == contentContractAddress));
         return makeRequestPayment(requestNonce, payee, label, amount);
     }
 
-    function makeRequestPayment(bytes32 requestNonce, address payee, string label, uint256 amount) private returns (bool) {
+    function makeRequestPayment(uint256 requestNonce, address payee, string label, uint256 amount) private returns (bool) {
         RequestData storage r = requestMap[requestNonce];
         if ((r.settled + amount) <= r.amountPaid) {
             payee.transfer(amount);
@@ -434,19 +410,19 @@ contract BaseContent is Editable {
     }
 
     function accessRequestContext(
-        bytes32 requestNonce,
+        uint256 requestNonce,
         bytes32 contextHash,
         address accessor,
         uint256 request_timestamp
-    ) public payable returns (bytes32) {
+    ) public payable returns (uint256) {
         require(tx.origin == addressKMS);
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;
         return accessRequestInternal(requestNonce, emptyVals, emptyAddrs, contextHash, accessor, request_timestamp);
     }
 
-    function makeNonce(uint256 reqId) view returns(bytes32) {
-        return keccak256(abi.encodePacked(requestID, address(this)));
+    function makeNonce(uint256 reqId) view returns(uint256) {
+        return uint256(keccak256(abi.encodePacked(requestID, address(this))));
     }
 
     function accessRequestV3(
@@ -454,7 +430,7 @@ contract BaseContent is Editable {
         address[] stakeholders
     ) public payable returns (bool) {
         requestID = requestID + 1;
-        bytes32 requestNonce = makeNonce(requestID);
+        uint256 requestNonce = makeNonce(requestID);
         accessRequestInternal(requestNonce, customValues, stakeholders, 0x0, msg.sender, now * 1000);
 
         //The 2 next lines could be moved into accessRequest internal to support payment via statechannel
@@ -497,14 +473,14 @@ contract BaseContent is Editable {
     }
 
     function accessRequestInternal(
-        bytes32 requestNonce,
+        uint256 requestNonce,
         bytes32[] custom_values,
         address[] stakeholders,
         bytes32 contextHash,
         address accessor,
         uint256 request_timestamp
     )
-    internal returns (bytes32) {
+    internal returns (uint256) {
 
         validateAccess(accessor, custom_values, stakeholders);
 
@@ -534,7 +510,7 @@ contract BaseContent is Editable {
     }
 
 
-    function accessCompleteInternal(bytes32 requestNonce, bytes32[] customValues, address[] stakeholders) public payable returns (bool) {
+    function accessCompleteInternal(uint256 requestNonce, bytes32[] customValues, address[] stakeholders) public payable returns (bool) {
         bool success = true;
         if (contentContractAddress != 0x0) {
             Content c = Content(contentContractAddress);
@@ -545,7 +521,7 @@ contract BaseContent is Editable {
     }
 
     function accessCompleteContext(
-        bytes32 _requestNonce,
+        uint256 _requestNonce,
         bytes32 _contextHash,
         address _accessor,
         uint256 _request_timestamp
@@ -571,7 +547,7 @@ contract BaseContent is Editable {
     // to the sender
     //
     // add a state variable in the contract indicating whether to credit back based on quality score
-    function accessCompleteV3(bytes32 requestNonce, bytes32[] customValues, address[] stakeholders) public payable returns (bool) {
+    function accessCompleteV3(uint256 requestNonce, bytes32[] customValues, address[] stakeholders) public payable returns (bool) {
         RequestData storage r = requestMap[requestNonce];
         require((r.originator != 0x0) && ((msg.sender == r.originator) || (msg.sender == owner)));
 
@@ -599,8 +575,8 @@ contract BaseContent is Editable {
         emit AccessCompleteV3(requestNonce, success, libraryAddress, 0x0, msg.sender, now * 1000);
         return success;
     }
-    function accessComplete(uint256 request_ID, uint256 score_pct, bytes32 /*ml_out_hash*/) public payable returns (bool) {
-        bytes32 requestNonce = makeNonce(requestID);
+    function accessComplete(uint256 request_ID, uint256 score_pct, uint256) public payable returns (bool) {
+        uint256 requestNonce = makeNonce(requestID);
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;
         bool success = accessCompleteV3(requestNonce, emptyVals, emptyAddrs);

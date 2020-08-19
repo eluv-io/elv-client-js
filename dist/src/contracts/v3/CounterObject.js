@@ -11,12 +11,63 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
+    "constant": true,
     "inputs": [{
-      "name": "addr",
+      "name": "_candidate",
       "type": "address"
     }],
-    "name": "isContract",
+    "name": "isAdmin",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "setAndGetBit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "getBit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "setAndGetBitInternal",
     "outputs": [{
       "name": "",
       "type": "bool"
@@ -31,57 +82,6 @@ var contract = {
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [],
-    "name": "OP_ACCESS_COMPLETE",
-    "outputs": [{
-      "name": "",
-      "type": "uint32"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "_opCodes",
-      "type": "uint32[]"
-    }, {
-      "name": "_contentAddrs",
-      "type": "address[]"
-    }, {
-      "name": "_userAddrs",
-      "type": "address[]"
-    }, {
-      "name": "_requestNonces",
-      "type": "uint256[]"
-    }, {
-      "name": "_ctxHashes",
-      "type": "bytes32[]"
-    }, {
-      "name": "_ts",
-      "type": "uint256[]"
-    }, {
-      "name": "_amt",
-      "type": "uint256[]"
-    }],
-    "name": "executeAccessBatch",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [],
-    "name": "OP_ACCESS_REQUEST",
-    "outputs": [{
-      "name": "",
-      "type": "uint32"
-    }],
-    "payable": false,
-    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -117,6 +117,20 @@ var contract = {
     "stateMutability": "nonpayable",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "incrementCounter",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [],
     "name": "owner",
@@ -139,19 +153,30 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
+    "constant": true,
     "inputs": [{
-      "name": "lib",
-      "type": "address"
+      "name": "_ident",
+      "type": "bytes32"
     }, {
-      "name": "content_type",
-      "type": "address"
+      "name": "_ord",
+      "type": "uint8"
     }],
-    "name": "createContent",
+    "name": "getCounter",
     "outputs": [{
       "name": "",
-      "type": "address"
+      "type": "uint32"
     }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }],
+    "name": "deleteGroup",
+    "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -170,6 +195,49 @@ var contract = {
     "payable": true,
     "stateMutability": "payable",
     "type": "fallback"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "slot",
+      "type": "uint8"
+    }, {
+      "indexed": false,
+      "name": "val",
+      "type": "uint32"
+    }],
+    "name": "CounterIncremented",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "ord",
+      "type": "uint8"
+    }, {
+      "indexed": false,
+      "name": "prev",
+      "type": "bool"
+    }],
+    "name": "BitSetAndGet",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }],
+    "name": "WordGroupDeleted",
+    "type": "event"
   }]
 };
 module.exports = contract;

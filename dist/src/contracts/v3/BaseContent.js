@@ -34,6 +34,26 @@ var contract = {
     "type": "function"
   }, {
     "constant": false,
+    "inputs": [{
+      "name": "request_ID",
+      "type": "uint256"
+    }, {
+      "name": "score_pct",
+      "type": "uint256"
+    }, {
+      "name": "",
+      "type": "uint256"
+    }],
+    "name": "accessComplete",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  }, {
+    "constant": false,
     "inputs": [],
     "name": "publish",
     "outputs": [{
@@ -46,45 +66,25 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [{
-      "name": "_requestNonce",
-      "type": "bytes32"
+      "name": "requestNonce",
+      "type": "uint256"
     }, {
-      "name": "_contextHash",
-      "type": "bytes32"
-    }, {
-      "name": "_accessor",
+      "name": "payee",
       "type": "address"
     }, {
-      "name": "_request_timestamp",
+      "name": "label",
+      "type": "string"
+    }, {
+      "name": "amount",
       "type": "uint256"
     }],
-    "name": "accessCompleteContext",
+    "name": "processRequestPayment",
     "outputs": [{
       "name": "",
       "type": "bool"
     }],
-    "payable": true,
-    "stateMutability": "payable",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "requestNonce",
-      "type": "bytes32"
-    }, {
-      "name": "customValues",
-      "type": "bytes32[]"
-    }, {
-      "name": "stakeholders",
-      "type": "address[]"
-    }],
-    "name": "accessCompleteInternal",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": true,
-    "stateMutability": "payable",
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,
@@ -121,6 +121,29 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "name": "requestMap",
+    "outputs": [{
+      "name": "originator",
+      "type": "address"
+    }, {
+      "name": "amountPaid",
+      "type": "uint256"
+    }, {
+      "name": "status",
+      "type": "int8"
+    }, {
+      "name": "settled",
+      "type": "uint256"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -166,6 +189,20 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_candidate",
+      "type": "address"
+    }],
+    "name": "isAdmin",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -307,6 +344,46 @@ var contract = {
     "stateMutability": "payable",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "requestNonce",
+      "type": "uint256"
+    }, {
+      "name": "customValues",
+      "type": "bytes32[]"
+    }, {
+      "name": "stakeholders",
+      "type": "address[]"
+    }],
+    "name": "accessCompleteV3",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "requestNonce",
+      "type": "uint256"
+    }, {
+      "name": "customValues",
+      "type": "bytes32[]"
+    }, {
+      "name": "stakeholders",
+      "type": "address[]"
+    }],
+    "name": "accessCompleteInternal",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [],
     "name": "STATUS_DRAFT",
@@ -341,26 +418,6 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "request_ID",
-      "type": "uint256"
-    }, {
-      "name": "score_pct",
-      "type": "uint256"
-    }, {
-      "name": "",
-      "type": "bytes32"
-    }],
-    "name": "accessComplete",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": true,
-    "stateMutability": "payable",
     "type": "function"
   }, {
     "constant": true,
@@ -465,6 +522,29 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "requestNonce",
+      "type": "uint256"
+    }, {
+      "name": "contextHash",
+      "type": "bytes32"
+    }, {
+      "name": "accessor",
+      "type": "address"
+    }, {
+      "name": "request_timestamp",
+      "type": "uint256"
+    }],
+    "name": "accessRequestContext",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [{
       "name": "",
@@ -477,26 +557,6 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "requestNonce",
-      "type": "bytes32"
-    }, {
-      "name": "customValues",
-      "type": "bytes32[]"
-    }, {
-      "name": "stakeholders",
-      "type": "address[]"
-    }],
-    "name": "accessCompleteV3",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": true,
-    "stateMutability": "payable",
     "type": "function"
   }, {
     "constant": true,
@@ -523,38 +583,6 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "_contentType",
-      "type": "address"
-    }, {
-      "name": "_addressKMS",
-      "type": "address"
-    }, {
-      "name": "_contentContractAddress",
-      "type": "address"
-    }, {
-      "name": "_accessCharge",
-      "type": "uint256"
-    }, {
-      "name": "_statusCode",
-      "type": "int256"
-    }, {
-      "name": "_visibility",
-      "type": "uint8"
-    }, {
-      "name": "_objectHash",
-      "type": "string"
-    }, {
-      "name": "_versionHashes",
-      "type": "string"
-    }],
-    "name": "migrate",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,
@@ -601,7 +629,7 @@ var contract = {
     "name": "makeNonce",
     "outputs": [{
       "name": "",
-      "type": "bytes32"
+      "type": "uint256"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -709,6 +737,20 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
+    "inputs": [{
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "getMeta",
+    "outputs": [{
+      "name": "",
+      "type": "bytes"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
     "inputs": [],
     "name": "contentSpace",
     "outputs": [{
@@ -728,6 +770,29 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_requestNonce",
+      "type": "uint256"
+    }, {
+      "name": "_contextHash",
+      "type": "bytes32"
+    }, {
+      "name": "_accessor",
+      "type": "address"
+    }, {
+      "name": "_request_timestamp",
+      "type": "uint256"
+    }],
+    "name": "accessCompleteContext",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
     "type": "function"
   }, {
     "constant": true,
@@ -787,29 +852,6 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
-    "inputs": [{
-      "name": "",
-      "type": "bytes32"
-    }],
-    "name": "requestMap",
-    "outputs": [{
-      "name": "originator",
-      "type": "address"
-    }, {
-      "name": "amountPaid",
-      "type": "uint256"
-    }, {
-      "name": "status",
-      "type": "int8"
-    }, {
-      "name": "settled",
-      "type": "uint256"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": true,
     "inputs": [],
     "name": "STATUS_REVIEW",
     "outputs": [{
@@ -851,6 +893,20 @@ var contract = {
       "type": "address"
     }],
     "name": "setContentContractAddress",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "key",
+      "type": "bytes"
+    }, {
+      "name": "value",
+      "type": "bytes"
+    }],
+    "name": "putMeta",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -903,52 +959,6 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
-    "inputs": [{
-      "name": "requestNonce",
-      "type": "bytes32"
-    }, {
-      "name": "contextHash",
-      "type": "bytes32"
-    }, {
-      "name": "accessor",
-      "type": "address"
-    }, {
-      "name": "request_timestamp",
-      "type": "uint256"
-    }],
-    "name": "accessRequestContext",
-    "outputs": [{
-      "name": "",
-      "type": "bytes32"
-    }],
-    "payable": true,
-    "stateMutability": "payable",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "requestNonce",
-      "type": "bytes32"
-    }, {
-      "name": "payee",
-      "type": "address"
-    }, {
-      "name": "label",
-      "type": "string"
-    }, {
-      "name": "amount",
-      "type": "uint256"
-    }],
-    "name": "processRequestPayment",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
     "inputs": [{
       "name": "content_space",
       "type": "address"
@@ -993,7 +1003,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "label",
@@ -1074,7 +1084,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "customContractResult",
@@ -1251,7 +1261,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "parentAddress",
@@ -1270,6 +1280,32 @@ var contract = {
       "type": "uint256"
     }],
     "name": "AccessRequestV3",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "contentSpace",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "parentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "visibility",
+      "type": "uint8"
+    }],
+    "name": "VisibilityChanged",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "key",
+      "type": "bytes"
+    }],
+    "name": "ObjectMetaChanged",
     "type": "event"
   }]
 };

@@ -579,18 +579,43 @@ class ElvClient {
    * @methodGroup Authorization
    * @param {string} issuer - Issuer to authorize against
    * @param {string} code - Access code
+   * @param {string=} email - Email address associated with the code
    *
    * @return {Promise<Object>} - Identifying address, list of accessible sites, and additional info about the authorized user
    */
-  async RedeemCode({issuer, code}) {
-    ValidateObject(issuer);
-
+  async RedeemCode({issuer, code, email}) {
     const wallet = this.GenerateWallet();
-    this.SetSigner({
-      signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
-    });
+    if(!this.signer) {
+      this.SetSigner({
+        signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
+      });
+    }
 
-    const objectId = issuer;
+    if(issuer.startsWith("iq__")) {
+      ValidateObject(issuer);
+    } else if(!issuer.replace(/^\//, "").startsWith("otp/ntp/iten")) {
+      throw Error("Invalid issuer: " + issuer);
+    } else {
+      // Ticket API
+
+      try {
+        await this.authClient.GenerateChannelContentToken({
+          issuer,
+          code,
+          email
+        });
+      } catch(error) {
+        this.Log("Failed to redeem code:");
+        this.Log(error, true);
+
+        throw Error("Invalid code");
+      }
+
+      return;
+    }
+
+    // Site selector
+
     const libraryId = await this.ContentObjectLibraryId({objectId});
 
     const Hash = (code) => {
