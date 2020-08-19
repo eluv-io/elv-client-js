@@ -659,7 +659,7 @@ function () {
   }, {
     key: "RedeemCode",
     value: function RedeemCode(_ref12) {
-      var issuer, code, email, wallet, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
+      var issuer, code, email, wallet, token, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
       return _regeneratorRuntime.async(function RedeemCode$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
@@ -681,7 +681,7 @@ function () {
               }
 
               ValidateObject(issuer);
-              _context7.next = 22;
+              _context7.next = 23;
               break;
 
             case 7:
@@ -702,26 +702,23 @@ function () {
               }));
 
             case 14:
-              _context7.next = 21;
-              break;
+              token = _context7.sent;
+              return _context7.abrupt("return", JSON.parse(Utils.FromB64(token)).qid);
 
-            case 16:
-              _context7.prev = 16;
+            case 18:
+              _context7.prev = 18;
               _context7.t0 = _context7["catch"](11);
-              this.Log("Failed to redeem code:");
+              this.Log("Failed to redeem code:", true);
               this.Log(_context7.t0, true);
               throw Error("Invalid code");
 
-            case 21:
-              return _context7.abrupt("return");
-
-            case 22:
-              _context7.next = 24;
+            case 23:
+              _context7.next = 25;
               return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
-            case 24:
+            case 25:
               libraryId = _context7.sent;
 
               Hash = function Hash(code) {
@@ -734,54 +731,54 @@ function () {
               };
 
               codeHash = Hash(code);
-              _context7.next = 29;
+              _context7.next = 30;
               return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: "public/codes/".concat(codeHash)
               }));
 
-            case 29:
+            case 30:
               codeInfo = _context7.sent;
 
               if (codeInfo) {
-                _context7.next = 33;
+                _context7.next = 34;
                 break;
               }
 
               this.Log("Code redemption failed:\n\t".concat(ticket, "\n\t").concat(code));
               throw Error("Invalid code: " + code);
 
-            case 33:
+            case 34:
               ak = codeInfo.ak, sites = codeInfo.sites, info = codeInfo.info;
-              _context7.next = 36;
+              _context7.next = 37;
               return _regeneratorRuntime.awrap(wallet.AddAccountFromEncryptedPK({
                 encryptedPrivateKey: this.utils.FromB64(ak),
                 password: code
               }));
 
-            case 36:
+            case 37:
               signer = _context7.sent;
               this.SetSigner({
                 signer: signer
               }); // Ensure wallet is initialized
 
-              _context7.next = 40;
+              _context7.next = 41;
               return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
-            case 40:
+            case 41:
               return _context7.abrupt("return", {
                 addr: this.utils.FormatAddress(signer.address),
                 sites: sites,
                 info: info || {}
               });
 
-            case 41:
+            case 42:
             case "end":
               return _context7.stop();
           }
         }
-      }, null, this, [[11, 16]]);
+      }, null, this, [[11, 18]]);
     }
     /**
      * Encrypt the given string or object with the current signer's public key
