@@ -11,18 +11,18 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
+    "constant": true,
     "inputs": [{
-      "name": "addr",
+      "name": "_candidate",
       "type": "address"
     }],
-    "name": "isContract",
+    "name": "isAdmin",
     "outputs": [{
       "name": "",
       "type": "bool"
     }],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": false,
@@ -31,57 +31,6 @@ var contract = {
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [],
-    "name": "OP_ACCESS_COMPLETE",
-    "outputs": [{
-      "name": "",
-      "type": "uint32"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "_opCodes",
-      "type": "uint32[]"
-    }, {
-      "name": "_contentAddrs",
-      "type": "address[]"
-    }, {
-      "name": "_userAddrs",
-      "type": "address[]"
-    }, {
-      "name": "_requestNonces",
-      "type": "uint256[]"
-    }, {
-      "name": "_ctxHashes",
-      "type": "bytes32[]"
-    }, {
-      "name": "_ts",
-      "type": "uint256[]"
-    }, {
-      "name": "_amt",
-      "type": "uint256[]"
-    }],
-    "name": "executeAccessBatch",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [],
-    "name": "OP_ACCESS_REQUEST",
-    "outputs": [{
-      "name": "",
-      "type": "uint32"
-    }],
-    "payable": false,
-    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -137,23 +86,6 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "lib",
-      "type": "address"
-    }, {
-      "name": "content_type",
-      "type": "address"
-    }],
-    "name": "createContent",
-    "outputs": [{
-      "name": "",
-      "type": "address"
-    }],
-    "payable": false,
-    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,

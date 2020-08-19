@@ -346,7 +346,7 @@ var topics = {
       "name": "LogPayment",
       "type": "event"
     }],
-    "contract": "BaseContent"
+    "ambiguous": true
   },
   "0x475e9d68ca61f129cebee5af694af00ed0e3b3b0d4b74071fbb81d0e2b912718": {
     "abi": [{
@@ -1446,7 +1446,7 @@ var topics = {
       "name": "RecordingPlaybackStarted",
       "type": "event"
     }],
-    "contract": "LvRecordableStream"
+    "ambiguous": true
   },
   "0x208745b583bd0c257eced13411dc4b50e9a3a9c1ef0cc2f95b30a7457ec50cc1": {
     "abi": [{
@@ -1479,7 +1479,7 @@ var topics = {
       "name": "RecordingPlaybackCompleted",
       "type": "event"
     }],
-    "contract": "LvRecordableStream"
+    "ambiguous": true
   },
   "0xe3b30c4da7320d1a542eb57f205a34d2fc36ecd114595f3d50be2a73b3426e6b": {
     "abi": [{
@@ -1802,40 +1802,6 @@ var topics = {
     }],
     "ambiguous": true
   },
-  "0xd486248fb919eb61c6b8a1c5cb8c94c51f436e437c5296a1171e6289039e4cff": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "requestNonce",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "result",
-        "type": "uint256"
-      }],
-      "name": "RunAccess",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x4f62ec698999dfdb98ef5dc6ea0ddcc9f8471e26c1cebc77dc036212426080d9": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "requestNonce",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "result",
-        "type": "uint256"
-      }],
-      "name": "RunFinalize",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
   "0xbdaffceabaaa783aa187fea6c2e815541d29e2290bf3f7d3c4fc53672b68f7df": {
     "abi": [{
       "anonymous": false,
@@ -1857,13 +1823,13 @@ var topics = {
     }],
     "ambiguous": true
   },
-  "0x79f778ed0728e9eb0e0ceb581a3f1f01fa09306a34abb3feb08c692623269152": {
+  "0x545ceffc5093a8300777a74bb094968fbd62d128313df01eb72fd5350ec659c7": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
         "indexed": false,
         "name": "requestNonce",
-        "type": "bytes32"
+        "type": "uint256"
       }, {
         "indexed": false,
         "name": "parentAddress",
@@ -1886,38 +1852,89 @@ var topics = {
     }],
     "ambiguous": true
   },
-  "0x5c87bd4eaa8e8718cbc2e10c6c44f676d876e57c0898e90b3a3f1ddb2235e20b": {
+  "0x369a336baa7895746725663e717b3523139ebabfff8c32bc4b13e8f88e502500": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
         "indexed": false,
-        "name": "requestNonce",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "label",
-        "type": "string"
-      }, {
-        "indexed": false,
-        "name": "payee",
+        "name": "contentSpace",
         "type": "address"
       }, {
         "indexed": false,
-        "name": "amount",
-        "type": "uint256"
+        "name": "parentAddress",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "visibility",
+        "type": "uint8"
       }],
-      "name": "LogPayment",
+      "name": "VisibilityChanged",
       "type": "event"
     }],
-    "contract": "BaseContent"
+    "ambiguous": true
   },
-  "0x015b22926a20d8a7f8b171021ac95d4cfb0ad4e3fcc3065353cc610400ba0e92": {
+  "0x77a2025a71f0f345cfd7e8a699b42215025b6ab4706dcfaa29393790aa63383f": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "ident",
+        "type": "bytes32"
+      }, {
+        "indexed": false,
+        "name": "slot",
+        "type": "uint8"
+      }, {
+        "indexed": false,
+        "name": "val",
+        "type": "uint32"
+      }],
+      "name": "CounterIncremented",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x4d04842102a74d85e502eec18f3048954c6d6e1d1c368c7bc49edcdcd45e9c3d": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "ident",
+        "type": "bytes32"
+      }, {
+        "indexed": false,
+        "name": "ord",
+        "type": "uint8"
+      }, {
+        "indexed": false,
+        "name": "prev",
+        "type": "bool"
+      }],
+      "name": "BitSetAndGet",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0x87d0c300430cf9ba25931ff8bf37f633abe097e533463927bbfdc1e9ae1d0e9f": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "ident",
+        "type": "bytes32"
+      }],
+      "name": "WordGroupDeleted",
+      "type": "event"
+    }],
+    "ambiguous": true
+  },
+  "0xd3e5b1d14681444d8159fa85b57104b685f47fb9164fd82b7fafe4e123dcc3a1": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
         "indexed": false,
         "name": "requestNonce",
-        "type": "bytes32"
+        "type": "uint256"
       }, {
         "indexed": false,
         "name": "customContractResult",
@@ -1944,67 +1961,175 @@ var topics = {
     }],
     "contract": "BaseContent"
   },
-  "0x96e7956254fc1ae7e734e5a3bfe07f165a07bb8774482d302680b5a093c0f936": {
+  "0xc2fe67ac699789805c53a93eea70eb0e316deaf8db4b810382d2412ba4fcb4c8": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
         "indexed": false,
-        "name": "timestamp",
-        "type": "uint256"
-      }, {
-        "indexed": false,
-        "name": "accessor",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "recObj",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "requestNonce",
+        "name": "version",
         "type": "bytes32"
       }, {
         "indexed": false,
-        "name": "accessTimestamp",
-        "type": "uint256"
+        "name": "owner",
+        "type": "address"
       }],
-      "name": "RecordingPlaybackStarted",
+      "name": "CreateTenant",
       "type": "event"
     }],
-    "contract": "LvRecordableStream"
+    "contract": "BaseTenantSpace"
   },
-  "0xc8cc5f2b4f405e523f8194a1c179bbc49717d29a0cd2108111f71d150d4debe9": {
+  "0x2fd37118a7338c6d45366419ced87ba93589ba1cca2489e8fb42b55de8874266": {
     "abi": [{
       "anonymous": false,
       "inputs": [{
         "indexed": false,
-        "name": "timestamp",
-        "type": "uint256"
+        "name": "func4Bytes",
+        "type": "bytes4[]"
       }, {
         "indexed": false,
-        "name": "accessor",
+        "name": "funcAddr",
         "type": "address"
-      }, {
+      }],
+      "name": "FunctionsAdded",
+      "type": "event"
+    }],
+    "contract": "BaseTenantSpace"
+  },
+  "0x145b7e243e91890686f5ba84dd1254f7497f549ffb955f4871b3d27d4137d471": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
         "indexed": false,
-        "name": "recObj",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "requestNonce",
+        "name": "groupId",
         "type": "bytes32"
       }, {
         "indexed": false,
-        "name": "percentPlayed",
-        "type": "uint8"
-      }, {
-        "indexed": false,
-        "name": "finalizeTimestamp",
-        "type": "uint256"
+        "name": "groupAddr",
+        "type": "address"
       }],
-      "name": "RecordingPlaybackCompleted",
+      "name": "AddTenantGroup",
       "type": "event"
     }],
-    "contract": "LvRecordableStream"
+    "contract": "BaseTenantSpace"
+  },
+  "0xa4ba7d16ec48ae0b1af6cf3707ad062b11503d59527bca97e68886e7f6991456": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "groupId",
+        "type": "bytes32"
+      }, {
+        "indexed": false,
+        "name": "groupAddr",
+        "type": "address"
+      }],
+      "name": "RemoveTenantGroup",
+      "type": "event"
+    }],
+    "contract": "BaseTenantSpace"
+  },
+  "0xc104e41939e1b09c10a83f97ac30b2d1f48605f4630aa8c64633501740ce0299": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "newManager",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "prevManager",
+        "type": "address"
+      }],
+      "name": "SetUserManager",
+      "type": "event"
+    }],
+    "contract": "BaseTenantSpace"
+  },
+  "0x9b77357b839fea8829ce30918f67eb91de08caa0e5272af43a86af5334b56177": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "newManager",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "prevManager",
+        "type": "address"
+      }],
+      "name": "SetNodeManager",
+      "type": "event"
+    }],
+    "contract": "BaseTenantSpace"
+  },
+  "0xfa2af382c197e27affb4e04f89f42556c71015346416b56be15b3aee3c87f661": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "newManager",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "prevManager",
+        "type": "address"
+      }],
+      "name": "SetFactoryManager",
+      "type": "event"
+    }],
+    "contract": "BaseTenantSpace"
+  },
+  "0x78cf028637abb89c0df6a78afd3d4403d03e5eb532390543d498bb346ee96477": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "newManager",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "prevManager",
+        "type": "address"
+      }],
+      "name": "SetKmsManager",
+      "type": "event"
+    }],
+    "contract": "BaseTenantSpace"
+  },
+  "0x59d13df91c02dfa098820027bd861986b2712e8fa2e7e431fea189243656aebd": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "to",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "amount",
+        "type": "uint256"
+      }],
+      "name": "TenantTransfer",
+      "type": "event"
+    }],
+    "contract": "TenantFuncsBase"
+  },
+  "0xaf51ac2c635b218e7e5205267ea152c8c9f51fc74f818c332dcf630e82a3dc3f": {
+    "abi": [{
+      "anonymous": false,
+      "inputs": [{
+        "indexed": false,
+        "name": "to",
+        "type": "address"
+      }, {
+        "indexed": false,
+        "name": "numGroups",
+        "type": "uint256"
+      }],
+      "name": "ApplyGroups",
+      "type": "event"
+    }],
+    "contract": "TenantFuncsBase"
   }
 };
 module.exports = topics;

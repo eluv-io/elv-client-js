@@ -477,7 +477,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "parentAddress",
@@ -496,6 +496,23 @@ var contract = {
       "type": "uint256"
     }],
     "name": "AccessRequestV3",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "contentSpace",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "parentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "visibility",
+      "type": "uint8"
+    }],
+    "name": "VisibilityChanged",
     "type": "event"
   }]
 };

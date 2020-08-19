@@ -11,17 +11,6 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
-    "inputs": [{
-      "name": "address_KMS",
-      "type": "address"
-    }],
-    "name": "updateAddressKMS",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
     "constant": true,
     "inputs": [],
     "name": "creator",
@@ -31,6 +20,42 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "factoryManager",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "name",
+    "outputs": [{
+      "name": "",
+      "type": "string"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_func4Bytes",
+      "type": "bytes4[]"
+    }, {
+      "name": "_funcAddr",
+      "type": "address"
+    }],
+    "name": "addFuncs",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,
@@ -90,19 +115,11 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
-    "inputs": [],
-    "name": "canConfirm",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
+    "inputs": [{
+      "name": "listKey",
+      "type": "bytes32"
     }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [],
-    "name": "approvalRequestsLength",
+    "name": "listLength",
     "outputs": [{
       "name": "",
       "type": "uint256"
@@ -113,16 +130,24 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [{
-      "name": "group",
+      "name": "_nodeMan",
       "type": "address"
     }],
-    "name": "removeReviewerGroup",
+    "name": "setNodeManager",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "canConfirm",
     "outputs": [{
       "name": "",
       "type": "bool"
     }],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": false,
@@ -156,31 +181,6 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
-    "inputs": [{
-      "name": "group",
-      "type": "address"
-    }],
-    "name": "addAccessorGroup",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "content_type",
-      "type": "address"
-    }],
-    "name": "createContent",
-    "outputs": [{
-      "name": "",
-      "type": "address"
-    }],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
     "constant": true,
     "inputs": [{
       "name": "typeHash",
@@ -195,15 +195,18 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": true,
-    "inputs": [],
-    "name": "reviewerGroupsLength",
-    "outputs": [{
-      "name": "",
+    "constant": false,
+    "inputs": [{
+      "name": "listKey",
+      "type": "bytes32"
+    }, {
+      "name": "itemOrd",
       "type": "uint256"
     }],
+    "name": "removeListOrd",
+    "outputs": [],
     "payable": false,
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,
@@ -225,20 +228,6 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "",
-      "type": "uint256"
-    }],
-    "name": "contributorGroups",
-    "outputs": [{
-      "name": "",
-      "type": "address"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [{
       "name": "_candidate",
       "type": "address"
     }],
@@ -246,6 +235,57 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "setAndGetBit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_candidate",
+      "type": "address"
+    }],
+    "name": "canNodePublish",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_kmsID",
+      "type": "string"
+    }, {
+      "name": "_prefix",
+      "type": "bytes"
+    }],
+    "name": "getKMSInfo",
+    "outputs": [{
+      "name": "",
+      "type": "string"
+    }, {
+      "name": "",
+      "type": "string"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -264,7 +304,7 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "_candidate",
+      "name": "",
       "type": "address"
     }],
     "name": "canReview",
@@ -290,20 +330,6 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": true,
-    "inputs": [{
-      "name": "",
-      "type": "uint256"
-    }],
-    "name": "accessorGroups",
-    "outputs": [{
-      "name": "",
-      "type": "address"
-    }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
     "constant": false,
     "inputs": [{
       "name": "contentObj",
@@ -316,6 +342,23 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "getBit",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -340,6 +383,34 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "setAndGetBitInternal",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_id",
+      "type": "bytes32"
+    }],
+    "name": "checkIdsRemove",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [],
     "name": "commitPending",
@@ -351,26 +422,37 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
-    "inputs": [{
-      "name": "group",
-      "type": "address"
-    }],
-    "name": "removeContributorGroup",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
     "constant": true,
     "inputs": [],
     "name": "requiresReview",
     "outputs": [{
       "name": "",
       "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "getTenantID",
+    "outputs": [{
+      "name": "",
+      "type": "string"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "name": "groupIds",
+    "outputs": [{
+      "name": "",
+      "type": "bytes32"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -388,8 +470,33 @@ var contract = {
     "type": "function"
   }, {
     "constant": false,
+    "inputs": [{
+      "name": "_kmsAddress",
+      "type": "address"
+    }],
+    "name": "createLibrary",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
     "inputs": [],
     "name": "kill",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_factMan",
+      "type": "address"
+    }],
+    "name": "setFactoryManager",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -407,25 +514,20 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
-    "inputs": [],
-    "name": "contributorGroupsLength",
-    "outputs": [{
+    "inputs": [{
+      "name": "",
+      "type": "bytes32"
+    }, {
       "name": "",
       "type": "uint256"
     }],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [],
-    "name": "submitApprovalRequest",
+    "name": "listsMapping",
     "outputs": [{
       "name": "",
-      "type": "bool"
+      "type": "string"
     }],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -434,6 +536,53 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "bytes32"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [],
+    "name": "createGroup",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_kmsAddr",
+      "type": "address"
+    }],
+    "name": "getKMSID",
+    "outputs": [{
+      "name": "",
+      "type": "string"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "GROUP_ID_ADMIN",
+    "outputs": [{
+      "name": "",
+      "type": "bytes32"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "userManager",
+    "outputs": [{
+      "name": "",
+      "type": "address"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -482,10 +631,10 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "index",
-      "type": "uint256"
+      "name": "_userAddr",
+      "type": "address"
     }],
-    "name": "getPendingApprovalRequest",
+    "name": "userWallets",
     "outputs": [{
       "name": "",
       "type": "address"
@@ -496,10 +645,13 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [{
-      "name": "group",
+      "name": "_id",
+      "type": "bytes32"
+    }, {
+      "name": "_groupAddr",
       "type": "address"
     }],
-    "name": "addContributorGroup",
+    "name": "addGroup",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -539,6 +691,45 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "description",
+    "outputs": [{
+      "name": "",
+      "type": "string"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "listKey",
+      "type": "bytes32"
+    }, {
+      "name": "itemVal",
+      "type": "string"
+    }],
+    "name": "addListItem",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "incrementCounter",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,
@@ -582,47 +773,13 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [{
-      "name": "content_contract",
-      "type": "address"
-    }, {
-      "name": "approved",
-      "type": "bool"
-    }, {
-      "name": "note",
-      "type": "string"
-    }],
-    "name": "approveContent",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "_contentAddr",
+      "name": "_kmsMan",
       "type": "address"
     }],
-    "name": "deleteContent",
+    "name": "setKmsManager",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": true,
-    "inputs": [{
-      "name": "",
-      "type": "uint256"
-    }],
-    "name": "approvalRequests",
-    "outputs": [{
-      "name": "",
-      "type": "address"
-    }],
-    "payable": false,
-    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -636,18 +793,15 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": true,
+    "constant": false,
     "inputs": [{
-      "name": "",
-      "type": "uint256"
+      "name": "_desc",
+      "type": "string"
     }],
-    "name": "reviewerGroups",
-    "outputs": [{
-      "name": "",
-      "type": "address"
-    }],
+    "name": "setDescription",
+    "outputs": [],
     "payable": false,
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,
@@ -673,6 +827,17 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_userMan",
+      "type": "address"
+    }],
+    "name": "setUserManager",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,
@@ -715,6 +880,46 @@ var contract = {
     "type": "function"
   }, {
     "constant": true,
+    "inputs": [],
+    "name": "nodeManager",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_func4Bytes",
+      "type": "bytes4"
+    }, {
+      "name": "_p1",
+      "type": "uint256"
+    }, {
+      "name": "_p2",
+      "type": "address"
+    }, {
+      "name": "_encAuthToken",
+      "type": "bytes"
+    }, {
+      "name": "_v",
+      "type": "uint8"
+    }, {
+      "name": "_r",
+      "type": "bytes32"
+    }, {
+      "name": "_s",
+      "type": "bytes32"
+    }],
+    "name": "callFuncUintAddr",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
     "inputs": [{
       "name": "content_type",
       "type": "address"
@@ -726,6 +931,20 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_to",
+      "type": "address"
+    }, {
+      "name": "_amount",
+      "type": "uint256"
+    }],
+    "name": "transfer",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,
@@ -755,6 +974,17 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [],
+    "name": "kmsManager",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
     "name": "contentSpace",
     "outputs": [{
       "name": "",
@@ -766,10 +996,52 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [],
+    "name": "createContentType",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_lib",
+      "type": "address"
+    }, {
+      "name": "_contentType",
+      "type": "address"
+    }],
+    "name": "createContent",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [],
     "name": "updateRequest",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "",
+      "type": "bytes4"
+    }],
+    "name": "funcMapping",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -794,26 +1066,43 @@ var contract = {
     "stateMutability": "nonpayable",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_id",
+      "type": "bytes32"
+    }, {
+      "name": "_groupAddr",
+      "type": "address"
+    }],
+    "name": "removeGroup",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [],
-    "name": "canPublish",
+    "name": "defLeewaySecs",
     "outputs": [{
       "name": "",
-      "type": "bool"
+      "type": "uint256"
     }],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
+    "constant": true,
     "inputs": [{
-      "name": "group",
+      "name": "_kmsAddr",
       "type": "address"
     }],
-    "name": "addReviewerGroup",
-    "outputs": [],
+    "name": "checkKMSAddr",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -822,6 +1111,23 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "string"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }, {
+      "name": "_ord",
+      "type": "uint8"
+    }],
+    "name": "getCounter",
+    "outputs": [{
+      "name": "",
+      "type": "uint32"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -855,29 +1161,72 @@ var contract = {
     "stateMutability": "nonpayable",
     "type": "function"
   }, {
-    "constant": true,
-    "inputs": [],
-    "name": "accessorGroupsLength",
+    "constant": false,
+    "inputs": [{
+      "name": "_ident",
+      "type": "bytes32"
+    }],
+    "name": "deleteGroup",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_userAddr",
+      "type": "address"
+    }],
+    "name": "createUserWallet",
     "outputs": [{
       "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
+      "name": "",
+      "type": "bytes32"
+    }, {
+      "name": "",
       "type": "uint256"
+    }],
+    "name": "groupsMapping",
+    "outputs": [{
+      "name": "",
+      "type": "address"
     }],
     "payable": false,
     "stateMutability": "view",
     "type": "function"
   }, {
-    "constant": false,
+    "constant": true,
     "inputs": [{
-      "name": "group",
-      "type": "address"
+      "name": "_func4Bytes",
+      "type": "bytes4"
+    }, {
+      "name": "_encAuthToken",
+      "type": "bytes"
+    }, {
+      "name": "_v",
+      "type": "uint8"
+    }, {
+      "name": "_r",
+      "type": "bytes32"
+    }, {
+      "name": "_s",
+      "type": "bytes32"
     }],
-    "name": "removeAccessorGroup",
+    "name": "checkCallFunc",
     "outputs": [{
       "name": "",
       "type": "bool"
     }],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   }, {
     "constant": true,
@@ -886,6 +1235,17 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "uint8"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [],
+    "name": "defTokenExpSecs",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
     }],
     "payable": false,
     "stateMutability": "view",
@@ -917,11 +1277,11 @@ var contract = {
     "type": "function"
   }, {
     "inputs": [{
-      "name": "address_KMS",
+      "name": "_contentSpace",
       "type": "address"
     }, {
-      "name": "content_space",
-      "type": "address"
+      "name": "_tenantName",
+      "type": "string"
     }],
     "payable": true,
     "stateMutability": "payable",
@@ -934,137 +1294,114 @@ var contract = {
     "anonymous": false,
     "inputs": [{
       "indexed": false,
-      "name": "contentAddress",
+      "name": "version",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "owner",
+      "type": "address"
+    }],
+    "name": "CreateTenant",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "walletAddress",
+      "type": "address"
+    }],
+    "name": "GetAccessWallet",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "func4Bytes",
+      "type": "bytes4[]"
+    }, {
+      "indexed": false,
+      "name": "funcAddr",
+      "type": "address"
+    }],
+    "name": "FunctionsAdded",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "groupId",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "groupAddr",
+      "type": "address"
+    }],
+    "name": "AddTenantGroup",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "groupId",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "groupAddr",
+      "type": "address"
+    }],
+    "name": "RemoveTenantGroup",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "newManager",
       "type": "address"
     }, {
       "indexed": false,
-      "name": "content_type",
+      "name": "prevManager",
+      "type": "address"
+    }],
+    "name": "SetUserManager",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "newManager",
       "type": "address"
     }, {
       "indexed": false,
-      "name": "spaceAddress",
+      "name": "prevManager",
       "type": "address"
     }],
-    "name": "ContentObjectCreated",
+    "name": "SetNodeManager",
     "type": "event"
   }, {
     "anonymous": false,
     "inputs": [{
       "indexed": false,
-      "name": "contentAddress",
+      "name": "newManager",
       "type": "address"
     }, {
       "indexed": false,
-      "name": "spaceAddress",
+      "name": "prevManager",
       "type": "address"
     }],
-    "name": "ContentObjectDeleted",
+    "name": "SetFactoryManager",
     "type": "event"
   }, {
     "anonymous": false,
     "inputs": [{
       "indexed": false,
-      "name": "group",
-      "type": "address"
-    }],
-    "name": "ContributorGroupAdded",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "group",
-      "type": "address"
-    }],
-    "name": "ContributorGroupRemoved",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "group",
-      "type": "address"
-    }],
-    "name": "ReviewerGroupAdded",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "group",
-      "type": "address"
-    }],
-    "name": "ReviewerGroupRemoved",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "group",
-      "type": "address"
-    }],
-    "name": "AccessorGroupAdded",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "group",
-      "type": "address"
-    }],
-    "name": "AccessorGroupRemoved",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "operationCode",
-      "type": "uint256"
-    }, {
-      "indexed": false,
-      "name": "candidate",
-      "type": "address"
-    }],
-    "name": "UnauthorizedOperation",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "contentAddress",
+      "name": "newManager",
       "type": "address"
     }, {
       "indexed": false,
-      "name": "submitter",
+      "name": "prevManager",
       "type": "address"
     }],
-    "name": "ApproveContentRequest",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "contentAddress",
-      "type": "address"
-    }, {
-      "indexed": false,
-      "name": "approved",
-      "type": "bool"
-    }, {
-      "indexed": false,
-      "name": "note",
-      "type": "string"
-    }],
-    "name": "ApproveContent",
-    "type": "event"
-  }, {
-    "anonymous": false,
-    "inputs": [{
-      "indexed": false,
-      "name": "addressKms",
-      "type": "address"
-    }],
-    "name": "UpdateKmsAddress",
+    "name": "SetKmsManager",
     "type": "event"
   }, {
     "anonymous": false,
@@ -1189,6 +1526,49 @@ var contract = {
       "type": "uint8"
     }],
     "name": "VisibilityChanged",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "slot",
+      "type": "uint8"
+    }, {
+      "indexed": false,
+      "name": "val",
+      "type": "uint32"
+    }],
+    "name": "CounterIncremented",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }, {
+      "indexed": false,
+      "name": "ord",
+      "type": "uint8"
+    }, {
+      "indexed": false,
+      "name": "prev",
+      "type": "bool"
+    }],
+    "name": "BitSetAndGet",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "ident",
+      "type": "bytes32"
+    }],
+    "name": "WordGroupDeleted",
     "type": "event"
   }, {
     "anonymous": false,

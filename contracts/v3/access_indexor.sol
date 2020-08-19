@@ -88,7 +88,6 @@ contract AccessIndexor is Ownable {
         contentSpace = content_space;
     }
 
-    /*
     function setLibraryRights(address lib, uint8 access_type, uint8 access) public  {
         setRightsInternal(libraries, lib, access_type, access);
     }
@@ -102,16 +101,12 @@ contract AccessIndexor is Ownable {
     }
 
     function setContentTypeRights(address obj, uint8 access_type, uint8 access) public  {
-        //setRightsInternal(contentTypes, obj, access_type, access);
-        //setRightsInternal(accessIndexes[CATEGORY_CONTENT_TYPE], obj, access_type, access);
         setRightsInternal(getAccessIndex(CATEGORY_CONTENT_TYPE), obj, access_type, access);
     }
 
     function setContractRights(address obj, uint8 access_type, uint8 access) public  {
         setRightsInternal(contracts, obj, access_type, access);
     }
-
-    */
 
     /*
     function checkLibraryRights(address lib, uint8 access_type) public view returns(bool) {
@@ -259,15 +254,13 @@ contract AccessIndexor is Ownable {
         emit RightsChanged(address(this), obj, newAggregate);
     }
 
-
     function setEntityRights(uint8 indexType, address obj, uint8 access_type, uint8 access) public  {
         if (indexType != 0) {
             setRightsInternal(getAccessIndex(indexType),  obj,  access_type,  access);
         }
     }
 
-
-        // Indexor managers can revoke anything
+    // Indexor managers can revoke anything
     // Indexor managers can confirm tentative
     // Object rights holders can grant tentative
     // Object rights holders can revoke

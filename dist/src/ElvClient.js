@@ -651,6 +651,7 @@ function () {
      * @methodGroup Authorization
      * @param {string} issuer - Issuer to authorize against
      * @param {string} code - Access code
+     * @param {string=} email - Email address associated with the code
      *
      * @return {Promise<Object>} - Identifying address, list of accessible sites, and additional info about the authorized user
      */
@@ -658,26 +659,69 @@ function () {
   }, {
     key: "RedeemCode",
     value: function RedeemCode(_ref12) {
-      var issuer, code, wallet, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
+      var issuer, code, email, wallet, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
       return _regeneratorRuntime.async(function RedeemCode$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              issuer = _ref12.issuer, code = _ref12.code;
-              ValidateObject(issuer);
+              issuer = _ref12.issuer, code = _ref12.code, email = _ref12.email;
               wallet = this.GenerateWallet();
-              this.SetSigner({
-                signer: wallet.AddAccountFromMnemonic({
-                  mnemonic: wallet.GenerateMnemonic()
-                })
-              });
-              objectId = issuer;
-              _context7.next = 7;
+
+              if (!this.signer) {
+                this.SetSigner({
+                  signer: wallet.AddAccountFromMnemonic({
+                    mnemonic: wallet.GenerateMnemonic()
+                  })
+                });
+              }
+
+              if (!issuer.startsWith("iq__")) {
+                _context7.next = 7;
+                break;
+              }
+
+              ValidateObject(issuer);
+              _context7.next = 22;
+              break;
+
+            case 7:
+              if (issuer.replace(/^\//, "").startsWith("otp/ntp/iten")) {
+                _context7.next = 11;
+                break;
+              }
+
+              throw Error("Invalid issuer: " + issuer);
+
+            case 11:
+              _context7.prev = 11;
+              _context7.next = 14;
+              return _regeneratorRuntime.awrap(this.authClient.GenerateChannelContentToken({
+                issuer: issuer,
+                code: code,
+                email: email
+              }));
+
+            case 14:
+              _context7.next = 21;
+              break;
+
+            case 16:
+              _context7.prev = 16;
+              _context7.t0 = _context7["catch"](11);
+              this.Log("Failed to redeem code:");
+              this.Log(_context7.t0, true);
+              throw Error("Invalid code");
+
+            case 21:
+              return _context7.abrupt("return");
+
+            case 22:
+              _context7.next = 24;
               return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
-            case 7:
+            case 24:
               libraryId = _context7.sent;
 
               Hash = function Hash(code) {
@@ -690,54 +734,54 @@ function () {
               };
 
               codeHash = Hash(code);
-              _context7.next = 12;
+              _context7.next = 29;
               return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: "public/codes/".concat(codeHash)
               }));
 
-            case 12:
+            case 29:
               codeInfo = _context7.sent;
 
               if (codeInfo) {
-                _context7.next = 16;
+                _context7.next = 33;
                 break;
               }
 
               this.Log("Code redemption failed:\n\t".concat(ticket, "\n\t").concat(code));
               throw Error("Invalid code: " + code);
 
-            case 16:
+            case 33:
               ak = codeInfo.ak, sites = codeInfo.sites, info = codeInfo.info;
-              _context7.next = 19;
+              _context7.next = 36;
               return _regeneratorRuntime.awrap(wallet.AddAccountFromEncryptedPK({
                 encryptedPrivateKey: this.utils.FromB64(ak),
                 password: code
               }));
 
-            case 19:
+            case 36:
               signer = _context7.sent;
               this.SetSigner({
                 signer: signer
               }); // Ensure wallet is initialized
 
-              _context7.next = 23;
+              _context7.next = 40;
               return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
-            case 23:
+            case 40:
               return _context7.abrupt("return", {
                 addr: this.utils.FormatAddress(signer.address),
                 sites: sites,
                 info: info || {}
               });
 
-            case 24:
+            case 41:
             case "end":
               return _context7.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[11, 16]]);
     }
     /**
      * Encrypt the given string or object with the current signer's public key

@@ -175,6 +175,20 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
+      "name": "_candidate",
+      "type": "address"
+    }],
+    "name": "isAdmin",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": true,
+    "inputs": [{
       "name": "candidate",
       "type": "address"
     }],
@@ -255,17 +269,6 @@ var contract = {
     "outputs": [{
       "name": "",
       "type": "bool"
-    }],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [],
-    "name": "registerSpaceNode",
-    "outputs": [{
-      "name": "",
-      "type": "address"
     }],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -642,6 +645,20 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_user",
+      "type": "address"
+    }],
+    "name": "createUserWalletInternal",
+    "outputs": [{
+      "name": "",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [{
       "name": "",
@@ -868,17 +885,6 @@ var contract = {
     }],
     "name": "setVisibility",
     "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [],
-    "name": "unregisterSpaceNode",
-    "outputs": [{
-      "name": "",
-      "type": "bool"
-    }],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1469,7 +1475,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "parentAddress",
@@ -1488,6 +1494,23 @@ var contract = {
       "type": "uint256"
     }],
     "name": "AccessRequestV3",
+    "type": "event"
+  }, {
+    "anonymous": false,
+    "inputs": [{
+      "indexed": false,
+      "name": "contentSpace",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "parentAddress",
+      "type": "address"
+    }, {
+      "indexed": false,
+      "name": "visibility",
+      "type": "uint8"
+    }],
+    "name": "VisibilityChanged",
     "type": "event"
   }, {
     "anonymous": false,

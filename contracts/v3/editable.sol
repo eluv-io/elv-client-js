@@ -27,7 +27,7 @@ Editable20200422180400ML: Fixed deletion of latest version
 contract Editable is  Accessible {
     using strings for *;
 
-    bytes32 public version ="Editable20200422180400ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="Editable20200626180400PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     event CommitPending(address spaceAddress, address parentAddress, string objectHash);
     event UpdateRequest(string objectHash);
@@ -42,26 +42,6 @@ contract Editable is  Accessible {
 
     string public pendingHash;
     bool public commitPending;
-
-
-    // TODO: migrate version timestamps as well ...
-    function migrate(string _objectHash, string _versionHashesConcat) internal onlyOwner {
-
-        objectHash = _objectHash;
-
-        if (bytes(_versionHashesConcat).length == 0)
-            return;
-
-        strings.slice memory s = _versionHashesConcat.toSlice();
-        strings.slice memory delim = ":".toSlice();
-        string[] memory hashes = new string[](s.count(delim) + 1);
-        for(uint i = 0; i < hashes.length; i++) {
-            hashes[i] = s.split(delim).toString();
-        }
-        versionHashes = hashes;
-
-        return;
-    }
 
     modifier onlyEditor() {
         require(canEdit());
@@ -230,10 +210,23 @@ contract Editable is  Accessible {
 
     function setGroupRights(address group, uint8 access_type, uint8 access) public {
         AccessIndexor indexor = AccessIndexor(group);
-        indexor.setEntityRights(indexCategory, address(this), access_type, access);
+        if (indexCategory == indexor.CATEGORY_CONTENT_OBJECT()) {
+            indexor.setContentObjectRights(address(this), access_type, access)  ;
+        } else if (indexCategory == indexor.CATEGORY_GROUP()) {
+            indexor.setAccessGroupRights(address(this), access_type, access);
+        } else if (indexCategory == indexor.CATEGORY_LIBRARY()) {
+            indexor.setLibraryRights(address(this), access_type, access);
+        } else if (indexCategory == indexor.CATEGORY_CONTENT_TYPE()) {
+            indexor.setContentTypeRights(address(this), access_type, access);
+        } else if (indexCategory == indexor.CATEGORY_CONTRACT()) {
+            indexor.setContractRights(address(this), access_type, access);
+        } else {
+            revert();
+        }
     }
 
     function setVisibility(uint8 _visibility_code) public onlyEditor {
         visibility = _visibility_code;
+        emit VisibilityChanged(contentSpace, contentSpace, visibility);
     }
 }

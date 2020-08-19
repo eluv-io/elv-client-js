@@ -24,6 +24,7 @@ const ACCESS_TYPES = {
   GROUP: "group",
   ACCESSIBLE: "accessible",
   EDITABLE: "editable",
+  TENANT: "tenant",
   OTHER: "other"
 };
 
@@ -46,7 +47,8 @@ const CONTRACTS = {
     [ACCESS_TYPES.WALLET]: require("./contracts/v3/BaseAccessWallet"),
     [ACCESS_TYPES.GROUP]: require("./contracts/v3/BaseAccessControlGroup"),
     [ACCESS_TYPES.ACCESSIBLE]: require("./contracts/v3/Accessible"),
-    [ACCESS_TYPES.EDITABLE]: require("./contracts/v3/Editable")
+    [ACCESS_TYPES.EDITABLE]: require("./contracts/v3/Editable"),
+    [ACCESS_TYPES.TENANT]: require("./contracts/v3/BaseTenantSpace")
   }
 };
 
@@ -412,7 +414,17 @@ class AuthorizationClient {
     return data;
   }
 
-  async GenerateChannelContentToken({objectId, versionHash, audienceData, context, oauthToken, value=0}) {
+  async GenerateChannelContentToken({
+    objectId,
+    versionHash,
+    issuer,
+    code,
+    email,
+    audienceData,
+    context,
+    oauthToken,
+    value=0
+  }) {
     if(oauthToken) {
       return await this.GenerateOauthChannelToken({
         objectId,
@@ -431,25 +443,49 @@ class AuthorizationClient {
 
     this.Log(`Making state channel access request: ${objectId}`);
 
-    if(!audienceData) {
-      audienceData = this.AudienceData({objectId, versionHash, context});
+    let token;
+    if(issuer) {
+      // Ticket API
+      const tenantId = issuer.replace(/^\//, "").split("/")[2];
+      const kmsAddress = await this.client.CallContractMethod({
+        contractAddress: Utils.HashToAddress(tenantId),
+        methodName: "addressKMS"
+      });
+
+      token = await Utils.ResponseToFormat(
+        "text",
+        this.MakeKMSRequest({
+          kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
+          method: "POST",
+          path: UrlJoin("ks", issuer),
+          body: { "_PASSWORD": code, "_EMAIL": email }
+        })
+      );
+
+      // Pull target object from token so token can be cached
+      objectId = JSON.parse(Utils.FromB64(token)).qid;
+    } else {
+      // State channel API
+      if(!audienceData) {
+        audienceData = this.AudienceData({objectId, versionHash, context});
+      }
+
+      const stateChannelApi = "elv_channelContentRequestContext";
+      const additionalParams = [JSON.stringify(audienceData)];
+
+      const payload = await this.MakeKMSCall({
+        objectId,
+        methodName: stateChannelApi,
+        paramTypes: ["address", "address", "uint", "uint"],
+        params: [this.client.signer.address, Utils.HashToAddress(objectId), value, Date.now()],
+        additionalParams
+      });
+
+      const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
+      const multiSig = Utils.FormatSignature(signature);
+
+      token = `${payload}.${Utils.B64(multiSig)}`;
     }
-
-    const stateChannelApi = "elv_channelContentRequestContext";
-    const additionalParams = [JSON.stringify(audienceData)];
-
-    const payload = await this.MakeKMSCall({
-      objectId,
-      methodName: stateChannelApi,
-      paramTypes: ["address", "address", "uint", "uint"],
-      params: [this.client.signer.address, Utils.HashToAddress(objectId), value, Date.now()],
-      additionalParams
-    });
-
-    const signature = await this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload)));
-    const multiSig = Utils.FormatSignature(signature);
-
-    const token = `${payload}.${Utils.B64(multiSig)}`;
 
     if(!this.noCache) {
       this.channelContentTokens[objectId] = {
@@ -671,6 +707,9 @@ class AuthorizationClient {
         case "BaseContent":
           accessType = ACCESS_TYPES.OBJECT;
           break;
+        case "BaseTenantSpace":
+          accessType = ACCESS_TYPES.TENANT;
+          break;
         default:
           accessType = ACCESS_TYPES.OTHER;
       }
@@ -881,7 +920,7 @@ class AuthorizationClient {
       objectId = Utils.DecodeVersionHash(versionHash).objectId;
     }
 
-    if(!objectId) {
+    if(!objectId && !kmsId) {
       kmsId = `ikms${Utils.AddressToHash(await this.client.DefaultKMSAddress())}`;
     }
 
