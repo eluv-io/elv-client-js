@@ -661,19 +661,19 @@ class ElvClient {
       // Ticket API
 
       try {
-        await this.authClient.GenerateChannelContentToken({
+        const token = await this.authClient.GenerateChannelContentToken({
           issuer,
           code,
           email
         });
+
+        return JSON.parse(Utils.FromB64(token)).qid;
       } catch(error) {
-        this.Log("Failed to redeem code:");
+        this.Log("Failed to redeem code:", true);
         this.Log(error, true);
 
         throw Error("Invalid code");
       }
-
-      return;
     }
 
     // Site selector
