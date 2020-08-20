@@ -972,10 +972,11 @@ exports.AvailableDRMs = async function() {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {string=} handler=playout - The handler to use for playout
  *
  * @return {Promise<Object>} - The available offerings
  */
-exports.AvailableOfferings = async function({objectId, versionHash, writeToken, linkPath}) {
+exports.AvailableOfferings = async function({objectId, versionHash, writeToken, linkPath, handler="playout"}) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   } else if(!versionHash) {
@@ -988,7 +989,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
 
-  const path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
+  const path = UrlJoin("q", versionHash, "rep", handler, "options.json");
 
   try {
     return await this.utils.ResponseToJson(

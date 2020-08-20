@@ -1764,18 +1764,20 @@ exports.AvailableDRMs = function _callee24() {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {string=} handler=playout - The handler to use for playout
  *
  * @return {Promise<Object>} - The available offerings
  */
 
 
 exports.AvailableOfferings = function _callee25(_ref18) {
-  var objectId, versionHash, writeToken, linkPath, path;
+  var objectId, versionHash, writeToken, linkPath, _ref18$handler, handler, path;
+
   return _regeneratorRuntime.async(function _callee25$(_context25) {
     while (1) {
       switch (_context25.prev = _context25.next) {
         case 0:
-          objectId = _ref18.objectId, versionHash = _ref18.versionHash, writeToken = _ref18.writeToken, linkPath = _ref18.linkPath;
+          objectId = _ref18.objectId, versionHash = _ref18.versionHash, writeToken = _ref18.writeToken, linkPath = _ref18.linkPath, _ref18$handler = _ref18.handler, handler = _ref18$handler === void 0 ? "playout" : _ref18$handler;
 
           if (objectId) {
             _context25.next = 5;
@@ -1819,7 +1821,7 @@ exports.AvailableOfferings = function _callee25(_ref18) {
           objectId = this.utils.DecodeVersionHash(versionHash).objectId;
 
         case 14:
-          path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
+          path = UrlJoin("q", versionHash, "rep", handler, "options.json");
           _context25.prev = 15;
           _context25.t0 = _regeneratorRuntime;
           _context25.t1 = this.utils;
