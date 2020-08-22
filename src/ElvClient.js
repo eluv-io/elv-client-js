@@ -605,6 +605,8 @@ class ElvClient {
           email
         });
 
+        this.staticToken = token;
+
         return JSON.parse(Utils.FromB64(token)).qid;
       } catch(error) {
         this.Log("Failed to redeem code:", true);
