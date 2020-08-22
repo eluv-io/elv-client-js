@@ -681,7 +681,7 @@ function () {
               }
 
               ValidateObject(issuer);
-              _context7.next = 23;
+              _context7.next = 24;
               break;
 
             case 7:
@@ -703,22 +703,23 @@ function () {
 
             case 14:
               token = _context7.sent;
+              this.staticToken = token;
               return _context7.abrupt("return", JSON.parse(Utils.FromB64(token)).qid);
 
-            case 18:
-              _context7.prev = 18;
+            case 19:
+              _context7.prev = 19;
               _context7.t0 = _context7["catch"](11);
               this.Log("Failed to redeem code:", true);
               this.Log(_context7.t0, true);
               throw Error("Invalid code");
 
-            case 23:
-              _context7.next = 25;
+            case 24:
+              _context7.next = 26;
               return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
-            case 25:
+            case 26:
               libraryId = _context7.sent;
 
               Hash = function Hash(code) {
@@ -731,54 +732,54 @@ function () {
               };
 
               codeHash = Hash(code);
-              _context7.next = 30;
+              _context7.next = 31;
               return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: "public/codes/".concat(codeHash)
               }));
 
-            case 30:
+            case 31:
               codeInfo = _context7.sent;
 
               if (codeInfo) {
-                _context7.next = 34;
+                _context7.next = 35;
                 break;
               }
 
               this.Log("Code redemption failed:\n\t".concat(ticket, "\n\t").concat(code));
               throw Error("Invalid code: " + code);
 
-            case 34:
+            case 35:
               ak = codeInfo.ak, sites = codeInfo.sites, info = codeInfo.info;
-              _context7.next = 37;
+              _context7.next = 38;
               return _regeneratorRuntime.awrap(wallet.AddAccountFromEncryptedPK({
                 encryptedPrivateKey: this.utils.FromB64(ak),
                 password: code
               }));
 
-            case 37:
+            case 38:
               signer = _context7.sent;
               this.SetSigner({
                 signer: signer
               }); // Ensure wallet is initialized
 
-              _context7.next = 41;
+              _context7.next = 42;
               return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
-            case 41:
+            case 42:
               return _context7.abrupt("return", {
                 addr: this.utils.FormatAddress(signer.address),
                 sites: sites,
                 info: info || {}
               });
 
-            case 42:
+            case 43:
             case "end":
               return _context7.stop();
           }
         }
-      }, null, this, [[11, 18]]);
+      }, null, this, [[11, 19]]);
     }
     /**
      * Encrypt the given string or object with the current signer's public key
