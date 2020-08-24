@@ -659,7 +659,7 @@ function () {
   }, {
     key: "RedeemCode",
     value: function RedeemCode(_ref12) {
-      var issuer, code, email, wallet, token, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
+      var issuer, code, email, wallet, token, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
       return _regeneratorRuntime.async(function RedeemCode$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
@@ -714,12 +714,14 @@ function () {
               throw Error("Invalid code");
 
             case 24:
-              _context7.next = 26;
+              // Site selector
+              objectId = issuer;
+              _context7.next = 27;
               return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
-            case 26:
+            case 27:
               libraryId = _context7.sent;
 
               Hash = function Hash(code) {
@@ -732,49 +734,49 @@ function () {
               };
 
               codeHash = Hash(code);
-              _context7.next = 31;
+              _context7.next = 32;
               return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: "public/codes/".concat(codeHash)
               }));
 
-            case 31:
+            case 32:
               codeInfo = _context7.sent;
 
               if (codeInfo) {
-                _context7.next = 35;
+                _context7.next = 36;
                 break;
               }
 
-              this.Log("Code redemption failed:\n\t".concat(ticket, "\n\t").concat(code));
+              this.Log("Code redemption failed:\n\t".concat(issuer, "\n\t").concat(code));
               throw Error("Invalid code: " + code);
 
-            case 35:
+            case 36:
               ak = codeInfo.ak, sites = codeInfo.sites, info = codeInfo.info;
-              _context7.next = 38;
+              _context7.next = 39;
               return _regeneratorRuntime.awrap(wallet.AddAccountFromEncryptedPK({
                 encryptedPrivateKey: this.utils.FromB64(ak),
                 password: code
               }));
 
-            case 38:
+            case 39:
               signer = _context7.sent;
               this.SetSigner({
                 signer: signer
               }); // Ensure wallet is initialized
 
-              _context7.next = 42;
+              _context7.next = 43;
               return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
-            case 42:
+            case 43:
               return _context7.abrupt("return", {
                 addr: this.utils.FormatAddress(signer.address),
                 sites: sites,
                 info: info || {}
               });
 
-            case 43:
+            case 44:
             case "end":
               return _context7.stop();
           }
