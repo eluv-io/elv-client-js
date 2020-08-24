@@ -618,6 +618,7 @@ class ElvClient {
 
     // Site selector
 
+    const objectId = issuer;
     const libraryId = await this.ContentObjectLibraryId({objectId});
 
     const Hash = (code) => {
@@ -629,7 +630,7 @@ class ElvClient {
     const codeInfo = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: `public/codes/${codeHash}`});
 
     if(!codeInfo){
-      this.Log(`Code redemption failed:\n\t${ticket}\n\t${code}`);
+      this.Log(`Code redemption failed:\n\t${issuer}\n\t${code}`);
       throw Error("Invalid code: " + code);
     }
 
