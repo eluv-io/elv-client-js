@@ -931,7 +931,7 @@ class AuthorizationClient {
     }
 
     const kmsHttpClient = new HttpClient({
-      uris: [kmsUrls[0]],
+      uris: kmsUrls,
       debug: this.debug
     });
 

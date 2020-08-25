@@ -1740,7 +1740,7 @@ function () {
 
             case 15:
               kmsHttpClient = new HttpClient({
-                uris: [kmsUrls[0]],
+                uris: kmsUrls,
                 debug: this.debug
               });
               _context22.next = 18;
