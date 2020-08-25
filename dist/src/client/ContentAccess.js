@@ -1303,32 +1303,28 @@ exports.MetadataAuth = function _callee20(_ref14) {
         case 8:
           accessType = _context20.sent;
           isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
-          noAuth = true;
-
-          if (this.fabricVersion >= 3) {
-            noAuth = visibility >= 10 || isPublic && visibility >= 1;
-          }
+          noAuth = visibility >= 10 || isPublic && visibility >= 1;
 
           if (!this.oauthToken) {
-            _context20.next = 20;
+            _context20.next = 19;
             break;
           }
 
-          _context20.next = 15;
+          _context20.next = 14;
           return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
             objectId: objectId,
             versionHash: versionHash
           }));
 
-        case 15:
+        case 14:
           kmsAddress = _context20.sent;
 
           if (!(kmsAddress && !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress))) {
-            _context20.next = 20;
+            _context20.next = 19;
             break;
           }
 
-          _context20.next = 19;
+          _context20.next = 18;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -1337,12 +1333,12 @@ exports.MetadataAuth = function _callee20(_ref14) {
             oauthToken: this.oauthToken
           }));
 
-        case 19:
+        case 18:
           return _context20.abrupt("return", _context20.sent);
 
-        case 20:
+        case 19:
           if (!(isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT)) {
-            _context20.next = 37;
+            _context20.next = 36;
             break;
           }
 
@@ -1351,20 +1347,20 @@ exports.MetadataAuth = function _callee20(_ref14) {
           _context20.t2 = libraryId;
 
           if (_context20.t2) {
-            _context20.next = 28;
+            _context20.next = 27;
             break;
           }
 
-          _context20.next = 27;
+          _context20.next = 26;
           return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: objectId,
             versionHash: versionHash
           }));
 
-        case 27:
+        case 26:
           _context20.t2 = _context20.sent;
 
-        case 28:
+        case 27:
           _context20.t3 = _context20.t2;
           _context20.t4 = noAuth;
           _context20.t5 = {
@@ -1372,14 +1368,14 @@ exports.MetadataAuth = function _callee20(_ref14) {
             noAuth: _context20.t4
           };
           _context20.t6 = _context20.t1.AuthorizationToken.call(_context20.t1, _context20.t5);
-          _context20.next = 34;
+          _context20.next = 33;
           return _context20.t0.awrap.call(_context20.t0, _context20.t6);
 
-        case 34:
+        case 33:
           return _context20.abrupt("return", _context20.sent);
 
-        case 37:
-          _context20.next = 39;
+        case 36:
+          _context20.next = 38;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -1387,10 +1383,10 @@ exports.MetadataAuth = function _callee20(_ref14) {
             noAuth: noAuth
           }));
 
-        case 39:
+        case 38:
           return _context20.abrupt("return", _context20.sent);
 
-        case 40:
+        case 39:
         case "end":
           return _context20.stop();
       }
@@ -2845,8 +2841,7 @@ exports.ContentObjectGraph = function _callee35(_ref28) {
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
-            versionHash: versionHash,
-            noAuth: this.fabricVersion < 3
+            versionHash: versionHash
           }));
 
         case 11:

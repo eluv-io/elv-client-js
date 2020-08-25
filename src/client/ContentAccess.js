@@ -699,10 +699,7 @@ exports.MetadataAuth = async function({
   const accessType = await this.AccessType({id: objectId});
   const isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
 
-  let noAuth = true;
-  if(this.fabricVersion >= 3) {
-    noAuth = visibility >= 10 || (isPublic && visibility >= 1);
-  }
+  let noAuth = visibility >= 10 || (isPublic && visibility >= 1);
 
   if(this.oauthToken) {
     // Check that KMS is set on this object
@@ -1632,7 +1629,7 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
   try {
     return await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: this.fabricVersion < 3}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         queryParams: {
           auto_update: autoUpdate,
           select
