@@ -91,6 +91,7 @@
     "lodash": "^4.17.19",
     "lodash.isequal": "^4.5.0",
     "minami": "^1.2.3",
+    "moment": "^2.27.0",
     "pre-commit": "^1.2.2",
     "raw-loader": "^0.5.1",
     "shell-quote": "^1.7.2",
