@@ -65,6 +65,7 @@
     "image-type": "^4.1.0",
     "js-polyfills": "^0.1.42",
     "mime-types": "^2.1.24",
+    "moment": "^2.27.0",
     "multicodec": "^0.5.3",
     "multihashes": "^0.4.14",
     "node-fetch": "^2.3.0",
