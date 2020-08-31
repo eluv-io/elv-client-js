@@ -846,6 +846,11 @@ exports.DownloadPart = async function({
   const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
 
   if(encrypted) {
+    // If not owner, indicate re-encryption
+    if(!this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId}))) {
+      headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
+    }
+
     return await this.DownloadEncrypted({
       conk: await this.EncryptionConk({libraryId, objectId}),
       downloadPath: path,
