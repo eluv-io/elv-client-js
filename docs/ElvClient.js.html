@@ -674,11 +674,15 @@ class ElvClient {
         this.Log("Failed to redeem code:", true);
         this.Log(error, true);
 
+        throw error;
+
+        /*
         if((error.body || "").toString().includes("exceed configured maximum")) {
           throw Error("Code exceeded maximum number of uses");
         } else {
           throw Error("Invalid code");
         }
+        */
       }
     }
 
