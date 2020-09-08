@@ -258,6 +258,18 @@ const Create = async ({
         console.warn("Warnings:");
         console.warn(warnings.join("\n"), "\n");
       }
+
+      // Check if resulting variant has an audio stream
+      const audioStream = (await client.ContentObjectMetadata({
+        libraryId: library,
+        objectId: id,
+        metadataSubtree: "/production_master/variants/default/streams/audio"
+      }));
+      if(!audioStream) {
+        console.warn("\nWARNING: no suitable audio found\n");
+      }
+
+
     } catch(error) {
       console.error("Unrecoverable error:");
       console.log(JSON.stringify(error, null, 2));
