@@ -34,8 +34,6 @@ contract Container is Editable {
         addressKMS = address_KMS;
     }
 
-
-
     function addContentType(address content_type, address content_contract) public onlyOwner {
         if ((contentTypeContracts[content_type] == 0x0) && (whitelistedType(content_type) == false)) {
             if (contentTypesLength < contentTypes.length) {

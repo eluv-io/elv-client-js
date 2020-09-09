@@ -37,8 +37,8 @@ contract Content is Ownable {
     event RunKill(uint result);
     event RunStatusChange(int proposedStatusCode, int returnStatusCode);
     event RunAccessCharge(int256 calculatedAccessCharge);
-    event RunAccess(bytes32 requestNonce, uint result);
-    event RunFinalize(bytes32 requestNonce, uint result);
+    event RunAccess(uint256 requestNonce, uint result);
+    event RunFinalize(uint256 requestNonce, uint result);
 
     function runDescribeStatus(int) public view returns (bytes32) {
         return 0x0;
@@ -98,7 +98,7 @@ contract Content is Ownable {
     //0 indicates that access request can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runAccess(
-        bytes32, /*requestNonce*/
+        uint256, /*requestNonce*/
         bytes32[], /*customValues*/
         address[], /*stakeholders*/
         address accessor
@@ -115,7 +115,7 @@ contract Content is Ownable {
     // 0 indicates that the finalization can proceed.
     // Other numbers can be used as error codes and would stop the processing.
     function runFinalize(
-      bytes32, /*requestNonce*/
+      uint256, /*requestNonce*/
       bytes32[], /*customValues*/
       address[], /*stakeholders*/
       address accessor

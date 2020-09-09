@@ -61,6 +61,29 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [{
+      "name": "requestNonce",
+      "type": "uint256"
+    }, {
+      "name": "customValues",
+      "type": "bytes32[]"
+    }, {
+      "name": "",
+      "type": "address[]"
+    }, {
+      "name": "accessor",
+      "type": "address"
+    }],
+    "name": "runFinalize",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
       "name": "_startTime",
       "type": "uint256"
     }, {
@@ -148,29 +171,6 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "requestNonce",
-      "type": "bytes32"
-    }, {
-      "name": "customValues",
-      "type": "bytes32[]"
-    }, {
-      "name": "",
-      "type": "address[]"
-    }, {
-      "name": "accessor",
-      "type": "address"
-    }],
-    "name": "runFinalize",
-    "outputs": [{
-      "name": "",
-      "type": "uint256"
-    }],
-    "payable": true,
-    "stateMutability": "payable",
     "type": "function"
   }, {
     "constant": true,
@@ -371,29 +371,6 @@ var contract = {
     "type": "function"
   }, {
     "constant": false,
-    "inputs": [{
-      "name": "requestNonce",
-      "type": "bytes32"
-    }, {
-      "name": "customValues",
-      "type": "bytes32[]"
-    }, {
-      "name": "stakeholders",
-      "type": "address[]"
-    }, {
-      "name": "accessor",
-      "type": "address"
-    }],
-    "name": "runAccess",
-    "outputs": [{
-      "name": "",
-      "type": "uint256"
-    }],
-    "payable": true,
-    "stateMutability": "payable",
-    "type": "function"
-  }, {
-    "constant": false,
     "inputs": [],
     "name": "runEdit",
     "outputs": [{
@@ -435,6 +412,29 @@ var contract = {
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "requestNonce",
+      "type": "uint256"
+    }, {
+      "name": "customValues",
+      "type": "bytes32[]"
+    }, {
+      "name": "stakeholders",
+      "type": "address[]"
+    }, {
+      "name": "accessor",
+      "type": "address"
+    }],
+    "name": "runAccess",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
     "type": "function"
   }, {
     "inputs": [],
@@ -624,7 +624,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "result",
@@ -637,7 +637,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "result",

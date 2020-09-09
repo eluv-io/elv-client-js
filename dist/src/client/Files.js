@@ -700,7 +700,7 @@ exports.UploadFiles = function _callee4(_ref4) {
 };
 
 exports.CreateFileUploadJob = function _callee5(_ref6) {
-  var libraryId, objectId, writeToken, ops, _ref6$defaults, defaults, _ref6$encryption, encryption, path, body;
+  var libraryId, objectId, writeToken, ops, _ref6$defaults, defaults, _ref6$encryption, encryption, body, path;
 
   return _regeneratorRuntime.async(function _callee5$(_context7) {
     while (1) {
@@ -714,7 +714,6 @@ exports.CreateFileUploadJob = function _callee5(_ref6) {
           ValidateWriteToken(writeToken);
           this.Log("Creating file upload job: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
           this.Log(ops);
-          path = this.fabricVersion >= 3 ? UrlJoin("q", writeToken, "files", "jobs") : UrlJoin("q", writeToken, "file_jobs");
 
           if (encryption === "cgck") {
             defaults.encryption = {
@@ -728,6 +727,7 @@ exports.CreateFileUploadJob = function _callee5(_ref6) {
             defaults: defaults,
             ops: ops
           };
+          path = UrlJoin("q", writeToken, "file_jobs");
           _context7.t0 = this.utils;
           _context7.t1 = this.HttpClient;
           _context7.next = 12;
@@ -772,7 +772,7 @@ exports.UploadStatus = function _callee6(_ref7) {
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
-          path = this.fabricVersion >= 3 ? UrlJoin("q", writeToken, "files", "jobs", uploadId) : UrlJoin("q", writeToken, "file_jobs", uploadId);
+          path = UrlJoin("q", writeToken, "file_jobs", uploadId);
           _context8.t0 = this.utils;
           _context8.t1 = this.HttpClient;
           _context8.next = 8;
@@ -814,7 +814,7 @@ exports.UploadJobStatus = function _callee7(_ref8) {
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
-          path = this.fabricVersion >= 3 ? UrlJoin("q", writeToken, "files", "jobs", uploadId, "uploads", jobId) : UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
+          path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
           _context9.t0 = this.utils;
           _context9.t1 = this.HttpClient;
           _context9.next = 8;
@@ -856,7 +856,7 @@ exports.UploadFileData = function _callee8(_ref9) {
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
-          path = this.fabricVersion >= 3 ? UrlJoin("q", writeToken, "files", "jobs", uploadId, jobId) : UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
+          path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
           _context10.t0 = _regeneratorRuntime;
           _context10.t1 = this.utils;
           _context10.t2 = this.HttpClient;
@@ -1096,7 +1096,7 @@ exports.DownloadFile = function _callee12(_ref13) {
           fileInfo = _context14.sent;
           encrypted = fileInfo && fileInfo["."].encryption && fileInfo["."].encryption.scheme === "cgck";
           encryption = encrypted ? "cgck" : undefined;
-          path = encrypted && !clientSideDecryption ? UrlJoin("q", writeToken || versionHash || objectId, "rep", "files_download", filePath) : this.fabricVersion >= 3 ? UrlJoin("q", writeToken || versionHash || objectId, "files", "download", filePath) : UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
+          path = encrypted && !clientSideDecryption ? UrlJoin("q", writeToken || versionHash || objectId, "rep", "files_download", filePath) : UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
           _context14.next = 12;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
@@ -1418,44 +1418,62 @@ exports.DownloadPart = function _callee15(_ref16) {
           bytesTotal = _context17.sent.part.size;
 
           if (!encrypted) {
-            _context17.next = 32;
+            _context17.next = 39;
             break;
           }
 
-          _context17.t0 = _regeneratorRuntime;
-          _context17.t1 = this;
+          _context17.t0 = this.utils;
+          _context17.t1 = this.signer.address;
           _context17.next = 18;
-          return _regeneratorRuntime.awrap(this.EncryptionConk({
-            libraryId: libraryId,
+          return _regeneratorRuntime.awrap(this.ContentObjectOwner({
             objectId: objectId
           }));
 
         case 18:
           _context17.t2 = _context17.sent;
-          _context17.t3 = path;
-          _context17.t4 = bytesTotal;
-          _context17.t5 = headers;
-          _context17.t6 = callback;
-          _context17.t7 = format;
-          _context17.t8 = chunked;
-          _context17.t9 = {
-            conk: _context17.t2,
-            downloadPath: _context17.t3,
-            bytesTotal: _context17.t4,
-            headers: _context17.t5,
-            callback: _context17.t6,
-            format: _context17.t7,
-            chunked: _context17.t8
-          };
-          _context17.t10 = _context17.t1.DownloadEncrypted.call(_context17.t1, _context17.t9);
-          _context17.next = 29;
-          return _context17.t0.awrap.call(_context17.t0, _context17.t10);
 
-        case 29:
+          if (_context17.t0.EqualAddress.call(_context17.t0, _context17.t1, _context17.t2)) {
+            _context17.next = 21;
+            break;
+          }
+
+          headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
+
+        case 21:
+          _context17.t3 = _regeneratorRuntime;
+          _context17.t4 = this;
+          _context17.next = 25;
+          return _regeneratorRuntime.awrap(this.EncryptionConk({
+            libraryId: libraryId,
+            objectId: objectId
+          }));
+
+        case 25:
+          _context17.t5 = _context17.sent;
+          _context17.t6 = path;
+          _context17.t7 = bytesTotal;
+          _context17.t8 = headers;
+          _context17.t9 = callback;
+          _context17.t10 = format;
+          _context17.t11 = chunked;
+          _context17.t12 = {
+            conk: _context17.t5,
+            downloadPath: _context17.t6,
+            bytesTotal: _context17.t7,
+            headers: _context17.t8,
+            callback: _context17.t9,
+            format: _context17.t10,
+            chunked: _context17.t11
+          };
+          _context17.t13 = _context17.t4.DownloadEncrypted.call(_context17.t4, _context17.t12);
+          _context17.next = 36;
+          return _context17.t3.awrap.call(_context17.t3, _context17.t13);
+
+        case 36:
           return _context17.abrupt("return", _context17.sent);
 
-        case 32:
-          _context17.next = 34;
+        case 39:
+          _context17.next = 41;
           return _regeneratorRuntime.awrap(this.Download({
             downloadPath: path,
             bytesTotal: bytesTotal,
@@ -1466,10 +1484,10 @@ exports.DownloadPart = function _callee15(_ref16) {
             chunkSize: chunkSize
           }));
 
-        case 34:
+        case 41:
           return _context17.abrupt("return", _context17.sent);
 
-        case 35:
+        case 42:
         case "end":
           return _context17.stop();
       }

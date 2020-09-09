@@ -34,7 +34,7 @@ contract ExternalUserWallet is Accessible, Editable {
 
     function accessRequest() public returns (bool) {
         require(msg.sender == owner || msg.sender == addressExtUser);
-        emit AccessRequestV3(keccak256(abi.encodePacked(address(this), now)), 0x0, 0x0, msg.sender, now * 1000);
+        emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), now))), 0x0, 0x0, msg.sender, now * 1000);
         return true;
     }
 }

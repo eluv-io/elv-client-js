@@ -21,4 +21,9 @@ contract UserSpace is IUserSpace {
         return userWallets[_userAddr];
     }
 
+    // STUB impl - meant to be overridden
+    function createUserWallet(address _user) external returns (address) {
+        require(false);
+        return 0x0;
+    }
 }

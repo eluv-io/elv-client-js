@@ -43,11 +43,12 @@ var ACCESS_TYPES = {
   GROUP: "group",
   ACCESSIBLE: "accessible",
   EDITABLE: "editable",
+  TENANT: "tenant",
   OTHER: "other"
 };
 var CONTRACTS = {
   v2: (_v = {}, _defineProperty(_v, ACCESS_TYPES.SPACE, require("./contracts/v2/BaseContentSpace")), _defineProperty(_v, ACCESS_TYPES.LIBRARY, require("./contracts/v2/BaseLibrary")), _defineProperty(_v, ACCESS_TYPES.TYPE, require("./contracts/v2/BaseContentType")), _defineProperty(_v, ACCESS_TYPES.OBJECT, require("./contracts/v2/BaseContent")), _defineProperty(_v, ACCESS_TYPES.WALLET, require("./contracts/v2/BaseAccessWallet")), _defineProperty(_v, ACCESS_TYPES.GROUP, require("./contracts/v2/BaseAccessControlGroup")), _defineProperty(_v, ACCESS_TYPES.ACCESSIBLE, require("./contracts/v2/Accessible")), _defineProperty(_v, ACCESS_TYPES.EDITABLE, require("./contracts/v2/Editable")), _v),
-  v3: (_v2 = {}, _defineProperty(_v2, ACCESS_TYPES.SPACE, require("./contracts/v3/BaseContentSpace")), _defineProperty(_v2, ACCESS_TYPES.LIBRARY, require("./contracts/v3/BaseLibrary")), _defineProperty(_v2, ACCESS_TYPES.TYPE, require("./contracts/v3/BaseContentType")), _defineProperty(_v2, ACCESS_TYPES.OBJECT, require("./contracts/v3/BaseContent")), _defineProperty(_v2, ACCESS_TYPES.WALLET, require("./contracts/v3/BaseAccessWallet")), _defineProperty(_v2, ACCESS_TYPES.GROUP, require("./contracts/v3/BaseAccessControlGroup")), _defineProperty(_v2, ACCESS_TYPES.ACCESSIBLE, require("./contracts/v3/Accessible")), _defineProperty(_v2, ACCESS_TYPES.EDITABLE, require("./contracts/v3/Editable")), _v2)
+  v3: (_v2 = {}, _defineProperty(_v2, ACCESS_TYPES.SPACE, require("./contracts/v3/BaseContentSpace")), _defineProperty(_v2, ACCESS_TYPES.LIBRARY, require("./contracts/v3/BaseLibrary")), _defineProperty(_v2, ACCESS_TYPES.TYPE, require("./contracts/v3/BaseContentType")), _defineProperty(_v2, ACCESS_TYPES.OBJECT, require("./contracts/v3/BaseContent")), _defineProperty(_v2, ACCESS_TYPES.WALLET, require("./contracts/v3/BaseAccessWallet")), _defineProperty(_v2, ACCESS_TYPES.GROUP, require("./contracts/v3/BaseAccessControlGroup")), _defineProperty(_v2, ACCESS_TYPES.ACCESSIBLE, require("./contracts/v3/Accessible")), _defineProperty(_v2, ACCESS_TYPES.EDITABLE, require("./contracts/v3/Editable")), _defineProperty(_v2, ACCESS_TYPES.TENANT, require("./contracts/v3/BaseTenantSpace")), _v2)
 };
 
 var AuthorizationClient =
@@ -729,13 +730,13 @@ function () {
   }, {
     key: "GenerateChannelContentToken",
     value: function GenerateChannelContentToken(_ref12) {
-      var objectId, versionHash, audienceData, context, oauthToken, _ref12$value, value, stateChannelApi, additionalParams, payload, signature, multiSig, token;
+      var objectId, versionHash, issuer, code, email, audienceData, context, oauthToken, _ref12$value, value, token, tenantId, kmsAddress, stateChannelApi, additionalParams, payload, signature, multiSig;
 
       return _regeneratorRuntime.async(function GenerateChannelContentToken$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              objectId = _ref12.objectId, versionHash = _ref12.versionHash, audienceData = _ref12.audienceData, context = _ref12.context, oauthToken = _ref12.oauthToken, _ref12$value = _ref12.value, value = _ref12$value === void 0 ? 0 : _ref12$value;
+              objectId = _ref12.objectId, versionHash = _ref12.versionHash, issuer = _ref12.issuer, code = _ref12.code, email = _ref12.email, audienceData = _ref12.audienceData, context = _ref12.context, oauthToken = _ref12.oauthToken, _ref12$value = _ref12.value, value = _ref12$value === void 0 ? 0 : _ref12$value;
 
               if (!oauthToken) {
                 _context7.next = 5;
@@ -771,6 +772,41 @@ function () {
             case 9:
               this.Log("Making state channel access request: ".concat(objectId));
 
+              if (!issuer) {
+                _context7.next = 21;
+                break;
+              }
+
+              // Ticket API
+              tenantId = issuer.replace(/^\//, "").split("/")[2];
+              _context7.next = 14;
+              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
+                contractAddress: Utils.HashToAddress(tenantId),
+                methodName: "addressKMS"
+              }));
+
+            case 14:
+              kmsAddress = _context7.sent;
+              _context7.next = 17;
+              return _regeneratorRuntime.awrap(Utils.ResponseToFormat("text", this.MakeKMSRequest({
+                kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
+                method: "POST",
+                path: UrlJoin("ks", issuer),
+                body: {
+                  "_PASSWORD": code,
+                  "_EMAIL": email
+                }
+              })));
+
+            case 17:
+              token = _context7.sent;
+              // Pull target object from token so token can be cached
+              objectId = JSON.parse(Utils.FromB64(token)).qid;
+              _context7.next = 32;
+              break;
+
+            case 21:
+              // State channel API
               if (!audienceData) {
                 audienceData = this.AudienceData({
                   objectId: objectId,
@@ -781,7 +817,7 @@ function () {
 
               stateChannelApi = "elv_channelContentRequestContext";
               additionalParams = [JSON.stringify(audienceData)];
-              _context7.next = 15;
+              _context7.next = 26;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: stateChannelApi,
@@ -790,16 +826,17 @@ function () {
                 additionalParams: additionalParams
               }));
 
-            case 15:
+            case 26:
               payload = _context7.sent;
-              _context7.next = 18;
+              _context7.next = 29;
               return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload))));
 
-            case 18:
+            case 29:
               signature = _context7.sent;
               multiSig = Utils.FormatSignature(signature);
               token = "".concat(payload, ".").concat(Utils.B64(multiSig));
 
+            case 32:
               if (!this.noCache) {
                 this.channelContentTokens[objectId] = {
                   token: token,
@@ -809,7 +846,7 @@ function () {
 
               return _context7.abrupt("return", token);
 
-            case 23:
+            case 34:
             case "end":
               return _context7.stop();
           }
@@ -1112,48 +1149,52 @@ function () {
               contractName = _context12.sent;
 
               if (this.accessTypes[id]) {
-                _context12.next = 21;
+                _context12.next = 23;
                 break;
               }
 
               _context12.t0 = contractName;
-              _context12.next = _context12.t0 === "BaseContentSpace" ? 7 : _context12.t0 === "BaseLibrary" ? 9 : _context12.t0 === "BaseContentType" ? 11 : _context12.t0 === "BsAccessWallet" ? 13 : _context12.t0 === "BsAccessCtrlGrp" ? 15 : _context12.t0 === "BaseContent" ? 17 : 19;
+              _context12.next = _context12.t0 === "BaseContentSpace" ? 7 : _context12.t0 === "BaseLibrary" ? 9 : _context12.t0 === "BaseContentType" ? 11 : _context12.t0 === "BsAccessWallet" ? 13 : _context12.t0 === "BsAccessCtrlGrp" ? 15 : _context12.t0 === "BaseContent" ? 17 : _context12.t0 === "BaseTenantSpace" ? 19 : 21;
               break;
 
             case 7:
               accessType = ACCESS_TYPES.SPACE;
-              return _context12.abrupt("break", 20);
+              return _context12.abrupt("break", 22);
 
             case 9:
               accessType = ACCESS_TYPES.LIBRARY;
-              return _context12.abrupt("break", 20);
+              return _context12.abrupt("break", 22);
 
             case 11:
               accessType = ACCESS_TYPES.TYPE;
-              return _context12.abrupt("break", 20);
+              return _context12.abrupt("break", 22);
 
             case 13:
               accessType = ACCESS_TYPES.WALLET;
-              return _context12.abrupt("break", 20);
+              return _context12.abrupt("break", 22);
 
             case 15:
               accessType = ACCESS_TYPES.GROUP;
-              return _context12.abrupt("break", 20);
+              return _context12.abrupt("break", 22);
 
             case 17:
               accessType = ACCESS_TYPES.OBJECT;
-              return _context12.abrupt("break", 20);
+              return _context12.abrupt("break", 22);
 
             case 19:
-              accessType = ACCESS_TYPES.OTHER;
-
-            case 20:
-              this.accessTypes[id] = accessType;
+              accessType = ACCESS_TYPES.TENANT;
+              return _context12.abrupt("break", 22);
 
             case 21:
-              return _context12.abrupt("return", this.accessTypes[id]);
+              accessType = ACCESS_TYPES.OTHER;
 
             case 22:
+              this.accessTypes[id] = accessType;
+
+            case 23:
+              return _context12.abrupt("return", this.accessTypes[id]);
+
+            case 24:
             case "end":
               return _context12.stop();
           }
@@ -1664,7 +1705,7 @@ function () {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
               }
 
-              if (objectId) {
+              if (!(!objectId && !kmsId)) {
                 _context22.next = 10;
                 break;
               }
@@ -1699,7 +1740,7 @@ function () {
 
             case 15:
               kmsHttpClient = new HttpClient({
-                uris: [kmsUrls[0]],
+                uris: kmsUrls,
                 debug: this.debug
               });
               _context22.next = 18;

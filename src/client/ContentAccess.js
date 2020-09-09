@@ -699,10 +699,7 @@ exports.MetadataAuth = async function({
   const accessType = await this.AccessType({id: objectId});
   const isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
 
-  let noAuth = true;
-  if(this.fabricVersion >= 3) {
-    noAuth = visibility >= 10 || (isPublic && visibility >= 1);
-  }
+  let noAuth = visibility >= 10 || (isPublic && visibility >= 1);
 
   if(this.oauthToken) {
     // Check that KMS is set on this object
@@ -972,10 +969,11 @@ exports.AvailableDRMs = async function() {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {string=} handler=playout - The handler to use for playout
  *
  * @return {Promise<Object>} - The available offerings
  */
-exports.AvailableOfferings = async function({objectId, versionHash, writeToken, linkPath}) {
+exports.AvailableOfferings = async function({objectId, versionHash, writeToken, linkPath, handler="playout"}) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   } else if(!versionHash) {
@@ -988,7 +986,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
 
-  const path = UrlJoin("q", versionHash, "rep", "playout", "options.json");
+  const path = UrlJoin("q", versionHash, "rep", handler, "options.json");
 
   try {
     return await this.utils.ResponseToJson(
@@ -1029,7 +1027,9 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
+ * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
+ * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
  */
@@ -1039,7 +1039,9 @@ exports.PlayoutOptions = async function({
   writeToken,
   linkPath,
   protocols=["dash", "hls"],
+  handler="playout",
   offering="default",
+  playoutType,
   drms=[],
   context,
   hlsjsProfile=true
@@ -1110,7 +1112,12 @@ exports.PlayoutOptions = async function({
     const protocol = option.properties.protocol;
     const drm = option.properties.drm;
     // Remove authorization parameter from playout path - it's re-added by Rep
-    const playoutPath = option.uri.split("?")[0];
+    let playoutPath = option.uri.split("?")[0];
+
+    if(playoutType) {
+      playoutPath = playoutPath.replace("playlist", `playlist-${playoutType}`);
+    }
+
     const licenseServers = option.properties.license_servers;
 
     // Create full playout URLs for this protocol / drm combo
@@ -1123,7 +1130,7 @@ exports.PlayoutOptions = async function({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
             versionHash: linkTargetHash || versionHash,
-            rep: UrlJoin("playout", offering, playoutPath),
+            rep: UrlJoin(handler, offering, playoutPath),
             channelAuth: true,
             queryParams: (hlsjsProfile && protocol === "hls" && drm === "aes-128") ? {player_profile: "hls-js"} : {}
           }),
@@ -1165,7 +1172,9 @@ exports.PlayoutOptions = async function({
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
+ * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
+ * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
  */
@@ -1175,7 +1184,9 @@ exports.BitmovinPlayoutOptions = async function({
   linkPath,
   protocols=["dash", "hls"],
   drms=[],
+  handler="playout",
   offering="default",
+  playoutType,
   context
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
@@ -1190,7 +1201,9 @@ exports.BitmovinPlayoutOptions = async function({
     linkPath,
     protocols,
     drms,
+    handler,
     offering,
+    playoutType,
     hlsjsProfile: false,
     context
   });
@@ -1616,7 +1629,7 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
   try {
     return await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, noAuth: this.fabricVersion < 3}),
+        headers: await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash}),
         queryParams: {
           auto_update: autoUpdate,
           select

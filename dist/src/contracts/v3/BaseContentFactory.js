@@ -44,6 +44,35 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "_opCodes",
+      "type": "uint32[]"
+    }, {
+      "name": "_contentAddrs",
+      "type": "address[]"
+    }, {
+      "name": "_userAddrs",
+      "type": "address[]"
+    }, {
+      "name": "_requestNonces",
+      "type": "uint256[]"
+    }, {
+      "name": "_ctxHashes",
+      "type": "bytes32[]"
+    }, {
+      "name": "_ts",
+      "type": "uint256[]"
+    }, {
+      "name": "_amt",
+      "type": "uint256[]"
+    }],
+    "name": "executeAccessBatch",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [],
     "name": "OP_ACCESS_REQUEST",
@@ -97,35 +126,6 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "_opCodes",
-      "type": "uint32[]"
-    }, {
-      "name": "_contentAddrs",
-      "type": "address[]"
-    }, {
-      "name": "_userAddrs",
-      "type": "address[]"
-    }, {
-      "name": "_requestNonces",
-      "type": "bytes32[]"
-    }, {
-      "name": "_ctxHashes",
-      "type": "bytes32[]"
-    }, {
-      "name": "_ts",
-      "type": "uint256[]"
-    }, {
-      "name": "_amt",
-      "type": "uint256[]"
-    }],
-    "name": "executeAccessBatch",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": true,
