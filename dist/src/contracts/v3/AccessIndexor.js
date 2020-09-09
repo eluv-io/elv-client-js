@@ -102,6 +102,23 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "obj",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setContractRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [{
       "name": "position",
@@ -165,6 +182,23 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "obj",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setContentObjectRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,
@@ -367,6 +401,23 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": false,
+    "inputs": [{
+      "name": "lib",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setLibraryRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
     "constant": true,
     "inputs": [{
       "name": "index_type",
@@ -405,6 +456,23 @@ var contract = {
       "name": "",
       "type": "uint256"
     }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "obj",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setContentTypeRights",
+    "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -621,6 +689,23 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "group",
+      "type": "address"
+    }, {
+      "name": "access_type",
+      "type": "uint8"
+    }, {
+      "name": "access",
+      "type": "uint8"
+    }],
+    "name": "setAccessGroupRights",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }, {
     "constant": false,

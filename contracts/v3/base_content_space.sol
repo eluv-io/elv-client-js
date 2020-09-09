@@ -17,7 +17,7 @@ import "./node.sol";
 import "./meta_object.sol";
 import "./transactable.sol";
 import "./lib_precompile.sol";
-//import "./lv_recording.sol"; // need to bring in event definitions
+import "./base_tenant_space.sol";
 
 /* -- Revision history --
 BaseContentSpace20190221114100ML: First versioned released
@@ -34,7 +34,7 @@ BaseContentSpace20200316120600ML: Defaults visibility to ensure access is open
 
 contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
-    bytes32 public version ="BaseContentSpace20200316120600ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20200626120600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -78,6 +78,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     // override
     function setVisibility(uint8 _visibility_code) public onlyOwner {
         visibility = _visibility_code;
+        emit VisibilityChanged(address(this), 0x0, visibility);
     }
 
     function setFactory(address new_factory) public onlyOwner {
@@ -109,31 +110,6 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return bcs.canNodePublish(msg.sender);
     }
 
-    // used to create a node contract instance. should be called by the address of the node that wishes to register.
-    function registerSpaceNode() public returns (address) {
-        require(nodeMapping[msg.sender] == 0x0); // for now can't re-register (or replace) node instance
-        uint i = 0;
-        for (; i < activeNodeAddresses.length; i++) {
-            if (activeNodeAddresses[i] == msg.sender) {
-                break;
-            }
-        }
-        require(i < activeNodeAddresses.length); // node should be in active list
-        address nodeAddr = BaseFactory(factory).createNode(msg.sender);
-        nodeMapping[msg.sender] = nodeAddr;
-        emit RegisterNode(nodeAddr);
-        return nodeAddr;
-    }
-
-    function unregisterSpaceNode() public returns (bool) {
-        require(nodeMapping[msg.sender] != 0x0);
-        address nodeAddr = nodeMapping[msg.sender];
-        delete nodeMapping[msg.sender];
-        Node(nodeAddr).kill();
-        emit UnregisterNode(nodeAddr);
-    }
-
-
     function createContentType() public returns (address) {
         address contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
@@ -162,27 +138,17 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         emit EngageAccountLibrary(tx.origin);
     }
 
-    function createAccessWallet() public returns (address) {
-        return createUserWallet(tx.origin);
+    function createUserWallet(address _user) external returns (address) {
+        return createUserWalletInternal(_user);
     }
 
-    // TODO: TESTING
-//    function createUserGuarantorWallet(address _user) public returns (bool) {
-//        if (userWallets[_user] != 0x0) {
-//            return false;
-//        }
-//        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-//        BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
-//        // wallet.setGuarantor(msg.sender);
-//        wallet.transferOwnership(_user);
-//        userWallets[_user] = walletAddress;
-//        emit CreateAccessWallet(walletAddress); // TODO: different event here?
-//        return true;
-//    }
+    function createAccessWallet() public returns (address) {
+        return createUserWalletInternal(tx.origin);
+    }
 
     //This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
-    function createUserWallet(address _user) public returns (address) {
+    function createUserWalletInternal(address _user) returns (address) {
         require(userWallets[_user] == 0x0);
         address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
         if (_user != tx.origin) {
@@ -206,17 +172,6 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         emit GetAccessWallet(walletAddress);
         return walletAddress;
     }
-
-    /* removed as the createUserWallet does not work for creating wallet on behalf of a user
-    // Not sure we want that, if so it might have to be restricted -- to be thought through
-    function userWallets(address user) public returns(address) {
-        if (userWallets[user] == 0x0) {
-            return createUserWallet(user);
-        } else {
-            return userWallets[user];
-        }
-    }
-    */
 
     function getKMSID(address _kmsAddr) public view returns (string){
         return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
@@ -430,7 +385,7 @@ contract BaseContentFactory is Ownable {
         return size > 0;
     }
 
-    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, bytes32[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
+    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, uint256[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
 
         //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
         //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);

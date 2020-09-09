@@ -11,6 +11,20 @@ var contract = {
     "stateMutability": "view",
     "type": "function"
   }, {
+    "constant": true,
+    "inputs": [{
+      "name": "_candidate",
+      "type": "address"
+    }],
+    "name": "isAdmin",
+    "outputs": [{
+      "name": "",
+      "type": "bool"
+    }],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }, {
     "constant": false,
     "inputs": [],
     "name": "kill",

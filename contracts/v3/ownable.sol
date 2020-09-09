@@ -13,6 +13,9 @@ Ownable20190528193800ML: Added contentSpace as all descendant objects need it an
 Ownable20200210110100ML: Added versionAPI, set to 3.0
 */
 
+interface IAdmin {
+    function isAdmin(address _adminAddr) external view returns (bool);
+}
 
 contract Ownable {
 
@@ -62,6 +65,19 @@ contract Ownable {
     function kill() public onlyOwner {
         selfdestruct(owner);  // kills contract; send remaining funds back to owner
     }
+}
 
+contract Adminable is Ownable, IAdmin {
+    // meant to be overridden in derived classes
+    function isAdmin(address _candidate) public view returns (bool) {
+        if (_candidate == owner) {
+            return true;
+        }
+        return false;
+    }
 
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender));
+        _;
+    }
 }

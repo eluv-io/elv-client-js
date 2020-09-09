@@ -426,10 +426,6 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
   this.Log(`Creating file upload job: ${libraryId} ${objectId} ${writeToken}`);
   this.Log(ops);
 
-  let path = this.fabricVersion >= 3 ?
-    UrlJoin("q", writeToken, "files", "jobs") :
-    UrlJoin("q", writeToken, "file_jobs");
-
   if(encryption === "cgck") {
     defaults.encryption = { scheme: "cgck" };
   }
@@ -440,6 +436,8 @@ exports.CreateFileUploadJob = async function({libraryId, objectId, writeToken, o
     defaults,
     ops
   };
+
+  const path = UrlJoin("q", writeToken, "file_jobs");
 
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
@@ -456,9 +454,7 @@ exports.UploadStatus = async function({libraryId, objectId, writeToken, uploadId
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  let path = this.fabricVersion >= 3 ?
-    UrlJoin("q", writeToken, "files", "jobs", uploadId) :
-    UrlJoin("q", writeToken, "file_jobs", uploadId);
+  const path = UrlJoin("q", writeToken, "file_jobs", uploadId);
 
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
@@ -474,9 +470,7 @@ exports.UploadJobStatus = async function({libraryId, objectId, writeToken, uploa
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  let path = this.fabricVersion >= 3 ?
-    UrlJoin("q", writeToken, "files", "jobs", uploadId, "uploads", jobId) :
-    UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
+  const path = UrlJoin("q", writeToken, "file_jobs", uploadId, "uploads", jobId);
 
   return this.utils.ResponseToJson(
     this.HttpClient.Request({
@@ -492,9 +486,7 @@ exports.UploadFileData = async function({libraryId, objectId, writeToken, upload
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
 
-  let path = this.fabricVersion >= 3 ?
-    UrlJoin("q", writeToken, "files", "jobs", uploadId, jobId) :
-    UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
+  let path = UrlJoin("q", writeToken, "file_jobs", uploadId, jobId);
 
   await this.utils.ResponseToJson(
     this.HttpClient.Request({
@@ -629,9 +621,8 @@ exports.DownloadFile = async function({
   const path =
     encrypted && !clientSideDecryption ?
       UrlJoin("q", writeToken || versionHash || objectId, "rep", "files_download", filePath) :
-      (this.fabricVersion >= 3 ?
-        UrlJoin("q", writeToken || versionHash || objectId, "files", "download", filePath) :
-        UrlJoin("q", writeToken || versionHash || objectId, "files", filePath));
+      UrlJoin("q", writeToken || versionHash || objectId, "files", filePath);
+
 
   const headers = await this.authClient.AuthorizationHeader({libraryId, objectId, versionHash, encryption});
   headers.Accept = "*/*";
@@ -699,7 +690,7 @@ exports.ContentParts = async function({libraryId, objectId, versionHash}) {
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  let path = UrlJoin("q", versionHash || objectId, "parts");
+  const path = UrlJoin("q", versionHash || objectId, "parts");
 
   const response = await this.utils.ResponseToJson(
     this.HttpClient.Request({
@@ -793,6 +784,11 @@ exports.DownloadPart = async function({
   const bytesTotal = (await this.ContentPart({libraryId, objectId, versionHash, partHash})).part.size;
 
   if(encrypted) {
+    // If not owner, indicate re-encryption
+    if(!this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId}))) {
+      headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
+    }
+
     return await this.DownloadEncrypted({
       conk: await this.EncryptionConk({libraryId, objectId}),
       downloadPath: path,

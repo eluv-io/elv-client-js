@@ -13,6 +13,29 @@ var contract = {
   }, {
     "constant": false,
     "inputs": [{
+      "name": "",
+      "type": "uint256"
+    }, {
+      "name": "",
+      "type": "bytes32[]"
+    }, {
+      "name": "",
+      "type": "address[]"
+    }, {
+      "name": "accessor",
+      "type": "address"
+    }],
+    "name": "runFinalize",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
       "name": "stream",
       "type": "address"
     }],
@@ -100,29 +123,6 @@ var contract = {
     }],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  }, {
-    "constant": false,
-    "inputs": [{
-      "name": "",
-      "type": "bytes32"
-    }, {
-      "name": "",
-      "type": "bytes32[]"
-    }, {
-      "name": "",
-      "type": "address[]"
-    }, {
-      "name": "accessor",
-      "type": "address"
-    }],
-    "name": "runFinalize",
-    "outputs": [{
-      "name": "",
-      "type": "uint256"
-    }],
-    "payable": true,
-    "stateMutability": "payable",
     "type": "function"
   }, {
     "constant": true,
@@ -282,29 +282,6 @@ var contract = {
     "type": "function"
   }, {
     "constant": false,
-    "inputs": [{
-      "name": "",
-      "type": "bytes32"
-    }, {
-      "name": "",
-      "type": "bytes32[]"
-    }, {
-      "name": "",
-      "type": "address[]"
-    }, {
-      "name": "accessor",
-      "type": "address"
-    }],
-    "name": "runAccess",
-    "outputs": [{
-      "name": "",
-      "type": "uint256"
-    }],
-    "payable": true,
-    "stateMutability": "payable",
-    "type": "function"
-  }, {
-    "constant": false,
     "inputs": [],
     "name": "runEdit",
     "outputs": [{
@@ -335,6 +312,29 @@ var contract = {
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
+    "type": "function"
+  }, {
+    "constant": false,
+    "inputs": [{
+      "name": "",
+      "type": "uint256"
+    }, {
+      "name": "",
+      "type": "bytes32[]"
+    }, {
+      "name": "",
+      "type": "address[]"
+    }, {
+      "name": "accessor",
+      "type": "address"
+    }],
+    "name": "runAccess",
+    "outputs": [{
+      "name": "",
+      "type": "uint256"
+    }],
+    "payable": true,
+    "stateMutability": "payable",
     "type": "function"
   }, {
     "payable": true,
@@ -531,7 +531,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "result",
@@ -544,7 +544,7 @@ var contract = {
     "inputs": [{
       "indexed": false,
       "name": "requestNonce",
-      "type": "bytes32"
+      "type": "uint256"
     }, {
       "indexed": false,
       "name": "result",

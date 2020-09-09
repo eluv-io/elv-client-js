@@ -6,6 +6,7 @@ import {Content} from "./content.sol";
 import {Container} from "./container.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import "./user_space.sol";
+import "./meta_object.sol";
 
 /* -- Revision history --
 BaseContent20190221101600ML: First versioned released
@@ -24,9 +25,9 @@ BaseContent20200422180500ML: Version update to reflect changes made to editable 
 */
 
 
-contract BaseContent is Editable {
+contract BaseContent is MetaObject, Editable {
 
-    bytes32 public version ="BaseContent20200422180500ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200803130000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -58,36 +59,6 @@ contract BaseContent is Editable {
      modifier onlyEditor() {
         require(canEdit());
         _;
-    }
-
-    function migrate(address _contentType,
-            address _addressKMS,
-            address _contentContractAddress,
-            // address _libraryAddress,
-            uint256 _accessCharge,
-            int _statusCode,
-            uint256 _requestID,
-            uint8 _visibility,
-            string _objectHash,
-            string _versionHashes
-        ) public {
-
-        Ownable space = Ownable(contentSpace);
-	    require(msg.sender == space.owner());
-
-        contentType = _contentType;
-        addressKMS = _addressKMS;
-        contentContractAddress = _contentContractAddress;
-        // libraryAddress = _libraryAddress; // TODO: set by library factory method?
-
-        accessCharge = _accessCharge;
-        statusCode = _statusCode;
-        requestID = _requestID;
-        visibility = _visibility;
-
-        super.migrate(_objectHash, _versionHashes);
-
-        return;
     }
 
     mapping(uint256 => RequestData) public requestMap;
@@ -385,14 +356,6 @@ contract BaseContent is Editable {
             emit LogPayment(request_ID, label, payee, amount);
         }
     }
-
-    event DbgAccess(
-        uint256 charged,
-        uint received,
-        uint converted,
-        bool enough
-    );
-    event DbgAccessCode(uint8 code);
 
     function updateRequest() public {
         if (contentContractAddress == 0x0) {
