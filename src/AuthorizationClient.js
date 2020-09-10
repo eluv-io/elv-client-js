@@ -781,7 +781,8 @@ class AuthorizationClient {
       methodArgs: args
     });
 
-    return info[2];
+    // Info: [visibility, hasAccess, accessCharge]
+    return info[1] === 0 ? 0 : info[2];
   }
 
   async Owner({id, address}) {

@@ -1357,7 +1357,7 @@ function () {
 
             case 7:
               info = _context15.sent;
-              return _context15.abrupt("return", info[2]);
+              return _context15.abrupt("return", info[1] === 0 ? 0 : info[2]);
 
             case 9:
             case "end":
