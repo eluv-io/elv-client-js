@@ -269,14 +269,18 @@ const Create = async ({
         console.warn(warnings.join("\n"), "\n");
       }
 
-      // Check if resulting variant has an audio stream
-      const audioStream = (await client.ContentObjectMetadata({
+      // Check if resulting variant has an audio and video stream
+      const streams = (await client.ContentObjectMetadata({
         libraryId: library,
         objectId: id,
-        metadataSubtree: "/production_master/variants/default/streams/audio"
+        versionHash: hash,
+        metadataSubtree: "/production_master/variants/default/streams"
       }));
-      if(!audioStream) {
+      if(!streams.hasOwnProperty("audio")) {
         console.warn("\nWARNING: no suitable audio found\n");
+      }
+      if(!streams.hasOwnProperty("video")) {
+        console.warn("\nWARNING: no video found\n");
       }
 
 
