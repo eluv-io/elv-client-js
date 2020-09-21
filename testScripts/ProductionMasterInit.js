@@ -89,6 +89,24 @@ const ProductionMasterInit = async ({libraryId, objectId, access, elvGeo}) => {
         console.log(logs.join("\n"), "\n");
       }
 
+      // Check if all variants in resulting master has an audio and video stream
+      const variants = (await client.ContentObjectMetadata({
+        libraryId: libraryId,
+        objectId: objectId,
+        versionHash: finalizeResponse.hash,
+        metadataSubtree: "/production_master/variants"
+      }));
+      console.log("variants: " + variants);
+      for(let variant in variants){
+        let streams = variants[variant].streams;
+        if(!streams.hasOwnProperty("audio")) {
+          console.warn("\nWARNING: no suitable audio found for variant '" + variant + "'");
+        }
+        if(!streams.hasOwnProperty("video")) {
+          console.warn("\nWARNING: no video found for variant '" + variant + "'");
+        }
+      }
+
       console.log("New version hash: " + finalizeResponse.hash + "\n");
 
     } catch(error) {
