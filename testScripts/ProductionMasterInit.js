@@ -96,7 +96,6 @@ const ProductionMasterInit = async ({libraryId, objectId, access, elvGeo}) => {
         versionHash: finalizeResponse.hash,
         metadataSubtree: "/production_master/variants"
       }));
-      console.log("variants: " + variants);
       for(let variant in variants){
         let streams = variants[variant].streams;
         if(!streams.hasOwnProperty("audio")) {
