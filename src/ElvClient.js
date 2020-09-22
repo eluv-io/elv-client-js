@@ -664,33 +664,38 @@ class ElvClient {
   /**
    * Encrypt the given string or object with the current signer's public key
    *
+   * @namedParams
    * @param {string | Object} message - The string or object to encrypt
+   * @param {string=} publicKey - If specified, message will be encrypted with this public key instead of the current user's
+   *
    * @return {Promise<string>} - The encrypted message
    */
-  async EncryptECIES(message) {
+  async EncryptECIES({message, publicKey}) {
     if(!this.signer) {
       throw "Signer not set";
     }
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.EncryptConk(message, this.signer.signingKey.keyPair.publicKey);
+    return await this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey);
   }
 
   /**
    * Decrypt the given encrypted message with the current signer's private key
    *
+   * @namedParams
    * @param {string} message - The message to decrypt
+   *
    * @return {Promise<string | Object>} - The decrypted string or object
    */
-  async DecryptECIES(message) {
+  async DecryptECIES({message}) {
     if(!this.signer) {
       throw "Signer not set";
     }
 
     ValidatePresence("message", message);
 
-    return await this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey);
+    return await this.Crypto.DecryptCap(message, publicKey || this.signer.signingKey.privateKey);
   }
 
   /**
