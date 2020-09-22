@@ -679,7 +679,7 @@ exports.LinkAccessGroupToOauth = async function({groupAddress, kmsId, oauthConfi
   const kmsConfig = await this.Crypto.EncryptConk(oauthConfig, publicKey);
 
   const userKey = `eluv.jwtv.iusr${this.utils.AddressToHash(this.signer.address)}`;
-  const userConfig = await this.EncryptECIES(oauthConfig);
+  const userConfig = await this.EncryptECIES({message: oauthConfig});
 
   const objectId = this.utils.AddressToObjectId(groupAddress);
   const writeToken = (await this.EditContentObject({libraryId: this.contentSpaceLibraryId, objectId})).write_token;

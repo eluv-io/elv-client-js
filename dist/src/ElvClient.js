@@ -786,33 +786,39 @@ function () {
     /**
      * Encrypt the given string or object with the current signer's public key
      *
+     * @namedParams
      * @param {string | Object} message - The string or object to encrypt
+     * @param {string=} publicKey - If specified, message will be encrypted with this public key instead of the current user's
+     *
      * @return {Promise<string>} - The encrypted message
      */
 
   }, {
     key: "EncryptECIES",
-    value: function EncryptECIES(message) {
+    value: function EncryptECIES(_ref13) {
+      var message, publicKey;
       return _regeneratorRuntime.async(function EncryptECIES$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
+              message = _ref13.message, publicKey = _ref13.publicKey;
+
               if (this.signer) {
-                _context8.next = 2;
+                _context8.next = 3;
                 break;
               }
 
               throw "Signer not set";
 
-            case 2:
+            case 3:
               ValidatePresence("message", message);
-              _context8.next = 5;
-              return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(message, this.signer.signingKey.keyPair.publicKey));
-
-            case 5:
-              return _context8.abrupt("return", _context8.sent);
+              _context8.next = 6;
+              return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey));
 
             case 6:
+              return _context8.abrupt("return", _context8.sent);
+
+            case 7:
             case "end":
               return _context8.stop();
           }
@@ -822,33 +828,38 @@ function () {
     /**
      * Decrypt the given encrypted message with the current signer's private key
      *
+     * @namedParams
      * @param {string} message - The message to decrypt
+     *
      * @return {Promise<string | Object>} - The decrypted string or object
      */
 
   }, {
     key: "DecryptECIES",
-    value: function DecryptECIES(message) {
+    value: function DecryptECIES(_ref14) {
+      var message;
       return _regeneratorRuntime.async(function DecryptECIES$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
+              message = _ref14.message;
+
               if (this.signer) {
-                _context9.next = 2;
+                _context9.next = 3;
                 break;
               }
 
               throw "Signer not set";
 
-            case 2:
+            case 3:
               ValidatePresence("message", message);
-              _context9.next = 5;
-              return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey));
-
-            case 5:
-              return _context9.abrupt("return", _context9.sent);
+              _context9.next = 6;
+              return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(message, publicKey || this.signer.signingKey.privateKey));
 
             case 6:
+              return _context9.abrupt("return", _context9.sent);
+
+            case 7:
             case "end":
               return _context9.stop();
           }
@@ -869,15 +880,15 @@ function () {
 
   }, {
     key: "Request",
-    value: function Request(_ref13) {
-      var url = _ref13.url,
-          _ref13$format = _ref13.format,
-          format = _ref13$format === void 0 ? "json" : _ref13$format,
-          _ref13$method = _ref13.method,
-          method = _ref13$method === void 0 ? "GET" : _ref13$method,
-          _ref13$headers = _ref13.headers,
-          headers = _ref13$headers === void 0 ? {} : _ref13$headers,
-          body = _ref13.body;
+    value: function Request(_ref15) {
+      var url = _ref15.url,
+          _ref15$format = _ref15.format,
+          format = _ref15$format === void 0 ? "json" : _ref15$format,
+          _ref15$method = _ref15.method,
+          method = _ref15$method === void 0 ? "GET" : _ref15$method,
+          _ref15$headers = _ref15.headers,
+          headers = _ref15$headers === void 0 ? {} : _ref15$headers,
+          body = _ref15.body;
       return this.utils.ResponseToFormat(format, HttpClient.Fetch(url, {
         method: method,
         headers: headers,
@@ -999,14 +1010,14 @@ function () {
     }
   }], [{
     key: "Configuration",
-    value: function Configuration(_ref14) {
-      var configUrl, _ref14$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, fabricVersion;
+    value: function Configuration(_ref16) {
+      var configUrl, _ref16$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, fabricVersion;
 
       return _regeneratorRuntime.async(function Configuration$(_context12) {
         while (1) {
           switch (_context12.prev = _context12.next) {
             case 0:
-              configUrl = _ref14.configUrl, _ref14$kmsUrls = _ref14.kmsUrls, kmsUrls = _ref14$kmsUrls === void 0 ? [] : _ref14$kmsUrls, region = _ref14.region;
+              configUrl = _ref16.configUrl, _ref16$kmsUrls = _ref16.kmsUrls, kmsUrls = _ref16$kmsUrls === void 0 ? [] : _ref16$kmsUrls, region = _ref16.region;
               _context12.prev = 1;
               uri = new URI(configUrl);
 
@@ -1148,14 +1159,14 @@ function () {
 
   }, {
     key: "FromConfigurationUrl",
-    value: function FromConfigurationUrl(_ref15) {
-      var configUrl, region, trustAuthorityId, staticToken, _ref15$noCache, noCache, _ref15$noAuth, noAuth, _ref16, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
+    value: function FromConfigurationUrl(_ref17) {
+      var configUrl, region, trustAuthorityId, staticToken, _ref17$noCache, noCache, _ref17$noAuth, noAuth, _ref18, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
             case 0:
-              configUrl = _ref15.configUrl, region = _ref15.region, trustAuthorityId = _ref15.trustAuthorityId, staticToken = _ref15.staticToken, _ref15$noCache = _ref15.noCache, noCache = _ref15$noCache === void 0 ? false : _ref15$noCache, _ref15$noAuth = _ref15.noAuth, noAuth = _ref15$noAuth === void 0 ? false : _ref15$noAuth;
+              configUrl = _ref17.configUrl, region = _ref17.region, trustAuthorityId = _ref17.trustAuthorityId, staticToken = _ref17.staticToken, _ref17$noCache = _ref17.noCache, noCache = _ref17$noCache === void 0 ? false : _ref17$noCache, _ref17$noAuth = _ref17.noAuth, noAuth = _ref17$noAuth === void 0 ? false : _ref17$noAuth;
               _context13.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
@@ -1163,11 +1174,11 @@ function () {
               }));
 
             case 3:
-              _ref16 = _context13.sent;
-              contentSpaceId = _ref16.contentSpaceId;
-              fabricURIs = _ref16.fabricURIs;
-              ethereumURIs = _ref16.ethereumURIs;
-              fabricVersion = _ref16.fabricVersion;
+              _ref18 = _context13.sent;
+              contentSpaceId = _ref18.contentSpaceId;
+              fabricURIs = _ref18.fabricURIs;
+              ethereumURIs = _ref18.ethereumURIs;
+              fabricVersion = _ref18.fabricVersion;
               client = new ElvClient({
                 contentSpaceId: contentSpaceId,
                 fabricVersion: fabricVersion,
