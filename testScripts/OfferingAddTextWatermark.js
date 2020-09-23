@@ -25,16 +25,18 @@ class OfferingAddTextWatermark extends ScriptOffering {
 
     const metadata = await client.ContentObjectMetadata({libraryId: libraryId, objectId: objectId});
 
-    // read from metadata top level key 'offerings'
-    if(!metadata.offerings) {
-      console.log("top level metadata key \"offerings\" not found");
+    this.validateOffering(metadata, offeringKey);
+
+    const targetOffering = metadata.offerings[offeringKey];
+    if (targetOffering.image_watermark != null) {
+      this.throwError("Offering already has a text watermark, " +
+          "currently adding both kinds of watermarks on same offering is not supported. " +
+          "Please run OfferingRemoveTextWatermark.js first to remove the text watermark");
+
     }
 
-    if(!metadata.offerings[offeringKey]) {
-      console.log("top level metadata key \"offerings\" does not contain a \"" + offeringKey + "\" offering");
-    }
+    targetOffering.simple_watermark = watermarkJson;
 
-    metadata.offerings[offeringKey].simple_watermark = watermarkJson;
     console.log("");
     console.log("Writing metadata back to object.");
     const {write_token} = await client.EditContentObject({
