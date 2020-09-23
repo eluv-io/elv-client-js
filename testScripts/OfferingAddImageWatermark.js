@@ -17,12 +17,53 @@ class OfferingAddImageWatermark extends ScriptOffering {
 
         // client.ToggleLogging(true);
 
-        let wallet = client.GenerateWallet();
-        let signer = wallet.AddAccount({
-            privateKey: process.env.PRIVATE_KEY
-        });
-        await client.SetSigner({signer});
+        console.log("Retrieving mezzanine metadata...");
 
+        let metadata = await client.ContentObjectMetadata({libraryId, objectId});
+
+        // read from metadata top level key 'offerings'
+        if (!metadata.offerings) {
+            console.log(`top level metadata key "offerings" not found`);
+        }
+
+        const offeringExists = metadata.offerings.hasOwnProperty(offeringKey);
+
+        // if the offering doesn't exist, or if --copyOffering was specified, we will be copying from an existing offering
+        const copying = (!offeringExists || copyOffering);
+
+        // if we are copying, and no --copyOffering was specified, try to copy from default offering
+        if (copying && !copyOffering) {
+            copyOffering = "default"
+            console.log("Using default offering as template...")
+        }
+
+        let targetOffering = null;
+
+        if (copying) {
+            // See if copyOffering exists
+            if (!metadata.offerings.hasOwnProperty(copyOffering)) {
+                console.log(`top level metadata key "offerings" does not contain an offering with key: "` + copyOffering + `"`);
+                return
+            }
+            targetOffering = Object.assign({}, metadata.offerings[copyOffering]);
+        } else {
+            if (!offeringExists) {
+                console.log(`top level metadata key "offerings" does not contain an offering with key: "` + offeringKey + `"`);
+                return
+            }
+
+            targetOffering = Object.assign({}, metadata.offerings[offeringKey]);
+        }
+
+        console.log(offeringKey);
+        if (targetOffering.simple_watermark) {
+            this.throwError("Offering already has a text watermark, " +
+                "currently adding both kinds of watermarks on same offering is not supported. " +
+                "Please run OfferingRemoveTextWatermark.js first to remove the text watermark");
+
+        }
+
+        console.log("Adding image watermark file...");
         // if image path is of form "./filename" then look for it and upload it
         const re = new RegExp("^\\./([^/]+)$");
         const match = re.exec(watermarkJson.image);
@@ -62,43 +103,6 @@ class OfferingAddImageWatermark extends ScriptOffering {
                 console.log("New hash: " + response.hash);
                 watermarkJson.image = "/qfab/" + response.hash + "/files/" + path.basename(imagePath);
             }
-        }
-
-        console.log("Retrieving mezzanine metadata...");
-
-        let metadata = await client.ContentObjectMetadata({libraryId, objectId});
-
-        // read from metadata top level key 'offerings'
-        if (!metadata.offerings) {
-            console.log(`top level metadata key "offerings" not found`);
-        }
-
-        const offeringExists = metadata.offerings.hasOwnProperty(offeringKey);
-
-        // if the offering doesn't exist, or if --copyOffering was specified, we will be copying from an existing offering
-        const copying = (!offeringExists || copyOffering);
-
-        // if we are copying, and no --copyOffering was specified, try to copy from default offering
-        if (copying && !copyOffering) {
-            copyOffering = "default"
-            console.log("Using default offering as template...")
-        }
-
-        let targetOffering = null;
-
-        if (copying) {
-            // See if copyOffering exists
-            if (!metadata.offerings.hasOwnProperty(copyOffering)) {
-                console.log(`top level metadata key "offerings" does not contain an offering with key: "` + copyOffering + `"`);
-                return
-            }
-            targetOffering = Object.assign({}, metadata.offerings[copyOffering]);
-        } else {
-            if (!offeringExists) {
-                console.log(`top level metadata key "offerings" does not contain an offering with key: "` + offeringKey + `"`);
-                return
-            }
-            targetOffering = Object.assign({}, metadata.offerings[offeringKey]);
         }
 
         targetOffering.image_watermark = watermarkJson;
