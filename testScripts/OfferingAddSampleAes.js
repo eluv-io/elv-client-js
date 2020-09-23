@@ -58,11 +58,11 @@ class OfferingAddSampleAes extends ScriptOffering {
       }
     }
 
-    await this.metadataWrite(metdata);
+    await this.metadataWrite(metadata);
   }
 
   header() {
-    return "Adding HLS SampleAes DRM  playout_format to mezzanine offering '" + this.args.offeringKey + "'... ";
+    return "Adding HLS SampleAes DRM playout_format to mezzanine offering '" + this.args.offeringKey + "'... ";
   }
 
 }
