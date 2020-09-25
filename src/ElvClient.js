@@ -661,6 +661,17 @@ class ElvClient {
     };
   }
 
+  async GetOTP({tenantId, otpId}) {
+    const params = [tenantId, otpId, "", Date.now()];
+    const paramTypes = ["string", "string", "string", "uint"];
+
+    return await this.authClient.MakeKMSCall({
+      methodName: "elv_getOTP",
+      params,
+      paramTypes
+    });
+  };
+
   /**
    * Encrypt the given string or object with the current signer's public key
    *
