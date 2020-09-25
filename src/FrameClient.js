@@ -360,6 +360,7 @@ class FrameClient {
       "FormatContractArguments",
       "GenerateStateChannelToken",
       "GetBalance",
+      "GetOTP",
       "LatestVersionHash",
       "LibraryContentTypes",
       "LinkAccessGroupToOauth",
