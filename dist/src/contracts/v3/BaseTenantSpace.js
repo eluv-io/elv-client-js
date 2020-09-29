@@ -1282,6 +1282,9 @@ var contract = {
     }, {
       "name": "_tenantName",
       "type": "string"
+    }, {
+      "name": "_kmsAddr",
+      "type": "address"
     }],
     "payable": true,
     "stateMutability": "payable",

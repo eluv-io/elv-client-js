@@ -31,28 +31,6 @@ contract BaseContentType is Editable {
         visibility = 0;
         indexCategory =  4; // AccessIndexor CATEGORY_CONTENT_TYPE
     }
-/*
-    function canEdit() public view returns (bool) {
-        if (visibility >= 100) {
-         return true;
-        }
-        IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address walletAddress = userSpaceObj.userWallets(tx.origin);
-        AccessIndexor wallet = AccessIndexor(walletAddress);
-        return wallet.checkContentTypeRights(address(this), wallet.TYPE_EDIT());
-    }
-*/
-/*
-    function hasAccess(address _candidate) public constant returns (bool) {
-        if ((visibility < 10 ) || (_candidate == owner)) {
-            IUserSpace userSpaceObj = IUserSpace(contentSpace);
-            address walletAddress = userSpaceObj.userWallets(_candidate);
-            AccessIndexor wallet = AccessIndexor(walletAddress);
-            return wallet.checkContentTypeRights(address(this), wallet.TYPE_ACCESS());
-        }
-        return true;
-    }
-*/
 
     function canCommit() public view returns (bool) {
         return canEdit();
@@ -62,5 +40,4 @@ contract BaseContentType is Editable {
         INodeSpace spc = INodeSpace(contentSpace);
         return spc.canNodePublish(msg.sender);
     }
-
 }
