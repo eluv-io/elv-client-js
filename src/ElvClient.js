@@ -585,6 +585,7 @@ class ElvClient {
    */
   async RedeemCode({issuer, code, email}) {
     const wallet = this.GenerateWallet();
+
     if(!this.signer) {
       this.SetSigner({
         signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
@@ -670,7 +671,7 @@ class ElvClient {
       params,
       paramTypes
     });
-  };
+  }
 
   /**
    * Encrypt the given string or object with the current signer's public key
