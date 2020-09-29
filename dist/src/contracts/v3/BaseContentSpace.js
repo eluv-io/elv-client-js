@@ -1006,17 +1006,6 @@ var contract = {
     "type": "function"
   }, {
     "constant": false,
-    "inputs": [],
-    "name": "engageAccountLibrary",
-    "outputs": [{
-      "name": "",
-      "type": "address"
-    }],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }, {
-    "constant": false,
     "inputs": [{
       "name": "address_KMS",
       "type": "address"

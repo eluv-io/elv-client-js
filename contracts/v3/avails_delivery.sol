@@ -38,7 +38,7 @@ contract AvailsDelivery is Content {
 
     function setAvailability(address content, bool sd,bool hd, uint start, uint end, address region ) public {
         BaseContent c = BaseContent(content);
-        require(tx.origin == c.owner());
+        require(msg.sender == c.owner());
         uint startDate = start;
         if (startDate == 0) {
             startDate = now;
@@ -48,7 +48,7 @@ contract AvailsDelivery is Content {
 
     function setAccessorGroup(address content, address accessor) public {
         BaseContent c = BaseContent(content);
-        require(tx.origin == c.owner());
+        require(msg.sender == c.owner());
         accessors[content] = accessor;
     }
 

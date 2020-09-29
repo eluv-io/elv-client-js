@@ -2,6 +2,7 @@ pragma solidity 0.4.24;
 
 import "./ownable.sol";
 import {IUserSpace} from "./base_space_interfaces.sol";
+import "./editable.sol";
 
 /* -- Revision history --
 AccessIndexor20190423111800ML: First versioned release
@@ -13,14 +14,15 @@ AccessIndexor20190801141000ML: Adds method to provide ACCESS right to the caller
 AccessIndexor20191113202400ML: Ensures accessor has at least access right to a group to benefit from group rights
 AccessIndexor20200110100200ML: Removes debug events
 AccessIndexor20200204144400ML: Fixes lookup of group based rights to check group membership vs. visibility only
-AccessIndexor20200316121400ML: replaces entity-specific set and check rights with generic one that uses index-type
-AccessIndexor20200410215200ML: disambiguate setRights by renaming setEntityRights
+AccessIndexor20200316121400ML: Replaces entity-specific set and check rights with generic one that uses index-type
+AccessIndexor20200410215200ML: Disambiguate setRights by renaming setEntityRights
+AccessIndexor20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 
 contract AccessIndexor is Ownable {
 
-    bytes32 public version = "AccessIndexor20200410215200ML";
+    bytes32 public version = "AccessIndexor20200928110000PO";
 
     event RightsChanged(address principal, address entity, uint8 aggregate);
 
@@ -107,28 +109,6 @@ contract AccessIndexor is Ownable {
     function setContractRights(address obj, uint8 access_type, uint8 access) public  {
         setRightsInternal(contracts, obj, access_type, access);
     }
-
-    /*
-    function checkLibraryRights(address lib, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_LIBRARY, lib, access_type);
-    }
-
-    function checkAccessGroupRights(address group, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_GROUP, group, access_type);
-    }
-
-    function checkContentObjectRights(address obj, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_CONTENT_OBJECT, obj, access_type);
-    }
-
-    function checkContentTypeRights(address obj, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_CONTENT_TYPE, obj, access_type);
-    }
-
-    function checkContractRights(address obj, uint8 access_type) public view returns(bool) {
-        return checkRights(CATEGORY_CONTRACT, obj, access_type);
-    }
-    */
 
     function getLibraryRights(address lib) public view returns(uint8) {
         return libraries.rights[lib];
@@ -267,12 +247,18 @@ contract AccessIndexor is Ownable {
     // Object rights holders can grant confirm if they are also Wallet manager
     //access is either ACCESS_NONE (0), or any uint8 > 0, the current rights and privilege of granter and grantee will drive the new rights values
     function setRightsInternal(AccessIndex storage index, address obj, uint8 access_type, uint8 access) private  {
-        bool isIndexorManager = hasManagerAccess(tx.origin);
-        bool isObjRightHolder = false;
-        IUserSpace space = IUserSpace(contentSpace);
-        address walletAddress = space.userWallets(tx.origin);
-        AccessIndexor wallet = AccessIndexor(walletAddress);
-        isObjRightHolder = wallet.checkRights(index.category, obj, TYPE_EDIT);
+
+        bool isIndexorManager = false;
+        bool isObjRightHolder = true;
+        // if we proxy through an object then it's the job of the calling object to auth the call correctly
+        if (msg.sender != obj) {
+            Editable e = Editable(obj);
+            isObjRightHolder = e.hasEditorRight(msg.sender);
+            isIndexorManager = hasManagerAccess(msg.sender);
+        } else {
+            // if we are being proxied through the target object then it is safe and correct to use tx.origin
+            isIndexorManager = hasManagerAccess(tx.origin);
+        }
 
         uint8 currentAggregate = index.rights[obj];
         uint8[3] memory currentRights;

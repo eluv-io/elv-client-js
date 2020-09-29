@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.4.24;
 
 import {Ownable} from "./ownable.sol";
 import {Accessible} from "./accessible.sol";
@@ -77,12 +77,13 @@ contract BaseTenantSpace is MetaObject, CounterObject, Accessible, Container, IU
     event CreateTenant(bytes32 version, address owner);
     event GetAccessWallet(address walletAddress);
 
-    constructor(address _contentSpace, string _tenantName) public payable {
+    constructor(address _contentSpace, string _tenantName, address _kmsAddr) public payable {
         name = _tenantName;
         BaseContentSpace spc = BaseContentSpace(_contentSpace);
         // allow either the space owner or a trusted address to refer to the space
         require(msg.sender == spc.owner() || spc.checkKMSAddr(msg.sender) > 0);
         contentSpace = address(_contentSpace);
+        addressKMS = _kmsAddr;
         emit CreateTenant(version, owner);
     }
 
