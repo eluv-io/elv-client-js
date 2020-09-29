@@ -1183,7 +1183,9 @@ exports.LinkAccessGroupToOauth = function _callee23(_ref19) {
           kmsConfig = _context23.sent;
           userKey = "eluv.jwtv.iusr".concat(this.utils.AddressToHash(this.signer.address));
           _context23.next = 16;
-          return _regeneratorRuntime.awrap(this.EncryptECIES(oauthConfig));
+          return _regeneratorRuntime.awrap(this.EncryptECIES({
+            message: oauthConfig
+          }));
 
         case 16:
           userConfig = _context23.sent;
