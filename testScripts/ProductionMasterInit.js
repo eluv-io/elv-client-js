@@ -99,10 +99,10 @@ const ProductionMasterInit = async ({libraryId, objectId, access, elvGeo}) => {
       for(let variant in variants){
         let streams = variants[variant].streams;
         if(!streams.hasOwnProperty("audio")) {
-          console.warn("\nWARNING: no suitable audio found for variant '" + variant + "'");
+          console.warn("\nWARNING: no audio stream found.\n");
         }
         if(!streams.hasOwnProperty("video")) {
-          console.warn("\nWARNING: no video found for variant '" + variant + "'");
+          console.warn("\nWARNING: no video stream found.\n");
         }
       }
 

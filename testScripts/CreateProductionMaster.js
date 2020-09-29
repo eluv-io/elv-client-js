@@ -277,10 +277,10 @@ const Create = async ({
         metadataSubtree: "/production_master/variants/default/streams"
       }));
       if(!streams.hasOwnProperty("audio")) {
-        console.warn("\nWARNING: no suitable audio found\n");
+        console.warn("\nWARNING: no audio stream found\n");
       }
       if(!streams.hasOwnProperty("video")) {
-        console.warn("\nWARNING: no video found\n");
+        console.warn("\nWARNING: no video stream found\n");
       }
 
 

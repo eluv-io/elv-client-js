@@ -28,16 +28,15 @@ class OfferingAddTextWatermark extends ScriptOffering {
     this.validateOffering(metadata, offeringKey);
 
     const targetOffering = metadata.offerings[offeringKey];
-    if (targetOffering.image_watermark != null) {
+    if(targetOffering.image_watermark != null) {
       this.throwError("Offering already has a text watermark, " +
           "currently adding both kinds of watermarks on same offering is not supported. " +
-          "Please run OfferingRemoveTextWatermark.js first to remove the text watermark");
+          "Please run OfferingRemoveTextWatermark.js first to remove the text watermark.");
 
     }
 
     targetOffering.simple_watermark = watermarkJson;
 
-    console.log("");
     console.log("Writing metadata back to object.");
     const {write_token} = await client.EditContentObject({
       libraryId: libraryId,
