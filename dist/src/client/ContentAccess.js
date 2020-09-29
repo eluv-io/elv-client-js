@@ -1271,13 +1271,13 @@ exports.ProduceMetadataLinks = function _callee19(_ref13) {
 };
 
 exports.MetadataAuth = function _callee20(_ref14) {
-  var libraryId, objectId, versionHash, _ref14$path, path, visibility, accessType, isPublic, noAuth, kmsAddress;
+  var libraryId, objectId, versionHash, _ref14$path, path, _ref14$channelAuth, channelAuth, visibility, accessType, isPublic, noAuth, kmsAddress;
 
   return _regeneratorRuntime.async(function _callee20$(_context20) {
     while (1) {
       switch (_context20.prev = _context20.next) {
         case 0:
-          libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash, _ref14$path = _ref14.path, path = _ref14$path === void 0 ? "/" : _ref14$path;
+          libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash, _ref14$path = _ref14.path, path = _ref14$path === void 0 ? "/" : _ref14$path, _ref14$channelAuth = _ref14.channelAuth, channelAuth = _ref14$channelAuth === void 0 ? false : _ref14$channelAuth;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1337,7 +1337,7 @@ exports.MetadataAuth = function _callee20(_ref14) {
           return _context20.abrupt("return", _context20.sent);
 
         case 19:
-          if (!(isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT)) {
+          if (!(isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth)) {
             _context20.next = 36;
             break;
           }
@@ -1380,7 +1380,8 @@ exports.MetadataAuth = function _callee20(_ref14) {
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            noAuth: noAuth
+            noAuth: noAuth,
+            channelAuth: channelAuth
           }));
 
         case 38:
@@ -3200,19 +3201,20 @@ exports.LinkTarget = function _callee36(_ref29) {
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
  */
 
 
 exports.LinkUrl = function _callee37(_ref30) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref30$queryParams, queryParams, path;
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref30$queryParams, queryParams, _ref30$channelAuth, channelAuth, path;
 
   return _regeneratorRuntime.async(function _callee37$(_context37) {
     while (1) {
       switch (_context37.prev = _context37.next) {
         case 0:
-          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, writeToken = _ref30.writeToken, linkPath = _ref30.linkPath, mimeType = _ref30.mimeType, _ref30$queryParams = _ref30.queryParams, queryParams = _ref30$queryParams === void 0 ? {} : _ref30$queryParams;
+          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, writeToken = _ref30.writeToken, linkPath = _ref30.linkPath, mimeType = _ref30.mimeType, _ref30$queryParams = _ref30.queryParams, queryParams = _ref30$queryParams === void 0 ? {} : _ref30$queryParams, _ref30$channelAuth = _ref30.channelAuth, channelAuth = _ref30$channelAuth === void 0 ? false : _ref30$channelAuth;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3249,7 +3251,8 @@ exports.LinkUrl = function _callee37(_ref30) {
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            path: linkPath
+            path: linkPath,
+            channelAuth: channelAuth
           }));
 
         case 12:
@@ -3286,25 +3289,29 @@ exports.LinkUrl = function _callee37(_ref30) {
  * @param {string=} versionHash - Hash of an object version
  * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
+ * @param {Object=} queryParams - Query params to add to the URL
  * @param {string=} format=json - Format of the response
+ * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
  */
 
 
 exports.LinkData = function _callee38(_ref31) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, _ref31$format, format, linkUrl;
+  var libraryId, objectId, versionHash, writeToken, linkPath, _ref31$queryParams, queryParams, _ref31$format, format, channelAuth, linkUrl;
 
   return _regeneratorRuntime.async(function _callee38$(_context38) {
     while (1) {
       switch (_context38.prev = _context38.next) {
         case 0:
-          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath, _ref31$format = _ref31.format, format = _ref31$format === void 0 ? "json" : _ref31$format;
+          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath, _ref31$queryParams = _ref31.queryParams, queryParams = _ref31$queryParams === void 0 ? {} : _ref31$queryParams, _ref31$format = _ref31.format, format = _ref31$format === void 0 ? "json" : _ref31$format, channelAuth = _ref31.channelAuth;
           _context38.next = 3;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
             writeToken: writeToken,
-            linkPath: linkPath
+            linkPath: linkPath,
+            queryParams: queryParams,
+            channelAuth: channelAuth
           }));
 
         case 3:

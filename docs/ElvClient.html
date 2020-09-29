@@ -1439,7 +1439,7 @@ automatically import the client settings from the fabric</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="DecryptECIES">
-      <span class="type-signature">async </span>DecryptECIES<span class="signature">(<span class="inline-param">message</span>)</span><span class="type-signature"> &rarr;  Promise.&lt;(string|Object)></span>
+      <span class="type-signature">async </span>DecryptECIES<span class="signature">({<span class="inline-param">message</span>})</span><span class="type-signature"> &rarr;  Promise.&lt;(string|Object)></span>
     </h4>
   </span>
 
@@ -1569,7 +1569,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line686">line 686</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line702">line 702</a>
         </li>
       </ul>
     </dd>
@@ -1592,7 +1592,7 @@ automatically import the client settings from the fabric</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="EncryptECIES">
-      <span class="type-signature">async </span>EncryptECIES<span class="signature">(<span class="inline-param">message</span>)</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">async </span>EncryptECIES<span class="signature">({<div class="block-param">message,</div><div class="block-param">publicKey<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -1634,6 +1634,8 @@ automatically import the client settings from the fabric</p>
       <th>Type</th>
 
       
+        <th>Attributes</th>
+      
 
       
 
@@ -1668,11 +1670,58 @@ automatically import the client settings from the fabric</p>
         </td>
 
         
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
 
         
 
         <td class="description last">
           <p>The string or object to encrypt</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>publicKey</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>If specified, message will be encrypted with this public key instead of the current user's</p>
           
         </td>
       </tr>
@@ -1728,7 +1777,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line670">line 670</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line684">line 684</a>
         </li>
       </ul>
     </dd>
@@ -2743,7 +2792,7 @@ automatically import the client settings from the fabric</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line707">line 707</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line723">line 723</a>
         </li>
       </ul>
     </dd>

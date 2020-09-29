@@ -225,8 +225,8 @@ await client.UploadFiles({
   writeToken,
   fileInfo: [
     {
-      path: "VideoFile.mp4",
-      mime_type: "video/mp4",
+      path: "image.jpg",
+      mime_type: "image/jpeg",
       size: 10000,
       data: (<ArrayBuffer 10000>)
     }

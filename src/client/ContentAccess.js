@@ -690,6 +690,7 @@ exports.MetadataAuth = async function({
   objectId,
   versionHash,
   path="/",
+  channelAuth=false
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
 
@@ -716,14 +717,14 @@ exports.MetadataAuth = async function({
     }
   }
 
-  if(isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT) {
+  if(isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth) {
     // Content object public metadata can be accessed using library access request
     return await this.authClient.AuthorizationToken({
       libraryId: libraryId || await this.ContentObjectLibraryId({objectId, versionHash}),
       noAuth
     });
   } else {
-    return await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noAuth});
+    return await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noAuth, channelAuth});
   }
 };
 
@@ -1776,10 +1777,11 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
  */
-exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, linkPath, mimeType, queryParams={}}) {
+exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, linkPath, mimeType, queryParams={}, channelAuth=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
@@ -1797,7 +1799,7 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
   queryParams = {
     ...queryParams,
     resolve: true,
-    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath})
+    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth})
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }
@@ -1818,10 +1820,12 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
  * @param {string=} versionHash - Hash of an object version
  * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
+ * @param {Object=} queryParams - Query params to add to the URL
  * @param {string=} format=json - Format of the response
+ * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
  */
-exports.LinkData = async function({libraryId, objectId, versionHash, writeToken, linkPath, format="json"}) {
-  const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, writeToken, linkPath});
+exports.LinkData = async function({libraryId, objectId, versionHash, writeToken, linkPath, queryParams={}, format="json", channelAuth}) {
+  const linkUrl = await this.LinkUrl({libraryId, objectId, versionHash, writeToken, linkPath, queryParams, channelAuth});
 
   return this.utils.ResponseToFormat(
     format,
