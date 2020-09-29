@@ -21,12 +21,13 @@ BsAccessCtrlGrp20190723165900ML: Fixes deletion/adding to groups
 BsAccessCtrlGrp20200204160600ML: Removes commented out sections
 BsAccessCtrlGrp20200305113000ML: Overloads checkRights to reflect difference between groups and wallets
 BsAccessCtrlGrp20200316121700ML: Leverages inherited hasAccess
+BsAccessCtrlGrp20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 
 contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Editable {
 
-    bytes32 public version ="BsAccessCtrlGrp20200316121700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BsAccessCtrlGrp20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public membersList;
     uint256 public membersNum;
@@ -113,6 +114,14 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         tenant = _tenantAddr;
     }
 
+    // overload ...
+    function hasEditorRight(address _candidate) public view returns (bool) {
+        if (_candidate == tenant) {
+            return true;
+        }
+        return super.hasEditorRight(_candidate);
+    }
+
     function hasManagerAccess(address _candidate) public view returns (bool) {
         return _candidate == tenant || hasEditorRight(_candidate);
     }
@@ -164,12 +173,6 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(candidate, TYPE_ACCESS, ACCESS_NONE);
     }
 
-    /*
-    function hasAccess(address candidate) public view returns (bool) {
-        return hasAccessRight(candidate, false);
-    }
-*/
-
     function canConfirm() public view returns (bool) {
         INodeSpace ns = INodeSpace(contentSpace);
         return ns.canNodePublish(msg.sender);
@@ -178,5 +181,4 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
     function checkRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
         return checkDirectRights(index_type, obj, access_type);
     }
-
 }

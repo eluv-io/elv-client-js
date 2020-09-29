@@ -96,6 +96,14 @@ var contract = {
     "stateMutability": "nonpayable",
     "type": "function"
   }, {
+    "inputs": [{
+      "name": "_spaceAddr",
+      "type": "address"
+    }],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  }, {
     "payable": true,
     "stateMutability": "payable",
     "type": "fallback"

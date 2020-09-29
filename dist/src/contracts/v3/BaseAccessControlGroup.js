@@ -642,7 +642,7 @@ var contract = {
   }, {
     "constant": true,
     "inputs": [{
-      "name": "candidate",
+      "name": "_candidate",
       "type": "address"
     }],
     "name": "hasEditorRight",

@@ -30,11 +30,13 @@ BaseContentSpace20190605144600ML: Implements canConfirm to overloads default fro
 BaseContentSpace20190801140400ML: Breaks AccessGroup creation to its own factory
 BaseContentSpace20200309155700ML: Removes import of recording custom contract. To get all events, media_platform.sol should be used
 BaseContentSpace20200316120600ML: Defaults visibility to ensure access is open
+BaseContentSpace20200626120600PO: authv3 changes
+BaseContentSpace20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
-    bytes32 public version ="BaseContentSpace20200626120600PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContentSpace20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     string public name;
     string public description;
@@ -111,47 +113,47 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     }
 
     function createContentType() public returns (address) {
+        require(msg.sender == tx.origin);
         address contentTypeAddress = BaseFactory(factory).createContentType();
         emit CreateContentType(contentTypeAddress);
         return contentTypeAddress;
     }
 
     function createLibrary(address address_KMS) public returns (address) {
+        require(msg.sender == tx.origin);
         address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
         emit CreateLibrary(libraryAddress);
         return libraryAddress;
     }
 
     function createContent(address lib, address content_type) public returns (address) {
+        require(msg.sender == tx.origin || msg.sender == lib);
         address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
         emit CreateContent(contentAddress);
         return contentAddress;
     }
 
     function createGroup() public returns (address) {
+        require(msg.sender == tx.origin);
         address groupAddress = BaseGroupFactory(groupFactory).createGroup();
         emit CreateGroup(groupAddress);
         return groupAddress;
     }
-
-    function engageAccountLibrary() public returns (address) {
-        emit EngageAccountLibrary(tx.origin);
-    }
-
+    
     function createUserWallet(address _user) external returns (address) {
         return createUserWalletInternal(_user);
     }
 
     function createAccessWallet() public returns (address) {
-        return createUserWalletInternal(tx.origin);
+        return createUserWalletInternal(msg.sender);
     }
 
-    //This methods revert when attempting to transfer ownership, so for now we make it private
+    // This methods revert when attempting to transfer ownership, so for now we make it private
     // Hence it will be assumed, that user are responsible for creating their wallet.
     function createUserWalletInternal(address _user) returns (address) {
-        require(userWallets[_user] == 0x0);
+        require(userWallets[_user] == address(0x0));
         address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-        if (_user != tx.origin) {
+        if (_user != msg.sender) {
             BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
             wallet.transferOwnership(_user);
         }
@@ -163,10 +165,10 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
 
     function getAccessWallet() public returns(address) {
         address walletAddress;
-        if (userWallets[tx.origin] == 0x0) {
+        if (userWallets[msg.sender] == 0x0) {
             walletAddress = createAccessWallet();
         } else {
-            walletAddress = userWallets[tx.origin];
+            walletAddress = userWallets[msg.sender];
         }
 
         emit GetAccessWallet(walletAddress);
@@ -288,15 +290,24 @@ BaseFactory20190722161600ML: No changes, updated to provide generation for BsAcc
 BaseFactory20190801140700ML: Removed access group creation to its own factory
 BaseFactory20200203112400ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 BaseFactory20200316120700ML: Uses content-type setRights instead of going straight to the wallet
+BaseFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 contract BaseFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20200316120700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+        // TODO: similar issue as tx.origin in Ownable - can't use msg.sender here because it's the space. But as with ownable,
+    //  don't think there's a legit spoofing attack here because the spoofee ends up with the rights.
     function createContentType() public returns (address) {
+        require(msg.sender == contentSpace);
         address newType = (new BaseContentType(msg.sender));
-        BaseContentType(newType).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
+        BaseContentType theType = BaseContentType(newType);
+        theType.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
+        theType.transferOwnership(tx.origin);
         return newType;
     }
 
@@ -314,15 +325,24 @@ contract BaseFactory is Ownable {
 BaseGroupFactory20190729115200ML: First versioned released
 BaseGroupFactory20200203112000ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 BaseGroupFactory20200316120800ML: Uses group setRights instead of going straight to the wallet
+BaseGroupFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 contract BaseGroupFactory is Ownable {
 
-    bytes32 public version ="BaseGroupFactory20200316120800ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseGroupFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+
+    // see note on BaseFactory
     function createGroup() public returns (address) {
+        require(msg.sender == contentSpace);
         address newGroup = (new BaseAccessControlGroup(msg.sender));
-        BaseAccessControlGroup(newGroup).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+        BaseAccessControlGroup theGroup = BaseAccessControlGroup(newGroup);
+        theGroup.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+        theGroup.transferOwnership(tx.origin);
         return newGroup;
     }
 }
@@ -333,15 +353,24 @@ contract BaseGroupFactory is Ownable {
 BaseLibFactory20190506153200ML: Split out of BaseFactory, adds access indexing
 BaseLibFactory20200203111800ML: Only records SEE rights in wallet upon creation, to avoid interference with transfer of ownership
 BaseLibFactory20200316121000ML: Uses group setRights instead of going straight to the wallet
+BaseLibFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 contract BaseLibraryFactory is Ownable {
 
-    bytes32 public version ="BaseLibFactory20200316121000ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+
+    // see note on BaseFactory
     function createLibrary(address address_KMS) public returns (address) {
+        require(msg.sender == contentSpace);
         address newLib = (new BaseLibrary(address_KMS, msg.sender));
-        BaseLibrary(newLib).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
+        BaseLibrary theLib = BaseLibrary(newLib);
+        theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
+        theLib.transferOwnership(tx.origin);
         return newLib;
     }
 }
@@ -354,16 +383,27 @@ BaseCtFactory20191219182100ML: Updated to reflect change in BaseContent201912191
 BaseCtFactory20200203112500ML: Set rights to SEE upon creation to avoid interfering with ownership transfer
 BaseCtFactory20200316121100ML: Uses content setRights instead of going straight to the wallet
 BaseCtFactory20200422180700ML: Updated to reflect fix of deletion of content objects
+BaseCtFactory20200803130000PO: authv3 changes
+BaseCtFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
+
 */
 
 contract BaseContentFactory is Ownable {
 
-    bytes32 public version ="BaseCtFactory20200422180700ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseCtFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
+    constructor(address _spaceAddr) public {
+        contentSpace = _spaceAddr;
+    }
+
+    // see note on BaseFactory re tx.origin
     function createContent(address lib, address content_type) public  returns (address) {
+        require(msg.sender == contentSpace);
         Container libraryObj = Container(lib);
 
-        require(libraryObj.canContribute(tx.origin)); //check if sender has contributor access
+        // this looks suspicious because it *can* be spoofed, but the object owner and the rights holder ends up being tx.origin
+        //  as well so there doesn't seem to be a legit spoofing attack.
+        require(libraryObj.canContribute(tx.origin)); // check if sender has contributor access
         require(libraryObj.validType(content_type));
 
         BaseContent content = new BaseContent(msg.sender, lib, content_type);
@@ -372,6 +412,7 @@ contract BaseContentFactory is Ownable {
 
         // register object in user wallet
         BaseContent(content).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+        content.transferOwnership(tx.origin);
 
         return address(content);
     }
