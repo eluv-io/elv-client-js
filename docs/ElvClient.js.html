@@ -647,6 +647,7 @@ class ElvClient {
    */
   async RedeemCode({issuer, code, email}) {
     const wallet = this.GenerateWallet();
+
     if(!this.signer) {
       this.SetSigner({
         signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})

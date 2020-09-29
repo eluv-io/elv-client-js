@@ -21,12 +21,13 @@ BaseLibrary20191010140800ML: Content can be deleted by content owner or the libr
 BaseLibrary20200110162700ML: Adds support for visibility, differentiates rights to access and edit library object and content
 BaseLibrary20200211164300ML: Modified to conform to authV3 API
 BaseLibrary20200316135200ML: Leverages inherited hasAccess
+BaseLibrary20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 
 contract BaseLibrary is MetaObject, Container {
 
-    bytes32 public version ="BaseLibrary20200316135200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseLibrary20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address[] public contributorGroups;
     address[] public reviewerGroups;
@@ -74,21 +75,6 @@ contract BaseLibrary is MetaObject, Container {
     function canCommit() public view returns (bool) {
         return canEdit();
     }
-
-    /*
-    function canEdit() public view returns (bool) {
-        return hasEditorRight(tx.origin);
-    }
-
-    function hasEditorRight(address candidate) public view returns (bool) {
-        if ((visibility >= 100) || (candidate == owner)) {
-            return true;
-        }
-        address userWallet = IUserSpace(contentSpace).userWallets(candidate);
-        AccessIndexor wallet = AccessIndexor(userWallet);
-        return wallet.checkLibraryRights(address(this), wallet.TYPE_EDIT());
-    }
-    */
 
     function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
         for (uint256 i = 0; i < _groupListLength; i++) {
@@ -255,7 +241,6 @@ contract BaseLibrary is MetaObject, Container {
     function submitApprovalRequest() public returns (bool) {
         address contentContract = msg.sender;
         BaseContent c = BaseContent(contentContract);
-        //require((c.owner() == tx.origin)); the publish already check authorization
 
         if (requiresReview() == false) { //No review required
             // 0 indicates approval, custom contract might overwrite that decision
@@ -278,7 +263,7 @@ contract BaseLibrary is MetaObject, Container {
         approvalRequestsLength++;
 
         // Log event
-        emit ApproveContentRequest(contentContract, tx.origin);
+        emit ApproveContentRequest(contentContract, msg.sender);
         return true;
     }
 
@@ -291,7 +276,7 @@ contract BaseLibrary is MetaObject, Container {
     }
 
     function approveContent(address content_contract, bool approved, string note) public returns ( bool ) {
-        require(canReview(tx.origin) == true);
+        require(canReview(msg.sender) == true);
         // credit the account based on the percent_complete
         uint256 index = approvalRequestsMap[content_contract] - 1;
         BaseContent c = BaseContent(content_contract);
@@ -326,33 +311,18 @@ contract BaseLibrary is MetaObject, Container {
     }
 
     function createContent(address content_type) public  returns (address) {
+        require(msg.sender == tx.origin, "only direct calls allowed");
         address content = IFactorySpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type, contentSpace);
         return content;
     }
 
     // content can be deleted by content owner or the library owner - enforced inside the kill
-    function deleteContent(address _contentAddr) public {
+    function deleteContent(address _contentAddr) public onlyEditor {
         BaseContent content = BaseContent(_contentAddr);
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }
-/*
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
-        if (walletAddress == 0x0){
-            //stakeholder is not a user (hence group or wallet)
-            setGroupRights(stakeholder, access_type, access);
-        } else {
-            setGroupRights(walletAddress, access_type, access);
-        }
-    }
-
-    function setGroupRights(address group, uint8 access_type, uint8 access) public {
-        AccessIndexor indexor = AccessIndexor(group);
-        indexor.setLibraryRights(address(this), access_type, access);
-    }
-*/
 
     function publish(address contentObj) public returns (bool) {
         require(msg.sender == contentObj);

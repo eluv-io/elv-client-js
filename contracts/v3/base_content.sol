@@ -32,12 +32,14 @@ BaseContent20200211163800ML: Modified to conform to authV3 API
 BaseContent20200212101200ML: Disambiguatea getAccessInfo vs getAccessInfoV3 to reflect API changes
 BaseContent20200316135000ML: Leverages inherited hasAccess
 BaseContent20200422180500ML: Version update to reflect changes made to editable to fix deletion
+BaseContent20200803130000PO: Authv3 changes
+BaseContent20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
 
 contract BaseContent is MetaObject, Editable {
 
-    bytes32 public version ="BaseContent20200626180500PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseContent20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
     address public contentType;
     address public addressKMS;
@@ -61,7 +63,6 @@ contract BaseContent is MetaObject, Editable {
         uint256 settled; //Amount of the escrowed money (amountPaid) that has been settled (paid to owner or refunded)
     }
 
-    // TODO: remove?
     mapping(uint256 => RequestData) public requestMap;
 
     event ContentObjectCreate(address containingLibrary);
@@ -149,7 +150,7 @@ contract BaseContent is MetaObject, Editable {
 
 
     function setStatusCode(int status_code) public returns (int) {
-        if ((tx.origin == owner) && ((status_code < 0) || ((status_code > 0) && (statusCode < 0)))) {
+        if ((msg.sender == owner) && ((status_code < 0) || ((status_code > 0) && (statusCode < 0)))) {
 
             //Owner can revert content to draft mode regardless of status (debatable for published, viewable content)
             //  and owner can move status from draft to in review
@@ -320,20 +321,10 @@ contract BaseContent is MetaObject, Editable {
         return accessCharge;
     }
 
-    /*
-    function canEdit() public view returns (bool) {
-        if ((visibility >= 100) || (msg.sender == owner)) {
-         return true;
-        }
-        IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address walletAddress = userSpaceObj.userWallets(tx.origin);
-        AccessIndexor wallet = AccessIndexor(walletAddress);
-        return wallet.checkContentObjectRights(address(this), wallet.TYPE_EDIT());
-    }
-    */
-
     function canPublish() public view returns (bool) {
-        return (canEdit() || msg.sender == libraryAddress);
+        // need to check the library address first. if canEdit() is called on a library it reverts because the library
+        //  cannot have a wallet.
+        return (msg.sender == libraryAddress || canEdit());
     }
 
     function canCommit() public view returns (bool) {
@@ -363,11 +354,7 @@ contract BaseContent is MetaObject, Editable {
         require(canPublish());
         int newStatusCode;
         if (contentContractAddress == 0x0) {
-            if (((tx.origin == owner) || (msg.sender == owner)) && ((status_code == -1) || (status_code == 1))) {
-                newStatusCode = status_code; //owner can change status back to draft or to in-review
-            } else if ((msg.sender == libraryAddress) && (statusCode >= 0)) {
-                newStatusCode = status_code; //library can change status of content in review to any status
-            }
+            newStatusCode = status_code;
         } else {
             Content c = Content(contentContractAddress);
             newStatusCode = c.runStatusChange(status_code);
@@ -415,7 +402,7 @@ contract BaseContent is MetaObject, Editable {
         address accessor,
         uint256 request_timestamp
     ) public payable returns (uint256) {
-        require(tx.origin == addressKMS);
+        require(msg.sender == addressKMS);
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;
         return accessRequestInternal(requestNonce, emptyVals, emptyAddrs, contextHash, accessor, request_timestamp);
@@ -527,7 +514,7 @@ contract BaseContent is MetaObject, Editable {
         uint256 _request_timestamp
         ) public payable returns (bool) {
 
-        require(tx.origin == addressKMS);
+        require(msg.sender == addressKMS);
         bytes32[] memory emptyVals;
         address[] memory emptyAddrs;
         bool success = accessCompleteInternal(_requestNonce,  emptyVals, emptyAddrs);
@@ -591,9 +578,9 @@ contract BaseContent is MetaObject, Editable {
             canKill = Content(contentContractAddress).runKillExt();
         }
         require((canKill == 0) || (canKill == 100) || (canKill == 1000) || (canKill == 1100));
-        if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules
-          require((tx.origin == owner) || Container(libraryAddress).canEdit());
-        }
+//        if (canKill < 1000) { //1000 and 1100 imply bypass of normal validation rules
+//          require(Container(libraryAddress).canEdit());
+//        }
         if ((canKill == 100) || (canKill == 1100)){
             Content(contentContractAddress).commandKill();
         }
@@ -605,21 +592,4 @@ contract BaseContent is MetaObject, Editable {
         AccessIndexor indexor = AccessIndexor(walletAddress);
         indexor.setAccessRights();
     }
-/*
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public {
-        address walletAddress = IUserSpace(contentSpace).userWallets(stakeholder);
-        if (walletAddress == 0x0){
-            //stakeholder is not a user (hence group or wallet)
-            setGroupRights(stakeholder, access_type, access);
-        } else {
-            setGroupRights(walletAddress, access_type, access);
-        }
-    }
-
-    function setGroupRights(address group, uint8 access_type, uint8 access) public {
-        AccessIndexor indexor = AccessIndexor(group);
-        indexor.setContentObjectRights(address(this), access_type, access);
-    }
-*/
-
 }
