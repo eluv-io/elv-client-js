@@ -400,6 +400,7 @@ class FrameClient {
       "SetGroupPermission",
       "SetNodes",
       "SetOauthToken",
+      "SetPolicyAuthorization",
       "SetSignerFromOauthToken",
       "SetVisibility",
       "SetPermission",
