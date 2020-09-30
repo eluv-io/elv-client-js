@@ -497,6 +497,7 @@ class ElvClient {
    * Set the OAuth token for use in state channel calls
    *
    * @methodGroup Authorization
+   * @namedParams
    * @param {string} token - The OAuth ID token
    */
   async SetOauthToken({token}) {
@@ -515,6 +516,7 @@ class ElvClient {
    * NOTE: The KMS URL(s) must be set in the initial configuration of the client (FromConfigurationUrl)
    *
    * @methodGroup Authorization
+   * @namedParams
    * @param {string} token - The OAuth ID
    */
   async SetSignerFromOauthToken({token}) {
@@ -574,9 +576,26 @@ class ElvClient {
   }
 
   /**
+   * Authorize the client against the specified policy.
+   *
+   * NOTE: After authorizing, the client will only be able to access content allowed by the policy
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string} objectId - The ID of the policy object
+   */
+  async SetPolicyAuthorization({objectId}) {
+    this.staticToken = await this.authClient.AuthorizationToken({
+      objectId,
+      channelAuth: true
+    });
+  }
+
+  /**
    * Redeem the specified code to authorize the client
    *
    * @methodGroup Authorization
+   * @namedParams
    * @param {string} issuer - Issuer to authorize against
    * @param {string} code - Access code
    * @param {string=} email - Email address associated with the code
