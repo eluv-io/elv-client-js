@@ -920,6 +920,7 @@ exports.AvailableDRMs = async function() {
 
       if(major > 13 || (major === 13 && minor >= 1)) {
         availableDRMs[1] = "sample-aes";
+        availableDRMs[2] = "fairplay";
       }
     }
 
@@ -933,6 +934,7 @@ exports.AvailableDRMs = async function() {
 
         if(major > 13 || (major === 13 && minor >= 1)) {
           availableDRMs[1] = "sample-aes";
+          availableDRMs[2] = "fairplay";
         }
       }
     }
@@ -1026,7 +1028,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+ * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
@@ -1120,6 +1122,7 @@ exports.PlayoutOptions = async function({
     }
 
     const licenseServers = option.properties.license_servers;
+    const cert = option.properties.cert;
 
     // Create full playout URLs for this protocol / drm combo
     playoutMap[protocol] = {
@@ -1135,7 +1138,7 @@ exports.PlayoutOptions = async function({
             channelAuth: true,
             queryParams: (hlsjsProfile && protocol === "hls" && drm === "aes-128") ? {player_profile: "hls-js"} : {}
           }),
-          drms: drm ? {[drm]: {licenseServers}} : undefined
+          drms: drm ? {[drm]: {licenseServers, cert}} : undefined
         }
       }
     };
@@ -1171,7 +1174,7 @@ exports.PlayoutOptions = async function({
  * @param {string=} objectId - Id of the content
  * @param {string} versionHash - Version hash of the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+ * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
