@@ -667,9 +667,8 @@ function () {
             case 0:
               objectId = _ref12.objectId;
               _context7.next = 3;
-              return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
-                objectId: objectId,
-                channelAuth: true
+              return _regeneratorRuntime.awrap(this.GenerateStateChannelToken({
+                objectId: objectId
               }));
 
             case 3:
