@@ -647,10 +647,7 @@ class ElvClient {
    * @param {string} objectId - The ID of the policy object
    */
   async SetPolicyAuthorization({objectId}) {
-    this.staticToken = await this.authClient.AuthorizationToken({
-      objectId,
-      channelAuth: true
-    });
+    this.staticToken = await this.GenerateStateChannelToken({objectId});
   }
 
   /**
