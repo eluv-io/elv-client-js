@@ -487,7 +487,11 @@ const Utils = {
   Platform: () => {
     if(typeof navigator !== "undefined" && navigator.product === "ReactNative") {
       return Utils.PLATFORM_REACT_NATIVE;
-    } else if((typeof process !== "undefined") && (typeof process.versions.node !== "undefined")) {
+    } else if(
+      (typeof process !== "undefined") &&
+      (typeof process.versions !== "undefined") &&
+      (typeof process.versions.node !== "undefined")
+    ) {
       return Utils.PLATFORM_NODE;
     } else {
       return Utils.PLATFORM_WEB;
