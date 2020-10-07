@@ -26,7 +26,15 @@ class ObjectSetPermissions extends ScriptBase {
         break;
     }
 
+    const prevHash = await client.LatestVersionHash({objectId: objectId});
     await client.SetPermission({objectId: objectId, permission: permissionLevel});
+    const newHash = await client.LatestVersionHash({objectId: objectId});
+
+    if(prevHash === newHash) {
+      console.log("\nVersion hash unchanged: " + newHash + "\n");
+    } else {
+      console.log("\nNew version hash: " + newHash + "\n");
+    }
   }
 
   options() {
