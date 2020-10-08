@@ -173,6 +173,7 @@ exports.SetPermission = async function({objectId, permission}) {
     await this.EditAndFinalizeContentObject({
       libraryId,
       objectId,
+      commitMessage: "Remove encryption conk",
       callback: async ({writeToken}) => {
         await this.DeleteMetadata({libraryId, objectId, writeToken, metadataSubtree: kmsConkKey});
       }
@@ -181,6 +182,7 @@ exports.SetPermission = async function({objectId, permission}) {
     await this.EditAndFinalizeContentObject({
       libraryId,
       objectId,
+      commitMessage: "Add encryption conk",
       callback: async ({writeToken}) => {
         await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
       }
@@ -271,7 +273,8 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
   await this.FinalizeContentObject({
     libraryId: this.contentSpaceLibraryId,
     objectId,
-    writeToken: createResponse.write_token
+    writeToken: createResponse.write_token,
+    commitMessage: "Create content type"
   });
 
   return objectId;
@@ -364,7 +367,8 @@ exports.CreateContentLibrary = async function({
   await this.FinalizeContentObject({
     libraryId,
     objectId,
-    writeToken: editResponse.write_token
+    writeToken: editResponse.write_token,
+    commitMessage: "Create library"
   });
 
   // Upload image if provided
@@ -697,16 +701,18 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
 
   this.Log(`Opening content draft: ${libraryId} ${objectId}`);
 
-  if(options.type) {
+  if("type" in options) {
     if(options.type.startsWith("hq__")) {
       // Type hash specified
       options.type = (await this.ContentType({versionHash: options.type})).hash;
     } else if(options.type.startsWith("iq__")) {
       // Type ID specified
       options.type = (await this.ContentType({typeId: options.type})).hash;
-    } else {
+    } else if(options.type) {
       // Type name specified
       options.type = (await this.ContentType({name: options.type})).hash;
+    } else {
+      options.type = "";
     }
   }
 
@@ -749,18 +755,26 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
+ * @param {string=} commitMessage - Message to include about this commit
  * @param {boolean=} publish=true - If specified, the object will also be published
  * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
  * Irrelevant if not publishing.
  *
  * @returns {Promise&lt;object>} - Response from FinalizeContentObject
  */
-exports.CreateAndFinalizeContentObject = async function({libraryId, callback, options={}, publish=true, awaitCommitConfirmation=true}) {
+exports.CreateAndFinalizeContentObject = async function({
+  libraryId,
+  callback,
+  options={},
+  commitMessage="",
+  publish=true,
+  awaitCommitConfirmation=true
+}) {
   const {id, writeToken} = await this.CreateContentObject({libraryId, objectId, options});
 
   await callback({objectId: id, writeToken});
 
-  await this.FinalizeContentObject({libraryId, objectId: id, writeToken, publish, awaitCommitConfirmation});
+  await this.FinalizeContentObject({libraryId, objectId: id, writeToken, commitMessage, publish, awaitCommitConfirmation});
 };
 
 /**
@@ -783,18 +797,27 @@ exports.CreateAndFinalizeContentObject = async function({libraryId, callback, op
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
+ * @param {string=} commitMessage - Message to include about this commit
  * @param {boolean=} publish=true - If specified, the object will also be published
  * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
  * Irrelevant if not publishing.
  *
  * @returns {Promise&lt;object>} - Response from FinalizeContentObject
  */
-exports.EditAndFinalizeContentObject = async function({libraryId, objectId, callback, options={}, publish=true, awaitCommitConfirmation=true}) {
+exports.EditAndFinalizeContentObject = async function({
+  libraryId,
+  objectId,
+  callback,
+  options={},
+  commitMessage="",
+  publish=true,
+  awaitCommitConfirmation=true
+}) {
   const {writeToken} = await this.EditContentObject({libraryId, objectId, options});
 
   await callback({writeToken});
 
-  return await this.FinalizeContentObject({libraryId, objectId, writeToken, publish, awaitCommitConfirmation});
+  return await this.FinalizeContentObject({libraryId, objectId, writeToken, commitMessage, publish, awaitCommitConfirmation});
 };
 
 exports.AwaitPending = async function(objectId) {
@@ -843,13 +866,34 @@ exports.AwaitPending = async function(objectId) {
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the draft
+ * @param {string=} commitMessage - Message to include about this commit
  * @param {boolean=} publish=true - If specified, the object will also be published
  * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
  * Irrelevant if not publishing.
  */
-exports.FinalizeContentObject = async function({libraryId, objectId, writeToken, publish=true, awaitCommitConfirmation=true}) {
+exports.FinalizeContentObject = async function({
+  libraryId,
+  objectId,
+  writeToken,
+  commitMessage="",
+  publish=true,
+  awaitCommitConfirmation=true
+}) {
   ValidateParameters({libraryId, objectId});
   ValidateWriteToken(writeToken);
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "commit",
+    metadata: {
+      message: commitMessage,
+      author: (await this.userProfileClient.UserMetadata({metadataSubtree: "public/name"})) || this.CurrentAccountAddress(),
+      author_address: this.CurrentAccountAddress(),
+      timestamp: new Date().toISOString()
+    }
+  });
 
   this.Log(`Finalizing content draft: ${libraryId} ${objectId} ${writeToken}`);
 
@@ -1191,7 +1235,8 @@ exports.UpdateContentObjectGraph = async function({libraryId, objectId, versionH
     const { hash } = await this.FinalizeContentObject({
       libraryId: currentLibraryId,
       objectId: currentObjectId,
-      writeToken: write_token
+      writeToken: write_token,
+      commitMessage: "Update links"
     });
 
     // If root object was specified by hash and updated, update hash

@@ -418,7 +418,16 @@ function () {
               isV3 = _ref6.isV3;
               accessType = _ref6.accessType;
               abi = _ref6.abi;
-              _context4.next = 22;
+
+              if (!(typeof accessType === "undefined")) {
+                _context4.next = 22;
+                break;
+              }
+
+              throw Error("Unable to determine contract info for ".concat(id, " (").concat(this.client.utils.HashToAddress(id), ") - Wrong network?"));
+
+            case 22:
+              _context4.next = 24;
               return _regeneratorRuntime.awrap(this.AccessInfo({
                 accessType: accessType,
                 publicKey: publicKey,
@@ -427,7 +436,7 @@ function () {
                 isV3: isV3
               }));
 
-            case 22:
+            case 24:
               _ref7 = _context4.sent;
               cache = _ref7.cache;
               accessArgs = _ref7.accessArgs;
@@ -435,14 +444,14 @@ function () {
               address = Utils.HashToAddress(id); // Check cache for existing transaction
 
               if (!(!noCache && !skipCache)) {
-                _context4.next = 31;
+                _context4.next = 33;
                 break;
               }
 
               cacheHit = update ? cache.modify[address] : cache.access[address];
 
               if (!cacheHit) {
-                _context4.next = 31;
+                _context4.next = 33;
                 break;
               }
 
@@ -450,49 +459,49 @@ function () {
                 transactionHash: cacheHit
               });
 
-            case 31:
+            case 33:
               if (!cacheOnly) {
-                _context4.next = 33;
+                _context4.next = 35;
                 break;
               }
 
               return _context4.abrupt("return");
 
-            case 33:
+            case 35:
               accessRequest = {
                 transactionHash: ""
               }; // Make the request
 
               if (!update) {
-                _context4.next = 41;
+                _context4.next = 43;
                 break;
               }
 
               this.Log("Making update request on ".concat(accessType, " ").concat(id));
-              _context4.next = 38;
+              _context4.next = 40;
               return _regeneratorRuntime.awrap(this.UpdateRequest({
                 id: id,
                 abi: abi
               }));
 
-            case 38:
+            case 40:
               accessRequest = _context4.sent;
-              _context4.next = 45;
+              _context4.next = 47;
               break;
 
-            case 41:
+            case 43:
               this.Log("Making access request on ".concat(accessType, " ").concat(id));
-              _context4.next = 44;
+              _context4.next = 46;
               return _regeneratorRuntime.awrap(this.AccessRequest({
                 id: id,
                 args: accessArgs,
                 checkAccessCharge: checkAccessCharge
               }));
 
-            case 44:
+            case 46:
               accessRequest = _context4.sent;
 
-            case 45:
+            case 47:
               // Cache the transaction hash
               if (!noCache) {
                 this.CacheTransaction({
@@ -514,7 +523,7 @@ function () {
 
               return _context4.abrupt("return", accessRequest);
 
-            case 47:
+            case 49:
             case "end":
               return _context4.stop();
           }
@@ -1313,7 +1322,7 @@ function () {
                 break;
               }
 
-              return _context14.abrupt("return");
+              return _context14.abrupt("return", {});
 
             case 12:
               return _context14.abrupt("return", {

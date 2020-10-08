@@ -137,14 +137,18 @@ class ElvWallet {
    * @returns {Signer} - Signer with the private key, connected to the provider
    */
   AddAccount({accountName, privateKey}) {
-    let signer = new Ethers.Wallet(privateKey);
-    signer = signer.connect(this.provider);
+    try {
+      let signer = new Ethers.Wallet(privateKey);
+      signer = signer.connect(this.provider);
 
-    if(accountName) {
-      this.signers[accountName] = signer;
+      if(accountName) {
+        this.signers[accountName] = signer;
+      }
+
+      return signer;
+    } catch(error) {
+      throw Error("Invalid private key");
     }
-
-    return signer;
   }
 
   /**

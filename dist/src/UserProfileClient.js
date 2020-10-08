@@ -206,7 +206,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: createResponse.write_token
+                writeToken: createResponse.write_token,
+                commitMessage: "Create user wallet object"
               }));
 
             case 39:
@@ -653,7 +654,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                commitMessage: "Merge user metadata"
               }));
 
             case 14:
@@ -711,7 +713,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                commitMessage: "Replace user metadata"
               }));
 
             case 14:
@@ -767,7 +770,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                commitMessage: "Delete user metadata"
               }));
 
             case 14:
@@ -1111,7 +1115,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                commitMessage: "Set user profile image"
               }));
 
             case 17:
@@ -1345,6 +1350,7 @@ function () {
                 libraryId: userLibraryId,
                 objectId: userObjectId,
                 writeToken: editRequest.write_token,
+                commitMessage: "Record user tags",
                 awaitCommitConfirmation: false
               }));
 
