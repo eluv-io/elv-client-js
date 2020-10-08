@@ -188,7 +188,8 @@ exports.CreateAccessGroup = async function({name, description, metadata={}}={}) 
   await this.FinalizeContentObject({
     libraryId: this.contentSpaceLibraryId,
     objectId,
-    writeToken: editResponse.write_token
+    writeToken: editResponse.write_token,
+    commitMessage: "Create access group"
   });
 
   return contractAddress;
@@ -700,7 +701,7 @@ exports.LinkAccessGroupToOauth = async function({groupAddress, kmsId, oauthConfi
     metadata: userConfig
   });
 
-  await this.FinalizeContentObject({libraryId: this.contentSpaceLibraryId, objectId, writeToken});
+  await this.FinalizeContentObject({libraryId: this.contentSpaceLibraryId, objectId, writeToken, commitMessage: "Bind access group to OAuth"});
 
   await this.CallContractMethodAndWait({
     contractAddress: groupAddress,

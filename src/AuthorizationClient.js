@@ -262,6 +262,11 @@ class AuthorizationClient {
 
     const id = objectId || libraryId || this.contentSpaceId;
     const { isV3, accessType, abi } = await this.ContractInfo({id});
+
+    if(typeof accessType === "undefined") {
+      throw Error(`Unable to determine contract info for ${id} (${this.client.utils.HashToAddress(id)}) - Wrong network?`);
+    }
+
     const { cache, accessArgs, checkAccessCharge } = await this.AccessInfo({
       accessType,
       publicKey,
@@ -762,7 +767,7 @@ class AuthorizationClient {
     const version = isV3 ? "v3" : "v2";
     const accessType = await this.AccessType(id);
 
-    if(accessType === this.ACCESS_TYPES.OTHER) { return; }
+    if(accessType === this.ACCESS_TYPES.OTHER) { return {}; }
 
     return {
       isV3,

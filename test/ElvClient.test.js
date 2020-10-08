@@ -521,6 +521,8 @@ describe("Test ElvClient", () => {
       await expect(finalizeResponse).toBeDefined();
 
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
+      delete metadata.commit;
+
       expect(metadata).toEqual(testMetadata);
 
       versionHash = finalizeResponse.hash;
@@ -528,6 +530,8 @@ describe("Test ElvClient", () => {
 
     test("Content Object Metadata", async () => {
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
+      delete metadata.commit;
+
       expect(metadata).toEqual({
         name: "Test Content Object",
         toMerge: {
@@ -594,6 +598,8 @@ describe("Test ElvClient", () => {
       expect(finalizeResponse).toBeDefined();
 
       const metadata = await client.ContentObjectMetadata({libraryId, objectId});
+      delete metadata.commit;
+
       expect(metadata).toEqual({
         name: "Test Content Object",
         toMerge: {
@@ -776,6 +782,48 @@ describe("Test ElvClient", () => {
         copy: "metadata"
       });
     });
+  });
+
+  test("Set Commit Message", async () => {
+    // Check automatic commit
+    const automaticCommit = await client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "commit"
+    });
+
+    expect(automaticCommit).toBeDefined();
+    expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author)).toBeTruthy();
+    expect(client.utils.EqualAddress(client.CurrentAccountAddress(), automaticCommit.author_address)).toBeTruthy();
+    expect(automaticCommit.message).toBeDefined();
+    expect(automaticCommit.timestamp).toBeDefined();
+    expect(isNaN((new Date(automaticCommit.timestamp)).getTime())).toBeFalsy();
+
+    // Create new commit with message and user name
+    await client.userProfileClient.ReplaceUserMetadata({
+      metadataSubtree: "public/name",
+      metadata: "Test User"
+    });
+
+    await client.EditAndFinalizeContentObject({
+      libraryId,
+      objectId,
+      commitMessage: "Test Commit Message",
+      callback: () => {}
+    });
+
+    const customCommit = await client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "commit"
+    });
+
+    expect(customCommit).toBeDefined();
+    expect(customCommit.author).toEqual("Test User");
+    expect(client.utils.EqualAddress(client.CurrentAccountAddress(), customCommit.author_address)).toBeTruthy();
+    expect(customCommit.timestamp).toBeDefined();
+    expect(isNaN((new Date(customCommit.timestamp)).getTime())).toBeFalsy();
+    expect(customCommit.message).toEqual("Test Commit Message");
   });
 
   describe("Content Object Group Permissions", () => {
