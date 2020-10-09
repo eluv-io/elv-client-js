@@ -134,7 +134,18 @@ class AuthorizationClient {
     noCache=false,
     noAuth=false
   }) {
-    if(this.client.staticToken) {
+    if(versionHash) { objectId = this.client.utils.DecodeVersionHash(versionHash).objectId; }
+
+    const isWalletRequest =
+      objectId &&
+      this.client.signer &&
+      this.client.utils.EqualAddress(
+        await this.client.userProfileClient.WalletAddress(false),
+        this.client.utils.HashToAddress(objectId)
+      );
+
+    // User wallet requests can't use static token
+    if(this.client.staticToken && !isWalletRequest) {
       return this.client.staticToken;
     }
 

@@ -156,7 +156,7 @@ function () {
   }, {
     key: "AuthorizationToken",
     value: function AuthorizationToken(_ref2) {
-      var libraryId, objectId, versionHash, partHash, encryption, audienceData, context, _ref2$update, update, _ref2$channelAuth, channelAuth, oauthToken, _ref2$noCache, noCache, _ref2$noAuth, noAuth, initialNoCache, authorizationToken;
+      var libraryId, objectId, versionHash, partHash, encryption, audienceData, context, _ref2$update, update, _ref2$channelAuth, channelAuth, oauthToken, _ref2$noCache, noCache, _ref2$noAuth, noAuth, isWalletRequest, initialNoCache, authorizationToken;
 
       return _regeneratorRuntime.async(function AuthorizationToken$(_context2) {
         while (1) {
@@ -164,16 +164,39 @@ function () {
             case 0:
               libraryId = _ref2.libraryId, objectId = _ref2.objectId, versionHash = _ref2.versionHash, partHash = _ref2.partHash, encryption = _ref2.encryption, audienceData = _ref2.audienceData, context = _ref2.context, _ref2$update = _ref2.update, update = _ref2$update === void 0 ? false : _ref2$update, _ref2$channelAuth = _ref2.channelAuth, channelAuth = _ref2$channelAuth === void 0 ? false : _ref2$channelAuth, oauthToken = _ref2.oauthToken, _ref2$noCache = _ref2.noCache, noCache = _ref2$noCache === void 0 ? false : _ref2$noCache, _ref2$noAuth = _ref2.noAuth, noAuth = _ref2$noAuth === void 0 ? false : _ref2$noAuth;
 
-              if (!this.client.staticToken) {
-                _context2.next = 3;
+              if (versionHash) {
+                objectId = this.client.utils.DecodeVersionHash(versionHash).objectId;
+              }
+
+              _context2.t0 = objectId && this.client.signer;
+
+              if (!_context2.t0) {
+                _context2.next = 10;
+                break;
+              }
+
+              _context2.t1 = this.client.utils;
+              _context2.next = 7;
+              return _regeneratorRuntime.awrap(this.client.userProfileClient.WalletAddress(false));
+
+            case 7:
+              _context2.t2 = _context2.sent;
+              _context2.t3 = this.client.utils.HashToAddress(objectId);
+              _context2.t0 = _context2.t1.EqualAddress.call(_context2.t1, _context2.t2, _context2.t3);
+
+            case 10:
+              isWalletRequest = _context2.t0;
+
+              if (!(this.client.staticToken && !isWalletRequest)) {
+                _context2.next = 13;
                 break;
               }
 
               return _context2.abrupt("return", this.client.staticToken);
 
-            case 3:
+            case 13:
               initialNoCache = this.noCache;
-              _context2.prev = 4;
+              _context2.prev = 14;
 
               // noCache enabled for this call
               if (noCache && !this.noCache) {
@@ -181,11 +204,11 @@ function () {
               }
 
               if (!channelAuth) {
-                _context2.next = 12;
+                _context2.next = 22;
                 break;
               }
 
-              _context2.next = 9;
+              _context2.next = 19;
               return _regeneratorRuntime.awrap(this.GenerateChannelContentToken({
                 objectId: objectId,
                 versionHash: versionHash,
@@ -194,13 +217,13 @@ function () {
                 oauthToken: oauthToken
               }));
 
-            case 9:
+            case 19:
               authorizationToken = _context2.sent;
-              _context2.next = 15;
+              _context2.next = 25;
               break;
 
-            case 12:
-              _context2.next = 14;
+            case 22:
+              _context2.next = 24;
               return _regeneratorRuntime.awrap(this.GenerateAuthorizationToken({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -211,28 +234,28 @@ function () {
                 noAuth: noAuth
               }));
 
-            case 14:
+            case 24:
               authorizationToken = _context2.sent;
 
-            case 15:
+            case 25:
               return _context2.abrupt("return", authorizationToken);
 
-            case 18:
-              _context2.prev = 18;
-              _context2.t0 = _context2["catch"](4);
-              throw _context2.t0;
+            case 28:
+              _context2.prev = 28;
+              _context2.t4 = _context2["catch"](14);
+              throw _context2.t4;
 
-            case 21:
-              _context2.prev = 21;
+            case 31:
+              _context2.prev = 31;
               this.noCache = initialNoCache;
-              return _context2.finish(21);
+              return _context2.finish(31);
 
-            case 24:
+            case 34:
             case "end":
               return _context2.stop();
           }
         }
-      }, null, this, [[4, 18, 21, 24]]);
+      }, null, this, [[14, 28, 31, 34]]);
     }
   }, {
     key: "GenerateAuthorizationToken",
