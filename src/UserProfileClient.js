@@ -138,7 +138,7 @@ await client.userProfileClient.UserMetadata()
    *
    * @return {Promise<string>} - The contract address of the current user's wallet contract
    */
-  async WalletAddress() {
+  async WalletAddress(autoCreate=true) {
     if(this.walletAddress) { return this.walletAddress; }
 
     const walletAddress = await this.client.CallContractMethod({
@@ -151,7 +151,7 @@ await client.userProfileClient.UserMetadata()
       this.walletAddress = walletAddress;
     }
 
-    if(!this.walletAddress) {
+    if(!this.walletAddress && autoCreate) {
       await this.CreateWallet();
     }
 
