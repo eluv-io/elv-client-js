@@ -101,17 +101,18 @@ module.exports = class ScriptBase {
         describe: "Geographic region for the fabric nodes.",
         type: "string",
       })
-      .version(false);
+      .strict().version(false);
   }
 
-  async run() {
+  run() {
     console.log("\n" + this.header());
-    try {
-      await this.body();
+    this.body().then(successValue => {
       console.log(this.footer()+ "\n");
-    } catch(err) {
-      console.error(err);
-    }
+      return successValue;
+    }, failureReason => {
+      console.error(failureReason);
+      process.exitCode = 1;
+    });
   }
 
   // validate that a number is an integer

@@ -257,10 +257,4 @@ class OfferingAddCaptionStream extends ScriptOffering {
 }
 
 const script = new OfferingAddCaptionStream;
-script.run().then(successValue => {
-  // nothing
-  return successValue;
-}, failureReason => {
-  console.error(failureReason);
-  process.exitCode = 1;
-});
+script.run();
