@@ -169,6 +169,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
         time_base: timeBase,
         ts: durationTs
       },
+      label: label,
       language: language,
       optimum_seg_dur: {
         "time_base": timeBase,
