@@ -919,7 +919,7 @@ function () {
             case 3:
               ValidatePresence("message", message);
               _context11.next = 6;
-              return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(message, publicKey || this.signer.signingKey.privateKey));
+              return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey));
 
             case 6:
               return _context11.abrupt("return", _context11.sent);
