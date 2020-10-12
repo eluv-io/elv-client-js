@@ -94,26 +94,8 @@ function () {
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.debug = debug;
-    this.accessTransactions = {
-      spaces: {},
-      libraries: {},
-      objects: {},
-      encryptedObjects: {},
-      types: {},
-      groups: {},
-      wallets: {},
-      other: {}
-    };
-    this.modifyTransactions = {
-      spaces: {},
-      libraries: {},
-      objects: {},
-      encryptedObjects: {},
-      types: {},
-      groups: {},
-      wallets: {},
-      other: {}
-    };
+    this.accessTransactions = {};
+    this.modifyTransactions = {};
     this.methodAvailability = {};
     this.accessVersions = {};
     this.accessTypes = {};
@@ -381,7 +363,7 @@ function () {
     value: function MakeAccessRequest(_ref5) {
       var _this = this;
 
-      var libraryId, objectId, versionHash, _ref5$args, args, _ref5$publicKey, publicKey, _ref5$update, update, _ref5$skipCache, skipCache, _ref5$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, _ref6, isV3, accessType, abi, _ref7, cache, accessArgs, checkAccessCharge, address, cacheHit, accessRequest;
+      var libraryId, objectId, versionHash, _ref5$args, args, _ref5$publicKey, publicKey, _ref5$update, update, _ref5$skipCache, skipCache, _ref5$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, _ref6, isV3, accessType, abi, _ref7, accessArgs, checkAccessCharge, address, cache, accessRequest, _cache;
 
       return _regeneratorRuntime.async(function MakeAccessRequest$(_context4) {
         while (1) {
@@ -461,79 +443,83 @@ function () {
 
             case 24:
               _ref7 = _context4.sent;
-              cache = _ref7.cache;
               accessArgs = _ref7.accessArgs;
               checkAccessCharge = _ref7.checkAccessCharge;
               address = Utils.HashToAddress(id); // Check cache for existing transaction
 
               if (!(!noCache && !skipCache)) {
-                _context4.next = 33;
+                _context4.next = 36;
                 break;
               }
 
-              cacheHit = update ? cache.modify[address] : cache.access[address];
+              cache = update ? this.modifyTransactions : this.accessTransactions;
 
-              if (!cacheHit) {
-                _context4.next = 33;
+              if (!cache[address]) {
+                _context4.next = 36;
                 break;
               }
 
-              return _context4.abrupt("return", {
-                transactionHash: cacheHit
-              });
-
-            case 33:
-              if (!cacheOnly) {
+              if (!(cache[address].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
                 _context4.next = 35;
+                break;
+              }
+
+              return _context4.abrupt("return", cache[address]);
+
+            case 35:
+              // Token expired
+              delete cache[address];
+
+            case 36:
+              if (!cacheOnly) {
+                _context4.next = 38;
                 break;
               }
 
               return _context4.abrupt("return");
 
-            case 35:
+            case 38:
               accessRequest = {
                 transactionHash: ""
               }; // Make the request
 
               if (!update) {
-                _context4.next = 43;
+                _context4.next = 46;
                 break;
               }
 
               this.Log("Making update request on ".concat(accessType, " ").concat(id));
-              _context4.next = 40;
+              _context4.next = 43;
               return _regeneratorRuntime.awrap(this.UpdateRequest({
                 id: id,
                 abi: abi
               }));
 
-            case 40:
+            case 43:
               accessRequest = _context4.sent;
-              _context4.next = 47;
+              _context4.next = 50;
               break;
 
-            case 43:
+            case 46:
               this.Log("Making access request on ".concat(accessType, " ").concat(id));
-              _context4.next = 46;
+              _context4.next = 49;
               return _regeneratorRuntime.awrap(this.AccessRequest({
                 id: id,
                 args: accessArgs,
                 checkAccessCharge: checkAccessCharge
               }));
 
-            case 46:
+            case 49:
               accessRequest = _context4.sent;
 
-            case 47:
+            case 50:
               // Cache the transaction hash
               if (!noCache) {
-                this.CacheTransaction({
-                  accessType: accessType,
-                  address: address,
-                  publicKey: publicKey,
-                  update: update,
+                _cache = update ? this.modifyTransactions : this.accessTransactions;
+                _cache[address] = {
+                  issuedAt: Date.now(),
                   transactionHash: accessRequest.transactionHash
-                }); // Save request ID if present
+                }; // Save request ID if present
 
                 accessRequest.logs.some(function (log) {
                   if (log.values && (log.values.requestID || log.values.requestNonce)) {
@@ -546,7 +532,7 @@ function () {
 
               return _context4.abrupt("return", accessRequest);
 
-            case 49:
+            case 52:
             case "end":
               return _context4.stop();
           }
@@ -786,40 +772,40 @@ function () {
 
             case 5:
               if (!(!this.noCache && this.channelContentTokens[objectId])) {
-                _context7.next = 9;
+                _context7.next = 11;
                 break;
               }
 
               if (!(this.channelContentTokens[objectId].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
-                _context7.next = 8;
+                _context7.next = 10;
                 break;
               }
 
               return _context7.abrupt("return", this.channelContentTokens[objectId].token);
 
-            case 8:
+            case 10:
               // Token expired
-              this.channelContentTokens[objectId] = undefined;
+              delete this.channelContentTokens[objectId];
 
-            case 9:
+            case 11:
               this.Log("Making state channel access request: ".concat(objectId));
 
               if (!issuer) {
-                _context7.next = 21;
+                _context7.next = 23;
                 break;
               }
 
               // Ticket API
               tenantId = issuer.replace(/^\//, "").split("/")[2];
-              _context7.next = 14;
+              _context7.next = 16;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(tenantId),
                 methodName: "addressKMS"
               }));
 
-            case 14:
+            case 16:
               kmsAddress = _context7.sent;
-              _context7.next = 17;
+              _context7.next = 19;
               return _regeneratorRuntime.awrap(Utils.ResponseToFormat("text", this.MakeKMSRequest({
                 kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
                 method: "POST",
@@ -830,14 +816,14 @@ function () {
                 }
               })));
 
-            case 17:
+            case 19:
               token = _context7.sent;
               // Pull target object from token so token can be cached
               objectId = JSON.parse(Utils.FromB64(token)).qid;
-              _context7.next = 32;
+              _context7.next = 34;
               break;
 
-            case 21:
+            case 23:
               // State channel API
               if (!audienceData) {
                 audienceData = this.AudienceData({
@@ -849,7 +835,7 @@ function () {
 
               stateChannelApi = "elv_channelContentRequestContext";
               additionalParams = [JSON.stringify(audienceData)];
-              _context7.next = 26;
+              _context7.next = 28;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: stateChannelApi,
@@ -858,17 +844,17 @@ function () {
                 additionalParams: additionalParams
               }));
 
-            case 26:
+            case 28:
               payload = _context7.sent;
-              _context7.next = 29;
+              _context7.next = 31;
               return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload))));
 
-            case 29:
+            case 31:
               signature = _context7.sent;
               multiSig = Utils.FormatSignature(signature);
               token = "".concat(payload, ".").concat(Utils.B64(multiSig));
 
-            case 32:
+            case 34:
               if (!this.noCache) {
                 this.channelContentTokens[objectId] = {
                   token: token,
@@ -878,7 +864,7 @@ function () {
 
               return _context7.abrupt("return", token);
 
-            case 34:
+            case 36:
             case "end":
               return _context7.stop();
           }
@@ -989,55 +975,14 @@ function () {
       }, null, this);
     }
   }, {
-    key: "CacheTransaction",
-    value: function CacheTransaction(_ref15) {
-      var accessType = _ref15.accessType,
-          address = _ref15.address,
-          publicKey = _ref15.publicKey,
-          update = _ref15.update,
-          transactionHash = _ref15.transactionHash;
-      var cache = update ? this.modifyTransactions : this.accessTransactions;
-
-      switch (accessType) {
-        case ACCESS_TYPES.SPACE:
-          cache = cache.spaces;
-          break;
-
-        case ACCESS_TYPES.LIBRARY:
-          cache = cache.libraries;
-          break;
-
-        case ACCESS_TYPES.TYPE:
-          cache = cache.types;
-          break;
-
-        case ACCESS_TYPES.GROUP:
-          cache = cache.groups;
-          break;
-
-        case ACCESS_TYPES.WALLET:
-          cache = cache.wallets;
-          break;
-
-        case ACCESS_TYPES.OBJECT:
-          cache = publicKey ? cache.encryptedObjects : cache.objects;
-          break;
-
-        default:
-          cache = cache.other;
-      }
-
-      cache[address] = transactionHash;
-    }
-  }, {
     key: "IsV3",
-    value: function IsV3(_ref16) {
+    value: function IsV3(_ref15) {
       var id;
       return _regeneratorRuntime.async(function IsV3$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
-              id = _ref16.id;
+              id = _ref15.id;
 
               if (this.accessVersions[id]) {
                 _context10.next = 5;
@@ -1066,86 +1011,34 @@ function () {
     }
   }, {
     key: "AccessInfo",
-    value: function AccessInfo(_ref17) {
-      var accessType, publicKey, args, isV3, cache, checkAccessCharge;
+    value: function AccessInfo(_ref16) {
+      var accessType, publicKey, args, isV3, checkAccessCharge;
       return _regeneratorRuntime.async(function AccessInfo$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              accessType = _ref17.accessType, publicKey = _ref17.publicKey, args = _ref17.args, isV3 = _ref17.isV3;
-              _context11.t0 = accessType;
-              _context11.next = _context11.t0 === ACCESS_TYPES.SPACE ? 4 : _context11.t0 === ACCESS_TYPES.LIBRARY ? 6 : _context11.t0 === ACCESS_TYPES.TYPE ? 8 : _context11.t0 === ACCESS_TYPES.GROUP ? 10 : _context11.t0 === ACCESS_TYPES.WALLET ? 12 : _context11.t0 === ACCESS_TYPES.OBJECT ? 14 : 18;
-              break;
+              accessType = _ref16.accessType, publicKey = _ref16.publicKey, args = _ref16.args, isV3 = _ref16.isV3;
+              checkAccessCharge = false;
 
-            case 4:
-              cache = {
-                access: this.accessTransactions.spaces,
-                modify: this.modifyTransactions.spaces
-              };
-              return _context11.abrupt("break", 19);
+              if (accessType === ACCESS_TYPES.OBJECT) {
+                checkAccessCharge = true;
 
-            case 6:
-              cache = {
-                access: this.accessTransactions.libraries,
-                modify: this.modifyTransactions.libraries
-              };
-              return _context11.abrupt("break", 19);
-
-            case 8:
-              cache = {
-                access: this.accessTransactions.types,
-                modify: this.modifyTransactions.types
-              };
-              return _context11.abrupt("break", 19);
-
-            case 10:
-              cache = {
-                access: this.accessTransactions.groups,
-                modify: this.modifyTransactions.groups
-              };
-              return _context11.abrupt("break", 19);
-
-            case 12:
-              cache = {
-                access: this.accessTransactions.wallets,
-                modify: this.modifyTransactions.wallets
-              };
-              return _context11.abrupt("break", 19);
-
-            case 14:
-              cache = publicKey ? {
-                access: this.accessTransactions.encryptedObjects,
-                modify: this.modifyTransactions.encryptedObjects
-              } : {
-                access: this.accessTransactions.objects,
-                modify: this.modifyTransactions.objects
-              };
-              checkAccessCharge = true;
-
-              if (!isV3) {
-                if (args && args.length > 0) {
-                  // Inject public key of requester
-                  args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
-                } else {
-                  // Set default args
-                  args = [0, // Access level
-                  this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-                  publicKey, //cap.public_key,
-                  [], // Custom values
-                  [] // Stakeholders
-                  ];
+                if (!isV3) {
+                  if (args && args.length > 0) {
+                    // Inject public key of requester
+                    args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
+                  } else {
+                    // Set default args
+                    args = [0, // Access level
+                    this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+                    publicKey, //cap.public_key,
+                    [], // Custom values
+                    [] // Stakeholders
+                    ];
+                  }
                 }
               }
 
-              return _context11.abrupt("break", 19);
-
-            case 18:
-              cache = {
-                access: this.accessTransactions.other,
-                modify: this.modifyTransactions.other
-              };
-
-            case 19:
               if (isV3 && (!args || args.length === 0)) {
                 args = [[], // customValues
                 [] // stakeholders
@@ -1153,12 +1046,11 @@ function () {
               }
 
               return _context11.abrupt("return", {
-                cache: cache,
                 accessArgs: args,
                 checkAccessCharge: checkAccessCharge
               });
 
-            case 21:
+            case 5:
             case "end":
               return _context11.stop();
           }
@@ -1235,14 +1127,14 @@ function () {
     }
   }, {
     key: "AccessComplete",
-    value: function AccessComplete(_ref18) {
-      var id, score, _ref19, abi, isV3, address, requestId, event;
+    value: function AccessComplete(_ref17) {
+      var id, score, _ref18, abi, isV3, address, requestId, event;
 
       return _regeneratorRuntime.async(function AccessComplete$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
             case 0:
-              id = _ref18.id, score = _ref18.score;
+              id = _ref17.id, score = _ref17.score;
               this.Log("Calling access complete on ".concat(id, " with score ").concat(score));
               _context13.next = 4;
               return _regeneratorRuntime.awrap(this.ContractInfo({
@@ -1250,9 +1142,9 @@ function () {
               }));
 
             case 4:
-              _ref19 = _context13.sent;
-              abi = _ref19.abi;
-              isV3 = _ref19.isV3;
+              _ref18 = _context13.sent;
+              abi = _ref18.abi;
+              isV3 = _ref18.isV3;
               address = Utils.HashToAddress(id);
               requestId = this.requestIds[address];
 
@@ -1296,7 +1188,7 @@ function () {
 
             case 20:
               delete this.requestIds[address];
-              delete this.accessTransactions.objects[address];
+              delete this.accessTransactions[address];
               return _context13.abrupt("return", event);
 
             case 23:
@@ -1310,13 +1202,13 @@ function () {
 
   }, {
     key: "ContractInfo",
-    value: function ContractInfo(_ref20) {
+    value: function ContractInfo(_ref19) {
       var id, address, isV3, version, accessType;
       return _regeneratorRuntime.async(function ContractInfo$(_context14) {
         while (1) {
           switch (_context14.prev = _context14.next) {
             case 0:
-              id = _ref20.id, address = _ref20.address;
+              id = _ref19.id, address = _ref19.address;
 
               if (!address) {
                 address = Utils.HashToAddress(id);
@@ -1363,22 +1255,22 @@ function () {
     }
   }, {
     key: "GetAccessCharge",
-    value: function GetAccessCharge(_ref21) {
-      var objectId, args, _ref22, abi, info;
+    value: function GetAccessCharge(_ref20) {
+      var objectId, args, _ref21, abi, info;
 
       return _regeneratorRuntime.async(function GetAccessCharge$(_context15) {
         while (1) {
           switch (_context15.prev = _context15.next) {
             case 0:
-              objectId = _ref21.objectId, args = _ref21.args;
+              objectId = _ref20.objectId, args = _ref20.args;
               _context15.next = 3;
               return _regeneratorRuntime.awrap(this.ContractInfo({
                 id: objectId
               }));
 
             case 3:
-              _ref22 = _context15.sent;
-              abi = _ref22.abi;
+              _ref21 = _context15.sent;
+              abi = _ref21.abi;
               _context15.next = 7;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(objectId),
@@ -1400,13 +1292,13 @@ function () {
     }
   }, {
     key: "Owner",
-    value: function Owner(_ref23) {
+    value: function Owner(_ref22) {
       var id, address, ownerAddress;
       return _regeneratorRuntime.async(function Owner$(_context16) {
         while (1) {
           switch (_context16.prev = _context16.next) {
             case 0:
-              id = _ref23.id, address = _ref23.address;
+              id = _ref22.id, address = _ref22.address;
 
               if (this.client.signer) {
                 _context16.next = 3;
@@ -1460,14 +1352,14 @@ function () {
     }
   }, {
     key: "KMSAddress",
-    value: function KMSAddress(_ref24) {
-      var objectId, versionHash, _ref25, abi;
+    value: function KMSAddress(_ref23) {
+      var objectId, versionHash, _ref24, abi;
 
       return _regeneratorRuntime.async(function KMSAddress$(_context18) {
         while (1) {
           switch (_context18.prev = _context18.next) {
             case 0:
-              objectId = _ref24.objectId, versionHash = _ref24.versionHash;
+              objectId = _ref23.objectId, versionHash = _ref23.versionHash;
 
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
@@ -1479,8 +1371,8 @@ function () {
               }));
 
             case 4:
-              _ref25 = _context18.sent;
-              abi = _ref25.abi;
+              _ref24 = _context18.sent;
+              abi = _ref24.abi;
               _context18.next = 8;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(objectId),
@@ -1500,14 +1392,14 @@ function () {
     }
   }, {
     key: "KMSInfo",
-    value: function KMSInfo(_ref26) {
-      var objectId, versionHash, kmsId, KMSInfo, _ref27, abi, _ref28, _abi, publicKey;
+    value: function KMSInfo(_ref25) {
+      var objectId, versionHash, kmsId, KMSInfo, _ref26, abi, _ref27, _abi, publicKey;
 
       return _regeneratorRuntime.async(function KMSInfo$(_context19) {
         while (1) {
           switch (_context19.prev = _context19.next) {
             case 0:
-              objectId = _ref26.objectId, versionHash = _ref26.versionHash, kmsId = _ref26.kmsId;
+              objectId = _ref25.objectId, versionHash = _ref25.versionHash, kmsId = _ref25.kmsId;
 
               if (!kmsId) {
                 _context19.next = 11;
@@ -1520,8 +1412,8 @@ function () {
               }));
 
             case 4:
-              _ref27 = _context19.sent;
-              abi = _ref27.abi;
+              _ref26 = _context19.sent;
+              abi = _ref26.abi;
               _context19.next = 8;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: this.client.contentSpaceAddress,
@@ -1547,8 +1439,8 @@ function () {
               }));
 
             case 14:
-              _ref28 = _context19.sent;
-              _abi = _ref28.abi;
+              _ref27 = _context19.sent;
+              _abi = _ref27.abi;
               _context19.next = 18;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(objectId),
@@ -1579,13 +1471,13 @@ function () {
 
   }, {
     key: "KMSSymmetricKey",
-    value: function KMSSymmetricKey(_ref29) {
+    value: function KMSSymmetricKey(_ref28) {
       var libraryId, objectId, kmsAddress, kmsCapId, kmsCap;
       return _regeneratorRuntime.async(function KMSSymmetricKey$(_context20) {
         while (1) {
           switch (_context20.prev = _context20.next) {
             case 0:
-              libraryId = _ref29.libraryId, objectId = _ref29.objectId;
+              libraryId = _ref28.libraryId, objectId = _ref28.objectId;
 
               if (!libraryId) {
                 libraryId = this.client.ContentObjectLibraryId({
@@ -1631,14 +1523,14 @@ function () {
 
   }, {
     key: "MakeKMSCall",
-    value: function MakeKMSCall(_ref30) {
-      var kmsId, objectId, versionHash, methodName, params, paramTypes, _ref30$additionalPara, additionalParams, packedHash, KMSUrls, i, stateChannelProvider;
+    value: function MakeKMSCall(_ref29) {
+      var kmsId, objectId, versionHash, methodName, params, paramTypes, _ref29$additionalPara, additionalParams, packedHash, KMSUrls, i, stateChannelProvider;
 
       return _regeneratorRuntime.async(function MakeKMSCall$(_context21) {
         while (1) {
           switch (_context21.prev = _context21.next) {
             case 0:
-              kmsId = _ref30.kmsId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, methodName = _ref30.methodName, params = _ref30.params, paramTypes = _ref30.paramTypes, _ref30$additionalPara = _ref30.additionalParams, additionalParams = _ref30$additionalPara === void 0 ? [] : _ref30$additionalPara;
+              kmsId = _ref29.kmsId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, methodName = _ref29.methodName, params = _ref29.params, paramTypes = _ref29.paramTypes, _ref29$additionalPara = _ref29.additionalParams, additionalParams = _ref29$additionalPara === void 0 ? [] : _ref29$additionalPara;
 
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
@@ -1724,14 +1616,14 @@ function () {
 
   }, {
     key: "MakeKMSRequest",
-    value: function MakeKMSRequest(_ref31) {
-      var kmsId, objectId, versionHash, _ref31$method, method, path, bodyType, _ref31$body, body, _ref31$queryParams, queryParams, headers, kmsUrls, kmsHttpClient;
+    value: function MakeKMSRequest(_ref30) {
+      var kmsId, objectId, versionHash, _ref30$method, method, path, bodyType, _ref30$body, body, _ref30$queryParams, queryParams, headers, kmsUrls, kmsHttpClient;
 
       return _regeneratorRuntime.async(function MakeKMSRequest$(_context22) {
         while (1) {
           switch (_context22.prev = _context22.next) {
             case 0:
-              kmsId = _ref31.kmsId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, _ref31$method = _ref31.method, method = _ref31$method === void 0 ? "GET" : _ref31$method, path = _ref31.path, bodyType = _ref31.bodyType, _ref31$body = _ref31.body, body = _ref31$body === void 0 ? {} : _ref31$body, _ref31$queryParams = _ref31.queryParams, queryParams = _ref31$queryParams === void 0 ? {} : _ref31$queryParams, headers = _ref31.headers;
+              kmsId = _ref30.kmsId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, _ref30$method = _ref30.method, method = _ref30$method === void 0 ? "GET" : _ref30$method, path = _ref30.path, bodyType = _ref30.bodyType, _ref30$body = _ref30.body, body = _ref30$body === void 0 ? {} : _ref30$body, _ref30$queryParams = _ref30.queryParams, queryParams = _ref30$queryParams === void 0 ? {} : _ref30$queryParams, headers = _ref30.headers;
 
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
@@ -1797,13 +1689,13 @@ function () {
     }
   }, {
     key: "ContractHasMethod",
-    value: function ContractHasMethod(_ref32) {
+    value: function ContractHasMethod(_ref31) {
       var contractAddress, abi, methodName, key, method, methodSignature, methodId;
       return _regeneratorRuntime.async(function ContractHasMethod$(_context23) {
         while (1) {
           switch (_context23.prev = _context23.next) {
             case 0:
-              contractAddress = _ref32.contractAddress, abi = _ref32.abi, methodName = _ref32.methodName;
+              contractAddress = _ref31.contractAddress, abi = _ref31.abi, methodName = _ref31.methodName;
               contractAddress = Utils.FormatAddress(contractAddress);
               key = "".concat(contractAddress, "-").concat(methodName);
 
@@ -1865,13 +1757,13 @@ function () {
     }
   }, {
     key: "MakeElvMasterCall",
-    value: function MakeElvMasterCall(_ref33) {
+    value: function MakeElvMasterCall(_ref32) {
       var methodName, params, ethUrls, i, url, elvMasterProvider;
       return _regeneratorRuntime.async(function MakeElvMasterCall$(_context24) {
         while (1) {
           switch (_context24.prev = _context24.next) {
             case 0:
-              methodName = _ref33.methodName, params = _ref33.params;
+              methodName = _ref32.methodName, params = _ref32.params;
               ethUrls = this.client.ethClient.ethereumURIs;
               i = 0;
 
@@ -1917,13 +1809,13 @@ function () {
     }
   }, {
     key: "ReEncryptionConk",
-    value: function ReEncryptionConk(_ref34) {
+    value: function ReEncryptionConk(_ref33) {
       var libraryId, objectId, versionHash, cap;
       return _regeneratorRuntime.async(function ReEncryptionConk$(_context25) {
         while (1) {
           switch (_context25.prev = _context25.next) {
             case 0:
-              libraryId = _ref34.libraryId, objectId = _ref34.objectId, versionHash = _ref34.versionHash;
+              libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash;
 
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
@@ -1961,14 +1853,14 @@ function () {
     }
   }, {
     key: "RecordTags",
-    value: function RecordTags(_ref35) {
-      var accessType, libraryId, objectId, versionHash, _ref36, abi, owner;
+    value: function RecordTags(_ref34) {
+      var accessType, libraryId, objectId, versionHash, _ref35, abi, owner;
 
       return _regeneratorRuntime.async(function RecordTags$(_context26) {
         while (1) {
           switch (_context26.prev = _context26.next) {
             case 0:
-              accessType = _ref35.accessType, libraryId = _ref35.libraryId, objectId = _ref35.objectId, versionHash = _ref35.versionHash;
+              accessType = _ref34.accessType, libraryId = _ref34.libraryId, objectId = _ref34.objectId, versionHash = _ref34.versionHash;
 
               if (!(accessType !== ACCESS_TYPES.OBJECT)) {
                 _context26.next = 3;
@@ -1984,8 +1876,8 @@ function () {
               }));
 
             case 5:
-              _ref36 = _context26.sent;
-              abi = _ref36.abi;
+              _ref35 = _context26.sent;
+              abi = _ref35.abi;
               _context26.next = 9;
               return _regeneratorRuntime.awrap(this.Owner({
                 id: objectId,
@@ -2019,7 +1911,7 @@ function () {
   }, {
     key: "CreateAccessGroup",
     value: function CreateAccessGroup() {
-      var _ref37, contractAddress, transactionHash;
+      var _ref36, contractAddress, transactionHash;
 
       return _regeneratorRuntime.async(function CreateAccessGroup$(_context27) {
         while (1) {
@@ -2032,9 +1924,9 @@ function () {
               }));
 
             case 2:
-              _ref37 = _context27.sent;
-              contractAddress = _ref37.contractAddress;
-              transactionHash = _ref37.transactionHash;
+              _ref36 = _context27.sent;
+              contractAddress = _ref36.contractAddress;
+              transactionHash = _ref36.transactionHash;
               return _context27.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
@@ -2050,7 +1942,7 @@ function () {
   }, {
     key: "CreateContentType",
     value: function CreateContentType() {
-      var _ref38, contractAddress, transactionHash;
+      var _ref37, contractAddress, transactionHash;
 
       return _regeneratorRuntime.async(function CreateContentType$(_context28) {
         while (1) {
@@ -2063,9 +1955,9 @@ function () {
               }));
 
             case 2:
-              _ref38 = _context28.sent;
-              contractAddress = _ref38.contractAddress;
-              transactionHash = _ref38.transactionHash;
+              _ref37 = _context28.sent;
+              contractAddress = _ref37.contractAddress;
+              transactionHash = _ref37.transactionHash;
               return _context28.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
@@ -2080,14 +1972,14 @@ function () {
     }
   }, {
     key: "CreateContentLibrary",
-    value: function CreateContentLibrary(_ref39) {
-      var kmsId, _ref40, contractAddress, transactionHash;
+    value: function CreateContentLibrary(_ref38) {
+      var kmsId, _ref39, contractAddress, transactionHash;
 
       return _regeneratorRuntime.async(function CreateContentLibrary$(_context29) {
         while (1) {
           switch (_context29.prev = _context29.next) {
             case 0:
-              kmsId = _ref39.kmsId;
+              kmsId = _ref38.kmsId;
               _context29.next = 3;
               return _regeneratorRuntime.awrap(this.client.ethClient.DeployLibraryContract({
                 contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
@@ -2096,9 +1988,9 @@ function () {
               }));
 
             case 3:
-              _ref40 = _context29.sent;
-              contractAddress = _ref40.contractAddress;
-              transactionHash = _ref40.transactionHash;
+              _ref39 = _context29.sent;
+              contractAddress = _ref39.contractAddress;
+              transactionHash = _ref39.transactionHash;
               return _context29.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
@@ -2113,14 +2005,14 @@ function () {
     }
   }, {
     key: "CreateContentObject",
-    value: function CreateContentObject(_ref41) {
-      var libraryId, typeId, _ref42, contractAddress, transactionHash, objectId;
+    value: function CreateContentObject(_ref40) {
+      var libraryId, typeId, _ref41, contractAddress, transactionHash;
 
       return _regeneratorRuntime.async(function CreateContentObject$(_context30) {
         while (1) {
           switch (_context30.prev = _context30.next) {
             case 0:
-              libraryId = _ref41.libraryId, typeId = _ref41.typeId;
+              libraryId = _ref40.libraryId, typeId = _ref40.typeId;
               _context30.next = 3;
               return _regeneratorRuntime.awrap(this.client.ethClient.DeployContentContract({
                 contentLibraryAddress: Utils.HashToAddress(libraryId),
@@ -2129,22 +2021,15 @@ function () {
               }));
 
             case 3:
-              _ref42 = _context30.sent;
-              contractAddress = _ref42.contractAddress;
-              transactionHash = _ref42.transactionHash;
-              // Cache object creation transaction for use in future updates
-              objectId = Utils.AddressToObjectId(contractAddress);
-
-              if (!this.noCache) {
-                this.modifyTransactions.objects[objectId] = transactionHash;
-              }
-
+              _ref41 = _context30.sent;
+              contractAddress = _ref41.contractAddress;
+              transactionHash = _ref41.transactionHash;
               return _context30.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
               });
 
-            case 9:
+            case 7:
             case "end":
               return _context30.stop();
           }
@@ -2155,26 +2040,8 @@ function () {
   }, {
     key: "ClearCache",
     value: function ClearCache() {
-      this.accessTransactions = {
-        spaces: {},
-        libraries: {},
-        types: {},
-        objects: {},
-        encryptedObjects: {},
-        groups: {},
-        wallets: {},
-        other: {}
-      };
-      this.modifyTransactions = {
-        spaces: {},
-        libraries: {},
-        types: {},
-        objects: {},
-        encryptedObjects: {},
-        groups: {},
-        wallets: {},
-        other: {}
-      };
+      this.accessTransactions = {};
+      this.modifyTransactions = {};
       this.channelContentTokens = {};
     }
   }]);
