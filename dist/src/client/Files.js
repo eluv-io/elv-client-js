@@ -91,7 +91,11 @@ exports.ListFiles = function _callee(_ref) {
   }, null, this);
 };
 /**
- * Copy/reference files from S3 to a content object
+ * Copy/reference files from S3 to a content object.
+ *
+ * S3 authentication is done by either providing an access key and secret or a presigned URL. The credentials will not be stored (neither in the client nor in the Fabric)
+ *
+ * NOTE: When providing a presigned URL instead of an access key + secret, the accessKey, secret, region and bucket parameters are not required.
  *
  * Expected format of fileInfo:
  *
@@ -113,6 +117,7 @@ exports.ListFiles = function _callee(_ref) {
  * @param {Array<Object>} fileInfo - List of files to reference/copy
  * @param {string} accessKey - AWS access key
  * @param {string} secret - AWS secret
+ * @param {string=} signedUrl
  * @param {string} encryption="none" - Encryption for uploaded files (copy only) - cgck | none
  * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
  * @param {function=} callback - If specified, will be periodically called with current upload status
@@ -122,13 +127,13 @@ exports.ListFiles = function _callee(_ref) {
 
 
 exports.UploadFilesFromS3 = function _callee2(_ref2) {
-  var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, _ref2$encryption, encryption, _ref2$copy, copy, callback, s3prefixRegex, i, fileSourcePath, s3prefixMatch, bucketName, encryption_key, conk, defaults, ops, _ref3, id, status, done, progress, _progress;
+  var libraryId, objectId, writeToken, region, bucket, fileInfo, accessKey, secret, signedUrl, _ref2$encryption, encryption, _ref2$copy, copy, callback, s3prefixRegex, i, fileSourcePath, s3prefixMatch, bucketName, encryption_key, conk, cloudCredentials, defaults, ops, _ref3, id, status, done, progress, _progress;
 
   return _regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
       switch (_context2.prev = _context2.next) {
         case 0:
-          libraryId = _ref2.libraryId, objectId = _ref2.objectId, writeToken = _ref2.writeToken, region = _ref2.region, bucket = _ref2.bucket, fileInfo = _ref2.fileInfo, accessKey = _ref2.accessKey, secret = _ref2.secret, _ref2$encryption = _ref2.encryption, encryption = _ref2$encryption === void 0 ? "none" : _ref2$encryption, _ref2$copy = _ref2.copy, copy = _ref2$copy === void 0 ? false : _ref2$copy, callback = _ref2.callback;
+          libraryId = _ref2.libraryId, objectId = _ref2.objectId, writeToken = _ref2.writeToken, region = _ref2.region, bucket = _ref2.bucket, fileInfo = _ref2.fileInfo, accessKey = _ref2.accessKey, secret = _ref2.secret, signedUrl = _ref2.signedUrl, _ref2$encryption = _ref2.encryption, encryption = _ref2$encryption === void 0 ? "none" : _ref2$encryption, _ref2$copy = _ref2.copy, copy = _ref2$copy === void 0 ? false : _ref2$copy, callback = _ref2.callback;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -194,6 +199,17 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
           encryption_key = "kp__".concat(bs58.encode(Buffer.from(JSON.stringify(conk))));
 
         case 25:
+          cloudCredentials = {
+            access_key_id: accessKey,
+            secret_access_key: secret
+          };
+
+          if (signedUrl) {
+            cloudCredentials = {
+              signed_url: signedUrl
+            };
+          }
+
           defaults = {
             encryption_key: encryption_key,
             access: {
@@ -203,10 +219,7 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
               storage_endpoint: {
                 region: region
               },
-              cloud_credentials: {
-                access_key_id: accessKey,
-                secret_access_key: secret
-              }
+              cloud_credentials: cloudCredentials
             }
           };
           ops = fileInfo.map(function (info) {
@@ -234,7 +247,7 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             }
           }); // eslint-disable-next-line no-unused-vars
 
-          _context2.next = 29;
+          _context2.next = 31;
           return _regeneratorRuntime.awrap(this.CreateFileUploadJob({
             libraryId: libraryId,
             objectId: objectId,
@@ -243,23 +256,23 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             defaults: defaults
           }));
 
-        case 29:
+        case 31:
           _ref3 = _context2.sent;
           id = _ref3.id;
 
-        case 31:
+        case 33:
           if (!true) {
-            _context2.next = 54;
+            _context2.next = 56;
             break;
           }
 
-          _context2.next = 34;
+          _context2.next = 36;
           return _regeneratorRuntime.awrap(new Promise(function (resolve) {
             return setTimeout(resolve, 1000);
           }));
 
-        case 34:
-          _context2.next = 36;
+        case 36:
+          _context2.next = 38;
           return _regeneratorRuntime.awrap(this.UploadStatus({
             libraryId: libraryId,
             objectId: objectId,
@@ -267,34 +280,34 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
             uploadId: id
           }));
 
-        case 36:
+        case 38:
           status = _context2.sent;
 
           if (!(status.errors && status.errors.length > 1)) {
-            _context2.next = 41;
+            _context2.next = 43;
             break;
           }
 
           throw status.errors.join("\n");
 
-        case 41:
+        case 43:
           if (!status.error) {
-            _context2.next = 46;
+            _context2.next = 48;
             break;
           }
 
           this.Log("S3 file upload failed:\n".concat(JSON.stringify(status, null, 2)));
           throw status.error;
 
-        case 46:
+        case 48:
           if (!(status.status.toLowerCase() === "failed")) {
-            _context2.next = 48;
+            _context2.next = 50;
             break;
           }
 
           throw "File upload failed";
 
-        case 48:
+        case 50:
           done = false;
 
           if (copy) {
@@ -325,17 +338,17 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
           }
 
           if (!done) {
-            _context2.next = 52;
+            _context2.next = 54;
             break;
           }
 
-          return _context2.abrupt("break", 54);
-
-        case 52:
-          _context2.next = 31;
-          break;
+          return _context2.abrupt("break", 56);
 
         case 54:
+          _context2.next = 33;
+          break;
+
+        case 56:
         case "end":
           return _context2.stop();
       }

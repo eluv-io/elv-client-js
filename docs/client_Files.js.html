@@ -116,7 +116,11 @@ exports.ListFiles = async function({libraryId, objectId, versionHash}) {
 };
 
 /**
- * Copy/reference files from S3 to a content object
+ * Copy/reference files from S3 to a content object.
+ *
+ * S3 authentication is done by either providing an access key and secret or a presigned URL. The credentials will not be stored (neither in the client nor in the Fabric)
+ *
+ * NOTE: When providing a presigned URL instead of an access key + secret, the accessKey, secret, region and bucket parameters are not required.
  *
  * Expected format of fileInfo:
  *
@@ -138,6 +142,7 @@ exports.ListFiles = async function({libraryId, objectId, versionHash}) {
  * @param {Array&lt;Object>} fileInfo - List of files to reference/copy
  * @param {string} accessKey - AWS access key
  * @param {string} secret - AWS secret
+ * @param {string=} signedUrl
  * @param {string} encryption="none" - Encryption for uploaded files (copy only) - cgck | none
  * @param {boolean} copy=false - If true, will copy the data from S3 into the fabric. Otherwise, a reference to the content will be made.
  * @param {function=} callback - If specified, will be periodically called with current upload status
@@ -153,6 +158,7 @@ exports.UploadFilesFromS3 = async function({
   fileInfo,
   accessKey,
   secret,
+  signedUrl,
   encryption="none",
   copy=false,
   callback
@@ -194,6 +200,17 @@ exports.UploadFilesFromS3 = async function({
     encryption_key = `kp__${bs58.encode(Buffer.from(JSON.stringify(conk)))}`;
   }
 
+  let cloudCredentials = {
+    access_key_id: accessKey,
+    secret_access_key: secret
+  };
+
+  if(signedUrl) {
+    cloudCredentials = {
+      signed_url: signedUrl
+    };
+  }
+
   const defaults = {
     encryption_key,
     access: {
@@ -203,10 +220,7 @@ exports.UploadFilesFromS3 = async function({
       storage_endpoint: {
         region
       },
-      cloud_credentials: {
-        access_key_id: accessKey,
-        secret_access_key: secret
-      }
+      cloud_credentials: cloudCredentials
     }
   };
 
