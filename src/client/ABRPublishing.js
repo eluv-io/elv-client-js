@@ -200,6 +200,7 @@ exports.CreateProductionMaster = async function({
     libraryId,
     objectId: id,
     writeToken: write_token,
+    commitMessage: "Create master",
     awaitCommitConfirmation: false
   });
 
@@ -375,7 +376,8 @@ exports.CreateABRMezzanine = async function({
   const finalizeResponse = await this.FinalizeContentObject({
     libraryId,
     objectId: id,
-    writeToken: write_token
+    writeToken: write_token,
+    commitMessage: "Create ABR mezzanine"
   });
 
   return {
@@ -459,7 +461,13 @@ exports.StartABRMezzanineJobs = async function({
     metadataSubtree: `lro_draft_${offeringKey}`,
     metadata: lroInfo
   });
-  await this.FinalizeContentObject({libraryId, objectId, writeToken: statusDraft.write_token});
+
+  await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken: statusDraft.write_token,
+    commitMessage: "Mezzanine LRO status"
+  });
 
   const {data, errors, warnings, logs} = await this.CallBitcodeMethod({
     libraryId,
@@ -611,6 +619,7 @@ exports.FinalizeABRMezzanine = async function({libraryId, objectId, offeringKey=
       libraryId,
       objectId: objectId,
       writeToken: lroDraft.write_token,
+      commitMessage: "Finalize ABR mezzanine",
       awaitCommitConfirmation: false
     });
 

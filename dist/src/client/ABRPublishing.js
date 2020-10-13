@@ -303,6 +303,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
+            commitMessage: "Create master",
             awaitCommitConfirmation: false
           }));
 
@@ -564,7 +565,8 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
-            writeToken: write_token
+            writeToken: write_token,
+            commitMessage: "Create ABR mezzanine"
           }));
 
         case 74:
@@ -711,7 +713,8 @@ exports.StartABRMezzanineJobs = function _callee4(_ref6) {
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
-            writeToken: statusDraft.write_token
+            writeToken: statusDraft.write_token,
+            commitMessage: "Mezzanine LRO status"
           }));
 
         case 28:
@@ -985,6 +988,7 @@ exports.FinalizeABRMezzanine = function _callee6(_ref9) {
             libraryId: libraryId,
             objectId: objectId,
             writeToken: lroDraft.write_token,
+            commitMessage: "Finalize ABR mezzanine",
             awaitCommitConfirmation: false
           }));
 

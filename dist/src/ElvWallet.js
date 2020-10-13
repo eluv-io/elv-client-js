@@ -118,14 +118,19 @@ function () {
     value: function AddAccount(_ref3) {
       var accountName = _ref3.accountName,
           privateKey = _ref3.privateKey;
-      var signer = new Ethers.Wallet(privateKey);
-      signer = signer.connect(this.provider);
 
-      if (accountName) {
-        this.signers[accountName] = signer;
+      try {
+        var signer = new Ethers.Wallet(privateKey);
+        signer = signer.connect(this.provider);
+
+        if (accountName) {
+          this.signers[accountName] = signer;
+        }
+
+        return signer;
+      } catch (error) {
+        throw Error("Invalid private key");
       }
-
-      return signer;
     }
     /**
      * Get the balance of the account. The account to query can be specified either by

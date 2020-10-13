@@ -1694,6 +1694,7 @@ exports.AvailableDRMs = function _callee24() {
 
               if (major > 13 || major === 13 && minor >= 1) {
                 availableDRMs[1] = "sample-aes";
+                availableDRMs[2] = "fairplay";
               }
             } // Test Safari
 
@@ -1707,6 +1708,7 @@ exports.AvailableDRMs = function _callee24() {
 
                 if (_major > 13 || _major === 13 && _minor >= 1) {
                   availableDRMs[1] = "sample-aes";
+                  availableDRMs[2] = "fairplay";
                 }
               }
             }
@@ -1883,7 +1885,7 @@ exports.AvailableOfferings = function _callee25(_ref18) {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+ * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play
@@ -1894,7 +1896,7 @@ exports.AvailableOfferings = function _callee25(_ref18) {
 
 
 exports.PlayoutOptions = function _callee26(_ref19) {
-  var objectId, versionHash, writeToken, linkPath, _ref19$protocols, protocols, _ref19$handler, handler, _ref19$offering, offering, playoutType, _ref19$drms, drms, context, _ref19$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, protocolMatch, drmMatch;
+  var objectId, versionHash, writeToken, linkPath, _ref19$protocols, protocols, _ref19$handler, handler, _ref19$offering, offering, playoutType, _ref19$drms, drms, context, _ref19$hlsjsProfile, hlsjsProfile, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee26$(_context26) {
     while (1) {
@@ -2044,7 +2046,7 @@ exports.PlayoutOptions = function _callee26(_ref19) {
 
         case 52:
           if (!(i < playoutOptions.length)) {
-            _context26.next = 85;
+            _context26.next = 86;
             break;
           }
 
@@ -2058,7 +2060,8 @@ exports.PlayoutOptions = function _callee26(_ref19) {
             playoutPath = playoutPath.replace("playlist", "playlist-".concat(playoutType));
           }
 
-          licenseServers = option.properties.license_servers; // Create full playout URLs for this protocol / drm combo
+          licenseServers = option.properties.license_servers;
+          cert = option.properties.cert; // Create full playout URLs for this protocol / drm combo
 
           _context26.t11 = _objectSpread;
           _context26.t12 = {};
@@ -2069,7 +2072,7 @@ exports.PlayoutOptions = function _callee26(_ref19) {
           _context26.t17 = _defineProperty;
           _context26.t18 = {};
           _context26.t19 = drm || "clear";
-          _context26.next = 70;
+          _context26.next = 71;
           return _regeneratorRuntime.awrap(this.Rep({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
@@ -2081,10 +2084,11 @@ exports.PlayoutOptions = function _callee26(_ref19) {
             } : {}
           }));
 
-        case 70:
+        case 71:
           _context26.t20 = _context26.sent;
           _context26.t21 = drm ? _defineProperty({}, drm, {
-            licenseServers: licenseServers
+            licenseServers: licenseServers,
+            cert: cert
           }) : undefined;
           _context26.t22 = {
             playoutUrl: _context26.t20,
@@ -2101,29 +2105,29 @@ exports.PlayoutOptions = function _callee26(_ref19) {
           drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
           if (!(!protocolMatch || !drmMatch)) {
-            _context26.next = 81;
+            _context26.next = 82;
             break;
           }
 
-          return _context26.abrupt("continue", 82);
+          return _context26.abrupt("continue", 83);
 
-        case 81:
+        case 82:
           // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
           if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
             playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
             playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
           }
 
-        case 82:
+        case 83:
           i++;
           _context26.next = 52;
           break;
 
-        case 85:
+        case 86:
           this.Log(playoutMap);
           return _context26.abrupt("return", playoutMap);
 
-        case 87:
+        case 88:
         case "end":
           return _context26.stop();
       }
@@ -2142,7 +2146,7 @@ exports.PlayoutOptions = function _callee26(_ref19) {
  * @param {string=} objectId - Id of the content
  * @param {string} versionHash - Version hash of the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {Array<string>} protocols=["dash", "hls"] - Acceptable playout protocols ("dash", "hls")
+ * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
  * @param {string=} offering=default - The offering to play

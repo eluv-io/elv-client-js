@@ -519,7 +519,8 @@ exports.SetCustomContentContract = function _callee8(_ref9) {
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
-            writeToken: writeToken
+            writeToken: writeToken,
+            commitMessage: "Set custom contract"
           }));
 
         case 15:
