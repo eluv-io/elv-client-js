@@ -324,7 +324,7 @@ exports.SetCustomContentContract = async function({
     }
   });
 
-  await this.FinalizeContentObject({libraryId, objectId, writeToken});
+  await this.FinalizeContentObject({libraryId, objectId, writeToken, commitMessage: "Set custom contract"});
 
   return setResult;
 };

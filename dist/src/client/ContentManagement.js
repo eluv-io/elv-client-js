@@ -211,6 +211,7 @@ exports.SetPermission = function _callee2(_ref2) {
           return _regeneratorRuntime.awrap(this.EditAndFinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
+            commitMessage: "Remove encryption conk",
             callback: function callback(_ref3) {
               var writeToken;
               return _regeneratorRuntime.async(function callback$(_context2) {
@@ -249,6 +250,7 @@ exports.SetPermission = function _callee2(_ref2) {
           return _regeneratorRuntime.awrap(this.EditAndFinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
+            commitMessage: "Add encryption conk",
             callback: function callback(_ref4) {
               var writeToken;
               return _regeneratorRuntime.async(function callback$(_context3) {
@@ -399,7 +401,8 @@ exports.CreateContentType = function _callee3(_ref5) {
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
-            writeToken: createResponse.write_token
+            writeToken: createResponse.write_token,
+            commitMessage: "Create content type"
           }));
 
         case 37:
@@ -524,7 +527,8 @@ exports.CreateContentLibrary = function _callee4(_ref7) {
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
-            writeToken: editResponse.write_token
+            writeToken: editResponse.write_token,
+            commitMessage: "Create library"
           }));
 
         case 33:
@@ -1109,8 +1113,8 @@ exports.EditContentObject = function _callee12(_ref17) {
           });
           this.Log("Opening content draft: ".concat(libraryId, " ").concat(objectId));
 
-          if (!options.type) {
-            _context14.next = 19;
+          if (!("type" in options)) {
+            _context14.next = 23;
             break;
           }
 
@@ -1126,7 +1130,7 @@ exports.EditContentObject = function _callee12(_ref17) {
 
         case 7:
           options.type = _context14.sent.hash;
-          _context14.next = 19;
+          _context14.next = 23;
           break;
 
         case 10:
@@ -1142,31 +1146,41 @@ exports.EditContentObject = function _callee12(_ref17) {
 
         case 13:
           options.type = _context14.sent.hash;
-          _context14.next = 19;
+          _context14.next = 23;
           break;
 
         case 16:
-          _context14.next = 18;
+          if (!options.type) {
+            _context14.next = 22;
+            break;
+          }
+
+          _context14.next = 19;
           return _regeneratorRuntime.awrap(this.ContentType({
             name: options.type
           }));
 
-        case 18:
-          options.type = _context14.sent.hash;
-
         case 19:
+          options.type = _context14.sent.hash;
+          _context14.next = 23;
+          break;
+
+        case 22:
+          options.type = "";
+
+        case 23:
           path = UrlJoin("qid", objectId);
           _context14.t0 = _regeneratorRuntime;
           _context14.t1 = this.utils;
           _context14.t2 = this.HttpClient;
-          _context14.next = 25;
+          _context14.next = 29;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true
           }));
 
-        case 25:
+        case 29:
           _context14.t3 = _context14.sent;
           _context14.t4 = path;
           _context14.t5 = options;
@@ -1178,10 +1192,10 @@ exports.EditContentObject = function _callee12(_ref17) {
           };
           _context14.t7 = _context14.t2.Request.call(_context14.t2, _context14.t6);
           _context14.t8 = _context14.t1.ResponseToJson.call(_context14.t1, _context14.t7);
-          _context14.next = 33;
+          _context14.next = 37;
           return _context14.t0.awrap.call(_context14.t0, _context14.t8);
 
-        case 33:
+        case 37:
           editResponse = _context14.sent;
           // Record the node used in creating this write token
           this.HttpClient.RecordWriteToken(editResponse.write_token);
@@ -1189,7 +1203,7 @@ exports.EditContentObject = function _callee12(_ref17) {
           editResponse.objectId = editResponse.id;
           return _context14.abrupt("return", editResponse);
 
-        case 38:
+        case 42:
         case "end":
           return _context14.stop();
       }
@@ -1215,6 +1229,7 @@ exports.EditContentObject = function _callee12(_ref17) {
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
+ * @param {string=} commitMessage - Message to include about this commit
  * @param {boolean=} publish=true - If specified, the object will also be published
  * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
  * Irrelevant if not publishing.
@@ -1224,13 +1239,13 @@ exports.EditContentObject = function _callee12(_ref17) {
 
 
 exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
-  var libraryId, callback, _ref18$options, options, _ref18$publish, publish, _ref18$awaitCommitCon, awaitCommitConfirmation, _ref19, id, writeToken;
+  var libraryId, callback, _ref18$options, options, _ref18$commitMessage, commitMessage, _ref18$publish, publish, _ref18$awaitCommitCon, awaitCommitConfirmation, _ref19, id, writeToken;
 
   return _regeneratorRuntime.async(function _callee13$(_context15) {
     while (1) {
       switch (_context15.prev = _context15.next) {
         case 0:
-          libraryId = _ref18.libraryId, callback = _ref18.callback, _ref18$options = _ref18.options, options = _ref18$options === void 0 ? {} : _ref18$options, _ref18$publish = _ref18.publish, publish = _ref18$publish === void 0 ? true : _ref18$publish, _ref18$awaitCommitCon = _ref18.awaitCommitConfirmation, awaitCommitConfirmation = _ref18$awaitCommitCon === void 0 ? true : _ref18$awaitCommitCon;
+          libraryId = _ref18.libraryId, callback = _ref18.callback, _ref18$options = _ref18.options, options = _ref18$options === void 0 ? {} : _ref18$options, _ref18$commitMessage = _ref18.commitMessage, commitMessage = _ref18$commitMessage === void 0 ? "" : _ref18$commitMessage, _ref18$publish = _ref18.publish, publish = _ref18$publish === void 0 ? true : _ref18$publish, _ref18$awaitCommitCon = _ref18.awaitCommitConfirmation, awaitCommitConfirmation = _ref18$awaitCommitCon === void 0 ? true : _ref18$awaitCommitCon;
           _context15.next = 3;
           return _regeneratorRuntime.awrap(this.CreateContentObject({
             libraryId: libraryId,
@@ -1254,6 +1269,7 @@ exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
             libraryId: libraryId,
             objectId: id,
             writeToken: writeToken,
+            commitMessage: commitMessage,
             publish: publish,
             awaitCommitConfirmation: awaitCommitConfirmation
           }));
@@ -1285,6 +1301,7 @@ exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
+ * @param {string=} commitMessage - Message to include about this commit
  * @param {boolean=} publish=true - If specified, the object will also be published
  * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
  * Irrelevant if not publishing.
@@ -1294,13 +1311,13 @@ exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
 
 
 exports.EditAndFinalizeContentObject = function _callee14(_ref20) {
-  var libraryId, objectId, callback, _ref20$options, options, _ref20$publish, publish, _ref20$awaitCommitCon, awaitCommitConfirmation, _ref21, writeToken;
+  var libraryId, objectId, callback, _ref20$options, options, _ref20$commitMessage, commitMessage, _ref20$publish, publish, _ref20$awaitCommitCon, awaitCommitConfirmation, _ref21, writeToken;
 
   return _regeneratorRuntime.async(function _callee14$(_context16) {
     while (1) {
       switch (_context16.prev = _context16.next) {
         case 0:
-          libraryId = _ref20.libraryId, objectId = _ref20.objectId, callback = _ref20.callback, _ref20$options = _ref20.options, options = _ref20$options === void 0 ? {} : _ref20$options, _ref20$publish = _ref20.publish, publish = _ref20$publish === void 0 ? true : _ref20$publish, _ref20$awaitCommitCon = _ref20.awaitCommitConfirmation, awaitCommitConfirmation = _ref20$awaitCommitCon === void 0 ? true : _ref20$awaitCommitCon;
+          libraryId = _ref20.libraryId, objectId = _ref20.objectId, callback = _ref20.callback, _ref20$options = _ref20.options, options = _ref20$options === void 0 ? {} : _ref20$options, _ref20$commitMessage = _ref20.commitMessage, commitMessage = _ref20$commitMessage === void 0 ? "" : _ref20$commitMessage, _ref20$publish = _ref20.publish, publish = _ref20$publish === void 0 ? true : _ref20$publish, _ref20$awaitCommitCon = _ref20.awaitCommitConfirmation, awaitCommitConfirmation = _ref20$awaitCommitCon === void 0 ? true : _ref20$awaitCommitCon;
           _context16.next = 3;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
@@ -1322,6 +1339,7 @@ exports.EditAndFinalizeContentObject = function _callee14(_ref20) {
             libraryId: libraryId,
             objectId: objectId,
             writeToken: writeToken,
+            commitMessage: commitMessage,
             publish: publish,
             awaitCommitConfirmation: awaitCommitConfirmation
           }));
@@ -1457,6 +1475,7 @@ exports.AwaitPending = function _callee15(objectId) {
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the draft
+ * @param {string=} commitMessage - Message to include about this commit
  * @param {boolean=} publish=true - If specified, the object will also be published
  * @param {boolean=} awaitCommitConfirmation=true - If specified, will wait for the publish commit to be confirmed.
  * Irrelevant if not publishing.
@@ -1464,70 +1483,113 @@ exports.AwaitPending = function _callee15(objectId) {
 
 
 exports.FinalizeContentObject = function _callee16(_ref22) {
-  var libraryId, objectId, writeToken, _ref22$publish, publish, _ref22$awaitCommitCon, awaitCommitConfirmation, path, finalizeResponse;
+  var libraryId, objectId, writeToken, _ref22$commitMessage, commitMessage, _ref22$publish, publish, _ref22$awaitCommitCon, awaitCommitConfirmation, path, finalizeResponse;
 
   return _regeneratorRuntime.async(function _callee16$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref22.libraryId, objectId = _ref22.objectId, writeToken = _ref22.writeToken, _ref22$publish = _ref22.publish, publish = _ref22$publish === void 0 ? true : _ref22$publish, _ref22$awaitCommitCon = _ref22.awaitCommitConfirmation, awaitCommitConfirmation = _ref22$awaitCommitCon === void 0 ? true : _ref22$awaitCommitCon;
+          libraryId = _ref22.libraryId, objectId = _ref22.objectId, writeToken = _ref22.writeToken, _ref22$commitMessage = _ref22.commitMessage, commitMessage = _ref22$commitMessage === void 0 ? "" : _ref22$commitMessage, _ref22$publish = _ref22.publish, publish = _ref22$publish === void 0 ? true : _ref22$publish, _ref22$awaitCommitCon = _ref22.awaitCommitConfirmation, awaitCommitConfirmation = _ref22$awaitCommitCon === void 0 ? true : _ref22$awaitCommitCon;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
+          _context19.t0 = _regeneratorRuntime;
+          _context19.t1 = this;
+          _context19.t2 = libraryId;
+          _context19.t3 = objectId;
+          _context19.t4 = writeToken;
+          _context19.t5 = commitMessage;
+          _context19.next = 11;
+          return _regeneratorRuntime.awrap(this.userProfileClient.UserMetadata({
+            metadataSubtree: "public/name"
+          }));
+
+        case 11:
+          _context19.t6 = _context19.sent;
+
+          if (_context19.t6) {
+            _context19.next = 14;
+            break;
+          }
+
+          _context19.t6 = this.CurrentAccountAddress();
+
+        case 14:
+          _context19.t7 = _context19.t6;
+          _context19.t8 = this.CurrentAccountAddress();
+          _context19.t9 = new Date().toISOString();
+          _context19.t10 = {
+            message: _context19.t5,
+            author: _context19.t7,
+            author_address: _context19.t8,
+            timestamp: _context19.t9
+          };
+          _context19.t11 = {
+            libraryId: _context19.t2,
+            objectId: _context19.t3,
+            writeToken: _context19.t4,
+            metadataSubtree: "commit",
+            metadata: _context19.t10
+          };
+          _context19.t12 = _context19.t1.ReplaceMetadata.call(_context19.t1, _context19.t11);
+          _context19.next = 22;
+          return _context19.t0.awrap.call(_context19.t0, _context19.t12);
+
+        case 22:
           this.Log("Finalizing content draft: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
-          _context19.next = 6;
+          _context19.next = 25;
           return _regeneratorRuntime.awrap(this.AwaitPending(objectId));
 
-        case 6:
+        case 25:
           path = UrlJoin("q", writeToken);
-          _context19.t0 = _regeneratorRuntime;
-          _context19.t1 = this.utils;
-          _context19.t2 = this.HttpClient;
-          _context19.next = 12;
+          _context19.t13 = _regeneratorRuntime;
+          _context19.t14 = this.utils;
+          _context19.t15 = this.HttpClient;
+          _context19.next = 31;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true
           }));
 
-        case 12:
-          _context19.t3 = _context19.sent;
-          _context19.t4 = path;
-          _context19.t5 = {
-            headers: _context19.t3,
+        case 31:
+          _context19.t16 = _context19.sent;
+          _context19.t17 = path;
+          _context19.t18 = {
+            headers: _context19.t16,
             method: "POST",
-            path: _context19.t4,
+            path: _context19.t17,
             failover: false
           };
-          _context19.t6 = _context19.t2.Request.call(_context19.t2, _context19.t5);
-          _context19.t7 = _context19.t1.ResponseToJson.call(_context19.t1, _context19.t6);
-          _context19.next = 19;
-          return _context19.t0.awrap.call(_context19.t0, _context19.t7);
+          _context19.t19 = _context19.t15.Request.call(_context19.t15, _context19.t18);
+          _context19.t20 = _context19.t14.ResponseToJson.call(_context19.t14, _context19.t19);
+          _context19.next = 38;
+          return _context19.t13.awrap.call(_context19.t13, _context19.t20);
 
-        case 19:
+        case 38:
           finalizeResponse = _context19.sent;
           this.Log("Finalized: ".concat(finalizeResponse.hash));
 
           if (!publish) {
-            _context19.next = 24;
+            _context19.next = 43;
             break;
           }
 
-          _context19.next = 24;
+          _context19.next = 43;
           return _regeneratorRuntime.awrap(this.PublishContentVersion({
             objectId: objectId,
             versionHash: finalizeResponse.hash,
             awaitCommitConfirmation: awaitCommitConfirmation
           }));
 
-        case 24:
+        case 43:
           // Invalidate cached content type, if this is one.
           delete this.contentTypes[objectId];
           return _context19.abrupt("return", finalizeResponse);
 
-        case 26:
+        case 45:
         case "end":
           return _context19.stop();
       }
@@ -2098,7 +2160,8 @@ exports.UpdateContentObjectGraph = function _callee26(_ref30) {
                     return _regeneratorRuntime.awrap(_this4.FinalizeContentObject({
                       libraryId: currentLibraryId,
                       objectId: currentObjectId,
-                      writeToken: write_token
+                      writeToken: write_token,
+                      commitMessage: "Update links"
                     }));
 
                   case 25:

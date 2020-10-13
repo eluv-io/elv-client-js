@@ -77,27 +77,8 @@ class AuthorizationClient {
     this.noAuth = noAuth;
     this.debug = debug;
 
-    this.accessTransactions = {
-      spaces: {},
-      libraries: {},
-      objects: {},
-      encryptedObjects: {},
-      types: {},
-      groups: {},
-      wallets: {},
-      other: {}
-    };
-
-    this.modifyTransactions = {
-      spaces: {},
-      libraries: {},
-      objects: {},
-      encryptedObjects: {},
-      types: {},
-      groups: {},
-      wallets: {},
-      other: {}
-    };
+    this.accessTransactions = {};
+    this.modifyTransactions = {};
 
     this.methodAvailability = {};
     this.accessVersions = {};
@@ -134,7 +115,18 @@ class AuthorizationClient {
     noCache=false,
     noAuth=false
   }) {
-    if(this.client.staticToken) {
+    if(versionHash) { objectId = this.client.utils.DecodeVersionHash(versionHash).objectId; }
+
+    const isWalletRequest =
+      objectId &&
+      this.client.signer &&
+      this.client.utils.EqualAddress(
+        await this.client.userProfileClient.WalletAddress(false),
+        this.client.utils.HashToAddress(objectId)
+      );
+
+    // User wallet requests can't use static token
+    if(this.client.staticToken && !isWalletRequest) {
       return this.client.staticToken;
     }
 
@@ -262,7 +254,12 @@ class AuthorizationClient {
 
     const id = objectId || libraryId || this.contentSpaceId;
     const { isV3, accessType, abi } = await this.ContractInfo({id});
-    const { cache, accessArgs, checkAccessCharge } = await this.AccessInfo({
+
+    if(typeof accessType === "undefined") {
+      throw Error(`Unable to determine contract info for ${id} (${this.client.utils.HashToAddress(id)}) - Wrong network?`);
+    }
+
+    const { accessArgs, checkAccessCharge } = await this.AccessInfo({
       accessType,
       publicKey,
       update,
@@ -274,9 +271,17 @@ class AuthorizationClient {
 
     // Check cache for existing transaction
     if(!noCache && !skipCache) {
-      let cacheHit = update ? cache.modify[address] : cache.access[address];
+      const cache = update ? this.modifyTransactions : this.accessTransactions;
 
-      if(cacheHit) { return { transactionHash: cacheHit }; }
+      if(cache[address]) {
+        // Expire after 12 hours
+        if(cache[address].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
+          return cache[address];
+        } else {
+          // Token expired
+          delete cache[address];
+        }
+      }
     }
 
     // If only checking the cache, don't continue to make access request
@@ -294,7 +299,12 @@ class AuthorizationClient {
 
     // Cache the transaction hash
     if(!noCache) {
-      this.CacheTransaction({accessType, address, publicKey, update, transactionHash: accessRequest.transactionHash});
+      const cache = update ? this.modifyTransactions : this.accessTransactions;
+
+      cache[address] = {
+        issuedAt: Date.now(),
+        transactionHash: accessRequest.transactionHash
+      };
 
       // Save request ID if present
       accessRequest.logs.some(log => {
@@ -433,12 +443,13 @@ class AuthorizationClient {
     }
 
     if(!this.noCache && this.channelContentTokens[objectId]) {
+      // Expire after 12 hours
       if(this.channelContentTokens[objectId].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
         return this.channelContentTokens[objectId].token;
+      } else {
+        // Token expired
+        delete this.channelContentTokens[objectId];
       }
-
-      // Token expired
-      this.channelContentTokens[objectId] = undefined;
     }
 
     this.Log(`Making state channel access request: ${objectId}`);
@@ -548,40 +559,6 @@ class AuthorizationClient {
     return fabricToken;
   }
 
-  CacheTransaction({accessType, address, publicKey, update, transactionHash}) {
-    let cache = update ? this.modifyTransactions : this.accessTransactions;
-
-    switch(accessType) {
-      case ACCESS_TYPES.SPACE:
-        cache = cache.spaces;
-        break;
-
-      case ACCESS_TYPES.LIBRARY:
-        cache = cache.libraries;
-        break;
-
-      case ACCESS_TYPES.TYPE:
-        cache = cache.types;
-        break;
-
-      case ACCESS_TYPES.GROUP:
-        cache = cache.groups;
-        break;
-
-      case ACCESS_TYPES.WALLET:
-        cache = cache.wallets;
-        break;
-
-      case ACCESS_TYPES.OBJECT:
-        cache = publicKey ? cache.encryptedObjects : cache.objects;
-        break;
-      default:
-        cache = cache.other;
-    }
-
-    cache[address] = transactionHash;
-  }
-
   async IsV3({id}) {
     if(!this.accessVersions[id]) {
       this.accessVersions[id] = await this.ContractHasMethod({
@@ -595,77 +572,26 @@ class AuthorizationClient {
   }
 
   async AccessInfo({accessType, publicKey, args, isV3}) {
-    let cache, checkAccessCharge;
+    let checkAccessCharge = false;
 
-    switch(accessType) {
-      case ACCESS_TYPES.SPACE:
-        cache = {
-          access: this.accessTransactions.spaces,
-          modify: this.modifyTransactions.spaces,
-        };
-        break;
+    if(accessType === ACCESS_TYPES.OBJECT) {
+      checkAccessCharge = true;
 
-      case ACCESS_TYPES.LIBRARY:
-        cache = {
-          access: this.accessTransactions.libraries,
-          modify: this.modifyTransactions.libraries,
-        };
-        break;
-
-      case ACCESS_TYPES.TYPE:
-        cache = {
-          access: this.accessTransactions.types,
-          modify: this.modifyTransactions.types
-        };
-        break;
-
-      case ACCESS_TYPES.GROUP:
-        cache = {
-          access: this.accessTransactions.groups,
-          modify: this.modifyTransactions.groups
-        };
-        break;
-
-      case ACCESS_TYPES.WALLET:
-        cache = {
-          access: this.accessTransactions.wallets,
-          modify: this.modifyTransactions.wallets
-        };
-        break;
-
-      case ACCESS_TYPES.OBJECT:
-        cache = publicKey ?
-          {
-            access: this.accessTransactions.encryptedObjects,
-            modify: this.modifyTransactions.encryptedObjects
-          } :
-          {
-            access: this.accessTransactions.objects,
-            modify: this.modifyTransactions.objects
-          };
-        checkAccessCharge = true;
-
-        if(!isV3) {
-          if(args && args.length > 0) {
-            // Inject public key of requester
-            args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
-          } else {
-            // Set default args
-            args = [
-              0, // Access level
-              this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
-              publicKey, //cap.public_key,
-              [], // Custom values
-              [] // Stakeholders
-            ];
-          }
+      if(!isV3) {
+        if(args && args.length > 0) {
+          // Inject public key of requester
+          args[1] = this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "";
+        } else {
+          // Set default args
+          args = [
+            0, // Access level
+            this.client.signer.signingKey ? this.client.signer.signingKey.publicKey : "", // Public key of requester
+            publicKey, //cap.public_key,
+            [], // Custom values
+            [] // Stakeholders
+          ];
         }
-        break;
-      default:
-        cache = {
-          access: this.accessTransactions.other,
-          modify: this.modifyTransactions.other
-        };
+      }
     }
 
     if(isV3 && (!args || args.length === 0)) {
@@ -676,7 +602,6 @@ class AuthorizationClient {
     }
 
     return {
-      cache,
       accessArgs: args,
       checkAccessCharge
     };
@@ -747,7 +672,7 @@ class AuthorizationClient {
     }
 
     delete this.requestIds[address];
-    delete this.accessTransactions.objects[address];
+    delete this.accessTransactions[address];
 
     return event;
   }
@@ -762,7 +687,7 @@ class AuthorizationClient {
     const version = isV3 ? "v3" : "v2";
     const accessType = await this.AccessType(id);
 
-    if(accessType === this.ACCESS_TYPES.OTHER) { return; }
+    if(accessType === this.ACCESS_TYPES.OTHER) { return {}; }
 
     return {
       isV3,
@@ -1079,17 +1004,11 @@ class AuthorizationClient {
 
   async CreateContentObject({libraryId, typeId}) {
     // Deploy contract
-    const { contractAddress, transactionHash } = await this.client.ethClient.DeployContentContract({
+    let { contractAddress, transactionHash } = await this.client.ethClient.DeployContentContract({
       contentLibraryAddress: Utils.HashToAddress(libraryId),
       typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
       signer: this.client.signer
     });
-
-    // Cache object creation transaction for use in future updates
-    const objectId = Utils.AddressToObjectId(contractAddress);
-    if(!this.noCache) {
-      this.modifyTransactions.objects[objectId] = transactionHash;
-    }
 
     return {
       contractAddress,
@@ -1099,28 +1018,8 @@ class AuthorizationClient {
 
   // Clear cached access transaction IDs and state channel tokens
   ClearCache() {
-    this.accessTransactions = {
-      spaces: {},
-      libraries: {},
-      types: {},
-      objects: {},
-      encryptedObjects: {},
-      groups: {},
-      wallets: {},
-      other: {}
-    };
-
-    this.modifyTransactions = {
-      spaces: {},
-      libraries: {},
-      types: {},
-      objects: {},
-      encryptedObjects: {},
-      groups: {},
-      wallets: {},
-      other: {}
-    };
-
+    this.accessTransactions = {};
+    this.modifyTransactions = {};
     this.channelContentTokens = {};
   }
 }

@@ -3,6 +3,9 @@
     "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"writeToken\": \"tqw_C138mP6qBdpjY4VCuvaZfDLxrSyGucmM8\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-copy\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": true,\n  \"callback\": \"<function>\"\n});"
   },
   {
+    "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"writeToken\": \"tqw_2SMiWJ6agtBYGRiS6oteCzn4p4x3ubVRS\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-reference\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"signedUrl\": <filtered>,\n  \"copy\": false,\n  \"callback\": \"<function>\"\n});"
+  },
+  {
     "signature": "async UploadFilesFromS3({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"writeToken\": \"tqw_57H5oLujYMACfCVdFrDy3PKTM48DWyub9\",\n  \"encryption\": \"cgck\",\n  \"fileInfo\": [\n    {\n      \"path\": \"s3-copy-encrypted\",\n      \"source\": \"ENTIRE_CREED_2min_.mp4\"\n    }\n  ],\n  \"region\": \"us-west-1\",\n  \"bucket\": \"eluvio-mez-test\",\n  \"accessKey\": \"<filtered>\",\n  \"secret\": \"<filtered>\",\n  \"copy\": true,\n  \"callback\": \"<function>\"\n});"
   },
   {

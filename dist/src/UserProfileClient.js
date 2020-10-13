@@ -206,7 +206,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: createResponse.write_token
+                writeToken: createResponse.write_token,
+                commitMessage: "Create user wallet object"
               }));
 
             case 39:
@@ -242,45 +243,49 @@ function () {
   }, {
     key: "WalletAddress",
     value: function WalletAddress() {
-      var walletAddress;
+      var autoCreate,
+          walletAddress,
+          _args2 = arguments;
       return _regeneratorRuntime.async(function WalletAddress$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
+              autoCreate = _args2.length > 0 && _args2[0] !== undefined ? _args2[0] : true;
+
               if (!this.walletAddress) {
-                _context2.next = 2;
+                _context2.next = 3;
                 break;
               }
 
               return _context2.abrupt("return", this.walletAddress);
 
-            case 2:
-              _context2.next = 4;
+            case 3:
+              _context2.next = 5;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
                 methodName: "userWallets",
                 methodArgs: [this.client.signer.address]
               }));
 
-            case 4:
+            case 5:
               walletAddress = _context2.sent;
 
               if (!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
                 this.walletAddress = walletAddress;
               }
 
-              if (this.walletAddress) {
-                _context2.next = 9;
+              if (!(!this.walletAddress && autoCreate)) {
+                _context2.next = 10;
                 break;
               }
 
-              _context2.next = 9;
+              _context2.next = 10;
               return _regeneratorRuntime.awrap(this.CreateWallet());
 
-            case 9:
+            case 10:
               return _context2.abrupt("return", this.walletAddress);
 
-            case 10:
+            case 11:
             case "end":
               return _context2.stop();
           }
@@ -653,7 +658,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                commitMessage: "Merge user metadata"
               }));
 
             case 14:
@@ -711,7 +717,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                commitMessage: "Replace user metadata"
               }));
 
             case 14:
@@ -767,7 +774,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                commitMessage: "Delete user metadata"
               }));
 
             case 14:
@@ -1111,7 +1119,8 @@ function () {
               return _regeneratorRuntime.awrap(this.client.FinalizeContentObject({
                 libraryId: libraryId,
                 objectId: objectId,
-                writeToken: editRequest.write_token
+                writeToken: editRequest.write_token,
+                commitMessage: "Set user profile image"
               }));
 
             case 17:
@@ -1345,6 +1354,7 @@ function () {
                 libraryId: userLibraryId,
                 objectId: userObjectId,
                 writeToken: editRequest.write_token,
+                commitMessage: "Record user tags",
                 awaitCommitConfirmation: false
               }));
 

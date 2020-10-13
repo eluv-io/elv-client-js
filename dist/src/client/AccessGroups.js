@@ -344,7 +344,8 @@ exports.CreateAccessGroup = function _callee7() {
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
-            writeToken: editResponse.write_token
+            writeToken: editResponse.write_token,
+            commitMessage: "Create access group"
           }));
 
         case 16:
@@ -1222,7 +1223,8 @@ exports.LinkAccessGroupToOauth = function _callee23(_ref19) {
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: this.contentSpaceLibraryId,
             objectId: objectId,
-            writeToken: writeToken
+            writeToken: writeToken,
+            commitMessage: "Bind access group to OAuth"
           }));
 
         case 27:

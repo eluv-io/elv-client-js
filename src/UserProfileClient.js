@@ -118,7 +118,8 @@ await client.userProfileClient.UserMetadata()
           await this.client.FinalizeContentObject({
             libraryId,
             objectId,
-            writeToken: createResponse.write_token
+            writeToken: createResponse.write_token,
+            commitMessage: "Create user wallet object"
           });
         }
       }
@@ -137,7 +138,7 @@ await client.userProfileClient.UserMetadata()
    *
    * @return {Promise<string>} - The contract address of the current user's wallet contract
    */
-  async WalletAddress() {
+  async WalletAddress(autoCreate=true) {
     if(this.walletAddress) { return this.walletAddress; }
 
     const walletAddress = await this.client.CallContractMethod({
@@ -150,7 +151,7 @@ await client.userProfileClient.UserMetadata()
       this.walletAddress = walletAddress;
     }
 
-    if(!this.walletAddress) {
+    if(!this.walletAddress && autoCreate) {
       await this.CreateWallet();
     }
 
@@ -350,7 +351,7 @@ await client.userProfileClient.UserMetadata()
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
     await this.client.MergeMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token, commitMessage: "Merge user metadata"});
   }
 
   /**
@@ -368,7 +369,7 @@ await client.userProfileClient.UserMetadata()
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
     await this.client.ReplaceMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree, metadata});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token, commitMessage: "Replace user metadata"});
   }
 
   /**
@@ -385,7 +386,7 @@ await client.userProfileClient.UserMetadata()
     const editRequest = await this.client.EditContentObject({libraryId, objectId});
 
     await this.client.DeleteMetadata({libraryId, objectId, writeToken: editRequest.write_token, metadataSubtree});
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token, commitMessage: "Delete user metadata"});
   }
 
   /**
@@ -520,7 +521,7 @@ await client.userProfileClient.UserMetadata()
       imagePath: "public/profile_image"
     });
 
-    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token});
+    await this.client.FinalizeContentObject({libraryId, objectId, writeToken: editRequest.write_token, commitMessage: "Set user profile image"});
   }
 
   /**
@@ -615,6 +616,7 @@ await client.userProfileClient.UserMetadata()
       libraryId: userLibraryId,
       objectId: userObjectId,
       writeToken: editRequest.write_token,
+      commitMessage: "Record user tags",
       awaitCommitConfirmation: false
     });
   }
