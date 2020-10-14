@@ -65,6 +65,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
     const offeringKey = this.args.offeringKey;
     const filePath = this.args.file;
     const fileName = path.basename(filePath);
+    const isDefault = this.args.isDefault;
     const label = this.args.label;
     const language = this.args.language;
     const timeShift = this.args.timeShift;
@@ -165,6 +166,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
       bit_rate: 100,
       codec_name: "none",
       codec_type: "captions",
+      default_for_media_type: isDefault,
       duration: {
         time_base: timeBase,
         ts: durationTs
@@ -240,6 +242,13 @@ class OfferingAddCaptionStream extends ScriptOffering {
         demandOption: true,
         describe: "Label to display for caption stream",
         type: "string"
+      })
+      .option("isDefault", {
+        alias: "is-default",
+        default: false,
+        demandOption: false,
+        describe: "Set as default caption stream",
+        type: "boolean"
       })
       .option("language", {
         alias: "lang",
