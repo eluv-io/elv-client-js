@@ -8,7 +8,7 @@ function getNestedObject(nestedObj, pathArr) {
     (obj && obj[key] !== "undefined") ? obj[key] : undefined, nestedObj);
 }
 
-class OfferingSetImage extends MetadataMixin(ScriptBase) {
+class ObjectSetImage extends MetadataMixin(ScriptBase) {
 
   async body() {
     const client = await this.client();
@@ -87,5 +87,5 @@ class OfferingSetImage extends MetadataMixin(ScriptBase) {
   }
 }
 
-const script = new OfferingSetImage;
+const script = new ObjectSetImage;
 script.run();

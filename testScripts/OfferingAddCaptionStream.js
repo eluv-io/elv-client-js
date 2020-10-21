@@ -9,8 +9,8 @@ const path = require("path");
 
 const ScriptOffering = require("./parentClasses/ScriptOffering");
 
-const RE_VTT_TIMESTAMP_LINE = /(^.*)([0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}) --> ([0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})(.*$)/;
-const RE_VTT_TIMESTAMP_PARTS = /([0-9]{2}):([0-9]{2}):([0-9]{2}\.[0-9]{3})/;
+const RE_VTT_TIMESTAMP_LINE = /^(([0-9]{2}:)?[0-9]{2}:[0-9]{2}\.[0-9]{3}) --> (([0-9]{2}:)?[0-9]{2}:[0-9]{2}\.[0-9]{3})(.*$)/;
+const RE_VTT_TIMESTAMP_PARTS = /(([0-9]{2}):)?([0-9]{2}):([0-9]{2}\.[0-9]{3})/;
 
 function zeroPadLeft(value, width) {
   return (value + "").padStart(width, "0");
@@ -18,7 +18,7 @@ function zeroPadLeft(value, width) {
 
 function timeStampShift(timestamp, offset) {
   const match = RE_VTT_TIMESTAMP_PARTS.exec(timestamp);
-  const shiftedSeconds = parseInt(match[1],10) * 3600 + parseInt(match[2], 10) * 60 + parseFloat(match[3]) + offset;
+  const shiftedSeconds = parseInt(match[2] || 0,10) * 3600 + parseInt(match[3], 10) * 60 + parseFloat(match[4]) + offset;
   if(shiftedSeconds < 0) {
     throw new Error("timeShift resulted in negative timestamp");
   }
@@ -33,7 +33,7 @@ function timeStampShift(timestamp, offset) {
 function vttLineTimeShift(line, offset) {
   const match = RE_VTT_TIMESTAMP_LINE.exec(line);
   if(match !== null) {
-    return match[1] + timeStampShift(match[2], offset) + " --> " + timeStampShift(match[3], offset) + match[4];
+    return timeStampShift(match[1], offset) + " --> " + timeStampShift(match[3], offset) + match[5];
   } else {
     return line;
   }
