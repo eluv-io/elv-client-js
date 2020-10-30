@@ -19,7 +19,8 @@ class VariantAddStream extends ScriptVariant {
     const default_for_media_type = this.args.isDefault;
     const variantKey = this.args.variantKey;
     const filePath = this.args.file;
-    const streamIndex = this.args.streamIndex;
+    const streamIndexes = this.args.streamIndex;
+    const mappingInfo = this.args.mapping;
 
     // ===============================================================
     // retrieve metadata from object and validate presence of variant
@@ -29,7 +30,12 @@ class VariantAddStream extends ScriptVariant {
       objectId
     });
     this.validateVariant(metadata, variantKey);
-    this.validateStreamSource(metadata, filePath, streamIndex);
+
+    let sources = [];
+    for(const i of streamIndexes) {
+      this.validateStreamSource(metadata, filePath, i);
+      sources.push({files_api_path: filePath, stream_index: i});
+    }
 
     // =======================================
     // make sure entry for specified stream does not already exist
@@ -42,21 +48,14 @@ class VariantAddStream extends ScriptVariant {
     }
 
     // make our changes
-    const variantStream = {
+    // merge into object variant metadata
+    variantStreams[streamKey] = {
       default_for_media_type,
       label,
       language,
-      mapping_info: "",
-      sources: [
-        {
-          files_api_path: filePath,
-          stream_index: streamIndex
-        }
-      ]
+      mapping_info: mappingInfo || "",
+      sources
     };
-
-    // merge into object variant metadata
-    variantStreams[streamKey] = variantStream;
 
     // write back to object
     await this.metadataWrite(metadata);
@@ -98,13 +97,18 @@ class VariantAddStream extends ScriptVariant {
         describe: "File path within object",
         type: "string"
       })
+      .option("mapping", {
+        alias: "m",
+        demandOption: false,
+        describe: "Mapping info for stream",
+        type: "string"
+      })
       .option("streamIndex", {
         alias: "stream-index",
         demandOption: true,
-        describe: "Index of stream to use from file",
-        type: "number"
+        describe: "Index(es) of stream(s) to use from file. (Currently only audio streams can use 2 stream indexes)",
+        type: "array"
       });
-
   }
 }
 
