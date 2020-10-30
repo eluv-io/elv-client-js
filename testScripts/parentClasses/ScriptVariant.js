@@ -63,8 +63,8 @@ module.exports = class ScriptVariant extends MetadataMixin(ScriptBase) {
       this.throwError("streamIndex " + streamIndex + " in file '" + filePath + "' is of type '" + sourceStream.type + "', currently only StreamAudio and StreamVideo are supported");
     }
 
-    if(sourceStream.type === "StreamAudio" && sourceStream.channels !== 2) {
-      this.throwError("streamIndex " + streamIndex + " in file '" + filePath + "' is audio but has " + sourceStream.channels + " channel(s), currently only audio streams with 2 channels are supported");
-    }
+    // if(sourceStream.type === "StreamAudio" && sourceStream.channels !== 2) {
+    //   this.throwError("streamIndex " + streamIndex + " in file '" + filePath + "' is audio but has " + sourceStream.channels + " channel(s), currently only audio streams with 2 channels are supported");
+    // }
   }
 };
