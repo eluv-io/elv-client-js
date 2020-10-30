@@ -1594,7 +1594,7 @@ exports.ContentObjectVersions = function _callee22(_ref16) {
 
 
 exports.LatestVersionHash = function _callee23(_ref17) {
-  var objectId, versionHash, latestHash, versions;
+  var objectId, versionHash, latestHash, versionCount;
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
@@ -1606,54 +1606,55 @@ exports.LatestVersionHash = function _callee23(_ref17) {
           }
 
           ValidateObject(objectId);
-          _context23.next = 5;
+          _context23.prev = 3;
+          _context23.next = 6;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: this.utils.HashToAddress(objectId),
             methodName: "objectHash"
           }));
 
-        case 5:
+        case 6:
           latestHash = _context23.sent;
+          _context23.next = 11;
+          break;
 
+        case 9:
+          _context23.prev = 9;
+          _context23.t0 = _context23["catch"](3);
+
+        case 11:
           if (latestHash) {
-            _context23.next = 19;
+            _context23.next = 18;
             break;
           }
 
-          _context23.t0 = _regeneratorRuntime;
-          _context23.t1 = this;
-          _context23.next = 11;
-          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
-            objectId: objectId
+          _context23.next = 14;
+          return _regeneratorRuntime.awrap(this.CallContractMethod({
+            contractAddress: this.utils.HashToAddress(objectId),
+            methodName: "countVersionHashes"
           }));
 
-        case 11:
-          _context23.t2 = _context23.sent;
-          _context23.t3 = objectId;
-          _context23.t4 = {
-            libraryId: _context23.t2,
-            objectId: _context23.t3
-          };
-          _context23.t5 = _context23.t1.ContentObjectVersions.call(_context23.t1, _context23.t4);
+        case 14:
+          versionCount = _context23.sent;
           _context23.next = 17;
-          return _context23.t0.awrap.call(_context23.t0, _context23.t5);
+          return _regeneratorRuntime.awrap(this.CallContractMethod({
+            contractAddress: this.utils.HashToAddress(objectId),
+            methodName: "versionHashes",
+            methodArgs: [versionCount - 1]
+          }));
 
         case 17:
-          versions = _context23.sent;
+          latestHash = _context23.sent;
 
-          if (versions && versions.versions && versions.versions[0]) {
-            latestHash = versions.versions[0].hash;
-          }
-
-        case 19:
+        case 18:
           return _context23.abrupt("return", latestHash);
 
-        case 20:
+        case 19:
         case "end":
           return _context23.stop();
       }
     }
-  }, null, this);
+  }, null, this, [[3, 9]]);
 };
 /* URL Methods */
 

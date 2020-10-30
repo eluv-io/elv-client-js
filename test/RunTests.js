@@ -7,7 +7,8 @@ const Tests = {
   Wallet: require("./ElvWallet.test"),
   FrameClient: require("./FrameClient.test"),
   UserProfileClient: require("./UserProfileClient.test"),
-  ElvClient: require("./ElvClient.test")
+  ElvClient: require("./ElvClient.test"),
+  PermissionsClient: require("./PermissionsClient.test")
 };
 
 const RunTests = async () => {

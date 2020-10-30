@@ -829,19 +829,21 @@ function () {
           switch (_context9.prev = _context9.next) {
             case 0:
               tenantId = _ref14.tenantId, otpId = _ref14.otpId;
+              ValidatePresence("tenantId", tenantId);
+              ValidatePresence("otpId", otpId);
               params = [tenantId, otpId, "", Date.now()];
               paramTypes = ["string", "string", "string", "uint"];
-              _context9.next = 5;
+              _context9.next = 7;
               return _regeneratorRuntime.awrap(this.authClient.MakeKMSCall({
                 methodName: "elv_getOTP",
                 params: params,
                 paramTypes: paramTypes
               }));
 
-            case 5:
+            case 7:
               return _context9.abrupt("return", _context9.sent);
 
-            case 6:
+            case 8:
             case "end":
               return _context9.stop();
           }

@@ -68,3 +68,11 @@ exports.ValidateAddress = function (address) {
 
   return Utils.FormatAddress(address);
 };
+
+exports.ValidatePermission = function (permission) {
+  if (permission && permission !== "full-access" && permission !== "no-access") {
+    throw Error("Invalid profile permission: ".concat(permission));
+  }
+
+  return permission;
+};

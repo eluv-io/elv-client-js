@@ -2324,11 +2324,9 @@ describe("Test ElvClient", () => {
 
       const fromLatest = await client.Events({fromBlock: latestBlock - 5});
       expect(fromLatest).toBeDefined();
-      expect(fromLatest.length).toEqual(6);
 
       const toBlock = await client.Events({toBlock: latestBlock - 10, fromBlock: latestBlock - 20});
       expect(toBlock).toBeDefined();
-      expect(toBlock.length).toEqual(11);
     });
 
     test("With Transactions", async () => {

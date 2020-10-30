@@ -873,21 +873,26 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
 
   ValidateObject(objectId);
 
-  let latestHash = await this.CallContractMethod({
-    contractAddress: this.utils.HashToAddress(objectId),
-    methodName: "objectHash"
-  });
+  let latestHash;
+  try {
+    latestHash = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      methodName: "objectHash"
+    });
+  // eslint-disable-next-line no-empty
+  } catch(error) {}
 
   if(!latestHash) {
-    // If hash not present in contract for some reason, get latest version from fabric API
-    const versions = await this.ContentObjectVersions({
-      libraryId: await this.ContentObjectLibraryId({objectId}),
-      objectId
+    const versionCount = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      methodName: "countVersionHashes"
     });
 
-    if(versions && versions.versions && versions.versions[0]) {
-      latestHash = versions.versions[0].hash;
-    }
+    latestHash = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      methodName: "versionHashes",
+      methodArgs: [versionCount - 1]
+    });
   }
 
   return latestHash;
