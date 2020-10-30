@@ -679,6 +679,9 @@ class ElvClient {
   }
 
   async GetOTP({tenantId, otpId}) {
+    ValidatePresence("tenantId", tenantId);
+    ValidatePresence("otpId", otpId);
+
     const params = [tenantId, otpId, "", Date.now()];
     const paramTypes = ["string", "string", "string", "uint"];
 

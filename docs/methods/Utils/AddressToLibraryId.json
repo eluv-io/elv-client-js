@@ -1,66 +1,14 @@
 [
   {
-    "signature": " AddressToLibraryId(\"0x875c509648a88a486f0d1d760301f3fff8470ce2\");",
-    "result": "\"ilib2tNqMTr51szPGsttFQJSq6gRdKaZ\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0x2806e87e50dd3d9873c8487573ea512c6861c0df\");",
-    "result": "\"ilibZLusoJnHFwAX9pfFB2rYX2yLnsY\""
-  },
-  {
     "signature": " AddressToLibraryId(\"0xe43da44cd2f7b9ead9405c8763dc7493a5ab54f1\");",
     "result": "\"ilib4BRmonTig9QSD87MRWP8F5iLfdct\""
   },
   {
-    "signature": " AddressToLibraryId(\"0x8751079776b87593671d1c7c3f60ccee2aced90c\");",
-    "result": "\"ilib2tLmXW589NURWcpU6XJv77pqTAuH\""
+    "signature": " AddressToLibraryId(\"0xb40515e87234f855c170dbc5c64e3dee5ed27072\");",
+    "result": "\"ilib3WTqrikm2JpYzvoFthwMLhYgdW2u\""
   },
   {
-    "signature": " AddressToLibraryId(\"0x8751079776b87593671d1C7c3F60ccee2aCEd90C\");",
-    "result": "\"ilib2tLmXW589NURWcpU6XJv77pqTAuH\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0x10ed9cb76ad39488a0819d1c7251fefdc182983c\");",
-    "result": "\"ilibEgMocJFMmsq75PLXcBh1TwdwnJX\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0x064628b706d0d6aae37a0437b084cf84a9c381c6\");",
-    "result": "\"ilib653PN3E7JHYpPYYDMyRi2xMvpVj\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0xaa2d53d9345ec9232bd8eff07866d8a493c3de7f\");",
-    "result": "\"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0xa5a062809c3076c3ec6f33c06f27373776b1b153\");",
-    "result": "\"ilib3JqHGiDhkrBid5eP1KDPMcKeGNjt\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0xAA2d53d9345eC9232Bd8EfF07866D8A493c3DE7F\");",
-    "result": "\"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0xa5a062809C3076C3EC6F33C06f27373776b1B153\");",
-    "result": "\"ilib3JqHGiDhkrBid5eP1KDPMcKeGNjt\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0xbc47f82b768b3af23f6715167f3ca50787c7f24f\");",
-    "result": "\"ilib3d91wfSyF4YooY1MvSfuZJaYefBU\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0x9253d6e9b63cc366372f17d682253bab79cd6b5e\");",
-    "result": "\"ilib33EoyrgaFph9hFMVNqcz1ZvsqBAm\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0x9253d6e9b63CC366372F17d682253bAB79Cd6B5e\");",
-    "result": "\"ilib33EoyrgaFph9hFMVNqcz1ZvsqBAm\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0xc3ab131c08567b1a10b3b20d97816dbab3570574\");",
-    "result": "\"ilib3j7DvNVcwkq5qTKXmZkEhViXW7Go\""
-  },
-  {
-    "signature": " AddressToLibraryId(\"0xC3aB131c08567B1a10b3b20D97816DBab3570574\");",
-    "result": "\"ilib3j7DvNVcwkq5qTKXmZkEhViXW7Go\""
+    "signature": " AddressToLibraryId(\"0xB40515e87234f855c170dbc5c64E3dee5ED27072\");",
+    "result": "\"ilib3WTqrikm2JpYzvoFthwMLhYgdW2u\""
   }
 ]

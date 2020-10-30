@@ -588,7 +588,7 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
   // Record the node used in creating this write token
   this.HttpClient.RecordWriteToken(createResponse.write_token);
 
-  createResponse.writetoken = createResponse.write_token;
+  createResponse.writeToken = createResponse.write_token;
   createResponse.objectId = createResponse.id;
 
   return createResponse;
@@ -689,7 +689,7 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
  * @methodGroup Content Objects
  * @namedParams
  * @param {string} libraryId - ID of the library
- * @param {function} callback - Async function to perform after creating the content draft and before finalizing. Object ID and write token are passed as named parameters.
+ * @param {function=} callback - Async function to perform after creating the content draft and before finalizing. Object ID and write token are passed as named parameters.
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
@@ -708,11 +708,15 @@ exports.CreateAndFinalizeContentObject = async function({
   publish=true,
   awaitCommitConfirmation=true
 }) {
-  const {id, writeToken} = await this.CreateContentObject({libraryId, objectId, options});
+  const args = await this.CreateContentObject({libraryId, options});
 
-  await callback({objectId: id, writeToken});
+  const {id, writeToken} = args;
 
-  await this.FinalizeContentObject({libraryId, objectId: id, writeToken, commitMessage, publish, awaitCommitConfirmation});
+  if(callback) {
+    await callback({objectId: id, writeToken});
+  }
+
+  return await this.FinalizeContentObject({libraryId, objectId: id, writeToken, commitMessage, publish, awaitCommitConfirmation});
 };
 
 /**
@@ -731,7 +735,7 @@ exports.CreateAndFinalizeContentObject = async function({
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
- * @param {function} callback - Async function to perform after creating the content draft and before finalizing. Write token is passed as a named parameter.
+ * @param {function=} callback - Async function to perform after creating the content draft and before finalizing. Write token is passed as a named parameter.
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
@@ -753,7 +757,9 @@ exports.EditAndFinalizeContentObject = async function({
 }) {
   const {writeToken} = await this.EditContentObject({libraryId, objectId, options});
 
-  await callback({writeToken});
+  if(callback) {
+    await callback({writeToken});
+  }
 
   return await this.FinalizeContentObject({libraryId, objectId, writeToken, commitMessage, publish, awaitCommitConfirmation});
 };
