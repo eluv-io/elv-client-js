@@ -2,6 +2,15 @@
   "drm_optional": true,
   "store_clear": true,
   "ladder_specs": {
+    "{\"media_type\":\"audio\",\"channels\":1}": {
+      "rung_specs": [
+        {
+          "bit_rate": 128000,
+          "media_type": "audio",
+          "pregenerate": true
+        }
+      ]
+    },
     "{\"media_type\":\"audio\",\"channels\":2}": {
       "rung_specs": [
         {
