@@ -1,6 +1,14 @@
 [
   {
-    "signature": "async RedeemCode({\n  \"issuer\": \"iq__2qXmASFyWJDAEnxw2nTZw4r6hDDM\",\n  \"code\": \"ASD123\"\n});",
-    "result": "{\n  \"addr\": \"0x8b4f29929ef55faad19b1831ee99113ce55c5497\",\n  \"sites\": [\n    {\n      \"siteId\": \"iq__SufWAMfhP6P2tTUSrmdTjRdPfUM\",\n      \"siteKey\": \"eluvio-demo\"\n    }\n  ],\n  \"info\": {\n    \"email\": \"ASD123@ASD123.com\",\n    \"first_name\": \"ASD\",\n    \"last_name\": \"123\"\n  }\n}"
+    "signature": "async RedeemCode({\n  \"tenantId\": \"iten4PgJYBY7UP3YpP2DYm7C9XxxL7kU\",\n  \"ntpId\": \"QOTPVcP8nDqZhv5\",\n  \"code\": \"4Rj7Vu\",\n  \"email\": \"\"\n});",
+    "result": "\"iq__3ax1WuidvcNm8Bd2CGEnqLYScsxL\""
+  },
+  {
+    "signature": "async RedeemCode({\n  \"tenantId\": \"iten4PgJYBY7UP3YpP2DYm7C9XxxL7kU\",\n  \"ntpId\": \"QOTPMd5QEYWokX3\",\n  \"code\": \"Cxr5Za\",\n  \"email\": \"\"\n});",
+    "result": "\"iq__3ax1WuidvcNm8Bd2CGEnqLYScsxL\""
+  },
+  {
+    "signature": "async RedeemCode({\n  \"tenantId\": \"iten4PgJYBY7UP3YpP2DYm7C9XxxL7kU\",\n  \"ntpId\": \"QOTPMd5QEYWokX3\",\n  \"code\": \"Ne94Tv\",\n  \"email\": \"person@example.com\"\n});",
+    "result": "\"iq__3ax1WuidvcNm8Bd2CGEnqLYScsxL\""
   }
 ]

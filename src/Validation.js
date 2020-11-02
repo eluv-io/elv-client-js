@@ -72,3 +72,13 @@ exports.ValidatePermission = (permission) => {
 
   return permission;
 };
+
+exports.ValidateDate = (date) => {
+  if(!date) { return; }
+
+  if(isNaN(new Date(date))) {
+    throw Error(`Invalid date: ${date}`);
+  }
+
+  return new Date(date).getTime();
+};

@@ -1,0 +1,14 @@
+[
+  {
+    "signature": "async IssueNTPCode({\n  \"tenantId\": \"iten4PgJYBY7UP3YpP2DYm7C9XxxL7kU\",\n  \"ntpId\": \"QOTPVcP8nDqZhv5\",\n  \"email\": \"\"\n});",
+    "result": "\"4Rj7Vu\""
+  },
+  {
+    "signature": "async IssueNTPCode({\n  \"tenantId\": \"iten4PgJYBY7UP3YpP2DYm7C9XxxL7kU\",\n  \"ntpId\": \"QOTPMd5QEYWokX3\",\n  \"email\": \"\"\n});",
+    "result": "\"Cxr5Za\""
+  },
+  {
+    "signature": "async IssueNTPCode({\n  \"tenantId\": \"iten4PgJYBY7UP3YpP2DYm7C9XxxL7kU\",\n  \"ntpId\": \"QOTPMd5QEYWokX3\",\n  \"email\": \"person@example.com\"\n});",
+    "result": "\"Ne94Tv\""
+  }
+]

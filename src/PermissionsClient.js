@@ -167,6 +167,7 @@ class PermissionsClient {
   /**
    * Initialize policy for the specified item
    *
+   * @methodGroup Policies
    * @namedParams
    * @param {string} policyId - Object ID of the policy
    * @param {string} policyWriteToken - Write token for the policy
@@ -214,6 +215,7 @@ class PermissionsClient {
   /**
    * Remove the specified item policy
    *
+   * @methodGroup Policies
    * @namedParams
    * @param {string} policyId - Object ID of the policy
    * @param {string} policyWriteToken - Write token for the policy
@@ -238,6 +240,7 @@ class PermissionsClient {
   /**
    * Retrieve profile information on the specified item policy
    *
+   * @methodGroup Profiles
    * @namedParams
    * @param {string} policyId - Object ID of the policy
    * @param {string} itemId - Object ID of the item
@@ -254,6 +257,7 @@ class PermissionsClient {
   /**
    * Create or modify a profile for the specified item policy
    *
+   * @methodGroup Profiles
    * @namedParams
    * @param {string} policyId - Object ID of the policy
    * @param {string} policyWriteToken - Write token for the policy
@@ -287,6 +291,7 @@ class PermissionsClient {
   /**
    * Remove a profile from the specified item policy
    *
+   * @methodGroup Profiles
    * @namedParams
    * @param {string} policyId - Object ID of the policy
    * @param {string} policyWriteToken - Write token for the policy
@@ -320,6 +325,7 @@ class PermissionsClient {
   /**
    * Retrieve the permissions for the specified item policy
    *
+   * @methodGroup Permissions
    * @namedParams
    * @param {string} policyId - Object ID of the policy
    * @param {string} itemId - Object ID of the item
@@ -382,6 +388,7 @@ class PermissionsClient {
   /**
    * Add or modify permission for the specified subject to the specified item policy
    *
+   * @methodGroup Permissions
    * @namedParams
    * @param {string} policyId - Object ID of the policy
    * @param {string} policyWriteToken - Write token for the policy
@@ -540,6 +547,7 @@ class PermissionsClient {
   /**
    * Remove permission for the specified subject from the specified item policy
    *
+   * @methodGroup Permissions
    * @namedParams
    * @param {string} policyId - Object ID of the policy
    * @param {string} policyWriteToken - Write token for the policy

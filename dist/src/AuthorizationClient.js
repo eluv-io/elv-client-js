@@ -654,7 +654,7 @@ function () {
                 break;
               }
 
-              throw Error("Access denied");
+              throw Error("Access denied (".concat(id, ")"));
 
             case 39:
               return _context5.abrupt("return", event);
@@ -791,21 +791,35 @@ function () {
               this.Log("Making state channel access request: ".concat(objectId));
 
               if (!issuer) {
-                _context7.next = 23;
+                _context7.next = 31;
                 break;
               }
 
               // Ticket API
               tenantId = issuer.replace(/^\//, "").split("/")[2];
-              _context7.next = 16;
+              _context7.prev = 14;
+              _context7.next = 17;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(tenantId),
                 methodName: "addressKMS"
               }));
 
-            case 16:
+            case 17:
               kmsAddress = _context7.sent;
-              _context7.next = 19;
+              _context7.next = 25;
+              break;
+
+            case 20:
+              _context7.prev = 20;
+              _context7.t0 = _context7["catch"](14);
+              _context7.next = 24;
+              return _regeneratorRuntime.awrap(this.client.DefaultKMSAddress());
+
+            case 24:
+              kmsAddress = _context7.sent;
+
+            case 25:
+              _context7.next = 27;
               return _regeneratorRuntime.awrap(Utils.ResponseToFormat("text", this.MakeKMSRequest({
                 kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
                 method: "POST",
@@ -816,14 +830,14 @@ function () {
                 }
               })));
 
-            case 19:
+            case 27:
               token = _context7.sent;
               // Pull target object from token so token can be cached
               objectId = JSON.parse(Utils.FromB64(token)).qid;
-              _context7.next = 34;
+              _context7.next = 42;
               break;
 
-            case 23:
+            case 31:
               // State channel API
               if (!audienceData) {
                 audienceData = this.AudienceData({
@@ -835,7 +849,7 @@ function () {
 
               stateChannelApi = "elv_channelContentRequestContext";
               additionalParams = [JSON.stringify(audienceData)];
-              _context7.next = 28;
+              _context7.next = 36;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: stateChannelApi,
@@ -844,17 +858,17 @@ function () {
                 additionalParams: additionalParams
               }));
 
-            case 28:
+            case 36:
               payload = _context7.sent;
-              _context7.next = 31;
+              _context7.next = 39;
               return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload))));
 
-            case 31:
+            case 39:
               signature = _context7.sent;
               multiSig = Utils.FormatSignature(signature);
               token = "".concat(payload, ".").concat(Utils.B64(multiSig));
 
-            case 34:
+            case 42:
               if (!this.noCache) {
                 this.channelContentTokens[objectId] = {
                   token: token,
@@ -864,12 +878,12 @@ function () {
 
               return _context7.abrupt("return", token);
 
-            case 36:
+            case 44:
             case "end":
               return _context7.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[14, 20]]);
     }
   }, {
     key: "ChannelContentFinalize",
