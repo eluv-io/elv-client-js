@@ -368,7 +368,7 @@ class AuthorizationClient {
 
     // If access request did not succeed, no event will be emitted
     if(event.logs.length === 0) {
-      throw Error("Access denied");
+      throw Error(`Access denied (${id})`);
     }
 
     return event;
@@ -458,10 +458,16 @@ class AuthorizationClient {
     if(issuer) {
       // Ticket API
       const tenantId = issuer.replace(/^\//, "").split("/")[2];
-      const kmsAddress = await this.client.CallContractMethod({
-        contractAddress: Utils.HashToAddress(tenantId),
-        methodName: "addressKMS"
-      });
+
+      let kmsAddress;
+      try {
+        kmsAddress = await this.client.CallContractMethod({
+          contractAddress: Utils.HashToAddress(tenantId),
+          methodName: "addressKMS"
+        });
+      } catch(error) {
+        kmsAddress = await this.client.DefaultKMSAddress();
+      }
 
       token = await Utils.ResponseToFormat(
         "text",

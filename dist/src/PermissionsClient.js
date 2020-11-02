@@ -47,13 +47,13 @@ function () {
    *
    *  - Profiles represent a set of permissions that can be applied to a subject (via a 'permission', see below)
    *
-   *  - A profile may have 'start' and 'end' times
+   *  - A profile may have `start` and `end` times
    *
    *  - A profile includes permission specifications for both the assets and the offerings of an item. Both must be specified when creating or modifying a profile.
    *
-   *  - For both assets and offerings, there is a `default_permission` entry, which can be either 'full-access' or 'no-access'. This represents the access allowed to the assets and offerings when a permission for the profile is granted, excepting any custom permissions that override it.
+   *  - For both assets and offerings, there is a `default_permission` entry, which can be either `full-access` or `no-access`. This represents the access allowed to the assets and offerings when a permission for the profile is granted, excepting any custom permissions that override it.
    *
-   *  - For both assets and offerings, a profile may have a 'custom_permissions' section, which specifies permissions for specific assets or offerings. These permissions must have a 'permission' entry which is either 'full-access' or 'no-access', and may have 'start' and 'end' times.
+   *  - For both assets and offerings, a profile may have a `custom_permissions` section, which specifies permissions for specific assets or offerings. These permissions must have a `permission` entry which is either `full-access` or `no-access`, and may have `start` and `end` times.
    *
    *
    *  Example Profile Specification:
@@ -94,7 +94,7 @@ function () {
    *
    *  - A permission must have a profile that is present in the item's policy
    *
-   *  - A permission may have 'start' and 'end' times. As mentioned above, the effective start and end times of a permission are the *most restrictive* of all applicable start and end times.
+   *  - A permission may have `start` and `end` times. As mentioned above, the effective start and end times of a permission are the *most restrictive* of all applicable start and end times.
    *
    *  - A permission must have a subject, which can be either a user or a group, either from the Fabric or from an OAuth provider
    *
@@ -182,6 +182,7 @@ function () {
     /**
      * Initialize policy for the specified item
      *
+     * @methodGroup Policies
      * @namedParams
      * @param {string} policyId - Object ID of the policy
      * @param {string} policyWriteToken - Write token for the policy
@@ -281,6 +282,7 @@ function () {
     /**
      * Remove the specified item policy
      *
+     * @methodGroup Policies
      * @namedParams
      * @param {string} policyId - Object ID of the policy
      * @param {string} policyWriteToken - Write token for the policy
@@ -333,6 +335,7 @@ function () {
     /**
      * Retrieve profile information on the specified item policy
      *
+     * @methodGroup Profiles
      * @namedParams
      * @param {string} policyId - Object ID of the policy
      * @param {string} itemId - Object ID of the item
@@ -381,6 +384,7 @@ function () {
     /**
      * Create or modify a profile for the specified item policy
      *
+     * @methodGroup Profiles
      * @namedParams
      * @param {string} policyId - Object ID of the policy
      * @param {string} policyWriteToken - Write token for the policy
@@ -438,6 +442,7 @@ function () {
     /**
      * Remove a profile from the specified item policy
      *
+     * @methodGroup Profiles
      * @namedParams
      * @param {string} policyId - Object ID of the policy
      * @param {string} policyWriteToken - Write token for the policy
@@ -494,6 +499,7 @@ function () {
     /**
      * Retrieve the permissions for the specified item policy
      *
+     * @methodGroup Permissions
      * @namedParams
      * @param {string} policyId - Object ID of the policy
      * @param {string} itemId - Object ID of the item
@@ -658,6 +664,7 @@ function () {
     /**
      * Add or modify permission for the specified subject to the specified item policy
      *
+     * @methodGroup Permissions
      * @namedParams
      * @param {string} policyId - Object ID of the policy
      * @param {string} policyWriteToken - Write token for the policy
@@ -897,6 +904,7 @@ function () {
     /**
      * Remove permission for the specified subject from the specified item policy
      *
+     * @methodGroup Permissions
      * @namedParams
      * @param {string} policyId - Object ID of the policy
      * @param {string} policyWriteToken - Write token for the policy

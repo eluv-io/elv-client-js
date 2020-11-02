@@ -3400,7 +3400,10 @@ exports.CreateEncryptionConk = function _callee39(_ref32) {
 
         case 18:
           _context39.next = 20;
-          return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk());
+          return _regeneratorRuntime.awrap(this.Crypto.GeneratePrimaryConk({
+            spaceId: this.contentSpaceId,
+            objectId: objectId
+          }));
 
         case 20:
           this.encryptionConks[objectId] = _context39.sent;

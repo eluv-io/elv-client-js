@@ -2180,7 +2180,7 @@ describe("Test ElvClient", () => {
       expect(accessComplete.transactionHash).toBeDefined();
     });
 
-    test("State Channel Access", async () => {
+    test.skip("State Channel Access", async () => {
       const token = await client.GenerateStateChannelToken({objectId});
 
       expect(token).toBeDefined();

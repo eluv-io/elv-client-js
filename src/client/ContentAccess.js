@@ -1869,7 +1869,10 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
   if(existingUserCap) {
     this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
   } else {
-    this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
+    this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk({
+      spaceId: this.contentSpaceId,
+      objectId
+    });
 
     await this.ReplaceMetadata({
       libraryId,

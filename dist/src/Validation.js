@@ -76,3 +76,15 @@ exports.ValidatePermission = function (permission) {
 
   return permission;
 };
+
+exports.ValidateDate = function (date) {
+  if (!date) {
+    return;
+  }
+
+  if (isNaN(new Date(date))) {
+    throw Error("Invalid date: ".concat(date));
+  }
+
+  return new Date(date).getTime();
+};
