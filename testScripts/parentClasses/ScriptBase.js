@@ -97,7 +97,7 @@ module.exports = class ScriptBase {
       })
       .option("elvGeo", {
         alias: "elv-geo",
-        choices: ["eu-west", "na-east", "na-west-north", "na-west-south"],
+        choices: ["as-east", "au-east", "eu-east", "eu-west", "na-east", "na-west-north", "na-west-south"],
         describe: "Geographic region for the fabric nodes.",
         type: "string",
       })

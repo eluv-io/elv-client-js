@@ -224,6 +224,8 @@ class OfferingAddCaptionStream extends ScriptOffering {
 
     // write back to object
     await this.metadataWrite(metadata);
+
+    console.log("Caption stream added using  stream key: %s", captionStreamKey);
   }
 
   header() {
