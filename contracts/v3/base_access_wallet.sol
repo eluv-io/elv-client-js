@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 import {Ownable} from "./ownable.sol";
 import {Container} from "./container.sol";
@@ -6,7 +6,6 @@ import {BaseContent} from "./base_content.sol";
 import {IKmsSpace, INodeSpace} from "./base_space_interfaces.sol";
 import "./access_indexor.sol";
 import "./transactable.sol";
-import {ExternalUserWallet} from "./external_user_wallet.sol";
 import "./meta_object.sol";
 
 /* -- Revision history --
@@ -24,7 +23,7 @@ BsAccessWallet20200928110000PO: Replace tx.origin with msg.sender in some cases
 contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable {
     bytes32 public version = "BsAccessWallet20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    constructor(address content_space)  public payable {
+    constructor(address payable content_space)  public payable {
         contentSpace = content_space;
     }
 
@@ -65,7 +64,7 @@ contract BaseAccessWallet is MetaObject, Container, AccessIndexor, Transactable 
     int public constant execStatusSigFail = 3;
     int public constant execStatusSendFail = 4;
 
-    function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address _dest, uint256 _value, uint256 _ts)
+    function execute(address _guarantor, uint8 _v, bytes32 _r, bytes32 _s, address payable _dest, uint256 _value, uint256 _ts)
     external
     returns (bool) {
 
@@ -115,11 +114,11 @@ contract BaseAccessWalletFactory is Ownable {
 
     bytes32 public version ="BsAccWltFactory20190506154200ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    constructor(address _spaceAddr) public {
+    constructor(address payable _spaceAddr) public {
         contentSpace = _spaceAddr;
     }
 
-    function createAccessWallet() public returns (address) {
+    function createAccessWallet() public returns (address payable) {
         require(msg.sender == contentSpace);
         BaseAccessWallet theWallet = new BaseAccessWallet(msg.sender); // msg.sender here is the space ...
         theWallet.transferOwnership(tx.origin);

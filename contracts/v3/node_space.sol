@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 import "./ownable.sol";
 import "./node.sol";
@@ -24,7 +24,7 @@ contract NodeSpace is Ownable, INodeSpace {
     bytes[] public pendingNodeLocators;
 
 
-    function checkRedundantEntry(address[] _addrs, bytes[] _locators, address _nodeAddr, bytes _nodeLocator) pure internal returns (bool) {
+    function checkRedundantEntry(address[] memory _addrs, bytes[] memory _locators, address _nodeAddr, bytes memory _nodeLocator) pure internal returns (bool) {
         require(_addrs.length == _locators.length);
         for (uint i = 0; i < _addrs.length; i++) {
             // right now we assume that neither the address or the locator can be used redundantly
@@ -46,7 +46,7 @@ contract NodeSpace is Ownable, INodeSpace {
     }
 
     // we assume that this call is made from the submitted node - that is, from their address
-    function submitNode(bytes _locator) public {
+    function submitNode(bytes memory _locator) public {
         require(!checkRedundantEntry(pendingNodeAddresses, pendingNodeLocators, msg.sender, _locator));
         require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, msg.sender, _locator));
         require(pendingNodeAddresses.length < 100); // don't allow *too* much abuse - TODO: what value?
@@ -87,7 +87,7 @@ contract NodeSpace is Ownable, INodeSpace {
     event AddNode(address ownerAddr, address nodeAddr);
 
     // direct method for owner to add node(s)
-    function addNode(address _nodeAddr, bytes _locator) public onlyOwner {
+    function addNode(address _nodeAddr, bytes memory _locator) public onlyOwner {
         require(!checkRedundantEntry(activeNodeAddresses, activeNodeLocators, _nodeAddr, _locator));
         activeNodeAddresses.push(_nodeAddr);
         activeNodeLocators.push(_locator);

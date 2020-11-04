@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 /* -- Revision history --
 Accessible20190222135900ML: First versioned released
@@ -38,7 +38,7 @@ contract Accessible is Ownable {
         }
 
         if (indexCategory > 0) {
-            address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
+            address payable walletAddress = address(uint160(IUserSpace(contentSpace).userWallets(candidate)));
             return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 1/*AccessIndexor TYPE_ACCESS*/);
         } else {
             return false;
@@ -47,11 +47,11 @@ contract Accessible is Ownable {
 
 
     function accessRequestV3(
-        bytes32[] customValues,
-        address[] stakeholders
+        bytes32[] memory,
+        address payable[] memory
     ) public payable returns (bool) {
         require(hasAccess(msg.sender));
-        emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), now))), 0x0, 0x0, msg.sender, now * 1000);
+        emit AccessRequestV3(uint256(keccak256(abi.encodePacked(address(this), now))), address(0x0), bytes32(0x0), msg.sender, now * 1000);
         return true;
     }
 
