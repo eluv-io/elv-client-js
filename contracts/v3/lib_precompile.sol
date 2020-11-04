@@ -1,28 +1,28 @@
-pragma solidity ^0.4.24;
+pragma solidity 0.5.4;
 
 library Precompile {
 
-    address constant elv_precomp_addr = 255;
+    address constant elv_precomp_addr = address(255);
 
     bytes4 constant sigIdString = bytes4(keccak256("makeIDString(int,address)"));
 
     int public constant KMS = 11;
     int public constant TEN = 14;
 
-    function CodeKMS() internal constant returns (int) {
+    function CodeKMS() internal pure returns (int) {
         return KMS;
     }
 
-    function CodeTEN() internal constant returns (int) {
+    function CodeTEN() internal pure returns (int) {
         return TEN;
     }
 
     uint constant idStrLen = 32;
 
-    function makeIDString(int _code, address _addr) internal constant returns (string ret) {
+    function makeIDString(int _code, address _addr) internal view returns (string memory ret) {
 
         bytes4 sig = sigIdString;
-        bytes4 codeBytes = bytes4(_code);
+        bytes4 codeBytes = bytes4(int32(_code));
         address callAddr = elv_precomp_addr;
 
         assembly {
@@ -32,10 +32,9 @@ library Precompile {
             mstore(add(x, 0x08), _addr)
             // input is now [4 bytes][4 bytes][32 bytes] = 40 bytes
 
-            let res := call(
+            let res := staticcall(
             0,          // no gas
             callAddr,   // To addr
-            0,          // No value - i.e. tokens
             x,          // Inputs are stored at location x
             0x28,       // Inputs are 40 bytes long
             x,          // Store output over input

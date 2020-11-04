@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 import {Content} from "./content.sol";
 
@@ -47,7 +47,7 @@ contract PaymentService is Content {
         return 0;
     }
 
-    function getPendingRedeemRequest() public constant returns ( address, string, uint256, string, string) {
+    function getPendingRedeemRequest() public view returns ( address, string, uint256, string, string) {
         if (redeemRequestsLength == 0) {
             return (0, "", 0, "", "");
         }
@@ -72,7 +72,7 @@ contract PaymentService is Content {
         return 1;
     }
 
-    function redeemDbg(uint256 idx) public constant returns (uint256, uint256, string) {
+    function redeemDbg(uint256 idx) public view returns (uint256, uint256, string) {
         return (redeemRequests.length, redeemRequestsLength, redeemRequests[idx].nonce);
     }
 
@@ -86,7 +86,7 @@ contract PaymentService is Content {
         emit SetTokenValue(currency, value);
     }
 
-    function getTokenValue() public constant returns(string, uint256) {
+    function getTokenValue() public view returns(string, uint256) {
         return (tokenCurrency, tokenValue);
     }
 

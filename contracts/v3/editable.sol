@@ -1,7 +1,6 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 //import {Ownable} from "./ownable.sol";
-import "./strings.sol";
 import "./accessible.sol";
 import "./access_indexor.sol";
 import "./user_space.sol";
@@ -27,7 +26,6 @@ Editable20200928110000PO: Replace tx.origin with msg.sender in some cases
 
 
 contract Editable is  Accessible {
-    using strings for *;
 
     bytes32 public version ="Editable20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
@@ -64,7 +62,7 @@ contract Editable is  Accessible {
             return true;
         }
         if (indexCategory > 0) {
-            address walletAddress = IUserSpace(contentSpace).userWallets(candidate);
+            address payable walletAddress = address(uint160(IUserSpace(contentSpace).userWallets(candidate)));
             return AccessIndexor(walletAddress).checkRights(indexCategory, address(this), 2 /* TYPE_EDIT */ );
         } else {
             return false;
@@ -92,7 +90,7 @@ contract Editable is  Accessible {
         commitPending = false;
     }
 
-    function commit(string _objectHash) public {
+    function commit(string memory _objectHash) public {
         require(canCommit());
         require(!commitPending); // don't allow two possibly different commits to step on each other - one always wins
 	    require(bytes(_objectHash).length < 128);
@@ -134,7 +132,7 @@ contract Editable is  Accessible {
         return;
     }
 
-    function deleteVersion(string _versionHash) public returns (int256) {
+    function deleteVersion(string memory _versionHash) public returns (int256) {
         require(canCommit());
 
         bytes32 findHash = keccak256(abi.encodePacked(_versionHash));
@@ -177,10 +175,10 @@ contract Editable is  Accessible {
         return foundIdx;
     }
 
-    function setRights(address stakeholder, uint8 access_type, uint8 access) public onlyEditor {
+    function setRights(address payable stakeholder, uint8 access_type, uint8 access) public onlyEditor {
         IUserSpace userSpaceObj = IUserSpace(contentSpace);
-        address walletAddress = userSpaceObj.userWallets(stakeholder);
-        if (walletAddress == 0x0){
+        address payable walletAddress = address(uint160(userSpaceObj.userWallets(stakeholder)));
+        if (walletAddress == address(0x0)){
             //stakeholder is not a user (hence group or wallet)
             setGroupRights(stakeholder, access_type, access);
         } else {
@@ -188,7 +186,7 @@ contract Editable is  Accessible {
         }
     }
 
-    function setGroupRights(address group, uint8 access_type, uint8 access) public {
+    function setGroupRights(address payable group, uint8 access_type, uint8 access) public {
         AccessIndexor indexor = AccessIndexor(group);
         if (indexCategory == indexor.CATEGORY_CONTENT_OBJECT()) {
             indexor.setContentObjectRights(address(this), access_type, access)  ;

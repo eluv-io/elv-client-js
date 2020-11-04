@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 import {Editable} from "./editable.sol";
 import "./accessible.sol";
@@ -26,7 +26,7 @@ contract BaseContentType is Editable {
 
     bytes32 public version ="BaseContentType20200316135100ML"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    constructor(address content_space) public payable {
+    constructor(address payable content_space) public payable {
         contentSpace = content_space;
         visibility = 0;
         indexCategory =  4; // AccessIndexor CATEGORY_CONTENT_TYPE

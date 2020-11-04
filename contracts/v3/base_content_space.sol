@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 import {Ownable} from "./ownable.sol";
 import {Editable} from "./editable.sol";
@@ -11,6 +11,7 @@ import {BaseAccessWalletFactory} from "./base_access_wallet.sol";
 import {BaseAccessWallet} from "./base_access_wallet.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import {Container} from "./container.sol";
+import {Utils} from "./utils.sol";
 import "./user_space.sol";
 import "./node_space.sol";
 import "./node.sol";
@@ -34,152 +35,19 @@ BaseContentSpace20200626120600PO: authv3 changes
 BaseContentSpace20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
-contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
-
-    bytes32 public version ="BaseContentSpace20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
-
-    string public name;
-    string public description;
-    address public factory;
-    address public groupFactory;
-    address public walletFactory;
-    address public libraryFactory;
-    address public contentFactory;
-
-    mapping(address => address) public nodeMapping;
+contract KmsManager is Ownable, IKmsSpace {
 
     mapping(string => bytes[]) kmsMapping;
     mapping(string => string)  kmsPublicKeys;
 
-    event CreateContentType(address contentTypeAddress);
-    event CreateLibrary(address libraryAddress);
-    event CreateGroup(address groupAddress);
-    event CreateContent(address contentAddress);
-    event CreateAccessWallet(address wallet);
-    event BindUserWallet(address wallet, address userAddr);
-
-    event EngageAccountLibrary(address accountAddress);
-    event SetFactory(address factory);
-
-    event RegisterNode(address nodeObjAddr);
-    event UnregisterNode(address nodeObjAddr);
-
-    event AddKMSLocator(address sender,uint status);
+    event AddKMSLocator(address sender, uint status);
     event RemoveKMSLocator(address sender, uint status);
 
-    event CreateSpace(bytes32 version, address owner);
-    event GetAccessWallet(address walletAddress);
-
-    constructor(string memory content_space_name) public {
-        name = content_space_name;
-        contentSpace = address(this);
-        emit CreateSpace(version, owner);
-        visibility = 10;
-    }
-
-    // override
-    function setVisibility(uint8 _visibility_code) public onlyOwner {
-        visibility = _visibility_code;
-        emit VisibilityChanged(address(this), 0x0, visibility);
-    }
-
-    function setFactory(address new_factory) public onlyOwner {
-        factory = new_factory;
-    }
-
-    function setGroupFactory(address new_factory) public onlyOwner {
-        groupFactory = new_factory;
-    }
-
-    function setWalletFactory(address new_factory) public onlyOwner {
-        walletFactory = new_factory;
-    }
-
-    function setLibraryFactory(address new_factory) public onlyOwner {
-        libraryFactory = new_factory;
-    }
-
-    function setContentFactory(address new_factory) public onlyOwner {
-        contentFactory = new_factory;
-    }
-
-    function setDescription(string memory content_space_description) public onlyOwner {
-        description = content_space_description;
-    }
-
-    function canConfirm() public view returns (bool) {
-        INodeSpace bcs = INodeSpace(address(this));
-        return bcs.canNodePublish(msg.sender);
-    }
-
-    function createContentType() public returns (address) {
-        require(msg.sender == tx.origin);
-        address contentTypeAddress = BaseFactory(factory).createContentType();
-        emit CreateContentType(contentTypeAddress);
-        return contentTypeAddress;
-    }
-
-    function createLibrary(address address_KMS) public returns (address) {
-        require(msg.sender == tx.origin);
-        address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
-        emit CreateLibrary(libraryAddress);
-        return libraryAddress;
-    }
-
-    function createContent(address lib, address content_type) public returns (address) {
-        require(msg.sender == tx.origin || msg.sender == lib);
-        address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
-        emit CreateContent(contentAddress);
-        return contentAddress;
-    }
-
-    function createGroup() public returns (address) {
-        require(msg.sender == tx.origin);
-        address groupAddress = BaseGroupFactory(groupFactory).createGroup();
-        emit CreateGroup(groupAddress);
-        return groupAddress;
-    }
-    
-    function createUserWallet(address _user) external returns (address) {
-        return createUserWalletInternal(_user);
-    }
-
-    function createAccessWallet() public returns (address) {
-        return createUserWalletInternal(msg.sender);
-    }
-
-    // This methods revert when attempting to transfer ownership, so for now we make it private
-    // Hence it will be assumed, that user are responsible for creating their wallet.
-    function createUserWalletInternal(address _user) returns (address) {
-        require(userWallets[_user] == address(0x0));
-        address walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
-        if (_user != msg.sender) {
-            BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
-            wallet.transferOwnership(_user);
-        }
-        emit CreateAccessWallet(walletAddress);
-        emit BindUserWallet(walletAddress, _user);
-        userWallets[_user] = walletAddress;
-        return walletAddress;
-    }
-
-    function getAccessWallet() public returns(address) {
-        address walletAddress;
-        if (userWallets[msg.sender] == 0x0) {
-            walletAddress = createAccessWallet();
-        } else {
-            walletAddress = userWallets[msg.sender];
-        }
-
-        emit GetAccessWallet(walletAddress);
-        return walletAddress;
-    }
-
-    function getKMSID(address _kmsAddr) public view returns (string){
+    function getKMSID(address _kmsAddr) public view returns (string memory) {
         return Precompile.makeIDString(Precompile.CodeKMS(), _kmsAddr);
     }
 
-    function checkKMS(string _kmsIdStr) public view returns (uint) {
+    function checkKMS(string memory _kmsIdStr) public view returns (uint) {
         return kmsMapping[_kmsIdStr].length;
     }
 
@@ -189,11 +57,11 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     }
 
     // can be used to add or remove - i.e. set to ""
-    function setKMSPublicKey(string _kmsID, string _pubKey) public onlyOwner {
+    function setKMSPublicKey(string memory _kmsID, string memory _pubKey) public onlyOwner {
         kmsPublicKeys[_kmsID] = _pubKey;
     }
 
-    function matchesPrefix(bytes input, bytes prefix) pure internal returns (bool) {
+    function matchesPrefix(bytes memory input, bytes memory prefix) pure internal returns (bool) {
         uint len = prefix.length;
         if (len > input.length) len = input.length;
         for (uint x = 0; x < len; x++) {
@@ -202,7 +70,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return true;
     }
 
-    function filterPrefix(bytes[] input, bytes prefix) view internal returns (bytes[]) {
+    function filterPrefix(bytes[] memory input, bytes memory prefix) pure internal returns (bytes[] memory) {
         uint countMatch = 0;
         for (uint i = 0; i < input.length; i++) {
             if (matchesPrefix(input[i], prefix)) {
@@ -212,7 +80,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         bytes[] memory output = new bytes[](countMatch);
         if (countMatch == 0) return output;
         countMatch = 0;
-        for (i = 0; i < input.length; i++) {
+        for (uint i = 0; i < input.length; i++) {
             if (matchesPrefix(input[i], prefix)) {
                 output[countMatch] = input[i];
                 countMatch++;
@@ -221,7 +89,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         return output;
     }
 
-    function getKMSInfo(string _kmsID, bytes prefix) external view returns (string, string) {
+    function getKMSInfo(string calldata _kmsID, bytes calldata prefix) external view returns (string memory, string memory) {
         bytes[] memory locators = kmsMapping[_kmsID];
         string memory publicKey = kmsPublicKeys[_kmsID];
 
@@ -244,7 +112,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
     // mapping(address => string[]) public kmsMapping;
     // status -> 0 added
     // status -> 1 not added
-    function addKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+    function addKMSLocator(string memory _kmsID, bytes memory _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
 
         for (uint i = 0; i < kmsLocators.length; i++) {
@@ -260,7 +128,7 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
 
     // status -> 0 removed
     // status -> 1 not removed
-    function removeKMSLocator(string _kmsID, bytes _locator) public onlyOwner returns (bool) {
+    function removeKMSLocator(string memory _kmsID, bytes memory _locator) public onlyOwner returns (bool) {
         bytes[] memory kmsLocators = kmsMapping[_kmsID];
         for (uint i = 0; i < kmsLocators.length; i++) {
             if (keccak256(kmsLocators[i]) == keccak256(_locator)) {
@@ -276,10 +144,164 @@ contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSp
         emit RemoveKMSLocator(msg.sender,1);
         return false;
     }
-    
 }
 
+contract BaseContentSpace is MetaObject, Container, UserSpace, NodeSpace, IKmsSpace, IFactorySpace {
 
+    bytes32 public version ="BaseContentSpace20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+
+    string public name;
+    string public description;
+    address payable public factory;
+    address payable public groupFactory;
+    address payable public walletFactory;
+    address payable public libraryFactory;
+    address payable public contentFactory;
+
+    mapping(address => address) public nodeMapping;
+
+    address payable public kmsManAddr;
+
+    function setKmsManager(address payable _kmsManAddr) public onlyOwner {
+        kmsManAddr = _kmsManAddr;
+    }
+
+    event CreateContentType(address contentTypeAddress);
+    event CreateLibrary(address libraryAddress);
+    event CreateGroup(address groupAddress);
+    event CreateContent(address contentAddress);
+    event CreateAccessWallet(address wallet);
+    event BindUserWallet(address wallet, address userAddr);
+
+    event EngageAccountLibrary(address accountAddress);
+    event SetFactory(address factory);
+
+    event CreateSpace(bytes32 version, address owner);
+    event GetAccessWallet(address walletAddress);
+
+    constructor(string memory content_space_name) public {
+        name = content_space_name;
+        contentSpace = address(this);
+        emit CreateSpace(version, owner);
+        visibility = 10;
+    }
+
+    // override
+    function setVisibility(uint8 _visibility_code) public onlyOwner {
+        visibility = _visibility_code;
+        emit VisibilityChanged(address(this), address(0x0), visibility);
+    }
+
+    function setFactory(address payable new_factory) public onlyOwner {
+        factory = new_factory;
+    }
+
+    function setGroupFactory(address payable new_factory) public onlyOwner {
+        groupFactory = new_factory;
+    }
+
+    function setWalletFactory(address payable new_factory) public onlyOwner {
+        walletFactory = new_factory;
+    }
+
+    function setLibraryFactory(address payable new_factory) public onlyOwner {
+        libraryFactory = new_factory;
+    }
+
+    function setContentFactory(address payable new_factory) public onlyOwner {
+        contentFactory = new_factory;
+    }
+
+    function setDescription(string memory content_space_description) public onlyOwner {
+        description = content_space_description;
+    }
+
+    function canConfirm() public view returns (bool) {
+        INodeSpace bcs = INodeSpace(address(this));
+        return bcs.canNodePublish(msg.sender);
+    }
+
+    function createContentType() public returns (address) {
+        require(msg.sender == tx.origin);
+        address contentTypeAddress = BaseTypeFactory(factory).createContentType();
+        emit CreateContentType(contentTypeAddress);
+        return contentTypeAddress;
+    }
+
+    function createLibrary(address address_KMS) public returns (address) {
+        require(msg.sender == tx.origin);
+        address libraryAddress = BaseLibraryFactory(libraryFactory).createLibrary(address_KMS);
+        emit CreateLibrary(libraryAddress);
+        return libraryAddress;
+    }
+
+    function createContent(address payable lib, address payable content_type) public returns (address) {
+        require(msg.sender == tx.origin || msg.sender == lib);
+        address contentAddress = BaseContentFactory(contentFactory).createContent(lib, content_type);
+        emit CreateContent(contentAddress);
+        return contentAddress;
+    }
+
+    function createGroup() public returns (address) {
+        require(msg.sender == tx.origin);
+        address groupAddress = BaseGroupFactory(groupFactory).createGroup();
+        emit CreateGroup(groupAddress);
+        return groupAddress;
+    }
+    
+    function createUserWallet(address payable _user) external returns (address) {
+        return createUserWalletInternal(_user);
+    }
+
+    function createAccessWallet() public returns (address) {
+        return createUserWalletInternal(msg.sender);
+    }
+
+    // This methods revert when attempting to transfer ownership, so for now we make it private
+    // Hence it will be assumed, that user are responsible for creating their wallet.
+    function createUserWalletInternal(address payable _user) private returns (address) {
+        require(userWallets[_user] == address(0x0));
+        address payable walletAddress = BaseAccessWalletFactory(walletFactory).createAccessWallet();
+        if (_user != msg.sender) {
+            BaseAccessWallet wallet = BaseAccessWallet(walletAddress);
+            wallet.transferOwnership(_user);
+        }
+        emit CreateAccessWallet(walletAddress);
+        emit BindUserWallet(walletAddress, _user);
+        userWallets[_user] = walletAddress;
+        return walletAddress;
+    }
+
+    function getAccessWallet() public returns(address) {
+        address walletAddress;
+        if (userWallets[msg.sender] == address(0x0)) {
+            walletAddress = createAccessWallet();
+        } else {
+            walletAddress = userWallets[msg.sender];
+        }
+
+        emit GetAccessWallet(walletAddress);
+        return walletAddress;
+    }
+
+    // implement IKmsSpace
+
+    function checkKMS(string calldata _kmsIdStr) external view returns (uint) {
+        return KmsManager(kmsManAddr).checkKMS(_kmsIdStr);
+    }
+
+    function checkKMSAddr(address _kmsAddr) external view returns (uint) {
+        return KmsManager(kmsManAddr).checkKMSAddr(_kmsAddr);
+    }
+
+    function getKMSID(address _kmsAddr) external view returns (string memory) {
+        return KmsManager(kmsManAddr).getKMSID(_kmsAddr);
+    }
+
+    function getKMSInfo(string calldata _kmsID, bytes calldata prefix) external view returns (string memory, string memory) {
+        return KmsManager(kmsManAddr).getKMSInfo(_kmsID, prefix);
+    }
+}
 
 /* -- Revision history --
 BaseFactory20190227170400ML: First versioned released
@@ -293,21 +315,37 @@ BaseFactory20200316120700ML: Uses content-type setRights instead of going straig
 BaseFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 */
 
-contract BaseFactory is Ownable {
+contract BaseTypeFactory is Ownable {
 
-    bytes32 public version ="BaseFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
+    bytes32 public version ="BaseTypeFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    constructor(address _spaceAddr) public {
+    constructor(address payable _spaceAddr) public {
         contentSpace = _spaceAddr;
     }
-        // TODO: similar issue as tx.origin in Ownable - can't use msg.sender here because it's the space. But as with ownable,
+
+    // TODO: similar issue as tx.origin in Ownable - can't use msg.sender here because it's the space. But as with ownable,
     //  don't think there's a legit spoofing attack here because the spoofee ends up with the rights.
     function createContentType() public returns (address) {
         require(msg.sender == contentSpace);
-        address newType = (new BaseContentType(msg.sender));
+        address payable newType = address(new BaseContentType(msg.sender));
         BaseContentType theType = BaseContentType(newType);
-        theType.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
-        theType.transferOwnership(tx.origin);
+
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address payable userWallet = address(uint160(userSpaceObj.userWallets(tx.origin)));
+
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            theType.transferOwnership(tx.origin);
+            index.setContentTypeRights(address(newType), 0, 2);
+        } else {
+            // v3+ path ...
+            theType.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/); // register library in user wallet
+            theType.transferOwnership(tx.origin);
+        }
+
         return newType;
     }
 
@@ -317,9 +355,6 @@ contract BaseFactory is Ownable {
         return address(n);
     }
 }
-
-
-
 
 /* -- Revision history --
 BaseGroupFactory20190729115200ML: First versioned released
@@ -332,22 +367,35 @@ contract BaseGroupFactory is Ownable {
 
     bytes32 public version ="BaseGroupFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    constructor(address _spaceAddr) public {
+    constructor(address payable _spaceAddr) public {
         contentSpace = _spaceAddr;
     }
 
     // see note on BaseFactory
     function createGroup() public returns (address) {
         require(msg.sender == contentSpace);
-        address newGroup = (new BaseAccessControlGroup(msg.sender));
+        address payable newGroup = address(new BaseAccessControlGroup(msg.sender));
         BaseAccessControlGroup theGroup = BaseAccessControlGroup(newGroup);
-        theGroup.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
-        theGroup.transferOwnership(tx.origin);
+
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address payable userWallet = address(uint160(userSpaceObj.userWallets(tx.origin)));
+
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            theGroup.transferOwnership(tx.origin);
+            index.setAccessGroupRights(newGroup, 0, 2);
+        } else {
+            // v3+ path ...
+            theGroup.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+            theGroup.transferOwnership(tx.origin);
+        }
+
         return newGroup;
     }
 }
-
-
 
 /* -- Revision history --
 BaseLibFactory20190506153200ML: Split out of BaseFactory, adds access indexing
@@ -360,17 +408,32 @@ contract BaseLibraryFactory is Ownable {
 
     bytes32 public version ="BaseLibFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    constructor(address _spaceAddr) public {
+    constructor(address payable _spaceAddr) public {
         contentSpace = _spaceAddr;
     }
 
     // see note on BaseFactory
     function createLibrary(address address_KMS) public returns (address) {
         require(msg.sender == contentSpace);
-        address newLib = (new BaseLibrary(address_KMS, msg.sender));
+        address payable newLib = address(new BaseLibrary(address_KMS, msg.sender));
         BaseLibrary theLib = BaseLibrary(newLib);
-        theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
-        theLib.transferOwnership(tx.origin);
+
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address payable userWallet = address(uint160(userSpaceObj.userWallets(tx.origin)));
+
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            theLib.transferOwnership(tx.origin);
+            index.setAccessGroupRights(newLib, 0, 2);
+        } else {
+            // v3+ path ...
+            theLib.setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);  // register library in user wallet
+            theLib.transferOwnership(tx.origin);
+        }
+
         return newLib;
     }
 }
@@ -388,16 +451,41 @@ BaseCtFactory20200928110000PO: Replace tx.origin with msg.sender in some cases
 
 */
 
+contract ContentFactoryHelper {
+    bytes constant currentObjBin = hex"608060408190527f4f776e61626c653230323030393238313130303030504f00000000000000000060009081557f332e30000000000000000000000000000000000000000000000000000000000060019081557f41636365737369626c653230323030363236313231363030504f0000000000006007556008805460ff191690911761ff00191690557f4564697461626c653230323030393238313130303030504f00000000000000006009557f42617365436f6e74656e743230323030393238313130303030504f0000000000601055601755606080620057f7833981018060405260608110156100f057600080fd5b5080516020808301516040938401516002805432600160a060020a0319918216179091556003805433908316179055600480548216600160a060020a0380881691909117909155601480548316828616179081905560001960165560118054909316828516179092556008805461010061ffff1990911617905586519116815294519394919390927fc3decc188980e855666b70498ca85e8fa284d97d30483d828fa126f7303d7d19928290030190a150505061564480620001b36000396000f3fe6080604052600436106103c65760003560e060020a9004806367e5c3bf116101f6578063aa024e8b11610111578063cbcd4461116100a4578063e542b7cb11610073578063e542b7cb146118ad578063ef1d7dc2146119e7578063f2fde38b146119fc578063f4d9bae814611a2f576103c6565b8063cbcd44611461179d578063e02dd9c2146117b2578063e1a70717146117c7578063e53853031461187a576103c6565b8063bc7dba33116100e0578063bc7dba33146115d9578063c26484a614611611578063c287e0ed14611755578063c9e8e72d1461176a576103c6565b8063aa024e8b146114cf578063ac55c906146114fc578063af570c04146115af578063b816f513146115c4576103c6565b80638280dd8f1161018957806397ac4fd21161015857806397ac4fd2146110375780639867db741461104c578063a1ff106e146110ff578063a8d4160e1461133e576103c6565b80638280dd8f14610fb05780638da5cb5b14610fda5780638f77920114610fef57806395a078e814611004576103c6565b806378f52ffb116101c557806378f52ffb14610df55780637ca8f61814610e2d5780637ddc2c5614610e5757806381beeb6414610f9b576103c6565b806367e5c3bf14610d505780636d2e4b1b14610d835780636e37542714610db65780637886f74714610dcb576103c6565b8063331b86c0116102e6578063484f4b3b116102795780635f6a1301116102485780635f6a130114610c87578063628449fd14610c9c5780636380501f14610d2657806364ade32b14610d3b576103c6565b8063484f4b3b14610b055780635267db4414610c3357806354fd4d5014610c5d5780635f4fcae114610c72576103c6565b806340b87a26116102b557806340b87a26146109a557806341c0e1b5146109ba578063446e8826146109cf57806345155f6e146109d7576103c6565b8063331b86c01461080457806336ebffca14610819578063375a6e7c1461082e57806338d0f50414610843576103c6565b80631a735f181161035e57806324d7806c1161032d57806324d7806c1461078057806327c1c21d146107b357806329adec14146107da57806332eaf21b146107ef576103c6565b80631a735f18146105a15780631bf7a9121461060057806322e564eb146107275780632310167f1461076b576103c6565b80630c6d3f931161039a5780630c6d3f93146104535780630fe1b5a21461051d578063100508a21461056157806314cfabb31461058c576103c6565b8062821de3146103c857806302d05d3f146103f95780630593e3351461040e578063075d47821461044b575b005b3480156103d457600080fd5b506103dd611a59565b60408051600160a060020a039092168252519081900360200190f35b34801561040557600080fd5b506103dd611a69565b6104376004803603606081101561042457600080fd5b5080359060208101359060400135611a78565b604080519115158252519081900360200190f35b610437611ae8565b34801561045f57600080fd5b506104376004803603608081101561047657600080fd5b813591600160a060020a03602082013516918101906060810160408201356401000000008111156104a657600080fd5b8201836020820111156104b857600080fd5b803590602001918460018302840111640100000000831117156104da57600080fd5b91908080601f0160208091040260200160405190810160405280939291908181526020018383808284376000920191909152509295505091359250611c5b915050565b34801561052957600080fd5b506103c66004803603606081101561054057600080fd5b50600160a060020a038135169060ff60208201358116916040013516611ca2565b34801561056d57600080fd5b50610576611d6e565b6040805160ff9092168252519081900360200190f35b34801561059857600080fd5b50610437611d73565b3480156105ad57600080fd5b506105cb600480360360208110156105c457600080fd5b5035611e10565b60408051600160a060020a0390951685526020850193909352600091820b90910b838301526060830152519081900360800190f35b6104376004803603604081101561061657600080fd5b81019060208101813564010000000081111561063157600080fd5b82018360208201111561064357600080fd5b8035906020019184602083028401116401000000008311171561066557600080fd5b91908080602002602001604051908101604052809392919081815260200183836020028082843760009201919091525092959493602081019350359150506401000000008111156106b557600080fd5b8201836020820111156106c757600080fd5b803590602001918460208302840111640100000000831117156106e957600080fd5b919080806020026020016040519081016040528093929190818152602001838360200280828437600092019190915250929550611e44945050505050565b34801561073357600080fd5b506103c66004803603606081101561074a57600080fd5b50600160a060020a038135169060ff60208201358116916040013516611f11565b34801561077757600080fd5b506103dd6123e4565b34801561078c57600080fd5b50610437600480360360208110156107a357600080fd5b5035600160a060020a03166123f3565b3480156107bf57600080fd5b506107c861241d565b60408051918252519081900360200190f35b3480156107e657600080fd5b50610576612423565b3480156107fb57600080fd5b506103dd61242c565b34801561081057600080fd5b506107c861243b565b34801561082557600080fd5b506103dd612441565b34801561083a57600080fd5b50610437612450565b34801561084f57600080fd5b506109816004803603606081101561086657600080fd5b60ff823516919081019060408101602082013564010000000081111561088b57600080fd5b82018360208201111561089d57600080fd5b803590602001918460208302840111640100000000831117156108bf57600080fd5b919080806020026020016040519081016040528093929190818152602001838360200280828437600092019190915250929594936020810193503591505064010000000081111561090f57600080fd5b82018360208201111561092157600080fd5b8035906020019184602083028401116401000000008311171561094357600080fd5b919080806020026020016040519081016040528093929190818152602001838360200280828437600092019190915250929550612459945050505050565b6040805160ff94851681529290931660208301528183015290519081900360600190f35b3480156109b157600080fd5b506107c8612479565b3480156109c657600080fd5b506103c661247f565b6104376125eb565b610437600480360360608110156109ed57600080fd5b81359190810190604081016020820135640100000000811115610a0f57600080fd5b820183602082011115610a2157600080fd5b80359060200191846020830284011164010000000083111715610a4357600080fd5b9190808060200260200160405190810160405280939291908181526020018383602002808284376000920191909152509295949360208101935035915050640100000000811115610a9357600080fd5b820183602082011115610aa557600080fd5b80359060200191846020830284011164010000000083111715610ac757600080fd5b9190808060200260200160405190810160405280939291908181526020018383602002808284376000920191909152509295506127ef945050505050565b61043760048036036060811015610b1b57600080fd5b81359190810190604081016020820135640100000000811115610b3d57600080fd5b820183602082011115610b4f57600080fd5b80359060200191846020830284011164010000000083111715610b7157600080fd5b9190808060200260200160405190810160405280939291908181526020018383602002808284376000920191909152509295949360208101935035915050640100000000811115610bc157600080fd5b820183602082011115610bd357600080fd5b80359060200191846020830284011164010000000083111715610bf557600080fd5b919080806020026020016040519081016040528093929190818152602001838360200280828437600092019190915250929550612a18945050505050565b348015610c3f57600080fd5b506107c860048036036020811015610c5657600080fd5b5035612b6a565b348015610c6957600080fd5b506107c8612bff565b348015610c7e57600080fd5b506107c8612c05565b348015610c9357600080fd5b506103c6612c0b565b348015610ca857600080fd5b50610cb1612c49565b6040805160208082528351818301528351919283929083019185019080838360005b83811015610ceb578181015183820152602001610cd3565b50505050905090810190601f168015610d185780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b348015610d3257600080fd5b50610576612cd7565b348015610d4757600080fd5b506107c8612ce5565b348015610d5c57600080fd5b5061043760048036036020811015610d7357600080fd5b5035600160a060020a0316612ceb565b348015610d8f57600080fd5b506103c660048036036020811015610da657600080fd5b5035600160a060020a0316612e6c565b348015610dc257600080fd5b50610437612ec7565b348015610dd757600080fd5b506107c860048036036020811015610dee57600080fd5b5035612ed6565b6107c860048036036080811015610e0b57600080fd5b50803590602081013590600160a060020a036040820135169060600135612ef5565b348015610e3957600080fd5b50610cb160048036036020811015610e5057600080fd5b5035612f2b565b348015610e6357600080fd5b5061098160048036036060811015610e7a57600080fd5b600160a060020a038235169190810190604081016020820135640100000000811115610ea557600080fd5b820183602082011115610eb757600080fd5b80359060200191846020830284011164010000000083111715610ed957600080fd5b9190808060200260200160405190810160405280939291908181526020018383602002808284376000920191909152509295949360208101935035915050640100000000811115610f2957600080fd5b820183602082011115610f3b57600080fd5b80359060200191846020830284011164010000000083111715610f5d57600080fd5b919080806020026020016040519081016040528093929190818152602001838360200280828437600092019190915250929550612f9f945050505050565b348015610fa757600080fd5b50610437613190565b348015610fbc57600080fd5b506107c860048036036020811015610fd357600080fd5b503561319b565b348015610fe657600080fd5b506103dd6132a6565b348015610ffb57600080fd5b506107c86132b5565b34801561101057600080fd5b506104376004803603602081101561102757600080fd5b5035600160a060020a03166132bb565b34801561104357600080fd5b506105766133ff565b34801561105857600080fd5b506103c66004803603602081101561106f57600080fd5b81019060208101813564010000000081111561108a57600080fd5b82018360208201111561109c57600080fd5b803590602001918460018302840111640100000000831117156110be57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550613404945050505050565b6107c8600480360360a081101561111557600080fd5b60ff823516919081019060408101602082013564010000000081111561113a57600080fd5b82018360208201111561114c57600080fd5b8035906020019184600183028401116401000000008311171561116e57600080fd5b91908080601f01602080910402602001604051908101604052809392919081815260200183838082843760009201919091525092959493602081019350359150506401000000008111156111c157600080fd5b8201836020820111156111d357600080fd5b803590602001918460018302840111640100000000831117156111f557600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929594936020810193503591505064010000000081111561124857600080fd5b82018360208201111561125a57600080fd5b8035906020019184602083028401116401000000008311171561127c57600080fd5b91908080602002602001604051908101604052809392919081815260200183836020028082843760009201919091525092959493602081019350359150506401000000008111156112cc57600080fd5b8201836020820111156112de57600080fd5b8035906020019184602083028401116401000000008311171561130057600080fd5b919080806020026020016040519081016040528093929190818152602001838360200280828437600092019190915250929550613531945050505050565b34801561134a57600080fd5b506113f16004803603602081101561136157600080fd5b81019060208101813564010000000081111561137c57600080fd5b82018360208201111561138e57600080fd5b803590602001918460018302840111640100000000831117156113b057600080fd5b91908080601f0160208091040260200160405190810160405280939291908181526020018383808284376000920191909152509295506136e1945050505050565b604051808060200180602001838103835285818151815260200191508051906020019080838360005b8381101561143257818101518382015260200161141a565b50505050905090810190601f16801561145f5780820380516001836020036101000a031916815260200191505b50838103825284518152845160209182019186019080838360005b8381101561149257818101518382015260200161147a565b50505050905090810190601f1680156114bf5780820380516001836020036101000a031916815260200191505b5094505050505060405180910390f35b3480156114db57600080fd5b506103c6600480360360208110156114f257600080fd5b503560ff16613a91565b34801561150857600080fd5b50610cb16004803603602081101561151f57600080fd5b81019060208101813564010000000081111561153a57600080fd5b82018360208201111561154c57600080fd5b8035906020019184600183028401116401000000008311171561156e57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929550613b11945050505050565b3480156115bb57600080fd5b506103dd613cba565b3480156115d057600080fd5b506103dd613cc9565b610437600480360360808110156115ef57600080fd5b50803590602081013590600160a060020a036040820135169060600135613cd8565b34801561161d57600080fd5b506109816004803603606081101561163457600080fd5b600160a060020a03823516919081019060408101602082013564010000000081111561165f57600080fd5b82018360208201111561167157600080fd5b8035906020019184602083028401116401000000008311171561169357600080fd5b91908080602002602001604051908101604052809392919081815260200183836020028082843760009201919091525092959493602081019350359150506401000000008111156116e357600080fd5b8201836020820111156116f557600080fd5b8035906020019184602083028401116401000000008311171561171757600080fd5b919080806020026020016040519081016040528093929190818152602001838360200280828437600092019190915250929550613d73945050505050565b34801561176157600080fd5b506103c6613f82565b34801561177657600080fd5b506103c66004803603602081101561178d57600080fd5b5035600160a060020a0316614107565b3480156117a957600080fd5b50610437614149565b3480156117be57600080fd5b50610cb1614168565b3480156117d357600080fd5b506107c8600480360360208110156117ea57600080fd5b81019060208101813564010000000081111561180557600080fd5b82018360208201111561181757600080fd5b8035906020019184600183028401116401000000008311171561183957600080fd5b91908080601f0160208091040260200160405190810160405280939291908181526020018383808284376000920191909152509295506141c3945050505050565b34801561188657600080fd5b506103c66004803603602081101561189d57600080fd5b5035600160a060020a0316614634565b3480156118b957600080fd5b506103c6600480360360408110156118d057600080fd5b8101906020810181356401000000008111156118eb57600080fd5b8201836020820111156118fd57600080fd5b8035906020019184600183028401116401000000008311171561191f57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600092019190915250929594936020810193503591505064010000000081111561197257600080fd5b82018360208201111561198457600080fd5b803590602001918460018302840111640100000000831117156119a657600080fd5b91908080601f01602080910402602001604051908101604052809392919081815260200183838082843760009201919091525092955061485d945050505050565b3480156119f357600080fd5b50610576614a54565b348015611a0857600080fd5b506103c660048036036020811015611a1f57600080fd5b5035600160a060020a0316614a59565b348015611a3b57600080fd5b506107c860048036036020811015611a5257600080fd5b5035614ab4565b601454600160a060020a03165b90565b600254600160a060020a031681565b600080611a86601754614b09565b90506060806000611a988484846127ef565b604080518a8152602081018a90528215158183015290519192507f2c49ac638ee7bf3341004c40512c79847bb7fb8f17fb53151ff576a35630ac06919081900360600190a1979650505050505050565b6000611af2613190565b1515611afd57600080fd5b601454604080517f2cf994220000000000000000000000000000000000000000000000000000000081523060048201529051600092600160a060020a031691632cf9942291602480830192602092919082900301818787803b158015611b6257600080fd5b505af1158015611b76573d6000803e3d6000fd5b505050506040513d6020811015611b8c57600080fd5b5051601654604080518315158152602081018390526060918101828152600a8054600260001961010060018416150201909116049383018490529495507fad9c5eacc073b2e1767affc883e050347e1dd379c9799cb5ac0a17bde80f5cf49486949390929190608083019084908015611c465780601f10611c1b57610100808354040283529160200191611c46565b820191906000526020600020905b815481529060010190602001808311611c2957829003601f168201915b505094505050505060405180910390a1905090565b601354600090600160a060020a031615801590611c825750601354600160a060020a031633145b1515611c8d57600080fd5b611c9985858585614b44565b95945050505050565b611caa613190565b1515611cb557600080fd5b600480546040805160e060020a6363e6ffdd028152600160a060020a03878116948201949094529051929091169160009183916363e6ffdd91602480820192602092909190829003018186803b158015611d0e57600080fd5b505afa158015611d22573d6000803e3d6000fd5b505050506040513d6020811015611d3857600080fd5b50519050600160a060020a0381161515611d5c57611d57858585611f11565b611d67565b611d67818585611f11565b5050505050565b600181565b60048054604080517f26683e14000000000000000000000000000000000000000000000000000000008152339381019390935251600092600160a060020a039092169182916326683e1491602480820192602092909190829003018186803b158015611dde57600080fd5b505afa158015611df2573d6000803e3d6000fd5b505050506040513d6020811015611e0857600080fd5b505191505090565b6018602052600090815260408120805460018201546002830154600390930154600160a060020a03909216939092900b9084565b60006017546001016017819055506000611e5f601754614b09565b9050611e748185856000336103e84202614c79565b50611e7d615419565b5060408051608081018252338152346020808301918252600083850181815260608501828152968252601890925293842092518354600160a060020a039190911673ffffffffffffffffffffffffffffffffffffffff19909116178355905160018084019190915590516002830180549190940b60ff1660ff19909116179092559151600390920191909155905092915050565b600083905080600160a060020a031663091600e66040518163ffffffff1660e060020a02815260040160206040518083038186803b158015611f5257600080fd5b505afa158015611f66573d6000803e3d6000fd5b505050506040513d6020811015611f7c57600080fd5b5051600854610100900460ff9081169116141561202157604080517f3def514000000000000000000000000000000000000000000000000000000000815230600482015260ff8086166024830152841660448201529051600160a060020a03831691633def514091606480830192600092919082900301818387803b15801561200457600080fd5b505af1158015612018573d6000803e3d6000fd5b505050506123de565b80600160a060020a03166312915a306040518163ffffffff1660e060020a02815260040160206040518083038186803b15801561205d57600080fd5b505afa158015612071573d6000803e3d6000fd5b505050506040513d602081101561208757600080fd5b5051600854610100900460ff9081169116141561210f57604080517ff17bda9100000000000000000000000000000000000000000000000000000000815230600482015260ff8086166024830152841660448201529051600160a060020a0383169163f17bda9191606480830192600092919082900301818387803b15801561200457600080fd5b80600160a060020a03166316aed2326040518163ffffffff1660e060020a02815260040160206040518083038186803b15801561214b57600080fd5b505afa15801561215f573d6000803e3d6000fd5b505050506040513d602081101561217557600080fd5b5051600854610100900460ff908116911614156121fd57604080517f7cbb7bf200000000000000000000000000000000000000000000000000000000815230600482015260ff8086166024830152841660448201529051600160a060020a03831691637cbb7bf291606480830192600092919082900301818387803b15801561200457600080fd5b80600160a060020a03166368a0469a6040518163ffffffff1660e060020a02815260040160206040518083038186803b15801561223957600080fd5b505afa15801561224d573d6000803e3d6000fd5b505050506040513d602081101561226357600080fd5b5051600854610100900460ff908116911614156122eb57604080517f8635adb500000000000000000000000000000000000000000000000000000000815230600482015260ff8086166024830152841660448201529051600160a060020a03831691638635adb591606480830192600092919082900301818387803b15801561200457600080fd5b80600160a060020a0316636373a4116040518163ffffffff1660e060020a02815260040160206040518083038186803b15801561232757600080fd5b505afa15801561233b573d6000803e3d6000fd5b505050506040513d602081101561235157600080fd5b5051600854610100900460ff908116911614156123d957604080517f224dcba000000000000000000000000000000000000000000000000000000000815230600482015260ff8086166024830152841660448201529051600160a060020a0383169163224dcba091606480830192600092919082900301818387803b15801561200457600080fd5b600080fd5b50505050565b601354600160a060020a031681565b600354600090600160a060020a038381169116141561241457506001612418565b5060005b919050565b60165481565b60085460ff1681565b601254600160a060020a031681565b600c5490565b601154600160a060020a031681565b600f5460ff1681565b6000806000612469338686612f9f565b9250925092505b93509350939050565b600b5481565b601454600160a060020a0316331461249657600080fd5b601354600090600160a060020a03161561252c57601360009054906101000a9004600160a060020a0316600160a060020a031663860b24926040518163ffffffff1660e060020a028152600401602060405180830381600087803b1580156124fd57600080fd5b505af1158015612511573d6000803e3d6000fd5b505050506040513d602081101561252757600080fd5b505190505b8015806125395750806064145b806125455750806103e8145b8061255157508061044c145b151561255c57600080fd5b806064148061256c57508061044c145b156125dd57601360009054906101000a9004600160a060020a0316600160a060020a0316632de3ecd16040518163ffffffff1660e060020a028152600401600060405180830381600087803b1580156125c457600080fd5b505af11580156125d8573d6000803e3d6000fd5b505050505b600354600160a060020a0316ff5b60006125f5611d73565b151561260057600080fd5b600f5460ff16151561261157600080fd5b6000600a80546001816001161561010002031660029004905011156126c057600c80546001818101808455600093909352600a8054612687937fdf6966c971051c3d54ec59162606531493a51404a002842f56009d7e5cf4a8c70192600261010091831615919091026000190190911604615440565b5050600b54600d80546001810182556000919091527fd7b6990105719101dabeb77144f2a3385c8033acd3af97e9423a695e81ad1eb501555b600e80546126e391600a9160026000196101006001841615020190911604615440565b5042600b5560408051602081019182905260009081905261270691600e916154c5565b50600f805460ff191690556004547fbdaffceabaaa783aa187fea6c2e815541d29e2290bf3f7d3c4fc53672b68f7df90600160a060020a0316612747611a59565b60408051600160a060020a038085168252831660208201526060918101828152600a805460026000196101006001841615020190911604938301849052926080830190849080156127d95780601f106127ae576101008083540402835291602001916127d9565b820191906000526020600020905b8154815290600101906020018083116127bc57829003601f168201915b505094505050505060405180910390a150600190565b60008381526018602052604081208054600160a060020a03161580159061283357508054600160a060020a03163314806128335750600354600160a060020a031633145b151561283e57600080fd5b600061284b868686612a18565b8254909150600160a060020a031633141561288b57801561287b576002828101805460ff1916909117905561288b565b60028201805460ff191660fe1790555b816001015482600301541015612967576002820154600090810b810b1361290c57815460408051808201909152600681527f726566756e640000000000000000000000000000000000000000000000000000602082015260038401546001850154612906938a93600160a060020a0390911692909103614b44565b50612967565b6003805460408051808201909152600e81527f72656c6561736520657363726f770000000000000000000000000000000000006020820152918401546001850154612965938a93600160a060020a031692909103614b44565b505b6000868152601860209081526040808320805473ffffffffffffffffffffffffffffffffffffffff191681556001810184905560028101805460ff1916905560030183905560145481518a815285151593810193909352600160a060020a03168282015260608201929092523360808201526103e8420260a082015290517fd3e5b1d14681444d8159fa85b57104b685f47fb9164fd82b7fafe4e123dcc3a19181900360c00190a195945050505050565b601354600090600190600160a060020a031615612b62576013546040517f1a485ccd000000000000000000000000000000000000000000000000000000008152600481018781523360648301819052608060248401908152885160848501528851600160a060020a03909516946000948694631a485ccd948d948d948d94929392604481019160a490910190602080890191028083838f5b83811015612ac8578181015183820152602001612ab0565b50505050905001838103825285818151815260200191508051906020019060200280838360005b83811015612b07578181015183820152602001612aef565b505050509050019650505050505050602060405180830381600087803b158015612b3057600080fd5b505af1158015612b44573d6000803e3d6000fd5b505050506040513d6020811015612b5a57600080fd5b505115925050505b949350505050565b600354600090600160a060020a031633148015612b9e57506000821280612b9e5750600082138015612b9e57506000601654125b15612ba95760168290555b601454600160a060020a0316331415612bc25760168290555b60165460408051918252517fda4f34b30fa0ba8a73fedb922f4d28e2a10a5d68e53cf8e942abce3ac09158a29181900360200190a1505060165490565b60105481565b60015481565b612c13612ec7565b1515612c1e57600080fd5b604080516020810191829052600090819052612c3c91600e916154c5565b50600f805460ff19169055565b600e805460408051602060026001851615610100026000190190941693909304601f81018490048402820184019092528181529291830182828015612ccf5780601f10612ca457610100808354040283529160200191612ccf565b820191906000526020600020905b815481529060010190602001808311612cb257829003601f168201915b505050505081565b600854610100900460ff1681565b60155481565b600354600090600160a060020a0383811691161480612d125750600854606460ff90911610155b15612d1f57506001612418565b600854600061010090910460ff161115612e6457600480546040805160e060020a6363e6ffdd028152600160a060020a03868116948201949094529051600093909216916363e6ffdd91602480820192602092909190829003018186803b158015612d8957600080fd5b505afa158015612d9d573d6000803e3d6000fd5b505050506040513d6020811015612db357600080fd5b5051600854604080517f7fb52f1a00000000000000000000000000000000000000000000000000000000815261010090920460ff1660048301523060248301526002604483015251919250600160a060020a03831691637fb52f1a91606480820192602092909190829003018186803b158015612e2f57600080fd5b505afa158015612e43573d6000803e3d6000fd5b505050506040513d6020811015612e5957600080fd5b505191506124189050565b506000612418565b600254600160a060020a03163314612e8357600080fd5b600160a060020a0381161515612e9857600080fd5b6002805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b6000612ed1613190565b905090565b600d805482908110612ee457fe5b600091825260209091200154905081565b601254600090600160a060020a03163314612f0f57600080fd5b606080612f20878383898989614c79565b979650505050505050565b600c805482908110612f3957fe5b600091825260209182902001805460408051601f6002600019610100600187161502019094169390930492830185900485028101850190915281815293509091830182828015612ccf5780601f10612ca457610100808354040283529160200191612ccf565b60008060006016546000141515612fc457612fb986614f51565b925092509250612470565b6000806000612fd4898989613d73565b9450909250905060ff8083161480612fef57508060ff1660ff145b1561318157600480546040805160e060020a6363e6ffdd028152600160a060020a038d8116948201949094529051929091169160009183916363e6ffdd91602480820192602092909190829003018186803b15801561304d57600080fd5b505afa158015613061573d6000803e3d6000fd5b505050506040513d602081101561307757600080fd5b50519050600160a060020a0381161561317e578360ff1660ff141561314757600854604080517f7fb52f1a00000000000000000000000000000000000000000000000000000000815261010090920460ff1660048301523060248301526000604483015251600160a060020a03831691637fb52f1a916064808301926020929190829003018186803b15801561310c57600080fd5b505afa158015613120573d6000803e3d6000fd5b505050506040513d602081101561313657600080fd5b505115156001141561314757600093505b60ff8416151561317e578260ff1660ff141561317e576131668b6132bb565b151560011415613179576000925061317e565b606492505b50505b90989097509095509350505050565b6000612ed133612ceb565b60006131a5614149565b15156131b057600080fd5b601354600090600160a060020a031615156131cc575081613264565b601354604080517f3513a805000000000000000000000000000000000000000000000000000000008152600481018690529051600160a060020a03909216918291633513a8059160248083019260209291908290030181600087803b15801561323457600080fd5b505af1158015613248573d6000803e3d6000fd5b505050506040513d602081101561325e57600080fd5b50519150505b60168190556040805182815290517fda4f34b30fa0ba8a73fedb922f4d28e2a10a5d68e53cf8e942abce3ac09158a29181900360200190a15050601654919050565b600354600160a060020a031681565b60175481565b600354600090600160a060020a03838116911614806132e25750600854600a60ff90911610155b156132ef57506001612418565b600854600061010090910460ff161115612e6457600480546040805160e060020a6363e6ffdd028152600160a060020a03868116948201949094529051600093909216916363e6ffdd91602480820192602092909190829003018186803b15801561335957600080fd5b505afa15801561336d573d6000803e3d6000fd5b505050506040513d602081101561338357600080fd5b5051600854604080517f7fb52f1a00000000000000000000000000000000000000000000000000000000815261010090920460ff1660048301523060248301526001604483015251919250600160a060020a03831691637fb52f1a91606480820192602092909190829003018186803b158015612e2f57600080fd5b600a81565b61340c612ec7565b151561341757600080fd5b600f5460ff161561342757600080fd5b805160801161343557600080fd5b805161344890600e9060208401906154c5565b50600f805460ff191660011790556004547fb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa7590600160a060020a031661348c611a59565b60408051600160a060020a038085168252831660208201526060918101828152600e8054600260001961010060018416150201909116049383018490529260808301908490801561351e5780601f106134f35761010080835404028352916020019161351e565b820191906000526020600020905b81548152906001019060200180831161350157829003601f168201915b505094505050505060405180910390a150565b600061353d8383611e44565b506017546040805182815260006020820181905260a0928201838152600a8054600260001961010060018416150201909116049484018590527f50f423e39e8beb25bb2da38a63e3d33b5368f261522813712756733eaf569a069594929390928b928b92916060830190608084019060c0850190889080156136005780601f106135d557610100808354040283529160200191613600565b820191906000526020600020905b8154815290600101906020018083116135e357829003601f168201915b5050848103835286518152865160209182019188019080838360005b8381101561363457818101518382015260200161361c565b50505050905090810190601f1680156136615780820380516001836020036101000a031916815260200191505b50848103825285518152855160209182019187019080838360005b8381101561369457818101518382015260200161367c565b50505050905090810190601f1680156136c15780820380516001836020036101000a031916815260200191505b509850505050505050505060405180910390a15060175495945050505050565b6004546012546060918291600160a060020a03918216911615806137945750601254604080517fd6be0f49000000000000000000000000000000000000000000000000000000008152600160a060020a03928316600482015290519183169163d6be0f4991602480820192602092909190829003018186803b15801561376657600080fd5b505afa15801561377a573d6000803e3d6000fd5b505050506040513d602081101561379057600080fd5b5051155b156137bd5750506040805160208181018352600080835283519182019093529182529150613a8c565b601254604080517f589aafc1000000000000000000000000000000000000000000000000000000008152600160a060020a03928316600482015290519183169163268bfac491839163589aafc191602480820192600092909190829003018186803b15801561382b57600080fd5b505afa15801561383f573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f19168201604052602081101561386857600080fd5b81019080805164010000000081111561388057600080fd5b8201602081018481111561389357600080fd5b81516401000000008111828201871017156138ad57600080fd5b5050929190505050866040518363ffffffff1660e060020a028152600401808060200180602001838103835285818151815260200191508051906020019080838360005b838110156139095781810151838201526020016138f1565b50505050905090810190601f1680156139365780820380516001836020036101000a031916815260200191505b50838103825284518152845160209182019186019080838360005b83811015613969578181015183820152602001613951565b50505050905090810190601f1680156139965780820380516001836020036101000a031916815260200191505b5094505050505060006040518083038186803b1580156139b557600080fd5b505afa1580156139c9573d6000803e3d6000fd5b505050506040513d6000823e601f3d908101601f1916820160409081528110156139f257600080fd5b810190808051640100000000811115613a0a57600080fd5b82016020810184811115613a1d57600080fd5b8151640100000000811182820187101715613a3757600080fd5b50509291906020018051640100000000811115613a5357600080fd5b82016020810184811115613a6657600080fd5b8151640100000000811182820187101715613a8057600080fd5b50949750955050505050505b915091565b613a99613190565b1515613aa457600080fd5b6008805460ff80841660ff19909216919091179182905560045460145460408051600160a060020a0393841681529190921660208201529290911682820152517f369a336baa7895746725663e717b3523139ebabfff8c32bc4b13e8f88e5025009181900360600190a150565b606060208251111515613bc85781518083015160008181526005602090815260409182902080548351601f600260001961010060018616150201909316929092049182018490048402810184019094528084529394939091830182828015613bba5780601f10613b8f57610100808354040283529160200191613bba565b820191906000526020600020905b815481529060010190602001808311613b9d57829003601f168201915b505050505092505050612418565b6006826040518082805190602001908083835b60208310613bfa5780518252601f199092019160209182019101613bdb565b518151600019602094850361010090810a820192831692199390931691909117909252949092019687526040805197889003820188208054601f6002600183161590980290950116959095049283018290048202880182019052818752929450925050830182828015613cae5780601f10613c8357610100808354040283529160200191613cae565b820191906000526020600020905b815481529060010190602001808311613c9157829003601f168201915b50505050509050919050565b600454600160a060020a031681565b601454600160a060020a031681565b601254600090600160a060020a03163314613cf257600080fd5b6060806000613d02888484612a18565b601454604080518b81528315156020820152600160a060020a0392831681830152606081018b9052918916608083015260a08201889052519192507fd3e5b1d14681444d8159fa85b57104b685f47fb9164fd82b7fafe4e123dcc3a1919081900360c00190a1979650505050505050565b6000806000806015549050613d86615533565b600854600160ff9091161015613d9d5760ff613da0565b60005b60ff9081168252600854600a91161015613dbb5760ff613dbe565b60005b60ff166020820152601354600160a060020a031615613f6b57600080600080601360009054906101000a9004600160a060020a0316600160a060020a03166374ba46098c8c8f6040518463ffffffff1660e060020a02815260040180806020018060200184600160a060020a0316600160a060020a03168152602001838103835286818151815260200191508051906020019060200280838360005b83811015613e72578181015183820152602001613e5a565b50505050905001838103825285818151815260200191508051906020019060200280838360005b83811015613eb1578181015183820152602001613e99565b505050509050019550505050505060806040518083038186803b158015613ed757600080fd5b505afa158015613eeb573d6000803e3d6000fd5b505050506040513d6080811015613f0157600080fd5b50805160208201516040830151606090930151601554929750909550919350909150811115613f335760648552613f66565b600184161515613f445760ff831685525b600284161515613f585760ff821660208601525b600484161515613f66578095505b505050505b805160209091015190989097509095509350505050565b601354600160a060020a03161515613fa157613f9c615112565b614105565b601354604080517fc9f3d94c0000000000000000000000000000000000000000000000000000000081529051600160a060020a0390921691600091839163c9f3d94c9160048082019260209290919082900301818787803b15801561400557600080fd5b505af1158015614019573d6000803e3d6000fd5b505050506040513d602081101561402f57600080fd5b50519050606481141561404957614044615112565b614102565b801561405457600080fd5b604080516020808252600a8054600260001961010060018416150201909116049183018290527f403f30aa5f4f2f89331a7b50054f64a00ce206f4d0a37f566ff344bbe46f8b65939092918291820190849080156140f35780601f106140c8576101008083540402835291602001916140f3565b820191906000526020600020905b8154815290600101906020018083116140d657829003601f168201915b50509250505060405180910390a15b50505b565b61410f613190565b151561411a57600080fd5b6012805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b601454600090600160a060020a0316331480612ed15750612ed1613190565b600a805460408051602060026001851615610100026000190190941693909304601f81018490048402820184019092528181529291830182828015612ccf5780601f10612ca457610100808354040283529160200191612ccf565b60006141cd612ec7565b15156141d857600080fd5b6000826040516020018082805190602001908083835b6020831061420d5780518252601f1990920191602091820191016141ee565b6001836020036101000a0380198251168184511680821785525050505050509050019150506040516020818303038152906040528051906020012090506000600a60405160200180828054600181600116156101000203166002900480156142ac5780601f1061428a5761010080835404028352918201916142ac565b820191906000526020600020905b815481529060010190602001808311614298575b50509150506040516020818303038152906040528051906020012090508082141561448357600c541515614303576040805160208101918290526000908190526142f891600a916154c5565b506000600b556143a7565b600080805b600c5481101561435b5781600d8281548110151561432257fe5b9060005260206000200154111561435357809250600d8181548110151561434557fe5b906000526020600020015491505b600101614308565b50600c80548390811061436a57fe5b90600052602060002001600a9080546001816001161561010002031660029004614395929190615440565b50600b8190556143a4826151d4565b50505b7f238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51600460009054906101000a9004600160a060020a03168560006040518084600160a060020a0316600160a060020a0316815260200180602001838152602001828103825284818151815260200191508051906020019080838360005b8381101561443c578181015183820152602001614424565b50505050905090810190601f1680156144695780820380516001836020036101000a031916815260200191505b5094505050505060405180910390a1600092505050612418565b60001960005b600c5481101561454c576000600c828154811015156144a457fe5b90600052602060002001604051602001808280546001816001161561010002031660029004801561450c5780601f106144ea57610100808354040283529182019161450c565b820191906000526020600020905b8154815290600101906020018083116144f8575b5050915050604051602081830303815290604052805190602001209050808514156145435761453a826151d4565b8192505061454c565b50600101614489565b5060001981141561455c57600080fd5b7f238d74c13cda9ba51e904772d41a616a1b9b30d09802484df6279fe1c3c07f51600460009054906101000a9004600160a060020a031686836040518084600160a060020a0316600160a060020a0316815260200180602001838152602001828103825284818151815260200191508051906020019080838360005b838110156145f05781810151838201526020016145d8565b50505050905090810190601f16801561461d5780820380516001836020036101000a031916815260200191505b5094505050505060405180910390a1949350505050565b61463c613190565b151561464757600080fd5b601354600090600160a060020a03161561476c57601360009054906101000a9004600160a060020a03169050600081600160a060020a031663860b24926040518163ffffffff1660e060020a028152600401602060405180830381600087803b1580156146b357600080fd5b505af11580156146c7573d6000803e3d6000fd5b505050506040513d60208110156146dd57600080fd5b5051905060648114806146f157508061044c145b156147515781600160a060020a0316632de3ecd16040518163ffffffff1660e060020a028152600401600060405180830381600087803b15801561473457600080fd5b505af1158015614748573d6000803e3d6000fd5b5050505061476a565b80158061475f5750806103e8145b151561476a57600080fd5b505b6013805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0384169081179091551561481a57819050600081600160a060020a0316637b1cdb3e6040518163ffffffff1660e060020a028152600401602060405180830381600087803b1580156147df57600080fd5b505af11580156147f3573d6000803e3d6000fd5b505050506040513d602081101561480957600080fd5b50519050801561481857600080fd5b505b60135460408051600160a060020a039092168252517fa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb79181900360200190a15050565b614866336123f3565b151561487157600080fd5b81516020106148cc57815180830151600081815260056020526040812091929161489a9161554e565b6000835111156148c557600082815260056020908152604090912084516148c3928601906154c5565b505b50506149b7565b6006826040518082805190602001908083835b602083106148fe5780518252601f1990920191602091820191016148df565b51815160209384036101000a6000190180199092169116179052920194855250604051938490030190922061493792509050600061554e565b6000815111156149b757806006836040518082805190602001908083835b602083106149745780518252601f199092019160209182019101614955565b51815160209384036101000a600019018019909216911617905292019485525060405193849003810190932084516149b595919491909101925090506154c5565b505b7fe2b310ec9dabdc05229a748e07666c3bc9c46c6ef465cce30d0aa3aa64a0644c826040518080602001828103825283818151815260200191508051906020019080838360005b83811015614a165781810151838201526020016149fe565b50505050905090810190601f168015614a435780820380516001836020036101000a031916815260200191505b509250505060405180910390a15050565b606481565b600354600160a060020a03163314614a7057600080fd5b600160a060020a0381161515614a8557600080fd5b6003805473ffffffffffffffffffffffffffffffffffffffff1916600160a060020a0392909216919091179055565b6000614abe613190565b1515614ac957600080fd5b60158290556040805183815290517f4114f8ef80b6de2161db580cbefa14e1892d15d3ebe2062c9914e4a5773114a39181900360200190a1505060155490565b60408051602080820193909352306c010000000000000000000000000281830152815180820360340181526054909101909152805191012090565b600084815260186020526040812060018101546003820154840111614c6d57604051600160a060020a0386169084156108fc029085906000818181858888f19350505050158015614b99573d6000803e3d6000fd5b508281600301540181600301819055507fad58d18ea7292f887da6f15bb4f0badddaa33d169713d09cf49710acc7c3a5b986858786604051808581526020018060200184600160a060020a0316600160a060020a03168152602001838152602001828103825285818151815260200191508051906020019080838360005b83811015614c2f578181015183820152602001614c17565b50505050905090810190601f168015614c5c5780820380516001836020036101000a031916815260200191505b509550505050505060405180910390a15b50600195945050505050565b6000614c868387876152d6565b601354600160a060020a031615614dd7576013546040517ff9b4aa0200000000000000000000000000000000000000000000000000000000815260048101898152600160a060020a0386811660648401526080602484019081528a5160848501528a519190941693600093859363f9b4aa02938e938e938e938d93909291604481019160a490910190602080890191028083838f5b83811015614d33578181015183820152602001614d1b565b50505050905001838103825285818151815260200191508051906020019060200280838360005b83811015614d72578181015183820152602001614d5a565b505050509050019650505050505050602060405180830381600087803b158015614d9b57600080fd5b505af1158015614daf573d6000803e3d6000fd5b505050506040513d6020811015614dc557600080fd5b505190508015614dd457600080fd5b50505b60145460408051898152600160a060020a039283166020820152808201879052918516606083015260808201849052517f545ceffc5093a8300777a74bb094968fbd62d128313df01eb72fd5350ec659c79181900360a00190a160005b8651811015614eb1578681815181101515614e4b57fe5b6020908102909101015115614ea9577f515e0a48b385fce2a8e4d9f169a97c4f6ea669a752358f5e6ab37cc3c2e84c388782815181101515614e8957fe5b906020019060200201516040518082815260200191505060405180910390a15b600101614e34565b5060005b8551811015614f45578551600090879083908110614ecf57fe5b60209081029091010151600160a060020a031614614f3d577fb6e3239e521a6c66920ae634f8e921a37e6991d520ac44d52f8516397f41b6848682815181101515614f1657fe5b602090810290910181015160408051600160a060020a039092168252519081900390910190a15b600101614eb5565b50959695505050505050565b60035460009081908190600160a060020a0385811691161480614f7c5750600854600a60ff90911610155b15614f9157505060155460009150819061510b565b600480546040805160e060020a6363e6ffdd028152600160a060020a03888116948201949094529051929091169160009183916363e6ffdd91602480820192602092909190829003018186803b158015614fea57600080fd5b505afa158015614ffe573d6000803e3d6000fd5b505050506040513d602081101561501457600080fd5b50519050600160a060020a0381161561504d57615030866132bb565b15156001141561504d57505060155460009350839250905061510b565b601454604080517f29d00219000000000000000000000000000000000000000000000000000000008152600160a060020a038981166004830152915191909216916329d00219916024808301926020929190829003018186803b1580156150b357600080fd5b505afa1580156150c7573d6000803e3d6000fd5b505050506040513d60208110156150dd57600080fd5b50511515600114156150fc57505060155460009350839250905061510b565b5050601554600a935083925090505b9193909250565b61511a613190565b151561512557600080fd5b604080516020808252600a8054600260001961010060018416150201909116049183018290527f403f30aa5f4f2f89331a7b50054f64a00ce206f4d0a37f566ff344bbe46f8b65939092918291820190849080156151c45780601f10615199576101008083540402835291602001916151c4565b820191906000526020600020905b8154815290600101906020018083116151a757829003601f168201915b50509250505060405180910390a1565b600c8054829081106151e257fe5b9060005260206000200160006151f8919061554e565b600d80548290811061520657fe5b6000918252602082200155600c546000190181146152ac57600c8054600019810190811061523057fe5b90600052602060002001600c8281548110151561524957fe5b906000526020600020019080546001816001161561010002031660029004615272929190615440565b50600d8054600019810190811061528557fe5b9060005260206000200154600d8281548110151561529f57fe5b6000918252602090912001555b600c8054906152bf906000198301615592565b50600d8054906141029060001983016155bb565b50565b60008060006152e6868686612f9f565b94509092509050606460ff82161415615312573483111561530657600080fd5b61530e615328565b5060005b60ff81161561532057600080fd5b505050505050565b600480546040805160e060020a6363e6ffdd028152339381019390935251600092600160a060020a03909216916363e6ffdd916024808301926020929190829003018186803b15801561537a57600080fd5b505afa15801561538e573d6000803e3d6000fd5b505050506040513d60208110156153a457600080fd5b5051604080517fb8ff1dba00000000000000000000000000000000000000000000000000000000815290519192508291600160a060020a0383169163b8ff1dba91600480830192600092919082900301818387803b15801561540557600080fd5b505af1158015615320573d6000803e3d6000fd5b60408051608081018252600080825260208201819052918101829052606081019190915290565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061547957805485556154b5565b828001600101855582156154b557600052602060002091601f016020900482015b828111156154b557825482559160010191906001019061549a565b506154c19291506155db565b5090565b828054600181600116156101000203166002900490600052602060002090601f016020900481019282601f1061550657805160ff19168380011785556154b5565b828001600101855582156154b5579182015b828111156154b5578251825591602001919060010190615518565b60408051808201825290600290829080388339509192915050565b50805460018160011615610100020316600290046000825580601f1061557457506152d3565b601f0160209004906000526020600020908101906152d391906155db565b8154818355818111156155b6576000838152602090206155b69181019083016155f5565b505050565b8154818355818111156155b6576000838152602090206155b69181019083015b611a6691905b808211156154c157600081556001016155e1565b611a6691905b808211156154c157600061560f828261554e565b506001016155fb56fea165627a7a72305820f4f4beca962110125e02229bab22635af19137f27364528e1547fb6dca3e142c0029";
+    function getContentObjectBin() public pure returns (bytes memory) {
+        return currentObjBin;
+    }
+}
+
 contract BaseContentFactory is Ownable {
 
     bytes32 public version ="BaseCtFactory20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    constructor(address _spaceAddr) public {
+    constructor(address payable _spaceAddr, address payable _helperAddr) public {
         contentSpace = _spaceAddr;
+        factoryHelper = _helperAddr;
+    }
+
+    bytes4 constant createContentSig = bytes4(keccak256("createContentInstance(address,address,address)"));
+
+    // TODO: *not* adding a setter here means that we need to create a new factory if we want to change the helper - i.e. change
+    //  the base content code. I *think* this is what we want to do.
+    address payable factoryHelper;
+
+    function createContractBytes(bytes memory _codeBytes,
+        address payable _spcAddr,
+        address payable _libAddr,
+        address payable _typeAddr)
+    private returns (address payable _addr) {
+        bytes memory encodeBytes = abi.encodePacked(_codeBytes, abi.encode(_spcAddr, _libAddr, _typeAddr));
+        assembly {
+            _addr := create(0, add(encodeBytes, 0x20), mload(encodeBytes))
+        }
     }
 
     // see note on BaseFactory re tx.origin
-    function createContent(address lib, address content_type) public  returns (address) {
+    function createContent(address payable lib, address payable content_type) public  returns (address) {
         require(msg.sender == contentSpace);
         Container libraryObj = Container(lib);
 
@@ -406,13 +494,29 @@ contract BaseContentFactory is Ownable {
         require(libraryObj.canContribute(tx.origin)); // check if sender has contributor access
         require(libraryObj.validType(content_type));
 
-        BaseContent content = new BaseContent(msg.sender, lib, content_type);
+        // BaseContent content = new BaseContent(msg.sender, lib, content_type);
+        bytes memory cObjBin = ContentFactoryHelper(factoryHelper).getContentObjectBin();
+        address payable contentAddr = createContractBytes(cObjBin, msg.sender, lib, content_type);
+        BaseContent content = BaseContent(contentAddr);
+
         content.setAddressKMS(libraryObj.addressKMS());
         content.setContentContractAddress(libraryObj.contentTypeContracts(content_type));
 
-        // register object in user wallet
-        BaseContent(content).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
-        content.transferOwnership(tx.origin);
+        IUserSpace userSpaceObj = IUserSpace(contentSpace);
+        address payable userWallet = address(uint160(userSpaceObj.userWallets(tx.origin)));
+
+        // due to a (intentional?) limitation of the EVM, this stanza *needs* to be duplicated as-is. in particular,
+        //  factoring this code into a shared subroutine will cause it to fail.
+        bool isV3Contract = Utils.checkV3Contract(userWallet);
+        if (!isV3Contract) {
+            AccessIndexor index = AccessIndexor(userWallet);
+            content.transferOwnership(tx.origin);
+            index.setContentObjectRights(address(content), 0, 2);
+        } else {
+            // v3+ path ...
+            BaseContent(content).setRights(tx.origin, 0 /*TYPE_SEE*/, 2 /*ACCESS_CONFIRMED*/);
+            content.transferOwnership(tx.origin);
+        }
 
         return address(content);
     }
@@ -420,24 +524,25 @@ contract BaseContentFactory is Ownable {
     uint32 public constant OP_ACCESS_REQUEST = 1;
     uint32 public constant OP_ACCESS_COMPLETE = 2;
 
-    function isContract(address addr) returns (bool) {
+    function isContract(address addr) public view returns (bool) {
         uint size;
         assembly { size := extcodesize(addr) }
         return size > 0;
     }
 
-    function executeAccessBatch(uint32[] _opCodes, address[] _contentAddrs, address[] _userAddrs, uint256[] _requestNonces, bytes32[] _ctxHashes, uint256[] _ts, uint256[] _amt) public {
+    function executeAccessBatch(
+        uint32[] memory _opCodes,
+        address payable[] memory _contentAddrs,
+        address[] memory _userAddrs,
+        uint256[] memory _requestNonces,
+        bytes32[] memory _ctxHashes,
+        uint256[] memory _ts,
+        uint256[] memory) public {
 
-        //        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
-        //        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
+        BaseContentSpace ourSpace = BaseContentSpace(contentSpace);
+        require(msg.sender == owner || ourSpace.checkKMSAddr(msg.sender) > 0);
 
         uint paramsLen = _opCodes.length;
-
-        require(_contentAddrs.length == paramsLen);
-        require(_requestNonces.length == paramsLen);
-        require(_userAddrs.length == paramsLen);
-        require(_ctxHashes.length == paramsLen);
-        require(_ts.length == paramsLen);
 
         for (uint i = 0; i < paramsLen; i++) {
             BaseContent cobj = BaseContent(_contentAddrs[i]);
