@@ -5,6 +5,12 @@ class PermissionsClient {
   /**
    * The PermissionsClient is intended to make it easy to setup and maintain permission policies in the fabric.
    *
+   * <br/><b>Item Policies</b>:
+   *  - An item policy is the full specification of the policy for an object. It consists of a set of available profiles and a list of permissions.
+   *  - The item policy must be initialized using `CreateItemPolicy` before the other modification methods in this client can be used.
+   *  - The item policy can be retrieved using the `ItemPolicy` method to check if the policy for a particular item has been initialized.
+   *
+   *
    * <br/><b>Dates</b>:
    *
    *  - `start` and `end` can be specified in several places in the policy. These can be provided in any format supported by JavaScript's `new Date(date)` constructor, such as Unix epoch timestamps or ISO timestamps.
@@ -165,6 +171,29 @@ class PermissionsClient {
   /* Add / remove overall item permission */
 
   /**
+   * Retrieve the full item policy for the given item.
+   *
+   * @methodGroup Policies
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} itemId - Object ID of the item
+   * @return {Promise<Object | undefined>} - The policy for the specified item. If none exists, returns undefined
+   */
+  async ItemPolicy({policyId, itemId}) {
+    const profiles = await this.ItemProfiles({policyId, itemId});
+    const permissions = await this.ItemPermissions({policyId, itemId});
+
+    if(!profiles || !permissions) {
+      return;
+    }
+
+    return {
+      profiles,
+      permissions
+    };
+  }
+
+  /**
    * Initialize policy for the specified item
    *
    * @methodGroup Policies
@@ -174,7 +203,7 @@ class PermissionsClient {
    * @param {string} itemId - Object ID of the item
    * @param {object=} profiles={} - Profiles to create
    */
-  async InitializeItemPolicy({policyId, policyWriteToken, itemId, profiles={}}) {
+  async CreateItemPolicy({policyId, policyWriteToken, itemId, profiles={}}) {
     ValidatePresence("policyId", policyId);
     ValidatePresence("policyWriteToken", policyWriteToken);
     ValidatePresence("itemId", itemId);

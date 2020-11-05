@@ -92,7 +92,7 @@ describe("Test Permissions Client", () => {
         libraryId,
         objectId: policyId,
         callback: async ({writeToken}) => {
-          await permissionsClient.InitializeItemPolicy({
+          await permissionsClient.CreateItemPolicy({
             policyId,
             policyWriteToken: writeToken,
             itemId: itemId1,
@@ -130,7 +130,7 @@ describe("Test Permissions Client", () => {
         libraryId,
         objectId: policyId,
         callback: async ({writeToken}) => {
-          await permissionsClient.InitializeItemPolicy({
+          await permissionsClient.CreateItemPolicy({
             policyId,
             policyWriteToken: writeToken,
             itemId: itemId2,
@@ -692,6 +692,17 @@ describe("Test Permissions Client", () => {
         subjectId: "00uqyha3cjm2Q7Zgv492",
         subjectName: "OAuth Group 2"
       });
+    });
+
+    test("Retrieve Item Policy", async () => {
+      const initializedPolicy = await permissionsClient.ItemPolicy({policyId, itemId: itemId2});
+
+      expect(initializedPolicy.profiles).toBeDefined();
+      expect(initializedPolicy.permissions).toBeDefined();
+
+      const uninitializedPolicy = await permissionsClient.ItemPolicy({policyId, itemId: "uninitializedId"});
+
+      expect(uninitializedPolicy).not.toBeDefined();
     });
 
     test("Remove Permissions", async () => {
