@@ -87,7 +87,7 @@ describe("Test Permissions Client", () => {
   });
 
   describe("Test Permissions Client", () => {
-    test("Add Item Permissions", async () => {
+    test("Create Item Policy", async () => {
       await client.EditAndFinalizeContentObject({
         libraryId,
         objectId: policyId,
@@ -473,6 +473,17 @@ describe("Test Permissions Client", () => {
             subjectSource: "oauth",
             profileName: "special-access"
           });
+
+          await permissionsClient.SetPermission({
+            policyId,
+            policyWriteToken: writeToken,
+            itemId: itemId2,
+            subjectId: "QOTPQVagZQv7Mkt",
+            subjectName: "Special Event NTP Instance",
+            subjectType: "ntp",
+            subjectSource: "fabric",
+            profileName: "special-access"
+          });
         }
       });
 
@@ -484,7 +495,7 @@ describe("Test Permissions Client", () => {
       });
 
       expect(permissionsMetadata).toBeDefined();
-      expect(permissionsMetadata.length).toEqual(4);
+      expect(permissionsMetadata.length).toEqual(5);
 
       expect(permissionsMetadata[0]).toMatchObject({
         profile: "all-access",
@@ -523,13 +534,21 @@ describe("Test Permissions Client", () => {
         }
       });
 
+      expect(permissionsMetadata[4]).toMatchObject({
+        profile: "special-access",
+        subject: {
+          id: "QOTPQVagZQv7Mkt",
+          type: "otp"
+        }
+      });
+
       const permissions = await permissionsClient.ItemPermissions({
         policyId,
         itemId: itemId2
       });
 
       expect(permissions).toBeDefined();
-      expect(permissions.length).toEqual(4);
+      expect(permissions.length).toEqual(5);
 
       expect(permissions[0]).toMatchObject({
         profileName: "all-access",
@@ -566,6 +585,14 @@ describe("Test Permissions Client", () => {
         subjectName: "OAuth User (oauth@user.com)"
       });
 
+      expect(permissions[4]).toMatchObject({
+        profileName: "special-access",
+        subjectSource: "fabric",
+        subjectType: "ntp",
+        subjectId: "QOTPQVagZQv7Mkt",
+        subjectName: "Special Event NTP Instance",
+      });
+
       // Ensure fabric user name is stored properly
       const userInfo = await client.ContentObjectMetadata({
         libraryId: libraryId,
@@ -575,6 +602,17 @@ describe("Test Permissions Client", () => {
 
       expect(userInfo).toBeDefined();
       expect(userInfo.name).toEqual("Test Account");
+
+      // Ensure NTP info is stored properly
+      const ntpInfo = await client.ContentObjectMetadata({
+        libraryId: libraryId,
+        objectId: policyId,
+        metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", "QOTPQVagZQv7Mkt")
+      });
+
+      expect(ntpInfo).toBeDefined();
+      expect(ntpInfo.name).toEqual("Special Event NTP Instance");
+      expect(ntpInfo.ntpId).toEqual("QOTPQVagZQv7Mkt");
 
       await client.EditAndFinalizeContentObject({
         libraryId,
@@ -627,7 +665,7 @@ describe("Test Permissions Client", () => {
       });
 
       expect(modifiedPermissionsMetadata).toBeDefined();
-      expect(modifiedPermissionsMetadata.length).toEqual(5);
+      expect(modifiedPermissionsMetadata.length).toEqual(6);
 
       expect(modifiedPermissionsMetadata[0]).toMatchObject({
         profile: "no-access",
@@ -649,7 +687,7 @@ describe("Test Permissions Client", () => {
         }
       });
 
-      expect(modifiedPermissionsMetadata[4]).toMatchObject({
+      expect(modifiedPermissionsMetadata[5]).toMatchObject({
         profile: "special-access",
         subject: {
           id: "OAuth Group 2",
@@ -664,7 +702,7 @@ describe("Test Permissions Client", () => {
       });
 
       expect(modifiedPermissions).toBeDefined();
-      expect(modifiedPermissions.length).toEqual(5);
+      expect(modifiedPermissions.length).toEqual(6);
 
       expect(modifiedPermissions[0]).toMatchObject({
         profileName: "no-access",
@@ -685,7 +723,7 @@ describe("Test Permissions Client", () => {
         subjectName: "OAuth Group"
       });
 
-      expect(modifiedPermissions[4]).toMatchObject({
+      expect(modifiedPermissions[5]).toMatchObject({
         profileName: "special-access",
         subjectSource: "oauth",
         subjectType: "group",
@@ -703,6 +741,17 @@ describe("Test Permissions Client", () => {
       const uninitializedPolicy = await permissionsClient.ItemPolicy({policyId, itemId: "uninitializedId"});
 
       expect(uninitializedPolicy).not.toBeDefined();
+
+      const allItems = await permissionsClient.PolicyItems({policyId});
+
+      expect(allItems).toBeDefined();
+      expect(Object.keys(allItems).length).toEqual(2);
+
+      expect(allItems[itemId1]).toBeDefined();
+      expect(allItems[itemId1].display_title).toEqual("Item 1");
+
+      expect(allItems[itemId2]).toBeDefined();
+      expect(allItems[itemId2].display_title).toEqual("Item 2");
     });
 
     test("Remove Permissions", async () => {
@@ -728,7 +777,7 @@ describe("Test Permissions Client", () => {
             policyId,
             policyWriteToken: writeToken,
             itemId: itemId2,
-            subjectId: "00qqwe3ZXm2Q8Zgq493",
+            subjectId: "00qqwe3ZXm2Q8Zgq494",
             subjectName: "OAuth Group 3",
             subjectType: "group",
             subjectSource: "oauth",
@@ -743,16 +792,16 @@ describe("Test Permissions Client", () => {
       });
 
       expect(permissions).toBeDefined();
-      expect(permissions.length).toEqual(4);
+      expect(permissions.length).toEqual(5);
 
       expect(permissions[0].subjectId).toEqual(groupAddress);
 
-      expect(permissions[3]).toMatchObject({
+      expect(permissions[4]).toMatchObject({
         profileName: "all-access",
         subjectSource: "oauth",
         subjectType: "group",
         subjectName: "OAuth Group 3",
-        subjectId: "00qqwe3ZXm2Q8Zgq493"
+        subjectId: "00qqwe3ZXm2Q8Zgq494"
       });
     });
 
