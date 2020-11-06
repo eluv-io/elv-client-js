@@ -85,7 +85,7 @@ class PermissionsClient {
    *
    *  - A permission may have `start` and `end` times. As mentioned above, the effective start and end times of a permission are the *most restrictive* of all applicable start and end times.
    *
-   *  - A permission must have a subject, which can be either a user or a group, either from the Fabric or from an OAuth provider
+   *  - A permission must have a subject, which can be either a user, a group, or an NTP instance, either from the Fabric or from an OAuth provider
    *
    *  - A subject must have an ID and a name. In the case of certain OAuth providers, the name may be used as an ID in most cases, but the immutable ID for that subject must be used as the ID. For example, in Okta, a group may be specified by its name "Content Admins", but have the Okta ID "00g102tklfAorixGi4x7". The former should be used as the subjectName, and the latter as the subjectId
    *
@@ -171,17 +171,37 @@ class PermissionsClient {
   /* Add / remove overall item permission */
 
   /**
+   * Retrieve a list of all items in the specified policy
+   *
+   * @methodGroup Policies
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
+   * @return {Promise<Object>} - A mapping of item objectId to the display name of the item
+   */
+  async PolicyItems({policyId, policyWriteToken}) {
+    return (await this.client.ContentObjectMetadata({
+      libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: "auth_policy_spec",
+      select: ["*/display_title"]
+    })) || {};
+  }
+
+  /**
    * Retrieve the full item policy for the given item.
    *
    * @methodGroup Policies
    * @namedParams
    * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
    * @param {string} itemId - Object ID of the item
    * @return {Promise<Object | undefined>} - The policy for the specified item. If none exists, returns undefined
    */
-  async ItemPolicy({policyId, itemId}) {
-    const profiles = await this.ItemProfiles({policyId, itemId});
-    const permissions = await this.ItemPermissions({policyId, itemId});
+  async ItemPolicy({policyId, policyWriteToken, itemId}) {
+    const profiles = await this.ItemProfiles({policyId, policyWriteToken, itemId});
+    const permissions = await this.ItemPermissions({policyId, policyWriteToken, itemId});
 
     if(!profiles || !permissions) {
       return;
@@ -272,13 +292,15 @@ class PermissionsClient {
    * @methodGroup Profiles
    * @namedParams
    * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
    * @param {string} itemId - Object ID of the item
    * @param {string=} profileName - The name of the profile. If not specified, all profiles will be returned
    */
-  async ItemProfiles({policyId, itemId, profileName}) {
+  async ItemProfiles({policyId, policyWriteToken, itemId, profileName}) {
     return await this.client.ContentObjectMetadata({
       libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
       objectId: policyId,
+      writeToken: policyWriteToken,
       metadataSubtree: UrlJoin("auth_policy_spec", itemId, "profiles", profileName || "")
     });
   }
@@ -357,23 +379,27 @@ class PermissionsClient {
    * @methodGroup Permissions
    * @namedParams
    * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
    * @param {string} itemId - Object ID of the item
    *
    * @return {Promise<Array>} - The list of permissions for the specified item
    */
-  async ItemPermissions({policyId, itemId}) {
+  async ItemPermissions({policyId, policyWriteToken, itemId}) {
     const libraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
     const permissions = (await this.client.ContentObjectMetadata({
       libraryId,
       objectId: policyId,
+      writeToken: policyWriteToken,
       metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions")
     })) || [];
 
     return await Promise.all(
       permissions.map(async permission => {
         const subjectSource = permission.subject.type.startsWith("oauth") ? "oauth" : "fabric";
-        const subjectType = permission.subject.type.includes("group") ? "group" : "user";
-        const subjectId = subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
+        const subjectType = permission.subject.type === "otp" ? "ntp" :
+          permission.subject.type.includes("group") ? "group" : "user";
+        const subjectId = permission.subject.type === "otp" ? permission.subject.id :
+          subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
 
         let subjectName = permission.subject.id;
         if(subjectSource === "fabric") {
@@ -384,11 +410,19 @@ class PermissionsClient {
               objectId: this.client.utils.AddressToObjectId(subjectId),
               metadataSubtree: UrlJoin("public", "name")
             })) || subjectId;
-          } else {
+          } else if(subjectType === "user") {
             subjectName = ((await this.client.ContentObjectMetadata({
               libraryId,
               objectId: policyId,
+              writeToken: policyWriteToken,
               metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", subjectId)
+            })) || {}).name || subjectId;
+          } else if(subjectType === "ntp") {
+            subjectName = ((await this.client.ContentObjectMetadata({
+              libraryId,
+              objectId: policyId,
+              writeToken: policyWriteToken,
+              metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
             })) || {}).name || subjectId;
           }
         }
@@ -423,7 +457,7 @@ class PermissionsClient {
    * @param {string} policyWriteToken - Write token for the policy
    * @param {string} itemId - Object ID of the item
    * @param {string} subjectSource="fabric" - ("fabric" | "oauth") - The source of the subject
-   * @param {string} subjectType="group - ("user" | "group") - The type of the subject
+   * @param {string} subjectType="group - ("user" | "group" | "ntp") - The type of the subject
    * @param {string} subjectName - The name of the subject
    * @param {string} subjectId - The ID of the subject
    * @param {string} profileName - The profile to apply for the permission
@@ -461,7 +495,7 @@ class PermissionsClient {
         if(!subjectId.startsWith("igrp")) {
           subjectId = `igrp${this.client.utils.AddressToHash(subjectId)}`;
         }
-      } else {
+      } else if(subjectType === "user") {
         if(!subjectId.startsWith("iusr")) {
           subjectId = `iusr${this.client.utils.AddressToHash(subjectId)}`;
         }
@@ -514,6 +548,11 @@ class PermissionsClient {
           id: subjectId,
           type: "user"
         };
+      } else if(subjectType === "ntp") {
+        subjectInfo = {
+          id: subjectId,
+          type: "otp"
+        };
       } else {
         throw Error(`Invalid subject type: ${subjectType}`);
       }
@@ -549,11 +588,12 @@ class PermissionsClient {
       metadata: existingPermissions.permissions
     });
 
-    // Fabric usernames are stored in auth_policy_settings/fabric_users
+    // Fabric usernames and NTP info are stored in auth_policy_settings/fabric_users
     if(subjectSource === "fabric" && subjectType === "user") {
       const userInfo = await this.client.ContentObjectMetadata({
         libraryId: policyLibraryId,
         objectId: policyId,
+        writeToken: policyWriteToken,
         metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId))
       });
 
@@ -566,6 +606,28 @@ class PermissionsClient {
           metadata: {
             address: this.client.utils.HashToAddress(subjectId),
             name: subjectName
+          }
+        });
+      }
+    } else if(subjectSource === "fabric" && subjectType === "ntp") {
+      const userInfo = await this.client.ContentObjectMetadata({
+        libraryId: policyLibraryId,
+        objectId: policyId,
+        writeToken: policyWriteToken,
+        metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
+      });
+
+      if(!userInfo) {
+        await this.client.ReplaceMetadata({
+          libraryId: policyLibraryId,
+          objectId: policyId,
+          writeToken: policyWriteToken,
+          metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId),
+          metadata: {
+            address: subjectId,
+            ntpId: subjectId,
+            name: subjectName,
+            type: "ntpInstance"
           }
         });
       }
@@ -594,6 +656,7 @@ class PermissionsClient {
     const permissions = await this.client.ContentObjectMetadata({
       libraryId: policyLibraryId,
       objectId: policyId,
+      writeToken: policyWriteToken,
       metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions")
     });
 
