@@ -744,7 +744,7 @@ class ElvClient {
    * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
    * be provided along with the ticket code in order to redeem the ticket.
    *
-   * @return {Promise&lt;string>} - The generated ticket code
+   * @return {Promise&lt;Object>} - The generated ticket code and additional information about the ticket.
    */
   async IssueNTPCode({tenantId, ntpId, email}) {
     ValidatePresence("tenantId", tenantId);
@@ -758,11 +758,11 @@ class ElvClient {
     const params = [tenantId, ntpId, JSON.stringify(options), Date.now()];
     const paramTypes = ["string", "string", "string", "uint"];
 
-    return (await this.authClient.MakeKMSCall({
+    return await this.authClient.MakeKMSCall({
       methodName: "elv_issueOTPCode",
       params,
       paramTypes
-    })).token;
+    });
   }
 
   /**

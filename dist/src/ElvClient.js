@@ -782,7 +782,7 @@ function () {
      * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
      * be provided along with the ticket code in order to redeem the ticket.
      *
-     * @return {Promise<string>} - The generated ticket code
+     * @return {Promise<Object>} - The generated ticket code and additional information about the ticket.
      */
 
   }, {
@@ -812,7 +812,7 @@ function () {
               }));
 
             case 9:
-              return _context9.abrupt("return", _context9.sent.token);
+              return _context9.abrupt("return", _context9.sent);
 
             case 10:
             case "end":
