@@ -52,7 +52,7 @@ var topics = {
       "name": "MemberAdded",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseAccessControlGroup"
   },
   "0x93bcaab179551bde429187645251f8e1fb8ac85801fcb1cf91eb2c9043d61117": {
     "abi": [{
@@ -65,7 +65,7 @@ var topics = {
       "name": "ManagerAccessGranted",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseAccessControlGroup"
   },
   "0x745cd29407db644ed93e3ceb61cbcab96d1dfb496989ac5d5bf514fc5a9fab9c": {
     "abi": [{
@@ -78,7 +78,7 @@ var topics = {
       "name": "MemberRevoked",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseAccessControlGroup"
   },
   "0x2d6aa1a9629d125e23a0cf692cda7cd6795dff1652eedd4673b38ec31e387b95": {
     "abi": [{
@@ -91,7 +91,7 @@ var topics = {
       "name": "ManagerAccessRevoked",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseAccessControlGroup"
   },
   "0x23de2adc3e22f171f66b3e5a333e17feb9dc30ba9570933bd259cb6c13ef7ab7": {
     "abi": [{
@@ -121,7 +121,7 @@ var topics = {
       "name": "OAuthStatusChanged",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseAccessControlGroup"
   },
   "0xb3ac059d88af6016aca1aebb7b3e796f2e7420435c59c563687814e9b85daa75": {
     "abi": [{
@@ -210,7 +210,7 @@ var topics = {
       "name": "ExecStatus",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseAccessWallet"
   },
   "0x280016f7418306a55542432120fd1a239ef9fcc1a92694d8d44ca76be0249ea7": {
     "abi": [{
@@ -275,7 +275,7 @@ var topics = {
       "name": "ContentObjectCreate",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x4f692e87baf302f7281e83eec109053efc2ca8e7bddfc6ce88c579cd9767f71f": {
     "abi": [{
@@ -292,7 +292,7 @@ var topics = {
       "name": "SetContentType",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x50f423e39e8beb25bb2da38a63e3d33b5368f261522813712756733eaf569a06": {
     "abi": [{
@@ -321,7 +321,7 @@ var topics = {
       "name": "AccessRequest",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0xad58d18ea7292f887da6f15bb4f0badddaa33d169713d09cf49710acc7c3a5b9": {
     "abi": [{
@@ -346,7 +346,7 @@ var topics = {
       "name": "LogPayment",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x475e9d68ca61f129cebee5af694af00ed0e3b3b0d4b74071fbb81d0e2b912718": {
     "abi": [{
@@ -384,7 +384,7 @@ var topics = {
       "name": "AccessRequestValue",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0xb6e3239e521a6c66920ae634f8e921a37e6991d520ac44d52f8516397f41b684": {
     "abi": [{
@@ -397,7 +397,7 @@ var topics = {
       "name": "AccessRequestStakeholder",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x2c49ac638ee7bf3341004c40512c79847bb7fb8f17fb53151ff576a35630ac06": {
     "abi": [{
@@ -418,7 +418,7 @@ var topics = {
       "name": "AccessComplete",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0xa6f2e38f0cfebf27212317fced3ac40bc62e00bd33f38d69603710740c69acb7": {
     "abi": [{
@@ -431,7 +431,7 @@ var topics = {
       "name": "SetContentContract",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x4114f8ef80b6de2161db580cbefa14e1892d15d3ebe2062c9914e4a5773114a3": {
     "abi": [{
@@ -444,7 +444,7 @@ var topics = {
       "name": "SetAccessCharge",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0xa58326ee5bb617cb8b4f0d0f5f557c469d2d05d7a738f777037deda9c724b370": {
     "abi": [{
@@ -478,7 +478,7 @@ var topics = {
       "name": "InsufficientFunds",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0xda4f34b30fa0ba8a73fedb922f4d28e2a10a5d68e53cf8e942abce3ac09158a2": {
     "abi": [{
@@ -491,7 +491,7 @@ var topics = {
       "name": "SetStatusCode",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0xad9c5eacc073b2e1767affc883e050347e1dd379c9799cb5ac0a17bde80f5cf4": {
     "abi": [{
@@ -512,7 +512,7 @@ var topics = {
       "name": "Publish",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x12b04791b5caab768e2757268992f0c62801e3921d9e310c893f0d5f9caa5f71": {
     "abi": [{
@@ -525,7 +525,7 @@ var topics = {
       "name": "InvokeCustomPreHook",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x8c693e8b27db7caf9b9637b66dcc11444760023a4d53e95407a3acef1b249f50": {
     "abi": [{
@@ -542,7 +542,7 @@ var topics = {
       "name": "ReturnCustomHook",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x97d9c9779ed3ed8b9a6edfe16d17b1fdec843245747a19abfb621806e37d4a89": {
     "abi": [{
@@ -555,7 +555,7 @@ var topics = {
       "name": "InvokeCustomPostHook",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContent"
   },
   "0x8354ff8c2c210fd53709db56438bb45d36a62de8bcc95c8459d80ce933d47680": {
     "abi": [{
@@ -634,7 +634,7 @@ var topics = {
       "name": "CreateContentType",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x473c07a6d0228c4fb8fe2be3b4617c3b5fb7c0f8cd9ba4b67e8631844b9b6571": {
     "abi": [{
@@ -647,7 +647,7 @@ var topics = {
       "name": "CreateLibrary",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0xa3b1fe71ae61bad8cffa485b230e24e518938f76182a30fa0d9979e7237ad159": {
     "abi": [{
@@ -660,7 +660,7 @@ var topics = {
       "name": "CreateGroup",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0xa0633ea0b3cb5796607e5f551ae79c7eeee0dc7ee0c3ff8996506261651368ce": {
     "abi": [{
@@ -673,7 +673,7 @@ var topics = {
       "name": "CreateContent",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x56c4bf13bebaa9f2be39ac3f2f4619a0dd1b694bb8c5f43c6b244a6dba0f0cca": {
     "abi": [{
@@ -686,7 +686,7 @@ var topics = {
       "name": "CreateAccessWallet",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x05e3f3adaf96d565bb326088a1d8e0d78497549df2c99a8ab681e5fbc7a9b3f2": {
     "abi": [{
@@ -703,7 +703,7 @@ var topics = {
       "name": "BindUserWallet",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x53ce35a7383a3ea3f695bdf0f87d7e5485ba816b382673e849bfdd24e7f5e3ca": {
     "abi": [{
@@ -716,7 +716,7 @@ var topics = {
       "name": "EngageAccountLibrary",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x1c893ef9379093af30f458b9e74d2aba13c499660b68dec5e29af7b199c188b9": {
     "abi": [{
@@ -729,7 +729,7 @@ var topics = {
       "name": "SetFactory",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x4575facd117046c9c28b69a3eb9c08939f2462a5a22ea6c6dcd4f79b8dd124e9": {
     "abi": [{
@@ -742,7 +742,7 @@ var topics = {
       "name": "RegisterNode",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0xb98695ab4c6cedb3b4dfe62479a9d39a59aa2cb38b8bd92bbb6ce5856e42bdf4": {
     "abi": [{
@@ -755,7 +755,7 @@ var topics = {
       "name": "UnregisterNode",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0xdf8127994c229011ce9c4764bdc0375bb71c06cf1544f034cd81a42f37233319": {
     "abi": [{
@@ -772,7 +772,7 @@ var topics = {
       "name": "AddKMSLocator",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x5f463eb53cddf646852b82c0d9bdb1d1ec215c3802b780e8b7beea8b6e99f94c": {
     "abi": [{
@@ -789,7 +789,7 @@ var topics = {
       "name": "RemoveKMSLocator",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x599bb380c80b69455450a615c515544b8da3b09f2efa116a5f0567682203cf54": {
     "abi": [{
@@ -806,7 +806,7 @@ var topics = {
       "name": "CreateSpace",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0x1c917c3c2698bd5b98acb9772728da62f2ce3670e4578910a6465b955f63e157": {
     "abi": [{
@@ -819,7 +819,7 @@ var topics = {
       "name": "GetAccessWallet",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseContentSpace"
   },
   "0xae5645569f32b946f7a747113c64094a29a6b84c5ddf55816ef4381ce8a3a46d": {
     "abi": [{
@@ -908,7 +908,7 @@ var topics = {
       "name": "ContentObjectCreated",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0x36500cee87b0da1746889a3483dccb525acfc40b8c0f2218e164c6cdf1482a3e": {
     "abi": [{
@@ -925,7 +925,7 @@ var topics = {
       "name": "ContentObjectDeleted",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0x218673669018c25b89bfbf1b58d0075e37c8847ef16e707b92355b7833e97d61": {
     "abi": [{
@@ -938,7 +938,7 @@ var topics = {
       "name": "ContributorGroupAdded",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0xbbd97daa1862eb12f77ed128a557406737cee07b131b1e2d7140dff2005e197c": {
     "abi": [{
@@ -951,7 +951,7 @@ var topics = {
       "name": "ContributorGroupRemoved",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0x1b88a571cc8ac2e87512f05648e79d184f5cc0cbb2889bc487c41f8b9a3202eb": {
     "abi": [{
@@ -964,7 +964,7 @@ var topics = {
       "name": "ReviewerGroupAdded",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0xdf9d78c5635b72b709c85300a786eb7238acbe5bffe01c60c16464e45c6eb6eb": {
     "abi": [{
@@ -977,7 +977,7 @@ var topics = {
       "name": "ReviewerGroupRemoved",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0x3a94857e4393737f73edb175a7d0c195c7f635d9ae995e12740616ec55c9d411": {
     "abi": [{
@@ -990,7 +990,7 @@ var topics = {
       "name": "AccessorGroupAdded",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0xc5224c4118417a068eeac7d714e6d8af6f99ec3fb611bc965185460b0e38f081": {
     "abi": [{
@@ -1003,7 +1003,7 @@ var topics = {
       "name": "AccessorGroupRemoved",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0x0588a34cf0de4e025d359c89ca4bacbcbf175440909952d91c814412d9da996a": {
     "abi": [{
@@ -1020,7 +1020,7 @@ var topics = {
       "name": "ApproveContentRequest",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0x70234ce475fee4ab40e5e55cf533f67f12b47ef4c860e62dd7affa84ead4b442": {
     "abi": [{
@@ -1041,7 +1041,7 @@ var topics = {
       "name": "ApproveContent",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0x74538e2fbd034afddf32b42c5939d211ce86c7683f9768f1a4969746f81f8608": {
     "abi": [{
@@ -1054,7 +1054,7 @@ var topics = {
       "name": "UpdateKmsAddress",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "BaseLibrary"
   },
   "0xcf34ef537ac33ee1ac626ca1587a0a7e8e51561e5514f8cb36afa1c5102b3bab": {
     "abi": [{
@@ -1284,7 +1284,7 @@ var topics = {
       "name": "CreateExtUserWallet",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "ExternalUserWallet"
   },
   "0xe36c3ab835cea1a8af00f744c77bb77bbbd33d20062bee3f9aceb6518d08e45e": {
     "abi": [{
@@ -1313,7 +1313,7 @@ var topics = {
       "name": "AuthorizeRecording",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x41b90676ca6c9f288172c8f4f1f0253bfc527115acd3f7a972a5219ea4b0d0c5": {
     "abi": [{
@@ -1338,7 +1338,7 @@ var topics = {
       "name": "CreateRecording",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x9d3bb073bb2ef4d4a880f32fbbc665abfad2b29f532a231d93ab2207396f0b25": {
     "abi": [{
@@ -1363,7 +1363,7 @@ var topics = {
       "name": "DeleteRecording",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x8e6b298cf577550234f0d0de33a4910d4bf1c4e08fe31b1173b2c6232297b3f4": {
     "abi": [{
@@ -1392,7 +1392,7 @@ var topics = {
       "name": "SetRecordingTimes",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x93ee8bc66b5d08a5dc39e788b1f78aa5f9ff2deda9e1387aa1fe22f9c329ed85": {
     "abi": [{
@@ -1417,7 +1417,7 @@ var topics = {
       "name": "SetRecordingStatus",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x182a726f966f22c96d651085c2a7143482b8d96fb0964ff2664ab8bdf2b703aa": {
     "abi": [{
@@ -1446,7 +1446,7 @@ var topics = {
       "name": "RecordingPlaybackStarted",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x208745b583bd0c257eced13411dc4b50e9a3a9c1ef0cc2f95b30a7457ec50cc1": {
     "abi": [{
@@ -1479,7 +1479,7 @@ var topics = {
       "name": "RecordingPlaybackCompleted",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0xe3b30c4da7320d1a542eb57f205a34d2fc36ecd114595f3d50be2a73b3426e6b": {
     "abi": [{
@@ -1516,7 +1516,7 @@ var topics = {
       "name": "RecordedProgramId",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x7b4822b1021af568bad37d56a35fbc255dc67153c544aa4116a289632a4e5955": {
     "abi": [{
@@ -1533,7 +1533,7 @@ var topics = {
       "name": "MembershipGroupRemoved",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x467a7c1305f91e354a8a1e9046906d4d1a4852f958a073a392555d809be313a7": {
     "abi": [{
@@ -1550,7 +1550,7 @@ var topics = {
       "name": "MembershipGroupAdded",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x8d7e6a8f23ccc8845c41fd09bebe570a0885272343268bbdfd71090b878b4b21": {
     "abi": [{
@@ -1563,7 +1563,7 @@ var topics = {
       "name": "StartStream",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x1b01b687e3428bc184341f729ec8a57bdd569536206cfb59e5d0cecb30dfcb7e": {
     "abi": [{
@@ -1576,7 +1576,7 @@ var topics = {
       "name": "StopStream",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0xe1182e14924c528bfb564fb8d4feefe9766244f88b00051f28182e635e9a1ae8": {
     "abi": [{
@@ -1589,7 +1589,7 @@ var topics = {
       "name": "EnableRecording",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x3a5d2272abc5c09c8e771719f0eeca97e31d2fc425f6c34cf1d7a712b5fb6bfd": {
     "abi": [{
@@ -1602,7 +1602,7 @@ var topics = {
       "name": "DisableRecording",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecordableStream"
   },
   "0x3e5026851758e1ab6e995b071b048e26e92f459b047600ff68914479d5074c54": {
     "abi": [{
@@ -1623,7 +1623,7 @@ var topics = {
       "name": "SetTimes",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecording"
   },
   "0x6fff8c8938f3906f27a679f8d6b6652c28d82df5e27e55ef5cdc5f96b06dee09": {
     "abi": [{
@@ -1640,7 +1640,7 @@ var topics = {
       "name": "UpdateRecordingStatus",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecording"
   },
   "0x453384b91e17e6c44d171f27d5d32a864cf9cc9740578ffd6552d323aa973372": {
     "abi": [{
@@ -1657,7 +1657,7 @@ var topics = {
       "name": "RecordProgramId",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvRecording"
   },
   "0xb72dd3ed580fe54dae87f5560d5617f1425b22e33e0a8e6ca80bf5cca9505535": {
     "abi": [{
@@ -1690,7 +1690,7 @@ var topics = {
       "name": "AuthorizeRecording",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvStreamRightsHolder"
   },
   "0xc9861f7825199418647d352092481fbd508dc7420e7a6e2f0f41be183d6e2c8d": {
     "abi": [{
@@ -1707,7 +1707,7 @@ var topics = {
       "name": "EnableRecording",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvStreamRightsHolder"
   },
   "0xaeba60bf43bc8bad9685cf80e62ae6d5cd753813786f1821576545517a3e49cb": {
     "abi": [{
@@ -1724,7 +1724,7 @@ var topics = {
       "name": "DisableRecording",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "LvStreamRightsHolder"
   },
   "0x66887b54b3a468d1f49f169043427354bba12c2a112aea5390bb426a96bf916c": {
     "abi": [{
@@ -1745,7 +1745,7 @@ var topics = {
       "name": "RedeemTokenRequest",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "PaymentService"
   },
   "0x34a9ae2cb75f5f06f7599e9cc92cb12c6a2f63af676d375bdc639acae37db5e0": {
     "abi": [{
@@ -1770,7 +1770,7 @@ var topics = {
       "name": "RedeemTokenExecuted",
       "type": "event"
     }],
-    "ambiguous": true
+    "contract": "PaymentService"
   },
   "0x5847a2cfd3bf297a9d3a67cfa50403274ce0289f9dac832c5cb7490a7972977a": {
     "abi": [{
@@ -1787,349 +1787,7 @@ var topics = {
       "name": "SetTokenValue",
       "type": "event"
     }],
-    "ambiguous": true
-  },
-  "0xe1f170f83120da6c17cd0ed37a683fc996637c63d2c94a60c806d4cb7466f47b": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "calculatedAccessCharge",
-        "type": "int256"
-      }],
-      "name": "RunAccessCharge",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0xbdaffceabaaa783aa187fea6c2e815541d29e2290bf3f7d3c4fc53672b68f7df": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "spaceAddress",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "parentAddress",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "objectHash",
-        "type": "string"
-      }],
-      "name": "VersionConfirm",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x545ceffc5093a8300777a74bb094968fbd62d128313df01eb72fd5350ec659c7": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "requestNonce",
-        "type": "uint256"
-      }, {
-        "indexed": false,
-        "name": "parentAddress",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "contextHash",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "accessor",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "requestTimestamp",
-        "type": "uint256"
-      }],
-      "name": "AccessRequestV3",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x369a336baa7895746725663e717b3523139ebabfff8c32bc4b13e8f88e502500": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "contentSpace",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "parentAddress",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "visibility",
-        "type": "uint8"
-      }],
-      "name": "VisibilityChanged",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x77a2025a71f0f345cfd7e8a699b42215025b6ab4706dcfaa29393790aa63383f": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "ident",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "slot",
-        "type": "uint8"
-      }, {
-        "indexed": false,
-        "name": "val",
-        "type": "uint32"
-      }],
-      "name": "CounterIncremented",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x4d04842102a74d85e502eec18f3048954c6d6e1d1c368c7bc49edcdcd45e9c3d": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "ident",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "ord",
-        "type": "uint8"
-      }, {
-        "indexed": false,
-        "name": "prev",
-        "type": "bool"
-      }],
-      "name": "BitSetAndGet",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0x87d0c300430cf9ba25931ff8bf37f633abe097e533463927bbfdc1e9ae1d0e9f": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "ident",
-        "type": "bytes32"
-      }],
-      "name": "WordGroupDeleted",
-      "type": "event"
-    }],
-    "ambiguous": true
-  },
-  "0xd3e5b1d14681444d8159fa85b57104b685f47fb9164fd82b7fafe4e123dcc3a1": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "requestNonce",
-        "type": "uint256"
-      }, {
-        "indexed": false,
-        "name": "customContractResult",
-        "type": "bool"
-      }, {
-        "indexed": false,
-        "name": "parentAddress",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "contextHash",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "accessor",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "request_timestamp",
-        "type": "uint256"
-      }],
-      "name": "AccessCompleteV3",
-      "type": "event"
-    }],
-    "contract": "BaseContent"
-  },
-  "0xc2fe67ac699789805c53a93eea70eb0e316deaf8db4b810382d2412ba4fcb4c8": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "version",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "owner",
-        "type": "address"
-      }],
-      "name": "CreateTenant",
-      "type": "event"
-    }],
-    "contract": "BaseTenantSpace"
-  },
-  "0x2fd37118a7338c6d45366419ced87ba93589ba1cca2489e8fb42b55de8874266": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "func4Bytes",
-        "type": "bytes4[]"
-      }, {
-        "indexed": false,
-        "name": "funcAddr",
-        "type": "address"
-      }],
-      "name": "FunctionsAdded",
-      "type": "event"
-    }],
-    "contract": "BaseTenantSpace"
-  },
-  "0x145b7e243e91890686f5ba84dd1254f7497f549ffb955f4871b3d27d4137d471": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "groupId",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "groupAddr",
-        "type": "address"
-      }],
-      "name": "AddTenantGroup",
-      "type": "event"
-    }],
-    "contract": "BaseTenantSpace"
-  },
-  "0xa4ba7d16ec48ae0b1af6cf3707ad062b11503d59527bca97e68886e7f6991456": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "groupId",
-        "type": "bytes32"
-      }, {
-        "indexed": false,
-        "name": "groupAddr",
-        "type": "address"
-      }],
-      "name": "RemoveTenantGroup",
-      "type": "event"
-    }],
-    "contract": "BaseTenantSpace"
-  },
-  "0xc104e41939e1b09c10a83f97ac30b2d1f48605f4630aa8c64633501740ce0299": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "newManager",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "prevManager",
-        "type": "address"
-      }],
-      "name": "SetUserManager",
-      "type": "event"
-    }],
-    "contract": "BaseTenantSpace"
-  },
-  "0x9b77357b839fea8829ce30918f67eb91de08caa0e5272af43a86af5334b56177": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "newManager",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "prevManager",
-        "type": "address"
-      }],
-      "name": "SetNodeManager",
-      "type": "event"
-    }],
-    "contract": "BaseTenantSpace"
-  },
-  "0xfa2af382c197e27affb4e04f89f42556c71015346416b56be15b3aee3c87f661": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "newManager",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "prevManager",
-        "type": "address"
-      }],
-      "name": "SetFactoryManager",
-      "type": "event"
-    }],
-    "contract": "BaseTenantSpace"
-  },
-  "0x78cf028637abb89c0df6a78afd3d4403d03e5eb532390543d498bb346ee96477": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "newManager",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "prevManager",
-        "type": "address"
-      }],
-      "name": "SetKmsManager",
-      "type": "event"
-    }],
-    "contract": "BaseTenantSpace"
-  },
-  "0x59d13df91c02dfa098820027bd861986b2712e8fa2e7e431fea189243656aebd": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "to",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "amount",
-        "type": "uint256"
-      }],
-      "name": "TenantTransfer",
-      "type": "event"
-    }],
-    "contract": "TenantFuncsBase"
-  },
-  "0xaf51ac2c635b218e7e5205267ea152c8c9f51fc74f818c332dcf630e82a3dc3f": {
-    "abi": [{
-      "anonymous": false,
-      "inputs": [{
-        "indexed": false,
-        "name": "to",
-        "type": "address"
-      }, {
-        "indexed": false,
-        "name": "numGroups",
-        "type": "uint256"
-      }],
-      "name": "ApplyGroups",
-      "type": "event"
-    }],
-    "contract": "TenantFuncsBase"
+    "contract": "PaymentService"
   }
 };
 module.exports = topics;
