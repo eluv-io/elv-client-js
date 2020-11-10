@@ -72,6 +72,10 @@ const argv = yargs
     type: "boolean",
     description: "Enable client logging"
   })
+  .option("wait", {
+    type: "boolean",
+    description: "Wait for mezzanine to finish transcoding, then finalize before exiting script"
+  })
   .demandOption(
     ["library", "masterHash", "type"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
