@@ -92,7 +92,7 @@ module.exports = class ScriptBase {
       })
       .option("configUrl", {
         alias: "config-url",
-        describe: "URL pointing to the Fabric configuration, enclosed in quotes. e.g. for Eluvio test network: --configUrl \"https://main.net955210.contentfabric.io/config\"",
+        describe: "URL pointing to the Fabric configuration, enclosed in quotes. e.g. for Eluvio demo network: --configUrl \"https://demov3.net955210.contentfabric.io/config\"",
         type: "string"
       })
       .option("elvGeo", {

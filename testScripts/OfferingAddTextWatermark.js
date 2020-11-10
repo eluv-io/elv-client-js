@@ -29,9 +29,9 @@ class OfferingAddTextWatermark extends ScriptOffering {
 
     const targetOffering = metadata.offerings[offeringKey];
     if(targetOffering.image_watermark != null) {
-      this.throwError("Offering already has a text watermark, " +
+      this.throwError("Offering already has an image watermark, " +
           "currently adding both kinds of watermarks on same offering is not supported. " +
-          "Please run OfferingRemoveTextWatermark.js first to remove the text watermark.");
+          "Please run OfferingRemoveImageWatermark.js first to remove the text watermark.");
 
     }
 
@@ -42,13 +42,13 @@ class OfferingAddTextWatermark extends ScriptOffering {
       libraryId: libraryId,
       objectId: objectId
     });
-    let response = await client.ReplaceMetadata({
+    await client.ReplaceMetadata({
       metadata: metadata,
       libraryId: libraryId,
       objectId: objectId,
       writeToken: write_token
     });
-    response = await client.FinalizeContentObject({libraryId: libraryId, objectId: objectId, writeToken: write_token});
+    await client.FinalizeContentObject({libraryId: libraryId, objectId: objectId, writeToken: write_token});
   }
 
   header() {
