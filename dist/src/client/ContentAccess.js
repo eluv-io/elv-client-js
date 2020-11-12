@@ -1536,29 +1536,32 @@ exports.ContentObjectMetadata = function _callee21(_ref15) {
 exports.AssetMetadata = function _callee22(_ref16) {
   var _this6 = this;
 
-  var objectId, metadata, localization, libraryId;
+  var libraryId, objectId, versionHash, metadata, localization;
   return _regeneratorRuntime.async(function _callee22$(_context22) {
     while (1) {
       switch (_context22.prev = _context22.next) {
         case 0:
-          objectId = _ref16.objectId, metadata = _ref16.metadata, localization = _ref16.localization;
+          libraryId = _ref16.libraryId, objectId = _ref16.objectId, versionHash = _ref16.versionHash, metadata = _ref16.metadata, localization = _ref16.localization;
+          ValidateParameters({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash
+          });
+
+          if (!objectId) {
+            objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+          }
 
           if (metadata) {
-            _context22.next = 11;
+            _context22.next = 12;
             break;
           }
 
-          _context22.next = 4;
-          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
-            objectId: objectId
-          }));
-
-        case 4:
-          libraryId = _context22.sent;
-          _context22.next = 7;
+          _context22.next = 6;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
+            versionHash: versionHash,
             metadataSubtree: "public/asset_metadata",
             resolveLinks: true,
             linkDepthLimit: 2,
@@ -1566,20 +1569,35 @@ exports.AssetMetadata = function _callee22(_ref16) {
             produceLinkUrls: true
           }));
 
-        case 7:
+        case 6:
           _context22.t0 = _context22.sent;
 
           if (_context22.t0) {
-            _context22.next = 10;
+            _context22.next = 9;
             break;
           }
 
           _context22.t0 = {};
 
-        case 10:
+        case 9:
           metadata = _context22.t0;
+          _context22.next = 15;
+          break;
 
-        case 11:
+        case 12:
+          _context22.next = 14;
+          return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            path: UrlJoin("public", "asset_metadata"),
+            metadata: metadata
+          }));
+
+        case 14:
+          metadata = _context22.sent;
+
+        case 15:
           if (!metadata.info) {
             metadata.info = {};
           }
@@ -1610,7 +1628,7 @@ exports.AssetMetadata = function _callee22(_ref16) {
 
           return _context22.abrupt("return", metadata);
 
-        case 14:
+        case 18:
         case "end":
           return _context22.stop();
       }

@@ -140,17 +140,16 @@ function () {
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
     this.trustAuthorityId = trustAuthorityId;
+    this.noCache = noCache;
+    this.noAuth = noAuth;
+    this.debug = false;
+    this.InitializeClients();
 
     if (staticToken) {
       this.SetStaticToken({
         token: staticToken
       });
     }
-
-    this.noCache = noCache;
-    this.noAuth = noAuth;
-    this.debug = false;
-    this.InitializeClients();
   }
   /**
    * Retrieve content space info and preferred fabric and blockchain URLs from the fabric
