@@ -832,6 +832,50 @@ exports.ContentObjectMetadata = async function({
   });
 };
 
+
+exports.AssetMetadata = async function({objectId, metadata, localization}) {
+  if(!metadata) {
+    const libraryId = await this.ContentObjectLibraryId({objectId});
+    metadata = (await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: "public/asset_metadata",
+      resolveLinks: true,
+      linkDepthLimit: 2,
+      resolveIgnoreErrors: true,
+      produceLinkUrls: true
+    })) || {};
+  }
+
+  if(!metadata.info) {
+    metadata.info = {};
+  }
+
+  if(localization) {
+    localization.reverse().forEach(keys => {
+      const overrides = this.utils.SafeTraverse(metadata, ...keys);
+
+      if(!overrides) { return; }
+
+      Object.keys(overrides).forEach(overrideKey => {
+        if(["display_title", "images", "title"].includes(overrideKey)) {
+          metadata[overrideKey] = overrides[overrideKey];
+        } else if(overrideKey === "info") {
+          Object.keys(overrides).forEach(infoOverrideKey => {
+            metadata.info[infoOverrideKey] = overrides.info[infoOverrideKey];
+          });
+        } else {
+          metadata.info[overrideKey] = overrides[overrideKey];
+        }
+      });
+
+      //delete metadata[keys[0]];
+    });
+  }
+
+  return metadata;
+};
+
 /**
  * List the versions of a content object
  *
