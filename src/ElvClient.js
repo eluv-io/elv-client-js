@@ -114,7 +114,10 @@ class ElvClient {
     this.ethereumURIs = ethereumURIs;
 
     this.trustAuthorityId = trustAuthorityId;
-    this.staticToken = staticToken;
+
+    if(staticToken) {
+      this.SetStaticToken({token: staticToken});
+    }
 
     this.noCache = noCache;
     this.noAuth = noAuth;
@@ -578,6 +581,24 @@ class ElvClient {
   }
 
   /**
+   * Set a static token for the client to use for all authorization
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string} token - The static token to use
+   */
+  SetStaticToken({token}) {
+    this.staticToken = token;
+
+    if(!this.signer) {
+      const wallet = this.GenerateWallet();
+      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+
+      this.SetSigner({signer});
+    }
+  }
+
+  /**
    * Authorize the client against the specified policy.
    *
    * NOTE: After authorizing, the client will only be able to access content allowed by the policy
@@ -587,7 +608,9 @@ class ElvClient {
    * @param {string} objectId - The ID of the policy object
    */
   async SetPolicyAuthorization({objectId}) {
-    this.staticToken = await this.GenerateStateChannelToken({objectId});
+    this.SetStaticToken({
+      token: await this.GenerateStateChannelToken({objectId})
+    });
   }
 
   /**
@@ -746,7 +769,7 @@ class ElvClient {
           email
         });
 
-        this.staticToken = token;
+        this.SetStaticToken({token});
 
         return JSON.parse(Utils.FromB64(token)).qid;
       } catch(error) {

@@ -140,7 +140,13 @@ function () {
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
     this.trustAuthorityId = trustAuthorityId;
-    this.staticToken = staticToken;
+
+    if (staticToken) {
+      this.SetStaticToken({
+        token: staticToken
+      });
+    }
+
     this.noCache = noCache;
     this.noAuth = noAuth;
     this.debug = false;
@@ -650,6 +656,30 @@ function () {
       }, null, this, [[4, 29]]);
     }
     /**
+     * Set a static token for the client to use for all authorization
+     *
+     * @methodGroup Authorization
+     * @namedParams
+     * @param {string} token - The static token to use
+     */
+
+  }, {
+    key: "SetStaticToken",
+    value: function SetStaticToken(_ref12) {
+      var token = _ref12.token;
+      this.staticToken = token;
+
+      if (!this.signer) {
+        var wallet = this.GenerateWallet();
+        var signer = wallet.AddAccountFromMnemonic({
+          mnemonic: wallet.GenerateMnemonic()
+        });
+        this.SetSigner({
+          signer: signer
+        });
+      }
+    }
+    /**
      * Authorize the client against the specified policy.
      *
      * NOTE: After authorizing, the client will only be able to access content allowed by the policy
@@ -661,22 +691,28 @@ function () {
 
   }, {
     key: "SetPolicyAuthorization",
-    value: function SetPolicyAuthorization(_ref12) {
+    value: function SetPolicyAuthorization(_ref13) {
       var objectId;
       return _regeneratorRuntime.async(function SetPolicyAuthorization$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              objectId = _ref12.objectId;
-              _context7.next = 3;
+              objectId = _ref13.objectId;
+              _context7.t0 = this;
+              _context7.next = 4;
               return _regeneratorRuntime.awrap(this.GenerateStateChannelToken({
                 objectId: objectId
               }));
 
-            case 3:
-              this.staticToken = _context7.sent;
-
             case 4:
+              _context7.t1 = _context7.sent;
+              _context7.t2 = {
+                token: _context7.t1
+              };
+
+              _context7.t0.SetStaticToken.call(_context7.t0, _context7.t2);
+
+            case 7:
             case "end":
               return _context7.stop();
           }
@@ -708,16 +744,16 @@ function () {
 
   }, {
     key: "CreateNTPInstance",
-    value: function CreateNTPInstance(_ref13) {
+    value: function CreateNTPInstance(_ref14) {
       var _this = this;
 
-      var tenantId, objectId, groupAddresses, _ref13$maxTickets, maxTickets, _ref13$maxRedemptions, maxRedemptions, startTime, endTime, _ref13$ticketLength, ticketLength, paramsJSON, groupIds;
+      var tenantId, objectId, groupAddresses, _ref14$maxTickets, maxTickets, _ref14$maxRedemptions, maxRedemptions, startTime, endTime, _ref14$ticketLength, ticketLength, paramsJSON, groupIds;
 
       return _regeneratorRuntime.async(function CreateNTPInstance$(_context8) {
         while (1) {
           switch (_context8.prev = _context8.next) {
             case 0:
-              tenantId = _ref13.tenantId, objectId = _ref13.objectId, groupAddresses = _ref13.groupAddresses, _ref13$maxTickets = _ref13.maxTickets, maxTickets = _ref13$maxTickets === void 0 ? 0 : _ref13$maxTickets, _ref13$maxRedemptions = _ref13.maxRedemptions, maxRedemptions = _ref13$maxRedemptions === void 0 ? 100 : _ref13$maxRedemptions, startTime = _ref13.startTime, endTime = _ref13.endTime, _ref13$ticketLength = _ref13.ticketLength, ticketLength = _ref13$ticketLength === void 0 ? 6 : _ref13$ticketLength;
+              tenantId = _ref14.tenantId, objectId = _ref14.objectId, groupAddresses = _ref14.groupAddresses, _ref14$maxTickets = _ref14.maxTickets, maxTickets = _ref14$maxTickets === void 0 ? 0 : _ref14$maxTickets, _ref14$maxRedemptions = _ref14.maxRedemptions, maxRedemptions = _ref14$maxRedemptions === void 0 ? 100 : _ref14$maxRedemptions, startTime = _ref14.startTime, endTime = _ref14.endTime, _ref14$ticketLength = _ref14.ticketLength, ticketLength = _ref14$ticketLength === void 0 ? 6 : _ref14$ticketLength;
               // targetIdStr string, defType int32, paramsJSON string, max, tsMillis int64, sig hexutil.Bytes
               ValidatePresence("tenantId", tenantId);
               ValidatePresence("objectId or groupAddresses", objectId || groupAddresses);
@@ -787,13 +823,13 @@ function () {
 
   }, {
     key: "IssueNTPCode",
-    value: function IssueNTPCode(_ref14) {
+    value: function IssueNTPCode(_ref15) {
       var tenantId, ntpId, email, options, params, paramTypes;
       return _regeneratorRuntime.async(function IssueNTPCode$(_context9) {
         while (1) {
           switch (_context9.prev = _context9.next) {
             case 0:
-              tenantId = _ref14.tenantId, ntpId = _ref14.ntpId, email = _ref14.email;
+              tenantId = _ref15.tenantId, ntpId = _ref15.ntpId, email = _ref15.email;
               ValidatePresence("tenantId", tenantId);
               ValidatePresence("ntpId", ntpId);
               options = [];
@@ -837,13 +873,13 @@ function () {
 
   }, {
     key: "RedeemCode",
-    value: function RedeemCode(_ref15) {
+    value: function RedeemCode(_ref16) {
       var issuer, tenantId, ntpId, code, email, wallet, token, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
       return _regeneratorRuntime.async(function RedeemCode$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
-              issuer = _ref15.issuer, tenantId = _ref15.tenantId, ntpId = _ref15.ntpId, code = _ref15.code, email = _ref15.email;
+              issuer = _ref16.issuer, tenantId = _ref16.tenantId, ntpId = _ref16.ntpId, code = _ref16.code, email = _ref16.email;
               wallet = this.GenerateWallet();
               issuer = issuer || "";
 
@@ -890,7 +926,9 @@ function () {
 
             case 17:
               token = _context10.sent;
-              this.staticToken = token;
+              this.SetStaticToken({
+                token: token
+              });
               return _context10.abrupt("return", JSON.parse(Utils.FromB64(token)).qid);
 
             case 22:
@@ -982,13 +1020,13 @@ function () {
 
   }, {
     key: "EncryptECIES",
-    value: function EncryptECIES(_ref16) {
+    value: function EncryptECIES(_ref17) {
       var message, publicKey;
       return _regeneratorRuntime.async(function EncryptECIES$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              message = _ref16.message, publicKey = _ref16.publicKey;
+              message = _ref17.message, publicKey = _ref17.publicKey;
 
               if (this.signer) {
                 _context11.next = 3;
@@ -1023,13 +1061,13 @@ function () {
 
   }, {
     key: "DecryptECIES",
-    value: function DecryptECIES(_ref17) {
+    value: function DecryptECIES(_ref18) {
       var message;
       return _regeneratorRuntime.async(function DecryptECIES$(_context12) {
         while (1) {
           switch (_context12.prev = _context12.next) {
             case 0:
-              message = _ref17.message;
+              message = _ref18.message;
 
               if (this.signer) {
                 _context12.next = 3;
@@ -1067,15 +1105,15 @@ function () {
 
   }, {
     key: "Request",
-    value: function Request(_ref18) {
-      var url = _ref18.url,
-          _ref18$format = _ref18.format,
-          format = _ref18$format === void 0 ? "json" : _ref18$format,
-          _ref18$method = _ref18.method,
-          method = _ref18$method === void 0 ? "GET" : _ref18$method,
-          _ref18$headers = _ref18.headers,
-          headers = _ref18$headers === void 0 ? {} : _ref18$headers,
-          body = _ref18.body;
+    value: function Request(_ref19) {
+      var url = _ref19.url,
+          _ref19$format = _ref19.format,
+          format = _ref19$format === void 0 ? "json" : _ref19$format,
+          _ref19$method = _ref19.method,
+          method = _ref19$method === void 0 ? "GET" : _ref19$method,
+          _ref19$headers = _ref19.headers,
+          headers = _ref19$headers === void 0 ? {} : _ref19$headers,
+          body = _ref19.body;
       return this.utils.ResponseToFormat(format, HttpClient.Fetch(url, {
         method: method,
         headers: headers,
@@ -1197,14 +1235,14 @@ function () {
     }
   }], [{
     key: "Configuration",
-    value: function Configuration(_ref19) {
-      var configUrl, _ref19$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, fabricVersion;
+    value: function Configuration(_ref20) {
+      var configUrl, _ref20$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, fabricVersion;
 
       return _regeneratorRuntime.async(function Configuration$(_context15) {
         while (1) {
           switch (_context15.prev = _context15.next) {
             case 0:
-              configUrl = _ref19.configUrl, _ref19$kmsUrls = _ref19.kmsUrls, kmsUrls = _ref19$kmsUrls === void 0 ? [] : _ref19$kmsUrls, region = _ref19.region;
+              configUrl = _ref20.configUrl, _ref20$kmsUrls = _ref20.kmsUrls, kmsUrls = _ref20$kmsUrls === void 0 ? [] : _ref20$kmsUrls, region = _ref20.region;
               _context15.prev = 1;
               uri = new URI(configUrl);
 
@@ -1346,14 +1384,14 @@ function () {
 
   }, {
     key: "FromConfigurationUrl",
-    value: function FromConfigurationUrl(_ref20) {
-      var configUrl, region, trustAuthorityId, staticToken, _ref20$noCache, noCache, _ref20$noAuth, noAuth, _ref21, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
+    value: function FromConfigurationUrl(_ref21) {
+      var configUrl, region, trustAuthorityId, staticToken, _ref21$noCache, noCache, _ref21$noAuth, noAuth, _ref22, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context16) {
         while (1) {
           switch (_context16.prev = _context16.next) {
             case 0:
-              configUrl = _ref20.configUrl, region = _ref20.region, trustAuthorityId = _ref20.trustAuthorityId, staticToken = _ref20.staticToken, _ref20$noCache = _ref20.noCache, noCache = _ref20$noCache === void 0 ? false : _ref20$noCache, _ref20$noAuth = _ref20.noAuth, noAuth = _ref20$noAuth === void 0 ? false : _ref20$noAuth;
+              configUrl = _ref21.configUrl, region = _ref21.region, trustAuthorityId = _ref21.trustAuthorityId, staticToken = _ref21.staticToken, _ref21$noCache = _ref21.noCache, noCache = _ref21$noCache === void 0 ? false : _ref21$noCache, _ref21$noAuth = _ref21.noAuth, noAuth = _ref21$noAuth === void 0 ? false : _ref21$noAuth;
               _context16.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
@@ -1361,11 +1399,11 @@ function () {
               }));
 
             case 3:
-              _ref21 = _context16.sent;
-              contentSpaceId = _ref21.contentSpaceId;
-              fabricURIs = _ref21.fabricURIs;
-              ethereumURIs = _ref21.ethereumURIs;
-              fabricVersion = _ref21.fabricVersion;
+              _ref22 = _context16.sent;
+              contentSpaceId = _ref22.contentSpaceId;
+              fabricURIs = _ref22.fabricURIs;
+              ethereumURIs = _ref22.ethereumURIs;
+              fabricVersion = _ref22.fabricVersion;
               client = new ElvClient({
                 contentSpaceId: contentSpaceId,
                 fabricVersion: fabricVersion,

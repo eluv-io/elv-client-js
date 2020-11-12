@@ -230,7 +230,8 @@ exports.CreateProductionMaster = function _callee(_ref) {
             accessKey: accessKey,
             secret: secret,
             copy: copy,
-            callback: callback
+            callback: callback,
+            encryption: encrypt ? "cgck" : "none"
           }));
 
         case 52:

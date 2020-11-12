@@ -278,6 +278,7 @@ class FrameClient {
       "AddContentLibraryGroup",
       "AddContentObjectGroupPermission",
       "AddLibraryContentType",
+      "AssetMetadata",
       "AvailableDRMs",
       "AvailableOfferings",
       "AwaitPending",
