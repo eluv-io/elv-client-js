@@ -833,18 +833,32 @@ exports.ContentObjectMetadata = async function({
 };
 
 
-exports.AssetMetadata = async function({objectId, metadata, localization}) {
+exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  if(!objectId) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
+
   if(!metadata) {
-    const libraryId = await this.ContentObjectLibraryId({objectId});
     metadata = (await this.ContentObjectMetadata({
       libraryId,
       objectId,
+      versionHash,
       metadataSubtree: "public/asset_metadata",
       resolveLinks: true,
       linkDepthLimit: 2,
       resolveIgnoreErrors: true,
       produceLinkUrls: true
     })) || {};
+  } else {
+    metadata = await this.ProduceMetadataLinks({
+      libraryId,
+      objectId,
+      versionHash,
+      path: UrlJoin("public", "asset_metadata"),
+      metadata
+    });
   }
 
   if(!metadata.info) {

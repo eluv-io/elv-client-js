@@ -178,16 +178,16 @@ class ElvClient {
 
     this.trustAuthorityId = trustAuthorityId;
 
-    if(staticToken) {
-      this.SetStaticToken({token: staticToken});
-    }
-
     this.noCache = noCache;
     this.noAuth = noAuth;
 
     this.debug = false;
 
     this.InitializeClients();
+
+    if(staticToken) {
+      this.SetStaticToken({token: staticToken});
+    }
   }
 
   /**
