@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 import "./base_space_interfaces.sol";
 
@@ -17,13 +17,9 @@ contract UserSpace is IUserSpace {
 
     mapping(address => address) public userWallets;
 
-    function userWallets(address _userAddr) external view returns (address) {
-        return userWallets[_userAddr];
-    }
-
     // STUB impl - meant to be overridden
-    function createUserWallet(address _user) external returns (address) {
+    function createUserWallet(address payable) external returns (address) {
         require(false);
-        return 0x0;
+        return address(0x0);
     }
 }

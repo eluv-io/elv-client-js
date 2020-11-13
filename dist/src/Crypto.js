@@ -160,27 +160,30 @@ var Crypto = {
       }
     });
   },
-  GeneratePrimaryConk: function GeneratePrimaryConk() {
-    var elvCrypto, _elvCrypto$generatePr, secretKey, publicKey, symmetricKey;
+  GeneratePrimaryConk: function GeneratePrimaryConk(_ref2) {
+    var spaceId, objectId, elvCrypto, _elvCrypto$generatePr, secretKey, publicKey, symmetricKey;
 
     return _regeneratorRuntime.async(function GeneratePrimaryConk$(_context4) {
       while (1) {
         switch (_context4.prev = _context4.next) {
           case 0:
-            _context4.next = 2;
+            spaceId = _ref2.spaceId, objectId = _ref2.objectId;
+            _context4.next = 3;
             return _regeneratorRuntime.awrap(Crypto.ElvCrypto());
 
-          case 2:
+          case 3:
             elvCrypto = _context4.sent;
             _elvCrypto$generatePr = elvCrypto.generatePrimaryKeys(), secretKey = _elvCrypto$generatePr.secretKey, publicKey = _elvCrypto$generatePr.publicKey;
             symmetricKey = elvCrypto.generateSymmetricKey().key;
             return _context4.abrupt("return", {
               symm_key: "kpsy".concat(bs58.encode(Buffer.from(symmetricKey))),
               secret_key: "kpsk".concat(bs58.encode(Buffer.from(secretKey))),
-              public_key: "kppk".concat(bs58.encode(Buffer.from(publicKey)))
+              public_key: "kppk".concat(bs58.encode(Buffer.from(publicKey))),
+              sid: spaceId,
+              qid: objectId
             });
 
-          case 6:
+          case 7:
           case "end":
             return _context4.stop();
         }
@@ -326,7 +329,7 @@ var Crypto = {
     });
   },
   OpenEncryptionStream: function OpenEncryptionStream(cap) {
-    var elvCrypto, _ref2, context, stream, cipher;
+    var elvCrypto, _ref3, context, stream, cipher;
 
     return _regeneratorRuntime.async(function OpenEncryptionStream$(_context8) {
       while (1) {
@@ -341,8 +344,8 @@ var Crypto = {
             return _regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
 
           case 5:
-            _ref2 = _context8.sent;
-            context = _ref2.context;
+            _ref3 = _context8.sent;
+            context = _ref3.context;
             stream = new Stream.PassThrough();
             cipher = elvCrypto.createCipher(context);
             return _context8.abrupt("return", stream.pipe(cipher).on("finish", function () {
@@ -410,7 +413,7 @@ var Crypto = {
     });
   },
   OpenDecryptionStream: function OpenDecryptionStream(cap) {
-    var elvCrypto, _ref3, context, type, stream, decipher;
+    var elvCrypto, _ref4, context, type, stream, decipher;
 
     return _regeneratorRuntime.async(function OpenDecryptionStream$(_context10) {
       while (1) {
@@ -425,9 +428,9 @@ var Crypto = {
             return _regeneratorRuntime.awrap(Crypto.EncryptionContext(cap));
 
           case 5:
-            _ref3 = _context10.sent;
-            context = _ref3.context;
-            type = _ref3.type;
+            _ref4 = _context10.sent;
+            context = _ref4.context;
+            type = _ref4.type;
             stream = new Stream.PassThrough();
             decipher = elvCrypto.createDecipher(type, context);
             return _context10.abrupt("return", stream.pipe(decipher).on("finish", function () {

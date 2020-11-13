@@ -1,0 +1,776 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="images/favicon.png" >
+
+  <title>
+    PermissionsClient.js - Documentation
+  </title>
+
+  <script src="scripts/prettify/prettify.js"></script>
+  <script src="scripts/prettify/lang-css.js"></script>
+
+  <link type="text/css" rel="stylesheet" href="styles/elv-jsdoc.css">
+  <link type="text/css" rel="stylesheet" href="styles/elv-prettify-jsdoc.css">
+</head>
+
+<body>
+  <div class="layout-container">
+    <nav class="nav-container">
+      <div class="header">
+        <a href="index.html">
+          <img class="logo" src="images/logo-dark.png" />
+        </a>
+        <div class="title">
+          Eluvio Javascript Client
+        </div>
+      </div>
+      <div class="nav-content">
+        <h3>Classes</h3><ul><li id="ElvClient-nav">
+          <div data-name="ElvClient" class="class-link-container"><a class="class-link">ElvClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="ElvClient-ElvClient-nav"><a href="ElvClient.html" class="method-link">ElvClient</a></li><li data-type="method" id="ElvClient-Configuration-nav"><a href="ElvClient.html#.Configuration" class="method-link">Configuration</a></li><li data-type="method" id="ElvClient-FromConfigurationUrl-nav"><a href="ElvClient.html#.FromConfigurationUrl" class="method-link">FromConfigurationUrl</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient-ClearCache-nav"><a href="ElvClient.html#ClearCache" class="method-link">ClearCache</a></li><h4 class="methodGroupHeader">Authorization</h4><li data-type="method" id="ElvClient-SetOauthToken-nav"><a href="ElvClient.html#SetOauthToken" class="method-link">SetOauthToken</a></li><li data-type="method" id="ElvClient-SetPolicyAuthorization-nav"><a href="ElvClient.html#SetPolicyAuthorization" class="method-link">SetPolicyAuthorization</a></li><li data-type="method" id="ElvClient-SetSignerFromOauthToken-nav"><a href="ElvClient.html#SetSignerFromOauthToken" class="method-link">SetSignerFromOauthToken</a></li><li data-type="method" id="ElvClient-SetStaticToken-nav"><a href="ElvClient.html#SetStaticToken" class="method-link">SetStaticToken</a></li><h4 class="methodGroupHeader">Miscellaneous</h4><li data-type="method" id="ElvClient-ToggleLogging-nav"><a href="ElvClient.html#ToggleLogging" class="method-link">ToggleLogging</a></li><h4 class="methodGroupHeader">Nodes</h4><li data-type="method" id="ElvClient-NodeId-nav"><a href="ElvClient.html#NodeId" class="method-link">NodeId</a></li><li data-type="method" id="ElvClient-Nodes-nav"><a href="ElvClient.html#Nodes" class="method-link">Nodes</a></li><li data-type="method" id="ElvClient-ResetRegion-nav"><a href="ElvClient.html#ResetRegion" class="method-link">ResetRegion</a></li><li data-type="method" id="ElvClient-SetNodes-nav"><a href="ElvClient.html#SetNodes" class="method-link">SetNodes</a></li><li data-type="method" id="ElvClient-UseRegion-nav"><a href="ElvClient.html#UseRegion" class="method-link">UseRegion</a></li><h4 class="methodGroupHeader">Signers</h4><li data-type="method" id="ElvClient-ClearSigner-nav"><a href="ElvClient.html#ClearSigner" class="method-link">ClearSigner</a></li><li data-type="method" id="ElvClient-CurrentAccountAddress-nav"><a href="ElvClient.html#CurrentAccountAddress" class="method-link">CurrentAccountAddress</a></li><li data-type="method" id="ElvClient-GenerateWallet-nav"><a href="ElvClient.html#GenerateWallet" class="method-link">GenerateWallet</a></li><li data-type="method" id="ElvClient-SetSigner-nav"><a href="ElvClient.html#SetSigner" class="method-link">SetSigner</a></li><li data-type="method" id="ElvClient-SetSignerFromWeb3Provider-nav"><a href="ElvClient.html#SetSignerFromWeb3Provider" class="method-link">SetSignerFromWeb3Provider</a></li><h4 class="methodGroupHeader">Tickets</h4><li data-type="method" id="ElvClient-CreateNTPInstance-nav"><a href="ElvClient.html#CreateNTPInstance" class="method-link">CreateNTPInstance</a></li><li data-type="method" id="ElvClient-IssueNTPCode-nav"><a href="ElvClient.html#IssueNTPCode" class="method-link">IssueNTPCode</a></li><li data-type="method" id="ElvClient-RedeemCode-nav"><a href="ElvClient.html#RedeemCode" class="method-link">RedeemCode</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvClient-DecryptECIES-nav"><a href="ElvClient.html#DecryptECIES" class="method-link">DecryptECIES</a></li><li data-type="method" id="ElvClient-EncryptECIES-nav"><a href="ElvClient.html#EncryptECIES" class="method-link">EncryptECIES</a></li><li data-type="method" id="ElvClient-Request-nav"><a href="ElvClient.html#Request" class="method-link">Request</a></li></ul></li><li id="ElvWallet-nav">
+          <div data-name="ElvWallet" class="class-link-container"><a class="class-link">ElvWallet</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="ElvWallet-ElvWallet-nav"><a href="ElvWallet.html" class="method-link">ElvWallet</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvWallet-AddAccount-nav"><a href="ElvWallet.html#AddAccount" class="method-link">AddAccount</a></li><li data-type="method" id="ElvWallet-AddAccountFromEncryptedPK-nav"><a href="ElvWallet.html#AddAccountFromEncryptedPK" class="method-link">AddAccountFromEncryptedPK</a></li><li data-type="method" id="ElvWallet-AddAccountFromMnemonic-nav"><a href="ElvWallet.html#AddAccountFromMnemonic" class="method-link">AddAccountFromMnemonic</a></li><li data-type="method" id="ElvWallet-GenerateEncryptedPrivateKey-nav"><a href="ElvWallet.html#GenerateEncryptedPrivateKey" class="method-link">GenerateEncryptedPrivateKey</a></li><li data-type="method" id="ElvWallet-GenerateMnemonic-nav"><a href="ElvWallet.html#GenerateMnemonic" class="method-link">GenerateMnemonic</a></li><li data-type="method" id="ElvWallet-GetAccount-nav"><a href="ElvWallet.html#GetAccount" class="method-link">GetAccount</a></li><li data-type="method" id="ElvWallet-GetAccountBalance-nav"><a href="ElvWallet.html#GetAccountBalance" class="method-link">GetAccountBalance</a></li><li data-type="method" id="ElvWallet-RemoveAccount-nav"><a href="ElvWallet.html#RemoveAccount" class="method-link">RemoveAccount</a></li></ul></li><li id="FrameClient-nav">
+          <div data-name="FrameClient" class="class-link-container"><a class="class-link">FrameClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="FrameClient-FrameClient-nav"><a href="FrameClient.html" class="method-link">FrameClient</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="FrameClient-AllowedMethods-nav"><a href="FrameClient.html#AllowedMethods" class="method-link">AllowedMethods</a></li><li data-type="method" id="FrameClient-PassRequest-nav"><a href="FrameClient.html#PassRequest" class="method-link">PassRequest</a></li></ul></li><li id="PermissionsClient-nav">
+          <div data-name="PermissionsClient" class="class-link-container"><a class="class-link">PermissionsClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="PermissionsClient-PermissionsClient-nav"><a href="PermissionsClient.html" class="method-link">PermissionsClient</a></li><h4 class="methodGroupHeader">Permissions</h4><li data-type="method" id="PermissionsClient-ItemPermissions-nav"><a href="PermissionsClient.html#ItemPermissions" class="method-link">ItemPermissions</a></li><li data-type="method" id="PermissionsClient-RemovePermission-nav"><a href="PermissionsClient.html#RemovePermission" class="method-link">RemovePermission</a></li><li data-type="method" id="PermissionsClient-SetPermission-nav"><a href="PermissionsClient.html#SetPermission" class="method-link">SetPermission</a></li><h4 class="methodGroupHeader">Policies</h4><li data-type="method" id="PermissionsClient-CreateItemPolicy-nav"><a href="PermissionsClient.html#CreateItemPolicy" class="method-link">CreateItemPolicy</a></li><li data-type="method" id="PermissionsClient-ItemPolicy-nav"><a href="PermissionsClient.html#ItemPolicy" class="method-link">ItemPolicy</a></li><li data-type="method" id="PermissionsClient-PolicyItems-nav"><a href="PermissionsClient.html#PolicyItems" class="method-link">PolicyItems</a></li><li data-type="method" id="PermissionsClient-RemoveItemPolicy-nav"><a href="PermissionsClient.html#RemoveItemPolicy" class="method-link">RemoveItemPolicy</a></li><h4 class="methodGroupHeader">Profiles</h4><li data-type="method" id="PermissionsClient-ItemProfiles-nav"><a href="PermissionsClient.html#ItemProfiles" class="method-link">ItemProfiles</a></li><li data-type="method" id="PermissionsClient-RemoveProfile-nav"><a href="PermissionsClient.html#RemoveProfile" class="method-link">RemoveProfile</a></li><li data-type="method" id="PermissionsClient-SetProfile-nav"><a href="PermissionsClient.html#SetProfile" class="method-link">SetProfile</a></li></ul></li><li id="UserProfileClient-nav">
+          <div data-name="UserProfileClient" class="class-link-container"><a class="class-link">UserProfileClient</a></div><ul class='methods'><h4 class="methodGroupHeader">Constructor</h4><li data-type="method" id="UserProfileClient-UserProfileClient-nav"><a href="UserProfileClient.html" class="method-link">UserProfileClient</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="UserProfileClient-AccessLevel-nav"><a href="UserProfileClient.html#AccessLevel" class="method-link">AccessLevel</a></li><li data-type="method" id="UserProfileClient-CollectedTags-nav"><a href="UserProfileClient.html#CollectedTags" class="method-link">CollectedTags</a></li><li data-type="method" id="UserProfileClient-DeleteUserMetadata-nav"><a href="UserProfileClient.html#DeleteUserMetadata" class="method-link">DeleteUserMetadata</a></li><li data-type="method" id="UserProfileClient-MergeUserMetadata-nav"><a href="UserProfileClient.html#MergeUserMetadata" class="method-link">MergeUserMetadata</a></li><li data-type="method" id="UserProfileClient-PublicUserMetadata-nav"><a href="UserProfileClient.html#PublicUserMetadata" class="method-link">PublicUserMetadata</a></li><li data-type="method" id="UserProfileClient-ReplaceUserMetadata-nav"><a href="UserProfileClient.html#ReplaceUserMetadata" class="method-link">ReplaceUserMetadata</a></li><li data-type="method" id="UserProfileClient-SetAccessLevel-nav"><a href="UserProfileClient.html#SetAccessLevel" class="method-link">SetAccessLevel</a></li><li data-type="method" id="UserProfileClient-SetTenantId-nav"><a href="UserProfileClient.html#SetTenantId" class="method-link">SetTenantId</a></li><li data-type="method" id="UserProfileClient-SetUserProfileImage-nav"><a href="UserProfileClient.html#SetUserProfileImage" class="method-link">SetUserProfileImage</a></li><li data-type="method" id="UserProfileClient-TenantId-nav"><a href="UserProfileClient.html#TenantId" class="method-link">TenantId</a></li><li data-type="method" id="UserProfileClient-UserMetadata-nav"><a href="UserProfileClient.html#UserMetadata" class="method-link">UserMetadata</a></li><li data-type="method" id="UserProfileClient-UserProfileImage-nav"><a href="UserProfileClient.html#UserProfileImage" class="method-link">UserProfileImage</a></li><li data-type="method" id="UserProfileClient-UserWalletAddress-nav"><a href="UserProfileClient.html#UserWalletAddress" class="method-link">UserWalletAddress</a></li><li data-type="method" id="UserProfileClient-UserWalletObjectInfo-nav"><a href="UserProfileClient.html#UserWalletObjectInfo" class="method-link">UserWalletObjectInfo</a></li><li data-type="method" id="UserProfileClient-WalletAddress-nav"><a href="UserProfileClient.html#WalletAddress" class="method-link">WalletAddress</a></li></ul></li></ul><h3>Modules</h3><ul><li id="ElvClient_ABRPublishing-nav">
+          <div data-name="ElvClient/ABRPublishing" class="class-link-container"><a class="class-link">ElvClient/ABRPublishing</a></div><ul class='methods'><li data-type="method" id="ElvClient_ABRPublishing-ElvClient/ABRPublishing-nav"><a href="module-ElvClient_ABRPublishing.html" class="method-link">ElvClient/ABRPublishing</a></li><h4 class="methodGroupHeader">ABR Publishing</h4><li data-type="method" id="ElvClient_ABRPublishing-CreateABRMezzanine-nav"><a href="module-ElvClient_ABRPublishing.html#.CreateABRMezzanine" class="method-link">CreateABRMezzanine</a></li><li data-type="method" id="ElvClient_ABRPublishing-CreateProductionMaster-nav"><a href="module-ElvClient_ABRPublishing.html#.CreateProductionMaster" class="method-link">CreateProductionMaster</a></li><li data-type="method" id="ElvClient_ABRPublishing-FinalizeABRMezzanine-nav"><a href="module-ElvClient_ABRPublishing.html#.FinalizeABRMezzanine" class="method-link">FinalizeABRMezzanine</a></li><li data-type="method" id="ElvClient_ABRPublishing-LROStatus-nav"><a href="module-ElvClient_ABRPublishing.html#.LROStatus" class="method-link">LROStatus</a></li><li data-type="method" id="ElvClient_ABRPublishing-StartABRMezzanineJobs-nav"><a href="module-ElvClient_ABRPublishing.html#.StartABRMezzanineJobs" class="method-link">StartABRMezzanineJobs</a></li></ul></li><li id="ElvClient_AccessGroups-nav">
+          <div data-name="ElvClient/AccessGroups" class="class-link-container"><a class="class-link">ElvClient/AccessGroups</a></div><ul class='methods'><li data-type="method" id="ElvClient_AccessGroups-ElvClient/AccessGroups-nav"><a href="module-ElvClient_AccessGroups.html" class="method-link">ElvClient/AccessGroups</a></li><h4 class="methodGroupHeader">Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-AccessGroupManagers-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupManagers" class="method-link">AccessGroupManagers</a></li><li data-type="method" id="ElvClient_AccessGroups-AccessGroupMembers-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupMembers" class="method-link">AccessGroupMembers</a></li><li data-type="method" id="ElvClient_AccessGroups-AccessGroupOwner-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AccessGroupOwner" class="method-link">AccessGroupOwner</a></li><li data-type="method" id="ElvClient_AccessGroups-AddAccessGroupManager-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddAccessGroupManager" class="method-link">AddAccessGroupManager</a></li><li data-type="method" id="ElvClient_AccessGroups-AddAccessGroupMember-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddAccessGroupMember" class="method-link">AddAccessGroupMember</a></li><li data-type="method" id="ElvClient_AccessGroups-CreateAccessGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.CreateAccessGroup" class="method-link">CreateAccessGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-DeleteAccessGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.DeleteAccessGroup" class="method-link">DeleteAccessGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveAccessGroupManager-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveAccessGroupManager" class="method-link">RemoveAccessGroupManager</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveAccessGroupMember-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveAccessGroupMember" class="method-link">RemoveAccessGroupMember</a></li><h4 class="methodGroupHeader">Library Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-AddContentLibraryGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddContentLibraryGroup" class="method-link">AddContentLibraryGroup</a></li><li data-type="method" id="ElvClient_AccessGroups-ContentLibraryGroupPermissions-nav"><a href="module-ElvClient_AccessGroups.html#.exports.ContentLibraryGroupPermissions" class="method-link">ContentLibraryGroupPermissions</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveContentLibraryGroup-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveContentLibraryGroup" class="method-link">RemoveContentLibraryGroup</a></li><h4 class="methodGroupHeader">Object Access Groups</h4><li data-type="method" id="ElvClient_AccessGroups-AddContentObjectGroupPermission-nav"><a href="module-ElvClient_AccessGroups.html#.exports.AddContentObjectGroupPermission" class="method-link">AddContentObjectGroupPermission</a></li><li data-type="method" id="ElvClient_AccessGroups-ContentObjectGroupPermissions-nav"><a href="module-ElvClient_AccessGroups.html#.exports.ContentObjectGroupPermissions" class="method-link">ContentObjectGroupPermissions</a></li><li data-type="method" id="ElvClient_AccessGroups-RemoveContentObjectGroupPermission-nav"><a href="module-ElvClient_AccessGroups.html#.exports.RemoveContentObjectGroupPermission" class="method-link">RemoveContentObjectGroupPermission</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvClient_AccessGroups-LinkAccessGroupToOauth-nav"><a href="module-ElvClient_AccessGroups.html#.LinkAccessGroupToOauth" class="method-link">LinkAccessGroupToOauth</a></li><li data-type="method" id="ElvClient_AccessGroups-UnlinkAccessGroupFromOauth-nav"><a href="module-ElvClient_AccessGroups.html#.UnlinkAccessGroupFromOauth" class="method-link">UnlinkAccessGroupFromOauth</a></li></ul></li><li id="ElvClient_ContentAccess-nav">
+          <div data-name="ElvClient/ContentAccess" class="class-link-container"><a class="class-link">ElvClient/ContentAccess</a></div><ul class='methods'><li data-type="method" id="ElvClient_ContentAccess-ElvClient/ContentAccess-nav"><a href="module-ElvClient_ContentAccess.html" class="method-link">ElvClient/ContentAccess</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient_ContentAccess-AccessInfo-nav"><a href="module-ElvClient_ContentAccess.html#.AccessInfo" class="method-link">AccessInfo</a></li><li data-type="method" id="ElvClient_ContentAccess-AccessRequest-nav"><a href="module-ElvClient_ContentAccess.html#.AccessRequest" class="method-link">AccessRequest</a></li><li data-type="method" id="ElvClient_ContentAccess-AccessType-nav"><a href="module-ElvClient_ContentAccess.html#.AccessType" class="method-link">AccessType</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectAccessComplete-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectAccessComplete" class="method-link">ContentObjectAccessComplete</a></li><li data-type="method" id="ElvClient_ContentAccess-FinalizeStateChannelAccess-nav"><a href="module-ElvClient_ContentAccess.html#.FinalizeStateChannelAccess" class="method-link">FinalizeStateChannelAccess</a></li><li data-type="method" id="ElvClient_ContentAccess-GenerateStateChannelToken-nav"><a href="module-ElvClient_ContentAccess.html#.GenerateStateChannelToken" class="method-link">GenerateStateChannelToken</a></li><li data-type="method" id="ElvClient_ContentAccess-SetAuthContext-nav"><a href="module-ElvClient_ContentAccess.html#.SetAuthContext" class="method-link">SetAuthContext</a></li><h4 class="methodGroupHeader">Collections</h4><li data-type="method" id="ElvClient_ContentAccess-Collection-nav"><a href="module-ElvClient_ContentAccess.html#.Collection" class="method-link">Collection</a></li><h4 class="methodGroupHeader">Content Libraries</h4><li data-type="method" id="ElvClient_ContentAccess-ContentLibraries-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibraries" class="method-link">ContentLibraries</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentLibrary-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibrary" class="method-link">ContentLibrary</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentLibraryOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentLibraryOwner" class="method-link">ContentLibraryOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-LibraryContentTypes-nav"><a href="module-ElvClient_ContentAccess.html#.LibraryContentTypes" class="method-link">LibraryContentTypes</a></li><h4 class="methodGroupHeader">Content Objects</h4><li data-type="method" id="ElvClient_ContentAccess-AssetMetadata-nav"><a href="module-ElvClient_ContentAccess.html#.AssetMetadata" class="method-link">AssetMetadata</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObject-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObject" class="method-link">ContentObject</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectLibraryId-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectLibraryId" class="method-link">ContentObjectLibraryId</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectOwner" class="method-link">ContentObjectOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjects-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjects" class="method-link">ContentObjects</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectVersions-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectVersions" class="method-link">ContentObjectVersions</a></li><li data-type="method" id="ElvClient_ContentAccess-LatestVersionHash-nav"><a href="module-ElvClient_ContentAccess.html#.LatestVersionHash" class="method-link">LatestVersionHash</a></li><li data-type="method" id="ElvClient_ContentAccess-Permission-nav"><a href="module-ElvClient_ContentAccess.html#.Permission" class="method-link">Permission</a></li><li data-type="method" id="ElvClient_ContentAccess-Proofs-nav"><a href="module-ElvClient_ContentAccess.html#.Proofs" class="method-link">Proofs</a></li><li data-type="method" id="ElvClient_ContentAccess-QParts-nav"><a href="module-ElvClient_ContentAccess.html#.QParts" class="method-link">QParts</a></li><li data-type="method" id="ElvClient_ContentAccess-VerifyContentObject-nav"><a href="module-ElvClient_ContentAccess.html#.VerifyContentObject" class="method-link">VerifyContentObject</a></li><h4 class="methodGroupHeader">Content Space</h4><li data-type="method" id="ElvClient_ContentAccess-ContentSpaceId-nav"><a href="module-ElvClient_ContentAccess.html#.ContentSpaceId" class="method-link">ContentSpaceId</a></li><li data-type="method" id="ElvClient_ContentAccess-DefaultKMSAddress-nav"><a href="module-ElvClient_ContentAccess.html#.DefaultKMSAddress" class="method-link">DefaultKMSAddress</a></li><h4 class="methodGroupHeader">Content Types</h4><li data-type="method" id="ElvClient_ContentAccess-ContentType-nav"><a href="module-ElvClient_ContentAccess.html#.ContentType" class="method-link">ContentType</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentTypeOwner-nav"><a href="module-ElvClient_ContentAccess.html#.ContentTypeOwner" class="method-link">ContentTypeOwner</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentTypes-nav"><a href="module-ElvClient_ContentAccess.html#.ContentTypes" class="method-link">ContentTypes</a></li><h4 class="methodGroupHeader">Encryption</h4><li data-type="method" id="ElvClient_ContentAccess-Decrypt-nav"><a href="module-ElvClient_ContentAccess.html#.Decrypt" class="method-link">Decrypt</a></li><li data-type="method" id="ElvClient_ContentAccess-Encrypt-nav"><a href="module-ElvClient_ContentAccess.html#.Encrypt" class="method-link">Encrypt</a></li><li data-type="method" id="ElvClient_ContentAccess-EncryptionConk-nav"><a href="module-ElvClient_ContentAccess.html#.EncryptionConk" class="method-link">EncryptionConk</a></li><h4 class="methodGroupHeader">Links</h4><li data-type="method" id="ElvClient_ContentAccess-ContentObjectGraph-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectGraph" class="method-link">ContentObjectGraph</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkData-nav"><a href="module-ElvClient_ContentAccess.html#.LinkData" class="method-link">LinkData</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkTarget-nav"><a href="module-ElvClient_ContentAccess.html#.LinkTarget" class="method-link">LinkTarget</a></li><li data-type="method" id="ElvClient_ContentAccess-LinkUrl-nav"><a href="module-ElvClient_ContentAccess.html#.LinkUrl" class="method-link">LinkUrl</a></li><h4 class="methodGroupHeader">Media</h4><li data-type="method" id="ElvClient_ContentAccess-AvailableDRMs-nav"><a href="module-ElvClient_ContentAccess.html#.AvailableDRMs" class="method-link">AvailableDRMs</a></li><li data-type="method" id="ElvClient_ContentAccess-AvailableOfferings-nav"><a href="module-ElvClient_ContentAccess.html#.AvailableOfferings" class="method-link">AvailableOfferings</a></li><li data-type="method" id="ElvClient_ContentAccess-BitmovinPlayoutOptions-nav"><a href="module-ElvClient_ContentAccess.html#.BitmovinPlayoutOptions" class="method-link">BitmovinPlayoutOptions</a></li><li data-type="method" id="ElvClient_ContentAccess-PlayoutOptions-nav"><a href="module-ElvClient_ContentAccess.html#.PlayoutOptions" class="method-link">PlayoutOptions</a></li><h4 class="methodGroupHeader">Metadata</h4><li data-type="method" id="ElvClient_ContentAccess-ContentObjectMetadata-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectMetadata" class="method-link">ContentObjectMetadata</a></li><h4 class="methodGroupHeader">URL Generation</h4><li data-type="method" id="ElvClient_ContentAccess-CallBitcodeMethod-nav"><a href="module-ElvClient_ContentAccess.html#.CallBitcodeMethod" class="method-link">CallBitcodeMethod</a></li><li data-type="method" id="ElvClient_ContentAccess-ContentObjectImageUrl-nav"><a href="module-ElvClient_ContentAccess.html#.ContentObjectImageUrl" class="method-link">ContentObjectImageUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-FabricUrl-nav"><a href="module-ElvClient_ContentAccess.html#.FabricUrl" class="method-link">FabricUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-FileUrl-nav"><a href="module-ElvClient_ContentAccess.html#.FileUrl" class="method-link">FileUrl</a></li><li data-type="method" id="ElvClient_ContentAccess-PublicRep-nav"><a href="module-ElvClient_ContentAccess.html#.PublicRep" class="method-link">PublicRep</a></li><li data-type="method" id="ElvClient_ContentAccess-Rep-nav"><a href="module-ElvClient_ContentAccess.html#.Rep" class="method-link">Rep</a></li></ul></li><li id="ElvClient_ContentManagement-nav">
+          <div data-name="ElvClient/ContentManagement" class="class-link-container"><a class="class-link">ElvClient/ContentManagement</a></div><ul class='methods'><li data-type="method" id="ElvClient_ContentManagement-ElvClient/ContentManagement-nav"><a href="module-ElvClient_ContentManagement.html" class="method-link">ElvClient/ContentManagement</a></li><h4 class="methodGroupHeader">Access Requests</h4><li data-type="method" id="ElvClient_ContentManagement-SetAccessCharge-nav"><a href="module-ElvClient_ContentManagement.html#.SetAccessCharge" class="method-link">SetAccessCharge</a></li><h4 class="methodGroupHeader">Content Libraries</h4><li data-type="method" id="ElvClient_ContentManagement-AddLibraryContentType-nav"><a href="module-ElvClient_ContentManagement.html#.AddLibraryContentType" class="method-link">AddLibraryContentType</a></li><li data-type="method" id="ElvClient_ContentManagement-CreateContentLibrary-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentLibrary" class="method-link">CreateContentLibrary</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentLibrary-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentLibrary" class="method-link">DeleteContentLibrary</a></li><li data-type="method" id="ElvClient_ContentManagement-RemoveLibraryContentType-nav"><a href="module-ElvClient_ContentManagement.html#.RemoveLibraryContentType" class="method-link">RemoveLibraryContentType</a></li><li data-type="method" id="ElvClient_ContentManagement-SetContentLibraryImage-nav"><a href="module-ElvClient_ContentManagement.html#.SetContentLibraryImage" class="method-link">SetContentLibraryImage</a></li><h4 class="methodGroupHeader">Content Objects</h4><li data-type="method" id="ElvClient_ContentManagement-CopyContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.CopyContentObject" class="method-link">CopyContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-CreateAndFinalizeContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.CreateAndFinalizeContentObject" class="method-link">CreateAndFinalizeContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-CreateContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentObject" class="method-link">CreateContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentObject" class="method-link">DeleteContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-DeleteContentVersion-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteContentVersion" class="method-link">DeleteContentVersion</a></li><li data-type="method" id="ElvClient_ContentManagement-EditAndFinalizeContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.EditAndFinalizeContentObject" class="method-link">EditAndFinalizeContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-EditContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.EditContentObject" class="method-link">EditContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-FinalizeContentObject-nav"><a href="module-ElvClient_ContentManagement.html#.FinalizeContentObject" class="method-link">FinalizeContentObject</a></li><li data-type="method" id="ElvClient_ContentManagement-PublishContentVersion-nav"><a href="module-ElvClient_ContentManagement.html#.PublishContentVersion" class="method-link">PublishContentVersion</a></li><li data-type="method" id="ElvClient_ContentManagement-SetContentObjectImage-nav"><a href="module-ElvClient_ContentManagement.html#.SetContentObjectImage" class="method-link">SetContentObjectImage</a></li><li data-type="method" id="ElvClient_ContentManagement-SetPermission-nav"><a href="module-ElvClient_ContentManagement.html#.SetPermission" class="method-link">SetPermission</a></li><h4 class="methodGroupHeader">Content Types</h4><li data-type="method" id="ElvClient_ContentManagement-CreateContentType-nav"><a href="module-ElvClient_ContentManagement.html#.CreateContentType" class="method-link">CreateContentType</a></li><h4 class="methodGroupHeader">Links</h4><li data-type="method" id="ElvClient_ContentManagement-CreateLinks-nav"><a href="module-ElvClient_ContentManagement.html#.CreateLinks" class="method-link">CreateLinks</a></li><li data-type="method" id="ElvClient_ContentManagement-UpdateContentObjectGraph-nav"><a href="module-ElvClient_ContentManagement.html#.UpdateContentObjectGraph" class="method-link">UpdateContentObjectGraph</a></li><h4 class="methodGroupHeader">Metadata</h4><li data-type="method" id="ElvClient_ContentManagement-DeleteMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.DeleteMetadata" class="method-link">DeleteMetadata</a></li><li data-type="method" id="ElvClient_ContentManagement-MergeMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.MergeMetadata" class="method-link">MergeMetadata</a></li><li data-type="method" id="ElvClient_ContentManagement-ReplaceMetadata-nav"><a href="module-ElvClient_ContentManagement.html#.ReplaceMetadata" class="method-link">ReplaceMetadata</a></li></ul></li><li id="ElvClient_Contracts-nav">
+          <div data-name="ElvClient/Contracts" class="class-link-container"><a class="class-link">ElvClient/Contracts</a></div><ul class='methods'><li data-type="method" id="ElvClient_Contracts-ElvClient/Contracts-nav"><a href="module-ElvClient_Contracts.html" class="method-link">ElvClient/Contracts</a></li><h4 class="methodGroupHeader">Blockchain</h4><li data-type="method" id="ElvClient_Contracts-BlockNumber-nav"><a href="module-ElvClient_Contracts.html#.BlockNumber" class="method-link">BlockNumber</a></li><li data-type="method" id="ElvClient_Contracts-Events-nav"><a href="module-ElvClient_Contracts.html#.Events" class="method-link">Events</a></li><li data-type="method" id="ElvClient_Contracts-GetBalance-nav"><a href="module-ElvClient_Contracts.html#.GetBalance" class="method-link">GetBalance</a></li><li data-type="method" id="ElvClient_Contracts-SendFunds-nav"><a href="module-ElvClient_Contracts.html#.SendFunds" class="method-link">SendFunds</a></li><h4 class="methodGroupHeader">Contracts</h4><li data-type="method" id="ElvClient_Contracts-CallContractMethod-nav"><a href="module-ElvClient_Contracts.html#.CallContractMethod" class="method-link">CallContractMethod</a></li><li data-type="method" id="ElvClient_Contracts-CallContractMethodAndWait-nav"><a href="module-ElvClient_Contracts.html#.CallContractMethodAndWait" class="method-link">CallContractMethodAndWait</a></li><li data-type="method" id="ElvClient_Contracts-ContractEvents-nav"><a href="module-ElvClient_Contracts.html#.ContractEvents" class="method-link">ContractEvents</a></li><li data-type="method" id="ElvClient_Contracts-ContractName-nav"><a href="module-ElvClient_Contracts.html#.ContractName" class="method-link">ContractName</a></li><li data-type="method" id="ElvClient_Contracts-CustomContractAddress-nav"><a href="module-ElvClient_Contracts.html#.CustomContractAddress" class="method-link">CustomContractAddress</a></li><li data-type="method" id="ElvClient_Contracts-DeployContract-nav"><a href="module-ElvClient_Contracts.html#.DeployContract" class="method-link">DeployContract</a></li><li data-type="method" id="ElvClient_Contracts-ExtractEventFromLogs-nav"><a href="module-ElvClient_Contracts.html#.ExtractEventFromLogs" class="method-link">ExtractEventFromLogs</a></li><li data-type="method" id="ElvClient_Contracts-ExtractValueFromEvent-nav"><a href="module-ElvClient_Contracts.html#.ExtractValueFromEvent" class="method-link">ExtractValueFromEvent</a></li><li data-type="method" id="ElvClient_Contracts-FormatContractArguments-nav"><a href="module-ElvClient_Contracts.html#.FormatContractArguments" class="method-link">FormatContractArguments</a></li><li data-type="method" id="ElvClient_Contracts-SetCustomContentContract-nav"><a href="module-ElvClient_Contracts.html#.SetCustomContentContract" class="method-link">SetCustomContentContract</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="ElvClient_Contracts-ContractAbi-nav"><a href="module-ElvClient_Contracts.html#.ContractAbi" class="method-link">ContractAbi</a></li></ul></li><li id="ElvClient_Files+Parts-nav">
+          <div data-name="ElvClient/Files+Parts" class="class-link-container"><a class="class-link">ElvClient/Files+Parts</a></div><ul class='methods'><li data-type="method" id="ElvClient_Files+Parts-ElvClient/Files+Parts-nav"><a href="module-ElvClient_Files+Parts.html" class="method-link">ElvClient/Files+Parts</a></li><h4 class="methodGroupHeader">Files</h4><li data-type="method" id="ElvClient_Files+Parts-CreateFileDirectories-nav"><a href="module-ElvClient_Files+Parts.html#.exports.CreateFileDirectories" class="method-link">CreateFileDirectories</a></li><li data-type="method" id="ElvClient_Files+Parts-DeleteFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DeleteFiles" class="method-link">DeleteFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-DownloadFile-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DownloadFile" class="method-link">DownloadFile</a></li><li data-type="method" id="ElvClient_Files+Parts-ListFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ListFiles" class="method-link">ListFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadFiles-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadFiles" class="method-link">UploadFiles</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadFilesFromS3-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadFilesFromS3" class="method-link">UploadFilesFromS3</a></li><h4 class="methodGroupHeader">Parts</h4><li data-type="method" id="ElvClient_Files+Parts-ContentPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ContentPart" class="method-link">ContentPart</a></li><li data-type="method" id="ElvClient_Files+Parts-ContentParts-nav"><a href="module-ElvClient_Files+Parts.html#.exports.ContentParts" class="method-link">ContentParts</a></li><li data-type="method" id="ElvClient_Files+Parts-CreatePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.CreatePart" class="method-link">CreatePart</a></li><li data-type="method" id="ElvClient_Files+Parts-DeletePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DeletePart" class="method-link">DeletePart</a></li><li data-type="method" id="ElvClient_Files+Parts-DownloadPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.DownloadPart" class="method-link">DownloadPart</a></li><li data-type="method" id="ElvClient_Files+Parts-FinalizePart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.FinalizePart" class="method-link">FinalizePart</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadPart-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadPart" class="method-link">UploadPart</a></li><li data-type="method" id="ElvClient_Files+Parts-UploadPartChunk-nav"><a href="module-ElvClient_Files+Parts.html#.exports.UploadPartChunk" class="method-link">UploadPartChunk</a></li></ul></li></ul><h3>Namespaces</h3><ul><li id="Crypto-nav">
+          <div data-name="Crypto" class="class-link-container"><a class="class-link">Crypto</a></div><ul class='methods'><li data-type="method" id="Crypto-Crypto-nav"><a href="Crypto.html" class="method-link">Crypto</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="Crypto-Decrypt-nav"><a href="Crypto.html#.Decrypt" class="method-link">Decrypt</a></li><li data-type="method" id="Crypto-Encrypt-nav"><a href="Crypto.html#.Encrypt" class="method-link">Encrypt</a></li></ul></li><li id="Utils-nav">
+          <div data-name="Utils" class="class-link-container"><a class="class-link">Utils</a></div><ul class='methods'><li data-type="method" id="Utils-Utils-nav"><a href="Utils.html" class="method-link">Utils</a></li><h4 class="methodGroupHeader">Methods</h4><li data-type="method" id="Utils-AddressToHash-nav"><a href="Utils.html#.AddressToHash" class="method-link">AddressToHash</a></li><li data-type="method" id="Utils-AddressToLibraryId-nav"><a href="Utils.html#.AddressToLibraryId" class="method-link">AddressToLibraryId</a></li><li data-type="method" id="Utils-AddressToObjectId-nav"><a href="Utils.html#.AddressToObjectId" class="method-link">AddressToObjectId</a></li><li data-type="method" id="Utils-AddressToSpaceId-nav"><a href="Utils.html#.AddressToSpaceId" class="method-link">AddressToSpaceId</a></li><li data-type="method" id="Utils-DecodeAuthorizationToken-nav"><a href="Utils.html#.DecodeAuthorizationToken" class="method-link">DecodeAuthorizationToken</a></li><li data-type="method" id="Utils-DecodeVersionHash-nav"><a href="Utils.html#.DecodeVersionHash" class="method-link">DecodeVersionHash</a></li><li data-type="method" id="Utils-EqualAddress-nav"><a href="Utils.html#.EqualAddress" class="method-link">EqualAddress</a></li><li data-type="method" id="Utils-EqualHash-nav"><a href="Utils.html#.EqualHash" class="method-link">EqualHash</a></li><li data-type="method" id="Utils-EtherToWei-nav"><a href="Utils.html#.EtherToWei" class="method-link">EtherToWei</a></li><li data-type="method" id="Utils-FormatAddress-nav"><a href="Utils.html#.FormatAddress" class="method-link">FormatAddress</a></li><li data-type="method" id="Utils-FormatSignature-nav"><a href="Utils.html#.FormatSignature" class="method-link">FormatSignature</a></li><li data-type="method" id="Utils-HashToAddress-nav"><a href="Utils.html#.HashToAddress" class="method-link">HashToAddress</a></li><li data-type="method" id="Utils-IsCloneable-nav"><a href="Utils.html#.IsCloneable" class="method-link">IsCloneable</a></li><li data-type="method" id="Utils-MakeClonable-nav"><a href="Utils.html#.MakeClonable" class="method-link">MakeClonable</a></li><li data-type="method" id="Utils-ResizeImage-nav"><a href="Utils.html#.ResizeImage" class="method-link">ResizeImage</a></li><li data-type="method" id="Utils-ToBigNumber-nav"><a href="Utils.html#.ToBigNumber" class="method-link">ToBigNumber</a></li><li data-type="method" id="Utils-ToBytes32-nav"><a href="Utils.html#.ToBytes32" class="method-link">ToBytes32</a></li><li data-type="method" id="Utils-WeiToEther-nav"><a href="Utils.html#.WeiToEther" class="method-link">WeiToEther</a></li></ul></li></ul>
+      </div>
+    </nav>
+
+    <div class="main">
+      <div class="header"></div>
+      <div class="main-content">
+        
+        <h1 class="page-title">
+          PermissionsClient.js
+        </h1>
+        
+
+        
+      
+
+<a class="button" href="PermissionsClient.html">Back</a>
+<div class="source-container">
+  <pre class="prettyprint source linenums"><code>const UrlJoin = require("url-join");
+const {ValidatePresence, ValidatePermission} = require("./Validation");
+
+class PermissionsClient {
+  /**
+   * The PermissionsClient is intended to make it easy to setup and maintain permission policies in the fabric.
+   *
+   * &lt;br/>&lt;b>Item Policies&lt;/b>:
+   *  - An item policy is the full specification of the policy for an object. It consists of a set of available profiles and a list of permissions.
+   *  - The item policy must be initialized using `CreateItemPolicy` before the other modification methods in this client can be used.
+   *  - The item policy can be retrieved using the `ItemPolicy` method to check if the policy for a particular item has been initialized.
+   *
+   *
+   * &lt;br/>&lt;b>Dates&lt;/b>:
+   *
+   *  - `start` and `end` can be specified in several places in the policy. These can be provided in any format supported by JavaScript's `new Date(date)` constructor, such as Unix epoch timestamps or ISO timestamps.
+   *
+   *  - Permissions, profiles and custom profile permissions may have start and end times. The effective allowed access is the *most restrictive* combination of applicable start and end times.
+   *
+   *
+   * &lt;br/>&lt;b>Subjects&lt;/b>:
+   *
+   *  - A subject is a recipient of a permission - namely Fabric and oauth users and groups.
+   *
+   *  - When specifying a subject, both the name and ID must be provided. For Fabric users, the ID is either the user or group address, or the igrp/iusr hash format of the address.
+   *
+   *
+   * &lt;br/>&lt;b>Items&lt;/b>:
+   *
+   *  - An 'item' in this API is a content object to which permissions are granted. All profiles and permissions are on a per-item basis.
+   *
+   *
+   * &lt;br/>&lt;b>Profiles&lt;/b>:
+   *
+   *  - Profiles represent a set of permissions that can be applied to a subject (via a 'permission', see below)
+   *
+   *  - A profile may have `start` and `end` times
+   *
+   *  - A profile includes permission specifications for both the assets and the offerings of an item. Both must be specified when creating or modifying a profile.
+   *
+   *  - For both assets and offerings, there is a `default_permission` entry, which can be either `full-access` or `no-access`. This represents the access allowed to the assets and offerings when a permission for the profile is granted, excepting any custom permissions that override it.
+   *
+   *  - For both assets and offerings, a profile may have a `custom_permissions` section, which specifies permissions for specific assets or offerings. These permissions must have a `permission` entry which is either `full-access` or `no-access`, and may have `start` and `end` times.
+   *
+   *
+   *  Example Profile Specification:
+
+       "pre-release": {
+          "start": "2020-12-10T08:00:00.000Z",
+          "end": "2020-12-31T08:00:00.000Z",
+          "assets": {
+            "custom_permissions": {
+              "2wLgQXV5VYvRPZlOEPN0.tif": {
+                "start": "2020-09-10T07:00:00.000Z",
+                "end": "2020-12-31T08:00:00.000Z",
+                "permission": "full-access"
+              },
+              "781rsItfv8UxrkYgSNhb.tif": {
+                "start": "2020-09-10T07:00:00.000Z",
+                "end": "2020-12-31T08:00:00.000Z",
+                "permission": "full-access"
+              },
+              "QCVtsOAcUKbA8svZeFRI.tif": {
+                "permission": "full-access"
+              },
+              "QXWQVA7FfUwLlEPlBI1G.tif": {
+                "permission": "full-access",
+                "start": "2020-09-30T07:00:00.000Z"
+              }
+            },
+            "default_permission": "no-access"
+          },
+          "offerings": {
+            "default_permission": "no-access"
+          }
+        }
+
+   *
+   *
+   * &lt;br/>&lt;b>Permissions&lt;/b>:
+   *
+   *  - A permission represents a grant of an item profile's permissions to a subject.
+   *
+   *  - A permission must have a profile that is present in the item's policy
+   *
+   *  - A permission may have `start` and `end` times. As mentioned above, the effective start and end times of a permission are the *most restrictive* of all applicable start and end times.
+   *
+   *  - A permission must have a subject, which can be either a user, a group, or an NTP instance, either from the Fabric or from an OAuth provider
+   *
+   *  - A subject must have an ID and a name. In the case of certain OAuth providers, the name may be used as an ID in most cases, but the immutable ID for that subject must be used as the ID. For example, in Okta, a group may be specified by its name "Content Admins", but have the Okta ID "00g102tklfAorixGi4x7". The former should be used as the subjectName, and the latter as the subjectId
+   *
+   *
+   * Example Permission:
+
+       {
+          "start": "2021-01-01T08:00:00.000Z",
+          "end": "2021-03-31T07:00:00.000Z",
+          "profileName": "servicing",
+          "subjectSource": "oauth",
+          "subjectType": "group",
+          "subjectName": "Partner1",
+          "subjectId: "00g102uednmwrTihN4x7"
+        }
+
+   *
+   * @param client - An instance of ElvClient
+   */
+  constructor(client) {
+    this.client = client;
+  }
+
+  FormatDate(date) {
+    if(!date) { return; }
+
+    if(isNaN(new Date(date))) {
+      throw Error(`Invalid start time: ${date}`);
+    }
+
+    return new Date(date).toISOString();
+  }
+
+  FormatProfile(profile) {
+    ValidatePermission(profile.default_permission);
+
+    let profileSpec = {};
+
+    if(profile.start) {
+      profileSpec.start = this.FormatDate(profile.start);
+    }
+
+    if(profile.end) {
+      profileSpec.end = this.FormatDate(profile.end);
+    }
+
+    ["assets", "offerings"].forEach(type => {
+      const typeInfo = profile[type] || {};
+
+      profileSpec[type] = {
+        default_permission: typeInfo.default_permission || typeInfo.default_permissions || "no-access"
+      };
+
+      if(typeInfo.custom_permissions) {
+        profileSpec[type].custom_permissions = {};
+
+        Object.keys(typeInfo.custom_permissions).forEach(id => {
+          const permission = typeInfo.custom_permissions[id];
+
+          let spec = {
+            permission: ValidatePermission(permission.permission)
+          };
+
+          if(permission.start) {
+            spec.start = this.FormatDate(permission.start);
+          }
+
+          if(permission.end) {
+            spec.end = this.FormatDate(permission.end);
+          }
+
+          profileSpec[type].custom_permissions[id] = {
+            ...permission,
+            ...spec
+          };
+        });
+      }
+    });
+
+    return profileSpec;
+  }
+
+  /* Add / remove overall item permission */
+
+  /**
+   * Retrieve a list of all items in the specified policy
+   *
+   * @methodGroup Policies
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
+   * @return {Promise&lt;Object>} - A mapping of item objectId to the display name of the item
+   */
+  async PolicyItems({policyId, policyWriteToken}) {
+    return (await this.client.ContentObjectMetadata({
+      libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: "auth_policy_spec",
+      select: ["*/display_title"]
+    })) || {};
+  }
+
+  /**
+   * Retrieve the full item policy for the given item.
+   *
+   * @methodGroup Policies
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
+   * @param {string} itemId - Object ID of the item
+   * @return {Promise&lt;Object | undefined>} - The policy for the specified item. If none exists, returns undefined
+   */
+  async ItemPolicy({policyId, policyWriteToken, itemId}) {
+    const profiles = await this.ItemProfiles({policyId, policyWriteToken, itemId});
+    const permissions = await this.ItemPermissions({policyId, policyWriteToken, itemId});
+
+    if(!profiles || !permissions) {
+      return;
+    }
+
+    return {
+      profiles,
+      permissions
+    };
+  }
+
+  /**
+   * Initialize policy for the specified item
+   *
+   * @methodGroup Policies
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyWriteToken - Write token for the policy
+   * @param {string} itemId - Object ID of the item
+   * @param {object=} profiles={} - Profiles to create
+   */
+  async CreateItemPolicy({policyId, policyWriteToken, itemId, profiles={}}) {
+    ValidatePresence("policyId", policyId);
+    ValidatePresence("policyWriteToken", policyWriteToken);
+    ValidatePresence("itemId", itemId);
+    ValidatePresence("profiles", profiles);
+
+    const metadata = (await this.client.ContentObjectMetadata({
+      libraryId: await this.client.ContentObjectLibraryId({objectId: itemId}),
+      objectId: itemId,
+      select: [
+        "public/name",
+        "public/asset_metadata/title",
+        "public/asset_metadata/display_title"
+      ]
+    })) || {};
+
+    const assetMetadata = (metadata.public || {}).asset_metadata || {};
+    const displayTitle = assetMetadata.display_title || assetMetadata.title || (metadata.public || {}).name;
+
+    let itemSpec = {
+      display_title: displayTitle,
+      permissions: [],
+      profiles: {}
+    };
+
+    Object.keys(profiles).forEach(profileName => {
+      itemSpec.profiles[profileName] = this.FormatProfile(profiles[profileName]);
+    });
+
+    await this.client.ReplaceMetadata({
+      libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId),
+      metadata: itemSpec
+    });
+  }
+
+  /**
+   * Remove the specified item policy
+   *
+   * @methodGroup Policies
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyWriteToken - Write token for the policy
+   * @param {string} itemId - Object ID of the item
+   */
+  async RemoveItemPolicy({policyId, policyWriteToken, itemId}) {
+    ValidatePresence("policyId", policyId);
+    ValidatePresence("policyWriteToken", policyWriteToken);
+    ValidatePresence("itemId", itemId);
+
+    await this.client.DeleteMetadata({
+      libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId)
+    });
+  }
+
+
+  /* Get / set / remove profile permissions */
+
+  /**
+   * Retrieve profile information on the specified item policy
+   *
+   * @methodGroup Profiles
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
+   * @param {string} itemId - Object ID of the item
+   * @param {string=} profileName - The name of the profile. If not specified, all profiles will be returned
+   */
+  async ItemProfiles({policyId, policyWriteToken, itemId, profileName}) {
+    return await this.client.ContentObjectMetadata({
+      libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "profiles", profileName || "")
+    });
+  }
+
+  /**
+   * Create or modify a profile for the specified item policy
+   *
+   * @methodGroup Profiles
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyWriteToken - Write token for the policy
+   * @param {string} itemId - Object ID of the item
+   * @param {string} profileName - The name of the profile
+   * @param {object} profileSpec - Specification for the profile. If not provided, profile
+   * will default to no access for both assets and offerings
+   */
+  async SetProfile({
+    policyId,
+    policyWriteToken,
+    itemId,
+    profileName,
+    profileSpec
+  }) {
+    ValidatePresence("policyId", policyId);
+    ValidatePresence("policyWriteToken", policyWriteToken);
+    ValidatePresence("itemId", itemId);
+    ValidatePresence("profileName", profileName);
+    ValidatePresence("profileSpec", profileSpec);
+
+    await this.client.ReplaceMetadata({
+      libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "profiles", profileName),
+      metadata: this.FormatProfile(profileSpec)
+    });
+  }
+
+  /**
+   * Remove a profile from the specified item policy
+   *
+   * @methodGroup Profiles
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyWriteToken - Write token for the policy
+   * @param {string} itemId - Object ID of the item
+   * @param {string} profileName - The name of the profile
+   * @param {object} profileSpec - Specification for the profile. If not provided, profile
+   * will default to no access for both assets and offerings
+   */
+  async RemoveProfile({
+    policyId,
+    policyWriteToken,
+    itemId,
+    profileName
+  }) {
+    ValidatePresence("policyId", policyId);
+    ValidatePresence("policyWriteToken", policyWriteToken);
+    ValidatePresence("itemId", itemId);
+    ValidatePresence("profileName", profileName);
+
+    await this.client.DeleteMetadata({
+      libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "profiles", profileName)
+    });
+  }
+
+
+  /* Get / set / remove subject permissions */
+
+  /**
+   * Retrieve the permissions for the specified item policy
+   *
+   * @methodGroup Permissions
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
+   * @param {string} itemId - Object ID of the item
+   *
+   * @return {Promise&lt;Array>} - The list of permissions for the specified item
+   */
+  async ItemPermissions({policyId, policyWriteToken, itemId}) {
+    const libraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+    const permissions = (await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions")
+    })) || [];
+
+    return await Promise.all(
+      permissions.map(async permission => {
+        const subjectSource = permission.subject.type.startsWith("oauth") ? "oauth" : "fabric";
+        const subjectType = permission.subject.type === "otp" ? "ntp" :
+          permission.subject.type.includes("group") ? "group" : "user";
+        const subjectId = permission.subject.type === "otp" ? permission.subject.id :
+          subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
+
+        let subjectName = permission.subject.id;
+        if(subjectSource === "fabric") {
+          if(subjectType === "group") {
+            const contentSpaceLibraryId = (await this.client.ContentSpaceId()).replace("ispc", "ilib");
+            subjectName = (await this.client.ContentObjectMetadata({
+              libraryId: contentSpaceLibraryId,
+              objectId: this.client.utils.AddressToObjectId(subjectId),
+              metadataSubtree: UrlJoin("public", "name")
+            })) || subjectId;
+          } else if(subjectType === "user") {
+            subjectName = ((await this.client.ContentObjectMetadata({
+              libraryId,
+              objectId: policyId,
+              writeToken: policyWriteToken,
+              metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", subjectId)
+            })) || {}).name || subjectId;
+          } else if(subjectType === "ntp") {
+            subjectName = ((await this.client.ContentObjectMetadata({
+              libraryId,
+              objectId: policyId,
+              writeToken: policyWriteToken,
+              metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
+            })) || {}).name || subjectId;
+          }
+        }
+
+        let permissionSpec = {
+          profileName: permission.profile,
+          subjectSource,
+          subjectType,
+          subjectId,
+          subjectName
+        };
+
+        if(permission.start) {
+          permissionSpec.start = permission.start;
+        }
+
+        if(permission.end) {
+          permissionSpec.end = permission.end;
+        }
+
+        return permissionSpec;
+      })
+    );
+  }
+
+  /**
+   * Add or modify permission for the specified subject to the specified item policy
+   *
+   * @methodGroup Permissions
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyWriteToken - Write token for the policy
+   * @param {string} itemId - Object ID of the item
+   * @param {string} subjectSource="fabric" - ("fabric" | "oauth") - The source of the subject
+   * @param {string} subjectType="group - ("user" | "group" | "ntp") - The type of the subject
+   * @param {string} subjectName - The name of the subject
+   * @param {string} subjectId - The ID of the subject
+   * @param {string} profileName - The profile to apply for the permission
+   * @param {string | number} start - The start time for the permission
+   * @param {string | number} end - The end time for the permission
+   */
+  async SetPermission({
+    policyId,
+    policyWriteToken,
+    itemId,
+    subjectSource="fabric",
+    subjectType="group",
+    subjectName,
+    subjectId,
+    profileName,
+    start,
+    end
+  }) {
+    ValidatePresence("policyId", policyId);
+    ValidatePresence("policyWriteToken", policyWriteToken);
+    ValidatePresence("itemId", itemId);
+    ValidatePresence("subjectType", subjectType);
+    ValidatePresence("subjectSource", subjectSource);
+    ValidatePresence("subjectId", subjectId);
+    ValidatePresence("profileName", profileName);
+
+    start = this.FormatDate(start);
+    end = this.FormatDate(end);
+
+    const policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+
+    // Allow address to be passed in for fabric subjects, though spec requires iusr/igrp hash
+    if(subjectSource === "fabric") {
+      if(subjectType === "group") {
+        if(!subjectId.startsWith("igrp")) {
+          subjectId = `igrp${this.client.utils.AddressToHash(subjectId)}`;
+        }
+      } else if(subjectType === "user") {
+        if(!subjectId.startsWith("iusr")) {
+          subjectId = `iusr${this.client.utils.AddressToHash(subjectId)}`;
+        }
+      }
+    }
+
+    let existingPermissions = await this.client.ContentObjectMetadata({
+      libraryId: policyLibraryId,
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId)
+    });
+
+    if(!existingPermissions) {
+      throw Error("Unable to add permissions to uninitialized item");
+    }
+
+    if(!existingPermissions.profiles[profileName]) {
+      throw Error(`Profile '${profileName}' does not exist`);
+    }
+
+    let index = existingPermissions.permissions.findIndex(permission => {
+      if(subjectSource === "fabric") {
+        return permission.subject.id === subjectId;
+      } else {
+        return permission.subject.oauth_id === subjectId;
+      }
+    });
+
+    if(index &lt; 0) {
+      index = existingPermissions.permissions.length;
+    }
+
+    let permissionSpec = {
+      profile: profileName
+    };
+
+    if(start) {permissionSpec.start = start; }
+    if(end) { permissionSpec.end = end; }
+
+    let subjectInfo;
+    if(subjectSource === "fabric") {
+      if(subjectType === "group") {
+        subjectInfo = {
+          id: subjectId,
+          type: "group"
+        };
+      } else if(subjectType === "user") {
+        subjectInfo = {
+          id: subjectId,
+          type: "user"
+        };
+      } else if(subjectType === "ntp") {
+        subjectInfo = {
+          id: subjectId,
+          type: "otp"
+        };
+      } else {
+        throw Error(`Invalid subject type: ${subjectType}`);
+      }
+    } else if(subjectSource === "oauth") {
+      if(subjectType === "group") {
+        subjectInfo = {
+          id: subjectName,
+          oauth_id: subjectId,
+          type: "oauth_group"
+        };
+      } else if(subjectType === "user") {
+        subjectInfo = {
+          id: subjectName,
+          oauth_id: subjectId,
+          type: "oauth_user"
+        };
+      } else {
+        throw Error(`Invalid subject type: ${subjectType}`);
+      }
+    } else {
+      throw Error(`Invalid subject source: ${subjectSource}`);
+    }
+
+    permissionSpec.subject = subjectInfo;
+
+    existingPermissions.permissions[index] = permissionSpec;
+
+    await this.client.ReplaceMetadata({
+      libraryId: policyLibraryId,
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions"),
+      metadata: existingPermissions.permissions
+    });
+
+    // Fabric usernames and NTP info are stored in auth_policy_settings/fabric_users
+    if(subjectSource === "fabric" &amp;&amp; subjectType === "user") {
+      const userInfo = await this.client.ContentObjectMetadata({
+        libraryId: policyLibraryId,
+        objectId: policyId,
+        writeToken: policyWriteToken,
+        metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId))
+      });
+
+      if(!userInfo) {
+        await this.client.ReplaceMetadata({
+          libraryId: policyLibraryId,
+          objectId: policyId,
+          writeToken: policyWriteToken,
+          metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId)),
+          metadata: {
+            address: this.client.utils.HashToAddress(subjectId),
+            name: subjectName
+          }
+        });
+      }
+    } else if(subjectSource === "fabric" &amp;&amp; subjectType === "ntp") {
+      const userInfo = await this.client.ContentObjectMetadata({
+        libraryId: policyLibraryId,
+        objectId: policyId,
+        writeToken: policyWriteToken,
+        metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
+      });
+
+      if(!userInfo) {
+        await this.client.ReplaceMetadata({
+          libraryId: policyLibraryId,
+          objectId: policyId,
+          writeToken: policyWriteToken,
+          metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId),
+          metadata: {
+            address: subjectId,
+            ntpId: subjectId,
+            name: subjectName,
+            type: "ntpInstance"
+          }
+        });
+      }
+    }
+  }
+
+
+  /**
+   * Remove permission for the specified subject from the specified item policy
+   *
+   * @methodGroup Permissions
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyWriteToken - Write token for the policy
+   * @param {string} itemId - Object ID of the item
+   * @param {string} subjectId - The ID of the subject
+   */
+  async RemovePermission({policyId, policyWriteToken, itemId, subjectId}) {
+    ValidatePresence("policyId", policyId);
+    ValidatePresence("policyWriteToken", policyWriteToken);
+    ValidatePresence("itemId", itemId);
+    ValidatePresence("subjectId", subjectId);
+
+    const policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+
+    const permissions = await this.client.ContentObjectMetadata({
+      libraryId: policyLibraryId,
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions")
+    });
+
+    if(!permissions) { return; }
+
+    // Convert address to appropriate ID
+    if(subjectId.startsWith("0x")) {
+      const id = this.client.utils.AddressToObjectId(subjectId);
+      if((await this.client.AccessType({id})) === "group") {
+        subjectId = `igrp${this.client.utils.AddressToHash(subjectId)}`;
+      } else {
+        subjectId = `iusr${this.client.utils.AddressToHash(subjectId)}`;
+      }
+    }
+
+    const index = permissions.findIndex(permission => {
+      return permission.subject.id === subjectId || permission.subject.oauth_id === subjectId;
+    });
+
+    if(index &lt; 0) { return; }
+
+    await this.client.DeleteMetadata({
+      libraryId: policyLibraryId,
+      objectId: policyId,
+      writeToken: policyWriteToken,
+      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions", index.toString())
+    });
+  }
+}
+
+module.exports = PermissionsClient;
+</code></pre>
+</div>
+
+    
+
+
+
+        <footer class="footer">
+          Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.3</a>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Format and add line numbers to code
+    prettyPrint();
+  </script>
+
+  <script type="text/javascript" src="scripts/utils.js"></script>
+
+  </body>
+</html>

@@ -9,8 +9,8 @@ const path = require("path");
 
 const ScriptOffering = require("./parentClasses/ScriptOffering");
 
-const RE_VTT_TIMESTAMP_LINE = /(^.*)([0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3}) --> ([0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3})(.*$)/;
-const RE_VTT_TIMESTAMP_PARTS = /([0-9]{2}):([0-9]{2}):([0-9]{2}\.[0-9]{3})/;
+const RE_VTT_TIMESTAMP_LINE = /^(([0-9]{2}:)?[0-9]{2}:[0-9]{2}\.[0-9]{3}) --> (([0-9]{2}:)?[0-9]{2}:[0-9]{2}\.[0-9]{3})(.*$)/;
+const RE_VTT_TIMESTAMP_PARTS = /(([0-9]{2}):)?([0-9]{2}):([0-9]{2}\.[0-9]{3})/;
 
 function zeroPadLeft(value, width) {
   return (value + "").padStart(width, "0");
@@ -18,7 +18,7 @@ function zeroPadLeft(value, width) {
 
 function timeStampShift(timestamp, offset) {
   const match = RE_VTT_TIMESTAMP_PARTS.exec(timestamp);
-  const shiftedSeconds = parseInt(match[1],10) * 3600 + parseInt(match[2], 10) * 60 + parseFloat(match[3]) + offset;
+  const shiftedSeconds = parseInt(match[2] || 0,10) * 3600 + parseInt(match[3], 10) * 60 + parseFloat(match[4]) + offset;
   if(shiftedSeconds < 0) {
     throw new Error("timeShift resulted in negative timestamp");
   }
@@ -33,7 +33,7 @@ function timeStampShift(timestamp, offset) {
 function vttLineTimeShift(line, offset) {
   const match = RE_VTT_TIMESTAMP_LINE.exec(line);
   if(match !== null) {
-    return match[1] + timeStampShift(match[2], offset) + " --> " + timeStampShift(match[3], offset) + match[4];
+    return timeStampShift(match[1], offset) + " --> " + timeStampShift(match[3], offset) + match[5];
   } else {
     return line;
   }
@@ -65,6 +65,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
     const offeringKey = this.args.offeringKey;
     const filePath = this.args.file;
     const fileName = path.basename(filePath);
+    const isDefault = this.args.isDefault;
     const label = this.args.label;
     const language = this.args.language;
     const timeShift = this.args.timeShift;
@@ -165,10 +166,12 @@ class OfferingAddCaptionStream extends ScriptOffering {
       bit_rate: 100,
       codec_name: "none",
       codec_type: "captions",
+      default_for_media_type: isDefault,
       duration: {
         time_base: timeBase,
         ts: durationTs
       },
+      label: label,
       language: language,
       optimum_seg_dur: {
         "time_base": timeBase,
@@ -221,6 +224,8 @@ class OfferingAddCaptionStream extends ScriptOffering {
 
     // write back to object
     await this.metadataWrite(metadata);
+
+    console.log("Caption stream added using  stream key: %s", captionStreamKey);
   }
 
   header() {
@@ -240,6 +245,13 @@ class OfferingAddCaptionStream extends ScriptOffering {
         describe: "Label to display for caption stream",
         type: "string"
       })
+      .option("isDefault", {
+        alias: "is-default",
+        default: false,
+        demandOption: false,
+        describe: "Set as default caption stream",
+        type: "boolean"
+      })
       .option("language", {
         alias: "lang",
         demandOption: true,
@@ -257,10 +269,4 @@ class OfferingAddCaptionStream extends ScriptOffering {
 }
 
 const script = new OfferingAddCaptionStream;
-script.run().then(successValue => {
-  // nothing
-  return successValue;
-}, failureReason => {
-  console.error(failureReason);
-  process.exitCode = 1;
-});
+script.run();

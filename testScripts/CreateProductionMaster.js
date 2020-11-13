@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-const { ElvClient } = require("../src/ElvClient");
+const {ElvClient} = require("../src/ElvClient");
 const fs = require("fs");
 const Path = require("path");
 const mime = require("mime-types");
@@ -26,7 +26,8 @@ const argv = yargs
     description: "Slug for the mezzanine (generated based on title if not specified)"
   })
   .option("ip-title-id", {
-    description: "IP title ID for the mezzanine (equivalent to slug if not specified)"
+    description: "IP title ID for the mezzanine (equivalent to slug if not specified)",
+    type: "string"
   })
   .option("metadata", {
     description: "Metadata JSON string (or file path if prefixed with '@') to include in the object metadata",
@@ -70,9 +71,6 @@ const argv = yargs
   .argv;
 const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 
-const Slugify = str =>
-  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g,"");
-
 const Create = async ({
   elvGeo,
   library,
@@ -84,12 +82,18 @@ const Create = async ({
   slug,
   metadata,
   files,
-  encrypt=false,
+  encrypt = false,
   s3Reference,
   s3Copy,
   credentials,
   debug
 }) => {
+
+  // force ipTitleId to be a string, if present
+  if(ipTitleId) {
+    ipTitleId = ipTitleId.toString();
+  }
+
   try {
     const privateKey = process.env.PRIVATE_KEY;
     if(!privateKey) {
@@ -144,7 +148,7 @@ const Create = async ({
         return;
       }
     } else {
-      metadata = { public: { asset_metadata: {} } };
+      metadata = {public: {asset_metadata: {}}};
     }
 
     metadata.public.asset_metadata = {
@@ -152,9 +156,15 @@ const Create = async ({
       ...(metadata.public.asset_metadata || {})
     };
 
-    if(ipTitleId) { metadata.public.asset_metadata.ip_title_id = ipTitleId; }
-    if(displayTitle) { metadata.public.asset_metadata.displayTitle = displayTitle; }
-    if(slug) { metadata.public.asset_metadata.slug = slug; }
+    if(ipTitleId) {
+      metadata.public.asset_metadata.ip_title_id = ipTitleId;
+    }
+    if(displayTitle) {
+      metadata.public.asset_metadata.displayTitle = displayTitle;
+    }
+    if(slug) {
+      metadata.public.asset_metadata.slug = slug;
+    }
 
     name = name || title + " MASTER";
 
@@ -173,7 +183,7 @@ const Create = async ({
     }
 
     let fileInfo;
-    let fileHandles=[];
+    let fileHandles = [];
     if(access) {
       fileInfo = files.map(path => ({
         path: Path.basename(path),
@@ -259,21 +269,25 @@ const Create = async ({
         console.warn(warnings.join("\n"), "\n");
       }
 
-      // Check if resulting variant has an audio stream
-      const audioStream = (await client.ContentObjectMetadata({
+      // Check if resulting variant has an audio and video stream
+      const streams = (await client.ContentObjectMetadata({
         libraryId: library,
         objectId: id,
-        metadataSubtree: "/production_master/variants/default/streams/audio"
+        versionHash: hash,
+        metadataSubtree: "/production_master/variants/default/streams"
       }));
-      if(!audioStream) {
-        console.warn("\nWARNING: no suitable audio found\n");
+      if(!streams.hasOwnProperty("audio")) {
+        console.warn("\nWARNING: no audio stream found\n");
+      }
+      if(!streams.hasOwnProperty("video")) {
+        console.warn("\nWARNING: no video stream found\n");
       }
 
 
     } catch(error) {
       console.error("Unrecoverable error:");
       console.log(JSON.stringify(error, null, 2));
-      console.error(error.body ? JSON.stringify(error.body, null, 2): error);
+      console.error(error.body ? JSON.stringify(error.body, null, 2) : error);
     }
   } catch(error) {
     console.error(error);

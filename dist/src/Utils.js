@@ -516,6 +516,31 @@ var Utils = {
 
     return imageUrl.toString();
   },
+  SafeTraverse: function SafeTraverse(object) {
+    for (var _len = arguments.length, keys = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      keys[_key - 1] = arguments[_key];
+    }
+
+    if (!object) {
+      return object;
+    }
+
+    if (keys.length === 1 && Array.isArray(keys[0])) {
+      keys = keys[0];
+    }
+
+    var result = object;
+
+    for (var i = 0; i < keys.length; i++) {
+      result = result[keys[i]];
+
+      if (result === undefined) {
+        return undefined;
+      }
+    }
+
+    return result;
+  },
 
   /**
    * Determine if the given value is cloneable - Data passed in messages must be cloneable

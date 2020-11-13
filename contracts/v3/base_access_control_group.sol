@@ -1,7 +1,7 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 //import "./ownable.sol";
-import {BaseFactory} from "./base_content_space.sol";
+import {BaseTypeFactory} from "./base_content_space.sol";
 import {AccessIndexor} from "./access_indexor.sol";
 import {Editable} from "./editable.sol";
 import {Container} from "./container.sol";
@@ -29,9 +29,9 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
 
     bytes32 public version ="BsAccessCtrlGrp20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    address[] public membersList;
+    address payable[] public membersList;
     uint256 public membersNum;
-    address[] public managersList;
+    address payable[] public managersList;
     uint256 public managersNum;
 
     event MemberAdded(address candidate);
@@ -44,7 +44,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
 
     bool public oauthEnabled;
 
-    constructor(address _contentSpace) public {
+    constructor(address payable _contentSpace) public {
         contentSpace = _contentSpace;
         membersNum = 0;
         managersList.push(creator);
@@ -58,7 +58,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         emit OAuthStatusChanged(_enabled);
     }
 
-    function grantManagerAccess(address manager) public onlyOwner {
+    function grantManagerAccess(address payable manager) public onlyOwner {
         bool already = false;
         for (uint i = 0; i < managersNum; i++) {
             if (managersList[i] == manager) {
@@ -78,7 +78,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(manager, TYPE_EDIT, ACCESS_TENTATIVE);
     }
 
-    function revokeManagerAccess(address manager) public {
+    function revokeManagerAccess(address payable manager) public {
         require((msg.sender == owner) || (msg.sender == manager));
         for (uint i = 0; i < managersNum; i++) {
             if (managersList[i] == manager) {
@@ -95,7 +95,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(manager, TYPE_EDIT, ACCESS_NONE);
     }
 
-    function isAdmin(address _candidate) public view returns (bool) {
+    function isAdmin(address payable _candidate) public view returns (bool) {
         if (_candidate == owner) {
             return true;
         }
@@ -126,7 +126,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         return _candidate == tenant || hasEditorRight(_candidate);
     }
 
-    function hasAccessRight(address candidate, bool mgr) public view returns (bool) {
+    function hasAccessRight(address payable candidate, bool mgr) public view returns (bool) {
         if (mgr == true) {
              return hasEditorRight(candidate);
         } else {
@@ -134,7 +134,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         }
     }
 
-    function grantAccess(address candidate) public {
+    function grantAccess(address payable candidate) public {
         require(hasManagerAccess(msg.sender) == true);
         bool already = false;
         for (uint i = 0; i < membersNum; i++) {
@@ -156,7 +156,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         setRights(candidate, TYPE_ACCESS, ACCESS_TENTATIVE);
     }
 
-    function revokeAccess(address candidate) public {
+    function revokeAccess(address payable candidate) public {
         require((hasManagerAccess(msg.sender) == true) || (msg.sender == candidate));
         for (uint i = 0; i < membersNum; i++) {
             if (membersList[i] == candidate) {
@@ -178,7 +178,7 @@ contract BaseAccessControlGroup is MetaObject, CounterObject, AccessIndexor, Edi
         return ns.canNodePublish(msg.sender);
     }
 
-    function checkRights(uint8 index_type, address obj, uint8 access_type) public view returns(bool) {
+    function checkRights(uint8 index_type, address payable obj, uint8 access_type) public view returns(bool) {
         return checkDirectRights(index_type, obj, access_type);
     }
 }

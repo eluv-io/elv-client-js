@@ -378,6 +378,24 @@ const Utils = {
     return imageUrl.toString();
   },
 
+  SafeTraverse(object, ...keys) {
+    if(!object) { return object; }
+
+    if(keys.length === 1 && Array.isArray(keys[0])) {
+      keys = keys[0];
+    }
+
+    let result = object;
+
+    for(let i = 0; i < keys.length; i++){
+      result = result[keys[i]];
+
+      if(result === undefined) { return undefined; }
+    }
+
+    return result;
+  },
+
   /**
    * Determine if the given value is cloneable - Data passed in messages must be cloneable
    *

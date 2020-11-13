@@ -148,7 +148,8 @@ exports.CreateProductionMaster = async function({
             accessKey,
             secret,
             copy,
-            callback
+            callback,
+            encryption: encrypt ? "cgck" : "none"
           });
         }
       }

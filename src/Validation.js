@@ -62,6 +62,23 @@ exports.ValidateAddress = (address) => {
     throw Error(`Invalid address: ${address}`);
   }
 
-
   return Utils.FormatAddress(address);
+};
+
+exports.ValidatePermission = (permission) => {
+  if(permission && permission !== "full-access" && permission !== "no-access") {
+    throw Error(`Invalid profile permission: ${permission}`);
+  }
+
+  return permission;
+};
+
+exports.ValidateDate = (date) => {
+  if(!date) { return; }
+
+  if(isNaN(new Date(date))) {
+    throw Error(`Invalid date: ${date}`);
+  }
+
+  return new Date(date).getTime();
 };

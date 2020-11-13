@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 
 import "./ownable.sol";
 import "./lib_enctoken.sol";
@@ -39,7 +39,7 @@ contract CounterObject is Adminable {
         return wordGroups[_ident].slots[slot] & checkVal == 0 ? false : true;
     }
 
-    function setAndGetBitInternal(bytes32 _ident, uint8 _ord) returns (bool) {
+    function setAndGetBitInternal(bytes32 _ident, uint8 _ord) internal returns (bool) {
         uint256 slot = _ord / (4 * 8); // bytes per slot * bits per slot
         uint256 bit = _ord % (4 * 8);
         uint32 checkVal = uint32(1) << bit;
@@ -62,7 +62,7 @@ contract MetaObject is Adminable {
 
     event ObjectMetaChanged(bytes key);
 
-    function putMeta(bytes key, bytes value) public onlyAdmin {
+    function putMeta(bytes memory key, bytes memory value) public onlyAdmin {
         if (key.length <= 32) {
             bytes32 smallKey;
             uint256 keyLen = key.length;
@@ -80,7 +80,7 @@ contract MetaObject is Adminable {
         emit ObjectMetaChanged(key);
     }
 
-    function getMeta(bytes key) public constant returns (bytes) {
+    function getMeta(bytes memory key) public view returns (bytes memory) {
         if (key.length <= 32) {
             bytes32 smallKey;
             uint256 keyLen = key.length;

@@ -1,8 +1,19 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.5.4;
 
-contract Utils {
-    function getBalance(address addr) public constant returns (uint256) {
-        return addr.balance;
+import {Ownable} from "./ownable.sol";
+
+library Utils {
+
+    bytes4 constant checkV3Sig = bytes4(keccak256("versionAPI()"));
+    function checkV3Contract(address _checkAddr) internal view returns (bool) {
+        bool success;
+        bytes memory data;
+        (success, data) = _checkAddr.staticcall(abi.encodeWithSelector(checkV3Sig));
+        // on contracts where versionAPI doesn't exist (pre-V3) the staticcall returns success but returned data is empty
+        if (!success || data.length == 0) {
+            return false;
+        }
+        return true;
     }
 }
 

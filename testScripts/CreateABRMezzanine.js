@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-const { ElvClient } = require("../src/ElvClient");
+const {ElvClient} = require("../src/ElvClient");
 const readline = require("readline");
 const fs = require("fs");
 
@@ -28,7 +28,8 @@ const argv = yargs
     description: "Slug for the mezzanine (generated based on title if not specified)"
   })
   .option("ip-title-id", {
-    description: "IP title ID for the mezzanine (equivalent to slug if not specified)"
+    description: "IP title ID for the mezzanine (equivalent to slug if not specified)",
+    type: "string"
   })
   .option("title-type", {
     description: "Title type for the mezzanine",
@@ -71,6 +72,10 @@ const argv = yargs
     type: "boolean",
     description: "Enable client logging"
   })
+  .option("wait", {
+    type: "boolean",
+    description: "Wait for mezzanine to finish transcoding, then finalize before exiting script"
+  })
   .demandOption(
     ["library", "masterHash", "type"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
@@ -80,7 +85,7 @@ const argv = yargs
 const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 
 const Slugify = str =>
-  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g,"");
+  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "");
 
 const Report = response => {
   if(response.errors.length > 0) {
@@ -113,8 +118,14 @@ const Create = async ({
   elvGeo,
   credentials,
   debug,
-  wait=false
+  wait = false
 }) => {
+
+  // force ipTitleId to be a string, if present
+  if(ipTitleId) {
+    ipTitleId = ipTitleId.toString();
+  }
+
   try {
     const privateKey = process.env.PRIVATE_KEY;
     if(!privateKey) {
@@ -183,7 +194,7 @@ const Create = async ({
         throw Error("Existing mez does not have 'title' set and title argument was not provided");
       }
     } else {
-      metadata = { public: { asset_metadata: {} } };
+      metadata = {public: {asset_metadata: {}}};
     }
 
     if(abrProfile) {
@@ -275,7 +286,9 @@ const Create = async ({
     console.log("Write Token:", startResponse.lro_draft.write_token);
     console.log("Write Node:", startResponse.lro_draft.node, "\n");
 
-    if(!wait) { return; }
+    if(!wait) {
+      return;
+    }
 
     console.log("Progress:");
 
@@ -287,7 +300,9 @@ const Create = async ({
       const progress = Object.keys(status).map(id => {
         const info = status[id];
 
-        if(!info.end) { done = false; }
+        if(!info.end) {
+          done = false;
+        }
 
         if(done && info.run_state !== "finished") {
           throw Error(`LRO ${id} failed with status ${info.run_state}`);
@@ -300,7 +315,9 @@ const Create = async ({
       readline.cursorTo(process.stdout, 0, null);
       process.stdout.write(progress.join(" "));
 
-      if(done) { break; }
+      if(done) {
+        break;
+      }
 
       await new Promise(resolve => setTimeout(resolve, 10000));
     }
@@ -318,7 +335,7 @@ const Create = async ({
     console.log("\tVersion Hash:", finalizeResponse.hash, "\n");
   } catch(error) {
     console.error("Error creating mezzanine:");
-    console.error(error.body ? JSON.stringify(error, null, 2): error);
+    console.error(error.body ? JSON.stringify(error, null, 2) : error);
   }
 };
 
