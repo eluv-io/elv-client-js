@@ -404,6 +404,7 @@ class FrameClient {
       "SetOauthToken",
       "SetPolicyAuthorization",
       "SetSignerFromOauthToken",
+      "SetStaticToken",
       "SetVisibility",
       "SetPermission",
       "StartABRMezzanineJobs",
