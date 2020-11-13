@@ -64,31 +64,40 @@ class EthClient {
     return this.provider;
   }
 
-  async ContractName(contractAddress) {
+  async ContractName(contractAddress, full=false) {
     const versionContract = new Ethers.Contract(contractAddress, AccessibleContract.abi, this.Provider());
 
     if(!this.contractNames[contractAddress]) {
-      try {
-        // Call using general "ownable" abi
-        const versionBytes32 = await this.CallContractMethod({
-          contract: versionContract,
-          abi: AccessibleContract.abi,
-          methodName: "version",
-          cacheContract: false
-        });
+      this.contractNames[contractAddress] = new Promise(async resolve => {
+        try {
+          // Call using general "ownable" abi
+          const versionBytes32 = await this.CallContractMethod({
+            contract: versionContract,
+            abi: AccessibleContract.abi,
+            methodName: "version",
+            cacheContract: false
+          });
 
-        const version =
-          Ethers.utils.parseBytes32String(
-            // Ensure bytes32 string is null terminated
-            versionBytes32.slice(0, -2) + "00"
-          );
-        this.contractNames[contractAddress] = version.split(/\d+/)[0];
-      } catch(error) {
-        this.contractNames[contractAddress] = "Unknown";
-      }
+          const version =
+            Ethers.utils.parseBytes32String(
+              // Ensure bytes32 string is null terminated
+              versionBytes32.slice(0, -2) + "00"
+            );
+
+          resolve(version);
+        } catch(error) {
+          resolve("Unknown");
+        }
+      });
     }
 
-    return this.contractNames[contractAddress];
+    const version = await this.contractNames[contractAddress];
+
+    if(full) {
+      return version;
+    } else {
+      return version.split(/\d+/)[0];
+    }
   }
 
   Contract({contractAddress, abi, cacheContract, overrideCachedContract}) {

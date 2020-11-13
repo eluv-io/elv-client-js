@@ -363,7 +363,7 @@ function () {
     value: function MakeAccessRequest(_ref5) {
       var _this = this;
 
-      var libraryId, objectId, versionHash, _ref5$args, args, _ref5$publicKey, publicKey, _ref5$update, update, _ref5$skipCache, skipCache, _ref5$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, _ref6, isV3, accessType, abi, _ref7, accessArgs, checkAccessCharge, address, cache, accessRequest, _cache;
+      var libraryId, objectId, versionHash, _ref5$args, args, _ref5$publicKey, publicKey, _ref5$update, update, _ref5$skipCache, skipCache, _ref5$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, _ref6, isV3, accessType, abi, _ref7, accessArgs, checkAccessCharge, address, _cache, promise, cache, accessRequest;
 
       return _regeneratorRuntime.async(function MakeAccessRequest$(_context4) {
         while (1) {
@@ -448,78 +448,74 @@ function () {
               address = Utils.HashToAddress(id); // Check cache for existing transaction
 
               if (!(!noCache && !skipCache)) {
-                _context4.next = 36;
-                break;
-              }
-
-              cache = update ? this.modifyTransactions : this.accessTransactions;
-
-              if (!cache[address]) {
-                _context4.next = 36;
-                break;
-              }
-
-              if (!(cache[address].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
-                _context4.next = 35;
-                break;
-              }
-
-              return _context4.abrupt("return", cache[address]);
-
-            case 35:
-              // Token expired
-              delete cache[address];
-
-            case 36:
-              if (!cacheOnly) {
                 _context4.next = 38;
+                break;
+              }
+
+              _cache = update ? this.modifyTransactions : this.accessTransactions;
+
+              if (!_cache[address]) {
+                _context4.next = 38;
+                break;
+              }
+
+              if (!(_cache[address].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
+                _context4.next = 37;
+                break;
+              }
+
+              _context4.next = 34;
+              return _regeneratorRuntime.awrap(_cache.promise);
+
+            case 34:
+              return _context4.abrupt("return", _cache[address]);
+
+            case 37:
+              // Token expired
+              delete _cache[address];
+
+            case 38:
+              if (!cacheOnly) {
+                _context4.next = 40;
                 break;
               }
 
               return _context4.abrupt("return");
 
-            case 38:
-              accessRequest = {
-                transactionHash: ""
-              }; // Make the request
-
-              if (!update) {
-                _context4.next = 46;
-                break;
+            case 40:
+              if (update) {
+                this.Log("Making update request on ".concat(accessType, " ").concat(id));
+                promise = this.UpdateRequest({
+                  id: id,
+                  abi: abi
+                });
+              } else {
+                this.Log("Making access request on ".concat(accessType, " ").concat(id));
+                promise = this.AccessRequest({
+                  id: id,
+                  args: accessArgs,
+                  checkAccessCharge: checkAccessCharge
+                });
               }
 
-              this.Log("Making update request on ".concat(accessType, " ").concat(id));
-              _context4.next = 43;
-              return _regeneratorRuntime.awrap(this.UpdateRequest({
-                id: id,
-                abi: abi
-              }));
+              cache = update ? this.modifyTransactions : this.accessTransactions; // Cache the transaction hash
 
-            case 43:
-              accessRequest = _context4.sent;
-              _context4.next = 50;
-              break;
+              if (!noCache) {
+                cache[address] = {
+                  issuedAt: Date.now(),
+                  promise: promise
+                };
+              }
+
+              _context4.prev = 43;
+              _context4.next = 46;
+              return _regeneratorRuntime.awrap(promise);
 
             case 46:
-              this.Log("Making access request on ".concat(accessType, " ").concat(id));
-              _context4.next = 49;
-              return _regeneratorRuntime.awrap(this.AccessRequest({
-                id: id,
-                args: accessArgs,
-                checkAccessCharge: checkAccessCharge
-              }));
-
-            case 49:
               accessRequest = _context4.sent;
 
-            case 50:
-              // Cache the transaction hash
               if (!noCache) {
-                _cache = update ? this.modifyTransactions : this.accessTransactions;
-                _cache[address] = {
-                  issuedAt: Date.now(),
-                  transactionHash: accessRequest.transactionHash
-                }; // Save request ID if present
+                cache[address].transactionHash = accessRequest.transactionHash; // Save request ID if present
 
                 accessRequest.logs.some(function (log) {
                   if (log.values && (log.values.requestID || log.values.requestNonce)) {
@@ -527,17 +523,26 @@ function () {
                     return true;
                   }
                 });
-              } //this.RecordTags({accessType, libraryId, objectId, versionHash});
-
+              }
 
               return _context4.abrupt("return", accessRequest);
 
-            case 52:
+            case 51:
+              _context4.prev = 51;
+              _context4.t0 = _context4["catch"](43);
+
+              if (!noCache) {
+                delete cache[address];
+              }
+
+              throw _context4.t0;
+
+            case 55:
             case "end":
               return _context4.stop();
           }
         }
-      }, null, this);
+      }, null, this, [[43, 51]]);
     }
   }, {
     key: "AccessRequest",
@@ -991,32 +996,33 @@ function () {
   }, {
     key: "IsV3",
     value: function IsV3(_ref15) {
-      var id;
+      var id, contractName;
       return _regeneratorRuntime.async(function IsV3$(_context10) {
         while (1) {
           switch (_context10.prev = _context10.next) {
             case 0:
               id = _ref15.id;
+              _context10.next = 3;
+              return _regeneratorRuntime.awrap(this.client.ethClient.ContractName(Utils.HashToAddress(id), true));
 
-              if (this.accessVersions[id]) {
-                _context10.next = 5;
-                break;
+            case 3:
+              contractName = _context10.sent;
+
+              if (!this.accessVersions[contractName]) {
+                this.accessVersions[contractName] = this.ContractHasMethod({
+                  contractAddress: this.client.utils.HashToAddress(id),
+                  abi: this.CONTRACTS.v3[this.ACCESS_TYPES.ACCESSIBLE].abi,
+                  methodName: "accessRequestV3"
+                });
               }
 
-              _context10.next = 4;
-              return _regeneratorRuntime.awrap(this.ContractHasMethod({
-                contractAddress: this.client.utils.HashToAddress(id),
-                abi: this.CONTRACTS.v3[this.ACCESS_TYPES.ACCESSIBLE].abi,
-                methodName: "accessRequestV3"
-              }));
+              _context10.next = 7;
+              return _regeneratorRuntime.awrap(this.accessVersions[contractName]);
 
-            case 4:
-              this.accessVersions[id] = _context10.sent;
+            case 7:
+              return _context10.abrupt("return", _context10.sent);
 
-            case 5:
-              return _context10.abrupt("return", this.accessVersions[id]);
-
-            case 6:
+            case 8:
             case "end":
               return _context10.stop();
           }

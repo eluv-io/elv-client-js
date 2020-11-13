@@ -521,6 +521,10 @@ var Utils = {
       keys[_key - 1] = arguments[_key];
     }
 
+    if (!object) {
+      return object;
+    }
+
     if (keys.length === 1 && Array.isArray(keys[0])) {
       keys = keys[0];
     }

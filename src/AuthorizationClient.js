@@ -276,6 +276,8 @@ class AuthorizationClient {
       if(cache[address]) {
         // Expire after 12 hours
         if(cache[address].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
+          await cache.promise;
+
           return cache[address];
         } else {
           // Token expired
@@ -287,37 +289,51 @@ class AuthorizationClient {
     // If only checking the cache, don't continue to make access request
     if(cacheOnly) { return; }
 
-    let accessRequest = { transactionHash: "" };
     // Make the request
+    let promise;
     if(update) {
       this.Log(`Making update request on ${accessType} ${id}`);
-      accessRequest = await this.UpdateRequest({id, abi});
+      promise = this.UpdateRequest({id, abi});
     } else {
       this.Log(`Making access request on ${accessType} ${id}`);
-      accessRequest = await this.AccessRequest({id, args: accessArgs, checkAccessCharge});
+      promise = this.AccessRequest({id, args: accessArgs, checkAccessCharge});
     }
+
+    const cache = update ? this.modifyTransactions : this.accessTransactions;
 
     // Cache the transaction hash
     if(!noCache) {
-      const cache = update ? this.modifyTransactions : this.accessTransactions;
-
       cache[address] = {
         issuedAt: Date.now(),
-        transactionHash: accessRequest.transactionHash
+        promise
       };
+    }
 
-      // Save request ID if present
-      accessRequest.logs.some(log => {
-        if(log.values && (log.values.requestID || log.values.requestNonce)) {
-          this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
-          return true;
-        }
-      });
+    try {
+      const accessRequest = await promise;
+
+      if(!noCache) {
+        cache[address].transactionHash = accessRequest.transactionHash;
+
+        // Save request ID if present
+        accessRequest.logs.some(log => {
+          if(log.values && (log.values.requestID || log.values.requestNonce)) {
+            this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
+            return true;
+          }
+        });
+      }
+
+      return accessRequest;
+    } catch(error) {
+      if(!noCache) {
+        delete cache[address];
+      }
+
+      throw error;
     }
 
     //this.RecordTags({accessType, libraryId, objectId, versionHash});
-
-    return accessRequest;
   }
 
   async AccessRequest({id, args=[], checkAccessCharge=false}) {
@@ -566,15 +582,17 @@ class AuthorizationClient {
   }
 
   async IsV3({id}) {
-    if(!this.accessVersions[id]) {
-      this.accessVersions[id] = await this.ContractHasMethod({
+    const contractName = await this.client.ethClient.ContractName(Utils.HashToAddress(id), true);
+
+    if(!this.accessVersions[contractName]) {
+      this.accessVersions[contractName] = this.ContractHasMethod({
         contractAddress: this.client.utils.HashToAddress(id),
         abi: this.CONTRACTS.v3[this.ACCESS_TYPES.ACCESSIBLE].abi,
         methodName: "accessRequestV3"
       });
     }
 
-    return this.accessVersions[id];
+    return await this.accessVersions[contractName];
   }
 
   async AccessInfo({accessType, publicKey, args, isV3}) {
