@@ -106,7 +106,7 @@ const Crypto = {
     return JSON.parse(Buffer.from(cap).toString());
   },
 
-  async GeneratePrimaryConk() {
+  async GeneratePrimaryConk({spaceId, objectId}) {
     const elvCrypto = await Crypto.ElvCrypto();
 
     const {secretKey, publicKey} = elvCrypto.generatePrimaryKeys();
@@ -115,7 +115,9 @@ const Crypto = {
     return {
       symm_key: `kpsy${bs58.encode(Buffer.from(symmetricKey))}`,
       secret_key: `kpsk${bs58.encode(Buffer.from(secretKey))}`,
-      public_key: `kppk${bs58.encode(Buffer.from(publicKey))}`
+      public_key: `kppk${bs58.encode(Buffer.from(publicKey))}`,
+      sid: spaceId,
+      qid: objectId
     };
   },
 

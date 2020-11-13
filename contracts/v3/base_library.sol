@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity 0.5.4;
 
 import {Container} from "./container.sol";
 import {BaseAccessControlGroup} from "./base_access_control_group.sol";
@@ -29,14 +29,14 @@ contract BaseLibrary is MetaObject, Container {
 
     bytes32 public version ="BaseLibrary20200928110000PO"; //class name (max 16), date YYYYMMDD, time HHMMSS and Developer initials XX
 
-    address[] public contributorGroups;
-    address[] public reviewerGroups;
-    address[] public accessorGroups;
+    address payable[] public contributorGroups;
+    address payable[] public reviewerGroups;
+    address payable[] public accessorGroups;
     uint256 public contributorGroupsLength = 0;
     uint256 public reviewerGroupsLength = 0;
     uint256 public accessorGroupsLength = 0;
 
-    address[] public approvalRequests;
+    address payable[] public approvalRequests;
     uint256 public approvalRequestsLength = 0;
     mapping (address => uint256) private approvalRequestsMap; //index offset by 1 to avoid confusing 0 for removed
 
@@ -53,8 +53,8 @@ contract BaseLibrary is MetaObject, Container {
     event ApproveContent(address contentAddress, bool approved, string note);
     event UpdateKmsAddress(address addressKms);
 
-    constructor(address address_KMS, address content_space) public payable {
-        contentSpace = content_space;
+    constructor(address address_KMS, address payable _content_space) public payable {
+        contentSpace = _content_space;
         addressKMS = address_KMS;
         visibility = 0;
         indexCategory = 3; // AccessIndexor CATEGORY_LIBRARY
@@ -76,7 +76,7 @@ contract BaseLibrary is MetaObject, Container {
         return canEdit();
     }
 
-    function addToGroupList(address _addGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
+    function addToGroupList(address payable _addGroup, address payable[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
         for (uint256 i = 0; i < _groupListLength; i++) {
             if (_addGroup == _groupList[i]) {
                 return _groupListLength;
@@ -90,7 +90,7 @@ contract BaseLibrary is MetaObject, Container {
         return (_groupListLength + 1);
     }
 
-    function removeFromGroupList(address _removeGroup, address[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
+    function removeFromGroupList(address payable _removeGroup, address payable[] storage _groupList, uint256 _groupListLength) internal returns (uint256) {
         for (uint256 i = 0; i < _groupListLength; i++) {
             if (_removeGroup == _groupList[i]) {
                 delete _groupList[i];
@@ -104,7 +104,7 @@ contract BaseLibrary is MetaObject, Container {
         return _groupListLength;
     }
 
-    function addContributorGroup(address group) public onlyEditor {
+    function addContributorGroup(address payable group) public onlyEditor {
         uint256 prevLen = contributorGroupsLength;
         contributorGroupsLength = addToGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength > prevLen) {
@@ -117,7 +117,7 @@ contract BaseLibrary is MetaObject, Container {
         }
     }
 
-    function groupIsListed(address group, address[] groups) internal returns (bool) {
+    function groupIsListed(address payable group, address payable[] memory groups) internal pure returns (bool) {
        for (uint256 i = 0; i < groups.length; i++) {
            if (group == groups[i]) {
                return true;
@@ -126,7 +126,7 @@ contract BaseLibrary is MetaObject, Container {
        return false;
     }
 
-    function removeContributorGroup(address group) public onlyEditor returns (bool) {
+    function removeContributorGroup(address payable group) public onlyEditor returns (bool) {
         uint256 prevLen = contributorGroupsLength;
         contributorGroupsLength = removeFromGroupList(group, contributorGroups, prevLen);
         if (contributorGroupsLength < prevLen) {
@@ -141,7 +141,7 @@ contract BaseLibrary is MetaObject, Container {
         return false;
     }
 
-    function addReviewerGroup(address group) public onlyEditor {
+    function addReviewerGroup(address payable group) public onlyEditor {
         uint256 prevLen = reviewerGroupsLength;
         reviewerGroupsLength = addToGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength > prevLen) {
@@ -154,7 +154,7 @@ contract BaseLibrary is MetaObject, Container {
         }
     }
 
-    function removeReviewerGroup(address group) public onlyEditor returns (bool) {
+    function removeReviewerGroup(address payable group) public onlyEditor returns (bool) {
         uint256 prevLen = reviewerGroupsLength;
         reviewerGroupsLength = removeFromGroupList(group, reviewerGroups, prevLen);
         if (reviewerGroupsLength < prevLen) {
@@ -172,7 +172,7 @@ contract BaseLibrary is MetaObject, Container {
 
     }
 
-    function addAccessorGroup(address group) public onlyEditor {
+    function addAccessorGroup(address payable group) public onlyEditor {
         uint256 prevLen = accessorGroupsLength;
         accessorGroupsLength = addToGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength > prevLen) {
@@ -185,7 +185,7 @@ contract BaseLibrary is MetaObject, Container {
         }
     }
 
-    function removeAccessorGroup(address group) public onlyEditor returns (bool) {
+    function removeAccessorGroup(address payable group) public onlyEditor returns (bool) {
         uint256 prevLen = accessorGroupsLength;
         accessorGroupsLength = removeFromGroupList(group, accessorGroups, prevLen);
         if (accessorGroupsLength < prevLen) {
@@ -201,9 +201,9 @@ contract BaseLibrary is MetaObject, Container {
         return false;
     }
 
-    function hasGroupAccess(address _candidate, address[] memory _groupList) internal constant returns (bool) {
+    function hasGroupAccess(address _candidate, address payable[] memory _groupList) internal view returns (bool) {
         for (uint i = 0; i < _groupList.length; i++) {
-            if (_groupList[i] != 0x0) {
+            if (_groupList[i] != address(0x0)) {
                 BaseAccessControlGroup groupContract = BaseAccessControlGroup(_groupList[i]);
                 if (groupContract.hasAccess(_candidate)) {
                     return true;
@@ -213,7 +213,7 @@ contract BaseLibrary is MetaObject, Container {
         return false;
     }
 /*
-    function hasAccess(address _candidate) public constant returns (bool) {
+    function hasAccess(address _candidate) public view returns (bool) {
         if ((visibility >= 10) || (_candidate == owner)) {
             return true;
         }
@@ -223,11 +223,11 @@ contract BaseLibrary is MetaObject, Container {
     }
     */
 
-    function canContribute(address _candidate) public constant returns (bool) {
+    function canContribute(address payable _candidate) public view returns (bool) {
         return hasEditorRight(_candidate) || hasGroupAccess(_candidate, contributorGroups);
     }
 
-    function canReview(address _candidate) public constant returns (bool) {
+    function canReview(address _candidate) public view returns (bool) {
         if (_candidate == owner) {
             return true;
         }
@@ -239,7 +239,7 @@ contract BaseLibrary is MetaObject, Container {
     }
 
     function submitApprovalRequest() public returns (bool) {
-        address contentContract = msg.sender;
+        address payable contentContract = msg.sender;
         BaseContent c = BaseContent(contentContract);
 
         if (requiresReview() == false) { //No review required
@@ -267,15 +267,15 @@ contract BaseLibrary is MetaObject, Container {
         return true;
     }
 
-    function getPendingApprovalRequest(uint256 index) public constant returns (address) {
+    function getPendingApprovalRequest(uint256 index) public view returns (address) {
         // Read and process the first content in the approvalRequests list
         if ((approvalRequestsLength == 0) || (approvalRequestsLength <= index)) {
-            return 0;
+            return address(0x0);
         }
         return approvalRequests[index];
     }
 
-    function approveContent(address content_contract, bool approved, string note) public returns ( bool ) {
+    function approveContent(address payable content_contract, bool approved, string memory note) public returns ( bool ) {
         require(canReview(msg.sender) == true);
         // credit the account based on the percent_complete
         uint256 index = approvalRequestsMap[content_contract] - 1;
@@ -286,7 +286,7 @@ contract BaseLibrary is MetaObject, Container {
         approvalRequestsLength--;
         approvalRequestsMap[content_contract] = 0;
         if (approvalRequestsLength > index) {
-            address lastRequest = approvalRequests[approvalRequestsLength];
+            address payable lastRequest = approvalRequests[approvalRequestsLength];
             approvalRequests[index] = lastRequest;
             delete approvalRequests[approvalRequestsLength];
             approvalRequestsMap[lastRequest] = index + 1;
@@ -310,7 +310,7 @@ contract BaseLibrary is MetaObject, Container {
         }
     }
 
-    function createContent(address content_type) public  returns (address) {
+    function createContent(address payable content_type) public  returns (address) {
         require(msg.sender == tx.origin, "only direct calls allowed");
         address content = IFactorySpace(contentSpace).createContent(address(this), content_type);
         emit ContentObjectCreated(content, content_type, contentSpace);
@@ -318,13 +318,13 @@ contract BaseLibrary is MetaObject, Container {
     }
 
     // content can be deleted by content owner or the library owner - enforced inside the kill
-    function deleteContent(address _contentAddr) public onlyEditor {
+    function deleteContent(address payable _contentAddr) public onlyEditor {
         BaseContent content = BaseContent(_contentAddr);
         content.kill();
         emit ContentObjectDeleted(_contentAddr, contentSpace);
     }
 
-    function publish(address contentObj) public returns (bool) {
+    function publish(address payable contentObj) public returns (bool) {
         require(msg.sender == contentObj);
         BaseContent content = BaseContent(contentObj);
         // Update the content contract to reflect the approval process

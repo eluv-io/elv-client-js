@@ -1,0 +1,54 @@
+[
+  {
+    "signature": " FormatDate(\"2020-11-06T05:13:40.649Z\");",
+    "result": "\"2020-11-06T05:13:40.649Z\""
+  },
+  {
+    "signature": " FormatDate(\"2021-11-06T05:13:40.649Z\");",
+    "result": "\"2021-11-06T05:13:40.649Z\""
+  },
+  {
+    "signature": " FormatDate(1604639620649);",
+    "result": "\"2020-11-06T05:13:40.649Z\""
+  },
+  {
+    "signature": " FormatDate(1636175620649);",
+    "result": "\"2021-11-06T05:13:40.649Z\""
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate({});"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  },
+  {
+    "signature": " FormatDate();"
+  }
+]

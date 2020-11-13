@@ -26,6 +26,10 @@ const argv = yargs
     type: "boolean",
     description: "When finalizing, wait until publishing has finished before exiting script"
   })
+  .option("force", {
+    type: "boolean",
+    description: "When finalizing, proceed even if warning raised"
+  })
   .demandOption(
     ["objectId"],
     "\nUsage: PRIVATE_KEY=<private-key> node MezzanineStatus.js --objectId <mezzanine-object-id> (--finalize) (--wait) (--offeringKey \"default\")\n"
@@ -66,7 +70,7 @@ function etaString(seconds) {
   return result;
 }
 
-const Status = async (objectId, offeringKey="default", finalize, wait) => {
+const Status = async (objectId, offeringKey="default", finalize, wait, force) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
@@ -117,7 +121,7 @@ const Status = async (objectId, offeringKey="default", finalize, wait) => {
     }
     console.log(JSON.stringify(status,null,2));
 
-    if(warningsAdded) {
+    if(warningsAdded && !(finalize && force)) {
       console.error("\nWarnings raised for LRO status, exiting script!\n");
       process.exitCode = 1;
       return;
@@ -159,7 +163,7 @@ const Status = async (objectId, offeringKey="default", finalize, wait) => {
   }
 };
 
-let {objectId, offeringKey, finalize, wait} = argv;
+let {objectId, offeringKey, finalize, wait, force} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -168,7 +172,7 @@ if(!privateKey) {
   return;
 }
 
-Status(objectId, offeringKey, finalize, wait).then(successValue => {
+Status(objectId, offeringKey, finalize, wait, force).then(successValue => {
   // nothing
   return successValue;
 }, failureReason => {

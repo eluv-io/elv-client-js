@@ -52,23 +52,31 @@ exports.Visibility = async function({id}) {
     const address = this.utils.HashToAddress(id);
 
     if(!this.visibilityInfo[address]) {
-      const hasVisibility = await this.authClient.ContractHasMethod({
-        contractAddress: address,
-        methodName: "visibility"
-      });
+      this.visibilityInfo[address] = new Promise(async resolve => {
+        const hasVisibility = await this.authClient.ContractHasMethod({
+          contractAddress: address,
+          methodName: "visibility"
+        });
 
-      if(!hasVisibility) {
-        // TODO: Fabric should be changed so this is equivalent to 1
-        return 0;
-      }
+        if(!hasVisibility) {
+          resolve(0);
+          return;
+        }
 
-      this.visibilityInfo[address] = await this.CallContractMethod({
-        contractAddress: this.utils.HashToAddress(id),
-        methodName: "visibility"
+        resolve(await this.CallContractMethod({
+          contractAddress: this.utils.HashToAddress(id),
+          methodName: "visibility"
+        }));
       });
     }
 
-    return this.visibilityInfo[address];
+    try {
+      return await this.visibilityInfo[address];
+    } catch(error) {
+      delete this.visibilityInfo[address];
+
+      throw error;
+    }
   // eslint-disable-next-line no-unreachable
   } catch(error) {
     if(error.code === "CALL_EXCEPTION") {
@@ -616,15 +624,25 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
       if(!this.objectLibraryIds[objectId]) {
         this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
 
-        this.objectLibraryIds[objectId] = this.utils.AddressToLibraryId(
-          await this.CallContractMethod({
-            contractAddress: this.utils.HashToAddress(objectId),
-            methodName: "libraryAddress"
-          })
+        this.objectLibraryIds[objectId] = new Promise(async resolve =>
+          resolve(
+            this.utils.AddressToLibraryId(
+              await this.CallContractMethod({
+                contractAddress: this.utils.HashToAddress(objectId),
+                methodName: "libraryAddress"
+              })
+            )
+          )
         );
       }
 
-      return this.objectLibraryIds[objectId];
+      try {
+        return await this.objectLibraryIds[objectId];
+      } catch(error) {
+        delete this.objectLibraryIds[objectId];
+
+        throw error;
+      }
     default:
       return this.contentSpaceLibraryId;
   }
@@ -832,6 +850,94 @@ exports.ContentObjectMetadata = async function({
   });
 };
 
+
+/** Retrive public/asset_metadata from the specified object, performing automatic localization override based on the specified localization info.
+ *
+ * File and rep links will have urls generated automatically within them (See the `produceLinkUrls` parameter in `ContentObjectMetadata`)
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
+ * @param {Object=} metadata - If you have already retrieved metadata for the object and just want to perform localization, the metadata <i>(Starting from public/asset_metadata)</i> can be
+ * provided to avoid re-fetching the metadata.
+ * @param {Array} localization - A list of locations of localized metadata, ordered from highest to lowest priority
+
+     localization: [
+       ["info_territories", "France", "FR"],
+       ["info_locals", "FR"]
+     ]
+
+ * @returns {Promise<Object>} - public/asset_metadata of the specified object, overwritten with specified localization
+ */
+exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization}) {
+  ValidateParameters({libraryId, objectId, versionHash});
+
+  if(!objectId) {
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  }
+
+  if(!metadata) {
+    metadata = (await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      metadataSubtree: "public/asset_metadata",
+      resolveLinks: true,
+      linkDepthLimit: 2,
+      resolveIgnoreErrors: true,
+      produceLinkUrls: true
+    })) || {};
+  } else {
+    metadata = await this.ProduceMetadataLinks({
+      libraryId,
+      objectId,
+      versionHash,
+      path: UrlJoin("public", "asset_metadata"),
+      metadata
+    });
+  }
+
+  if(!metadata.info) {
+    metadata.info = {};
+  }
+
+  if(localization) {
+    localization.reverse().forEach(keys => {
+      const overrides = this.utils.SafeTraverse(metadata, ...keys);
+
+      if(!overrides) { return; }
+
+      Object.keys(overrides).forEach(overrideKey => {
+        if(overrideKey === "info") {
+          Object.keys(overrides.info).forEach(infoOverrideKey => {
+            const value = overrides.info[infoOverrideKey];
+            if(
+              (typeof value === "object" && Object.keys(value).length === 0) ||
+              (Array.isArray(value) && value.length === 0)
+            ) { return; }
+
+            metadata.info[infoOverrideKey] = value;
+          });
+        } else {
+          const value = overrides[overrideKey];
+          if(
+            (typeof value === "object" && Object.keys(value).length === 0) ||
+            (Array.isArray(value) && value.length === 0)
+          ) { return; }
+
+          metadata[overrideKey] = value;
+        }
+      });
+
+      //delete metadata[keys[0]];
+    });
+  }
+
+  return metadata;
+};
+
 /**
  * List the versions of a content object
  *
@@ -873,21 +979,26 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
 
   ValidateObject(objectId);
 
-  let latestHash = await this.CallContractMethod({
-    contractAddress: this.utils.HashToAddress(objectId),
-    methodName: "objectHash"
-  });
+  let latestHash;
+  try {
+    latestHash = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      methodName: "objectHash"
+    });
+  // eslint-disable-next-line no-empty
+  } catch(error) {}
 
   if(!latestHash) {
-    // If hash not present in contract for some reason, get latest version from fabric API
-    const versions = await this.ContentObjectVersions({
-      libraryId: await this.ContentObjectLibraryId({objectId}),
-      objectId
+    const versionCount = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      methodName: "countVersionHashes"
     });
 
-    if(versions && versions.versions && versions.versions[0]) {
-      latestHash = versions.versions[0].hash;
-    }
+    latestHash = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(objectId),
+      methodName: "versionHashes",
+      methodArgs: [versionCount - 1]
+    });
   }
 
   return latestHash;
@@ -1035,6 +1146,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
+ * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
  */
 exports.PlayoutOptions = async function({
   objectId,
@@ -1047,7 +1159,8 @@ exports.PlayoutOptions = async function({
   playoutType,
   drms=[],
   context,
-  hlsjsProfile=true
+  hlsjsProfile=true,
+  authorizationToken
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
@@ -1084,15 +1197,16 @@ exports.PlayoutOptions = async function({
     context
   });
 
-  // Add authorization token to playout URLs
   let queryParams = {
-    authorization: await this.authClient.AuthorizationToken({
-      libraryId: linkTargetLibraryId || libraryId,
-      objectId: linkTargetId || objectId,
-      channelAuth: true,
-      oauthToken: this.oauthToken,
-      audienceData
-    })
+    authorization:
+      authorizationToken ||
+      await this.authClient.AuthorizationToken({
+        libraryId: linkTargetLibraryId || libraryId,
+        objectId: linkTargetId || objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+        audienceData
+      })
   };
 
   if(linkPath) {
@@ -1136,7 +1250,11 @@ exports.PlayoutOptions = async function({
             versionHash: linkTargetHash || versionHash,
             rep: UrlJoin(handler, offering, playoutPath),
             channelAuth: true,
-            queryParams: (hlsjsProfile && protocol === "hls" && drm === "aes-128") ? {player_profile: "hls-js"} : {}
+            noAuth: !!authorizationToken,
+            queryParams:
+              (hlsjsProfile && protocol === "hls" && drm === "aes-128") ?
+                {authorization: authorizationToken, player_profile: "hls-js"} :
+                {authorization: authorizationToken}
           }),
           drms: drm ? {[drm]: {licenseServers, cert}} : undefined
         }
@@ -1181,6 +1299,7 @@ exports.PlayoutOptions = async function({
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
+ * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
  */
 exports.BitmovinPlayoutOptions = async function({
   objectId,
@@ -1191,7 +1310,8 @@ exports.BitmovinPlayoutOptions = async function({
   handler="playout",
   offering="default",
   playoutType,
-  context
+  context,
+  authorizationToken
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
@@ -1209,7 +1329,8 @@ exports.BitmovinPlayoutOptions = async function({
     offering,
     playoutType,
     hlsjsProfile: false,
-    context
+    context,
+    authorizationToken
   });
 
   delete playoutOptions.playoutMethods;
@@ -1456,14 +1577,16 @@ exports.FabricUrl = async function({
   // Clone queryParams to avoid modification of the original
   queryParams = {...queryParams};
 
-  queryParams.authorization = await this.authClient.AuthorizationToken({
-    libraryId,
-    objectId,
-    versionHash,
-    channelAuth,
-    noAuth,
-    noCache
-  });
+  if(!queryParams.authorization) {
+    queryParams.authorization = await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      versionHash,
+      channelAuth,
+      noAuth,
+      noCache
+    });
+  }
 
   if((rep || publicRep) && objectId && !versionHash) {
     versionHash = await this.LatestVersionHash({objectId});
@@ -1864,7 +1987,10 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
   if(existingUserCap) {
     this.encryptionConks[objectId] = await this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey);
   } else {
-    this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk();
+    this.encryptionConks[objectId] = await this.Crypto.GeneratePrimaryConk({
+      spaceId: this.contentSpaceId,
+      objectId
+    });
 
     await this.ReplaceMetadata({
       libraryId,

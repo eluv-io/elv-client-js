@@ -1,4 +1,4 @@
-pragma solidity 0.4.24;
+pragma solidity 0.5.4;
 import {Editable} from "./editable.sol";
 import {BaseContent} from "./base_content.sol";
 import {INodeSpace} from "./node_space.sol";
@@ -21,9 +21,9 @@ contract Container is Editable {
 
     address public addressKMS;
 
-    address[] public contentTypes;
+    address payable[] public contentTypes;
     uint256 public contentTypesLength = 0;
-    mapping ( address => address ) public contentTypeContracts;  // custom contracts map
+    mapping ( address => address payable ) public contentTypeContracts;  // custom contracts map
 
 
     event ContentTypeAdded(address contentType, address contentContract);
@@ -34,8 +34,8 @@ contract Container is Editable {
         addressKMS = address_KMS;
     }
 
-    function addContentType(address content_type, address content_contract) public onlyOwner {
-        if ((contentTypeContracts[content_type] == 0x0) && (whitelistedType(content_type) == false)) {
+    function addContentType(address payable content_type, address payable content_contract) public onlyOwner {
+        if ((contentTypeContracts[content_type] == address(0x0)) && (whitelistedType(content_type) == false)) {
             if (contentTypesLength < contentTypes.length) {
                 contentTypes[contentTypesLength] = content_type;
             } else {
@@ -90,7 +90,7 @@ contract Container is Editable {
                 return contentTypes[i];
             }
         }
-        return 0x0;
+        return address(0x0);
     }
 
     function requiresReview() public view returns (bool) {
@@ -98,11 +98,11 @@ contract Container is Editable {
     }
 
     // Current implementation ignores rights provided directly to individual
-    function canContribute(address _candidate) public constant returns (bool) {
+    function canContribute(address payable _candidate) public view returns (bool) {
         return ((_candidate == owner) || (msg.sender == owner)); //not sure about the ||
     }
 
-    function canPublish(address _candidate) public view returns (bool) {
+    function canPublish(address payable _candidate) public view returns (bool) {
         return ((_candidate == owner) || (msg.sender == owner)); //not sure about the ||
     }
 
@@ -110,7 +110,7 @@ contract Container is Editable {
         return false;
     }
 
-    function publish(address contentObj) public returns (bool) {
+    function publish(address payable contentObj) public returns (bool) {
         require(msg.sender == contentObj);
         BaseContent content = BaseContent(contentObj);
         content.updateStatus(0); //update status to published

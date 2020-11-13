@@ -13,6 +13,8 @@ const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 
 const {
+  ValidateAddress,
+  ValidateDate,
   ValidateObject,
   ValidatePresence
 } = require("./Validation");
@@ -112,7 +114,6 @@ class ElvClient {
     this.ethereumURIs = ethereumURIs;
 
     this.trustAuthorityId = trustAuthorityId;
-    this.staticToken = staticToken;
 
     this.noCache = noCache;
     this.noAuth = noAuth;
@@ -120,6 +121,10 @@ class ElvClient {
     this.debug = false;
 
     this.InitializeClients();
+
+    if(staticToken) {
+      this.SetStaticToken({token: staticToken});
+    }
   }
 
   /**
@@ -576,6 +581,24 @@ class ElvClient {
   }
 
   /**
+   * Set a static token for the client to use for all authorization
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string} token - The static token to use
+   */
+  SetStaticToken({token}) {
+    this.staticToken = token;
+
+    if(!this.signer) {
+      const wallet = this.GenerateWallet();
+      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+
+      this.SetSigner({signer});
+    }
+  }
+
+  /**
    * Authorize the client against the specified policy.
    *
    * NOTE: After authorizing, the client will only be able to access content allowed by the policy
@@ -585,22 +608,140 @@ class ElvClient {
    * @param {string} objectId - The ID of the policy object
    */
   async SetPolicyAuthorization({objectId}) {
-    this.staticToken = await this.GenerateStateChannelToken({objectId});
+    this.SetStaticToken({
+      token: await this.GenerateStateChannelToken({objectId})
+    });
   }
 
   /**
-   * Redeem the specified code to authorize the client
+   * Issue an n-time-password (NTP) instance. This instance contains a specification for the tickets (AKA codes) to be issued, including
+   * the target(s) to be authorized, how many tickets can be issued, and when and how many times tickets can be redeemed.
    *
-   * @methodGroup Authorization
+   * Note: For date types (startTime/endTime), you may specify the date in any format parsable by JavaScript's `new Date()` constructor,
+   * including Unix epoch timestamps and ISO strings
+   *
+   * @see <a href="#IssueNTPCode">IssueNTPCode</a>
+   *
+   * @methodGroup Tickets
    * @namedParams
-   * @param {string} issuer - Issuer to authorize against
+   * @param {string} tenantId - The ID of the tenant in which to create the NTP instance
+   * @param {string} objectId - ID of the object for the tickets to be authorized to
+   * @param {Array<string>=} groupAddresses - List of group addresses for the tickets to inherit permissions from
+   * @param {number=} maxTickets=0 - The maximum number of tickets that may be issued for this instance (if 0, no limit)
+   * @param {number=} maxRedemptions=100 - The maximum number of times each ticket may be redeemed
+   * @param {string|number=} startTime - The time when issued tickets can be redeemed
+   * @param {string|number=} endTime - The time when issued tickets can no longer be redeemed
+   * @param {number=} ticketLength=6 - The number of characters in each ticket code
+   *
+   * @return {Promise<string>} - The ID of the NTP instance. This ID can be used when issuing tickets (See IssueNTPCode)
+   */
+  async CreateNTPInstance({
+    tenantId,
+    objectId,
+    groupAddresses,
+    maxTickets=0,
+    maxRedemptions=100,
+    startTime,
+    endTime,
+    ticketLength=6
+  }) {
+    // targetIdStr string, defType int32, paramsJSON string, max, tsMillis int64, sig hexutil.Bytes
+    ValidatePresence("tenantId", tenantId);
+    ValidatePresence("objectId or groupAddresses", objectId || groupAddresses);
+
+    if(objectId) { ValidateObject(objectId); }
+    if(groupAddresses) { groupAddresses.forEach(address => ValidateAddress(address)); }
+
+    startTime = ValidateDate(startTime);
+    endTime = ValidateDate(endTime);
+
+    let paramsJSON = [`ntp:${maxRedemptions}`, `sen:${ticketLength}`];
+
+    if(objectId) {
+      paramsJSON.push(`qid:${objectId}`);
+    } else if(groupAddresses) {
+      const groupIds = groupAddresses.map(address => `igrp${this.utils.AddressToHash(address)}`);
+
+      paramsJSON.push(`gid:${groupIds.join(",")}`);
+    }
+
+    if(startTime) {
+      paramsJSON.push(`vat:${startTime}`);
+    }
+
+    if(endTime) {
+      paramsJSON.push(`exp:${endTime}`);
+    }
+
+    return await this.authClient.MakeKMSCall({
+      methodName: "elv_createOTPInstance",
+      params: [
+        tenantId,
+        4,
+        JSON.stringify(paramsJSON),
+        maxTickets,
+        Date.now()
+      ],
+      paramTypes: [
+        "string",
+        "int",
+        "string",
+        "int",
+        "int"
+      ]
+    });
+  }
+
+  /**
+   * Issue a ticket from the specified NTP ID
+   *
+   * @see <a href="#CreateNTPInstance">CreateNTPInstance</a>
+   *
+   * @methodGroup Tickets
+   * @namedParams
+   * @param {string} tenantId - The ID of the tenant in the NTP instance was created
+   * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
+   * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
+   * be provided along with the ticket code in order to redeem the ticket.
+   *
+   * @return {Promise<Object>} - The generated ticket code and additional information about the ticket.
+   */
+  async IssueNTPCode({tenantId, ntpId, email}) {
+    ValidatePresence("tenantId", tenantId);
+    ValidatePresence("ntpId", ntpId);
+
+    let options = [];
+    if(email) {
+      options.push(`eml:${email}`);
+    }
+
+    const params = [tenantId, ntpId, JSON.stringify(options), Date.now()];
+    const paramTypes = ["string", "string", "string", "uint"];
+
+    return await this.authClient.MakeKMSCall({
+      methodName: "elv_issueOTPCode",
+      params,
+      paramTypes
+    });
+  }
+
+  /**
+   * Redeem the specified ticket/code to authorize the client. Must provide either issuer or tenantId and ntpId
+   *
+   * @methodGroup Tickets
+   * @namedParams
+   * @param {string=} issuer - Issuer to authorize against
+   * @param {string=} tenantId - The ID of the tenant from which the ticket was issued
+   * @param {string} ntpId - The ID of the NTP instance from which the ticket was issued
    * @param {string} code - Access code
    * @param {string=} email - Email address associated with the code
    *
-   * @return {Promise<Object>} - Identifying address, list of accessible sites, and additional info about the authorized user
+   * @return {Promise<string>} - The object ID which the ticket is authorized to
    */
-  async RedeemCode({issuer, code, email}) {
+  async RedeemCode({issuer, tenantId, ntpId, code, email}) {
     const wallet = this.GenerateWallet();
+
+    issuer = issuer || "";
 
     if(!this.signer) {
       this.SetSigner({
@@ -610,10 +751,16 @@ class ElvClient {
 
     if(issuer.startsWith("iq__")) {
       ValidateObject(issuer);
-    } else if(!issuer.replace(/^\//, "").startsWith("otp/ntp/iten")) {
+    } else if(issuer && !issuer.replace(/^\//, "").startsWith("otp/ntp/iten")) {
       throw Error("Invalid issuer: " + issuer);
     } else {
       // Ticket API
+
+      ValidatePresence("issuer or tenantId and ntpId", issuer || (tenantId && ntpId));
+
+      if(!issuer) {
+        issuer = `/otp/ntp/${tenantId}/${ntpId}`;
+      }
 
       try {
         const token = await this.authClient.GenerateChannelContentToken({
@@ -622,7 +769,7 @@ class ElvClient {
           email
         });
 
-        this.staticToken = token;
+        this.SetStaticToken({token});
 
         return JSON.parse(Utils.FromB64(token)).qid;
       } catch(error) {
@@ -676,17 +823,6 @@ class ElvClient {
       sites,
       info: info || {}
     };
-  }
-
-  async GetOTP({tenantId, otpId}) {
-    const params = [tenantId, otpId, "", Date.now()];
-    const paramTypes = ["string", "string", "string", "uint"];
-
-    return await this.authClient.MakeKMSCall({
-      methodName: "elv_getOTP",
-      params,
-      paramTypes
-    });
   }
 
   /**

@@ -92,26 +92,27 @@ module.exports = class ScriptBase {
       })
       .option("configUrl", {
         alias: "config-url",
-        describe: "URL pointing to the Fabric configuration, enclosed in quotes. e.g. for Eluvio test network: --configUrl \"https://main.net955210.contentfabric.io/config\"",
+        describe: "URL pointing to the Fabric configuration, enclosed in quotes. e.g. for Eluvio demo network: --configUrl \"https://demov3.net955210.contentfabric.io/config\"",
         type: "string"
       })
       .option("elvGeo", {
         alias: "elv-geo",
-        choices: ["eu-west", "na-east", "na-west-north", "na-west-south"],
+        choices: ["as-east", "au-east", "eu-east", "eu-west", "na-east", "na-west-north", "na-west-south"],
         describe: "Geographic region for the fabric nodes.",
         type: "string",
       })
-      .version(false);
+      .strict().version(false);
   }
 
-  async run() {
+  run() {
     console.log("\n" + this.header());
-    try {
-      await this.body();
+    this.body().then(successValue => {
       console.log(this.footer()+ "\n");
-    } catch(err) {
-      console.error(err);
-    }
+      return successValue;
+    }, failureReason => {
+      console.error(failureReason);
+      process.exitCode = 1;
+    });
   }
 
   // validate that a number is an integer

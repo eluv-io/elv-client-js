@@ -1026,7 +1026,7 @@ exports.CreateContentObject = function _callee10(_ref14) {
           createResponse = _context12.sent;
           // Record the node used in creating this write token
           this.HttpClient.RecordWriteToken(createResponse.write_token);
-          createResponse.writetoken = createResponse.write_token;
+          createResponse.writeToken = createResponse.write_token;
           createResponse.objectId = createResponse.id;
           return _context12.abrupt("return", createResponse);
 
@@ -1225,7 +1225,7 @@ exports.EditContentObject = function _callee12(_ref17) {
  * @methodGroup Content Objects
  * @namedParams
  * @param {string} libraryId - ID of the library
- * @param {function} callback - Async function to perform after creating the content draft and before finalizing. Object ID and write token are passed as named parameters.
+ * @param {function=} callback - Async function to perform after creating the content draft and before finalizing. Object ID and write token are passed as named parameters.
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
@@ -1239,7 +1239,7 @@ exports.EditContentObject = function _callee12(_ref17) {
 
 
 exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
-  var libraryId, callback, _ref18$options, options, _ref18$commitMessage, commitMessage, _ref18$publish, publish, _ref18$awaitCommitCon, awaitCommitConfirmation, _ref19, id, writeToken;
+  var libraryId, callback, _ref18$options, options, _ref18$commitMessage, commitMessage, _ref18$publish, publish, _ref18$awaitCommitCon, awaitCommitConfirmation, args, id, writeToken;
 
   return _regeneratorRuntime.async(function _callee13$(_context15) {
     while (1) {
@@ -1249,14 +1249,18 @@ exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
           _context15.next = 3;
           return _regeneratorRuntime.awrap(this.CreateContentObject({
             libraryId: libraryId,
-            objectId: objectId,
             options: options
           }));
 
         case 3:
-          _ref19 = _context15.sent;
-          id = _ref19.id;
-          writeToken = _ref19.writeToken;
+          args = _context15.sent;
+          id = args.id, writeToken = args.writeToken;
+
+          if (!callback) {
+            _context15.next = 8;
+            break;
+          }
+
           _context15.next = 8;
           return _regeneratorRuntime.awrap(callback({
             objectId: id,
@@ -1275,6 +1279,9 @@ exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
           }));
 
         case 10:
+          return _context15.abrupt("return", _context15.sent);
+
+        case 11:
         case "end":
           return _context15.stop();
       }
@@ -1297,7 +1304,7 @@ exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
- * @param {function} callback - Async function to perform after creating the content draft and before finalizing. Write token is passed as a named parameter.
+ * @param {function=} callback - Async function to perform after creating the content draft and before finalizing. Write token is passed as a named parameter.
  * @param {object=} options -
  * meta: New metadata for the object - will be merged into existing metadata if specified
  * type: New type for the object - Object ID, version hash or name of type
@@ -1310,14 +1317,14 @@ exports.CreateAndFinalizeContentObject = function _callee13(_ref18) {
  */
 
 
-exports.EditAndFinalizeContentObject = function _callee14(_ref20) {
-  var libraryId, objectId, callback, _ref20$options, options, _ref20$commitMessage, commitMessage, _ref20$publish, publish, _ref20$awaitCommitCon, awaitCommitConfirmation, _ref21, writeToken;
+exports.EditAndFinalizeContentObject = function _callee14(_ref19) {
+  var libraryId, objectId, callback, _ref19$options, options, _ref19$commitMessage, commitMessage, _ref19$publish, publish, _ref19$awaitCommitCon, awaitCommitConfirmation, _ref20, writeToken;
 
   return _regeneratorRuntime.async(function _callee14$(_context16) {
     while (1) {
       switch (_context16.prev = _context16.next) {
         case 0:
-          libraryId = _ref20.libraryId, objectId = _ref20.objectId, callback = _ref20.callback, _ref20$options = _ref20.options, options = _ref20$options === void 0 ? {} : _ref20$options, _ref20$commitMessage = _ref20.commitMessage, commitMessage = _ref20$commitMessage === void 0 ? "" : _ref20$commitMessage, _ref20$publish = _ref20.publish, publish = _ref20$publish === void 0 ? true : _ref20$publish, _ref20$awaitCommitCon = _ref20.awaitCommitConfirmation, awaitCommitConfirmation = _ref20$awaitCommitCon === void 0 ? true : _ref20$awaitCommitCon;
+          libraryId = _ref19.libraryId, objectId = _ref19.objectId, callback = _ref19.callback, _ref19$options = _ref19.options, options = _ref19$options === void 0 ? {} : _ref19$options, _ref19$commitMessage = _ref19.commitMessage, commitMessage = _ref19$commitMessage === void 0 ? "" : _ref19$commitMessage, _ref19$publish = _ref19.publish, publish = _ref19$publish === void 0 ? true : _ref19$publish, _ref19$awaitCommitCon = _ref19.awaitCommitConfirmation, awaitCommitConfirmation = _ref19$awaitCommitCon === void 0 ? true : _ref19$awaitCommitCon;
           _context16.next = 3;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
@@ -1326,15 +1333,21 @@ exports.EditAndFinalizeContentObject = function _callee14(_ref20) {
           }));
 
         case 3:
-          _ref21 = _context16.sent;
-          writeToken = _ref21.writeToken;
-          _context16.next = 7;
+          _ref20 = _context16.sent;
+          writeToken = _ref20.writeToken;
+
+          if (!callback) {
+            _context16.next = 8;
+            break;
+          }
+
+          _context16.next = 8;
           return _regeneratorRuntime.awrap(callback({
             writeToken: writeToken
           }));
 
-        case 7:
-          _context16.next = 9;
+        case 8:
+          _context16.next = 10;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
@@ -1344,10 +1357,10 @@ exports.EditAndFinalizeContentObject = function _callee14(_ref20) {
             awaitCommitConfirmation: awaitCommitConfirmation
           }));
 
-        case 9:
+        case 10:
           return _context16.abrupt("return", _context16.sent);
 
-        case 10:
+        case 11:
         case "end":
           return _context16.stop();
       }
@@ -1482,14 +1495,14 @@ exports.AwaitPending = function _callee15(objectId) {
  */
 
 
-exports.FinalizeContentObject = function _callee16(_ref22) {
-  var libraryId, objectId, writeToken, _ref22$commitMessage, commitMessage, _ref22$publish, publish, _ref22$awaitCommitCon, awaitCommitConfirmation, path, finalizeResponse;
+exports.FinalizeContentObject = function _callee16(_ref21) {
+  var libraryId, objectId, writeToken, _ref21$commitMessage, commitMessage, _ref21$publish, publish, _ref21$awaitCommitCon, awaitCommitConfirmation, path, finalizeResponse;
 
   return _regeneratorRuntime.async(function _callee16$(_context19) {
     while (1) {
       switch (_context19.prev = _context19.next) {
         case 0:
-          libraryId = _ref22.libraryId, objectId = _ref22.objectId, writeToken = _ref22.writeToken, _ref22$commitMessage = _ref22.commitMessage, commitMessage = _ref22$commitMessage === void 0 ? "" : _ref22$commitMessage, _ref22$publish = _ref22.publish, publish = _ref22$publish === void 0 ? true : _ref22$publish, _ref22$awaitCommitCon = _ref22.awaitCommitConfirmation, awaitCommitConfirmation = _ref22$awaitCommitCon === void 0 ? true : _ref22$awaitCommitCon;
+          libraryId = _ref21.libraryId, objectId = _ref21.objectId, writeToken = _ref21.writeToken, _ref21$commitMessage = _ref21.commitMessage, commitMessage = _ref21$commitMessage === void 0 ? "" : _ref21$commitMessage, _ref21$publish = _ref21.publish, publish = _ref21$publish === void 0 ? true : _ref21$publish, _ref21$awaitCommitCon = _ref21.awaitCommitConfirmation, awaitCommitConfirmation = _ref21$awaitCommitCon === void 0 ? true : _ref21$awaitCommitCon;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -1608,16 +1621,16 @@ exports.FinalizeContentObject = function _callee16(_ref22) {
  */
 
 
-exports.PublishContentVersion = function _callee18(_ref23) {
+exports.PublishContentVersion = function _callee18(_ref22) {
   var _this3 = this;
 
-  var objectId, versionHash, _ref23$awaitCommitCon, awaitCommitConfirmation, commit, abi, fromBlock, objectHash, pendingHash;
+  var objectId, versionHash, _ref22$awaitCommitCon, awaitCommitConfirmation, commit, abi, fromBlock, objectHash, pendingHash;
 
   return _regeneratorRuntime.async(function _callee18$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
         case 0:
-          objectId = _ref23.objectId, versionHash = _ref23.versionHash, _ref23$awaitCommitCon = _ref23.awaitCommitConfirmation, awaitCommitConfirmation = _ref23$awaitCommitCon === void 0 ? true : _ref23$awaitCommitCon;
+          objectId = _ref22.objectId, versionHash = _ref22.versionHash, _ref22$awaitCommitCon = _ref22.awaitCommitConfirmation, awaitCommitConfirmation = _ref22$awaitCommitCon === void 0 ? true : _ref22$awaitCommitCon;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
           this.Log("Publishing: ".concat(objectId || versionHash));
 
@@ -1751,14 +1764,14 @@ exports.PublishContentVersion = function _callee18(_ref23) {
  */
 
 
-exports.DeleteContentVersion = function _callee19(_ref24) {
+exports.DeleteContentVersion = function _callee19(_ref23) {
   var versionHash, _this$utils$DecodeVer, objectId;
 
   return _regeneratorRuntime.async(function _callee19$(_context22) {
     while (1) {
       switch (_context22.prev = _context22.next) {
         case 0:
-          versionHash = _ref24.versionHash;
+          versionHash = _ref23.versionHash;
           ValidateVersion(versionHash);
           this.Log("Deleting content version: ".concat(versionHash));
           _this$utils$DecodeVer = this.utils.DecodeVersionHash(versionHash), objectId = _this$utils$DecodeVer.objectId;
@@ -1786,13 +1799,13 @@ exports.DeleteContentVersion = function _callee19(_ref24) {
  */
 
 
-exports.DeleteContentObject = function _callee20(_ref25) {
+exports.DeleteContentObject = function _callee20(_ref24) {
   var libraryId, objectId;
   return _regeneratorRuntime.async(function _callee20$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
-          libraryId = _ref25.libraryId, objectId = _ref25.objectId;
+          libraryId = _ref24.libraryId, objectId = _ref24.objectId;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -1827,14 +1840,14 @@ exports.DeleteContentObject = function _callee20(_ref25) {
  */
 
 
-exports.MergeMetadata = function _callee21(_ref26) {
-  var libraryId, objectId, writeToken, _ref26$metadataSubtre, metadataSubtree, _ref26$metadata, metadata, path;
+exports.MergeMetadata = function _callee21(_ref25) {
+  var libraryId, objectId, writeToken, _ref25$metadataSubtre, metadataSubtree, _ref25$metadata, metadata, path;
 
   return _regeneratorRuntime.async(function _callee21$(_context24) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
-          libraryId = _ref26.libraryId, objectId = _ref26.objectId, writeToken = _ref26.writeToken, _ref26$metadataSubtre = _ref26.metadataSubtree, metadataSubtree = _ref26$metadataSubtre === void 0 ? "/" : _ref26$metadataSubtre, _ref26$metadata = _ref26.metadata, metadata = _ref26$metadata === void 0 ? {} : _ref26$metadata;
+          libraryId = _ref25.libraryId, objectId = _ref25.objectId, writeToken = _ref25.writeToken, _ref25$metadataSubtre = _ref25.metadataSubtree, metadataSubtree = _ref25$metadataSubtre === void 0 ? "/" : _ref25$metadataSubtre, _ref25$metadata = _ref25.metadata, metadata = _ref25$metadata === void 0 ? {} : _ref25$metadata;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -1887,14 +1900,14 @@ exports.MergeMetadata = function _callee21(_ref26) {
  */
 
 
-exports.ReplaceMetadata = function _callee22(_ref27) {
-  var libraryId, objectId, writeToken, _ref27$metadataSubtre, metadataSubtree, _ref27$metadata, metadata, path;
+exports.ReplaceMetadata = function _callee22(_ref26) {
+  var libraryId, objectId, writeToken, _ref26$metadataSubtre, metadataSubtree, _ref26$metadata, metadata, path;
 
   return _regeneratorRuntime.async(function _callee22$(_context25) {
     while (1) {
       switch (_context25.prev = _context25.next) {
         case 0:
-          libraryId = _ref27.libraryId, objectId = _ref27.objectId, writeToken = _ref27.writeToken, _ref27$metadataSubtre = _ref27.metadataSubtree, metadataSubtree = _ref27$metadataSubtre === void 0 ? "/" : _ref27$metadataSubtre, _ref27$metadata = _ref27.metadata, metadata = _ref27$metadata === void 0 ? {} : _ref27$metadata;
+          libraryId = _ref26.libraryId, objectId = _ref26.objectId, writeToken = _ref26.writeToken, _ref26$metadataSubtre = _ref26.metadataSubtree, metadataSubtree = _ref26$metadataSubtre === void 0 ? "/" : _ref26$metadataSubtre, _ref26$metadata = _ref26.metadata, metadata = _ref26$metadata === void 0 ? {} : _ref26$metadata;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -1947,14 +1960,14 @@ exports.ReplaceMetadata = function _callee22(_ref27) {
  */
 
 
-exports.DeleteMetadata = function _callee23(_ref28) {
-  var libraryId, objectId, writeToken, _ref28$metadataSubtre, metadataSubtree, path;
+exports.DeleteMetadata = function _callee23(_ref27) {
+  var libraryId, objectId, writeToken, _ref27$metadataSubtre, metadataSubtree, path;
 
   return _regeneratorRuntime.async(function _callee23$(_context26) {
     while (1) {
       switch (_context26.prev = _context26.next) {
         case 0:
-          libraryId = _ref28.libraryId, objectId = _ref28.objectId, writeToken = _ref28.writeToken, _ref28$metadataSubtre = _ref28.metadataSubtree, metadataSubtree = _ref28$metadataSubtre === void 0 ? "/" : _ref28$metadataSubtre;
+          libraryId = _ref27.libraryId, objectId = _ref27.objectId, writeToken = _ref27.writeToken, _ref27$metadataSubtre = _ref27.metadataSubtree, metadataSubtree = _ref27$metadataSubtre === void 0 ? "/" : _ref27$metadataSubtre;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -2002,13 +2015,13 @@ exports.DeleteMetadata = function _callee23(_ref28) {
  */
 
 
-exports.SetAccessCharge = function _callee24(_ref29) {
+exports.SetAccessCharge = function _callee24(_ref28) {
   var objectId, accessCharge;
   return _regeneratorRuntime.async(function _callee24$(_context27) {
     while (1) {
       switch (_context27.prev = _context27.next) {
         case 0:
-          objectId = _ref29.objectId, accessCharge = _ref29.accessCharge;
+          objectId = _ref28.objectId, accessCharge = _ref28.accessCharge;
           ValidateObject(objectId);
           this.Log("Setting access charge: ".concat(objectId, " ").concat(accessCharge));
           _context27.next = 5;
@@ -2040,7 +2053,7 @@ exports.SetAccessCharge = function _callee24(_ref29) {
  */
 
 
-exports.UpdateContentObjectGraph = function _callee26(_ref30) {
+exports.UpdateContentObjectGraph = function _callee26(_ref29) {
   var _this4 = this;
 
   var libraryId, objectId, versionHash, callback, total, completed, _loop, _ret;
@@ -2049,7 +2062,7 @@ exports.UpdateContentObjectGraph = function _callee26(_ref30) {
     while (1) {
       switch (_context30.prev = _context30.next) {
         case 0:
-          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, callback = _ref30.callback;
+          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, callback = _ref29.callback;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2064,7 +2077,7 @@ exports.UpdateContentObjectGraph = function _callee26(_ref30) {
           completed = 0; // eslint-disable-next-line no-constant-condition
 
           _loop = function _loop() {
-            var graph, currentHash, links, details, name, currentLibraryId, currentObjectId, _ref31, write_token, _ref33, hash;
+            var graph, currentHash, links, details, name, currentLibraryId, currentObjectId, _ref30, write_token, _ref32, hash;
 
             return _regeneratorRuntime.async(function _loop$(_context29) {
               while (1) {
@@ -2128,16 +2141,16 @@ exports.UpdateContentObjectGraph = function _callee26(_ref30) {
                     }));
 
                   case 19:
-                    _ref31 = _context29.sent;
-                    write_token = _ref31.write_token;
+                    _ref30 = _context29.sent;
+                    write_token = _ref30.write_token;
                     _context29.next = 23;
-                    return _regeneratorRuntime.awrap(Promise.all(links.map(function _callee25(_ref32) {
+                    return _regeneratorRuntime.awrap(Promise.all(links.map(function _callee25(_ref31) {
                       var path, updated;
                       return _regeneratorRuntime.async(function _callee25$(_context28) {
                         while (1) {
                           switch (_context28.prev = _context28.next) {
                             case 0:
-                              path = _ref32.path, updated = _ref32.updated;
+                              path = _ref31.path, updated = _ref31.updated;
                               _context28.next = 3;
                               return _regeneratorRuntime.awrap(_this4.ReplaceMetadata({
                                 libraryId: currentLibraryId,
@@ -2165,8 +2178,8 @@ exports.UpdateContentObjectGraph = function _callee26(_ref30) {
                     }));
 
                   case 25:
-                    _ref33 = _context29.sent;
-                    hash = _ref33.hash;
+                    _ref32 = _context29.sent;
+                    hash = _ref32.hash;
 
                     // If root object was specified by hash and updated, update hash
                     if (currentHash === versionHash) {
@@ -2239,16 +2252,16 @@ exports.UpdateContentObjectGraph = function _callee26(_ref30) {
  */
 
 
-exports.CreateLinks = function _callee28(_ref34) {
+exports.CreateLinks = function _callee28(_ref33) {
   var _this5 = this;
 
-  var libraryId, objectId, writeToken, _ref34$links, links;
+  var libraryId, objectId, writeToken, _ref33$links, links;
 
   return _regeneratorRuntime.async(function _callee28$(_context32) {
     while (1) {
       switch (_context32.prev = _context32.next) {
         case 0:
-          libraryId = _ref34.libraryId, objectId = _ref34.objectId, writeToken = _ref34.writeToken, _ref34$links = _ref34.links, links = _ref34$links === void 0 ? [] : _ref34$links;
+          libraryId = _ref33.libraryId, objectId = _ref33.objectId, writeToken = _ref33.writeToken, _ref33$links = _ref33.links, links = _ref33$links === void 0 ? [] : _ref33$links;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId

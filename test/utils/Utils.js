@@ -91,6 +91,9 @@ const CreateClient = async (name, bux="2") => {
       client.ToggleLogging(true);
     }
 
+    // Create user wallet
+    await client.userProfileClient.CreateWallet();
+
     return client;
   } catch(error) {
     console.error("ERROR INITIALIZING TEST CLIENT: ");
