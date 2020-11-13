@@ -1098,6 +1098,7 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
+ * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
  */
 exports.PlayoutOptions = async function({
   objectId,
@@ -1110,7 +1111,8 @@ exports.PlayoutOptions = async function({
   playoutType,
   drms=[],
   context,
-  hlsjsProfile=true
+  hlsjsProfile=true,
+  authorizationToken
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
@@ -1147,15 +1149,16 @@ exports.PlayoutOptions = async function({
     context
   });
 
-  // Add authorization token to playout URLs
   let queryParams = {
-    authorization: await this.authClient.AuthorizationToken({
-      libraryId: linkTargetLibraryId || libraryId,
-      objectId: linkTargetId || objectId,
-      channelAuth: true,
-      oauthToken: this.oauthToken,
-      audienceData
-    })
+    authorization:
+      authorizationToken ||
+      await this.authClient.AuthorizationToken({
+        libraryId: linkTargetLibraryId || libraryId,
+        objectId: linkTargetId || objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+        audienceData
+      })
   };
 
   if(linkPath) {
@@ -1199,7 +1202,11 @@ exports.PlayoutOptions = async function({
             versionHash: linkTargetHash || versionHash,
             rep: UrlJoin(handler, offering, playoutPath),
             channelAuth: true,
-            queryParams: (hlsjsProfile && protocol === "hls" && drm === "aes-128") ? {player_profile: "hls-js"} : {}
+            noAuth: !!authorizationToken,
+            queryParams:
+              (hlsjsProfile && protocol === "hls" && drm === "aes-128") ?
+                {authorization: authorizationToken, player_profile: "hls-js"} :
+                {authorization: authorizationToken}
           }),
           drms: drm ? {[drm]: {licenseServers, cert}} : undefined
         }
@@ -1244,6 +1251,7 @@ exports.PlayoutOptions = async function({
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
+ * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
  */
 exports.BitmovinPlayoutOptions = async function({
   objectId,
@@ -1254,7 +1262,8 @@ exports.BitmovinPlayoutOptions = async function({
   handler="playout",
   offering="default",
   playoutType,
-  context
+  context,
+  authorizationToken
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
@@ -1272,7 +1281,8 @@ exports.BitmovinPlayoutOptions = async function({
     offering,
     playoutType,
     hlsjsProfile: false,
-    context
+    context,
+    authorizationToken
   });
 
   delete playoutOptions.playoutMethods;
@@ -1519,14 +1529,16 @@ exports.FabricUrl = async function({
   // Clone queryParams to avoid modification of the original
   queryParams = {...queryParams};
 
-  queryParams.authorization = await this.authClient.AuthorizationToken({
-    libraryId,
-    objectId,
-    versionHash,
-    channelAuth,
-    noAuth,
-    noCache
-  });
+  if(!queryParams.authorization) {
+    queryParams.authorization = await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      versionHash,
+      channelAuth,
+      noAuth,
+      noCache
+    });
+  }
 
   if((rep || publicRep) && objectId && !versionHash) {
     versionHash = await this.LatestVersionHash({objectId});
