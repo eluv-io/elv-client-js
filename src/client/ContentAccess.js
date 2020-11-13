@@ -52,23 +52,31 @@ exports.Visibility = async function({id}) {
     const address = this.utils.HashToAddress(id);
 
     if(!this.visibilityInfo[address]) {
-      const hasVisibility = await this.authClient.ContractHasMethod({
-        contractAddress: address,
-        methodName: "visibility"
-      });
+      this.visibilityInfo[address] = new Promise(async resolve => {
+        const hasVisibility = await this.authClient.ContractHasMethod({
+          contractAddress: address,
+          methodName: "visibility"
+        });
 
-      if(!hasVisibility) {
-        // TODO: Fabric should be changed so this is equivalent to 1
-        return 0;
-      }
+        if(!hasVisibility) {
+          resolve(0);
+          return;
+        }
 
-      this.visibilityInfo[address] = await this.CallContractMethod({
-        contractAddress: this.utils.HashToAddress(id),
-        methodName: "visibility"
+        resolve(await this.CallContractMethod({
+          contractAddress: this.utils.HashToAddress(id),
+          methodName: "visibility"
+        }));
       });
     }
 
-    return this.visibilityInfo[address];
+    try {
+      return await this.visibilityInfo[address];
+    } catch(error) {
+      delete this.visibilityInfo[address];
+
+      throw error;
+    }
   // eslint-disable-next-line no-unreachable
   } catch(error) {
     if(error.code === "CALL_EXCEPTION") {
@@ -616,15 +624,25 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
       if(!this.objectLibraryIds[objectId]) {
         this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
 
-        this.objectLibraryIds[objectId] = this.utils.AddressToLibraryId(
-          await this.CallContractMethod({
-            contractAddress: this.utils.HashToAddress(objectId),
-            methodName: "libraryAddress"
-          })
+        this.objectLibraryIds[objectId] = new Promise(async resolve =>
+          resolve(
+            this.utils.AddressToLibraryId(
+              await this.CallContractMethod({
+                contractAddress: this.utils.HashToAddress(objectId),
+                methodName: "libraryAddress"
+              })
+            )
+          )
         );
       }
 
-      return this.objectLibraryIds[objectId];
+      try {
+        return await this.objectLibraryIds[objectId];
+      } catch(error) {
+        delete this.objectLibraryIds[objectId];
+
+        throw error;
+      }
     default:
       return this.contentSpaceLibraryId;
   }
@@ -833,6 +851,26 @@ exports.ContentObjectMetadata = async function({
 };
 
 
+/** Retrive public/asset_metadata from the specified object, performing automatic localization override based on the specified localization info.
+ *
+ * File and rep links will have urls generated automatically within them (See the `produceLinkUrls` parameter in `ContentObjectMetadata`)
+ *
+ * @methodGroup Content Objects
+ * @namedParams
+ * @param {string=} libraryId - ID of the library
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version of the object -- if not specified, latest version is used
+ * @param {Object=} metadata - If you have already retrieved metadata for the object and just want to perform localization, the metadata <i>(Starting from public/asset_metadata)</i> can be
+ * provided to avoid re-fetching the metadata.
+ * @param {Array} localization - A list of locations of localized metadata, ordered from highest to lowest priority
+
+     localization: [
+       ["info_territories", "France", "FR"],
+       ["info_locals", "FR"]
+     ]
+
+ * @returns {Promise<Object>} - public/asset_metadata of the specified object, overwritten with specified localization
+ */
 exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
@@ -872,14 +910,24 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
       if(!overrides) { return; }
 
       Object.keys(overrides).forEach(overrideKey => {
-        if(["display_title", "images", "title"].includes(overrideKey)) {
-          metadata[overrideKey] = overrides[overrideKey];
-        } else if(overrideKey === "info") {
-          Object.keys(overrides).forEach(infoOverrideKey => {
-            metadata.info[infoOverrideKey] = overrides.info[infoOverrideKey];
+        if(overrideKey === "info") {
+          Object.keys(overrides.info).forEach(infoOverrideKey => {
+            const value = overrides.info[infoOverrideKey];
+            if(
+              (typeof value === "object" && Object.keys(value).length === 0) ||
+              (Array.isArray(value) && value.length === 0)
+            ) { return; }
+
+            metadata.info[infoOverrideKey] = value;
           });
         } else {
-          metadata.info[overrideKey] = overrides[overrideKey];
+          const value = overrides[overrideKey];
+          if(
+            (typeof value === "object" && Object.keys(value).length === 0) ||
+            (Array.isArray(value) && value.length === 0)
+          ) { return; }
+
+          metadata[overrideKey] = value;
         }
       });
 
