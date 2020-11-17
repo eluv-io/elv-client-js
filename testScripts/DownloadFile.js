@@ -20,17 +20,13 @@ const argv = yargs
     type: "string",
     description: "Path to the output directory"
   })
-  .option("format", {
-    type : "string",
-    description: "Format in which to return the data (blob | arraybuffer | buffer)"
-  })
   .option("config-url", {
     type: "string",
     description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
   })
   .demandOption(
     ["objectId","file","out"],
-    "\nUsage: PRIVATE_KEY=<private-key> node EditContent --objectId <object-id> --replaceMetadata <subtree> '<metadata-json>'  (--config-url \"<fabric-config-url>\") ..."
+    "\nUsage: PRIVATE_KEY=<private-key> node DownloadFile --objectId <object-id> --library <library-Id> --file <file> --out <dir>  (--config-url \"<fabric-config-url>\") ..."
   )
   .argv;
 
@@ -40,7 +36,6 @@ const FileDownload = async ({
   library,
   objectId,
   file,
-  format,
   out
 }) => {
   const client = await ElvClient.FromConfigurationUrl({
@@ -59,7 +54,7 @@ const FileDownload = async ({
         libraryId : library,
         objectId : objectId,
         filePath : file,
-        format : format
+        format : "buffer"
       });
 
       outFilePath = Path.join(out,Path.parse(file).base);
@@ -74,7 +69,7 @@ const FileDownload = async ({
   }
 };
 
-let {library, objectId, file, format, out} = argv;
+let {library, objectId, file, out} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -86,6 +81,5 @@ FileDownload({
   library,
   objectId,
   file,
-  format,
   out
 });
