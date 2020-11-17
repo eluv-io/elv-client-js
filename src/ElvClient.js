@@ -277,6 +277,7 @@ class ElvClient {
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
     this.visibilityInfo = {};
+    this.inaccessibleLibraries = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug});
