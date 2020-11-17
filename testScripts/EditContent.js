@@ -34,6 +34,10 @@ const argv = yargs
     type: "boolean",
     description: "If specified, files will be referenced from an S3 bucket instead of the local system"
   })
+  .option("encrypt", {
+    type: "boolean",
+    description: "Encrypt uploaded files"
+  })
   .option("type", {
     type: "string",
     description: "New type for this object (object ID, version hash or name of type)"
@@ -59,6 +63,7 @@ const EditContent = async ({
   access,
   s3Reference,
   s3Copy,
+  encrypt,
   type
 }) => {
   const client = await ElvClient.FromConfigurationUrl({
@@ -165,6 +170,7 @@ const EditContent = async ({
           accessKey,
           secret,
           copy: s3Copy && !s3Reference,
+          encryption: encrypt ? "cgck" : "none",
           callback: console.log
         });
       } else {
@@ -186,6 +192,7 @@ const EditContent = async ({
           objectId,
           writeToken: write_token,
           fileInfo,
+          encryption: encrypt ? "cgck" : "none",
           callback: progress => {
             console.log();
             Object.keys(progress).forEach(filename => {
@@ -210,7 +217,7 @@ const EditContent = async ({
   }
 };
 
-let {objectId, replaceMetadata, mergeMetadata, deleteMetadata, files, s3Reference, s3Copy, type} = argv;
+let {objectId, replaceMetadata, mergeMetadata, deleteMetadata, files, s3Reference, s3Copy, encrypt, type} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -242,5 +249,6 @@ EditContent({
   access,
   s3Reference,
   s3Copy,
+  encrypt,
   type
 });
