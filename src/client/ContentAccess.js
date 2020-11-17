@@ -735,12 +735,22 @@ exports.MetadataAuth = async function({
     }
   }
 
-  if(isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth) {
+  if(!this.inaccessibleLibraries[libraryId] && isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth) {
     // Content object public metadata can be accessed using library access request
-    return await this.authClient.AuthorizationToken({
-      libraryId: libraryId || await this.ContentObjectLibraryId({objectId, versionHash}),
-      noAuth
-    });
+    try {
+      return await this.authClient.AuthorizationToken({
+        libraryId: libraryId || await this.ContentObjectLibraryId({objectId, versionHash}),
+        noAuth
+      });
+    } catch(error) {
+      if(error.message && error.message.toLowerCase().startsWith("access denied")) {
+        this.inaccessibleLibraries[libraryId] = true;
+
+        return await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noAuth, channelAuth});
+      }
+
+      throw error;
+    }
   } else {
     return await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noAuth, channelAuth});
   }
