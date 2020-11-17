@@ -1113,7 +1113,7 @@ exports.EditContentObject = function _callee12(_ref17) {
           });
           this.Log("Opening content draft: ".concat(libraryId, " ").concat(objectId));
 
-          if (!("type" in options)) {
+          if (!("type" in options && options.type)) {
             _context14.next = 23;
             break;
           }

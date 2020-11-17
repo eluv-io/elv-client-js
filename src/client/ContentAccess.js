@@ -791,7 +791,6 @@ exports.MetadataAuth = async function({
  * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
- * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
  *
  * @returns {Promise<Object | string>} - Metadata of the content object
  */
@@ -823,7 +822,10 @@ exports.ContentObjectMetadata = async function({
 
   let metadata;
   try {
-    const authToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
+    const authToken =
+      queryParams.authorization ?
+        queryParams.authorization :
+        await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
 
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
@@ -1933,9 +1935,9 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
   }
 
   queryParams = {
+    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}),
     ...queryParams,
-    resolve: true,
-    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth})
+    resolve: true
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }

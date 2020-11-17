@@ -1393,30 +1393,31 @@ exports.MetadataAuth = function _callee22(_ref14) {
           return _context22.abrupt("return", _context22.sent);
 
         case 19:
-          if (!(isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth)) {
-            _context22.next = 36;
+          if (!(!this.inaccessibleLibraries[libraryId] && isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth)) {
+            _context22.next = 47;
             break;
           }
 
+          _context22.prev = 20;
           _context22.t0 = _regeneratorRuntime;
           _context22.t1 = this.authClient;
           _context22.t2 = libraryId;
 
           if (_context22.t2) {
-            _context22.next = 27;
+            _context22.next = 28;
             break;
           }
 
-          _context22.next = 26;
+          _context22.next = 27;
           return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: objectId,
             versionHash: versionHash
           }));
 
-        case 26:
+        case 27:
           _context22.t2 = _context22.sent;
 
-        case 27:
+        case 28:
           _context22.t3 = _context22.t2;
           _context22.t4 = noAuth;
           _context22.t5 = {
@@ -1424,14 +1425,23 @@ exports.MetadataAuth = function _callee22(_ref14) {
             noAuth: _context22.t4
           };
           _context22.t6 = _context22.t1.AuthorizationToken.call(_context22.t1, _context22.t5);
-          _context22.next = 33;
+          _context22.next = 34;
           return _context22.t0.awrap.call(_context22.t0, _context22.t6);
 
-        case 33:
+        case 34:
           return _context22.abrupt("return", _context22.sent);
 
-        case 36:
-          _context22.next = 38;
+        case 37:
+          _context22.prev = 37;
+          _context22.t7 = _context22["catch"](20);
+
+          if (!(_context22.t7.message && _context22.t7.message.toLowerCase().startsWith("access denied"))) {
+            _context22.next = 44;
+            break;
+          }
+
+          this.inaccessibleLibraries[libraryId] = true;
+          _context22.next = 43;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -1440,15 +1450,35 @@ exports.MetadataAuth = function _callee22(_ref14) {
             channelAuth: channelAuth
           }));
 
-        case 38:
+        case 43:
           return _context22.abrupt("return", _context22.sent);
 
-        case 39:
+        case 44:
+          throw _context22.t7;
+
+        case 45:
+          _context22.next = 50;
+          break;
+
+        case 47:
+          _context22.next = 49;
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            noAuth: noAuth,
+            channelAuth: channelAuth
+          }));
+
+        case 49:
+          return _context22.abrupt("return", _context22.sent);
+
+        case 50:
         case "end":
           return _context22.stop();
       }
     }
-  }, null, this);
+  }, null, this, [[20, 37]]);
 };
 /**
  * Get the metadata of a content object
@@ -1485,7 +1515,6 @@ exports.MetadataAuth = function _callee22(_ref14) {
  * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
- * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
  *
  * @returns {Promise<Object | string>} - Metadata of the content object
  */
@@ -1512,7 +1541,18 @@ exports.ContentObjectMetadata = function _callee23(_ref15) {
 
           path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
           _context23.prev = 5;
-          _context23.next = 8;
+
+          if (!queryParams.authorization) {
+            _context23.next = 10;
+            break;
+          }
+
+          _context23.t0 = queryParams.authorization;
+          _context23.next = 13;
+          break;
+
+        case 10:
+          _context23.next = 12;
           return _regeneratorRuntime.awrap(this.MetadataAuth({
             libraryId: libraryId,
             objectId: objectId,
@@ -1520,9 +1560,12 @@ exports.ContentObjectMetadata = function _callee23(_ref15) {
             path: metadataSubtree
           }));
 
-        case 8:
-          authToken = _context23.sent;
-          _context23.next = 11;
+        case 12:
+          _context23.t0 = _context23.sent;
+
+        case 13:
+          authToken = _context23.t0;
+          _context23.next = 16;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             headers: {
               "Authorization": "Bearer ".concat(authToken)
@@ -1539,35 +1582,35 @@ exports.ContentObjectMetadata = function _callee23(_ref15) {
             path: path
           })));
 
-        case 11:
+        case 16:
           metadata = _context23.sent;
-          _context23.next = 19;
+          _context23.next = 24;
           break;
 
-        case 14:
-          _context23.prev = 14;
-          _context23.t0 = _context23["catch"](5);
+        case 19:
+          _context23.prev = 19;
+          _context23.t1 = _context23["catch"](5);
 
-          if (!(_context23.t0.status !== 404)) {
-            _context23.next = 18;
+          if (!(_context23.t1.status !== 404)) {
+            _context23.next = 23;
             break;
           }
 
-          throw _context23.t0;
+          throw _context23.t1;
 
-        case 18:
+        case 23:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 19:
+        case 24:
           if (produceLinkUrls) {
-            _context23.next = 21;
+            _context23.next = 26;
             break;
           }
 
           return _context23.abrupt("return", metadata);
 
-        case 21:
-          _context23.next = 23;
+        case 26:
+          _context23.next = 28;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
@@ -1576,15 +1619,15 @@ exports.ContentObjectMetadata = function _callee23(_ref15) {
             metadata: metadata
           }));
 
-        case 23:
+        case 28:
           return _context23.abrupt("return", _context23.sent);
 
-        case 24:
+        case 29:
         case "end":
           return _context23.stop();
       }
     }
-  }, null, this, [[5, 14]]);
+  }, null, this, [[5, 19]]);
 };
 /** Retrive public/asset_metadata from the specified object, performing automatic localization override based on the specified localization info.
  *
@@ -3463,9 +3506,7 @@ exports.LinkUrl = function _callee40(_ref31) {
           }
 
           _context40.t0 = _objectSpread;
-          _context40.t1 = {};
-          _context40.t2 = queryParams;
-          _context40.next = 12;
+          _context40.next = 10;
           return _regeneratorRuntime.awrap(this.MetadataAuth({
             libraryId: libraryId,
             objectId: objectId,
@@ -3474,13 +3515,16 @@ exports.LinkUrl = function _callee40(_ref31) {
             channelAuth: channelAuth
           }));
 
-        case 12:
-          _context40.t3 = _context40.sent;
-          _context40.t4 = {
-            resolve: true,
-            authorization: _context40.t3
+        case 10:
+          _context40.t1 = _context40.sent;
+          _context40.t2 = {
+            authorization: _context40.t1
           };
-          queryParams = (0, _context40.t0)(_context40.t1, _context40.t2, _context40.t4);
+          _context40.t3 = queryParams;
+          _context40.t4 = {
+            resolve: true
+          };
+          queryParams = (0, _context40.t0)(_context40.t2, _context40.t3, _context40.t4);
 
           if (mimeType) {
             queryParams["header-accept"] = mimeType;
