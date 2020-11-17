@@ -32,9 +32,7 @@
   },
   "pre-commit": {
     "run": [
-      "lint",
-      "build",
-      "add-build"
+      "lint"
     ]
   },
   "browser": {
