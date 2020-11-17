@@ -639,7 +639,7 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
 
   this.Log(`Opening content draft: ${libraryId} ${objectId}`);
 
-  if("type" in options) {
+  if("type" in options && options.type) {
     if(options.type.startsWith("hq__")) {
       // Type hash specified
       options.type = (await this.ContentType({versionHash: options.type})).hash;
