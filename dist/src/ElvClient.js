@@ -176,6 +176,7 @@ function () {
       this.objectLibraryIds = {};
       this.objectImageUrls = {};
       this.visibilityInfo = {};
+      this.inaccessibleLibraries = {};
       this.HttpClient = new HttpClient({
         uris: this.fabricURIs,
         debug: this.debug
