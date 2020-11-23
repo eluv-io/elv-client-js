@@ -144,13 +144,27 @@ exports.Permission = async function({objectId}) {
 /* Content Spaces */
 
 /**
- * Get the address of the default KMS of the content space
+ * Get the address of the default KMS of the content space or the provided tenant
  *
  * @methodGroup Content Space
+ * @namedParams
+ * @param {string=} tenantId - An ID of a tenant contract - if not specified, the content space contract will be used
  *
  * @returns {Promise<string>} - Address of the KMS
  */
-exports.DefaultKMSAddress = async function() {
+exports.DefaultKMSAddress = async function({tenantId}={}) {
+  // Ensure tenant ID, if specified, is a tenant contract and not a group contract
+  if(tenantId && (await this.AccessType({id: tenantId})) === this.authClient.ACCESS_TYPES.TENANT) {
+    const kmsAddress = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(tenantId),
+      methodName: "addressKMS",
+    });
+
+    if(kmsAddress) {
+      return kmsAddress;
+    }
+  }
+
   return await this.CallContractMethod({
     contractAddress: this.contentSpaceAddress,
     methodName: "addressKMS",
