@@ -80,6 +80,8 @@ class AuthorizationClient {
     this.accessTransactions = {};
     this.modifyTransactions = {};
 
+    this.transactionLocks = {};
+
     this.methodAvailability = {};
     this.accessVersions = {};
     this.accessTypes = {};
@@ -269,71 +271,80 @@ class AuthorizationClient {
 
     const address = Utils.HashToAddress(id);
 
-    // Check cache for existing transaction
-    if(!noCache && !skipCache) {
-      const cache = update ? this.modifyTransactions : this.accessTransactions;
+    let elapsed = 0;
+    while(this.transactionLocks[id]) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      elapsed += 100;
 
-      if(cache[address]) {
-        // Expire after 12 hours
-        if(cache[address].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
-          await cache.promise;
-
-          return cache[address];
-        } else {
-          // Token expired
-          delete cache[address];
-        }
+      if(elapsed > 15000) {
+        this.Log(`Lock never released for ${id} - releasing lock`);
+        delete this.transactionLocks[id];
       }
-    }
-
-    // If only checking the cache, don't continue to make access request
-    if(cacheOnly) { return; }
-
-    // Make the request
-    let promise;
-    if(update) {
-      this.Log(`Making update request on ${accessType} ${id}`);
-      promise = this.UpdateRequest({id, abi});
-    } else {
-      this.Log(`Making access request on ${accessType} ${id}`);
-      promise = this.AccessRequest({id, args: accessArgs, checkAccessCharge});
-    }
-
-    const cache = update ? this.modifyTransactions : this.accessTransactions;
-
-    // Cache the transaction hash
-    if(!noCache) {
-      cache[address] = {
-        issuedAt: Date.now(),
-        promise
-      };
     }
 
     try {
-      const accessRequest = await promise;
+      this.transactionLocks[id] = true;
 
-      if(!noCache) {
-        cache[address].transactionHash = accessRequest.transactionHash;
+      // Check cache for existing transaction
+      if(!noCache && !skipCache) {
+        let cache = update ? this.modifyTransactions : this.accessTransactions;
 
-        // Save request ID if present
-        accessRequest.logs.some(log => {
-          if(log.values && (log.values.requestID || log.values.requestNonce)) {
-            this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
-            return true;
+        if(cache[address]) {
+          // Expire after 12 hours
+          if(cache[address].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
+
+            return cache[address];
+          } else {
+            // Token expired
+            delete cache[address];
           }
-        });
+        }
       }
 
-      return accessRequest;
-    } catch(error) {
-      if(!noCache) {
-        delete cache[address];
+      // If only checking the cache, don't continue to make access request
+      if(cacheOnly) {
+        return;
       }
 
-      throw error;
+      // Make the request
+      let accessRequest;
+      if(update) {
+        this.Log(`Making update request on ${accessType} ${id}`);
+        accessRequest = await this.UpdateRequest({id, abi});
+      } else {
+        this.Log(`Making access request on ${accessType} ${id}`);
+        accessRequest = await this.AccessRequest({id, args: accessArgs, checkAccessCharge});
+      }
+
+      const cache = update ? this.modifyTransactions : this.accessTransactions;
+
+      try {
+        if(!noCache) {
+          cache[address] = {
+            issuedAt: Date.now(),
+            transactionHash: accessRequest.transactionHash
+          };
+
+          // Save request ID if present
+          accessRequest.logs.some(log => {
+            if(log.values && (log.values.requestID || log.values.requestNonce)) {
+              this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
+              return true;
+            }
+          });
+        }
+
+        return accessRequest;
+      } catch(error) {
+        if(!noCache) {
+          delete cache[address];
+        }
+
+        throw error;
+      }
+    } finally {
+      delete this.transactionLocks[id];
     }
-
-    //this.RecordTags({accessType, libraryId, objectId, versionHash});
   }
 
   async AccessRequest({id, args=[], checkAccessCharge=false}) {
@@ -829,15 +840,18 @@ class AuthorizationClient {
   }
 
   // Make an RPC call to the KMS with signed parameters
-  async MakeKMSCall({kmsId, objectId, versionHash, methodName, params, paramTypes, additionalParams=[]}) {
+  async MakeKMSCall({kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, additionalParams=[], signature=true}) {
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
     if(!objectId) {
-      kmsId = `ikms${Utils.AddressToHash(await this.client.DefaultKMSAddress())}`;
+      kmsId = `ikms${Utils.AddressToHash(await this.client.DefaultKMSAddress({tenantId}))}`;
     }
 
-    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-    params.push(await this.Sign(packedHash));
+    if(signature) {
+      const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+      params.push(await this.Sign(packedHash));
+    }
+
     params = params.concat(additionalParams);
 
     const KMSUrls = (await this.KMSInfo({kmsId, objectId, versionHash})).urls;

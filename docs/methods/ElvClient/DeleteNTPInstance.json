@@ -1,0 +1,5 @@
+[
+  {
+    "signature": "async DeleteNTPInstance({\n  \"tenantId\": \"iten3PumhoQT6LG4VTDZozu83a6qw9JS\",\n  \"ntpId\": \"QOTP3MVczfg3b7j\"\n});"
+  }
+]

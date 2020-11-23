@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async NTPInstance({\n  \"tenantId\": \"iten3PumhoQT6LG4VTDZozu83a6qw9JS\",\n  \"ntpId\": \"QOTP3MVczfg3b7j\"\n});",
+    "result": "{\n  \"ntpId\": \"QOTP3MVczfg3b7j\",\n  \"tenantId\": \"iten3PumhoQT6LG4VTDZozu83a6qw9JS\",\n  \"kmsId\": \"ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g\",\n  \"objectId\": \"iq__iTghh4NbMVUVK7wMHSNtXrH2vq8\",\n  \"type\": \"NTP\",\n  \"updatedAt\": 1605812427397,\n  \"startTime\": \"1541202951043\",\n  \"endTime\": \"1667519750043\",\n  \"ticketLength\": \"6\",\n  \"maxRedemptions\": \"456\",\n  \"maxTickets\": 123,\n  \"issuedTickets\": 0\n}"
+  }
+]
