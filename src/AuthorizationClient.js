@@ -921,6 +921,10 @@ class AuthorizationClient {
         abi = (await this.ContractInfo({address: contractAddress})).abi;
       }
 
+      if(!abi) {
+        throw Error("No ABI for specified contract (wrong network?)");
+      }
+
       const method = abi.find(method => method.name === methodName);
 
       if(!method) {

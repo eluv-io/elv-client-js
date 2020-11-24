@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async PolicyItems({\n  \"policyId\": \"iq__2GQxZKB5vWrVQxQqpAA9wvQTnRoK\"\n});",
-    "result": "{\n  \"iq__45BLDwFN6Qrf3ZBRUWew9SLyTJzK\": {\n    \"display_title\": \"Item 1\"\n  },\n  \"iq__mNNQTQ6uVNPG1PvMmK2EmdBTWko\": {\n    \"display_title\": \"Item 2\"\n  }\n}"
+    "signature": "async PolicyItems({\n  \"policyId\": \"iq__2LFhd7iBv9NrPpCku2fHemCjHUaG\"\n});",
+    "result": "{\n  \"iq__3XUR87YHPauksf6rfiHXnQ6HYxyb\": {\n    \"display_title\": \"Item 1\"\n  },\n  \"iq__3bHYikt7r3C4Kf1miukvYaC7P6j5\": {\n    \"display_title\": \"Item 2\"\n  }\n}"
   }
 ]

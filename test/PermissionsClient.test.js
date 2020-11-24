@@ -23,7 +23,7 @@ const later = Date.now() + 365 * 24 * 60 * 60 * 1000;
 describe("Test Permissions Client", () => {
   beforeAll(async () => {
     try {
-      client = await CreateClient("ElvClient", "2");
+      client = await CreateClient("ElvClient", "1");
 
       permissionsClient = OutputLogger(PermissionsClient, new PermissionsClient(client));
 
@@ -69,7 +69,6 @@ describe("Test Permissions Client", () => {
       itemId1 = itemObject1.id;
       itemId2 = itemObject2.id;
       groupAddress = await client.CreateAccessGroup({name: "Test Group"});
-      userAddress = client.CurrentAccountAddress();
     } catch(error) {
       console.error("\n\nSetup failed:");
       console.error(error);
@@ -754,6 +753,30 @@ describe("Test Permissions Client", () => {
       expect(allItems[itemId2].display_title).toEqual("Item 2");
     });
 
+    test("Retrieve Subject Permissions", async () => {
+      const subjectPermissions1 = await permissionsClient.SubjectPermissions({
+        policyId,
+        subjectId: "00uyyha6cjm2Q7Zgv4x6"
+      });
+
+      expect(subjectPermissions1).toBeDefined();
+      expect(Object.keys(subjectPermissions1).length).toEqual(1);
+      expect(subjectPermissions1[itemId2]).toBeDefined();
+      expect(subjectPermissions1[itemId2].permissions).toBeDefined();
+      expect(subjectPermissions1[itemId2].permissions.length).toEqual(1);
+
+      const subjectPermissions2 = await permissionsClient.SubjectPermissions({
+        policyId,
+        subjectId: client.utils.FormatAddress(client.signer.address)
+      });
+
+      expect(subjectPermissions2).toBeDefined();
+      expect(Object.keys(subjectPermissions2).length).toEqual(1);
+      expect(subjectPermissions2[itemId2]).toBeDefined();
+      expect(subjectPermissions2[itemId2].permissions).toBeDefined();
+      expect(subjectPermissions2[itemId2].permissions.length).toEqual(1);
+    });
+
     test("Remove Permissions", async () => {
       await client.EditAndFinalizeContentObject({
         libraryId,
@@ -834,6 +857,38 @@ describe("Test Permissions Client", () => {
       });
 
       expect(noProfile).not.toBeDefined();
+    });
+
+
+    test("Remove Subject Permissions", async () => {
+      const initialPermissions = await permissionsClient.SubjectPermissions({
+        policyId,
+        subjectId: "QOTPQVagZQv7Mkt"
+      });
+
+      expect(initialPermissions).toBeDefined();
+      expect(Object.keys(initialPermissions).length).toBeGreaterThan(0);
+
+      await client.EditAndFinalizeContentObject({
+        libraryId,
+        objectId: policyId,
+        callback: async ({writeToken}) => {
+          await permissionsClient.RemoveSubjectPermissions({
+            policyId,
+            policyWriteToken: writeToken,
+            subjectId: "QOTPQVagZQv7Mkt"
+          });
+        }
+      });
+
+      const finalPermissions = await permissionsClient.SubjectPermissions({
+        policyId,
+        subjectId: "QOTPQVagZQv7Mkt"
+      });
+
+      expect(finalPermissions).toBeDefined();
+      expect(Object.keys(finalPermissions).length).toEqual(0);
+
     });
 
     test("Remove Item Permissions", async () => {
