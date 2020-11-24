@@ -1,8 +1,8 @@
 [
   {
-    "signature": "async RemoveItemPolicy({\n  \"policyId\": \"iq__2GQxZKB5vWrVQxQqpAA9wvQTnRoK\",\n  \"policyWriteToken\": \"tqw_NJKeQTPCC2LfMYyySpjvAVs8zJyPXs45X\",\n  \"itemId\": \"iq__45BLDwFN6Qrf3ZBRUWew9SLyTJzK\"\n});"
+    "signature": "async RemoveItemPolicy({\n  \"policyId\": \"iq__2LFhd7iBv9NrPpCku2fHemCjHUaG\",\n  \"policyWriteToken\": \"tqw_4aHc9NgzM29hirTbE22tvusG53XHcneEj\",\n  \"itemId\": \"iq__3XUR87YHPauksf6rfiHXnQ6HYxyb\"\n});"
   },
   {
-    "signature": "async RemoveItemPolicy({\n  \"policyId\": \"iq__2GQxZKB5vWrVQxQqpAA9wvQTnRoK\",\n  \"policyWriteToken\": \"tqw_ErxduEbpXs9Lkc58KQhsxLRuP8FMjanMt\",\n  \"itemId\": \"iq__mNNQTQ6uVNPG1PvMmK2EmdBTWko\"\n});"
+    "signature": "async RemoveItemPolicy({\n  \"policyId\": \"iq__2LFhd7iBv9NrPpCku2fHemCjHUaG\",\n  \"policyWriteToken\": \"tqw_M38Km7vjBXkZTS59P9Q6ckkTM5X9VZqf6\",\n  \"itemId\": \"iq__3bHYikt7r3C4Kf1miukvYaC7P6j5\"\n});"
   }
 ]

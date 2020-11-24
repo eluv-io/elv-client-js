@@ -106,7 +106,7 @@ const CreateClient = async (name, bux="2") => {
 const ReturnBalance = async (client) => {
   const balance = await client.GetBalance({address: client.signer.address});
 
-  if(balance < 1) {
+  if(balance < 0.5) {
     return;
   }
 
