@@ -396,7 +396,7 @@ exports.RedeemCode = async function({issuer, tenantId, ntpId, code, email}) {
 
       this.SetStaticToken({token});
 
-      return JSON.parse(Utils.FromB64(token)).qid;
+      return JSON.parse(this.utils.FromB64(token)).qid;
     } catch(error) {
       this.Log("Failed to redeem code:", true);
       this.Log(error, true);
