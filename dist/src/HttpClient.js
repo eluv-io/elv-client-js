@@ -144,8 +144,8 @@ function () {
               }
 
               // Server error - Try next node
+              this.Log("HttpClient failing over from ".concat(this.BaseURI(), ": ").concat(attempts + 1, " attempts"), true);
               this.uriIndex = (this.uriIndex + 1) % this.uris.length;
-              this.Log("HttpClient failing over: ".concat(attempts + 1, " attempts"), true);
               _context.next = 23;
               return _regeneratorRuntime.awrap(this.Request({
                 method: method,

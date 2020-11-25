@@ -434,7 +434,7 @@ function () {
               throw Error("Unknown method: " + methodName);
 
             case 11:
-              this.Log("Calling contract method:\n        Address: ".concat(contract.address, "\n        Method: ").concat(methodName, "\n        Args: [").concat(methodArgs.join(", "), "]"));
+              this.Log("Calling contract method:\n        Provider: ".concat(this.Provider().connection.url, "\n        Address: ").concat(contract.address, "\n        Method: ").concat(methodName, "\n        Args: [").concat(methodArgs.join(", "), "]"));
               methodAbi = contract["interface"].abi.find(function (method) {
                 return method.name === methodName;
               }); // Lock if performing a transaction

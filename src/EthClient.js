@@ -253,6 +253,7 @@ class EthClient {
 
     this.Log(
       `Calling contract method:
+        Provider: ${this.Provider().connection.url}
         Address: ${contract.address}
         Method: ${methodName}
         Args: [${methodArgs.join(", ")}]`
