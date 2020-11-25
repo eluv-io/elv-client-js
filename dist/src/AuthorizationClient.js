@@ -96,6 +96,7 @@ function () {
     this.debug = debug;
     this.accessTransactions = {};
     this.modifyTransactions = {};
+    this.transactionLocks = {};
     this.methodAvailability = {};
     this.accessVersions = {};
     this.accessTypes = {};
@@ -363,7 +364,7 @@ function () {
     value: function MakeAccessRequest(_ref5) {
       var _this = this;
 
-      var libraryId, objectId, versionHash, _ref5$args, args, _ref5$publicKey, publicKey, _ref5$update, update, _ref5$skipCache, skipCache, _ref5$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, _ref6, isV3, accessType, abi, _ref7, accessArgs, checkAccessCharge, address, _cache, promise, cache, accessRequest;
+      var libraryId, objectId, versionHash, _ref5$args, args, _ref5$publicKey, publicKey, _ref5$update, update, _ref5$skipCache, skipCache, _ref5$noCache, noCache, cacheOnly, walletContractAddress, walletCreated, id, _ref6, isV3, accessType, abi, _ref7, accessArgs, checkAccessCharge, address, elapsed, _cache, accessRequest, cache;
 
       return _regeneratorRuntime.async(function MakeAccessRequest$(_context4) {
         while (1) {
@@ -445,77 +446,105 @@ function () {
               _ref7 = _context4.sent;
               accessArgs = _ref7.accessArgs;
               checkAccessCharge = _ref7.checkAccessCharge;
-              address = Utils.HashToAddress(id); // Check cache for existing transaction
+              address = Utils.HashToAddress(id);
+              elapsed = 0;
+
+            case 29:
+              if (!this.transactionLocks[id]) {
+                _context4.next = 36;
+                break;
+              }
+
+              _context4.next = 32;
+              return _regeneratorRuntime.awrap(new Promise(function (resolve) {
+                return setTimeout(resolve, 100);
+              }));
+
+            case 32:
+              elapsed += 100;
+
+              if (elapsed > 15000) {
+                this.Log("Lock never released for ".concat(id, " - releasing lock"));
+                delete this.transactionLocks[id];
+              }
+
+              _context4.next = 29;
+              break;
+
+            case 36:
+              _context4.prev = 36;
+              this.transactionLocks[id] = true; // Check cache for existing transaction
 
               if (!(!noCache && !skipCache)) {
-                _context4.next = 38;
+                _context4.next = 46;
                 break;
               }
 
               _cache = update ? this.modifyTransactions : this.accessTransactions;
 
               if (!_cache[address]) {
-                _context4.next = 38;
+                _context4.next = 46;
                 break;
               }
 
               if (!(_cache[address].issuedAt > Date.now() - 12 * 60 * 60 * 1000)) {
-                _context4.next = 37;
+                _context4.next = 45;
                 break;
               }
 
-              _context4.next = 34;
-              return _regeneratorRuntime.awrap(_cache.promise);
-
-            case 34:
               return _context4.abrupt("return", _cache[address]);
 
-            case 37:
+            case 45:
               // Token expired
               delete _cache[address];
 
-            case 38:
+            case 46:
               if (!cacheOnly) {
-                _context4.next = 40;
+                _context4.next = 48;
                 break;
               }
 
               return _context4.abrupt("return");
 
-            case 40:
-              if (update) {
-                this.Log("Making update request on ".concat(accessType, " ").concat(id));
-                promise = this.UpdateRequest({
-                  id: id,
-                  abi: abi
-                });
-              } else {
-                this.Log("Making access request on ".concat(accessType, " ").concat(id));
-                promise = this.AccessRequest({
-                  id: id,
-                  args: accessArgs,
-                  checkAccessCharge: checkAccessCharge
-                });
+            case 48:
+              if (!update) {
+                _context4.next = 55;
+                break;
               }
 
-              cache = update ? this.modifyTransactions : this.accessTransactions; // Cache the transaction hash
+              this.Log("Making update request on ".concat(accessType, " ").concat(id));
+              _context4.next = 52;
+              return _regeneratorRuntime.awrap(this.UpdateRequest({
+                id: id,
+                abi: abi
+              }));
+
+            case 52:
+              accessRequest = _context4.sent;
+              _context4.next = 59;
+              break;
+
+            case 55:
+              this.Log("Making access request on ".concat(accessType, " ").concat(id));
+              _context4.next = 58;
+              return _regeneratorRuntime.awrap(this.AccessRequest({
+                id: id,
+                args: accessArgs,
+                checkAccessCharge: checkAccessCharge
+              }));
+
+            case 58:
+              accessRequest = _context4.sent;
+
+            case 59:
+              cache = update ? this.modifyTransactions : this.accessTransactions;
+              _context4.prev = 60;
 
               if (!noCache) {
                 cache[address] = {
                   issuedAt: Date.now(),
-                  promise: promise
-                };
-              }
-
-              _context4.prev = 43;
-              _context4.next = 46;
-              return _regeneratorRuntime.awrap(promise);
-
-            case 46:
-              accessRequest = _context4.sent;
-
-              if (!noCache) {
-                cache[address].transactionHash = accessRequest.transactionHash; // Save request ID if present
+                  transactionHash: accessRequest.transactionHash
+                }; // Save request ID if present
 
                 accessRequest.logs.some(function (log) {
                   if (log.values && (log.values.requestID || log.values.requestNonce)) {
@@ -527,9 +556,9 @@ function () {
 
               return _context4.abrupt("return", accessRequest);
 
-            case 51:
-              _context4.prev = 51;
-              _context4.t0 = _context4["catch"](43);
+            case 65:
+              _context4.prev = 65;
+              _context4.t0 = _context4["catch"](60);
 
               if (!noCache) {
                 delete cache[address];
@@ -537,12 +566,17 @@ function () {
 
               throw _context4.t0;
 
-            case 55:
+            case 69:
+              _context4.prev = 69;
+              delete this.transactionLocks[id];
+              return _context4.finish(69);
+
+            case 72:
             case "end":
               return _context4.stop();
           }
         }
-      }, null, this, [[43, 51]]);
+      }, null, this, [[36,, 69, 72], [60, 65]]);
     }
   }, {
     key: "AccessRequest",
@@ -796,7 +830,7 @@ function () {
               this.Log("Making state channel access request: ".concat(objectId));
 
               if (!issuer) {
-                _context7.next = 31;
+                _context7.next = 43;
                 break;
               }
 
@@ -811,20 +845,51 @@ function () {
 
             case 17:
               kmsAddress = _context7.sent;
-              _context7.next = 25;
-              break;
+
+              if (kmsAddress) {
+                _context7.next = 20;
+                break;
+              }
+
+              throw "";
 
             case 20:
-              _context7.prev = 20;
+              _context7.next = 27;
+              break;
+
+            case 22:
+              _context7.prev = 22;
               _context7.t0 = _context7["catch"](14);
-              _context7.next = 24;
+              _context7.next = 26;
               return _regeneratorRuntime.awrap(this.client.DefaultKMSAddress());
 
-            case 24:
+            case 26:
               kmsAddress = _context7.sent;
 
-            case 25:
-              _context7.next = 27;
+            case 27:
+              _context7.prev = 27;
+              _context7.next = 30;
+              return _regeneratorRuntime.awrap(Utils.ResponseToFormat("text", this.MakeKMSRequest({
+                kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
+                method: "POST",
+                path: UrlJoin("as", issuer),
+                body: {
+                  "_PASSWORD": code,
+                  "_EMAIL": email
+                }
+              })));
+
+            case 30:
+              token = _context7.sent;
+              _context7.next = 40;
+              break;
+
+            case 33:
+              _context7.prev = 33;
+              _context7.t1 = _context7["catch"](27);
+              this.Log("/as token redemption failed:", true);
+              this.Log(_context7.t1, true);
+              _context7.next = 39;
               return _regeneratorRuntime.awrap(Utils.ResponseToFormat("text", this.MakeKMSRequest({
                 kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
                 method: "POST",
@@ -835,14 +900,16 @@ function () {
                 }
               })));
 
-            case 27:
+            case 39:
               token = _context7.sent;
+
+            case 40:
               // Pull target object from token so token can be cached
               objectId = JSON.parse(Utils.FromB64(token)).qid;
-              _context7.next = 42;
+              _context7.next = 54;
               break;
 
-            case 31:
+            case 43:
               // State channel API
               if (!audienceData) {
                 audienceData = this.AudienceData({
@@ -854,7 +921,7 @@ function () {
 
               stateChannelApi = "elv_channelContentRequestContext";
               additionalParams = [JSON.stringify(audienceData)];
-              _context7.next = 36;
+              _context7.next = 48;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: stateChannelApi,
@@ -863,17 +930,17 @@ function () {
                 additionalParams: additionalParams
               }));
 
-            case 36:
+            case 48:
               payload = _context7.sent;
-              _context7.next = 39;
+              _context7.next = 51;
               return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(payload))));
 
-            case 39:
+            case 51:
               signature = _context7.sent;
               multiSig = Utils.FormatSignature(signature);
               token = "".concat(payload, ".").concat(Utils.B64(multiSig));
 
-            case 42:
+            case 54:
               if (!this.noCache) {
                 this.channelContentTokens[objectId] = {
                   token: token,
@@ -883,12 +950,12 @@ function () {
 
               return _context7.abrupt("return", token);
 
-            case 44:
+            case 56:
             case "end":
               return _context7.stop();
           }
         }
-      }, null, this, [[14, 20]]);
+      }, null, this, [[14, 22], [27, 33]]);
     }
   }, {
     key: "ChannelContentFinalize",
@@ -1544,13 +1611,13 @@ function () {
   }, {
     key: "MakeKMSCall",
     value: function MakeKMSCall(_ref29) {
-      var kmsId, objectId, versionHash, methodName, params, paramTypes, _ref29$additionalPara, additionalParams, packedHash, KMSUrls, i, stateChannelProvider;
+      var kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, _ref29$additionalPara, additionalParams, _ref29$signature, signature, packedHash, KMSUrls, i, stateChannelProvider;
 
       return _regeneratorRuntime.async(function MakeKMSCall$(_context21) {
         while (1) {
           switch (_context21.prev = _context21.next) {
             case 0:
-              kmsId = _ref29.kmsId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, methodName = _ref29.methodName, params = _ref29.params, paramTypes = _ref29.paramTypes, _ref29$additionalPara = _ref29.additionalParams, additionalParams = _ref29$additionalPara === void 0 ? [] : _ref29$additionalPara;
+              kmsId = _ref29.kmsId, tenantId = _ref29.tenantId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, methodName = _ref29.methodName, params = _ref29.params, paramTypes = _ref29.paramTypes, _ref29$additionalPara = _ref29.additionalParams, additionalParams = _ref29$additionalPara === void 0 ? [] : _ref29$additionalPara, _ref29$signature = _ref29.signature, signature = _ref29$signature === void 0 ? true : _ref29$signature;
 
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
@@ -1564,7 +1631,9 @@ function () {
               _context21.t0 = "ikms";
               _context21.t1 = Utils;
               _context21.next = 7;
-              return _regeneratorRuntime.awrap(this.client.DefaultKMSAddress());
+              return _regeneratorRuntime.awrap(this.client.DefaultKMSAddress({
+                tenantId: tenantId
+              }));
 
             case 7:
               _context21.t2 = _context21.sent;
@@ -1572,66 +1641,72 @@ function () {
               kmsId = _context21.t0.concat.call(_context21.t0, _context21.t3);
 
             case 10:
+              if (!signature) {
+                _context21.next = 17;
+                break;
+              }
+
               packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
               _context21.t4 = params;
-              _context21.next = 14;
+              _context21.next = 15;
               return _regeneratorRuntime.awrap(this.Sign(packedHash));
 
-            case 14:
+            case 15:
               _context21.t5 = _context21.sent;
 
               _context21.t4.push.call(_context21.t4, _context21.t5);
 
+            case 17:
               params = params.concat(additionalParams);
-              _context21.next = 19;
+              _context21.next = 20;
               return _regeneratorRuntime.awrap(this.KMSInfo({
                 kmsId: kmsId,
                 objectId: objectId,
                 versionHash: versionHash
               }));
 
-            case 19:
+            case 20:
               KMSUrls = _context21.sent.urls;
               i = 0;
 
-            case 21:
+            case 22:
               if (!(i < KMSUrls.length)) {
-                _context21.next = 38;
+                _context21.next = 39;
                 break;
               }
 
-              _context21.prev = 22;
+              _context21.prev = 23;
               this.Log("Making KMS request:\n          URL: ".concat(KMSUrls[i], "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
               stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
-              _context21.next = 27;
+              _context21.next = 28;
               return _regeneratorRuntime.awrap(stateChannelProvider.send(methodName, params));
 
-            case 27:
+            case 28:
               return _context21.abrupt("return", _context21.sent);
 
-            case 30:
-              _context21.prev = 30;
-              _context21.t6 = _context21["catch"](22);
+            case 31:
+              _context21.prev = 31;
+              _context21.t6 = _context21["catch"](23);
               this.Log("KMS Call Error: ".concat(_context21.t6), true); // If the request has been attempted on all KMS urls, throw the error
 
               if (!(i === KMSUrls.length - 1)) {
-                _context21.next = 35;
+                _context21.next = 36;
                 break;
               }
 
               throw _context21.t6;
 
-            case 35:
+            case 36:
               i++;
-              _context21.next = 21;
+              _context21.next = 22;
               break;
 
-            case 38:
+            case 39:
             case "end":
               return _context21.stop();
           }
         }
-      }, null, this, [[22, 30]]);
+      }, null, this, [[23, 31]]);
     } // Make an arbitrary HTTP call to the KMS
 
   }, {
@@ -1720,7 +1795,7 @@ function () {
               key = "".concat(contractAddress, "-").concat(methodName);
 
               if (!(this.methodAvailability[key] === undefined)) {
-                _context23.next = 17;
+                _context23.next = 19;
                 break;
               }
 
@@ -1740,35 +1815,43 @@ function () {
               abi = _context23.sent.abi;
 
             case 9:
+              if (abi) {
+                _context23.next = 11;
+                break;
+              }
+
+              throw Error("No ABI for specified contract (wrong network?)");
+
+            case 11:
               method = abi.find(function (method) {
                 return method.name === methodName;
               });
 
               if (method) {
-                _context23.next = 12;
+                _context23.next = 14;
                 break;
               }
 
               return _context23.abrupt("return", false);
 
-            case 12:
+            case 14:
               methodSignature = "".concat(method.name, "(").concat(method.inputs.map(function (i) {
                 return i.type;
               }).join(","), ")");
               methodId = Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(methodSignature)).replace("0x", "").slice(0, 8);
-              _context23.next = 16;
+              _context23.next = 18;
               return _regeneratorRuntime.awrap(this.MakeElvMasterCall({
                 methodName: "elv_deployedContractHasMethod",
                 params: [contractAddress, methodId]
               }));
 
-            case 16:
+            case 18:
               this.methodAvailability[key] = _context23.sent;
 
-            case 17:
+            case 19:
               return _context23.abrupt("return", this.methodAvailability[key]);
 
-            case 18:
+            case 20:
             case "end":
               return _context23.stop();
           }

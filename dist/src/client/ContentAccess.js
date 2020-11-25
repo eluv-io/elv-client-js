@@ -287,29 +287,77 @@ exports.Permission = function _callee3(_ref2) {
 /* Content Spaces */
 
 /**
- * Get the address of the default KMS of the content space
+ * Get the address of the default KMS of the content space or the provided tenant
  *
  * @methodGroup Content Space
+ * @namedParams
+ * @param {string=} tenantId - An ID of a tenant contract - if not specified, the content space contract will be used
  *
  * @returns {Promise<string>} - Address of the KMS
  */
 
 
 exports.DefaultKMSAddress = function _callee4() {
+  var _ref3,
+      tenantId,
+      kmsAddress,
+      _args4 = arguments;
+
   return _regeneratorRuntime.async(function _callee4$(_context4) {
     while (1) {
       switch (_context4.prev = _context4.next) {
         case 0:
-          _context4.next = 2;
+          _ref3 = _args4.length > 0 && _args4[0] !== undefined ? _args4[0] : {}, tenantId = _ref3.tenantId;
+          _context4.t0 = tenantId;
+
+          if (!_context4.t0) {
+            _context4.next = 8;
+            break;
+          }
+
+          _context4.next = 5;
+          return _regeneratorRuntime.awrap(this.AccessType({
+            id: tenantId
+          }));
+
+        case 5:
+          _context4.t1 = _context4.sent;
+          _context4.t2 = this.authClient.ACCESS_TYPES.TENANT;
+          _context4.t0 = _context4.t1 === _context4.t2;
+
+        case 8:
+          if (!_context4.t0) {
+            _context4.next = 14;
+            break;
+          }
+
+          _context4.next = 11;
+          return _regeneratorRuntime.awrap(this.CallContractMethod({
+            contractAddress: this.utils.HashToAddress(tenantId),
+            methodName: "addressKMS"
+          }));
+
+        case 11:
+          kmsAddress = _context4.sent;
+
+          if (!kmsAddress) {
+            _context4.next = 14;
+            break;
+          }
+
+          return _context4.abrupt("return", kmsAddress);
+
+        case 14:
+          _context4.next = 16;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: this.contentSpaceAddress,
             methodName: "addressKMS"
           }));
 
-        case 2:
+        case 16:
           return _context4.abrupt("return", _context4.sent);
 
-        case 3:
+        case 17:
         case "end":
           return _context4.stop();
       }
@@ -343,13 +391,13 @@ exports.ContentSpaceId = function () {
  */
 
 
-exports.ContentTypeOwner = function _callee5(_ref3) {
+exports.ContentTypeOwner = function _callee5(_ref4) {
   var name, typeId, versionHash, contentType;
   return _regeneratorRuntime.async(function _callee5$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
-          name = _ref3.name, typeId = _ref3.typeId, versionHash = _ref3.versionHash;
+          name = _ref4.name, typeId = _ref4.typeId, versionHash = _ref4.versionHash;
           _context5.next = 3;
           return _regeneratorRuntime.awrap(this.ContentType({
             name: name,
@@ -392,14 +440,14 @@ exports.ContentTypeOwner = function _callee5(_ref3) {
  */
 
 
-exports.ContentType = function _callee6(_ref4) {
-  var name, typeId, versionHash, _ref4$publicOnly, publicOnly, types, metadata;
+exports.ContentType = function _callee6(_ref5) {
+  var name, typeId, versionHash, _ref5$publicOnly, publicOnly, types, metadata;
 
   return _regeneratorRuntime.async(function _callee6$(_context6) {
     while (1) {
       switch (_context6.prev = _context6.next) {
         case 0:
-          name = _ref4.name, typeId = _ref4.typeId, versionHash = _ref4.versionHash, _ref4$publicOnly = _ref4.publicOnly, publicOnly = _ref4$publicOnly === void 0 ? false : _ref4$publicOnly;
+          name = _ref5.name, typeId = _ref5.typeId, versionHash = _ref5.versionHash, _ref5$publicOnly = _ref5.publicOnly, publicOnly = _ref5$publicOnly === void 0 ? false : _ref5$publicOnly;
           this.Log("Retrieving content type: ".concat(name || typeId || versionHash));
 
           if (versionHash) {
@@ -703,13 +751,13 @@ exports.ContentLibraries = function _callee9() {
  */
 
 
-exports.ContentLibrary = function _callee10(_ref5) {
+exports.ContentLibrary = function _callee10(_ref6) {
   var libraryId, path, library;
   return _regeneratorRuntime.async(function _callee10$(_context10) {
     while (1) {
       switch (_context10.prev = _context10.next) {
         case 0:
-          libraryId = _ref5.libraryId;
+          libraryId = _ref6.libraryId;
           ValidateLibrary(libraryId);
           path = UrlJoin("qlibs", libraryId);
           _context10.t0 = _regeneratorRuntime;
@@ -757,13 +805,13 @@ exports.ContentLibrary = function _callee10(_ref5) {
  */
 
 
-exports.ContentLibraryOwner = function _callee11(_ref6) {
+exports.ContentLibraryOwner = function _callee11(_ref7) {
   var libraryId;
   return _regeneratorRuntime.async(function _callee11$(_context11) {
     while (1) {
       switch (_context11.prev = _context11.next) {
         case 0:
-          libraryId = _ref6.libraryId;
+          libraryId = _ref7.libraryId;
           ValidateLibrary(libraryId);
           _context11.t0 = this.utils;
           _context11.next = 5;
@@ -799,7 +847,7 @@ exports.ContentLibraryOwner = function _callee11(_ref6) {
  */
 
 
-exports.LibraryContentTypes = function _callee13(_ref7) {
+exports.LibraryContentTypes = function _callee13(_ref8) {
   var _this5 = this;
 
   var libraryId, typesLength, allowedTypes;
@@ -807,7 +855,7 @@ exports.LibraryContentTypes = function _callee13(_ref7) {
     while (1) {
       switch (_context13.prev = _context13.next) {
         case 0:
-          libraryId = _ref7.libraryId;
+          libraryId = _ref8.libraryId;
           ValidateLibrary(libraryId);
           this.Log("Retrieving library content types for ".concat(libraryId));
           _context13.next = 5;
@@ -901,14 +949,14 @@ exports.LibraryContentTypes = function _callee13(_ref7) {
  */
 
 
-exports.ContentObjects = function _callee14(_ref8) {
-  var libraryId, _ref8$filterOptions, filterOptions, path, queryParams, filterTypeMap, addFilter;
+exports.ContentObjects = function _callee14(_ref9) {
+  var libraryId, _ref9$filterOptions, filterOptions, path, queryParams, filterTypeMap, addFilter;
 
   return _regeneratorRuntime.async(function _callee14$(_context14) {
     while (1) {
       switch (_context14.prev = _context14.next) {
         case 0:
-          libraryId = _ref8.libraryId, _ref8$filterOptions = _ref8.filterOptions, filterOptions = _ref8$filterOptions === void 0 ? {} : _ref8$filterOptions;
+          libraryId = _ref9.libraryId, _ref9$filterOptions = _ref9.filterOptions, filterOptions = _ref9$filterOptions === void 0 ? {} : _ref9$filterOptions;
           ValidateLibrary(libraryId);
           this.Log("Retrieving content objects from ".concat(libraryId));
           path = UrlJoin("qlibs", libraryId, "q");
@@ -961,10 +1009,10 @@ exports.ContentObjects = function _callee14(_ref8) {
             ncnt: ":nc:"
           };
 
-          addFilter = function addFilter(_ref9) {
-            var key = _ref9.key,
-                type = _ref9.type,
-                filter = _ref9.filter;
+          addFilter = function addFilter(_ref10) {
+            var key = _ref10.key,
+                type = _ref10.type,
+                filter = _ref10.filter;
             queryParams.filter.push("".concat(key).concat(filterTypeMap[type]).concat(filter));
           };
 
@@ -1026,13 +1074,13 @@ exports.ContentObjects = function _callee14(_ref8) {
  */
 
 
-exports.ContentObject = function _callee15(_ref10) {
+exports.ContentObject = function _callee15(_ref11) {
   var libraryId, objectId, versionHash, path;
   return _regeneratorRuntime.async(function _callee15$(_context15) {
     while (1) {
       switch (_context15.prev = _context15.next) {
         case 0:
-          libraryId = _ref10.libraryId, objectId = _ref10.objectId, versionHash = _ref10.versionHash;
+          libraryId = _ref11.libraryId, objectId = _ref11.objectId, versionHash = _ref11.versionHash;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1089,13 +1137,13 @@ exports.ContentObject = function _callee15(_ref10) {
  */
 
 
-exports.ContentObjectOwner = function _callee16(_ref11) {
+exports.ContentObjectOwner = function _callee16(_ref12) {
   var objectId;
   return _regeneratorRuntime.async(function _callee16$(_context16) {
     while (1) {
       switch (_context16.prev = _context16.next) {
         case 0:
-          objectId = _ref11.objectId;
+          objectId = _ref12.objectId;
           ValidateObject(objectId);
           this.Log("Retrieving content object owner: ".concat(objectId));
           _context16.t0 = this.utils;
@@ -1130,7 +1178,7 @@ exports.ContentObjectOwner = function _callee16(_ref11) {
  */
 
 
-exports.ContentObjectLibraryId = function _callee18(_ref12) {
+exports.ContentObjectLibraryId = function _callee18(_ref13) {
   var _this6 = this;
 
   var objectId, versionHash;
@@ -1138,7 +1186,7 @@ exports.ContentObjectLibraryId = function _callee18(_ref12) {
     while (1) {
       switch (_context18.prev = _context18.next) {
         case 0:
-          objectId = _ref12.objectId, versionHash = _ref12.versionHash;
+          objectId = _ref13.objectId, versionHash = _ref13.versionHash;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (versionHash) {
@@ -1210,16 +1258,16 @@ exports.ContentObjectLibraryId = function _callee18(_ref12) {
   }, null, this, [[10, 16]]);
 };
 
-exports.ProduceMetadataLinks = function _callee21(_ref13) {
+exports.ProduceMetadataLinks = function _callee21(_ref14) {
   var _this7 = this;
 
-  var libraryId, objectId, versionHash, _ref13$path, path, metadata, result;
+  var libraryId, objectId, versionHash, _ref14$path, path, metadata, result;
 
   return _regeneratorRuntime.async(function _callee21$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
         case 0:
-          libraryId = _ref13.libraryId, objectId = _ref13.objectId, versionHash = _ref13.versionHash, _ref13$path = _ref13.path, path = _ref13$path === void 0 ? "/" : _ref13$path, metadata = _ref13.metadata;
+          libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash, _ref14$path = _ref14.path, path = _ref14$path === void 0 ? "/" : _ref14$path, metadata = _ref14.metadata;
 
           if (!(!metadata || _typeof(metadata) !== "object")) {
             _context21.next = 3;
@@ -1326,14 +1374,14 @@ exports.ProduceMetadataLinks = function _callee21(_ref13) {
   }, null, this);
 };
 
-exports.MetadataAuth = function _callee22(_ref14) {
-  var libraryId, objectId, versionHash, _ref14$path, path, _ref14$channelAuth, channelAuth, visibility, accessType, isPublic, noAuth, kmsAddress;
+exports.MetadataAuth = function _callee22(_ref15) {
+  var libraryId, objectId, versionHash, _ref15$path, path, _ref15$channelAuth, channelAuth, visibility, accessType, isPublic, noAuth, kmsAddress;
 
   return _regeneratorRuntime.async(function _callee22$(_context22) {
     while (1) {
       switch (_context22.prev = _context22.next) {
         case 0:
-          libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash, _ref14$path = _ref14.path, path = _ref14$path === void 0 ? "/" : _ref14$path, _ref14$channelAuth = _ref14.channelAuth, channelAuth = _ref14$channelAuth === void 0 ? false : _ref14$channelAuth;
+          libraryId = _ref15.libraryId, objectId = _ref15.objectId, versionHash = _ref15.versionHash, _ref15$path = _ref15.path, path = _ref15$path === void 0 ? "/" : _ref15$path, _ref15$channelAuth = _ref15.channelAuth, channelAuth = _ref15$channelAuth === void 0 ? false : _ref15$channelAuth;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1520,14 +1568,14 @@ exports.MetadataAuth = function _callee22(_ref14) {
  */
 
 
-exports.ContentObjectMetadata = function _callee23(_ref15) {
-  var libraryId, objectId, versionHash, writeToken, _ref15$metadataSubtre, metadataSubtree, _ref15$queryParams, queryParams, _ref15$select, select, _ref15$remove, remove, _ref15$resolveLinks, resolveLinks, _ref15$resolveInclude, resolveIncludeSource, _ref15$resolveIgnoreE, resolveIgnoreErrors, _ref15$linkDepthLimit, linkDepthLimit, _ref15$produceLinkUrl, produceLinkUrls, path, metadata, authToken;
+exports.ContentObjectMetadata = function _callee23(_ref16) {
+  var libraryId, objectId, versionHash, writeToken, _ref16$metadataSubtre, metadataSubtree, _ref16$queryParams, queryParams, _ref16$select, select, _ref16$remove, remove, _ref16$resolveLinks, resolveLinks, _ref16$resolveInclude, resolveIncludeSource, _ref16$resolveIgnoreE, resolveIgnoreErrors, _ref16$linkDepthLimit, linkDepthLimit, _ref16$produceLinkUrl, produceLinkUrls, path, metadata, authToken;
 
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
-          libraryId = _ref15.libraryId, objectId = _ref15.objectId, versionHash = _ref15.versionHash, writeToken = _ref15.writeToken, _ref15$metadataSubtre = _ref15.metadataSubtree, metadataSubtree = _ref15$metadataSubtre === void 0 ? "/" : _ref15$metadataSubtre, _ref15$queryParams = _ref15.queryParams, queryParams = _ref15$queryParams === void 0 ? {} : _ref15$queryParams, _ref15$select = _ref15.select, select = _ref15$select === void 0 ? [] : _ref15$select, _ref15$remove = _ref15.remove, remove = _ref15$remove === void 0 ? [] : _ref15$remove, _ref15$resolveLinks = _ref15.resolveLinks, resolveLinks = _ref15$resolveLinks === void 0 ? false : _ref15$resolveLinks, _ref15$resolveInclude = _ref15.resolveIncludeSource, resolveIncludeSource = _ref15$resolveInclude === void 0 ? false : _ref15$resolveInclude, _ref15$resolveIgnoreE = _ref15.resolveIgnoreErrors, resolveIgnoreErrors = _ref15$resolveIgnoreE === void 0 ? false : _ref15$resolveIgnoreE, _ref15$linkDepthLimit = _ref15.linkDepthLimit, linkDepthLimit = _ref15$linkDepthLimit === void 0 ? 1 : _ref15$linkDepthLimit, _ref15$produceLinkUrl = _ref15.produceLinkUrls, produceLinkUrls = _ref15$produceLinkUrl === void 0 ? false : _ref15$produceLinkUrl;
+          libraryId = _ref16.libraryId, objectId = _ref16.objectId, versionHash = _ref16.versionHash, writeToken = _ref16.writeToken, _ref16$metadataSubtre = _ref16.metadataSubtree, metadataSubtree = _ref16$metadataSubtre === void 0 ? "/" : _ref16$metadataSubtre, _ref16$queryParams = _ref16.queryParams, queryParams = _ref16$queryParams === void 0 ? {} : _ref16$queryParams, _ref16$select = _ref16.select, select = _ref16$select === void 0 ? [] : _ref16$select, _ref16$remove = _ref16.remove, remove = _ref16$remove === void 0 ? [] : _ref16$remove, _ref16$resolveLinks = _ref16.resolveLinks, resolveLinks = _ref16$resolveLinks === void 0 ? false : _ref16$resolveLinks, _ref16$resolveInclude = _ref16.resolveIncludeSource, resolveIncludeSource = _ref16$resolveInclude === void 0 ? false : _ref16$resolveInclude, _ref16$resolveIgnoreE = _ref16.resolveIgnoreErrors, resolveIgnoreErrors = _ref16$resolveIgnoreE === void 0 ? false : _ref16$resolveIgnoreE, _ref16$linkDepthLimit = _ref16.linkDepthLimit, linkDepthLimit = _ref16$linkDepthLimit === void 0 ? 1 : _ref16$linkDepthLimit, _ref16$produceLinkUrl = _ref16.produceLinkUrls, produceLinkUrls = _ref16$produceLinkUrl === void 0 ? false : _ref16$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1651,7 +1699,7 @@ exports.ContentObjectMetadata = function _callee23(_ref15) {
  */
 
 
-exports.AssetMetadata = function _callee24(_ref16) {
+exports.AssetMetadata = function _callee24(_ref17) {
   var _this8 = this;
 
   var libraryId, objectId, versionHash, metadata, localization;
@@ -1659,7 +1707,7 @@ exports.AssetMetadata = function _callee24(_ref16) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
-          libraryId = _ref16.libraryId, objectId = _ref16.objectId, versionHash = _ref16.versionHash, metadata = _ref16.metadata, localization = _ref16.localization;
+          libraryId = _ref17.libraryId, objectId = _ref17.objectId, versionHash = _ref17.versionHash, metadata = _ref17.metadata, localization = _ref17.localization;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1775,13 +1823,13 @@ exports.AssetMetadata = function _callee24(_ref16) {
  */
 
 
-exports.ContentObjectVersions = function _callee25(_ref17) {
+exports.ContentObjectVersions = function _callee25(_ref18) {
   var libraryId, objectId, path;
   return _regeneratorRuntime.async(function _callee25$(_context25) {
     while (1) {
       switch (_context25.prev = _context25.next) {
         case 0:
-          libraryId = _ref17.libraryId, objectId = _ref17.objectId;
+          libraryId = _ref18.libraryId, objectId = _ref18.objectId;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -1826,13 +1874,13 @@ exports.ContentObjectVersions = function _callee25(_ref17) {
  */
 
 
-exports.LatestVersionHash = function _callee26(_ref18) {
+exports.LatestVersionHash = function _callee26(_ref19) {
   var objectId, versionHash, latestHash, versionCount;
   return _regeneratorRuntime.async(function _callee26$(_context26) {
     while (1) {
       switch (_context26.prev = _context26.next) {
         case 0:
-          objectId = _ref18.objectId, versionHash = _ref18.versionHash;
+          objectId = _ref19.objectId, versionHash = _ref19.versionHash;
 
           if (versionHash) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -2003,14 +2051,14 @@ exports.AvailableDRMs = function _callee27() {
  */
 
 
-exports.AvailableOfferings = function _callee28(_ref19) {
-  var objectId, versionHash, writeToken, linkPath, _ref19$handler, handler, path;
+exports.AvailableOfferings = function _callee28(_ref20) {
+  var objectId, versionHash, writeToken, linkPath, _ref20$handler, handler, path;
 
   return _regeneratorRuntime.async(function _callee28$(_context28) {
     while (1) {
       switch (_context28.prev = _context28.next) {
         case 0:
-          objectId = _ref19.objectId, versionHash = _ref19.versionHash, writeToken = _ref19.writeToken, linkPath = _ref19.linkPath, _ref19$handler = _ref19.handler, handler = _ref19$handler === void 0 ? "playout" : _ref19$handler;
+          objectId = _ref20.objectId, versionHash = _ref20.versionHash, writeToken = _ref20.writeToken, linkPath = _ref20.linkPath, _ref20$handler = _ref20.handler, handler = _ref20$handler === void 0 ? "playout" : _ref20$handler;
 
           if (objectId) {
             _context28.next = 5;
@@ -2130,14 +2178,14 @@ exports.AvailableOfferings = function _callee28(_ref19) {
  */
 
 
-exports.PlayoutOptions = function _callee29(_ref20) {
-  var objectId, versionHash, writeToken, linkPath, _ref20$protocols, protocols, _ref20$handler, handler, _ref20$offering, offering, playoutType, _ref20$drms, drms, context, _ref20$hlsjsProfile, hlsjsProfile, authorizationToken, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
+exports.PlayoutOptions = function _callee29(_ref21) {
+  var objectId, versionHash, writeToken, linkPath, _ref21$protocols, protocols, _ref21$handler, handler, _ref21$offering, offering, playoutType, _ref21$drms, drms, context, _ref21$hlsjsProfile, hlsjsProfile, authorizationToken, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee29$(_context29) {
     while (1) {
       switch (_context29.prev = _context29.next) {
         case 0:
-          objectId = _ref20.objectId, versionHash = _ref20.versionHash, writeToken = _ref20.writeToken, linkPath = _ref20.linkPath, _ref20$protocols = _ref20.protocols, protocols = _ref20$protocols === void 0 ? ["dash", "hls"] : _ref20$protocols, _ref20$handler = _ref20.handler, handler = _ref20$handler === void 0 ? "playout" : _ref20$handler, _ref20$offering = _ref20.offering, offering = _ref20$offering === void 0 ? "default" : _ref20$offering, playoutType = _ref20.playoutType, _ref20$drms = _ref20.drms, drms = _ref20$drms === void 0 ? [] : _ref20$drms, context = _ref20.context, _ref20$hlsjsProfile = _ref20.hlsjsProfile, hlsjsProfile = _ref20$hlsjsProfile === void 0 ? true : _ref20$hlsjsProfile, authorizationToken = _ref20.authorizationToken;
+          objectId = _ref21.objectId, versionHash = _ref21.versionHash, writeToken = _ref21.writeToken, linkPath = _ref21.linkPath, _ref21$protocols = _ref21.protocols, protocols = _ref21$protocols === void 0 ? ["dash", "hls"] : _ref21$protocols, _ref21$handler = _ref21.handler, handler = _ref21$handler === void 0 ? "playout" : _ref21$handler, _ref21$offering = _ref21.offering, offering = _ref21$offering === void 0 ? "default" : _ref21$offering, playoutType = _ref21.playoutType, _ref21$drms = _ref21.drms, drms = _ref21$drms === void 0 ? [] : _ref21$drms, context = _ref21.context, _ref21$hlsjsProfile = _ref21.hlsjsProfile, hlsjsProfile = _ref21$hlsjsProfile === void 0 ? true : _ref21$hlsjsProfile, authorizationToken = _ref21.authorizationToken;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
           protocols = protocols.map(function (p) {
             return p.toLowerCase();
@@ -2406,14 +2454,14 @@ exports.PlayoutOptions = function _callee29(_ref20) {
  */
 
 
-exports.BitmovinPlayoutOptions = function _callee30(_ref22) {
-  var objectId, versionHash, linkPath, _ref22$protocols, protocols, _ref22$drms, drms, _ref22$handler, handler, _ref22$offering, offering, playoutType, context, authorizationToken, playoutOptions, linkTargetId, linkTargetHash, libraryId, authToken, config;
+exports.BitmovinPlayoutOptions = function _callee30(_ref23) {
+  var objectId, versionHash, linkPath, _ref23$protocols, protocols, _ref23$drms, drms, _ref23$handler, handler, _ref23$offering, offering, playoutType, context, authorizationToken, playoutOptions, linkTargetId, linkTargetHash, libraryId, authToken, config;
 
   return _regeneratorRuntime.async(function _callee30$(_context30) {
     while (1) {
       switch (_context30.prev = _context30.next) {
         case 0:
-          objectId = _ref22.objectId, versionHash = _ref22.versionHash, linkPath = _ref22.linkPath, _ref22$protocols = _ref22.protocols, protocols = _ref22$protocols === void 0 ? ["dash", "hls"] : _ref22$protocols, _ref22$drms = _ref22.drms, drms = _ref22$drms === void 0 ? [] : _ref22$drms, _ref22$handler = _ref22.handler, handler = _ref22$handler === void 0 ? "playout" : _ref22$handler, _ref22$offering = _ref22.offering, offering = _ref22$offering === void 0 ? "default" : _ref22$offering, playoutType = _ref22.playoutType, context = _ref22.context, authorizationToken = _ref22.authorizationToken;
+          objectId = _ref23.objectId, versionHash = _ref23.versionHash, linkPath = _ref23.linkPath, _ref23$protocols = _ref23.protocols, protocols = _ref23$protocols === void 0 ? ["dash", "hls"] : _ref23$protocols, _ref23$drms = _ref23.drms, drms = _ref23$drms === void 0 ? [] : _ref23$drms, _ref23$handler = _ref23.handler, handler = _ref23$handler === void 0 ? "playout" : _ref23$handler, _ref23$offering = _ref23.offering, offering = _ref23$offering === void 0 ? "default" : _ref23$offering, playoutType = _ref23.playoutType, context = _ref23.context, authorizationToken = _ref23.authorizationToken;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!objectId) {
@@ -2545,14 +2593,14 @@ exports.BitmovinPlayoutOptions = function _callee30(_ref22) {
  */
 
 
-exports.CallBitcodeMethod = function _callee31(_ref23) {
-  var libraryId, objectId, versionHash, writeToken, method, _ref23$queryParams, queryParams, _ref23$body, body, _ref23$headers, headers, _ref23$constant, constant, _ref23$format, format, path, authHeader;
+exports.CallBitcodeMethod = function _callee31(_ref24) {
+  var libraryId, objectId, versionHash, writeToken, method, _ref24$queryParams, queryParams, _ref24$body, body, _ref24$headers, headers, _ref24$constant, constant, _ref24$format, format, path, authHeader;
 
   return _regeneratorRuntime.async(function _callee31$(_context31) {
     while (1) {
       switch (_context31.prev = _context31.next) {
         case 0:
-          libraryId = _ref23.libraryId, objectId = _ref23.objectId, versionHash = _ref23.versionHash, writeToken = _ref23.writeToken, method = _ref23.method, _ref23$queryParams = _ref23.queryParams, queryParams = _ref23$queryParams === void 0 ? {} : _ref23$queryParams, _ref23$body = _ref23.body, body = _ref23$body === void 0 ? {} : _ref23$body, _ref23$headers = _ref23.headers, headers = _ref23$headers === void 0 ? {} : _ref23$headers, _ref23$constant = _ref23.constant, constant = _ref23$constant === void 0 ? true : _ref23$constant, _ref23$format = _ref23.format, format = _ref23$format === void 0 ? "json" : _ref23$format;
+          libraryId = _ref24.libraryId, objectId = _ref24.objectId, versionHash = _ref24.versionHash, writeToken = _ref24.writeToken, method = _ref24.method, _ref24$queryParams = _ref24.queryParams, queryParams = _ref24$queryParams === void 0 ? {} : _ref24$queryParams, _ref24$body = _ref24.body, body = _ref24$body === void 0 ? {} : _ref24$body, _ref24$headers = _ref24.headers, headers = _ref24$headers === void 0 ? {} : _ref24$headers, _ref24$constant = _ref24.constant, constant = _ref24$constant === void 0 ? true : _ref24$constant, _ref24$format = _ref24.format, format = _ref24$format === void 0 ? "json" : _ref24$format;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2643,14 +2691,14 @@ exports.CallBitcodeMethod = function _callee31(_ref23) {
  */
 
 
-exports.Rep = function _callee32(_ref24) {
-  var libraryId, objectId, versionHash, rep, _ref24$queryParams, queryParams, _ref24$channelAuth, channelAuth, _ref24$noAuth, noAuth, _ref24$noCache, noCache;
+exports.Rep = function _callee32(_ref25) {
+  var libraryId, objectId, versionHash, rep, _ref25$queryParams, queryParams, _ref25$channelAuth, channelAuth, _ref25$noAuth, noAuth, _ref25$noCache, noCache;
 
   return _regeneratorRuntime.async(function _callee32$(_context32) {
     while (1) {
       switch (_context32.prev = _context32.next) {
         case 0:
-          libraryId = _ref24.libraryId, objectId = _ref24.objectId, versionHash = _ref24.versionHash, rep = _ref24.rep, _ref24$queryParams = _ref24.queryParams, queryParams = _ref24$queryParams === void 0 ? {} : _ref24$queryParams, _ref24$channelAuth = _ref24.channelAuth, channelAuth = _ref24$channelAuth === void 0 ? false : _ref24$channelAuth, _ref24$noAuth = _ref24.noAuth, noAuth = _ref24$noAuth === void 0 ? false : _ref24$noAuth, _ref24$noCache = _ref24.noCache, noCache = _ref24$noCache === void 0 ? false : _ref24$noCache;
+          libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash, rep = _ref25.rep, _ref25$queryParams = _ref25.queryParams, queryParams = _ref25$queryParams === void 0 ? {} : _ref25$queryParams, _ref25$channelAuth = _ref25.channelAuth, channelAuth = _ref25$channelAuth === void 0 ? false : _ref25$channelAuth, _ref25$noAuth = _ref25.noAuth, noAuth = _ref25$noAuth === void 0 ? false : _ref25$noAuth, _ref25$noCache = _ref25.noCache, noCache = _ref25$noCache === void 0 ? false : _ref25$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2702,14 +2750,14 @@ exports.Rep = function _callee32(_ref24) {
  */
 
 
-exports.PublicRep = function _callee33(_ref25) {
-  var libraryId, objectId, versionHash, rep, _ref25$queryParams, queryParams;
+exports.PublicRep = function _callee33(_ref26) {
+  var libraryId, objectId, versionHash, rep, _ref26$queryParams, queryParams;
 
   return _regeneratorRuntime.async(function _callee33$(_context33) {
     while (1) {
       switch (_context33.prev = _context33.next) {
         case 0:
-          libraryId = _ref25.libraryId, objectId = _ref25.objectId, versionHash = _ref25.versionHash, rep = _ref25.rep, _ref25$queryParams = _ref25.queryParams, queryParams = _ref25$queryParams === void 0 ? {} : _ref25$queryParams;
+          libraryId = _ref26.libraryId, objectId = _ref26.objectId, versionHash = _ref26.versionHash, rep = _ref26.rep, _ref26$queryParams = _ref26.queryParams, queryParams = _ref26$queryParams === void 0 ? {} : _ref26$queryParams;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2764,14 +2812,14 @@ exports.PublicRep = function _callee33(_ref25) {
  */
 
 
-exports.FabricUrl = function _callee34(_ref26) {
-  var libraryId, objectId, versionHash, writeToken, partHash, rep, publicRep, call, _ref26$queryParams, queryParams, _ref26$channelAuth, channelAuth, _ref26$noAuth, noAuth, _ref26$noCache, noCache, path;
+exports.FabricUrl = function _callee34(_ref27) {
+  var libraryId, objectId, versionHash, writeToken, partHash, rep, publicRep, call, _ref27$queryParams, queryParams, _ref27$channelAuth, channelAuth, _ref27$noAuth, noAuth, _ref27$noCache, noCache, path;
 
   return _regeneratorRuntime.async(function _callee34$(_context34) {
     while (1) {
       switch (_context34.prev = _context34.next) {
         case 0:
-          libraryId = _ref26.libraryId, objectId = _ref26.objectId, versionHash = _ref26.versionHash, writeToken = _ref26.writeToken, partHash = _ref26.partHash, rep = _ref26.rep, publicRep = _ref26.publicRep, call = _ref26.call, _ref26$queryParams = _ref26.queryParams, queryParams = _ref26$queryParams === void 0 ? {} : _ref26$queryParams, _ref26$channelAuth = _ref26.channelAuth, channelAuth = _ref26$channelAuth === void 0 ? false : _ref26$channelAuth, _ref26$noAuth = _ref26.noAuth, noAuth = _ref26$noAuth === void 0 ? false : _ref26$noAuth, _ref26$noCache = _ref26.noCache, noCache = _ref26$noCache === void 0 ? false : _ref26$noCache;
+          libraryId = _ref27.libraryId, objectId = _ref27.objectId, versionHash = _ref27.versionHash, writeToken = _ref27.writeToken, partHash = _ref27.partHash, rep = _ref27.rep, publicRep = _ref27.publicRep, call = _ref27.call, _ref27$queryParams = _ref27.queryParams, queryParams = _ref27$queryParams === void 0 ? {} : _ref27$queryParams, _ref27$channelAuth = _ref27.channelAuth, channelAuth = _ref27$channelAuth === void 0 ? false : _ref27$channelAuth, _ref27$noAuth = _ref27.noAuth, noAuth = _ref27$noAuth === void 0 ? false : _ref27$noAuth, _ref27$noCache = _ref27.noCache, noCache = _ref27$noCache === void 0 ? false : _ref27$noCache;
 
           if (objectId || versionHash) {
             ValidateParameters({
@@ -2874,14 +2922,14 @@ exports.FabricUrl = function _callee34(_ref26) {
  */
 
 
-exports.FileUrl = function _callee35(_ref27) {
-  var libraryId, objectId, versionHash, writeToken, filePath, _ref27$queryParams, queryParams, _ref27$noCache, noCache, path, authorizationToken, fileInfo, encrypted;
+exports.FileUrl = function _callee35(_ref28) {
+  var libraryId, objectId, versionHash, writeToken, filePath, _ref28$queryParams, queryParams, _ref28$noCache, noCache, path, authorizationToken, fileInfo, encrypted;
 
   return _regeneratorRuntime.async(function _callee35$(_context35) {
     while (1) {
       switch (_context35.prev = _context35.next) {
         case 0:
-          libraryId = _ref27.libraryId, objectId = _ref27.objectId, versionHash = _ref27.versionHash, writeToken = _ref27.writeToken, filePath = _ref27.filePath, _ref27$queryParams = _ref27.queryParams, queryParams = _ref27$queryParams === void 0 ? {} : _ref27$queryParams, _ref27$noCache = _ref27.noCache, noCache = _ref27$noCache === void 0 ? false : _ref27$noCache;
+          libraryId = _ref28.libraryId, objectId = _ref28.objectId, versionHash = _ref28.versionHash, writeToken = _ref28.writeToken, filePath = _ref28.filePath, _ref28$queryParams = _ref28.queryParams, queryParams = _ref28$queryParams === void 0 ? {} : _ref28$queryParams, _ref28$noCache = _ref28.noCache, noCache = _ref28$noCache === void 0 ? false : _ref28$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2967,14 +3015,14 @@ exports.FileUrl = function _callee35(_ref27) {
  */
 
 
-exports.ContentObjectImageUrl = function _callee36(_ref28) {
-  var libraryId, objectId, versionHash, height, _ref28$imagePath, imagePath, imageMetadata, _queryParams;
+exports.ContentObjectImageUrl = function _callee36(_ref29) {
+  var libraryId, objectId, versionHash, height, _ref29$imagePath, imagePath, imageMetadata, _queryParams;
 
   return _regeneratorRuntime.async(function _callee36$(_context36) {
     while (1) {
       switch (_context36.prev = _context36.next) {
         case 0:
-          libraryId = _ref28.libraryId, objectId = _ref28.objectId, versionHash = _ref28.versionHash, height = _ref28.height, _ref28$imagePath = _ref28.imagePath, imagePath = _ref28$imagePath === void 0 ? "public/display_image" : _ref28$imagePath;
+          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, height = _ref29.height, _ref29$imagePath = _ref29.imagePath, imagePath = _ref29$imagePath === void 0 ? "public/display_image" : _ref29$imagePath;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3074,16 +3122,16 @@ exports.ContentObjectImageUrl = function _callee36(_ref28) {
  */
 
 
-exports.ContentObjectGraph = function _callee38(_ref29) {
+exports.ContentObjectGraph = function _callee38(_ref30) {
   var _this9 = this;
 
-  var libraryId, objectId, versionHash, _ref29$autoUpdate, autoUpdate, select, path, errorInfo, cycles, info;
+  var libraryId, objectId, versionHash, _ref30$autoUpdate, autoUpdate, select, path, errorInfo, cycles, info;
 
   return _regeneratorRuntime.async(function _callee38$(_context38) {
     while (1) {
       switch (_context38.prev = _context38.next) {
         case 0:
-          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, _ref29$autoUpdate = _ref29.autoUpdate, autoUpdate = _ref29$autoUpdate === void 0 ? false : _ref29$autoUpdate, select = _ref29.select;
+          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, _ref30$autoUpdate = _ref30.autoUpdate, autoUpdate = _ref30$autoUpdate === void 0 ? false : _ref30$autoUpdate, select = _ref30.select;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3262,13 +3310,13 @@ exports.ContentObjectGraph = function _callee38(_ref29) {
  */
 
 
-exports.LinkTarget = function _callee39(_ref30) {
+exports.LinkTarget = function _callee39(_ref31) {
   var libraryId, objectId, versionHash, writeToken, linkPath, linkInfo, targetHash, subPath;
   return _regeneratorRuntime.async(function _callee39$(_context39) {
     while (1) {
       switch (_context39.prev = _context39.next) {
         case 0:
-          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, writeToken = _ref30.writeToken, linkPath = _ref30.linkPath;
+          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3469,14 +3517,14 @@ exports.LinkTarget = function _callee39(_ref30) {
  */
 
 
-exports.LinkUrl = function _callee40(_ref31) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref31$queryParams, queryParams, _ref31$channelAuth, channelAuth, path;
+exports.LinkUrl = function _callee40(_ref32) {
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref32$queryParams, queryParams, _ref32$channelAuth, channelAuth, path;
 
   return _regeneratorRuntime.async(function _callee40$(_context40) {
     while (1) {
       switch (_context40.prev = _context40.next) {
         case 0:
-          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath, mimeType = _ref31.mimeType, _ref31$queryParams = _ref31.queryParams, queryParams = _ref31$queryParams === void 0 ? {} : _ref31$queryParams, _ref31$channelAuth = _ref31.channelAuth, channelAuth = _ref31$channelAuth === void 0 ? false : _ref31$channelAuth;
+          libraryId = _ref32.libraryId, objectId = _ref32.objectId, versionHash = _ref32.versionHash, writeToken = _ref32.writeToken, linkPath = _ref32.linkPath, mimeType = _ref32.mimeType, _ref32$queryParams = _ref32.queryParams, queryParams = _ref32$queryParams === void 0 ? {} : _ref32$queryParams, _ref32$channelAuth = _ref32.channelAuth, channelAuth = _ref32$channelAuth === void 0 ? false : _ref32$channelAuth;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3558,14 +3606,14 @@ exports.LinkUrl = function _callee40(_ref31) {
  */
 
 
-exports.LinkData = function _callee41(_ref32) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, _ref32$queryParams, queryParams, _ref32$format, format, channelAuth, linkUrl;
+exports.LinkData = function _callee41(_ref33) {
+  var libraryId, objectId, versionHash, writeToken, linkPath, _ref33$queryParams, queryParams, _ref33$format, format, channelAuth, linkUrl;
 
   return _regeneratorRuntime.async(function _callee41$(_context41) {
     while (1) {
       switch (_context41.prev = _context41.next) {
         case 0:
-          libraryId = _ref32.libraryId, objectId = _ref32.objectId, versionHash = _ref32.versionHash, writeToken = _ref32.writeToken, linkPath = _ref32.linkPath, _ref32$queryParams = _ref32.queryParams, queryParams = _ref32$queryParams === void 0 ? {} : _ref32$queryParams, _ref32$format = _ref32.format, format = _ref32$format === void 0 ? "json" : _ref32$format, channelAuth = _ref32.channelAuth;
+          libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, writeToken = _ref33.writeToken, linkPath = _ref33.linkPath, _ref33$queryParams = _ref33.queryParams, queryParams = _ref33$queryParams === void 0 ? {} : _ref33$queryParams, _ref33$format = _ref33.format, format = _ref33$format === void 0 ? "json" : _ref33$format, channelAuth = _ref33.channelAuth;
           _context41.next = 3;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             libraryId: libraryId,
@@ -3598,14 +3646,14 @@ exports.LinkData = function _callee41(_ref32) {
 /* Encryption */
 
 
-exports.CreateEncryptionConk = function _callee42(_ref33) {
-  var libraryId, objectId, versionHash, writeToken, _ref33$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
+exports.CreateEncryptionConk = function _callee42(_ref34) {
+  var libraryId, objectId, versionHash, writeToken, _ref34$createKMSConk, createKMSConk, capKey, existingUserCap, kmsAddress, kmsPublicKey, kmsCapKey, existingKMSCap;
 
   return _regeneratorRuntime.async(function _callee42$(_context42) {
     while (1) {
       switch (_context42.prev = _context42.next) {
         case 0:
-          libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash, writeToken = _ref33.writeToken, _ref33$createKMSConk = _ref33.createKMSConk, createKMSConk = _ref33$createKMSConk === void 0 ? true : _ref33$createKMSConk;
+          libraryId = _ref34.libraryId, objectId = _ref34.objectId, versionHash = _ref34.versionHash, writeToken = _ref34.writeToken, _ref34$createKMSConk = _ref34.createKMSConk, createKMSConk = _ref34$createKMSConk === void 0 ? true : _ref34$createKMSConk;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3787,13 +3835,13 @@ exports.CreateEncryptionConk = function _callee42(_ref33) {
  */
 
 
-exports.EncryptionConk = function _callee43(_ref34) {
+exports.EncryptionConk = function _callee43(_ref35) {
   var libraryId, objectId, versionHash, writeToken, owner, capKey, existingUserCap;
   return _regeneratorRuntime.async(function _callee43$(_context43) {
     while (1) {
       switch (_context43.prev = _context43.next) {
         case 0:
-          libraryId = _ref34.libraryId, objectId = _ref34.objectId, versionHash = _ref34.versionHash, writeToken = _ref34.writeToken;
+          libraryId = _ref35.libraryId, objectId = _ref35.objectId, versionHash = _ref35.versionHash, writeToken = _ref35.writeToken;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3918,13 +3966,13 @@ exports.EncryptionConk = function _callee43(_ref34) {
  */
 
 
-exports.Encrypt = function _callee44(_ref35) {
+exports.Encrypt = function _callee44(_ref36) {
   var libraryId, objectId, writeToken, chunk, conk, data;
   return _regeneratorRuntime.async(function _callee44$(_context44) {
     while (1) {
       switch (_context44.prev = _context44.next) {
         case 0:
-          libraryId = _ref35.libraryId, objectId = _ref35.objectId, writeToken = _ref35.writeToken, chunk = _ref35.chunk;
+          libraryId = _ref36.libraryId, objectId = _ref36.objectId, writeToken = _ref36.writeToken, chunk = _ref36.chunk;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -3967,13 +4015,13 @@ exports.Encrypt = function _callee44(_ref35) {
  */
 
 
-exports.Decrypt = function _callee45(_ref36) {
+exports.Decrypt = function _callee45(_ref37) {
   var libraryId, objectId, writeToken, chunk, conk, data;
   return _regeneratorRuntime.async(function _callee45$(_context45) {
     while (1) {
       switch (_context45.prev = _context45.next) {
         case 0:
-          libraryId = _ref36.libraryId, objectId = _ref36.objectId, writeToken = _ref36.writeToken, chunk = _ref36.chunk;
+          libraryId = _ref37.libraryId, objectId = _ref37.objectId, writeToken = _ref37.writeToken, chunk = _ref37.chunk;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -4014,13 +4062,13 @@ exports.Decrypt = function _callee45(_ref36) {
  */
 
 
-exports.AccessType = function _callee46(_ref37) {
+exports.AccessType = function _callee46(_ref38) {
   var id;
   return _regeneratorRuntime.async(function _callee46$(_context46) {
     while (1) {
       switch (_context46.prev = _context46.next) {
         case 0:
-          id = _ref37.id;
+          id = _ref38.id;
           _context46.next = 3;
           return _regeneratorRuntime.awrap(this.authClient.AccessType(id));
 
@@ -4047,13 +4095,13 @@ exports.AccessType = function _callee46(_ref37) {
  * @return {Promise<Object>} - Info about the access charge and whether or not the object is accessible to the current user   */
 
 
-exports.AccessInfo = function _callee47(_ref38) {
+exports.AccessInfo = function _callee47(_ref39) {
   var objectId, args, info;
   return _regeneratorRuntime.async(function _callee47$(_context47) {
     while (1) {
       switch (_context47.prev = _context47.next) {
         case 0:
-          objectId = _ref38.objectId, args = _ref38.args;
+          objectId = _ref39.objectId, args = _ref39.args;
           ValidateObject(objectId);
 
           if (!args) {
@@ -4116,14 +4164,14 @@ exports.AccessInfo = function _callee47(_ref38) {
  */
 
 
-exports.AccessRequest = function _callee48(_ref39) {
-  var libraryId, objectId, versionHash, _ref39$args, args, _ref39$update, update, _ref39$noCache, noCache;
+exports.AccessRequest = function _callee48(_ref40) {
+  var libraryId, objectId, versionHash, _ref40$args, args, _ref40$update, update, _ref40$noCache, noCache;
 
   return _regeneratorRuntime.async(function _callee48$(_context48) {
     while (1) {
       switch (_context48.prev = _context48.next) {
         case 0:
-          libraryId = _ref39.libraryId, objectId = _ref39.objectId, versionHash = _ref39.versionHash, _ref39$args = _ref39.args, args = _ref39$args === void 0 ? [] : _ref39$args, _ref39$update = _ref39.update, update = _ref39$update === void 0 ? false : _ref39$update, _ref39$noCache = _ref39.noCache, noCache = _ref39$noCache === void 0 ? false : _ref39$noCache;
+          libraryId = _ref40.libraryId, objectId = _ref40.objectId, versionHash = _ref40.versionHash, _ref40$args = _ref40.args, args = _ref40$args === void 0 ? [] : _ref40$args, _ref40$update = _ref40.update, update = _ref40$update === void 0 ? false : _ref40$update, _ref40$noCache = _ref40.noCache, noCache = _ref40$noCache === void 0 ? false : _ref40$noCache;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -4165,8 +4213,8 @@ exports.AccessRequest = function _callee48(_ref39) {
  */
 
 
-exports.SetAuthContext = function (_ref40) {
-  var context = _ref40.context;
+exports.SetAuthContext = function (_ref41) {
+  var context = _ref41.context;
 
   if (context && Object.values(context).find(function (value) {
     return typeof value !== "string";
@@ -4192,14 +4240,14 @@ exports.SetAuthContext = function (_ref40) {
  */
 
 
-exports.GenerateStateChannelToken = function _callee49(_ref41) {
-  var objectId, versionHash, context, _ref41$noCache, noCache;
+exports.GenerateStateChannelToken = function _callee49(_ref42) {
+  var objectId, versionHash, context, _ref42$noCache, noCache;
 
   return _regeneratorRuntime.async(function _callee49$(_context49) {
     while (1) {
       switch (_context49.prev = _context49.next) {
         case 0:
-          objectId = _ref41.objectId, versionHash = _ref41.versionHash, context = _ref41.context, _ref41$noCache = _ref41.noCache, noCache = _ref41$noCache === void 0 ? false : _ref41$noCache;
+          objectId = _ref42.objectId, versionHash = _ref42.versionHash, context = _ref42.context, _ref42$noCache = _ref42.noCache, noCache = _ref42$noCache === void 0 ? false : _ref42$noCache;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!versionHash) {
@@ -4257,13 +4305,13 @@ exports.GenerateStateChannelToken = function _callee49(_ref41) {
  */
 
 
-exports.FinalizeStateChannelAccess = function _callee50(_ref42) {
+exports.FinalizeStateChannelAccess = function _callee50(_ref43) {
   var objectId, versionHash, percentComplete;
   return _regeneratorRuntime.async(function _callee50$(_context50) {
     while (1) {
       switch (_context50.prev = _context50.next) {
         case 0:
-          objectId = _ref42.objectId, versionHash = _ref42.versionHash, percentComplete = _ref42.percentComplete;
+          objectId = _ref43.objectId, versionHash = _ref43.versionHash, percentComplete = _ref43.percentComplete;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!versionHash) {
@@ -4324,14 +4372,14 @@ exports.FinalizeStateChannelAccess = function _callee50(_ref42) {
  */
 
 
-exports.ContentObjectAccessComplete = function _callee51(_ref43) {
-  var objectId, _ref43$score, score;
+exports.ContentObjectAccessComplete = function _callee51(_ref44) {
+  var objectId, _ref44$score, score;
 
   return _regeneratorRuntime.async(function _callee51$(_context51) {
     while (1) {
       switch (_context51.prev = _context51.next) {
         case 0:
-          objectId = _ref43.objectId, _ref43$score = _ref43.score, score = _ref43$score === void 0 ? 100 : _ref43$score;
+          objectId = _ref44.objectId, _ref44$score = _ref44.score, score = _ref44$score === void 0 ? 100 : _ref44$score;
           ValidateObject(objectId);
 
           if (!(score < 0 || score > 100)) {
@@ -4377,13 +4425,13 @@ exports.ContentObjectAccessComplete = function _callee51(_ref43) {
  */
 
 
-exports.Collection = function _callee52(_ref44) {
+exports.Collection = function _callee52(_ref45) {
   var collectionType, validCollectionTypes, walletAddress;
   return _regeneratorRuntime.async(function _callee52$(_context52) {
     while (1) {
       switch (_context52.prev = _context52.next) {
         case 0:
-          collectionType = _ref44.collectionType;
+          collectionType = _ref45.collectionType;
           validCollectionTypes = ["accessGroups", "contentObjects", "contentTypes", "contracts", "libraries"];
 
           if (validCollectionTypes.includes(collectionType)) {
@@ -4453,13 +4501,13 @@ exports.Collection = function _callee52(_ref44) {
  */
 
 
-exports.VerifyContentObject = function _callee53(_ref45) {
+exports.VerifyContentObject = function _callee53(_ref46) {
   var libraryId, objectId, versionHash;
   return _regeneratorRuntime.async(function _callee53$(_context53) {
     while (1) {
       switch (_context53.prev = _context53.next) {
         case 0:
-          libraryId = _ref45.libraryId, objectId = _ref45.objectId, versionHash = _ref45.versionHash;
+          libraryId = _ref46.libraryId, objectId = _ref46.objectId, versionHash = _ref46.versionHash;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -4497,13 +4545,13 @@ exports.VerifyContentObject = function _callee53(_ref45) {
  */
 
 
-exports.Proofs = function _callee54(_ref46) {
+exports.Proofs = function _callee54(_ref47) {
   var libraryId, objectId, versionHash, partHash, path;
   return _regeneratorRuntime.async(function _callee54$(_context54) {
     while (1) {
       switch (_context54.prev = _context54.next) {
         case 0:
-          libraryId = _ref46.libraryId, objectId = _ref46.objectId, versionHash = _ref46.versionHash, partHash = _ref46.partHash;
+          libraryId = _ref47.libraryId, objectId = _ref47.objectId, versionHash = _ref47.versionHash, partHash = _ref47.partHash;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -4557,14 +4605,14 @@ exports.Proofs = function _callee54(_ref46) {
  */
 
 
-exports.QParts = function _callee55(_ref47) {
-  var libraryId, objectId, partHash, _ref47$format, format, path;
+exports.QParts = function _callee55(_ref48) {
+  var libraryId, objectId, partHash, _ref48$format, format, path;
 
   return _regeneratorRuntime.async(function _callee55$(_context55) {
     while (1) {
       switch (_context55.prev = _context55.next) {
         case 0:
-          libraryId = _ref47.libraryId, objectId = _ref47.objectId, partHash = _ref47.partHash, _ref47$format = _ref47.format, format = _ref47$format === void 0 ? "blob" : _ref47$format;
+          libraryId = _ref48.libraryId, objectId = _ref48.objectId, partHash = _ref48.partHash, _ref48$format = _ref48.format, format = _ref48$format === void 0 ? "blob" : _ref48$format;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,

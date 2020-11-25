@@ -8,7 +8,7 @@
   "homepage": "https://github.com/eluv-io/elv-client-js",
   "scripts": {
     "bump-version": "npm --git-tag-version --no-commit-hooks version patch",
-    "build": "npm run build-contracts && npm run build-docs && npm run build-dist && npm run build-frame-client && npm run build-permissions-client && npm run build-prod",
+    "build": "npm run build-docs && npm run build-dist && npm run build-frame-client && npm run build-permissions-client && npm run build-prod",
     "build-docs": "node build/BuildDocs.js && ./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme README.md",
     "build-dist": "node ./node_modules/@babel/cli/bin/babel.js --source-type=unambiguous --presets=@babel/preset-env --plugins @babel/plugin-transform-runtime src --out-dir dist/src",
     "build-contracts": "node build/BuildContracts.js",

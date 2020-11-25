@@ -492,19 +492,36 @@ class AuthorizationClient {
           contractAddress: Utils.HashToAddress(tenantId),
           methodName: "addressKMS"
         });
+
+        if(!kmsAddress) { throw ""; }
       } catch(error) {
         kmsAddress = await this.client.DefaultKMSAddress();
       }
 
-      token = await Utils.ResponseToFormat(
-        "text",
-        this.MakeKMSRequest({
-          kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
-          method: "POST",
-          path: UrlJoin("ks", issuer),
-          body: { "_PASSWORD": code, "_EMAIL": email }
-        })
-      );
+      try {
+        token = await Utils.ResponseToFormat(
+          "text",
+          this.MakeKMSRequest({
+            kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
+            method: "POST",
+            path: UrlJoin("as", issuer),
+            body: { "_PASSWORD": code, "_EMAIL": email }
+          })
+        );
+      } catch(error) {
+        this.Log("/as token redemption failed:", true);
+        this.Log(error, true);
+
+        token = await Utils.ResponseToFormat(
+          "text",
+          this.MakeKMSRequest({
+            kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
+            method: "POST",
+            path: UrlJoin("ks", issuer),
+            body: {"_PASSWORD": code, "_EMAIL": email}
+          })
+        );
+      }
 
       // Pull target object from token so token can be cached
       objectId = JSON.parse(Utils.FromB64(token)).qid;

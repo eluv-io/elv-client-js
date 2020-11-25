@@ -116,9 +116,8 @@ class HttpClient {
       // Fail over if not a write token request, the response was a server error, and we haven't tried all available nodes
       if(!writeToken && ((failover && parseInt(response.status) >= 500) || forceFailover) && attempts < this.uris.length) {
         // Server error - Try next node
+        this.Log(`HttpClient failing over from ${this.BaseURI()}: ${attempts + 1} attempts`, true);
         this.uriIndex = (this.uriIndex + 1) % this.uris.length;
-
-        this.Log(`HttpClient failing over: ${attempts + 1} attempts`, true);
 
         return await this.Request({
           method,
