@@ -913,7 +913,7 @@ class AuthorizationClient {
 
     const kmsHttpClient = new HttpClient({
       uris: kmsUrls,
-      debug: this.debug
+      debug: true
     });
 
     return await kmsHttpClient.Request({

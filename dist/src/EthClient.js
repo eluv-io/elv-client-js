@@ -80,6 +80,16 @@ function () {
   }
 
   _createClass(EthClient, [{
+    key: "SetEthereumURIs",
+    value: function SetEthereumURIs(uris) {
+      this.ethereumURIs = uris;
+      this.ethereumURIIndex = 0;
+      this.HttpClient = new HttpClient({
+        uris: this.ethereumURIs,
+        debug: this.debug
+      });
+    }
+  }, {
     key: "Provider",
     value: function Provider() {
       if (!this.provider) {
