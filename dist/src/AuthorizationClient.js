@@ -1760,7 +1760,7 @@ function () {
             case 15:
               kmsHttpClient = new HttpClient({
                 uris: kmsUrls,
-                debug: this.debug
+                debug: true
               });
               _context22.next = 18;
               return _regeneratorRuntime.awrap(kmsHttpClient.Request({

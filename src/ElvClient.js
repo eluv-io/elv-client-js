@@ -165,37 +165,6 @@ class ElvClient {
         ethereumURIs = ethereumURIs.filter(filterHTTPS);
       }
 
-      // Test each eth url
-      ethereumURIs = (await Promise.all(
-        ethereumURIs.map(async (uri) => {
-          try {
-            const response = await Promise.race([
-              HttpClient.Fetch(
-                uri,
-                {
-                  method: "post",
-                  headers: {"Content-Type": "application/json"},
-                  body: JSON.stringify({method: "net_version", params: [], id: 1, jsonrpc: "2.0"})
-                }
-              ),
-              new Promise(resolve => setTimeout(() => resolve({ok: false}), 5000))
-            ]);
-
-            if(response.ok) {
-              return uri;
-            }
-
-            // eslint-disable-next-line no-console
-            console.error("Eth node unavailable: " + uri);
-          } catch(error) {
-            // eslint-disable-next-line no-console
-            console.error("Eth node unavailable: " + uri);
-            // eslint-disable-next-line no-console
-            console.error(error);
-          }
-        })
-      )).filter(uri => uri);
-
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
 
       return {
@@ -265,7 +234,7 @@ class ElvClient {
     return client;
   }
 
-  InitializeClients() {
+  async InitializeClients() {
     // Cached info
     this.contentTypes = {};
     this.encryptionConks = {};
@@ -296,6 +265,43 @@ class ElvClient {
     // Initialize crypto wasm
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
+
+    // Test each eth url
+    const workingEthURIs = (await Promise.all(
+      this.ethereumURIs.map(async (uri) => {
+        try {
+          const response = await Promise.race([
+            HttpClient.Fetch(
+              uri,
+              {
+                method: "post",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({method: "net_version", params: [], id: 1, jsonrpc: "2.0"})
+              }
+            ),
+            new Promise(resolve => setTimeout(() => resolve({ok: false}), 5000))
+          ]);
+
+          if(response.ok) {
+            return uri;
+          }
+
+          // eslint-disable-next-line no-console
+          this.Log("Eth node unavailable: " + uri, true);
+        } catch(error) {
+          // eslint-disable-next-line no-console
+          this.Log("Eth node unavailable: " + uri, true);
+          // eslint-disable-next-line no-console
+          this.Log(error, true);
+        }
+      })
+    )).filter(uri => uri);
+
+    // If any eth urls are bad, discard them
+    if(workingEthURIs.length !== this.ethereumURIs.length) {
+      this.ethereumURIs = workingEthURIs;
+      this.ethClient.SetEthereumURIs(workingEthURIs);
+    }
   }
 
   ConfigUrl() {

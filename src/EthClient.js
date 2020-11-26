@@ -50,6 +50,12 @@ class EthClient {
     Ethers.errors.setLogLevel("error");
   }
 
+  SetEthereumURIs(uris) {
+    this.ethereumURIs = uris;
+    this.ethereumURIIndex = 0;
+    this.HttpClient = new HttpClient({uris: this.ethereumURIs, debug: this.debug});
+  }
+
   Provider() {
     if(!this.provider) {
       this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]);
