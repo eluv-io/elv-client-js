@@ -12,6 +12,9 @@ if(typeof crypto === "undefined") {
 
 let ElvCrypto;
 switch(Utils.Platform()) {
+  case Utils.PLATFORM_REACT_NATIVE:
+    ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.externals").default;
+    break;
   case Utils.PLATFORM_WEB:
     ElvCrypto = require("@eluvio/crypto/dist/elv-crypto.bundle.externals").default;
     break;
