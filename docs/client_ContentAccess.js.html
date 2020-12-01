@@ -2135,12 +2135,14 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
- * @param {string} objectId - Version hash of the object
+ * @param {string} versionHash - Version hash of the object
  * @param {string=} writeToken - Write token of the content object draft
+ * @param {boolean=} download=false - If specified, will return keys appropriate for download (if the current user is not
+ * the owner of the object, download will be performed via proxy-reencryption)
  *
  * @return Promise&lt;Object> - The encryption conk for the object
  */
-exports.EncryptionConk = async function({libraryId, objectId, versionHash, writeToken}) {
+exports.EncryptionConk = async function({libraryId, objectId, versionHash, writeToken, download=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
@@ -2151,12 +2153,11 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
   const owner = await this.authClient.Owner({id: objectId});
 
   if(!this.utils.EqualAddress(owner, this.signer.address)) {
-    // Target decryption
-    if(!this.reencryptionConks[objectId]) {
-      this.reencryptionConks[objectId] = await this.authClient.ReEncryptionConk({libraryId, objectId});
+    if(download) {
+      return await this.authClient.ReEncryptionConk({libraryId, objectId, versionHash});
+    } else {
+      return await this.authClient.EncryptionConk({libraryId, objectId, versionHash});
     }
-
-    return this.reencryptionConks[objectId];
   }
 
   // Primary encryption
@@ -2224,7 +2225,7 @@ exports.Encrypt = async function({libraryId, objectId, writeToken, chunk}) {
 exports.Decrypt = async function({libraryId, objectId, writeToken, chunk}) {
   ValidateParameters({libraryId, objectId});
 
-  const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+  const conk = await this.EncryptionConk({libraryId, objectId, writeToken, download: true});
   const data = await this.Crypto.Decrypt(conk, chunk);
 
   // Convert to ArrayBuffer

@@ -1169,7 +1169,8 @@ exports.DownloadFile = function _callee12(_ref13) {
           return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
-            versionHash: versionHash
+            versionHash: versionHash,
+            download: true
           }));
 
         case 31:
@@ -1458,7 +1459,8 @@ exports.DownloadPart = function _callee15(_ref16) {
           _context17.next = 25;
           return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
-            objectId: objectId
+            objectId: objectId,
+            download: true
           }));
 
         case 25:
