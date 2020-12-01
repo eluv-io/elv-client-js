@@ -175,7 +175,6 @@ function () {
               // Cached info
               this.contentTypes = {};
               this.encryptionConks = {};
-              this.reencryptionConks = {};
               this.stateChannelAccess = {};
               this.objectLibraryIds = {};
               this.objectImageUrls = {};
@@ -206,7 +205,7 @@ function () {
               this.Crypto = Crypto;
               this.Crypto.ElvCrypto(); // Test each eth url
 
-              _context2.next = 16;
+              _context2.next = 15;
               return _regeneratorRuntime.awrap(Promise.all(this.ethereumURIs.map(function _callee(uri) {
                 var response;
                 return _regeneratorRuntime.async(function _callee$(_context) {
@@ -269,7 +268,7 @@ function () {
                 }, null, null, [[0, 9]]);
               })));
 
-            case 16:
+            case 15:
               _context2.t0 = function (uri) {
                 return uri;
               };
@@ -282,7 +281,7 @@ function () {
                 this.ethClient.SetEthereumURIs(workingEthURIs);
               }
 
-            case 19:
+            case 18:
             case "end":
               return _context2.stop();
           }

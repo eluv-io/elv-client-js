@@ -80,7 +80,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
     // Transfer funds to new account
     client.SetSigner({signer: fundedSigner});
-    await client.SendFunds({recipient: tenantAdminSigner.address, ether: 10});
+    await client.SendFunds({recipient: tenantAdminSigner.address, ether: 20});
 
     // Switch to new tenant admin account
     client.SetSigner({signer: tenantAdminSigner});

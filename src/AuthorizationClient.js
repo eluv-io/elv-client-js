@@ -2,6 +2,7 @@ const HttpClient = require("./HttpClient");
 const Ethers = require("ethers");
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
+const bs58 = require("bs58");
 
 /*
 // -- Contract javascript files built using build/BuildContracts.js
@@ -86,6 +87,7 @@ class AuthorizationClient {
     this.accessVersions = {};
     this.accessTypes = {};
     this.channelContentTokens = {};
+    this.encryptionKeys = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
   }
@@ -416,7 +418,7 @@ class AuthorizationClient {
     });
 
     if(event.logs.length === 0 || !updateRequestEvent) {
-      throw Error("Update request denied");
+      throw Error(`Update request denied for ${id}`);
     }
 
     return event;
@@ -791,6 +793,10 @@ class AuthorizationClient {
 
     const { abi } = await this.ContractInfo({id: objectId});
 
+    if(!abi) {
+      throw Error(`Unable to determine contract info for ${objectId} - wrong network?`);
+    }
+
     return await this.client.CallContractMethod({
       contractAddress: Utils.HashToAddress(objectId),
       abi,
@@ -837,8 +843,8 @@ class AuthorizationClient {
   }
 
   // Retrieve symmetric key for object
-  async KMSSymmetricKey({libraryId, objectId}) {
-    if(!libraryId) { libraryId = this.client.ContentObjectLibraryId({objectId}); }
+  async RetrieveConk({libraryId, objectId}) {
+    if(!libraryId) { libraryId = await this.client.ContentObjectLibraryId({objectId}); }
 
     const kmsAddress = await this.KMSAddress({objectId});
     const kmsCapId = `eluv.caps.ikms${Utils.AddressToHash(kmsAddress)}`;
@@ -848,12 +854,14 @@ class AuthorizationClient {
       metadataSubtree: kmsCapId
     });
 
-    return await this.MakeKMSCall({
+    const cap = await this.MakeKMSCall({
       objectId,
-      methodName: "elv_getSymmetricKeyAuth",
+      methodName: "elv_getEncryptionKey",
       paramTypes: ["string", "string", "string", "string", "string"],
       params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
     });
+
+    return JSON.parse(bs58.decode(cap.replace(/^kp__/, "")).toString("utf-8"));
   }
 
   // Make an RPC call to the KMS with signed parameters
@@ -999,12 +1007,33 @@ class AuthorizationClient {
 
     if(!this.reencryptionKeys[objectId]) {
       let cap = await this.client.Crypto.GenerateTargetConk();
-      cap.symm_key = await this.KMSSymmetricKey({libraryId, objectId});
+      const { symm_key } = await this.RetrieveConk({libraryId, objectId});
+      cap.symm_key = symm_key;
 
       this.reencryptionKeys[objectId] = cap;
     }
 
     return this.reencryptionKeys[objectId];
+  }
+
+  async EncryptionConk({libraryId, objectId, versionHash}) {
+    if(versionHash) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    if(!libraryId) { libraryId = await this.client.ContentObjectLibraryId({objectId}); }
+
+    if(!this.encryptionKeys[objectId]) {
+      const conk = await this.RetrieveConk({libraryId, objectId});
+
+      const { secret_key } = await this.client.Crypto.GeneratePrimaryConk({objectId});
+      conk.secret_key = secret_key;
+
+      // { secret_key, public_key, symm_key, block_size }
+      this.encryptionKeys[objectId] = conk;
+    }
+
+    return this.encryptionKeys[objectId];
   }
 
   async RecordTags({accessType, libraryId, objectId, versionHash}) {

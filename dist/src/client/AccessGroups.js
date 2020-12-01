@@ -980,25 +980,26 @@ exports.ContentObjectGroupPermissions = function _callee20(_ref16) {
               while (1) {
                 switch (_context19.prev = _context19.next) {
                   case 0:
+                    _context19.prev = 0;
                     groupAddress = _this4.utils.FormatAddress(groupAddress);
-                    _context19.next = 3;
+                    _context19.next = 4;
                     return _regeneratorRuntime.awrap(_this4.CallContractMethod({
                       contractAddress: groupAddress,
                       methodName: rightsMethod,
                       methodArgs: [contractAddress]
                     }));
 
-                  case 3:
+                  case 4:
                     permission = _context19.sent;
 
                     if (!(permission === 0)) {
-                      _context19.next = 6;
+                      _context19.next = 7;
                       break;
                     }
 
                     return _context19.abrupt("return");
 
-                  case 6:
+                  case 7:
                     permissions = [];
 
                     if (permission >= 100) {
@@ -1014,13 +1015,23 @@ exports.ContentObjectGroupPermissions = function _callee20(_ref16) {
                     }
 
                     groupPermissions[groupAddress] = permissions;
+                    _context19.next = 18;
+                    break;
 
-                  case 11:
+                  case 14:
+                    _context19.prev = 14;
+                    _context19.t0 = _context19["catch"](0);
+
+                    _this4.Log("Failed to retrieve group permissions for ".concat(groupAddress), true);
+
+                    _this4.Log(_context19.t0, true);
+
+                  case 18:
                   case "end":
                     return _context19.stop();
                 }
               }
-            });
+            }, null, null, [[0, 14]]);
           })));
 
         case 22:

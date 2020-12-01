@@ -626,31 +626,38 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
   const groupPermissions = {};
   await Promise.all(
     groupAddresses.map(async groupAddress => {
-      groupAddress = this.utils.FormatAddress(groupAddress);
+      try {
+        groupAddress = this.utils.FormatAddress(groupAddress);
 
-      let permission = await this.CallContractMethod({
-        contractAddress: groupAddress,
-        methodName: rightsMethod,
-        methodArgs: [contractAddress]
-      });
+        let permission = await this.CallContractMethod({
+          contractAddress: groupAddress,
+          methodName: rightsMethod,
+          methodArgs: [contractAddress]
+        });
 
-      if(permission === 0) { return; }
+        if(permission === 0) {
+          return;
+        }
 
-      let permissions = [];
+        let permissions = [];
 
-      if(permission >= 100) {
-        permissions.push("manage");
+        if(permission >= 100) {
+          permissions.push("manage");
+        }
+
+        if(permission % 100 >= 10) {
+          permissions.push("access");
+        }
+
+        if(permission % 10 > 0) {
+          permissions.push("see");
+        }
+
+        groupPermissions[groupAddress] = permissions;
+      } catch(error) {
+        this.Log(`Failed to retrieve group permissions for ${groupAddress}`, true);
+        this.Log(error, true);
       }
-
-      if(permission % 100 >= 10) {
-        permissions.push("access");
-      }
-
-      if(permission % 10 > 0) {
-        permissions.push("see");
-      }
-
-      groupPermissions[groupAddress] = permissions;
     })
   );
 
