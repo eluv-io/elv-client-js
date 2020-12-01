@@ -3828,20 +3828,23 @@ exports.CreateEncryptionConk = function _callee42(_ref34) {
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
- * @param {string} objectId - Version hash of the object
+ * @param {string} versionHash - Version hash of the object
  * @param {string=} writeToken - Write token of the content object draft
+ * @param {boolean=} download=false - If specified, will return keys appropriate for download (if the current user is not
+ * the owner of the object, download will be performed via proxy-reencryption)
  *
  * @return Promise<Object> - The encryption conk for the object
  */
 
 
 exports.EncryptionConk = function _callee43(_ref35) {
-  var libraryId, objectId, versionHash, writeToken, owner, capKey, existingUserCap;
+  var libraryId, objectId, versionHash, writeToken, _ref35$download, download, owner, capKey, existingUserCap;
+
   return _regeneratorRuntime.async(function _callee43$(_context43) {
     while (1) {
       switch (_context43.prev = _context43.next) {
         case 0:
-          libraryId = _ref35.libraryId, objectId = _ref35.objectId, versionHash = _ref35.versionHash, writeToken = _ref35.writeToken;
+          libraryId = _ref35.libraryId, objectId = _ref35.objectId, versionHash = _ref35.versionHash, writeToken = _ref35.writeToken, _ref35$download = _ref35.download, download = _ref35$download === void 0 ? false : _ref35$download;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3865,35 +3868,44 @@ exports.EncryptionConk = function _callee43(_ref35) {
           owner = _context43.sent;
 
           if (this.utils.EqualAddress(owner, this.signer.address)) {
-            _context43.next = 13;
+            _context43.next = 17;
             break;
           }
 
-          if (this.reencryptionConks[objectId]) {
-            _context43.next = 12;
+          if (!download) {
+            _context43.next = 14;
             break;
           }
 
           _context43.next = 11;
           return _regeneratorRuntime.awrap(this.authClient.ReEncryptionConk({
             libraryId: libraryId,
-            objectId: objectId
+            objectId: objectId,
+            versionHash: versionHash
           }));
 
         case 11:
-          this.reencryptionConks[objectId] = _context43.sent;
+          return _context43.abrupt("return", _context43.sent);
 
-        case 12:
-          return _context43.abrupt("return", this.reencryptionConks[objectId]);
+        case 14:
+          _context43.next = 16;
+          return _regeneratorRuntime.awrap(this.authClient.EncryptionConk({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash
+          }));
 
-        case 13:
+        case 16:
+          return _context43.abrupt("return", _context43.sent);
+
+        case 17:
           if (this.encryptionConks[objectId]) {
-            _context43.next = 30;
+            _context43.next = 34;
             break;
           }
 
           capKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context43.next = 17;
+          _context43.next = 21;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -3903,29 +3915,29 @@ exports.EncryptionConk = function _callee43(_ref35) {
             metadataSubtree: capKey
           }));
 
-        case 17:
+        case 21:
           existingUserCap = _context43.sent;
 
           if (!existingUserCap) {
-            _context43.next = 24;
+            _context43.next = 28;
             break;
           }
 
-          _context43.next = 21;
+          _context43.next = 25;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
-        case 21:
+        case 25:
           this.encryptionConks[objectId] = _context43.sent;
-          _context43.next = 30;
+          _context43.next = 34;
           break;
 
-        case 24:
+        case 28:
           if (!writeToken) {
-            _context43.next = 29;
+            _context43.next = 33;
             break;
           }
 
-          _context43.next = 27;
+          _context43.next = 31;
           return _regeneratorRuntime.awrap(this.CreateEncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
@@ -3934,17 +3946,17 @@ exports.EncryptionConk = function _callee43(_ref35) {
             createKMSConk: false
           }));
 
-        case 27:
-          _context43.next = 30;
+        case 31:
+          _context43.next = 34;
           break;
 
-        case 29:
+        case 33:
           throw "No encryption conk present for " + objectId;
 
-        case 30:
+        case 34:
           return _context43.abrupt("return", this.encryptionConks[objectId]);
 
-        case 31:
+        case 35:
         case "end":
           return _context43.stop();
       }
@@ -4030,7 +4042,8 @@ exports.Decrypt = function _callee45(_ref37) {
           return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
-            writeToken: writeToken
+            writeToken: writeToken,
+            download: true
           }));
 
         case 4:

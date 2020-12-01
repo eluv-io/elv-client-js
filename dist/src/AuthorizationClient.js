@@ -21,6 +21,8 @@ var Ethers = require("ethers");
 var Utils = require("./Utils");
 
 var UrlJoin = require("url-join");
+
+var bs58 = require("bs58");
 /*
 // -- Contract javascript files built using build/BuildContracts.js
 const SpaceContract = require("./contracts/BaseContentSpace");
@@ -101,6 +103,7 @@ function () {
     this.accessVersions = {};
     this.accessTypes = {};
     this.channelContentTokens = {};
+    this.encryptionKeys = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
   } // Return authorization token in appropriate headers
@@ -735,7 +738,7 @@ function () {
                 break;
               }
 
-              throw Error("Update request denied");
+              throw Error("Update request denied for ".concat(id));
 
             case 7:
               return _context6.abrupt("return", event);
@@ -1460,17 +1463,26 @@ function () {
             case 4:
               _ref24 = _context18.sent;
               abi = _ref24.abi;
-              _context18.next = 8;
+
+              if (abi) {
+                _context18.next = 8;
+                break;
+              }
+
+              throw Error("Unable to determine contract info for ".concat(objectId, " - wrong network?"));
+
+            case 8:
+              _context18.next = 10;
               return _regeneratorRuntime.awrap(this.client.CallContractMethod({
                 contractAddress: Utils.HashToAddress(objectId),
                 abi: abi,
                 methodName: "addressKMS"
               }));
 
-            case 8:
+            case 10:
               return _context18.abrupt("return", _context18.sent);
 
-            case 9:
+            case 11:
             case "end":
               return _context18.stop();
           }
@@ -1557,50 +1569,59 @@ function () {
     } // Retrieve symmetric key for object
 
   }, {
-    key: "KMSSymmetricKey",
-    value: function KMSSymmetricKey(_ref28) {
-      var libraryId, objectId, kmsAddress, kmsCapId, kmsCap;
-      return _regeneratorRuntime.async(function KMSSymmetricKey$(_context20) {
+    key: "RetrieveConk",
+    value: function RetrieveConk(_ref28) {
+      var libraryId, objectId, kmsAddress, kmsCapId, kmsCap, cap;
+      return _regeneratorRuntime.async(function RetrieveConk$(_context20) {
         while (1) {
           switch (_context20.prev = _context20.next) {
             case 0:
               libraryId = _ref28.libraryId, objectId = _ref28.objectId;
 
-              if (!libraryId) {
-                libraryId = this.client.ContentObjectLibraryId({
-                  objectId: objectId
-                });
+              if (libraryId) {
+                _context20.next = 5;
+                break;
               }
 
               _context20.next = 4;
-              return _regeneratorRuntime.awrap(this.KMSAddress({
+              return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
             case 4:
+              libraryId = _context20.sent;
+
+            case 5:
+              _context20.next = 7;
+              return _regeneratorRuntime.awrap(this.KMSAddress({
+                objectId: objectId
+              }));
+
+            case 7:
               kmsAddress = _context20.sent;
               kmsCapId = "eluv.caps.ikms".concat(Utils.AddressToHash(kmsAddress));
-              _context20.next = 8;
+              _context20.next = 11;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: libraryId,
                 objectId: objectId,
                 metadataSubtree: kmsCapId
               }));
 
-            case 8:
+            case 11:
               kmsCap = _context20.sent;
-              _context20.next = 11;
+              _context20.next = 14;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
-                methodName: "elv_getSymmetricKeyAuth",
+                methodName: "elv_getEncryptionKey",
                 paramTypes: ["string", "string", "string", "string", "string"],
                 params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
               }));
 
-            case 11:
-              return _context20.abrupt("return", _context20.sent);
+            case 14:
+              cap = _context20.sent;
+              return _context20.abrupt("return", JSON.parse(bs58.decode(cap.replace(/^kp__/, "")).toString("utf-8")));
 
-            case 12:
+            case 16:
             case "end":
               return _context20.stop();
           }
@@ -1913,7 +1934,8 @@ function () {
   }, {
     key: "ReEncryptionConk",
     value: function ReEncryptionConk(_ref33) {
-      var libraryId, objectId, versionHash, cap;
+      var libraryId, objectId, versionHash, cap, _ref34, symm_key;
+
       return _regeneratorRuntime.async(function ReEncryptionConk$(_context25) {
         while (1) {
           switch (_context25.prev = _context25.next) {
@@ -1925,7 +1947,7 @@ function () {
               }
 
               if (this.reencryptionKeys[objectId]) {
-                _context25.next = 10;
+                _context25.next = 12;
                 break;
               }
 
@@ -1935,19 +1957,21 @@ function () {
             case 5:
               cap = _context25.sent;
               _context25.next = 8;
-              return _regeneratorRuntime.awrap(this.KMSSymmetricKey({
+              return _regeneratorRuntime.awrap(this.RetrieveConk({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
             case 8:
-              cap.symm_key = _context25.sent;
+              _ref34 = _context25.sent;
+              symm_key = _ref34.symm_key;
+              cap.symm_key = symm_key;
               this.reencryptionKeys[objectId] = cap;
 
-            case 10:
+            case 12:
               return _context25.abrupt("return", this.reencryptionKeys[objectId]);
 
-            case 11:
+            case 13:
             case "end":
               return _context25.stop();
           }
@@ -1955,47 +1979,111 @@ function () {
       }, null, this);
     }
   }, {
-    key: "RecordTags",
-    value: function RecordTags(_ref34) {
-      var accessType, libraryId, objectId, versionHash, _ref35, abi, owner;
+    key: "EncryptionConk",
+    value: function EncryptionConk(_ref35) {
+      var libraryId, objectId, versionHash, conk, _ref36, secret_key;
 
-      return _regeneratorRuntime.async(function RecordTags$(_context26) {
+      return _regeneratorRuntime.async(function EncryptionConk$(_context26) {
         while (1) {
           switch (_context26.prev = _context26.next) {
             case 0:
-              accessType = _ref34.accessType, libraryId = _ref34.libraryId, objectId = _ref34.objectId, versionHash = _ref34.versionHash;
+              libraryId = _ref35.libraryId, objectId = _ref35.objectId, versionHash = _ref35.versionHash;
 
-              if (!(accessType !== ACCESS_TYPES.OBJECT)) {
-                _context26.next = 3;
+              if (versionHash) {
+                objectId = Utils.DecodeVersionHash(versionHash).objectId;
+              }
+
+              if (libraryId) {
+                _context26.next = 6;
                 break;
               }
 
-              return _context26.abrupt("return");
+              _context26.next = 5;
+              return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
+                objectId: objectId
+              }));
+
+            case 5:
+              libraryId = _context26.sent;
+
+            case 6:
+              if (this.encryptionKeys[objectId]) {
+                _context26.next = 16;
+                break;
+              }
+
+              _context26.next = 9;
+              return _regeneratorRuntime.awrap(this.RetrieveConk({
+                libraryId: libraryId,
+                objectId: objectId
+              }));
+
+            case 9:
+              conk = _context26.sent;
+              _context26.next = 12;
+              return _regeneratorRuntime.awrap(this.client.Crypto.GeneratePrimaryConk({
+                objectId: objectId
+              }));
+
+            case 12:
+              _ref36 = _context26.sent;
+              secret_key = _ref36.secret_key;
+              conk.secret_key = secret_key; // { secret_key, public_key, symm_key, block_size }
+
+              this.encryptionKeys[objectId] = conk;
+
+            case 16:
+              return _context26.abrupt("return", this.encryptionKeys[objectId]);
+
+            case 17:
+            case "end":
+              return _context26.stop();
+          }
+        }
+      }, null, this);
+    }
+  }, {
+    key: "RecordTags",
+    value: function RecordTags(_ref37) {
+      var accessType, libraryId, objectId, versionHash, _ref38, abi, owner;
+
+      return _regeneratorRuntime.async(function RecordTags$(_context27) {
+        while (1) {
+          switch (_context27.prev = _context27.next) {
+            case 0:
+              accessType = _ref37.accessType, libraryId = _ref37.libraryId, objectId = _ref37.objectId, versionHash = _ref37.versionHash;
+
+              if (!(accessType !== ACCESS_TYPES.OBJECT)) {
+                _context27.next = 3;
+                break;
+              }
+
+              return _context27.abrupt("return");
 
             case 3:
-              _context26.next = 5;
+              _context27.next = 5;
               return _regeneratorRuntime.awrap(this.ContractInfo({
                 id: objectId
               }));
 
             case 5:
-              _ref35 = _context26.sent;
-              abi = _ref35.abi;
-              _context26.next = 9;
+              _ref38 = _context27.sent;
+              abi = _ref38.abi;
+              _context27.next = 9;
               return _regeneratorRuntime.awrap(this.Owner({
                 id: objectId,
                 abi: abi
               }));
 
             case 9:
-              owner = _context26.sent;
+              owner = _context27.sent;
 
               if (Utils.EqualAddress(owner, this.client.signer.address)) {
-                _context26.next = 13;
+                _context27.next = 13;
                 break;
               }
 
-              _context26.next = 13;
+              _context27.next = 13;
               return _regeneratorRuntime.awrap(this.client.userProfileClient.RecordTags({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -2004,7 +2092,7 @@ function () {
 
             case 13:
             case "end":
-              return _context26.stop();
+              return _context27.stop();
           }
         }
       }, null, this);
@@ -2014,53 +2102,22 @@ function () {
   }, {
     key: "CreateAccessGroup",
     value: function CreateAccessGroup() {
-      var _ref36, contractAddress, transactionHash;
+      var _ref39, contractAddress, transactionHash;
 
-      return _regeneratorRuntime.async(function CreateAccessGroup$(_context27) {
+      return _regeneratorRuntime.async(function CreateAccessGroup$(_context28) {
         while (1) {
-          switch (_context27.prev = _context27.next) {
+          switch (_context28.prev = _context28.next) {
             case 0:
-              _context27.next = 2;
+              _context28.next = 2;
               return _regeneratorRuntime.awrap(this.client.ethClient.DeployAccessGroupContract({
                 contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                 signer: this.client.signer
               }));
 
             case 2:
-              _ref36 = _context27.sent;
-              contractAddress = _ref36.contractAddress;
-              transactionHash = _ref36.transactionHash;
-              return _context27.abrupt("return", {
-                contractAddress: contractAddress,
-                transactionHash: transactionHash
-              });
-
-            case 6:
-            case "end":
-              return _context27.stop();
-          }
-        }
-      }, null, this);
-    }
-  }, {
-    key: "CreateContentType",
-    value: function CreateContentType() {
-      var _ref37, contractAddress, transactionHash;
-
-      return _regeneratorRuntime.async(function CreateContentType$(_context28) {
-        while (1) {
-          switch (_context28.prev = _context28.next) {
-            case 0:
-              _context28.next = 2;
-              return _regeneratorRuntime.awrap(this.client.ethClient.DeployTypeContract({
-                contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-                signer: this.client.signer
-              }));
-
-            case 2:
-              _ref37 = _context28.sent;
-              contractAddress = _ref37.contractAddress;
-              transactionHash = _ref37.transactionHash;
+              _ref39 = _context28.sent;
+              contractAddress = _ref39.contractAddress;
+              transactionHash = _ref39.transactionHash;
               return _context28.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
@@ -2074,32 +2131,30 @@ function () {
       }, null, this);
     }
   }, {
-    key: "CreateContentLibrary",
-    value: function CreateContentLibrary(_ref38) {
-      var kmsId, _ref39, contractAddress, transactionHash;
+    key: "CreateContentType",
+    value: function CreateContentType() {
+      var _ref40, contractAddress, transactionHash;
 
-      return _regeneratorRuntime.async(function CreateContentLibrary$(_context29) {
+      return _regeneratorRuntime.async(function CreateContentType$(_context29) {
         while (1) {
           switch (_context29.prev = _context29.next) {
             case 0:
-              kmsId = _ref38.kmsId;
-              _context29.next = 3;
-              return _regeneratorRuntime.awrap(this.client.ethClient.DeployLibraryContract({
+              _context29.next = 2;
+              return _regeneratorRuntime.awrap(this.client.ethClient.DeployTypeContract({
                 contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-                kmsId: kmsId,
                 signer: this.client.signer
               }));
 
-            case 3:
-              _ref39 = _context29.sent;
-              contractAddress = _ref39.contractAddress;
-              transactionHash = _ref39.transactionHash;
+            case 2:
+              _ref40 = _context29.sent;
+              contractAddress = _ref40.contractAddress;
+              transactionHash = _ref40.transactionHash;
               return _context29.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
               });
 
-            case 7:
+            case 6:
             case "end":
               return _context29.stop();
           }
@@ -2107,26 +2162,26 @@ function () {
       }, null, this);
     }
   }, {
-    key: "CreateContentObject",
-    value: function CreateContentObject(_ref40) {
-      var libraryId, typeId, _ref41, contractAddress, transactionHash;
+    key: "CreateContentLibrary",
+    value: function CreateContentLibrary(_ref41) {
+      var kmsId, _ref42, contractAddress, transactionHash;
 
-      return _regeneratorRuntime.async(function CreateContentObject$(_context30) {
+      return _regeneratorRuntime.async(function CreateContentLibrary$(_context30) {
         while (1) {
           switch (_context30.prev = _context30.next) {
             case 0:
-              libraryId = _ref40.libraryId, typeId = _ref40.typeId;
+              kmsId = _ref41.kmsId;
               _context30.next = 3;
-              return _regeneratorRuntime.awrap(this.client.ethClient.DeployContentContract({
-                contentLibraryAddress: Utils.HashToAddress(libraryId),
-                typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
+              return _regeneratorRuntime.awrap(this.client.ethClient.DeployLibraryContract({
+                contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
+                kmsId: kmsId,
                 signer: this.client.signer
               }));
 
             case 3:
-              _ref41 = _context30.sent;
-              contractAddress = _ref41.contractAddress;
-              transactionHash = _ref41.transactionHash;
+              _ref42 = _context30.sent;
+              contractAddress = _ref42.contractAddress;
+              transactionHash = _ref42.transactionHash;
               return _context30.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
@@ -2135,6 +2190,39 @@ function () {
             case 7:
             case "end":
               return _context30.stop();
+          }
+        }
+      }, null, this);
+    }
+  }, {
+    key: "CreateContentObject",
+    value: function CreateContentObject(_ref43) {
+      var libraryId, typeId, _ref44, contractAddress, transactionHash;
+
+      return _regeneratorRuntime.async(function CreateContentObject$(_context31) {
+        while (1) {
+          switch (_context31.prev = _context31.next) {
+            case 0:
+              libraryId = _ref43.libraryId, typeId = _ref43.typeId;
+              _context31.next = 3;
+              return _regeneratorRuntime.awrap(this.client.ethClient.DeployContentContract({
+                contentLibraryAddress: Utils.HashToAddress(libraryId),
+                typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
+                signer: this.client.signer
+              }));
+
+            case 3:
+              _ref44 = _context31.sent;
+              contractAddress = _ref44.contractAddress;
+              transactionHash = _ref44.transactionHash;
+              return _context31.abrupt("return", {
+                contractAddress: contractAddress,
+                transactionHash: transactionHash
+              });
+
+            case 7:
+            case "end":
+              return _context31.stop();
           }
         }
       }, null, this);

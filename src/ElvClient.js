@@ -235,7 +235,6 @@ class ElvClient {
     // Cached info
     this.contentTypes = {};
     this.encryptionConks = {};
-    this.reencryptionConks = {};
     this.stateChannelAccess = {};
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
