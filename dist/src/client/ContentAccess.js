@@ -2179,7 +2179,7 @@ exports.AvailableOfferings = function _callee28(_ref20) {
 
 
 exports.PlayoutOptions = function _callee29(_ref21) {
-  var objectId, versionHash, writeToken, linkPath, _ref21$protocols, protocols, _ref21$handler, handler, _ref21$offering, offering, playoutType, _ref21$drms, drms, context, _ref21$hlsjsProfile, hlsjsProfile, authorizationToken, libraryId, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
+  var objectId, versionHash, writeToken, linkPath, _ref21$protocols, protocols, _ref21$handler, handler, _ref21$offering, offering, playoutType, _ref21$drms, drms, context, _ref21$hlsjsProfile, hlsjsProfile, authorizationToken, libraryId, offeringPath, link, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee29$(_context29) {
     while (1) {
@@ -2225,13 +2225,44 @@ exports.PlayoutOptions = function _callee29(_ref21) {
 
         case 14:
           libraryId = _context29.sent;
+          _context29.prev = 15;
 
-          if (!linkPath) {
-            _context29.next = 26;
+          if (linkPath) {
+            _context29.next = 22;
             break;
           }
 
-          _context29.next = 18;
+          offeringPath = UrlJoin("public", "asset_metadata", "sources", "default");
+          _context29.next = 20;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            metadataSubtree: offeringPath
+          }));
+
+        case 20:
+          link = _context29.sent;
+
+          if (link) {
+            linkPath = offeringPath;
+          }
+
+        case 22:
+          _context29.next = 26;
+          break;
+
+        case 24:
+          _context29.prev = 24;
+          _context29.t0 = _context29["catch"](15);
+
+        case 26:
+          if (!linkPath) {
+            _context29.next = 37;
+            break;
+          }
+
+          _context29.next = 29;
           return _regeneratorRuntime.awrap(this.LinkTarget({
             libraryId: libraryId,
             objectId: objectId,
@@ -2240,15 +2271,15 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             linkPath: linkPath
           }));
 
-        case 18:
+        case 29:
           linkTargetHash = _context29.sent;
           linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
-          _context29.next = 22;
+          _context29.next = 33;
           return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: linkTargetId
           }));
 
-        case 22:
+        case 33:
           linkTargetLibraryId = _context29.sent;
 
           if (writeToken) {
@@ -2257,51 +2288,51 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
 
-          _context29.next = 27;
+          _context29.next = 38;
           break;
 
-        case 26:
+        case 37:
           path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
 
-        case 27:
-          _context29.t0 = this.authClient;
-          _context29.t1 = linkTargetId || objectId;
-          _context29.t2 = linkTargetHash || versionHash;
+        case 38:
+          _context29.t1 = this.authClient;
+          _context29.t2 = linkTargetId || objectId;
+          _context29.t3 = linkTargetHash || versionHash;
 
-          if (_context29.t2) {
-            _context29.next = 34;
-            break;
-          }
-
-          _context29.next = 33;
-          return _regeneratorRuntime.awrap(this.LatestVersionHash({
-            objectId: objectId
-          }));
-
-        case 33:
-          _context29.t2 = _context29.sent;
-
-        case 34:
-          _context29.t3 = _context29.t2;
-          _context29.t4 = protocols;
-          _context29.t5 = drms;
-          _context29.t6 = context;
-          _context29.t7 = {
-            objectId: _context29.t1,
-            versionHash: _context29.t3,
-            protocols: _context29.t4,
-            drms: _context29.t5,
-            context: _context29.t6
-          };
-          audienceData = _context29.t0.AudienceData.call(_context29.t0, _context29.t7);
-          _context29.t8 = authorizationToken;
-
-          if (_context29.t8) {
+          if (_context29.t3) {
             _context29.next = 45;
             break;
           }
 
           _context29.next = 44;
+          return _regeneratorRuntime.awrap(this.LatestVersionHash({
+            objectId: objectId
+          }));
+
+        case 44:
+          _context29.t3 = _context29.sent;
+
+        case 45:
+          _context29.t4 = _context29.t3;
+          _context29.t5 = protocols;
+          _context29.t6 = drms;
+          _context29.t7 = context;
+          _context29.t8 = {
+            objectId: _context29.t2,
+            versionHash: _context29.t4,
+            protocols: _context29.t5,
+            drms: _context29.t6,
+            context: _context29.t7
+          };
+          audienceData = _context29.t1.AudienceData.call(_context29.t1, _context29.t8);
+          _context29.t9 = authorizationToken;
+
+          if (_context29.t9) {
+            _context29.next = 56;
+            break;
+          }
+
+          _context29.next = 55;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
@@ -2310,36 +2341,36 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             audienceData: audienceData
           }));
 
-        case 44:
-          _context29.t8 = _context29.sent;
+        case 55:
+          _context29.t9 = _context29.sent;
 
-        case 45:
-          _context29.t9 = _context29.t8;
+        case 56:
+          _context29.t10 = _context29.t9;
           queryParams = {
-            authorization: _context29.t9
+            authorization: _context29.t10
           };
 
           if (linkPath) {
             queryParams.resolve = true;
           }
 
-          _context29.t10 = Object;
-          _context29.next = 51;
+          _context29.t11 = Object;
+          _context29.next = 62;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             path: path,
             method: "GET",
             queryParams: queryParams
           })));
 
-        case 51:
-          _context29.t11 = _context29.sent;
-          playoutOptions = _context29.t10.values.call(_context29.t10, _context29.t11);
+        case 62:
+          _context29.t12 = _context29.sent;
+          playoutOptions = _context29.t11.values.call(_context29.t11, _context29.t12);
           playoutMap = {};
           i = 0;
 
-        case 55:
+        case 66:
           if (!(i < playoutOptions.length)) {
-            _context29.next = 89;
+            _context29.next = 100;
             break;
           }
 
@@ -2356,16 +2387,16 @@ exports.PlayoutOptions = function _callee29(_ref21) {
           licenseServers = option.properties.license_servers;
           cert = option.properties.cert; // Create full playout URLs for this protocol / drm combo
 
-          _context29.t12 = _objectSpread;
-          _context29.t13 = {};
-          _context29.t14 = playoutMap[protocol] || {};
-          _context29.t15 = _objectSpread;
-          _context29.t16 = {};
-          _context29.t17 = (playoutMap[protocol] || {}).playoutMethods || {};
-          _context29.t18 = _defineProperty;
-          _context29.t19 = {};
-          _context29.t20 = drm || "clear";
-          _context29.next = 74;
+          _context29.t13 = _objectSpread;
+          _context29.t14 = {};
+          _context29.t15 = playoutMap[protocol] || {};
+          _context29.t16 = _objectSpread;
+          _context29.t17 = {};
+          _context29.t18 = (playoutMap[protocol] || {}).playoutMethods || {};
+          _context29.t19 = _defineProperty;
+          _context29.t20 = {};
+          _context29.t21 = drm || "clear";
+          _context29.next = 85;
           return _regeneratorRuntime.awrap(this.Rep({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
@@ -2381,55 +2412,55 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             }
           }));
 
-        case 74:
-          _context29.t21 = _context29.sent;
-          _context29.t22 = drm ? _defineProperty({}, drm, {
+        case 85:
+          _context29.t22 = _context29.sent;
+          _context29.t23 = drm ? _defineProperty({}, drm, {
             licenseServers: licenseServers,
             cert: cert
           }) : undefined;
-          _context29.t23 = {
-            playoutUrl: _context29.t21,
-            drms: _context29.t22
+          _context29.t24 = {
+            playoutUrl: _context29.t22,
+            drms: _context29.t23
           };
-          _context29.t24 = (0, _context29.t18)(_context29.t19, _context29.t20, _context29.t23);
-          _context29.t25 = (0, _context29.t15)(_context29.t16, _context29.t17, _context29.t24);
-          _context29.t26 = {
-            playoutMethods: _context29.t25
+          _context29.t25 = (0, _context29.t19)(_context29.t20, _context29.t21, _context29.t24);
+          _context29.t26 = (0, _context29.t16)(_context29.t17, _context29.t18, _context29.t25);
+          _context29.t27 = {
+            playoutMethods: _context29.t26
           };
-          playoutMap[protocol] = (0, _context29.t12)(_context29.t13, _context29.t14, _context29.t26);
+          playoutMap[protocol] = (0, _context29.t13)(_context29.t14, _context29.t15, _context29.t27);
           // Exclude any options that do not satisfy the specified protocols and/or DRMs
           protocolMatch = protocols.includes(protocol);
           drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
           if (!(!protocolMatch || !drmMatch)) {
-            _context29.next = 85;
+            _context29.next = 96;
             break;
           }
 
-          return _context29.abrupt("continue", 86);
+          return _context29.abrupt("continue", 97);
 
-        case 85:
+        case 96:
           // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
           if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
             playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
             playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
           }
 
-        case 86:
+        case 97:
           i++;
-          _context29.next = 55;
+          _context29.next = 66;
           break;
 
-        case 89:
+        case 100:
           this.Log(playoutMap);
           return _context29.abrupt("return", playoutMap);
 
-        case 91:
+        case 102:
         case "end":
           return _context29.stop();
       }
     }
-  }, null, this);
+  }, null, this, [[15, 24]]);
 };
 /**
  * Retrieve playout options in BitMovin player format for the specified content that satisfy
