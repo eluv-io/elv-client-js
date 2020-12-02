@@ -1265,6 +1265,23 @@ exports.PlayoutOptions = async function({
 
   const libraryId = await this.ContentObjectLibraryId({objectId});
 
+  try {
+    // If public/asset_metadata/sources/&lt;offering> exists, use that instead of directly calling on object
+
+    if(!linkPath) {
+      const offeringPath = UrlJoin("public", "asset_metadata", "sources", "default");
+      const link = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        versionHash,
+        metadataSubtree: offeringPath
+      });
+
+      if(link) { linkPath = offeringPath; }
+    }
+  // eslint-disable-next-line no-empty
+  } catch(error) {}
+
   let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
   if(linkPath) {
     linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, writeToken, linkPath});
