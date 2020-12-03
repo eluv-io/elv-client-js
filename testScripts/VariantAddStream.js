@@ -53,7 +53,6 @@ class VariantAddStream extends ScriptVariant {
       } else {
         this.validateStreamSource(metadata, filePath, streamIndex);
         sources.push({
-          channel_index: channelIndex,
           files_api_path: filePath,
           stream_index: streamIndex
         });

@@ -27,6 +27,10 @@ const argv = yargs
     type: "boolean",
     description: "When finalizing, exit script immediately after finalize call rather than waiting for publish to finish"
   })
+  .option("wait", {
+    type: "boolean",
+    description: "DEPRECATED (does not do anything, this is now true by default, option is only kept to prevent breaking existing scripts that use it)"
+  })
   .option("force", {
     type: "boolean",
     description: "When finalizing, proceed even if warning raised"
