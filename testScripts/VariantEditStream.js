@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
 
-// Change source info for an existing stream in a variant
+// Edit specs for an existing stream in a variant
 
 
 const ScriptVariant = require("./parentClasses/ScriptVariant");
 
-class VariantAddStream extends ScriptVariant {
+class VariantEditStream extends ScriptVariant {
 
   async body() {
     const client = await this.client();
@@ -30,6 +30,8 @@ class VariantAddStream extends ScriptVariant {
       libraryId,
       objectId
     });
+
+    let sources = [];
     this.validateVariant(metadata, variantKey);
 
     if(channelIndexes) {
@@ -37,8 +39,6 @@ class VariantAddStream extends ScriptVariant {
         this.throwError("when using --channelIndex, you may only specify one --streamIndex");
       }
     }
-
-    let sources = [];
 
     for(const streamIndex of streamIndexes) {
       if(channelIndexes) {
@@ -61,13 +61,13 @@ class VariantAddStream extends ScriptVariant {
     }
 
     // =======================================
-    // make sure entry for specified stream does not already exist
+    // find entry for specified stream
     // =======================================
 
     let variantStreams = metadata.production_master.variants[variantKey].streams;
 
-    if(variantStreams.hasOwnProperty(streamKey)) {
-      this.throwError("Stream '" + streamKey + "' is already present in variant '" + variantKey + "'");
+    if(!variantStreams.hasOwnProperty(streamKey)) {
+      this.throwError("Stream '" + streamKey + "' not found in variant '" + variantKey + "'");
     }
 
     // make our changes
@@ -85,7 +85,7 @@ class VariantAddStream extends ScriptVariant {
   }
 
   header() {
-    return "Adding stream '" + this.args.streamKey + "' to variant '" + this.args.variantKey + "'... ";
+    return "Changing source for stream '" + this.args.streamKey + "' in variant '" + this.args.variantKey + "'... ";
   }
 
   options() {
@@ -93,25 +93,24 @@ class VariantAddStream extends ScriptVariant {
       .option("streamKey", {
         alias: "stream-key",
         demandOption: true,
-        describe: "Key for new stream",
+        describe: "Stream within variant to change",
         type: "string"
       })
       .option("label", {
-        demandOption: true,
+        default: "",
         describe: "Label to display for stream",
         type: "string"
       })
       .option("language", {
         alias: "lang",
-        demandOption: true,
+        default: "",
         describe: "Language code for stream (some older players may use this as the label)",
         type: "string"
       })
       .option("isDefault", {
         alias: "is-default",
         default: false,
-        demandOption: false,
-        describe: "Stream should be chosen by default",
+        describe: "Stream should be chosen by default (will be set to false if not included)",
         type: "boolean"
       })
       .option("file", {
@@ -122,7 +121,7 @@ class VariantAddStream extends ScriptVariant {
       })
       .option("mapping", {
         alias: "m",
-        demandOption: false,
+        default: "",
         describe: "Mapping info for stream",
         type: "string"
       })
@@ -138,7 +137,8 @@ class VariantAddStream extends ScriptVariant {
         type: "array"
       });
   }
+
 }
 
-const script = new VariantAddStream;
+const script = new VariantEditStream;
 script.run();

@@ -1,11 +1,11 @@
 /* eslint-disable no-console */
 
-// Change source info for an existing stream in a variant
+// Edit specs for an existing stream in a variant
 
 
 const ScriptVariant = require("./parentClasses/ScriptVariant");
 
-class VariantChangeStreamSource extends ScriptVariant {
+class VariantRemoveStream extends ScriptVariant {
 
   async body() {
     const client = await this.client();
@@ -15,8 +15,6 @@ class VariantChangeStreamSource extends ScriptVariant {
 
     const streamKey = this.args.streamKey;
     const variantKey = this.args.variantKey;
-    const filePath = this.args.file;
-    const streamIndex = this.args.streamIndex;
 
     // ===============================================================
     // retrieve metadata from object and validate presence of variant
@@ -25,9 +23,6 @@ class VariantChangeStreamSource extends ScriptVariant {
       libraryId,
       objectId
     });
-
-    this.validateVariant(metadata, variantKey);
-    this.validateStreamSource(metadata, filePath, streamIndex);
 
     // =======================================
     // find entry for specified stream
@@ -39,22 +34,15 @@ class VariantChangeStreamSource extends ScriptVariant {
       this.throwError("Stream '" + streamKey + "' not found in variant '" + variantKey + "'");
     }
 
-    let variantStream = variantStreams[streamKey];
-    if(variantStream.sources.length !== 1) {
-      this.throwError("Stream '" + streamKey + "' in variant '" + variantKey + "' is not single-source. Currently only variant streams with 1 source are supported.");
-    }
-
-    // make our changes
-
-    variantStream.sources[0].files_api_path = filePath;
-    variantStream.sources[0].stream_index = streamIndex;
+    // delete key
+    delete metadata.production_master.variants[variantKey].streams[streamKey];
 
     // write back to object
     await this.metadataWrite(metadata);
   }
 
   header() {
-    return "Changing source for stream '" + this.args.streamKey + "' in variant '" + this.args.variantKey + "'... ";
+    return "Deleting stream '" + this.args.streamKey + "' from variant '" + this.args.variantKey + "'... ";
   }
 
   options() {
@@ -62,24 +50,11 @@ class VariantChangeStreamSource extends ScriptVariant {
       .option("streamKey", {
         alias: "stream-key",
         demandOption: true,
-        describe: "Stream within variant to change",
+        describe: "Stream within variant to delete",
         type: "string"
-      })
-      .option("file", {
-        alias: "f",
-        demandOption: true,
-        describe: "File path within object",
-        type: "string"
-      })
-      .option("streamIndex", {
-        alias: "stream-index",
-        demandOption: true,
-        describe: "Index of stream to use from file",
-        type: "number"
       });
-
   }
 }
 
-const script = new VariantChangeStreamSource;
+const script = new VariantRemoveStream;
 script.run();
