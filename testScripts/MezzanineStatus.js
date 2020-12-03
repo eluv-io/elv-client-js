@@ -22,13 +22,18 @@ const argv = yargs
     type: "string",
     description: "URL pointing to the Fabric configuration. i.e. https://main.net955210.contentfabric.io/config"
   })
-  .option("wait", {
+  .option("no-wait", {
+    alias: "noWait",
     type: "boolean",
-    description: "When finalizing, wait until publishing has finished before exiting script"
+    description: "When finalizing, exit script immediately after finalize call rather than waiting for publish to finish"
   })
   .option("force", {
     type: "boolean",
     description: "When finalizing, proceed even if warning raised"
+  })
+  .option("debug", {
+    type: "boolean",
+    description: "Enable client logging"
   })
   .demandOption(
     ["objectId"],
@@ -70,7 +75,7 @@ function etaString(seconds) {
   return result;
 }
 
-const Status = async (objectId, offeringKey="default", finalize, wait, force) => {
+const Status = async (objectId, offeringKey="default", finalize, noWait, force, debug) => {
   try {
     const client = await ElvClient.FromConfigurationUrl({
       configUrl: ClientConfiguration["config-url"]
@@ -82,6 +87,10 @@ const Status = async (objectId, offeringKey="default", finalize, wait, force) =>
     });
 
     await client.SetSigner({signer});
+
+    if(debug) {
+      client.ToggleLogging(true);
+    }
 
     const libraryId = await client.ContentObjectLibraryId({objectId});
 
@@ -142,8 +151,10 @@ const Status = async (objectId, offeringKey="default", finalize, wait, force) =>
       console.log("\tObject ID:", objectId);
       console.log("\tVersion Hash:", finalizeResponse.hash, "\n");
 
-      if(wait) {
-        console.log("--wait specified, waiting for publishing to finish...");
+      if(noWait) {
+        console.log("--no-wait specified, exiting script without waiting for publishing to finish (finalized new object version may take up to several minutes to become visible.");
+      } else {
+        console.log("Waiting for publishing to finish and new object version to become visible...");
         let publishFinished = false;
         let latestObjectData = {};
         while(!publishFinished) {
@@ -163,7 +174,7 @@ const Status = async (objectId, offeringKey="default", finalize, wait, force) =>
   }
 };
 
-let {objectId, offeringKey, finalize, wait, force} = argv;
+let {objectId, offeringKey, finalize, noWait, force, debug} = argv;
 
 const privateKey = process.env.PRIVATE_KEY;
 if(!privateKey) {
@@ -172,7 +183,7 @@ if(!privateKey) {
   return;
 }
 
-Status(objectId, offeringKey, finalize, wait, force).then(successValue => {
+Status(objectId, offeringKey, finalize, noWait, force, debug).then(successValue => {
   // nothing
   return successValue;
 }, failureReason => {
