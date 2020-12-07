@@ -177,6 +177,13 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
     await SetObjectPermissions(client, masterTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
 
+    const permissionsTypeId = await client.CreateContentType({
+      name: `${tenantName} - Permissions`,
+      metadata: {...typeMetadata, public: { "eluv.manageApp": "avails-manager" }}
+    });
+
+    await SetObjectPermissions(client, permissionsTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
+
     const channelTypeId = await client.CreateContentType({
       name: `${tenantName} - Channel`,
       metadata: {
@@ -223,6 +230,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     console.log(`\t${tenantName} - Title: ${titleTypeId}`);
     console.log(`\t${tenantName} - Title Collection: ${titleCollectionTypeId}`);
     console.log(`\t${tenantName} - Title Master: ${masterTypeId}`);
+    console.log(`\t${tenantName} - Permissions: ${permissionsTypeId}`);
     console.log(`\t${tenantName} - Channel ${channelTypeId}`);
     console.log(`\t${tenantName} - Live Stream ${streamTypeId}`);
 

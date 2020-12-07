@@ -1205,7 +1205,7 @@ exports.PlayoutOptions = async function({
     // If public/asset_metadata/sources/<offering> exists, use that instead of directly calling on object
 
     if(!linkPath) {
-      const offeringPath = UrlJoin("public", "asset_metadata", "sources", "default");
+      const offeringPath = UrlJoin("public", "asset_metadata", "sources", offering);
       const link = await this.ContentObjectMetadata({
         libraryId,
         objectId,
