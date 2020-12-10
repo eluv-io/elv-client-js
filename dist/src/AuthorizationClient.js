@@ -1627,125 +1627,84 @@ function () {
           }
         }
       }, null, this);
+    } // Retrieve symmetric key for object
+
+  }, {
+    key: "RetrieveReencryptionSymmetricKey",
+    value: function RetrieveReencryptionSymmetricKey(_ref29) {
+      var libraryId, objectId, kmsAddress, kmsCapId, kmsCap;
+      return _regeneratorRuntime.async(function RetrieveReencryptionSymmetricKey$(_context21) {
+        while (1) {
+          switch (_context21.prev = _context21.next) {
+            case 0:
+              libraryId = _ref29.libraryId, objectId = _ref29.objectId;
+
+              if (libraryId) {
+                _context21.next = 5;
+                break;
+              }
+
+              _context21.next = 4;
+              return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
+                objectId: objectId
+              }));
+
+            case 4:
+              libraryId = _context21.sent;
+
+            case 5:
+              _context21.next = 7;
+              return _regeneratorRuntime.awrap(this.KMSAddress({
+                objectId: objectId
+              }));
+
+            case 7:
+              kmsAddress = _context21.sent;
+              kmsCapId = "eluv.caps.ikms".concat(Utils.AddressToHash(kmsAddress));
+              _context21.next = 11;
+              return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
+                libraryId: libraryId,
+                objectId: objectId,
+                metadataSubtree: kmsCapId
+              }));
+
+            case 11:
+              kmsCap = _context21.sent;
+              _context21.next = 14;
+              return _regeneratorRuntime.awrap(this.MakeKMSCall({
+                objectId: objectId,
+                methodName: "elv_getSymmetricKeyAuth",
+                paramTypes: ["string", "string", "string", "string", "string"],
+                params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
+              }));
+
+            case 14:
+              return _context21.abrupt("return", _context21.sent);
+
+            case 15:
+            case "end":
+              return _context21.stop();
+          }
+        }
+      }, null, this);
     } // Make an RPC call to the KMS with signed parameters
 
   }, {
     key: "MakeKMSCall",
-    value: function MakeKMSCall(_ref29) {
-      var kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, _ref29$additionalPara, additionalParams, _ref29$signature, signature, packedHash, KMSUrls, i, stateChannelProvider;
+    value: function MakeKMSCall(_ref30) {
+      var kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, _ref30$additionalPara, additionalParams, _ref30$signature, signature, packedHash, KMSUrls, i, stateChannelProvider;
 
-      return _regeneratorRuntime.async(function MakeKMSCall$(_context21) {
+      return _regeneratorRuntime.async(function MakeKMSCall$(_context22) {
         while (1) {
-          switch (_context21.prev = _context21.next) {
+          switch (_context22.prev = _context22.next) {
             case 0:
-              kmsId = _ref29.kmsId, tenantId = _ref29.tenantId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, methodName = _ref29.methodName, params = _ref29.params, paramTypes = _ref29.paramTypes, _ref29$additionalPara = _ref29.additionalParams, additionalParams = _ref29$additionalPara === void 0 ? [] : _ref29$additionalPara, _ref29$signature = _ref29.signature, signature = _ref29$signature === void 0 ? true : _ref29$signature;
+              kmsId = _ref30.kmsId, tenantId = _ref30.tenantId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, methodName = _ref30.methodName, params = _ref30.params, paramTypes = _ref30.paramTypes, _ref30$additionalPara = _ref30.additionalParams, additionalParams = _ref30$additionalPara === void 0 ? [] : _ref30$additionalPara, _ref30$signature = _ref30.signature, signature = _ref30$signature === void 0 ? true : _ref30$signature;
 
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
               }
 
               if (objectId) {
-                _context21.next = 10;
-                break;
-              }
-
-              _context21.t0 = "ikms";
-              _context21.t1 = Utils;
-              _context21.next = 7;
-              return _regeneratorRuntime.awrap(this.client.DefaultKMSAddress({
-                tenantId: tenantId
-              }));
-
-            case 7:
-              _context21.t2 = _context21.sent;
-              _context21.t3 = _context21.t1.AddressToHash.call(_context21.t1, _context21.t2);
-              kmsId = _context21.t0.concat.call(_context21.t0, _context21.t3);
-
-            case 10:
-              if (!signature) {
-                _context21.next = 17;
-                break;
-              }
-
-              packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-              _context21.t4 = params;
-              _context21.next = 15;
-              return _regeneratorRuntime.awrap(this.Sign(packedHash));
-
-            case 15:
-              _context21.t5 = _context21.sent;
-
-              _context21.t4.push.call(_context21.t4, _context21.t5);
-
-            case 17:
-              params = params.concat(additionalParams);
-              _context21.next = 20;
-              return _regeneratorRuntime.awrap(this.KMSInfo({
-                kmsId: kmsId,
-                objectId: objectId,
-                versionHash: versionHash
-              }));
-
-            case 20:
-              KMSUrls = _context21.sent.urls;
-              i = 0;
-
-            case 22:
-              if (!(i < KMSUrls.length)) {
-                _context21.next = 39;
-                break;
-              }
-
-              _context21.prev = 23;
-              this.Log("Making KMS request:\n          URL: ".concat(KMSUrls[i], "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
-              stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
-              _context21.next = 28;
-              return _regeneratorRuntime.awrap(stateChannelProvider.send(methodName, params));
-
-            case 28:
-              return _context21.abrupt("return", _context21.sent);
-
-            case 31:
-              _context21.prev = 31;
-              _context21.t6 = _context21["catch"](23);
-              this.Log("KMS Call Error: ".concat(_context21.t6), true); // If the request has been attempted on all KMS urls, throw the error
-
-              if (!(i === KMSUrls.length - 1)) {
-                _context21.next = 36;
-                break;
-              }
-
-              throw _context21.t6;
-
-            case 36:
-              i++;
-              _context21.next = 22;
-              break;
-
-            case 39:
-            case "end":
-              return _context21.stop();
-          }
-        }
-      }, null, this, [[23, 31]]);
-    } // Make an arbitrary HTTP call to the KMS
-
-  }, {
-    key: "MakeKMSRequest",
-    value: function MakeKMSRequest(_ref30) {
-      var kmsId, objectId, versionHash, _ref30$method, method, path, bodyType, _ref30$body, body, _ref30$queryParams, queryParams, headers, kmsUrls, kmsHttpClient;
-
-      return _regeneratorRuntime.async(function MakeKMSRequest$(_context22) {
-        while (1) {
-          switch (_context22.prev = _context22.next) {
-            case 0:
-              kmsId = _ref30.kmsId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, _ref30$method = _ref30.method, method = _ref30$method === void 0 ? "GET" : _ref30$method, path = _ref30.path, bodyType = _ref30.bodyType, _ref30$body = _ref30.body, body = _ref30$body === void 0 ? {} : _ref30$body, _ref30$queryParams = _ref30.queryParams, queryParams = _ref30$queryParams === void 0 ? {} : _ref30$queryParams, headers = _ref30.headers;
-
-              if (versionHash) {
-                objectId = Utils.DecodeVersionHash(versionHash).objectId;
-              }
-
-              if (!(!objectId && !kmsId)) {
                 _context22.next = 10;
                 break;
               }
@@ -1753,7 +1712,9 @@ function () {
               _context22.t0 = "ikms";
               _context22.t1 = Utils;
               _context22.next = 7;
-              return _regeneratorRuntime.awrap(this.client.DefaultKMSAddress());
+              return _regeneratorRuntime.awrap(this.client.DefaultKMSAddress({
+                tenantId: tenantId
+              }));
 
             case 7:
               _context22.t2 = _context22.sent;
@@ -1761,7 +1722,106 @@ function () {
               kmsId = _context22.t0.concat.call(_context22.t0, _context22.t3);
 
             case 10:
-              _context22.next = 12;
+              if (!signature) {
+                _context22.next = 17;
+                break;
+              }
+
+              packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+              _context22.t4 = params;
+              _context22.next = 15;
+              return _regeneratorRuntime.awrap(this.Sign(packedHash));
+
+            case 15:
+              _context22.t5 = _context22.sent;
+
+              _context22.t4.push.call(_context22.t4, _context22.t5);
+
+            case 17:
+              params = params.concat(additionalParams);
+              _context22.next = 20;
+              return _regeneratorRuntime.awrap(this.KMSInfo({
+                kmsId: kmsId,
+                objectId: objectId,
+                versionHash: versionHash
+              }));
+
+            case 20:
+              KMSUrls = _context22.sent.urls;
+              i = 0;
+
+            case 22:
+              if (!(i < KMSUrls.length)) {
+                _context22.next = 39;
+                break;
+              }
+
+              _context22.prev = 23;
+              this.Log("Making KMS request:\n          URL: ".concat(KMSUrls[i], "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
+              stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
+              _context22.next = 28;
+              return _regeneratorRuntime.awrap(stateChannelProvider.send(methodName, params));
+
+            case 28:
+              return _context22.abrupt("return", _context22.sent);
+
+            case 31:
+              _context22.prev = 31;
+              _context22.t6 = _context22["catch"](23);
+              this.Log("KMS Call Error: ".concat(_context22.t6), true); // If the request has been attempted on all KMS urls, throw the error
+
+              if (!(i === KMSUrls.length - 1)) {
+                _context22.next = 36;
+                break;
+              }
+
+              throw _context22.t6;
+
+            case 36:
+              i++;
+              _context22.next = 22;
+              break;
+
+            case 39:
+            case "end":
+              return _context22.stop();
+          }
+        }
+      }, null, this, [[23, 31]]);
+    } // Make an arbitrary HTTP call to the KMS
+
+  }, {
+    key: "MakeKMSRequest",
+    value: function MakeKMSRequest(_ref31) {
+      var kmsId, objectId, versionHash, _ref31$method, method, path, bodyType, _ref31$body, body, _ref31$queryParams, queryParams, headers, kmsUrls, kmsHttpClient;
+
+      return _regeneratorRuntime.async(function MakeKMSRequest$(_context23) {
+        while (1) {
+          switch (_context23.prev = _context23.next) {
+            case 0:
+              kmsId = _ref31.kmsId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, _ref31$method = _ref31.method, method = _ref31$method === void 0 ? "GET" : _ref31$method, path = _ref31.path, bodyType = _ref31.bodyType, _ref31$body = _ref31.body, body = _ref31$body === void 0 ? {} : _ref31$body, _ref31$queryParams = _ref31.queryParams, queryParams = _ref31$queryParams === void 0 ? {} : _ref31$queryParams, headers = _ref31.headers;
+
+              if (versionHash) {
+                objectId = Utils.DecodeVersionHash(versionHash).objectId;
+              }
+
+              if (!(!objectId && !kmsId)) {
+                _context23.next = 10;
+                break;
+              }
+
+              _context23.t0 = "ikms";
+              _context23.t1 = Utils;
+              _context23.next = 7;
+              return _regeneratorRuntime.awrap(this.client.DefaultKMSAddress());
+
+            case 7:
+              _context23.t2 = _context23.sent;
+              _context23.t3 = _context23.t1.AddressToHash.call(_context23.t1, _context23.t2);
+              kmsId = _context23.t0.concat.call(_context23.t0, _context23.t3);
+
+            case 10:
+              _context23.next = 12;
               return _regeneratorRuntime.awrap(this.KMSInfo({
                 kmsId: kmsId,
                 objectId: objectId,
@@ -1769,10 +1829,10 @@ function () {
               }));
 
             case 12:
-              kmsUrls = _context22.sent.urls;
+              kmsUrls = _context23.sent.urls;
 
               if (!(!kmsUrls || !kmsUrls[0])) {
-                _context22.next = 15;
+                _context23.next = 15;
                 break;
               }
 
@@ -1783,7 +1843,7 @@ function () {
                 uris: kmsUrls,
                 debug: true
               });
-              _context22.next = 18;
+              _context23.next = 18;
               return _regeneratorRuntime.awrap(kmsHttpClient.Request({
                 method: method,
                 path: path,
@@ -1794,50 +1854,50 @@ function () {
               }));
 
             case 18:
-              return _context22.abrupt("return", _context22.sent);
+              return _context23.abrupt("return", _context23.sent);
 
             case 19:
             case "end":
-              return _context22.stop();
+              return _context23.stop();
           }
         }
       }, null, this);
     }
   }, {
     key: "ContractHasMethod",
-    value: function ContractHasMethod(_ref31) {
+    value: function ContractHasMethod(_ref32) {
       var contractAddress, abi, methodName, key, method, methodSignature, methodId;
-      return _regeneratorRuntime.async(function ContractHasMethod$(_context23) {
+      return _regeneratorRuntime.async(function ContractHasMethod$(_context24) {
         while (1) {
-          switch (_context23.prev = _context23.next) {
+          switch (_context24.prev = _context24.next) {
             case 0:
-              contractAddress = _ref31.contractAddress, abi = _ref31.abi, methodName = _ref31.methodName;
+              contractAddress = _ref32.contractAddress, abi = _ref32.abi, methodName = _ref32.methodName;
               contractAddress = Utils.FormatAddress(contractAddress);
               key = "".concat(contractAddress, "-").concat(methodName);
 
               if (!(this.methodAvailability[key] === undefined)) {
-                _context23.next = 19;
+                _context24.next = 19;
                 break;
               }
 
               this.Log("Checking method availability: ".concat(contractAddress, " ").concat(methodName));
 
               if (abi) {
-                _context23.next = 9;
+                _context24.next = 9;
                 break;
               }
 
-              _context23.next = 8;
+              _context24.next = 8;
               return _regeneratorRuntime.awrap(this.ContractInfo({
                 address: contractAddress
               }));
 
             case 8:
-              abi = _context23.sent.abi;
+              abi = _context24.sent.abi;
 
             case 9:
               if (abi) {
-                _context23.next = 11;
+                _context24.next = 11;
                 break;
               }
 
@@ -1849,131 +1909,128 @@ function () {
               });
 
               if (method) {
-                _context23.next = 14;
+                _context24.next = 14;
                 break;
               }
 
-              return _context23.abrupt("return", false);
+              return _context24.abrupt("return", false);
 
             case 14:
               methodSignature = "".concat(method.name, "(").concat(method.inputs.map(function (i) {
                 return i.type;
               }).join(","), ")");
               methodId = Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(methodSignature)).replace("0x", "").slice(0, 8);
-              _context23.next = 18;
+              _context24.next = 18;
               return _regeneratorRuntime.awrap(this.MakeElvMasterCall({
                 methodName: "elv_deployedContractHasMethod",
                 params: [contractAddress, methodId]
               }));
 
             case 18:
-              this.methodAvailability[key] = _context23.sent;
+              this.methodAvailability[key] = _context24.sent;
 
             case 19:
-              return _context23.abrupt("return", this.methodAvailability[key]);
+              return _context24.abrupt("return", this.methodAvailability[key]);
 
             case 20:
             case "end":
-              return _context23.stop();
+              return _context24.stop();
           }
         }
       }, null, this);
     }
   }, {
     key: "MakeElvMasterCall",
-    value: function MakeElvMasterCall(_ref32) {
+    value: function MakeElvMasterCall(_ref33) {
       var methodName, params, ethUrls, i, url, elvMasterProvider;
-      return _regeneratorRuntime.async(function MakeElvMasterCall$(_context24) {
+      return _regeneratorRuntime.async(function MakeElvMasterCall$(_context25) {
         while (1) {
-          switch (_context24.prev = _context24.next) {
+          switch (_context25.prev = _context25.next) {
             case 0:
-              methodName = _ref32.methodName, params = _ref32.params;
+              methodName = _ref33.methodName, params = _ref33.params;
               ethUrls = this.client.ethClient.ethereumURIs;
               i = 0;
 
             case 3:
               if (!(i < ethUrls.length)) {
-                _context24.next = 21;
+                _context25.next = 21;
                 break;
               }
 
-              _context24.prev = 4;
+              _context25.prev = 4;
               url = ethUrls[i];
               this.Log("Making elv-master request:\n          URL: ".concat(url, "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
               elvMasterProvider = new Ethers.providers.JsonRpcProvider(url);
-              _context24.next = 10;
+              _context25.next = 10;
               return _regeneratorRuntime.awrap(elvMasterProvider.send(methodName, params));
 
             case 10:
-              return _context24.abrupt("return", _context24.sent);
+              return _context25.abrupt("return", _context25.sent);
 
             case 13:
-              _context24.prev = 13;
-              _context24.t0 = _context24["catch"](4);
-              this.Log("elv-master Call Error: ".concat(_context24.t0), true); // If the request has been attempted on all KMS urls, throw the error
+              _context25.prev = 13;
+              _context25.t0 = _context25["catch"](4);
+              this.Log("elv-master Call Error: ".concat(_context25.t0), true); // If the request has been attempted on all KMS urls, throw the error
 
               if (!(i === ethUrls.length - 1)) {
-                _context24.next = 18;
+                _context25.next = 18;
                 break;
               }
 
-              throw _context24.t0;
+              throw _context25.t0;
 
             case 18:
               i++;
-              _context24.next = 3;
+              _context25.next = 3;
               break;
 
             case 21:
             case "end":
-              return _context24.stop();
+              return _context25.stop();
           }
         }
       }, null, this, [[4, 13]]);
     }
   }, {
     key: "ReEncryptionConk",
-    value: function ReEncryptionConk(_ref33) {
-      var libraryId, objectId, versionHash, cap, _ref34, symm_key;
-
-      return _regeneratorRuntime.async(function ReEncryptionConk$(_context25) {
+    value: function ReEncryptionConk(_ref34) {
+      var libraryId, objectId, versionHash, cap;
+      return _regeneratorRuntime.async(function ReEncryptionConk$(_context26) {
         while (1) {
-          switch (_context25.prev = _context25.next) {
+          switch (_context26.prev = _context26.next) {
             case 0:
-              libraryId = _ref33.libraryId, objectId = _ref33.objectId, versionHash = _ref33.versionHash;
+              libraryId = _ref34.libraryId, objectId = _ref34.objectId, versionHash = _ref34.versionHash;
 
               if (versionHash) {
                 objectId = Utils.DecodeVersionHash(versionHash).objectId;
               }
 
               if (this.reencryptionKeys[objectId]) {
-                _context25.next = 12;
+                _context26.next = 10;
                 break;
               }
 
-              _context25.next = 5;
+              _context26.next = 5;
               return _regeneratorRuntime.awrap(this.client.Crypto.GenerateTargetConk());
 
             case 5:
-              cap = _context25.sent;
-              _context25.next = 8;
-              return _regeneratorRuntime.awrap(this.RetrieveConk({
+              cap = _context26.sent;
+              _context26.next = 8;
+              return _regeneratorRuntime.awrap(this.RetrieveReencryptionSymmetricKey({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
             case 8:
-              _ref34 = _context25.sent;
-              symm_key = _ref34.symm_key;
-              cap.symm_key = symm_key;
+              cap.symm_key = _context26.sent;
               this.reencryptionKeys[objectId] = cap;
 
-            case 12:
-              return _context25.abrupt("return", this.reencryptionKeys[objectId]);
+            case 10:
+              return _context26.abrupt("return", this.reencryptionKeys[objectId]);
 
-            case 13:
+            case 11:
             case "end":
-              return _context25.stop();
+              return _context26.stop();
           }
         }
       }, null, this);
@@ -1983,9 +2040,9 @@ function () {
     value: function EncryptionConk(_ref35) {
       var libraryId, objectId, versionHash, conk, _ref36, secret_key;
 
-      return _regeneratorRuntime.async(function EncryptionConk$(_context26) {
+      return _regeneratorRuntime.async(function EncryptionConk$(_context27) {
         while (1) {
-          switch (_context26.prev = _context26.next) {
+          switch (_context27.prev = _context27.next) {
             case 0:
               libraryId = _ref35.libraryId, objectId = _ref35.objectId, versionHash = _ref35.versionHash;
 
@@ -1994,50 +2051,50 @@ function () {
               }
 
               if (libraryId) {
-                _context26.next = 6;
+                _context27.next = 6;
                 break;
               }
 
-              _context26.next = 5;
+              _context27.next = 5;
               return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
             case 5:
-              libraryId = _context26.sent;
+              libraryId = _context27.sent;
 
             case 6:
               if (this.encryptionKeys[objectId]) {
-                _context26.next = 16;
+                _context27.next = 16;
                 break;
               }
 
-              _context26.next = 9;
+              _context27.next = 9;
               return _regeneratorRuntime.awrap(this.RetrieveConk({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
             case 9:
-              conk = _context26.sent;
-              _context26.next = 12;
+              conk = _context27.sent;
+              _context27.next = 12;
               return _regeneratorRuntime.awrap(this.client.Crypto.GeneratePrimaryConk({
                 objectId: objectId
               }));
 
             case 12:
-              _ref36 = _context26.sent;
+              _ref36 = _context27.sent;
               secret_key = _ref36.secret_key;
               conk.secret_key = secret_key; // { secret_key, public_key, symm_key, block_size }
 
               this.encryptionKeys[objectId] = conk;
 
             case 16:
-              return _context26.abrupt("return", this.encryptionKeys[objectId]);
+              return _context27.abrupt("return", this.encryptionKeys[objectId]);
 
             case 17:
             case "end":
-              return _context26.stop();
+              return _context27.stop();
           }
         }
       }, null, this);
@@ -2047,43 +2104,43 @@ function () {
     value: function RecordTags(_ref37) {
       var accessType, libraryId, objectId, versionHash, _ref38, abi, owner;
 
-      return _regeneratorRuntime.async(function RecordTags$(_context27) {
+      return _regeneratorRuntime.async(function RecordTags$(_context28) {
         while (1) {
-          switch (_context27.prev = _context27.next) {
+          switch (_context28.prev = _context28.next) {
             case 0:
               accessType = _ref37.accessType, libraryId = _ref37.libraryId, objectId = _ref37.objectId, versionHash = _ref37.versionHash;
 
               if (!(accessType !== ACCESS_TYPES.OBJECT)) {
-                _context27.next = 3;
+                _context28.next = 3;
                 break;
               }
 
-              return _context27.abrupt("return");
+              return _context28.abrupt("return");
 
             case 3:
-              _context27.next = 5;
+              _context28.next = 5;
               return _regeneratorRuntime.awrap(this.ContractInfo({
                 id: objectId
               }));
 
             case 5:
-              _ref38 = _context27.sent;
+              _ref38 = _context28.sent;
               abi = _ref38.abi;
-              _context27.next = 9;
+              _context28.next = 9;
               return _regeneratorRuntime.awrap(this.Owner({
                 id: objectId,
                 abi: abi
               }));
 
             case 9:
-              owner = _context27.sent;
+              owner = _context28.sent;
 
               if (Utils.EqualAddress(owner, this.client.signer.address)) {
-                _context27.next = 13;
+                _context28.next = 13;
                 break;
               }
 
-              _context27.next = 13;
+              _context28.next = 13;
               return _regeneratorRuntime.awrap(this.client.userProfileClient.RecordTags({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -2092,7 +2149,7 @@ function () {
 
             case 13:
             case "end":
-              return _context27.stop();
+              return _context28.stop();
           }
         }
       }, null, this);
@@ -2104,51 +2161,20 @@ function () {
     value: function CreateAccessGroup() {
       var _ref39, contractAddress, transactionHash;
 
-      return _regeneratorRuntime.async(function CreateAccessGroup$(_context28) {
+      return _regeneratorRuntime.async(function CreateAccessGroup$(_context29) {
         while (1) {
-          switch (_context28.prev = _context28.next) {
+          switch (_context29.prev = _context29.next) {
             case 0:
-              _context28.next = 2;
+              _context29.next = 2;
               return _regeneratorRuntime.awrap(this.client.ethClient.DeployAccessGroupContract({
                 contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                 signer: this.client.signer
               }));
 
             case 2:
-              _ref39 = _context28.sent;
+              _ref39 = _context29.sent;
               contractAddress = _ref39.contractAddress;
               transactionHash = _ref39.transactionHash;
-              return _context28.abrupt("return", {
-                contractAddress: contractAddress,
-                transactionHash: transactionHash
-              });
-
-            case 6:
-            case "end":
-              return _context28.stop();
-          }
-        }
-      }, null, this);
-    }
-  }, {
-    key: "CreateContentType",
-    value: function CreateContentType() {
-      var _ref40, contractAddress, transactionHash;
-
-      return _regeneratorRuntime.async(function CreateContentType$(_context29) {
-        while (1) {
-          switch (_context29.prev = _context29.next) {
-            case 0:
-              _context29.next = 2;
-              return _regeneratorRuntime.awrap(this.client.ethClient.DeployTypeContract({
-                contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
-                signer: this.client.signer
-              }));
-
-            case 2:
-              _ref40 = _context29.sent;
-              contractAddress = _ref40.contractAddress;
-              transactionHash = _ref40.transactionHash;
               return _context29.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
@@ -2162,16 +2188,47 @@ function () {
       }, null, this);
     }
   }, {
+    key: "CreateContentType",
+    value: function CreateContentType() {
+      var _ref40, contractAddress, transactionHash;
+
+      return _regeneratorRuntime.async(function CreateContentType$(_context30) {
+        while (1) {
+          switch (_context30.prev = _context30.next) {
+            case 0:
+              _context30.next = 2;
+              return _regeneratorRuntime.awrap(this.client.ethClient.DeployTypeContract({
+                contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
+                signer: this.client.signer
+              }));
+
+            case 2:
+              _ref40 = _context30.sent;
+              contractAddress = _ref40.contractAddress;
+              transactionHash = _ref40.transactionHash;
+              return _context30.abrupt("return", {
+                contractAddress: contractAddress,
+                transactionHash: transactionHash
+              });
+
+            case 6:
+            case "end":
+              return _context30.stop();
+          }
+        }
+      }, null, this);
+    }
+  }, {
     key: "CreateContentLibrary",
     value: function CreateContentLibrary(_ref41) {
       var kmsId, _ref42, contractAddress, transactionHash;
 
-      return _regeneratorRuntime.async(function CreateContentLibrary$(_context30) {
+      return _regeneratorRuntime.async(function CreateContentLibrary$(_context31) {
         while (1) {
-          switch (_context30.prev = _context30.next) {
+          switch (_context31.prev = _context31.next) {
             case 0:
               kmsId = _ref41.kmsId;
-              _context30.next = 3;
+              _context31.next = 3;
               return _regeneratorRuntime.awrap(this.client.ethClient.DeployLibraryContract({
                 contentSpaceAddress: Utils.HashToAddress(this.contentSpaceId),
                 kmsId: kmsId,
@@ -2179,17 +2236,17 @@ function () {
               }));
 
             case 3:
-              _ref42 = _context30.sent;
+              _ref42 = _context31.sent;
               contractAddress = _ref42.contractAddress;
               transactionHash = _ref42.transactionHash;
-              return _context30.abrupt("return", {
+              return _context31.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
               });
 
             case 7:
             case "end":
-              return _context30.stop();
+              return _context31.stop();
           }
         }
       }, null, this);
@@ -2199,12 +2256,12 @@ function () {
     value: function CreateContentObject(_ref43) {
       var libraryId, typeId, _ref44, contractAddress, transactionHash;
 
-      return _regeneratorRuntime.async(function CreateContentObject$(_context31) {
+      return _regeneratorRuntime.async(function CreateContentObject$(_context32) {
         while (1) {
-          switch (_context31.prev = _context31.next) {
+          switch (_context32.prev = _context32.next) {
             case 0:
               libraryId = _ref43.libraryId, typeId = _ref43.typeId;
-              _context31.next = 3;
+              _context32.next = 3;
               return _regeneratorRuntime.awrap(this.client.ethClient.DeployContentContract({
                 contentLibraryAddress: Utils.HashToAddress(libraryId),
                 typeAddress: typeId ? Utils.HashToAddress(typeId) : Utils.nullAddress,
@@ -2212,17 +2269,17 @@ function () {
               }));
 
             case 3:
-              _ref44 = _context31.sent;
+              _ref44 = _context32.sent;
               contractAddress = _ref44.contractAddress;
               transactionHash = _ref44.transactionHash;
-              return _context31.abrupt("return", {
+              return _context32.abrupt("return", {
                 contractAddress: contractAddress,
                 transactionHash: transactionHash
               });
 
             case 7:
             case "end":
-              return _context31.stop();
+              return _context32.stop();
           }
         }
       }, null, this);

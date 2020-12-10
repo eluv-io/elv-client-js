@@ -2232,7 +2232,7 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             break;
           }
 
-          offeringPath = UrlJoin("public", "asset_metadata", "sources", "default");
+          offeringPath = UrlJoin("public", "asset_metadata", "sources", offering);
           _context29.next = 20;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
