@@ -864,6 +864,27 @@ class AuthorizationClient {
     return JSON.parse(bs58.decode(cap.replace(/^kp__/, "")).toString("utf-8"));
   }
 
+  // Retrieve symmetric key for object
+  async RetrieveReencryptionSymmetricKey({libraryId, objectId}) {
+    if(!libraryId) { libraryId = await this.client.ContentObjectLibraryId({objectId}); }
+
+    const kmsAddress = await this.KMSAddress({objectId});
+    const kmsCapId = `eluv.caps.ikms${Utils.AddressToHash(kmsAddress)}`;
+    const kmsCap = await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: kmsCapId
+    });
+
+    return await this.MakeKMSCall({
+      objectId,
+      methodName: "elv_getSymmetricKeyAuth",
+      paramTypes: ["string", "string", "string", "string", "string"],
+      params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
+    });
+  }
+
+
   // Make an RPC call to the KMS with signed parameters
   async MakeKMSCall({kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, additionalParams=[], signature=true}) {
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
@@ -1007,8 +1028,7 @@ class AuthorizationClient {
 
     if(!this.reencryptionKeys[objectId]) {
       let cap = await this.client.Crypto.GenerateTargetConk();
-      const { symm_key } = await this.RetrieveConk({libraryId, objectId});
-      cap.symm_key = symm_key;
+      cap.symm_key = await this.RetrieveReencryptionSymmetricKey({libraryId, objectId});
 
       this.reencryptionKeys[objectId] = cap;
     }
