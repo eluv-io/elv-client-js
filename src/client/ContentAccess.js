@@ -465,7 +465,6 @@ exports.LibraryContentTypes = async function({libraryId}) {
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {object=} filterOptions - Pagination, sorting and filtering options
- * @param {boolean=} filterOptions.latestOnly=true - If specified, only latest version of objects will be included
  * @param {number=} filterOptions.start - Start index for pagination
  * @param {number=} filterOptions.limit - Max number of objects to return
  * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
@@ -520,10 +519,6 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
     if(filterOptions.sortDesc) {
       queryParams.sort_descending = true;
     }
-  }
-
-  if(filterOptions.latestOnly === false) {
-    queryParams.latest_version_only = false;
   }
 
   // Filters
