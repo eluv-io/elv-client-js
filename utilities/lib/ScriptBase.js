@@ -26,10 +26,12 @@ module.exports = class ScriptBase {
 
     this.logger = new Logger(this.args.json);
 
-    // if --configUrl was not passed in, try to read from ../TestConfiguration.json
+    // if --configUrl was not passed in, try to read from env var
     if(!this.args.configUrl) {
-      const ClientConfiguration = require("../../TestConfiguration.json");
-      this.args.configUrl = ClientConfiguration["config-url"];
+      if(!process.env.FABRIC_CONFIG_URL) {
+        throw Error("Please either supply --configUrl or set environment variable FABRIC_CONFIG_URL");
+      }
+      this.args.configUrl = process.env.FABRIC_CONFIG_URL;
     }
   }
 
