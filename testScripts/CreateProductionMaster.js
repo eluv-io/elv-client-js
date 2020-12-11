@@ -11,7 +11,7 @@ const argv = yargs
     description: "ID of the library in which to create the master"
   })
   .option("type", {
-    description: "Name, object ID, or version hash of the type for the mezzanine"
+    description: "Name, object ID, or version hash of the type for the master"
   })
   .option("name", {
     description: "Name for the master object (derived from ip-title-id and title if not specified)"
@@ -23,10 +23,10 @@ const argv = yargs
     description: "Display title for the asset (set to title if not specified)"
   })
   .option("slug", {
-    description: "Slug for the mezzanine (generated based on title if not specified)"
+    description: "Slug for the master (generated based on title if not specified)"
   })
   .option("ip-title-id", {
-    description: "IP title ID for the mezzanine (equivalent to slug if not specified)",
+    description: "IP title ID for the master (equivalent to slug if not specified)",
     type: "string"
   })
   .option("metadata", {

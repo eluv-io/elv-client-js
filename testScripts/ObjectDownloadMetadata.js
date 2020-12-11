@@ -20,14 +20,13 @@ class ObjectDownloadMetadata extends MetadataMixin(ScriptBase) {
       objectId
     });
 
-    let result = "";
+    let result;
 
     // if jsonPath supplied, use
     if(jsonPath) {
       result = JSONPath({
         json: metadata,
         path: jsonPath,
-        preventEval: true,
         wrap: false
       });
     } else {
