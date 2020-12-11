@@ -932,7 +932,6 @@ exports.LibraryContentTypes = function _callee13(_ref8) {
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {object=} filterOptions - Pagination, sorting and filtering options
- * @param {boolean=} filterOptions.latestOnly=true - If specified, only latest version of objects will be included
  * @param {number=} filterOptions.start - Start index for pagination
  * @param {number=} filterOptions.limit - Max number of objects to return
  * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
@@ -991,10 +990,6 @@ exports.ContentObjects = function _callee14(_ref9) {
             if (filterOptions.sortDesc) {
               queryParams.sort_descending = true;
             }
-          }
-
-          if (filterOptions.latestOnly === false) {
-            queryParams.latest_version_only = false;
           } // Filters
 
 
@@ -1031,12 +1026,12 @@ exports.ContentObjects = function _callee14(_ref9) {
           _context14.t0 = _regeneratorRuntime;
           _context14.t1 = this.utils;
           _context14.t2 = this.HttpClient;
-          _context14.next = 21;
+          _context14.next = 20;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId
           }));
 
-        case 21:
+        case 20:
           _context14.t3 = _context14.sent;
           _context14.t4 = path;
           _context14.t5 = queryParams;
@@ -1048,13 +1043,13 @@ exports.ContentObjects = function _callee14(_ref9) {
           };
           _context14.t7 = _context14.t2.Request.call(_context14.t2, _context14.t6);
           _context14.t8 = _context14.t1.ResponseToJson.call(_context14.t1, _context14.t7);
-          _context14.next = 29;
+          _context14.next = 28;
           return _context14.t0.awrap.call(_context14.t0, _context14.t8);
 
-        case 29:
+        case 28:
           return _context14.abrupt("return", _context14.sent);
 
-        case 30:
+        case 29:
         case "end":
           return _context14.stop();
       }
