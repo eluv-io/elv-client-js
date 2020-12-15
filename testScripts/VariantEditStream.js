@@ -22,6 +22,7 @@ class VariantEditStream extends ScriptVariant {
     const channelIndexes = this.args.channelIndex;
     const streamIndexes = this.args.streamIndex;
     const mappingInfo = this.args.mapping;
+    const multipliers = this.args.mult;
 
     // ===============================================================
     // retrieve metadata from object and validate presence of variant
@@ -35,8 +36,8 @@ class VariantEditStream extends ScriptVariant {
     this.validateVariant(metadata, variantKey);
 
     if(channelIndexes) {
-      if(channelIndexes.length() > 0 && streamIndexes.length() !== 1) {
-        this.throwError("when using --channelIndex, you may only specify one --streamIndex");
+      if(channelIndexes.length > 0 && streamIndexes.length !== 1) {
+        throw new Error("when using --channelIndex, you may only specify one --streamIndex");
       }
     }
 
@@ -56,6 +57,15 @@ class VariantEditStream extends ScriptVariant {
           files_api_path: filePath,
           stream_index: streamIndex
         });
+      }
+    }
+
+    if(multipliers) {
+      if(multipliers.length !== sources.length) {
+        throw new Error("When using --multiplier you must provide exactly one value for every source (expected: " + sources.length + ")");
+      }
+      for(const [arrayIndex, source] of sources.entries()) {
+        source.multiplier = parseFloat(multipliers[arrayIndex]);
       }
     }
 
@@ -127,6 +137,11 @@ class VariantEditStream extends ScriptVariant {
       .option("channelIndex", {
         alias: "channel-index",
         describe: "Channel(s) of stream to use from file. (Only applies to audio streams)",
+        type: "array"
+      })
+      .option("multiplier", {
+        alias: "mult",
+        describe: "Sound level adjustment (Only applies to audio streams). Relationship between perceived volume and sound level is logarithmic, e.g. 0.707 = cut perceived volume by half, 1.414 = double perceived volume.",
         type: "array"
       })
       .option("streamIndex", {
