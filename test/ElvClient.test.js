@@ -2547,7 +2547,7 @@ describe("Test ElvClient", () => {
     });
     */
 
-    test("Delete Access Group", async () => {
+    test.skip("Delete Access Group", async () => {
       await client.DeleteAccessGroup({contractAddress: accessGroupAddress});
     });
   });

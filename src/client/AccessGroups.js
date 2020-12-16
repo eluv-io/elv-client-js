@@ -196,7 +196,7 @@ exports.CreateAccessGroup = async function({name, description, metadata={}}={}) 
 };
 
 /**
- * Delete an access group
+ * NOT YET SUPPORTED - Delete an access group
  *
  * Calls the kill method on the specified access group's contract
  *
@@ -206,6 +206,9 @@ exports.CreateAccessGroup = async function({name, description, metadata={}}={}) 
  * @param {string} contractAddress - The address of the access group contract
  */
 exports.DeleteAccessGroup = async function({contractAddress}) {
+  throw Error("Not supported");
+
+  // eslint-disable-next-line no-unreachable
   contractAddress = ValidateAddress(contractAddress);
 
   this.Log(`Deleting access group ${contractAddress}`);

@@ -208,6 +208,10 @@ function () {
         contract = this.cachedContracts[contractAddress];
       }
 
+      if (!abi) {
+        throw Error("No ABI for contract ".concat(contractAddress, " - Wrong network?"));
+      }
+
       if (!contract) {
         contract = new Ethers.Contract(contractAddress, abi, this.Provider());
         contract = contract.connect(this.client.signer);

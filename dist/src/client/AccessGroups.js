@@ -359,7 +359,7 @@ exports.CreateAccessGroup = function _callee7() {
   }, null, this);
 };
 /**
- * Delete an access group
+ * NOT YET SUPPORTED - Delete an access group
  *
  * Calls the kill method on the specified access group's contract
  *
@@ -377,16 +377,9 @@ exports.DeleteAccessGroup = function _callee8(_ref7) {
       switch (_context8.prev = _context8.next) {
         case 0:
           contractAddress = _ref7.contractAddress;
-          contractAddress = ValidateAddress(contractAddress);
-          this.Log("Deleting access group ".concat(contractAddress));
-          _context8.next = 5;
-          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
-            contractAddress: contractAddress,
-            methodName: "kill",
-            methodArgs: []
-          }));
+          throw Error("Not supported");
 
-        case 5:
+        case 6:
         case "end":
           return _context8.stop();
       }
