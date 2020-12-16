@@ -14,7 +14,7 @@ const {
   ValidateVersion,
   ValidatePartHash,
   ValidateWriteToken,
-  ValidateParameters
+  ValidateParameters,
 } = require("../Validation");
 
 

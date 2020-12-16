@@ -854,6 +854,10 @@ class AuthorizationClient {
       metadataSubtree: kmsCapId
     });
 
+    if(!kmsCap) {
+      throw Error("No KMS key set for this object");
+    }
+
     const cap = await this.MakeKMSCall({
       objectId,
       methodName: "elv_getEncryptionKey",
@@ -875,6 +879,10 @@ class AuthorizationClient {
       objectId,
       metadataSubtree: kmsCapId
     });
+
+    if(!kmsCap) {
+      throw Error("No KMS key set for this object");
+    }
 
     return await this.MakeKMSCall({
       objectId,

@@ -1609,7 +1609,16 @@ function () {
 
             case 11:
               kmsCap = _context20.sent;
-              _context20.next = 14;
+
+              if (kmsCap) {
+                _context20.next = 14;
+                break;
+              }
+
+              throw Error("No KMS key set for this object");
+
+            case 14:
+              _context20.next = 16;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: "elv_getEncryptionKey",
@@ -1617,11 +1626,11 @@ function () {
                 params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
               }));
 
-            case 14:
+            case 16:
               cap = _context20.sent;
               return _context20.abrupt("return", JSON.parse(bs58.decode(cap.replace(/^kp__/, "")).toString("utf-8")));
 
-            case 16:
+            case 18:
             case "end":
               return _context20.stop();
           }
@@ -1670,7 +1679,16 @@ function () {
 
             case 11:
               kmsCap = _context21.sent;
-              _context21.next = 14;
+
+              if (kmsCap) {
+                _context21.next = 14;
+                break;
+              }
+
+              throw Error("No KMS key set for this object");
+
+            case 14:
+              _context21.next = 16;
               return _regeneratorRuntime.awrap(this.MakeKMSCall({
                 objectId: objectId,
                 methodName: "elv_getSymmetricKeyAuth",
@@ -1678,10 +1696,10 @@ function () {
                 params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
               }));
 
-            case 14:
+            case 16:
               return _context21.abrupt("return", _context21.sent);
 
-            case 15:
+            case 17:
             case "end":
               return _context21.stop();
           }

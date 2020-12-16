@@ -9,7 +9,8 @@ const Ethers = require("ethers");
 
 const {
   ValidateAddress,
-  ValidateParameters
+  ValidateParameters,
+  ValidatePresence
 } = require("../Validation");
 
 /**
@@ -31,6 +32,8 @@ exports.ContractName = async function({contractAddress}) {
 /**
  * Retrieve the ABI for the given contract via its address or a Fabric ID. Contract must be a standard Eluvio contract
  *
+ * @methodGroup Contracts
+ * @namedParams
  * @param {string=} contractAddress - The address of the contract
  * @param {string=} id - The Fabric ID of the contract
  *
@@ -225,6 +228,94 @@ exports.CallContractMethodAndWait = async function({
     formatArguments,
     cacheContract,
     overrideCachedContract
+  });
+};
+
+/**
+ * Retrieve metadata from the specified contract
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string} contractAddress - The address of the contract
+ * @param {string} metadataKey - The metadata key to retrieve
+ *
+ * @return {Promise<Object|string>}
+ */
+exports.ContractMetadata = async function({contractAddress, metadataKey, }) {
+  ValidatePresence("contractAddress", contractAddress);
+  ValidatePresence("metadataKey", metadataKey);
+
+  try {
+    const metadata = await this.CallContractMethod({
+      contractAddress,
+      methodName: "getMeta",
+      methodArgs: [metadataKey]
+    });
+
+    const data = Buffer.from((metadata || "").replace("0x", ""), "hex").toString("utf-8");
+
+    try {
+      return JSON.parse(data);
+    } catch(error) {
+      return data;
+    }
+  } catch(error) {
+    return "";
+  }
+};
+
+/**
+ * Merge contract metadata at the specified key.
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string} contractAddress - The address of the contract
+ * @param {string} metadataKey - The metadata key to retrieve
+ * @param {string} metadata
+ */
+exports.MergeContractMetadata = async function({contractAddress, metadataKey, metadata}) {
+  ValidatePresence("contractAddress", contractAddress);
+  ValidatePresence("metadataKey", metadataKey);
+
+  const existingMetadata = await this.ContractMetadata({contractAddress, metadataKey}) || {};
+
+  if(typeof existingMetadata === "object") {
+    metadata = {
+      ...existingMetadata,
+      ...metadata
+    };
+  }
+
+  await this.CallContractMethodAndWait({
+    contractAddress,
+    methodName: "putMeta",
+    methodArgs: [
+      metadataKey,
+      JSON.stringify(metadata)
+    ]
+  });
+};
+
+/**
+ * Replace the contract metadata at the specified key
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string} contractAddress - The address of the contract
+ * @param {string} metadataKey - The metadata key to retrieve
+ * @param {string|Object} metadata - The metadata to insert
+ */
+exports.ReplaceContractMetadata = async function({contractAddress, metadataKey, metadata}) {
+  ValidatePresence("contractAddress", contractAddress);
+  ValidatePresence("metadataKey", metadataKey);
+
+  await this.CallContractMethodAndWait({
+    contractAddress,
+    methodName: "putMeta",
+    methodArgs: [
+      metadataKey,
+      JSON.stringify(metadata)
+    ]
   });
 };
 
