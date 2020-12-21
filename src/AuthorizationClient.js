@@ -2,6 +2,8 @@ const HttpClient = require("./HttpClient");
 const Ethers = require("ethers");
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
+const bs58 = require("bs58");
+const {LogMessage} = require("./LogMessage");
 
 /*
 // -- Contract javascript files built using build/BuildContracts.js
@@ -54,17 +56,7 @@ const CONTRACTS = {
 
 class AuthorizationClient {
   Log(message, error=false) {
-    if(!this.debug) { return; }
-
-    if(typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-
-    error ?
-      // eslint-disable-next-line no-console
-      console.error(`\n(elv-client-js#AuthorizationClient) ${message}\n`) :
-      // eslint-disable-next-line no-console
-      console.log(`\n(elv-client-js#AuthorizationClient) ${message}\n`);
+    LogMessage(this, message, error);
   }
 
   constructor({client, contentSpaceId, debug=false, noCache=false, noAuth=false}) {
@@ -80,10 +72,13 @@ class AuthorizationClient {
     this.accessTransactions = {};
     this.modifyTransactions = {};
 
+    this.transactionLocks = {};
+
     this.methodAvailability = {};
     this.accessVersions = {};
     this.accessTypes = {};
     this.channelContentTokens = {};
+    this.encryptionKeys = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
   }
@@ -269,71 +264,80 @@ class AuthorizationClient {
 
     const address = Utils.HashToAddress(id);
 
-    // Check cache for existing transaction
-    if(!noCache && !skipCache) {
-      const cache = update ? this.modifyTransactions : this.accessTransactions;
+    let elapsed = 0;
+    while(this.transactionLocks[id]) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      elapsed += 100;
 
-      if(cache[address]) {
-        // Expire after 12 hours
-        if(cache[address].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
-          await cache.promise;
-
-          return cache[address];
-        } else {
-          // Token expired
-          delete cache[address];
-        }
+      if(elapsed > 15000) {
+        this.Log(`Lock never released for ${id} - releasing lock`);
+        delete this.transactionLocks[id];
       }
-    }
-
-    // If only checking the cache, don't continue to make access request
-    if(cacheOnly) { return; }
-
-    // Make the request
-    let promise;
-    if(update) {
-      this.Log(`Making update request on ${accessType} ${id}`);
-      promise = this.UpdateRequest({id, abi});
-    } else {
-      this.Log(`Making access request on ${accessType} ${id}`);
-      promise = this.AccessRequest({id, args: accessArgs, checkAccessCharge});
-    }
-
-    const cache = update ? this.modifyTransactions : this.accessTransactions;
-
-    // Cache the transaction hash
-    if(!noCache) {
-      cache[address] = {
-        issuedAt: Date.now(),
-        promise
-      };
     }
 
     try {
-      const accessRequest = await promise;
+      this.transactionLocks[id] = true;
 
-      if(!noCache) {
-        cache[address].transactionHash = accessRequest.transactionHash;
+      // Check cache for existing transaction
+      if(!noCache && !skipCache) {
+        let cache = update ? this.modifyTransactions : this.accessTransactions;
 
-        // Save request ID if present
-        accessRequest.logs.some(log => {
-          if(log.values && (log.values.requestID || log.values.requestNonce)) {
-            this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
-            return true;
+        if(cache[address]) {
+          // Expire after 12 hours
+          if(cache[address].issuedAt > (Date.now() - (12 * 60 * 60 * 1000))) {
+
+            return cache[address];
+          } else {
+            // Token expired
+            delete cache[address];
           }
-        });
+        }
       }
 
-      return accessRequest;
-    } catch(error) {
-      if(!noCache) {
-        delete cache[address];
+      // If only checking the cache, don't continue to make access request
+      if(cacheOnly) {
+        return;
       }
 
-      throw error;
+      // Make the request
+      let accessRequest;
+      if(update) {
+        this.Log(`Making update request on ${accessType} ${id}`);
+        accessRequest = await this.UpdateRequest({id, abi});
+      } else {
+        this.Log(`Making access request on ${accessType} ${id}`);
+        accessRequest = await this.AccessRequest({id, args: accessArgs, checkAccessCharge});
+      }
+
+      const cache = update ? this.modifyTransactions : this.accessTransactions;
+
+      try {
+        if(!noCache) {
+          cache[address] = {
+            issuedAt: Date.now(),
+            transactionHash: accessRequest.transactionHash
+          };
+
+          // Save request ID if present
+          accessRequest.logs.some(log => {
+            if(log.values && (log.values.requestID || log.values.requestNonce)) {
+              this.requestIds[address] = (log.values.requestID || log.values.requestNonce || "").toString().replace(/^0x/, "");
+              return true;
+            }
+          });
+        }
+
+        return accessRequest;
+      } catch(error) {
+        if(!noCache) {
+          delete cache[address];
+        }
+
+        throw error;
+      }
+    } finally {
+      delete this.transactionLocks[id];
     }
-
-    //this.RecordTags({accessType, libraryId, objectId, versionHash});
   }
 
   async AccessRequest({id, args=[], checkAccessCharge=false}) {
@@ -405,7 +409,7 @@ class AuthorizationClient {
     });
 
     if(event.logs.length === 0 || !updateRequestEvent) {
-      throw Error("Update request denied");
+      throw Error(`Update request denied for ${id}`);
     }
 
     return event;
@@ -481,19 +485,36 @@ class AuthorizationClient {
           contractAddress: Utils.HashToAddress(tenantId),
           methodName: "addressKMS"
         });
+
+        if(!kmsAddress) { throw ""; }
       } catch(error) {
         kmsAddress = await this.client.DefaultKMSAddress();
       }
 
-      token = await Utils.ResponseToFormat(
-        "text",
-        this.MakeKMSRequest({
-          kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
-          method: "POST",
-          path: UrlJoin("ks", issuer),
-          body: { "_PASSWORD": code, "_EMAIL": email }
-        })
-      );
+      try {
+        token = await Utils.ResponseToFormat(
+          "text",
+          this.MakeKMSRequest({
+            kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
+            method: "POST",
+            path: UrlJoin("as", issuer),
+            body: { "_PASSWORD": code, "_EMAIL": email }
+          })
+        );
+      } catch(error) {
+        this.Log("/as token redemption failed:", true);
+        this.Log(error, true);
+
+        token = await Utils.ResponseToFormat(
+          "text",
+          this.MakeKMSRequest({
+            kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
+            method: "POST",
+            path: UrlJoin("ks", issuer),
+            body: {"_PASSWORD": code, "_EMAIL": email}
+          })
+        );
+      }
 
       // Pull target object from token so token can be cached
       objectId = JSON.parse(Utils.FromB64(token)).qid;
@@ -763,6 +784,10 @@ class AuthorizationClient {
 
     const { abi } = await this.ContractInfo({id: objectId});
 
+    if(!abi) {
+      throw Error(`Unable to determine contract info for ${objectId} - wrong network?`);
+    }
+
     return await this.client.CallContractMethod({
       contractAddress: Utils.HashToAddress(objectId),
       abi,
@@ -809,8 +834,8 @@ class AuthorizationClient {
   }
 
   // Retrieve symmetric key for object
-  async KMSSymmetricKey({libraryId, objectId}) {
-    if(!libraryId) { libraryId = this.client.ContentObjectLibraryId({objectId}); }
+  async RetrieveConk({libraryId, objectId}) {
+    if(!libraryId) { libraryId = await this.client.ContentObjectLibraryId({objectId}); }
 
     const kmsAddress = await this.KMSAddress({objectId});
     const kmsCapId = `eluv.caps.ikms${Utils.AddressToHash(kmsAddress)}`;
@@ -820,6 +845,36 @@ class AuthorizationClient {
       metadataSubtree: kmsCapId
     });
 
+    if(!kmsCap) {
+      throw Error("No KMS key set for this object");
+    }
+
+    const cap = await this.MakeKMSCall({
+      objectId,
+      methodName: "elv_getEncryptionKey",
+      paramTypes: ["string", "string", "string", "string", "string"],
+      params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
+    });
+
+    return JSON.parse(bs58.decode(cap.replace(/^kp__/, "")).toString("utf-8"));
+  }
+
+  // Retrieve symmetric key for object
+  async RetrieveReencryptionSymmetricKey({libraryId, objectId}) {
+    if(!libraryId) { libraryId = await this.client.ContentObjectLibraryId({objectId}); }
+
+    const kmsAddress = await this.KMSAddress({objectId});
+    const kmsCapId = `eluv.caps.ikms${Utils.AddressToHash(kmsAddress)}`;
+    const kmsCap = await this.client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      metadataSubtree: kmsCapId
+    });
+
+    if(!kmsCap) {
+      throw Error("No KMS key set for this object");
+    }
+
     return await this.MakeKMSCall({
       objectId,
       methodName: "elv_getSymmetricKeyAuth",
@@ -828,16 +883,20 @@ class AuthorizationClient {
     });
   }
 
+
   // Make an RPC call to the KMS with signed parameters
-  async MakeKMSCall({kmsId, objectId, versionHash, methodName, params, paramTypes, additionalParams=[]}) {
+  async MakeKMSCall({kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, additionalParams=[], signature=true}) {
     if(versionHash) { objectId = Utils.DecodeVersionHash(versionHash).objectId; }
 
     if(!objectId) {
-      kmsId = `ikms${Utils.AddressToHash(await this.client.DefaultKMSAddress())}`;
+      kmsId = `ikms${Utils.AddressToHash(await this.client.DefaultKMSAddress({tenantId}))}`;
     }
 
-    const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
-    params.push(await this.Sign(packedHash));
+    if(signature) {
+      const packedHash = Ethers.utils.solidityKeccak256(paramTypes, params);
+      params.push(await this.Sign(packedHash));
+    }
+
     params = params.concat(additionalParams);
 
     const KMSUrls = (await this.KMSInfo({kmsId, objectId, versionHash})).urls;
@@ -882,7 +941,7 @@ class AuthorizationClient {
 
     const kmsHttpClient = new HttpClient({
       uris: kmsUrls,
-      debug: this.debug
+      debug: true
     });
 
     return await kmsHttpClient.Request({
@@ -905,6 +964,10 @@ class AuthorizationClient {
 
       if(!abi) {
         abi = (await this.ContractInfo({address: contractAddress})).abi;
+      }
+
+      if(!abi) {
+        throw Error("No ABI for specified contract (wrong network?)");
       }
 
       const method = abi.find(method => method.name === methodName);
@@ -964,12 +1027,32 @@ class AuthorizationClient {
 
     if(!this.reencryptionKeys[objectId]) {
       let cap = await this.client.Crypto.GenerateTargetConk();
-      cap.symm_key = await this.KMSSymmetricKey({libraryId, objectId});
+      cap.symm_key = await this.RetrieveReencryptionSymmetricKey({libraryId, objectId});
 
       this.reencryptionKeys[objectId] = cap;
     }
 
     return this.reencryptionKeys[objectId];
+  }
+
+  async EncryptionConk({libraryId, objectId, versionHash}) {
+    if(versionHash) {
+      objectId = Utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    if(!libraryId) { libraryId = await this.client.ContentObjectLibraryId({objectId}); }
+
+    if(!this.encryptionKeys[objectId]) {
+      const conk = await this.RetrieveConk({libraryId, objectId});
+
+      const { secret_key } = await this.client.Crypto.GeneratePrimaryConk({objectId});
+      conk.secret_key = secret_key;
+
+      // { secret_key, public_key, symm_key, block_size }
+      this.encryptionKeys[objectId] = conk;
+    }
+
+    return this.encryptionKeys[objectId];
   }
 
   async RecordTags({accessType, libraryId, objectId, versionHash}) {

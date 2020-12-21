@@ -1,7 +1,5 @@
 var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-var _typeof = require("@babel/runtime/helpers/typeof");
-
 var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
 var _createClass = require("@babel/runtime/helpers/createClass");
@@ -13,6 +11,9 @@ var UrlJoin = require("url-join");
 var _require = require("./FrameClient"),
     FrameClient = _require.FrameClient;
 
+var _require2 = require("./LogMessage"),
+    LogMessage = _require2.LogMessage;
+
 var UserProfileClient =
 /*#__PURE__*/
 function () {
@@ -22,18 +23,7 @@ function () {
     key: "Log",
     value: function Log(message) {
       var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (!this.debug) {
-        return;
-      }
-
-      if (_typeof(message) === "object") {
-        message = JSON.stringify(message);
-      }
-
-      error ? // eslint-disable-next-line no-console
-      console.error("\n(elv-client-js#UserProfileClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
-      console.log("\n(elv-client-js#UserProfileClient) ".concat(message, "\n"));
+      LogMessage(this, message, error);
     }
     /**
      * Methods used to access and modify information about the user

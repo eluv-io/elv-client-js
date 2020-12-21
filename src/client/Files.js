@@ -657,7 +657,7 @@ exports.DownloadFile = async function({
 
   if(encrypted && clientSideDecryption) {
     return await this.DownloadEncrypted({
-      conk: await this.EncryptionConk({libraryId, objectId, versionHash}),
+      conk: await this.EncryptionConk({libraryId, objectId, versionHash, download: true}),
       downloadPath: path,
       bytesTotal,
       headers,
@@ -804,7 +804,7 @@ exports.DownloadPart = async function({
     }
 
     return await this.DownloadEncrypted({
-      conk: await this.EncryptionConk({libraryId, objectId}),
+      conk: await this.EncryptionConk({libraryId, objectId, download: true}),
       downloadPath: path,
       bytesTotal,
       headers,

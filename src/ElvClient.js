@@ -1,4 +1,6 @@
-if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+if(typeof Buffer === "undefined") {
+  Buffer = require("buffer/").Buffer;
+}
 
 const URI = require("urijs");
 const Ethers = require("ethers");
@@ -11,11 +13,9 @@ const HttpClient = require("./HttpClient");
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
+const {LogMessage} = require("./LogMessage");
 
 const {
-  ValidateAddress,
-  ValidateDate,
-  ValidateObject,
   ValidatePresence
 } = require("./Validation");
 
@@ -23,9 +23,6 @@ if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
   global.Response = (require("node-fetch")).Response;
-} else if(Utils.Platform() === Utils.PLATFORM_REACT_NATIVE) {
-  // React native polyfill
-  require("unorm");
 }
 
 /**
@@ -33,18 +30,8 @@ if(Utils.Platform() === Utils.PLATFORM_NODE) {
  *
  */
 class ElvClient {
-  Log(message, error=false) {
-    if(!this.debug) { return; }
-
-    if(typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-
-    error ?
-      // eslint-disable-next-line no-console
-      console.error(`\n(elv-client-js#ElvClient) ${message}\n`) :
-      // eslint-disable-next-line no-console
-      console.log(`\n(elv-client-js#ElvClient) ${message}\n`);
+  Log(message, error = false) {
+    LogMessage(this, message, error);
   }
 
   /**
@@ -53,13 +40,25 @@ class ElvClient {
    * @methodGroup Miscellaneous
    *
    * @param {boolean} enable - Set logging
+   * @param {Object=} options - Additional options for customizing logging
+   * - log: custom log() function
+   * - error: custom error() function
+   * - (custom functions must accept same arguments as console.log/console.error)
    */
-  ToggleLogging(enable) {
-    this.debug = enable;
-    this.authClient ? this.authClient.debug = enable : undefined;
-    this.ethClient ? this.ethClient.debug = enable : undefined;
-    this.HttpClient ? this.HttpClient.debug = enable : undefined;
-    this.userProfileClient ? this.userProfileClient.debug = enable : undefined;
+  ToggleLogging(enable, options = {}) {
+    // define func with closure to pass to forEach
+    const setDebug = (reporter) => {
+      if(reporter) {
+        reporter.debug = enable;
+        reporter.debugOptions = options;
+      }
+    };
+
+    [this,
+      this.authClient,
+      this.ethClient,
+      this.HttpClient,
+      this.userProfileClient].forEach(setDebug);
 
     if(enable) {
       this.Log(
@@ -168,37 +167,6 @@ class ElvClient {
         ethereumURIs = ethereumURIs.filter(filterHTTPS);
       }
 
-      // Test each eth url
-      ethereumURIs = (await Promise.all(
-        ethereumURIs.map(async (uri) => {
-          try {
-            const response = await Promise.race([
-              HttpClient.Fetch(
-                uri,
-                {
-                  method: "post",
-                  headers: {"Content-Type": "application/json"},
-                  body: JSON.stringify({method: "net_version", params: [], id: 1, jsonrpc: "2.0"})
-                }
-              ),
-              new Promise(resolve => setTimeout(() => resolve({ok: false}), 5000))
-            ]);
-
-            if(response.ok) {
-              return uri;
-            }
-
-            // eslint-disable-next-line no-console
-            console.error("Eth node unavailable: " + uri);
-          } catch(error) {
-            // eslint-disable-next-line no-console
-            console.error("Eth node unavailable: " + uri);
-            // eslint-disable-next-line no-console
-            console.error(error);
-          }
-        })
-      )).filter(uri => uri);
-
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
 
       return {
@@ -268,15 +236,15 @@ class ElvClient {
     return client;
   }
 
-  InitializeClients() {
+  async InitializeClients() {
     // Cached info
     this.contentTypes = {};
     this.encryptionConks = {};
-    this.reencryptionConks = {};
     this.stateChannelAccess = {};
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
     this.visibilityInfo = {};
+    this.inaccessibleLibraries = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug});
@@ -298,6 +266,43 @@ class ElvClient {
     // Initialize crypto wasm
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
+
+    // Test each eth url
+    const workingEthURIs = (await Promise.all(
+      this.ethereumURIs.map(async (uri) => {
+        try {
+          const response = await Promise.race([
+            HttpClient.Fetch(
+              uri,
+              {
+                method: "post",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({method: "net_version", params: [], id: 1, jsonrpc: "2.0"})
+              }
+            ),
+            new Promise(resolve => setTimeout(() => resolve({ok: false}), 5000))
+          ]);
+
+          if(response.ok) {
+            return uri;
+          }
+
+          // eslint-disable-next-line no-console
+          this.Log("Eth node unavailable: " + uri, true);
+        } catch(error) {
+          // eslint-disable-next-line no-console
+          this.Log("Eth node unavailable: " + uri, true);
+          // eslint-disable-next-line no-console
+          this.Log(error, true);
+        }
+      })
+    )).filter(uri => uri);
+
+    // If any eth urls are bad, discard them
+    if(workingEthURIs.length !== this.ethereumURIs.length) {
+      this.ethereumURIs = workingEthURIs;
+      this.ethClient.SetEthereumURIs(workingEthURIs);
+    }
   }
 
   ConfigUrl() {
@@ -326,7 +331,7 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const { fabricURIs, ethereumURIs } = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -376,7 +381,7 @@ class ElvClient {
    * @return {Promise<string>} - The node ID reported by the fabric
    */
   async NodeId({region}) {
-    const { nodeId } = await ElvClient.Configuration({
+    const {nodeId} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -614,218 +619,6 @@ class ElvClient {
   }
 
   /**
-   * Issue an n-time-password (NTP) instance. This instance contains a specification for the tickets (AKA codes) to be issued, including
-   * the target(s) to be authorized, how many tickets can be issued, and when and how many times tickets can be redeemed.
-   *
-   * Note: For date types (startTime/endTime), you may specify the date in any format parsable by JavaScript's `new Date()` constructor,
-   * including Unix epoch timestamps and ISO strings
-   *
-   * @see <a href="#IssueNTPCode">IssueNTPCode</a>
-   *
-   * @methodGroup Tickets
-   * @namedParams
-   * @param {string} tenantId - The ID of the tenant in which to create the NTP instance
-   * @param {string} objectId - ID of the object for the tickets to be authorized to
-   * @param {Array<string>=} groupAddresses - List of group addresses for the tickets to inherit permissions from
-   * @param {number=} maxTickets=0 - The maximum number of tickets that may be issued for this instance (if 0, no limit)
-   * @param {number=} maxRedemptions=100 - The maximum number of times each ticket may be redeemed
-   * @param {string|number=} startTime - The time when issued tickets can be redeemed
-   * @param {string|number=} endTime - The time when issued tickets can no longer be redeemed
-   * @param {number=} ticketLength=6 - The number of characters in each ticket code
-   *
-   * @return {Promise<string>} - The ID of the NTP instance. This ID can be used when issuing tickets (See IssueNTPCode)
-   */
-  async CreateNTPInstance({
-    tenantId,
-    objectId,
-    groupAddresses,
-    maxTickets=0,
-    maxRedemptions=100,
-    startTime,
-    endTime,
-    ticketLength=6
-  }) {
-    // targetIdStr string, defType int32, paramsJSON string, max, tsMillis int64, sig hexutil.Bytes
-    ValidatePresence("tenantId", tenantId);
-    ValidatePresence("objectId or groupAddresses", objectId || groupAddresses);
-
-    if(objectId) { ValidateObject(objectId); }
-    if(groupAddresses) { groupAddresses.forEach(address => ValidateAddress(address)); }
-
-    startTime = ValidateDate(startTime);
-    endTime = ValidateDate(endTime);
-
-    let paramsJSON = [`ntp:${maxRedemptions}`, `sen:${ticketLength}`];
-
-    if(objectId) {
-      paramsJSON.push(`qid:${objectId}`);
-    } else if(groupAddresses) {
-      const groupIds = groupAddresses.map(address => `igrp${this.utils.AddressToHash(address)}`);
-
-      paramsJSON.push(`gid:${groupIds.join(",")}`);
-    }
-
-    if(startTime) {
-      paramsJSON.push(`vat:${startTime}`);
-    }
-
-    if(endTime) {
-      paramsJSON.push(`exp:${endTime}`);
-    }
-
-    return await this.authClient.MakeKMSCall({
-      methodName: "elv_createOTPInstance",
-      params: [
-        tenantId,
-        4,
-        JSON.stringify(paramsJSON),
-        maxTickets,
-        Date.now()
-      ],
-      paramTypes: [
-        "string",
-        "int",
-        "string",
-        "int",
-        "int"
-      ]
-    });
-  }
-
-  /**
-   * Issue a ticket from the specified NTP ID
-   *
-   * @see <a href="#CreateNTPInstance">CreateNTPInstance</a>
-   *
-   * @methodGroup Tickets
-   * @namedParams
-   * @param {string} tenantId - The ID of the tenant in the NTP instance was created
-   * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
-   * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
-   * be provided along with the ticket code in order to redeem the ticket.
-   *
-   * @return {Promise<Object>} - The generated ticket code and additional information about the ticket.
-   */
-  async IssueNTPCode({tenantId, ntpId, email}) {
-    ValidatePresence("tenantId", tenantId);
-    ValidatePresence("ntpId", ntpId);
-
-    let options = [];
-    if(email) {
-      options.push(`eml:${email}`);
-    }
-
-    const params = [tenantId, ntpId, JSON.stringify(options), Date.now()];
-    const paramTypes = ["string", "string", "string", "uint"];
-
-    return await this.authClient.MakeKMSCall({
-      methodName: "elv_issueOTPCode",
-      params,
-      paramTypes
-    });
-  }
-
-  /**
-   * Redeem the specified ticket/code to authorize the client. Must provide either issuer or tenantId and ntpId
-   *
-   * @methodGroup Tickets
-   * @namedParams
-   * @param {string=} issuer - Issuer to authorize against
-   * @param {string=} tenantId - The ID of the tenant from which the ticket was issued
-   * @param {string} ntpId - The ID of the NTP instance from which the ticket was issued
-   * @param {string} code - Access code
-   * @param {string=} email - Email address associated with the code
-   *
-   * @return {Promise<string>} - The object ID which the ticket is authorized to
-   */
-  async RedeemCode({issuer, tenantId, ntpId, code, email}) {
-    const wallet = this.GenerateWallet();
-
-    issuer = issuer || "";
-
-    if(!this.signer) {
-      this.SetSigner({
-        signer: wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()})
-      });
-    }
-
-    if(issuer.startsWith("iq__")) {
-      ValidateObject(issuer);
-    } else if(issuer && !issuer.replace(/^\//, "").startsWith("otp/ntp/iten")) {
-      throw Error("Invalid issuer: " + issuer);
-    } else {
-      // Ticket API
-
-      ValidatePresence("issuer or tenantId and ntpId", issuer || (tenantId && ntpId));
-
-      if(!issuer) {
-        issuer = `/otp/ntp/${tenantId}/${ntpId}`;
-      }
-
-      try {
-        const token = await this.authClient.GenerateChannelContentToken({
-          issuer,
-          code,
-          email
-        });
-
-        this.SetStaticToken({token});
-
-        return JSON.parse(Utils.FromB64(token)).qid;
-      } catch(error) {
-        this.Log("Failed to redeem code:", true);
-        this.Log(error, true);
-
-        throw error;
-
-        /*
-        if((error.body || "").toString().includes("exceed configured maximum")) {
-          throw Error("Code exceeded maximum number of uses");
-        } else {
-          throw Error("Invalid code");
-        }
-        */
-      }
-    }
-
-    // Site selector
-
-    const objectId = issuer;
-    const libraryId = await this.ContentObjectLibraryId({objectId});
-
-    const Hash = (code) => {
-      const chars = code.split("").map(code => code.charCodeAt(0));
-      return chars.reduce((sum, char, i) => (chars[i + 1] ? (sum * 2) + char * chars[i+1] * (i + 1) : sum + char), 0).toString();
-    };
-
-    const codeHash = Hash(code);
-    const codeInfo = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: `public/codes/${codeHash}`});
-
-    if(!codeInfo){
-      this.Log(`Code redemption failed:\n\t${issuer}\n\t${code}`);
-      throw Error("Invalid code: " + code);
-    }
-
-    const { ak, sites, info } = codeInfo;
-
-    const signer = await wallet.AddAccountFromEncryptedPK({
-      encryptedPrivateKey: this.utils.FromB64(ak),
-      password: code
-    });
-
-    this.SetSigner({signer});
-
-    // Ensure wallet is initialized
-    await this.userProfileClient.WalletAddress();
-
-    return {
-      addr: this.utils.FormatAddress(signer.address),
-      sites,
-      info: info || {}
-    };
-  }
-
-  /**
    * Encrypt the given string or object with the current signer's public key
    *
    * @namedParams
@@ -873,7 +666,7 @@ class ElvClient {
    *
    * @return {Promise<*>} - Response in the specified format
    */
-  Request({url, format="json", method="GET", headers={}, body}) {
+  Request({url, format="json", method="GET", headers = {}, body}) {
     return this.utils.ResponseToFormat(
       format,
       HttpClient.Fetch(
@@ -913,7 +706,9 @@ class ElvClient {
 
   // Call a method specified in a message from a frame
   async CallFromFrameMessage(message, Respond) {
-    if(message.type !== "ElvFrameRequest") { return; }
+    if(message.type !== "ElvFrameRequest") {
+      return;
+    }
 
     let callback;
     if(message.callbackId) {
@@ -980,5 +775,6 @@ Object.assign(ElvClient.prototype, require("./client/Contracts"));
 Object.assign(ElvClient.prototype, require("./client/Files"));
 Object.assign(ElvClient.prototype, require("./client/ABRPublishing"));
 Object.assign(ElvClient.prototype, require("./client/ContentManagement"));
+Object.assign(ElvClient.prototype, require("./client/NTP"));
 
 exports.ElvClient = ElvClient;

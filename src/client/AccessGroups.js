@@ -196,7 +196,7 @@ exports.CreateAccessGroup = async function({name, description, metadata={}}={}) 
 };
 
 /**
- * Delete an access group
+ * NOT YET SUPPORTED - Delete an access group
  *
  * Calls the kill method on the specified access group's contract
  *
@@ -206,6 +206,9 @@ exports.CreateAccessGroup = async function({name, description, metadata={}}={}) 
  * @param {string} contractAddress - The address of the access group contract
  */
 exports.DeleteAccessGroup = async function({contractAddress}) {
+  throw Error("Not supported");
+
+  // eslint-disable-next-line no-unreachable
   contractAddress = ValidateAddress(contractAddress);
 
   this.Log(`Deleting access group ${contractAddress}`);
@@ -562,31 +565,38 @@ exports.ContentObjectGroupPermissions = async function({objectId}) {
   const groupPermissions = {};
   await Promise.all(
     groupAddresses.map(async groupAddress => {
-      groupAddress = this.utils.FormatAddress(groupAddress);
+      try {
+        groupAddress = this.utils.FormatAddress(groupAddress);
 
-      let permission = await this.CallContractMethod({
-        contractAddress: groupAddress,
-        methodName: rightsMethod,
-        methodArgs: [contractAddress]
-      });
+        let permission = await this.CallContractMethod({
+          contractAddress: groupAddress,
+          methodName: rightsMethod,
+          methodArgs: [contractAddress]
+        });
 
-      if(permission === 0) { return; }
+        if(permission === 0) {
+          return;
+        }
 
-      let permissions = [];
+        let permissions = [];
 
-      if(permission >= 100) {
-        permissions.push("manage");
+        if(permission >= 100) {
+          permissions.push("manage");
+        }
+
+        if(permission % 100 >= 10) {
+          permissions.push("access");
+        }
+
+        if(permission % 10 > 0) {
+          permissions.push("see");
+        }
+
+        groupPermissions[groupAddress] = permissions;
+      } catch(error) {
+        this.Log(`Failed to retrieve group permissions for ${groupAddress}`, true);
+        this.Log(error, true);
       }
-
-      if(permission % 100 >= 10) {
-        permissions.push("access");
-      }
-
-      if(permission % 10 > 0) {
-        permissions.push("see");
-      }
-
-      groupPermissions[groupAddress] = permissions;
     })
   );
 

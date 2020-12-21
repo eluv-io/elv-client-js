@@ -1,4 +1,12 @@
+var _defineProperty = require("@babel/runtime/helpers/defineProperty");
+
+var _typeof = require("@babel/runtime/helpers/typeof");
+
 var _regeneratorRuntime = require("@babel/runtime/regenerator");
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 /**
  * Methods for deploying and interacting with contracts
@@ -10,7 +18,8 @@ var Ethers = require("ethers"); //const ContentContract = require("../contracts/
 
 var _require = require("../Validation"),
     ValidateAddress = _require.ValidateAddress,
-    ValidateParameters = _require.ValidateParameters;
+    ValidateParameters = _require.ValidateParameters,
+    ValidatePresence = _require.ValidatePresence;
 /**
  * Return the name of the contract, as specified in the contracts "version" string
  *
@@ -47,6 +56,8 @@ exports.ContractName = function _callee(_ref) {
 /**
  * Retrieve the ABI for the given contract via its address or a Fabric ID. Contract must be a standard Eluvio contract
  *
+ * @methodGroup Contracts
+ * @namedParams
  * @param {string=} contractAddress - The address of the contract
  * @param {string=} id - The Fabric ID of the contract
  *
@@ -373,6 +384,153 @@ exports.CallContractMethodAndWait = function _callee6(_ref7) {
   }, null, this);
 };
 /**
+ * Retrieve metadata from the specified contract
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string} contractAddress - The address of the contract
+ * @param {string} metadataKey - The metadata key to retrieve
+ *
+ * @return {Promise<Object|string>}
+ */
+
+
+exports.ContractMetadata = function _callee7(_ref8) {
+  var contractAddress, metadataKey, metadata, data;
+  return _regeneratorRuntime.async(function _callee7$(_context7) {
+    while (1) {
+      switch (_context7.prev = _context7.next) {
+        case 0:
+          contractAddress = _ref8.contractAddress, metadataKey = _ref8.metadataKey;
+          ValidatePresence("contractAddress", contractAddress);
+          ValidatePresence("metadataKey", metadataKey);
+          _context7.prev = 3;
+          _context7.next = 6;
+          return _regeneratorRuntime.awrap(this.CallContractMethod({
+            contractAddress: contractAddress,
+            methodName: "getMeta",
+            methodArgs: [metadataKey]
+          }));
+
+        case 6:
+          metadata = _context7.sent;
+          data = Buffer.from((metadata || "").replace("0x", ""), "hex").toString("utf-8");
+          _context7.prev = 8;
+          return _context7.abrupt("return", JSON.parse(data));
+
+        case 12:
+          _context7.prev = 12;
+          _context7.t0 = _context7["catch"](8);
+          return _context7.abrupt("return", data);
+
+        case 15:
+          _context7.next = 20;
+          break;
+
+        case 17:
+          _context7.prev = 17;
+          _context7.t1 = _context7["catch"](3);
+          return _context7.abrupt("return", "");
+
+        case 20:
+        case "end":
+          return _context7.stop();
+      }
+    }
+  }, null, this, [[3, 17], [8, 12]]);
+};
+/**
+ * Merge contract metadata at the specified key.
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string} contractAddress - The address of the contract
+ * @param {string} metadataKey - The metadata key to retrieve
+ * @param {string} metadata
+ */
+
+
+exports.MergeContractMetadata = function _callee8(_ref9) {
+  var contractAddress, metadataKey, metadata, existingMetadata;
+  return _regeneratorRuntime.async(function _callee8$(_context8) {
+    while (1) {
+      switch (_context8.prev = _context8.next) {
+        case 0:
+          contractAddress = _ref9.contractAddress, metadataKey = _ref9.metadataKey, metadata = _ref9.metadata;
+          ValidatePresence("contractAddress", contractAddress);
+          ValidatePresence("metadataKey", metadataKey);
+          _context8.next = 5;
+          return _regeneratorRuntime.awrap(this.ContractMetadata({
+            contractAddress: contractAddress,
+            metadataKey: metadataKey
+          }));
+
+        case 5:
+          _context8.t0 = _context8.sent;
+
+          if (_context8.t0) {
+            _context8.next = 8;
+            break;
+          }
+
+          _context8.t0 = {};
+
+        case 8:
+          existingMetadata = _context8.t0;
+
+          if (_typeof(existingMetadata) === "object") {
+            metadata = _objectSpread({}, existingMetadata, {}, metadata);
+          }
+
+          _context8.next = 12;
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+            contractAddress: contractAddress,
+            methodName: "putMeta",
+            methodArgs: [metadataKey, JSON.stringify(metadata)]
+          }));
+
+        case 12:
+        case "end":
+          return _context8.stop();
+      }
+    }
+  }, null, this);
+};
+/**
+ * Replace the contract metadata at the specified key
+ *
+ * @methodGroup Contracts
+ * @namedParams
+ * @param {string} contractAddress - The address of the contract
+ * @param {string} metadataKey - The metadata key to retrieve
+ * @param {string|Object} metadata - The metadata to insert
+ */
+
+
+exports.ReplaceContractMetadata = function _callee9(_ref10) {
+  var contractAddress, metadataKey, metadata;
+  return _regeneratorRuntime.async(function _callee9$(_context9) {
+    while (1) {
+      switch (_context9.prev = _context9.next) {
+        case 0:
+          contractAddress = _ref10.contractAddress, metadataKey = _ref10.metadataKey, metadata = _ref10.metadata;
+          ValidatePresence("contractAddress", contractAddress);
+          ValidatePresence("metadataKey", metadataKey);
+          _context9.next = 5;
+          return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
+            contractAddress: contractAddress,
+            methodName: "putMeta",
+            methodArgs: [metadataKey, JSON.stringify(metadata)]
+          }));
+
+        case 5:
+        case "end":
+          return _context9.stop();
+      }
+    }
+  }, null, this);
+};
+/**
  * Get the custom contract of the specified object
  *
  * @methodGroup Contracts
@@ -385,13 +543,13 @@ exports.CallContractMethodAndWait = function _callee6(_ref7) {
  */
 
 
-exports.CustomContractAddress = function _callee7(_ref8) {
+exports.CustomContractAddress = function _callee10(_ref11) {
   var libraryId, objectId, versionHash, abi, customContractAddress;
-  return _regeneratorRuntime.async(function _callee7$(_context7) {
+  return _regeneratorRuntime.async(function _callee10$(_context10) {
     while (1) {
-      switch (_context7.prev = _context7.next) {
+      switch (_context10.prev = _context10.next) {
         case 0:
-          libraryId = _ref8.libraryId, objectId = _ref8.objectId, versionHash = _ref8.versionHash;
+          libraryId = _ref11.libraryId, objectId = _ref11.objectId, versionHash = _ref11.versionHash;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -403,22 +561,22 @@ exports.CustomContractAddress = function _callee7(_ref8) {
           }
 
           if (!(libraryId === this.contentSpaceLibraryId || this.utils.EqualHash(libraryId, objectId))) {
-            _context7.next = 5;
+            _context10.next = 5;
             break;
           }
 
-          return _context7.abrupt("return");
+          return _context10.abrupt("return");
 
         case 5:
           this.Log("Retrieving custom contract address: ".concat(objectId));
-          _context7.next = 8;
+          _context10.next = 8;
           return _regeneratorRuntime.awrap(this.ContractAbi({
             id: objectId
           }));
 
         case 8:
-          abi = _context7.sent;
-          _context7.next = 11;
+          abi = _context10.sent;
+          _context10.next = 11;
           return _regeneratorRuntime.awrap(this.ethClient.CallContractMethod({
             contractAddress: this.utils.HashToAddress(objectId),
             abi: abi,
@@ -427,21 +585,21 @@ exports.CustomContractAddress = function _callee7(_ref8) {
           }));
 
         case 11:
-          customContractAddress = _context7.sent;
+          customContractAddress = _context10.sent;
 
           if (!(customContractAddress === this.utils.nullAddress)) {
-            _context7.next = 14;
+            _context10.next = 14;
             break;
           }
 
-          return _context7.abrupt("return");
+          return _context10.abrupt("return");
 
         case 14:
-          return _context7.abrupt("return", this.utils.FormatAddress(customContractAddress));
+          return _context10.abrupt("return", this.utils.FormatAddress(customContractAddress));
 
         case 15:
         case "end":
-          return _context7.stop();
+          return _context10.stop();
       }
     }
   }, null, this);
@@ -466,14 +624,14 @@ exports.CustomContractAddress = function _callee7(_ref8) {
  */
 
 
-exports.SetCustomContentContract = function _callee8(_ref9) {
-  var libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, _ref9$overrides, overrides, setResult, writeToken;
+exports.SetCustomContentContract = function _callee11(_ref12) {
+  var libraryId, objectId, customContractAddress, name, description, abi, factoryAbi, _ref12$overrides, overrides, setResult, writeToken;
 
-  return _regeneratorRuntime.async(function _callee8$(_context8) {
+  return _regeneratorRuntime.async(function _callee11$(_context11) {
     while (1) {
-      switch (_context8.prev = _context8.next) {
+      switch (_context11.prev = _context11.next) {
         case 0:
-          libraryId = _ref9.libraryId, objectId = _ref9.objectId, customContractAddress = _ref9.customContractAddress, name = _ref9.name, description = _ref9.description, abi = _ref9.abi, factoryAbi = _ref9.factoryAbi, _ref9$overrides = _ref9.overrides, overrides = _ref9$overrides === void 0 ? {} : _ref9$overrides;
+          libraryId = _ref12.libraryId, objectId = _ref12.objectId, customContractAddress = _ref12.customContractAddress, name = _ref12.name, description = _ref12.description, abi = _ref12.abi, factoryAbi = _ref12.factoryAbi, _ref12$overrides = _ref12.overrides, overrides = _ref12$overrides === void 0 ? {} : _ref12$overrides;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -481,7 +639,7 @@ exports.SetCustomContentContract = function _callee8(_ref9) {
           customContractAddress = ValidateAddress(customContractAddress);
           customContractAddress = this.utils.FormatAddress(customContractAddress);
           this.Log("Setting custom contract address: ".concat(objectId, " ").concat(customContractAddress));
-          _context8.next = 7;
+          _context11.next = 7;
           return _regeneratorRuntime.awrap(this.ethClient.SetCustomContentContract({
             contentContractAddress: this.utils.HashToAddress(objectId),
             customContractAddress: customContractAddress,
@@ -490,16 +648,16 @@ exports.SetCustomContentContract = function _callee8(_ref9) {
           }));
 
         case 7:
-          setResult = _context8.sent;
-          _context8.next = 10;
+          setResult = _context11.sent;
+          _context11.next = 10;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
 
         case 10:
-          writeToken = _context8.sent.write_token;
-          _context8.next = 13;
+          writeToken = _context11.sent.write_token;
+          _context11.next = 13;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -515,7 +673,7 @@ exports.SetCustomContentContract = function _callee8(_ref9) {
           }));
 
         case 13:
-          _context8.next = 15;
+          _context11.next = 15;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
@@ -524,11 +682,11 @@ exports.SetCustomContentContract = function _callee8(_ref9) {
           }));
 
         case 15:
-          return _context8.abrupt("return", setResult);
+          return _context11.abrupt("return", setResult);
 
         case 16:
         case "end":
-          return _context8.stop();
+          return _context11.stop();
       }
     }
   }, null, this);
@@ -550,10 +708,10 @@ exports.SetCustomContentContract = function _callee8(_ref9) {
  */
 
 
-exports.ExtractEventFromLogs = function (_ref10) {
-  var abi = _ref10.abi,
-      event = _ref10.event,
-      eventName = _ref10.eventName;
+exports.ExtractEventFromLogs = function (_ref13) {
+  var abi = _ref13.abi,
+      event = _ref13.event,
+      eventName = _ref13.eventName;
   return this.ethClient.ExtractEventFromLogs({
     abi: abi,
     event: event,
@@ -576,11 +734,11 @@ exports.ExtractEventFromLogs = function (_ref10) {
  */
 
 
-exports.ExtractValueFromEvent = function (_ref11) {
-  var abi = _ref11.abi,
-      event = _ref11.event,
-      eventName = _ref11.eventName,
-      eventValue = _ref11.eventValue;
+exports.ExtractValueFromEvent = function (_ref14) {
+  var abi = _ref14.abi,
+      event = _ref14.event,
+      eventName = _ref14.eventName,
+      eventValue = _ref14.eventValue;
   var eventLog = this.ethClient.ExtractEventFromLogs({
     abi: abi,
     event: event,
@@ -590,19 +748,19 @@ exports.ExtractValueFromEvent = function (_ref11) {
   return eventLog ? eventLog.values[eventValue] : undefined;
 };
 
-exports.FormatBlockNumbers = function _callee9(_ref12) {
-  var fromBlock, toBlock, _ref12$count, count, latestBlock;
+exports.FormatBlockNumbers = function _callee12(_ref15) {
+  var fromBlock, toBlock, _ref15$count, count, latestBlock;
 
-  return _regeneratorRuntime.async(function _callee9$(_context9) {
+  return _regeneratorRuntime.async(function _callee12$(_context12) {
     while (1) {
-      switch (_context9.prev = _context9.next) {
+      switch (_context12.prev = _context12.next) {
         case 0:
-          fromBlock = _ref12.fromBlock, toBlock = _ref12.toBlock, _ref12$count = _ref12.count, count = _ref12$count === void 0 ? 10 : _ref12$count;
-          _context9.next = 3;
+          fromBlock = _ref15.fromBlock, toBlock = _ref15.toBlock, _ref15$count = _ref15.count, count = _ref15$count === void 0 ? 10 : _ref15$count;
+          _context12.next = 3;
           return _regeneratorRuntime.awrap(this.BlockNumber());
 
         case 3:
-          latestBlock = _context9.sent;
+          latestBlock = _context12.sent;
 
           if (!toBlock) {
             if (!fromBlock) {
@@ -624,14 +782,14 @@ exports.FormatBlockNumbers = function _callee9(_ref12) {
             fromBlock = 0;
           }
 
-          return _context9.abrupt("return", {
+          return _context12.abrupt("return", {
             fromBlock: fromBlock,
             toBlock: toBlock
           });
 
         case 8:
         case "end":
-          return _context9.stop();
+          return _context12.stop();
       }
     }
   }, null, this);
@@ -652,23 +810,23 @@ exports.FormatBlockNumbers = function _callee9(_ref12) {
  */
 
 
-exports.Events = function _callee10() {
-  var _ref13,
+exports.Events = function _callee13() {
+  var _ref16,
       toBlock,
       fromBlock,
-      _ref13$count,
+      _ref16$count,
       count,
-      _ref13$includeTransac,
+      _ref16$includeTransac,
       includeTransaction,
       blocks,
-      _args10 = arguments;
+      _args13 = arguments;
 
-  return _regeneratorRuntime.async(function _callee10$(_context10) {
+  return _regeneratorRuntime.async(function _callee13$(_context13) {
     while (1) {
-      switch (_context10.prev = _context10.next) {
+      switch (_context13.prev = _context13.next) {
         case 0:
-          _ref13 = _args10.length > 0 && _args10[0] !== undefined ? _args10[0] : {}, toBlock = _ref13.toBlock, fromBlock = _ref13.fromBlock, _ref13$count = _ref13.count, count = _ref13$count === void 0 ? 10 : _ref13$count, _ref13$includeTransac = _ref13.includeTransaction, includeTransaction = _ref13$includeTransac === void 0 ? false : _ref13$includeTransac;
-          _context10.next = 3;
+          _ref16 = _args13.length > 0 && _args13[0] !== undefined ? _args13[0] : {}, toBlock = _ref16.toBlock, fromBlock = _ref16.fromBlock, _ref16$count = _ref16.count, count = _ref16$count === void 0 ? 10 : _ref16$count, _ref16$includeTransac = _ref16.includeTransaction, includeTransaction = _ref16$includeTransac === void 0 ? false : _ref16$includeTransac;
+          _context13.next = 3;
           return _regeneratorRuntime.awrap(this.FormatBlockNumbers({
             fromBlock: fromBlock,
             toBlock: toBlock,
@@ -676,9 +834,9 @@ exports.Events = function _callee10() {
           }));
 
         case 3:
-          blocks = _context10.sent;
+          blocks = _context13.sent;
           this.Log("Querying events - Blocks ".concat(blocks.fromBlock, " to ").concat(blocks.toBlock));
-          _context10.next = 7;
+          _context13.next = 7;
           return _regeneratorRuntime.awrap(this.ethClient.Events({
             fromBlock: blocks.fromBlock,
             toBlock: blocks.toBlock,
@@ -686,11 +844,11 @@ exports.Events = function _callee10() {
           }));
 
         case 7:
-          return _context10.abrupt("return", _context10.sent);
+          return _context13.abrupt("return", _context13.sent);
 
         case 8:
         case "end":
-          return _context10.stop();
+          return _context13.stop();
       }
     }
   }, null, this);
@@ -704,22 +862,22 @@ exports.Events = function _callee10() {
  */
 
 
-exports.BlockNumber = function _callee11() {
-  return _regeneratorRuntime.async(function _callee11$(_context11) {
+exports.BlockNumber = function _callee14() {
+  return _regeneratorRuntime.async(function _callee14$(_context14) {
     while (1) {
-      switch (_context11.prev = _context11.next) {
+      switch (_context14.prev = _context14.next) {
         case 0:
-          _context11.next = 2;
+          _context14.next = 2;
           return _regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
             methodName: "getBlockNumber"
           }));
 
         case 2:
-          return _context11.abrupt("return", _context11.sent);
+          return _context14.abrupt("return", _context14.sent);
 
         case 3:
         case "end":
-          return _context11.stop();
+          return _context14.stop();
       }
     }
   }, null, this);
@@ -735,27 +893,27 @@ exports.BlockNumber = function _callee11() {
  */
 
 
-exports.GetBalance = function _callee12(_ref14) {
+exports.GetBalance = function _callee15(_ref17) {
   var address, balance;
-  return _regeneratorRuntime.async(function _callee12$(_context12) {
+  return _regeneratorRuntime.async(function _callee15$(_context15) {
     while (1) {
-      switch (_context12.prev = _context12.next) {
+      switch (_context15.prev = _context15.next) {
         case 0:
-          address = _ref14.address;
+          address = _ref17.address;
           address = ValidateAddress(address);
-          _context12.next = 4;
+          _context15.next = 4;
           return _regeneratorRuntime.awrap(this.ethClient.MakeProviderCall({
             methodName: "getBalance",
             args: [address]
           }));
 
         case 4:
-          balance = _context12.sent;
-          return _context12.abrupt("return", Ethers.utils.formatEther(balance));
+          balance = _context15.sent;
+          return _context15.abrupt("return", Ethers.utils.formatEther(balance));
 
         case 6:
         case "end":
-          return _context12.stop();
+          return _context15.stop();
       }
     }
   }, null, this);
@@ -772,31 +930,31 @@ exports.GetBalance = function _callee12(_ref14) {
  */
 
 
-exports.SendFunds = function _callee13(_ref15) {
+exports.SendFunds = function _callee16(_ref18) {
   var recipient, ether, transaction;
-  return _regeneratorRuntime.async(function _callee13$(_context13) {
+  return _regeneratorRuntime.async(function _callee16$(_context16) {
     while (1) {
-      switch (_context13.prev = _context13.next) {
+      switch (_context16.prev = _context16.next) {
         case 0:
-          recipient = _ref15.recipient, ether = _ref15.ether;
+          recipient = _ref18.recipient, ether = _ref18.ether;
           recipient = ValidateAddress(recipient);
-          _context13.next = 4;
+          _context16.next = 4;
           return _regeneratorRuntime.awrap(this.signer.sendTransaction({
             to: recipient,
             value: Ethers.utils.parseEther(ether.toString())
           }));
 
         case 4:
-          transaction = _context13.sent;
-          _context13.next = 7;
+          transaction = _context16.sent;
+          _context16.next = 7;
           return _regeneratorRuntime.awrap(transaction.wait());
 
         case 7:
-          return _context13.abrupt("return", _context13.sent);
+          return _context16.abrupt("return", _context16.sent);
 
         case 8:
         case "end":
-          return _context13.stop();
+          return _context16.stop();
       }
     }
   }, null, this);
