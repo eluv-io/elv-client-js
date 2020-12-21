@@ -1193,7 +1193,7 @@ exports.ContentObjectLibraryId = function _callee18(_ref13) {
 
         case 5:
           _context18.t0 = _context18.sent;
-          _context18.next = _context18.t0 === this.authClient.ACCESS_TYPES.LIBRARY ? 8 : _context18.t0 === this.authClient.ACCESS_TYPES.OBJECT ? 9 : 20;
+          _context18.next = _context18.t0 === this.authClient.ACCESS_TYPES.LIBRARY ? 8 : _context18.t0 === this.authClient.ACCESS_TYPES.OBJECT ? 9 : _context18.t0 === this.authClient.ACCESS_TYPES.OTHER ? 20 : 21;
           break;
 
         case 8:
@@ -1243,9 +1243,12 @@ exports.ContentObjectLibraryId = function _callee18(_ref13) {
           throw _context18.t1;
 
         case 20:
-          return _context18.abrupt("return", this.contentSpaceLibraryId);
+          throw Error("Unable to retrieve library ID for ".concat(versionHash || objectId, ": Unknown type. (wrong network or deleted object?)"));
 
         case 21:
+          return _context18.abrupt("return", this.contentSpaceLibraryId);
+
+        case 22:
         case "end":
           return _context18.stop();
       }

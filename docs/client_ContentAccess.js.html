@@ -716,6 +716,8 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
 
         throw error;
       }
+    case this.authClient.ACCESS_TYPES.OTHER:
+      throw Error(`Unable to retrieve library ID for ${versionHash || objectId}: Unknown type. (wrong network or deleted object?)`);
     default:
       return this.contentSpaceLibraryId;
   }

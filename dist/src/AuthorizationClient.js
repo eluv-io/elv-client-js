@@ -1,7 +1,5 @@
 var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-var _typeof = require("@babel/runtime/helpers/typeof");
-
 var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
 var _createClass = require("@babel/runtime/helpers/createClass");
@@ -23,6 +21,9 @@ var Utils = require("./Utils");
 var UrlJoin = require("url-join");
 
 var bs58 = require("bs58");
+
+var _require = require("./LogMessage"),
+    LogMessage = _require.LogMessage;
 /*
 // -- Contract javascript files built using build/BuildContracts.js
 const SpaceContract = require("./contracts/BaseContentSpace");
@@ -62,18 +63,7 @@ function () {
     key: "Log",
     value: function Log(message) {
       var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (!this.debug) {
-        return;
-      }
-
-      if (_typeof(message) === "object") {
-        message = JSON.stringify(message);
-      }
-
-      error ? // eslint-disable-next-line no-console
-      console.error("\n(elv-client-js#AuthorizationClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
-      console.log("\n(elv-client-js#AuthorizationClient) ".concat(message, "\n"));
+      LogMessage(this, message, error);
     }
   }]);
 
