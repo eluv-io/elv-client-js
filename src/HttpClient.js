@@ -1,19 +1,10 @@
 const URI = require("urijs");
 const Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch").default;
+const {LogMessage} = require("./LogMessage");
 
 class HttpClient {
   Log(message, error=false) {
-    if(!this.debug) { return; }
-
-    if(typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-
-    error ?
-      // eslint-disable-next-line no-console
-      console.error(`\n(elv-client-js#HttpClient) ${message}\n`) :
-      // eslint-disable-next-line no-console
-      console.log(`\n(elv-client-js#HttpClient) ${message}\n`);
+    LogMessage(this, message, error);
   }
 
   constructor({uris, debug}) {
