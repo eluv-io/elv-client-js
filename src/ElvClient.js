@@ -1,4 +1,6 @@
-if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
+if(typeof Buffer === "undefined") {
+  Buffer = require("buffer/").Buffer;
+}
 
 const URI = require("urijs");
 const Ethers = require("ethers");
@@ -11,6 +13,7 @@ const HttpClient = require("./HttpClient");
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
+const {LogMessage} = require("./LogMessage");
 
 const {
   ValidatePresence
@@ -27,18 +30,8 @@ if(Utils.Platform() === Utils.PLATFORM_NODE) {
  *
  */
 class ElvClient {
-  Log(message, error=false) {
-    if(!this.debug) { return; }
-
-    if(typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-
-    error ?
-      // eslint-disable-next-line no-console
-      console.error(`\n(elv-client-js#ElvClient) ${message}\n`) :
-      // eslint-disable-next-line no-console
-      console.log(`\n(elv-client-js#ElvClient) ${message}\n`);
+  Log(message, error = false) {
+    LogMessage(this, message, error);
   }
 
   /**
@@ -47,13 +40,25 @@ class ElvClient {
    * @methodGroup Miscellaneous
    *
    * @param {boolean} enable - Set logging
+   * @param {Object=} options - Additional options for customizing logging
+   * - log: custom log() function
+   * - error: custom error() function
+   * - (custom functions must accept same arguments as console.log/console.error)
    */
-  ToggleLogging(enable) {
-    this.debug = enable;
-    this.authClient ? this.authClient.debug = enable : undefined;
-    this.ethClient ? this.ethClient.debug = enable : undefined;
-    this.HttpClient ? this.HttpClient.debug = enable : undefined;
-    this.userProfileClient ? this.userProfileClient.debug = enable : undefined;
+  ToggleLogging(enable, options = {}) {
+    // define func with closure to pass to forEach
+    const setDebug = (reporter) => {
+      if(reporter) {
+        reporter.debug = enable;
+        reporter.debugOptions = options;
+      }
+    };
+
+    [this,
+      this.authClient,
+      this.ethClient,
+      this.HttpClient,
+      this.userProfileClient].forEach(setDebug);
 
     if(enable) {
       this.Log(
@@ -92,8 +97,8 @@ class ElvClient {
     ethereumURIs,
     trustAuthorityId,
     staticToken,
-    noCache=false,
-    noAuth=false
+    noCache = false,
+    noAuth = false
   }) {
     this.utils = Utils;
 
@@ -135,7 +140,7 @@ class ElvClient {
    */
   static async Configuration({
     configUrl,
-    kmsUrls=[],
+    kmsUrls = [],
     region
   }) {
     try {
@@ -202,8 +207,8 @@ class ElvClient {
     region,
     trustAuthorityId,
     staticToken,
-    noCache=false,
-    noAuth=false
+    noCache = false,
+    noAuth = false
   }) {
     const {
       contentSpaceId,
@@ -326,7 +331,7 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const { fabricURIs, ethereumURIs } = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -376,7 +381,7 @@ class ElvClient {
    * @return {Promise<string>} - The node ID reported by the fabric
    */
   async NodeId({region}) {
-    const { nodeId } = await ElvClient.Configuration({
+    const {nodeId} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
@@ -661,7 +666,7 @@ class ElvClient {
    *
    * @return {Promise<*>} - Response in the specified format
    */
-  Request({url, format="json", method="GET", headers={}, body}) {
+  Request({url, format = "json", method = "GET", headers = {}, body}) {
     return this.utils.ResponseToFormat(
       format,
       HttpClient.Fetch(
@@ -701,7 +706,9 @@ class ElvClient {
 
   // Call a method specified in a message from a frame
   async CallFromFrameMessage(message, Respond) {
-    if(message.type !== "ElvFrameRequest") { return; }
+    if(message.type !== "ElvFrameRequest") {
+      return;
+    }
 
     let callback;
     if(message.callbackId) {
