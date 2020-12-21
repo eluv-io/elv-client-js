@@ -1,7 +1,5 @@
 var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
-var _typeof = require("@babel/runtime/helpers/typeof");
-
 var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
 var _createClass = require("@babel/runtime/helpers/createClass");
@@ -9,6 +7,9 @@ var _createClass = require("@babel/runtime/helpers/createClass");
 var URI = require("urijs");
 
 var _Fetch = typeof fetch !== "undefined" ? fetch : require("node-fetch")["default"];
+
+var _require = require("./LogMessage"),
+    LogMessage = _require.LogMessage;
 
 var HttpClient =
 /*#__PURE__*/
@@ -19,18 +20,7 @@ function () {
     key: "Log",
     value: function Log(message) {
       var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (!this.debug) {
-        return;
-      }
-
-      if (_typeof(message) === "object") {
-        message = JSON.stringify(message);
-      }
-
-      error ? // eslint-disable-next-line no-console
-      console.error("\n(elv-client-js#HttpClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
-      console.log("\n(elv-client-js#HttpClient) ".concat(message, "\n"));
+      LogMessage(this, message, error);
     }
   }]);
 

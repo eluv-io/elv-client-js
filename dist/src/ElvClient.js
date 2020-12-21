@@ -1,8 +1,8 @@
 var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 
-var _regeneratorRuntime = require("@babel/runtime/regenerator");
-
 var _typeof = require("@babel/runtime/helpers/typeof");
+
+var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
@@ -31,8 +31,11 @@ var Utils = require("./Utils");
 
 var Crypto = require("./Crypto");
 
-var _require = require("./Validation"),
-    ValidatePresence = _require.ValidatePresence;
+var _require = require("./LogMessage"),
+    LogMessage = _require.LogMessage;
+
+var _require2 = require("./Validation"),
+    ValidatePresence = _require2.ValidatePresence;
 
 if (Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
@@ -54,18 +57,7 @@ function () {
     key: "Log",
     value: function Log(message) {
       var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (!this.debug) {
-        return;
-      }
-
-      if (_typeof(message) === "object") {
-        message = JSON.stringify(message);
-      }
-
-      error ? // eslint-disable-next-line no-console
-      console.error("\n(elv-client-js#ElvClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
-      console.log("\n(elv-client-js#ElvClient) ".concat(message, "\n"));
+      LogMessage(this, message, error);
     }
     /**
      * Enable or disable verbose logging
@@ -73,16 +65,26 @@ function () {
      * @methodGroup Miscellaneous
      *
      * @param {boolean} enable - Set logging
+     * @param {Object=} options - Additional options for customizing logging
+     * - log: custom log() function
+     * - error: custom error() function
+     * - (custom functions must accept same arguments as console.log/console.error)
      */
 
   }, {
     key: "ToggleLogging",
     value: function ToggleLogging(enable) {
-      this.debug = enable;
-      this.authClient ? this.authClient.debug = enable : undefined;
-      this.ethClient ? this.ethClient.debug = enable : undefined;
-      this.HttpClient ? this.HttpClient.debug = enable : undefined;
-      this.userProfileClient ? this.userProfileClient.debug = enable : undefined;
+      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+      // define func with closure to pass to forEach
+      var setDebug = function setDebug(reporter) {
+        if (reporter) {
+          reporter.debug = enable;
+          reporter.debugOptions = options;
+        }
+      };
+
+      [this, this.authClient, this.ethClient, this.HttpClient, this.userProfileClient].forEach(setDebug);
 
       if (enable) {
         this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\n\t\t").concat(this.ethereumURIs.join(", \n\t\t"), "\n\t]"));

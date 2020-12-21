@@ -97,8 +97,8 @@ class ElvClient {
     ethereumURIs,
     trustAuthorityId,
     staticToken,
-    noCache = false,
-    noAuth = false
+    noCache=false,
+    noAuth=false
   }) {
     this.utils = Utils;
 
@@ -140,7 +140,7 @@ class ElvClient {
    */
   static async Configuration({
     configUrl,
-    kmsUrls = [],
+    kmsUrls=[],
     region
   }) {
     try {
@@ -207,8 +207,8 @@ class ElvClient {
     region,
     trustAuthorityId,
     staticToken,
-    noCache = false,
-    noAuth = false
+    noCache=false,
+    noAuth=false
   }) {
     const {
       contentSpaceId,
@@ -666,7 +666,7 @@ class ElvClient {
    *
    * @return {Promise<*>} - Response in the specified format
    */
-  Request({url, format = "json", method = "GET", headers = {}, body}) {
+  Request({url, format="json", method="GET", headers = {}, body}) {
     return this.utils.ResponseToFormat(
       format,
       HttpClient.Fetch(
