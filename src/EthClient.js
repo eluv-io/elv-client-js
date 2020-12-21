@@ -15,23 +15,12 @@ const AccessibleContract = require("./contracts/v3/Accessible");
 
 
 const Utils = require("./Utils");
-
+const {LogMessage} = require("./LogMessage");
 const Topics = require("./events/Topics");
 
 class EthClient {
   Log(message, error=false) {
-    if(!this.debug) { return; }
-
-    if(typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-
-    error ?
-      // eslint-disable-next-line no-console
-      console.error(`\n(elv-client-js#EthClient) ${message}\n`) :
-      // eslint-disable-next-line no-console
-      console.log(`\n(elv-client-js#EthClient) ${message}\n`);
-    // eslint-disable-next-line no-console
+    LogMessage(this, message, error);
   }
 
   constructor({client, uris, debug}) {

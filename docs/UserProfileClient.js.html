@@ -65,20 +65,11 @@
   <pre class="prettyprint source linenums"><code>const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 const { FrameClient } = require("./FrameClient");
+const {LogMessage} = require("./LogMessage");
 
 class UserProfileClient {
   Log(message, error=false) {
-    if(!this.debug) { return; }
-
-    if(typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-
-    error ?
-      // eslint-disable-next-line no-console
-      console.error(`\n(elv-client-js#UserProfileClient) ${message}\n`) :
-      // eslint-disable-next-line no-console
-      console.log(`\n(elv-client-js#UserProfileClient) ${message}\n`);
+    LogMessage(this, message, error);
   }
 
   /**
