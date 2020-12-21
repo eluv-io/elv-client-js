@@ -6,6 +6,7 @@
 
 const UrlJoin = require("url-join");
 const ImageType = require("image-type");
+const Ethers = require("ethers");
 
 /*
 const LibraryContract = require("../contracts/BaseLibrary");
@@ -401,7 +402,7 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
 };
 
 /**
- * Delete the specified content library
+ * NOT YET SUPPORTED - Delete the specified content library
  *
  * @methodGroup Content Libraries
  *
@@ -409,6 +410,9 @@ exports.SetContentObjectImage = async function({libraryId, objectId, writeToken,
  * @param {string} libraryId - ID of the library to delete
  */
 exports.DeleteContentLibrary = async function({libraryId}) {
+  throw Error("Not supported");
+
+  // eslint-disable-next-line no-unreachable
   ValidateLibrary(libraryId);
 
   let path = UrlJoin("qlibs", libraryId);
@@ -639,7 +643,7 @@ exports.EditContentObject = async function({libraryId, objectId, options={}}) {
 
   this.Log(`Opening content draft: ${libraryId} ${objectId}`);
 
-  if("type" in options) {
+  if("type" in options && options.type) {
     if(options.type.startsWith("hq__")) {
       // Type hash specified
       options.type = (await this.ContentType({versionHash: options.type})).hash;
@@ -1258,4 +1262,73 @@ exports.CreateLinks = async function({
       });
     }
   );
+};
+
+/**
+ * Initialize or replace the signed auth policy for the specified object
+ *
+ * @methodGroup Auth Policies
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {string=} target="auth_policy_spec" - The metadata location of the auth policy
+ * @param {string} body - The body of the policy
+ * @param {string} version - The version of the policy
+ * @param {string=} description - A description for the policy
+ * @param {string=} id - The ID of the policy
+ */
+exports.InitializeAuthPolicy = async function({
+  libraryId,
+  objectId,
+  writeToken,
+  target="auth_policy_spec",
+  body,
+  version,
+  description,
+  id
+}) {
+  let authPolicy = {
+    type: "epl-ast",
+    version,
+    body,
+    data: {
+      "/": UrlJoin(".", "meta", target)
+    },
+    signer: `iusr${this.utils.AddressToHash(this.signer.address)}`,
+    description: description || "",
+    id: id || ""
+  };
+
+  const string = `${authPolicy.type}|${authPolicy.version}|${authPolicy.body}|${authPolicy.data["/"]}`;
+  authPolicy.signature = this.utils.FormatSignature(
+    await this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)))
+  );
+
+  await this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: "auth_policy",
+    metadata: authPolicy
+  });
+
+  await this.SetAuthPolicy({objectId, policyId: objectId});
+};
+
+
+/**
+ * Set the authorization policy for the specified object
+ *
+ * @methodGroup Auth Policies
+ * @namedParams
+ * @param {string} objectId - The ID of the object
+ * @param {string} policyId - The ID of the policy
+ */
+exports.SetAuthPolicy = async function({objectId, policyId}) {
+  await this.MergeContractMetadata({
+    contractAddress: this.utils.HashToAddress(objectId),
+    metadataKey: "_AUTH_CONTEXT",
+    metadata: { "elv:delegation-id": policyId }
+  });
 };

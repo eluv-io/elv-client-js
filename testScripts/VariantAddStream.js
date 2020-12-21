@@ -19,8 +19,10 @@ class VariantAddStream extends ScriptVariant {
     const default_for_media_type = this.args.isDefault;
     const variantKey = this.args.variantKey;
     const filePath = this.args.file;
+    const channelIndexes = this.args.channelIndex;
     const streamIndexes = this.args.streamIndex;
     const mappingInfo = this.args.mapping;
+    const multipliers = this.args.mult;
 
     // ===============================================================
     // retrieve metadata from object and validate presence of variant
@@ -31,10 +33,40 @@ class VariantAddStream extends ScriptVariant {
     });
     this.validateVariant(metadata, variantKey);
 
+    if(channelIndexes) {
+      if(channelIndexes.length > 0 && streamIndexes.length !== 1) {
+        throw new Error("when using --channelIndex, you may only specify one --streamIndex");
+      }
+    }
+
     let sources = [];
-    for(const i of streamIndexes) {
-      this.validateStreamSource(metadata, filePath, i);
-      sources.push({files_api_path: filePath, stream_index: i});
+
+    for(const streamIndex of streamIndexes) {
+      if(channelIndexes) {
+        for(const channelIndex of channelIndexes) {
+          this.validateStreamSource(metadata, filePath, streamIndex, channelIndex);
+          sources.push({
+            channel_index: channelIndex,
+            files_api_path: filePath,
+            stream_index: streamIndex
+          });
+        }
+      } else {
+        this.validateStreamSource(metadata, filePath, streamIndex);
+        sources.push({
+          files_api_path: filePath,
+          stream_index: streamIndex
+        });
+      }
+    }
+
+    if(multipliers) {
+      if(multipliers.length !== sources.length) {
+        throw new Error("When using --multiplier you must provide exactly one value for every source (expected: " + sources.length + ")");
+      }
+      for(const [arrayIndex, source] of sources.entries()) {
+        source.multiplier = parseFloat(multipliers[arrayIndex]);
+      }
     }
 
     // =======================================
@@ -70,7 +102,7 @@ class VariantAddStream extends ScriptVariant {
       .option("streamKey", {
         alias: "stream-key",
         demandOption: true,
-        describe: "Stream within variant to change",
+        describe: "Key for new stream",
         type: "string"
       })
       .option("label", {
@@ -102,6 +134,16 @@ class VariantAddStream extends ScriptVariant {
         demandOption: false,
         describe: "Mapping info for stream",
         type: "string"
+      })
+      .option("channelIndex", {
+        alias: "channel-index",
+        describe: "Channel(s) of stream to use from file. (Only applies to audio streams)",
+        type: "array"
+      })
+      .option("multiplier", {
+        alias: "mult",
+        describe: "Sound level adjustment (Only applies to audio streams). Relationship between perceived volume and sound level is logarithmic, e.g. 0.707 = cut perceived volume by half, 1.414 = double perceived volume.",
+        type: "array"
       })
       .option("streamIndex", {
         alias: "stream-index",

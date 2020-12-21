@@ -16,6 +16,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
 var UrlJoin = require("url-join");
 
 var ImageType = require("image-type");
+
+var Ethers = require("ethers");
 /*
 const LibraryContract = require("../contracts/BaseLibrary");
 const ContentContract = require("../contracts/BaseContent");
@@ -670,7 +672,7 @@ exports.SetContentObjectImage = function _callee6(_ref10) {
   }, null, this);
 };
 /**
- * Delete the specified content library
+ * NOT YET SUPPORTED - Delete the specified content library
  *
  * @methodGroup Content Libraries
  *
@@ -686,32 +688,26 @@ exports.DeleteContentLibrary = function _callee7(_ref11) {
       switch (_context9.prev = _context9.next) {
         case 0:
           libraryId = _ref11.libraryId;
-          ValidateLibrary(libraryId);
-          path = UrlJoin("qlibs", libraryId);
-          _context9.next = 5;
-          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
-            libraryId: libraryId,
-            update: true
-          }));
+          throw Error("Not supported");
 
-        case 5:
+        case 6:
           authorizationHeader = _context9.sent;
-          _context9.next = 8;
+          _context9.next = 9;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(libraryId),
             methodName: "kill",
             methodArgs: []
           }));
 
-        case 8:
-          _context9.next = 10;
+        case 9:
+          _context9.next = 11;
           return _regeneratorRuntime.awrap(this.HttpClient.Request({
             headers: authorizationHeader,
             method: "DELETE",
             path: path
           }));
 
-        case 10:
+        case 11:
         case "end":
           return _context9.stop();
       }
@@ -1113,7 +1109,7 @@ exports.EditContentObject = function _callee12(_ref17) {
           });
           this.Log("Opening content draft: ".concat(libraryId, " ").concat(objectId));
 
-          if (!("type" in options)) {
+          if (!("type" in options && options.type)) {
             _context14.next = 23;
             break;
           }
@@ -2321,6 +2317,105 @@ exports.CreateLinks = function _callee28(_ref33) {
         case 5:
         case "end":
           return _context32.stop();
+      }
+    }
+  }, null, this);
+};
+/**
+ * Initialize or replace the signed auth policy for the specified object
+ *
+ * @methodGroup Auth Policies
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {string=} target="auth_policy_spec" - The metadata location of the auth policy
+ * @param {string} body - The body of the policy
+ * @param {string} version - The version of the policy
+ * @param {string=} description - A description for the policy
+ * @param {string=} id - The ID of the policy
+ */
+
+
+exports.InitializeAuthPolicy = function _callee29(_ref34) {
+  var libraryId, objectId, writeToken, _ref34$target, target, body, version, description, id, authPolicy, string;
+
+  return _regeneratorRuntime.async(function _callee29$(_context33) {
+    while (1) {
+      switch (_context33.prev = _context33.next) {
+        case 0:
+          libraryId = _ref34.libraryId, objectId = _ref34.objectId, writeToken = _ref34.writeToken, _ref34$target = _ref34.target, target = _ref34$target === void 0 ? "auth_policy_spec" : _ref34$target, body = _ref34.body, version = _ref34.version, description = _ref34.description, id = _ref34.id;
+          authPolicy = {
+            type: "epl-ast",
+            version: version,
+            body: body,
+            data: {
+              "/": UrlJoin(".", "meta", target)
+            },
+            signer: "iusr".concat(this.utils.AddressToHash(this.signer.address)),
+            description: description || "",
+            id: id || ""
+          };
+          string = "".concat(authPolicy.type, "|").concat(authPolicy.version, "|").concat(authPolicy.body, "|").concat(authPolicy.data["/"]);
+          _context33.t0 = this.utils;
+          _context33.next = 6;
+          return _regeneratorRuntime.awrap(this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string))));
+
+        case 6:
+          _context33.t1 = _context33.sent;
+          authPolicy.signature = _context33.t0.FormatSignature.call(_context33.t0, _context33.t1);
+          _context33.next = 10;
+          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            writeToken: writeToken,
+            metadataSubtree: "auth_policy",
+            metadata: authPolicy
+          }));
+
+        case 10:
+          _context33.next = 12;
+          return _regeneratorRuntime.awrap(this.SetAuthPolicy({
+            objectId: objectId,
+            policyId: objectId
+          }));
+
+        case 12:
+        case "end":
+          return _context33.stop();
+      }
+    }
+  }, null, this);
+};
+/**
+ * Set the authorization policy for the specified object
+ *
+ * @methodGroup Auth Policies
+ * @namedParams
+ * @param {string} objectId - The ID of the object
+ * @param {string} policyId - The ID of the policy
+ */
+
+
+exports.SetAuthPolicy = function _callee30(_ref35) {
+  var objectId, policyId;
+  return _regeneratorRuntime.async(function _callee30$(_context34) {
+    while (1) {
+      switch (_context34.prev = _context34.next) {
+        case 0:
+          objectId = _ref35.objectId, policyId = _ref35.policyId;
+          _context34.next = 3;
+          return _regeneratorRuntime.awrap(this.MergeContractMetadata({
+            contractAddress: this.utils.HashToAddress(objectId),
+            metadataKey: "_AUTH_CONTEXT",
+            metadata: {
+              "elv:delegation-id": policyId
+            }
+          }));
+
+        case 3:
+        case "end":
+          return _context34.stop();
       }
     }
   }, null, this);

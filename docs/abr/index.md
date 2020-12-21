@@ -1,10 +1,57 @@
 <link rel="stylesheet" type="text/css" media="all" href="index.css" />
 
+<a id="contents"></a>
+
 # Eluvio Content Fabric: Ingesting Media for Adaptive Bit Rate (ABR) Streaming
 
-*last revised: 2020-07-17*
+*last revised: 2020-12-02*
 
-## Basic Concepts
+  * [Basic Concepts](#basic-concepts)
+  * [Preparation](#preparation)
+    * [Find your Content Fabric private key and record it in a safe place](#find-your-content-fabric-private-key-and-record-it-in-a-safe-place)
+    * [Download and set up the elv-client-js library](#download-and-set-up-the-elv-client-js-library)
+    * [Updating your copy of elv-client-js](#updating-your-copy-of-elv-client-js)
+  * [Create a Production Master object](#create-a-production-master-object)
+    * [Get your Production Master Content Type name and/or ID](#get-your-production-master-content-type-name-andor-id)
+    * [Get your Production Master Library ID](#get-your-production-master-library-id)
+    * [Create from a file on AWS S3](#create-from-a-file-on-aws-s3)
+    * [Create from a local file](#create-from-a-local-file)
+    * [Check output from CreateProductionMaster.js script](#check-output-from-createproductionmaster)
+    * [Grant Permissions on Production Master object - via browser](#grant-permissions-on-production-master-object---via-browser)
+    * [Grant Permissions on Production Master object - via command line](#grant-permissions-on-production-master-object---via-command-line)
+  * [(If needed) Change streams on Production Master Variant](#change-streams-on-production-master-variant)
+    * [Display Production Master Stream Info](#display-production-master-stream-info)
+    * [Add stream to Production Master Variant](#add-stream-to-production-master-variant)
+    * [Edit existing stream in Production Master Variant](#edit-existing-stream-in-production-master-variant)
+    * [Remove existing stream from Production Master Variant](#remove-existing-stream-from-production-master-variant)
+  * [Create a Mezzanine object](#create-a-mezzanine-object)
+    * [Find the latest version hash for your Production Master](#find-the-latest-version-hash-for-your-production-master)
+    * [Get your Mezzanine Content Type name and/or ID](#get-your-mezzanine-content-type-name-andor-id)
+    * [Get your Mezzanine Library ID](#get-your-mezzanine-library-id)
+    * [Choose an ABR Profile](#choose-an-abr-profile)
+    * [Create the Mezzanine object](#create-the-mezzanine-object)
+    * [Successful creation of Mezzanine object](#successful-creation-of-mezzanine-object)
+    * [Checking Mezzanine transcoding status](#checking-mezzanine-transcoding-status)
+  * [Finalize your Mezzanine object](#finalize-your-mezzanine-object)
+    * [Grant Permissions on Mezzanine object - via browser](#grant-permissions-on-mezzanine-object-via-browser)
+    * [Grant Permissions on Mezzanine object - via command line](#grant-permissions-on-mezzanine-object-via-command-line)
+  * [Adding another Offering to a Mezzanine object](#adding-another-offering-to-a-mezzanine-object)
+    * [Viewing Offerings other than "default"](#viewing-offerings-other-than-default)
+  * [Adding / removing playout options from an Offering](#adding--removing-playout-options-from-an-offering)
+    * [Adding Clear (DRM-free) playout option](#adding-clear-drm-free-playout-option)
+    * [Removing Clear (DRM-free) playout option](#removing-clear-drm-free-playout-option)
+    * [Removing DRM playout option](#removing-drm-playout-option)
+    * [Displaying the resolution ladder for an Offering](#displaying-the-resolution-ladder-for-an-offering)
+    * [Adding a rung to an Offering's video playout resolution ladder](#adding-a-rung-to-an-offerings-video-playout-resolution-ladder)
+    * [Removing a rung from an Offering's video playout resolution ladder](#removing-a-rung-from-an-offerings-video-playout-resolution-ladder)
+  * [Example Scenarios](#example-scenarios)
+    * [Adding a stereo stream created from 2 mono streams to a Production Master Variant](#adding-a-stereo-stream-created-from-2-mono-streams-to-a-production-master-variant)
+    * [Adding a stereo stream created from a single mono stream to a Production Master Variant](#adding-a-stereo-stream-created-from-a-single-mono-stream-to-a-production-master-variant)
+    * [Adding a 'clear playout' Offering to a DRM-protected Mezzanine](#adding-a-clear-playout-offering-to-a-drm-protected-mezzanine)
+  * [Language Codes and Labels](#language-codes-and-labels)
+
+<a id="basic-concepts"></a>
+## Basic Concepts&nbsp;[&#8673;](#contents)
 
 In the Content Fabric, ingesting video for streaming involves two kinds of objects, **Production Masters** and **ABR Mezzanines**:
 
@@ -21,13 +68,19 @@ In the Content Fabric, ingesting video for streaming involves two kinds of objec
 		* Market- or country-specific version(s)
 	* Unless otherwise specified, on initial creation always starts with one **Variant** named `default`
 	* A **Variant** specifies which files (**Sources**) to use and which stream(s) to include from each.
+
 * **ABR Mezzanines**
 	* Generally lower bitrate and/or resolution than Production Masters
 	* Encoded with h264 or h265 video and AAC audio
 	* Directly viewable from the Content Fabric
 	* Stored in the Content Fabric
 	* Optimized for low-latency streaming
-	* Contains any custom metadata, including internal asset ID (if any)
+	* Can contain custom metadata, e.g.:
+	   * Internal asset ID
+	   * External ID(s)
+	   * Synopsis, Ratings, Genre, Cast, Crew
+	     * Defaults (usually English)
+	     * Territory and/or language-specific overrides
 	* Defines 1 or more **Offerings**. Each **Offering** specifies the following:
 		* What **Production Master** and **Variant** within to stream
 		* What resolutions and bitrates to offer
@@ -35,18 +88,22 @@ In the Content Fabric, ingesting video for streaming involves two kinds of objec
 		* Watermark text or image (if any)
 		* Caption/subtitle streams (if any)
 		* Whether to trim the from beginning and/or end of the **Production Master**'s **Variant** and if so how much
+		* An **Offering** initially contains the same streams as the **Production Master** **Variant** that was used to create it, but can be edited after creation to add or remove streams (e.g. adding a subtitle stream or removing an audio language track)
 
 The ingest process consists of the following steps:
 
-1. Creating a **Production Master** object that points to your master source files (alternately, local master source files can be uploaded to the fabric)
-2. Creating an **ABR Mezzanine** object that points to the **Production Master** and adds streaming resolutions / bitrates as well as any DRM / watermarking. Once you create the mezzanine, the Content Fabric will begin transcoding.
-3. Finalizing the **ABR Mezzanine** after transcoding has finished.
+1. Create a **Production Master** object that points to your master source files (alternately, local master source files can be uploaded to the fabric)
+2. Create an **ABR Mezzanine** object that points to the **Production Master** and adds streaming resolutions / bitrates as well as any DRM / watermarking. Once you create the mezzanine, the Content Fabric will begin transcoding.
+3. Finalize the **ABR Mezzanine** after transcoding has finished.
+4. (Optionally) Setting trim points and/or adding subtitles
 
-_NOTE: Currently caption/subtitle files are added to **ABR Mezzanines** separately after creation. In the near future this will be changed so that they are part of the original **Production Master** instead._
+_NOTE: Although currently caption/subtitle files are added to **ABR Mezzanines** separately after creation, in the future this may be changed so that they are part of the original **Production Master** instead._
 
-## Preparation
+<a id="preparation"></a>
+## Preparation&nbsp;[&#8673;](#contents)
 
-### Find your Content Fabric private key and record it in a safe place:
+<a id="find-your-content-fabric-private-key-and-record-it-in-a-safe-place"></a>
+### Find your Content Fabric private key and record it in a safe place&nbsp;[&#8673;](#contents)
 
 
 1. Navigate to the Content Fabric Browser page
@@ -60,7 +117,8 @@ _NOTE: Currently caption/subtitle files are added to **ABR Mezzanines** separate
 1. Double-click on this value and copy
 1. **IMPORTANT:** Save in a safe place (a permanent file). Do not share this key. The Content Fabric is designed to be trustless - we do not keep a copy of your key and cannot reset or recover it for you. Until you save a copy of your key somewhere it only exists in your browser's local storage, which can get erased if you choose to wipe your browser history.
 
-### Download and set up the elv-client-js library:
+<a id="download-and-set-up-the-elv-client-js-library"></a>
+### Download and set up the elv-client-js library&nbsp;[&#8673;](#contents)
 
 
 * If you do not have them already, install **git** and **node.js** / **npm**
@@ -91,8 +149,8 @@ _NOTE: Currently caption/subtitle files are added to **ABR Mezzanines** separate
 	* `export AWS_KEY=AK...` *(your AWS S3 key)*
 	* `export AWS_SECRET=...` *(your AWS S3 secret)*
 
-
-## Updating your copy of elv-client-js
+<a id="updating-your-copy-of-elv-client-js"></a>
+### Updating your copy of elv-client-js&nbsp;[&#8673;](#contents)
 
 If you need to update to the latest version of elv-client-js, you can do so with:
 
@@ -100,7 +158,8 @@ If you need to update to the latest version of elv-client-js, you can do so with
     git pull
     npm install
 
-## Creating a Production Master object
+<a id="create-a-production-master-object"></a>
+## Create a Production Master object&nbsp;[&#8673;](#contents)
 
 The **Production Master** object contains links to your original source material. It is not directly playable, but is used to generate a playable **Mezzanine** object.
 
@@ -111,7 +170,8 @@ To create a Production Master, you will need the following:
 * One or more media files
 * (optional) An asset ID (generally your internal ID for a title)  
 
-### Get your Production Master Content Type name and/or ID
+<a id="get-your-production-master-content-type-name-andor-id"></a>
+### Get your Production Master Content Type name and/or ID&nbsp;[&#8673;](#contents)
 
 Each tenant of the Content Fabric has a number **Content Types** created for them. These provide a way of customizing the structure of your fabric objects.
 
@@ -127,7 +187,8 @@ If you click on this item, you will see a detail screen where you can select and
 
 *NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.*
 
-### Get your Production Master Library ID
+<a id="get-your-production-master-library-id"></a>
+### Get your Production Master Library ID&nbsp;[&#8673;](#contents)
 
 Click on **Content** in the left sidebar to get to your list of libraries.
 
@@ -137,7 +198,8 @@ On the next screen, click on the **Library Info** tab to find the Library ID. Wh
 
 `--library ilib...` *(your 'Title Masters' library ID - library IDs start with "ilib")*
 
-### Creating from a file on AWS S3
+<a id="create-from-a-file-on-aws-s3"></a>
+### Create from a file on AWS S3&nbsp;[&#8673;](#contents)
 
 Here is a sample command line to generate a Production Master using a file on AWS S3. Once you have the required information, substitute it into the sample below (if you do not need to attach an asset ID, you can omit the `--ip-title-id` line):
 
@@ -155,7 +217,9 @@ Here is a sample command line to generate a Production Master using a file on AW
 **NOTE:** Our convention in this case is to omit the "s3://" prefix and bucket name from the start of file path, i.e. use `bbb_sunflower_1080p_60fps_stereo_abl.mp4` instead of `s3://BUCKET_NAME/bbb_sunflower_1080p_60fps_stereo_abl.mp4`. If the file is in a subdirectory, start with the name of the subdirectory, without any leading slash character (/)
 
 
-### Creating from a local file
+
+<a id="create-from-a-local-file"></a>
+### Create from a local file&nbsp;[&#8673;](#contents)
 Here is a sample command line to generate a Production Master using a local file.  Once you have the required information, substitute it into the sample below (if you do not need to attach an asset ID, you can omit the `--ip-title-id` line):
 
         cd elv-client-js
@@ -168,9 +232,10 @@ Here is a sample command line to generate a Production Master using a local file
           --files PATH_TO_YOUR_DIRECTORY/bbb_sunflower_1080p_60fps_stereo_abl.mp4
 
 
-### Successful creation of Production Master object
+<a id="check-output-from-createproductionmaster"></a>
+### Check output from CreateProductionMaster.js script&nbsp;[&#8673;](#contents)
 
-When you run the `CreateProductionMaster.js` script, the server examines the file(s) for audio and video streams, then makes a best guess about what should be included in the mezzanine.
+When you run the `CreateProductionMaster.js` script, the server examines the file(s) for audio and video streams, then makes a simple guess about what should be included in the mezzanine.
 
 You should see output like the following:
 
@@ -185,33 +250,43 @@ You should see output like the following:
 
 If you included any non-media files in the --files list, you will also see warnings at the end of the output complaining `Failed to create media.Source from file`. These can be ignored as long as you included at least one media file.
 
-In your browser, if you click on **Content** in the left sidebar, then click on your Title Masters library, you should see your new Production Master object.
+If the server did not find a presupplied stereo (2-channel) audio stream among the files, you will see the following warning:
 
-(If you are already on the page that lists objects in the library you may need to click the refresh icon ![image for refresh icon](images/icon_reload.png) to see the new object)
+```
+WARNING: no audio stream found
+```
 
-Clicking on the object will show you details about the object. For the next step (generating a mezzanine) you will need the **Latest Version Hash** for the object. This value (hq__9v2JY2… for this example) can be copied by clicking on the clipboard icon as shown below. It is also listed in the output from the `CreateProductionMaster.js` script.
+If the server did not find a video stream among the files, you will see the following warning:
 
-![image for copy latest version hash](images/copy_latest_version_hash.png)
+```
+WARNING: no video stream found
+```
 
 A **Production Master** contains one or more **Variants**. A **Variant** is one version of the original title (this allows you to create different content versions for particular countries or distribution channels). The `CreateProductionMaster.js` script creates a single Variant named `default`.
 
-Clicking on the **Show Metadata** button and drilling down into *production_master* → *variants* → *default* → *streams* will reveal what files and stream indexes the server has chosen to include in this "default" Variant.
+Clicking on the **Show Metadata** button and drilling down into *production_master* &#8594;  *variants* &#8594;  *default* &#8594;  *streams* will reveal what files and stream indexes the server has chosen to include in this "default" Variant.
 
-### Grant Permissions on Production Master object - via browser
+<a id="grant-permissions-on-production-master-object---via-browser"></a>
+### Grant Permissions on Production Master object - via browser&nbsp;[&#8673;](#contents)
 
-In order to let other users work with your object, you must grant permissions to an **Access Group**.
+In order to let other Content Admins work with your Production Master object, you must grant permissions to an **Access Group**.
 
 From the object details page, click the blue **Groups** button at top - you should see a screen with the *Access Group* field already chosen for you, set to "*TENANT_NAME* Content Admins".
 
-Check all 3 boxes (**See**, **Access**, and **Manage**), then click **Submit**.
+Check the **Manage** box, then click **Submit**.
 
 
-### Grant Permissions on Production Master object - via command line
+<a id="grant-permissions-on-production-master-object---via-command-line"></a>
+### Grant Permissions on Production Master object - via command line&nbsp;[&#8673;](#contents)
 
 In order to grant permissions via the command line, you will need to know the following:
 
 * The ID of your Production Master object (starts with "iq__")
 * The Address of your "*TENANT_NAME* Content Admins" group (starts with "0x")
+* What permission level you would like to grant (for your Content Admins group, choose **manage**)
+  * see
+  * access
+  * manage 
 
 You can find the Address of your group by clicking on the blue **Groups** button at top when you are browsing the details of any object. You can choose a group from the **Access Group** dropdown, then double-click the **Address** field to select it and copy to your clipboard.
 
@@ -220,23 +295,187 @@ The command to add permissions is then:
     node testScripts/AddGroupPermissions.js \
       --objectId YOUR_OBJECT_ID \
       --groupAddress YOUR_GROUP_ADDRESS \
-      --permissions see access manage
+      --permissions manage
 
-## Creating a Mezzanine object
+
+<a id="change-streams-on-production-master-variant"></a>
+## (If needed) Change streams on Production Master Variant&nbsp;[&#8673;](#contents)
+
+If you need to make any changes to the Variant's stream selections (e.g. because the server did not choose the desired streams, or if you wish to add more audio streams) you can use scripts to add/edit/remove Variant streams. In order to use these scripts, you will need to look at the Production Master's existing stream information.
+
+<a id="display-production-master-stream-info"></a>
+### Display Production Master Stream Info&nbsp;[&#8673;](#contents)
+
+You can inspect stream information for files and Variants in the fabric browser by clicking on the **Show Metadata** button and drilling down by clicking on *production_master* &#8594; *sources* &#8594; *(filename)* &#8594; *streams* and   *production_master* &#8594; *variants* &#8594; *(variant name)* &#8594; *streams*. (Clicking on a downward pointing triangle &#9660; will expand all details for a line item, clicking on an expanded line item will collapse it) 
+
+Alternately, you can use the `ProductionMasterInfo.js` script, which will output a subset of this information:
+
+    node testScripts/ProductionMasterInfo.js \
+      --libraryId YOUR_LIBRARY_ID  \
+      --objectId YOUR_MASTER_OBJECT_ID
+
+<a id="add-stream-to-production-master-variant"></a>
+### Add stream to Production Master Variant&nbsp;[&#8673;](#contents)
+
+In order add a stream to a Variant, you will need to supply the following information:
+
+  * The ID of your library that contains your Production Masters (starts with "ilib")
+  * The ID of your Production Master object (starts with "iq__")
+  * The internal name ("key") for the Variant (usually **"default"**)
+  * What internal identifier (called a "stream key") to give your stream. This key can be anything you want, and is not displayed to the end user, but it is recommended to choose something that contains no spaces, uses only letters/numbers/dashes, and describes the media type and purpose, e.g. **audio-french** or **audio-en-surround**. If you must include spaces, then surround the key with quotation marks on the command line.  
+  * An externally visible label for the stream. This is what the end user sees in controls to choose audio and/or subtitle streams (see section [Language Codes and Labels](#language-codes-and-labels)). If it contains spaces or punctuation, you must surround with quotation marks, e.g. `"Director's commentary"`.
+  * The language code for the stream (see section [Language Codes and Labels](#language-codes-and-labels)).
+  * The name of the file in the Production Master that contains the desired stream(s) to use. (An audio stream in your Variant can be created from multiple streams in the original file). This is the filename as it appears in the file list for your Production Master object, and should not contain S3 bucket names or subdirectory prefixes.
+  * The stream index(es) to use from the file. Note that stream indexes start at zero, so if your file contains 8 streams and you want to use the last 2, the stream indexes would be 6 and 7. (Use of multiple stream indexes is only valid for audio streams. Video streams in your Variant can only use one stream index from the source file. For audio, currently only a maximum of 2 indexes can be specified, but support for Dolby mixdown is scheduled to be added soon)
+  * (Only for audio streams using more than one stream index) The **mapping** to use to combine the source audio streams. Currently only 1 mapping is supported, **2MONO_1STEREO**, which will map the first stream index to the left channel and the second stream index to the right channel.
+  * (Only if the stream is the default to use) The flag `--isDefault`. If omitted, the stream is assumed to be an alternate stream and will not be chosen by default unless it is the only stream of its type (audio or subtitle) or if the user has a matching browser/player language preference configured. 
+
+The command to add the stream is then would resemble the following: 
+
+(note that `--mapping`, `SECOND_STREAM_INDEX`, and `--isDefault` would not always be included)
+   
+    node testScripts/VariantAddStream.js \
+      --libraryId YOUR_LIBRARY_ID  \
+      --objectId YOUR_MASTER_OBJECT_ID  \
+      --variantKey THE_VARIANT_NAME \
+      --streamKey YOUR_CHOSEN_STREAM_KEY \
+      --file THE_FILENAME \
+      --label YOUR_EXTERNALLY_VISIBLE_STREAM_LABEL \
+      --language THE_LANGUAGE_CODE \
+      --streamIndex FIRST_STREAM_INDEX SECOND_STREAM_INDEX \
+      --mapping THE_MAPPING \
+      --isDefault
+
+Here is a sample command with example values filled in, for the case where the master source file contains a stereo audio stream:
+ 
+    node testScripts/VariantAddStream.js \
+      --libraryId ilib3t4Cf8pdxftVcc4Si35yZxPgN33  \
+      --objectId iq__3RVmL1WdnVj7mYrKZcDUPpzstFNU  \
+      --variantKey default \
+      --streamKey audio-alternate \
+      --file MyAlternateAudio.mp4 \
+      --label "Director's commentary" \
+      --language en \
+      --streamIndex 0
+
+Once you run the command, it will output the new **version hash** for the Production Master. You will need this value in order to create a mezzanine, unless you have more streams to add to the Variant, in which case you will need the version hash that is output by your final `VariantAddStream.js` command.
+
+
+<a id="edit-existing-stream-in-production-master-variant"></a>
+### Edit existing stream in Production Master Variant&nbsp;[&#8673;](#contents)
+
+The command to edit a stream is similar to the one for adding a stream. In order edit a stream in a Variant, you will need to supply the following information:
+
+  * The ID of your library that contains your Production Masters (starts with "ilib")
+  * The ID of your Production Master object (starts with "iq__")
+  * The internal name ("key") for the Variant (usually **"default"**)
+  * The internal identifier (called a "stream key") for the stream to edit.  
+  * An externally visible label for the stream. This is what the end user sees in controls to choose audio and/or subtitle streams (see section [Language Codes and Labels](#language-codes-and-labels)).  If it contains spaces or punctuation, you must surround with quotation marks, e.g. `"Director's commentary"`.
+  * The language code for the stream (see section [Language Codes and Labels](#language-codes-and-labels)).
+  * The name of the file in the Production Master that contains the desired stream(s) to use. (An audio stream in your Variant can be created from multiple streams in the original file). This is the filename as it appears in the file list for your Production Master object, and should not contain S3 bucket names or subdirectory prefixes.
+  * The stream index(es) to use from the file. Note that stream indexes start at zero, so if your file contains 8 streams and you want to use the last 2, the stream indexes would be 6 and 7. (Use of multiple stream indexes is only valid for audio streams. Video streams in your Variant can only use one stream index from the source file. For audio, currently only a maximum of 2 indexes can be specified, but support for Dolby mixdown is scheduled to be added soon)
+  * (Only for audio streams using more than one stream index) The **mapping** to use to combine the source audio streams. Currently only 1 mapping is supported, **2MONO_1STEREO**, which will map the first stream index to the left channel and the second stream index to the right channel.
+  * (Only if the stream is the default to use) The flag `--isDefault`. If omitted, the stream is assumed to be an alternate stream and will not be chosen by default unless it is the only stream of its type (audio or subtitle) or if the user has a matching browser/player language preference configured. 
+
+The command to edit the stream is then would resemble the following: 
+
+(note that `--mapping`, `SECOND_STREAM_INDEX`, and `--isDefault` would not always be included)
+   
+    node testScripts/VariantEditStream.js \
+      --libraryId YOUR_LIBRARY_ID  \
+      --objectId YOUR_MASTER_OBJECT_ID  \
+      --variantKey THE_VARIANT_NAME \
+      --streamKey THE_EXISTING_STREAM_KEY \
+      --file THE_FILENAME \
+      --label YOUR_EXTERNALLY_VISIBLE_STREAM_LABEL \
+      --language THE_LANGUAGE_CODE \
+      --streamIndex FIRST_STREAM_INDEX SECOND_STREAM_INDEX \
+      --mapping THE_MAPPING \
+      --isDefault
+
+Here is a sample command with example values filled in, to change the streamIndex from the previous example to 1 instead of zero:
+ 
+    node testScripts/VariantAddStream.js \
+      --libraryId ilib3t4Cf8pdxftVcc4Si35yZxPgN33  \
+      --objectId iq__3RVmL1WdnVj7mYrKZcDUPpzstFNU  \
+      --variantKey default \
+      --streamKey audio-alternate \
+      --file MyAlternateAudio.mp4 \
+      --label "Director's commentary" \
+      --language en \
+      --streamIndex 1
+
+Once you run the command, it will output the new **version hash** for the Production Master. You will need this value in order to create a mezzanine, unless you have more streams to edit, in which case you will need the version hash that is output by your final `VariantEditStream.js` command.
+
+
+<a id="remove-existing-stream-from-production-master-variant"></a>
+### Remove existing stream from Production Master Variant&nbsp;[&#8673;](#contents)
+
+In order remove a stream from a Variant, you will need to supply the following information:
+
+  * The ID of your library that contains your Production Masters (starts with "ilib")
+  * The ID of your Production Master object (starts with "iq__")
+  * The internal name ("key") for the Variant (usually **"default"**)
+  * The internal identifier (called a "stream key") for the stream to remove.  
+
+The command to edit the stream is then would be the following: 
+   
+    node testScripts/VariantRemoveStream.js \
+      --libraryId YOUR_LIBRARY_ID  \
+      --objectId YOUR_MASTER_OBJECT_ID  \
+      --variantKey THE_VARIANT_NAME \
+      --streamKey THE_EXISTING_STREAM_KEY
+
+Once you run the command, it will output the new **version hash** for the Production Master. You will need this value in order to create a mezzanine, unless you have more streams to remove, in which case you will need the version hash that is output by your final `VariantRemoveStream.js` command.
+
+      
+<a id="create-a-mezzanine-object"></a>
+## Create a Mezzanine object&nbsp;[&#8673;](#contents)
 
 A **Mezzanine** object contains transcoded media optimized for adaptive bitrate (ABR) streaming. Depending on the ABR profile you choose, it is playable via HLS and/or DASH with DRM (you also have the option to offer playout in the clear).
 
 To create a Mezzanine, you will need the following:
 
+* The Latest Version Hash of your Production Master object (see *"Find the latest version hash for your Production Master"* section below)
 * Your Mezzanine Content Type name or ID
 * Your Mezzanine Library ID
-* The Latest Version Hash of your Production Master object (see *"Successful creation of Production Master object"* section above)
 * A JSON file containing an ABR Profile specifying bit rates, playout formats, and DRM information
 * (optional) An asset ID (generally your internal ID for a title)  
 
 *NOTE: In the instructions below there are a number of operations done via browser. These can be done programmatically as well and we can provide code samples as needed.*
 
-### Get your Mezzanine Content Type name and/or ID
+<a id="find-the-latest-version-hash-for-your-production-master"></a>
+### Find the latest version hash for your Production Master&nbsp;[&#8673;](#contents)
+
+Any script that creates and/or modifies a Production Master will output the new version hash for the object, e.g.: 
+
+```
+Adding stream 'audio' to variant 'default'... 
+Writing metadata back to object...
+Finalizing object...
+New version hash: hq__N8VZbpdEtRyTsuPtnczwKNi2hgFNu3F7CJEHmroPqbwEaJNwoL9tiGGLEvi7zm4ZpGmQrntWT
+Done.
+```
+
+Version hashes always start with the characters `hq__` and this value can be copied and pasted in your command terminal window.
+
+Alternately, you can also look up the version hash in the Fabric Browser and copy from there:
+
+In your browser, if you click on **Content** in the left sidebar, then click on your Title Masters library, you should be able to find your new Production Master object.
+
+(If you are already on the page that lists objects in the library you may need to click the refresh icon ![image for refresh icon](images/icon_reload.png) to see the new object)
+
+Clicking on the object will show you details about the object. For the next step (generating a mezzanine) you will need the **Latest Version Hash** for the object. This value (hq__9v2JY2… for this example) can be copied by clicking on the clipboard icon as shown below. It is also listed in the output from the `CreateProductionMaster.js` script.
+
+![image for copy latest version hash](images/copy_latest_version_hash.png)
+
+
+
+
+
+
+<a id="get-your-mezzanine-content-type-name-andor-id"></a>
+### Get your Mezzanine Content Type name and/or ID&nbsp;[&#8673;](#contents)
 
 Click on **Content Types** on the left side and click on the one named "*TENANT_NAME* - Title".
 
@@ -249,7 +488,8 @@ You will see a detail screen where you can select and copy the **Name** and **Ob
  `--type iq__...` *(your 'Title' content type ID - content type IDs start with "iq__")*
 
 
-### Get your Mezzanine Library ID
+<a id="get-your-mezzanine-library-id"></a>
+### Get your Mezzanine Library ID&nbsp;[&#8673;](#contents)
 
 Click on **Content** in the left sidebar to get to your list of libraries.
 
@@ -257,7 +497,8 @@ Click on the one labeled "*TENANT_NAME* - Titles", then click on the **Library I
 
 `--library ilib...` *(your 'Titles' library ID - library IDs start with "ilib")*
 
-### Choose an ABR Profile
+<a id="choose-an-abr-profile"></a>
+### Choose an ABR Profile&nbsp;[&#8673;](#contents)
 
 An **ABR Profile** contains information on what formats, resolutions and bitrates to offer for streaming playout, as well as any DRM and/or watermarking information.
 
@@ -274,7 +515,8 @@ For most content we recommend using the `abr_profile_drm.json` file, which conta
 
 The `*_clear` files are for publishing without DRM.
 
-### Create the Mezzanine object
+<a id="create-the-mezzanine-object"></a>
+### Create the Mezzanine object&nbsp;[&#8673;](#contents)
 
 Once you have the required information, substitute it into the sample command below (if you do not need to attach an asset ID, you can omit the `--ip-title-id` line):
 
@@ -290,7 +532,8 @@ Once you have the required information, substitute it into the sample command be
 
 Once the object is created, transcoding will begin on the server.
 
-### Successful creation of Mezzanine object
+<a id="successful-creation-of-mezzanine-object"></a>
+### Successful creation of Mezzanine object&nbsp;[&#8673;](#contents)
 
 Your output from the previous command should look something like this:
 
@@ -319,7 +562,8 @@ Drilling down into it, you should see some information about transcoding progres
 
 In most cases, the percentage value shown is an average of 2 values (audio percent done and video percent done). The audio generally processes much more quickly, so you will see the value climb quickly to just above 50%, then progress more slowly.
 
-### Checking Mezzanine transcoding status
+<a id="checking-mezzanine-transcoding-status"></a>
+### Checking Mezzanine transcoding status&nbsp;[&#8673;](#contents)
 
 You can get detailed progress info with the following command:
 
@@ -356,7 +600,8 @@ Depending on the format, bitrate and complexity of the original source material,
 
 Once both jobs show a "run_state" of "finished", you are ready for the next step, finalization.
 
-## Finalizing your Mezzanine object
+<a id="finalize-your-mezzanine-object"></a>
+## Finalize your Mezzanine object&nbsp;[&#8673;](#contents)
 
 Finalizing the Mezzanine makes the transcoded media available for viewing and distributes it to other nodes in the Content Fabric.
 
@@ -368,16 +613,40 @@ While the command itself should complete quickly, it can take 2-3 minutes for th
 
 In the browser, click the refresh icon ![image for refresh icon](images/icon_reload.png) to update your view, then click on the **Display** tab to see the finalized content.
 
-### Grant Permissions on Mezzanine object
+<a id="grant-permissions-on-mezzanine-object-via-browser"></a>
+### Grant Permissions on Mezzanine object - via browser&nbsp;[&#8673;](#contents)
 
 (Identical process as for the Production Master object)
 
 From the object details page, click the blue **Groups** button at top - you should see a screen with the *Access Group* field already chosen for you, set to "*TENANT_NAME* Content Admins".
 
-Check all 3 boxes (**See**, **Access**, and **Manage**), then click **Submit**.
+Check the **Manage** box, then click **Submit**.
 
+<a id="grant-permissions-on-mezzanine-object-via-command-line"></a>
+### Grant Permissions on Mezzanine object - via command line&nbsp;[&#8673;](#contents)
 
-## Adding another Offering to a Mezzanine object
+(Identical process as for the Production Master object)
+
+In order to grant permissions via the command line, you will need to know the following:
+
+* The ID of your Mezzanine object (starts with "iq__")
+* The Address of your "*TENANT_NAME* Content Admins" group (starts with "0x")
+* What permission level you would like to grant (for your Content Admins group, choose **manage**)
+  * see
+  * access
+  * manage 
+
+You can find the Address of your group by clicking on the blue **Groups** button at top when you are browsing the details of any object. You can choose a group from the **Access Group** dropdown, then double-click the **Address** field to select it and copy to your clipboard.
+
+The command to add permissions is then:
+
+    node testScripts/AddGroupPermissions.js \
+      --objectId YOUR_OBJECT_ID \
+      --groupAddress YOUR_GROUP_ADDRESS \
+      --permissions manage
+
+<a id="adding-another-offering-to-a-mezzanine-object"></a>
+## Adding another Offering to a Mezzanine object&nbsp;[&#8673;](#contents)
 
 A **Mezzanine** object contains one or more **Offerings**. Each **Offering** specifies the following information:
 
@@ -401,15 +670,18 @@ The `OfferingCopy.js` script allows you to duplicate an existing Offering, after
 
 (if you want to copy an Offering other than the one named `default` then change the end of the `--offeringKey` line)
 
-### Viewing Offerings other than "default"
+<a id="viewing-offerings-other-than-default"></a>
+### Viewing Offerings other than "default"&nbsp;[&#8673;](#contents)
 
 In the Fabric Browser, when you are on the **Display** tab for your Mezzanine, click on the **Advanced Controls** button to access additional options. The **Offering** pulldown menu will allow you to choose other Offerings besides "default".
 
-## Adding / removing playout options from an Offering
+<a id="adding--removing-playout-options-from-an-offering"></a>
+## Adding / removing playout options from an Offering&nbsp;[&#8673;](#contents)
 
 You can make changes to an Offering (either the `default`, or one you have created via the `OfferingCopy.js` script) to modify playout options.
 
-### Adding Clear (DRM-free) playout option
+<a id="adding-clear-drm-free-playout-option"></a>
+### Adding Clear (DRM-free) playout option&nbsp;[&#8673;](#contents)
 
 The `OfferingAddClear.js` script will add a DRM-free playout option to one Offering within your Mezzanine:
 
@@ -418,7 +690,8 @@ The `OfferingAddClear.js` script will add a DRM-free playout option to one Offer
       --objectId YOUR_MEZ_OBJECT_ID \
       --offeringKey THE_OFFERING_NAME
 
-### Removing Clear (DRM-free) playout option
+<a id="removing-clear-drm-free-playout-option"></a>
+### Removing Clear (DRM-free) playout option&nbsp;[&#8673;](#contents)
 
 The `OfferingRemoveClear.js` script will remove DRM-free playout options from one Offering within your Mezzanine:
 
@@ -428,7 +701,8 @@ The `OfferingRemoveClear.js` script will remove DRM-free playout options from on
       --offeringKey THE_OFFERING_NAME
 
 
-### Removing DRM playout option
+<a id="removing-drm-playout-option"></a>
+### Removing DRM playout option&nbsp;[&#8673;](#contents)
 
 The `OfferingRemoveDRM.js` script will remove DRM-protected playout options from one Offering within your Mezzanine:
 
@@ -437,7 +711,8 @@ The `OfferingRemoveDRM.js` script will remove DRM-protected playout options from
       --objectId YOUR_MEZ_OBJECT_ID \
       --offeringKey THE_OFFERING_NAME
 
-### Displaying the resolution ladder for an Offering
+<a id="displaying-the-resolution-ladder-for-an-offering"></a>
+### Displaying the resolution ladder for an Offering&nbsp;[&#8673;](#contents)
 
 The `OfferingListRungs.js` script will display the resolution ladder for an existing Offering:
 
@@ -491,7 +766,8 @@ Sample output:
       }
     }
 
-### Adding a rung to an Offering's video playout resolution ladder
+<a id="adding-a-rung-to-an-offerings-video-playout-resolution-ladder"></a>
+### Adding a rung to an Offering's video playout resolution ladder&nbsp;[&#8673;](#contents)
 
 The `OfferingAddVideoRung.js` script will allow you to add a new rung to an Offering's video resolution ladder:
 
@@ -523,7 +799,8 @@ For example, if your top rung is 1920x1080 @ 9,500,000 bps:
  
  Note that in special cases, your Offering's video stream may not be named `video` - if this is the case, use `--streamKey STREAM_NAME` to specify the actual name of the stream. (You can use the `OfferingListRungs.js` script to see the names of your Offering's streams)
  
-### Removing a rung from an Offering's video playout resolution ladder
+<a id="removing-a-rung-from-an-offerings-video-playout-resolution-ladder"></a>
+### Removing a rung from an Offering's video playout resolution ladder&nbsp;[&#8673;](#contents)
 
 The `OfferingRemoveVideoRung.js` script will allow you to remove an existing rung from an Offering's video resolution ladder:
 
@@ -541,7 +818,56 @@ You are not allowed to remove the top rung from the ladder, if you try the scrip
 
 Note that in special cases, your Offering's video stream may not be named `video` - if this is the case, use `--streamKey STREAM_NAME` to specify the actual name of the stream. (You can use the `OfferingListRungs.js` script to see the names of your Offering's streams)
 
-## Example Scenario: Adding a 'clear playout' Offering to a DRM-protected Mezzanine
+<a id="example-scenarios"></a>
+## Example Scenarios&nbsp;[&#8673;](#contents)
+
+<a id="adding-a-stereo-stream-created-from-2-mono-streams-to-a-production-master-variant"></a>
+### Adding a stereo stream created from 2 mono streams to a Production Master Variant&nbsp;[&#8673;](#contents)
+
+In the case where the source has left and right audio stored individually as mono streams, adding a stereo stream requires using the `VariantAddStream.js` script and specifying the stream indexes to use, as well as the mapping type **2MONO_1STEREO**.
+
+For example, The following assumes that your source audio streams are in file 'MyMovie.mp4', at stream indexes 1 and 2, is English, and should be the default audio choice.
+
+    node testScripts/VariantAddStream.js \
+      --libraryId ilib3t4Cf8pdxftVcc4Si35yZxPgN33  \
+      --objectId iq__3RVmL1WdnVj7mYrKZcDUPpzstFNU  \
+      --variantKey default \
+      --streamKey audio \
+      --file MyMovie.mp4 \
+      --label English \
+      --language en \
+      --streamIndex 1 2 \
+      --mapping 2MONO_1STEREO \
+      --isDefault
+
+
+For more detailed info on the individual options, please see [Add stream to Production Master Variant](#add-stream-to-production-master-variant) 
+
+
+<a id="adding-a-stereo-stream-created-from-a-single-mono-stream-to-a-production-master-variant"></a>
+### Adding a stereo stream created from a single mono stream to a Production Master Variant&nbsp;[&#8673;](#contents)
+
+In the case where the source only has a single mono stream, adding a stereo stream is similar to the case where you have 2 mono channels (above), except that you would specify the same source stream index twice.
+
+For example, The following assumes that your source audio stream is in file 'MyMovie.mp4', has stream index 1, is English, and should be the default audio choice.
+
+    node testScripts/VariantAddStream.js \
+      --libraryId ilib3t4Cf8pdxftVcc4Si35yZxPgN33  \
+      --objectId iq__3RVmL1WdnVj7mYrKZcDUPpzstFNU  \
+      --variantKey default \
+      --streamKey audio \
+      --file MyMovie.mp4 \
+      --label English \
+      --language en \
+      --streamIndex 1 1 \
+      --mapping 2MONO_1STEREO \
+      --isDefault
+
+For more detailed info on the individual options, please see [Add stream to Production Master Variant](#add-stream-to-production-master-variant) 
+
+
+<a id="adding-a-clear-playout-offering-to-a-drm-protected-mezzanine"></a>
+### Adding a 'clear playout' Offering to a DRM-protected Mezzanine&nbsp;[&#8673;](#contents)
 
 The following assumes that you created your Mezzanine using the `abr_profile_drm.json` profile, which will result in a `default` Offering that only offers DRM playback:
 
@@ -562,3 +888,185 @@ The following assumes that you created your Mezzanine using the `abr_profile_drm
       --offeringKey clear-playout      
       
 After running the above commands, you will have an additional `clear-playout` Offering that has only DRM-free playout options.
+
+
+<a id="language-codes-and-labels"></a>
+## Language Codes and Labels&nbsp;[&#8673;](#contents)
+
+Below is a table of codes and labels for some of the most commonly encountered languages. To look up a language not on this list, visit the [IANA Language Subtag Registry](https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry)
+
+<table>
+<thead>
+<tr>
+<th></th>
+<th>code</th>
+<th>label</th>
+<th>note</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>Arabic</td>
+<td>ar</td>
+<td>&#1575;&#1614;&#1604;&#1618;&#1593;&#1614;&#1585;&#1614;&#1576;&#1616;&#1610;&#1614;&#1617;&#1577;&#1615;</td>
+<td></td>
+</tr>
+<tr>
+<td>Chinese (Cantonese)</td>
+<td>yue</td>
+<td>&#24291;&#26481;&#35441;</td>
+<td>for audio only</td>
+</tr>
+<tr>
+<td>Chinese (Mandarin)</td>
+<td>cmn</td>
+<td>&#26222;&#36890;&#35805;</td>
+<td>for audio only</td>
+</tr>
+<tr>
+<td>Chinese (Simplified)</td>
+<td>zh-hans</td>
+<td>&#31616;&#20307;&#20013;&#25991;</td>
+<td>for captions only</td>
+</tr>
+<tr>
+<td>Chinese (Traditional)</td>
+<td>zh-hant</td>
+<td>&#32321;&#39636;&#20013;&#25991;</td>
+<td>for captions only</td>
+</tr>
+<tr>
+<td>Danish</td>
+<td>da</td>
+<td>Dansk</td>
+<td></td>
+</tr>
+<tr>
+<td>Dutch</td>
+<td>nl</td>
+<td>Nederlands</td>
+<td></td>
+</tr>
+<tr>
+<td>English</td>
+<td>en</td>
+<td>English</td>
+<td></td>
+</tr>
+<tr>
+<td>Finnish</td>
+<td>fi</td>
+<td>Suomi</td>
+<td></td>
+</tr>
+<tr>
+<td>French</td>
+<td>fr</td>
+<td>Fran&ccedil;ais</td>
+<td></td>
+</tr>
+<tr>
+<td>German</td>
+<td>de</td>
+<td>Deutsch</td>
+<td></td>
+</tr>
+<tr>
+<td>Hebrew</td>
+<td>he</td>
+<td>&#1506;&#1460;&#1489;&#1456;&#1512;&#1460;&#1497;&#1514;</td>
+<td></td>
+</tr>
+<tr>
+<td>Hindi</td>
+<td>hi</td>
+<td>&#2361;&#2367;&#2344;&#2381;&#2342;&#2368;</td>
+<td></td>
+</tr>
+<tr>
+<td>Indonesian</td>
+<td>id</td>
+<td>Bahasa Indonesia</td>
+<td></td>
+</tr>
+<tr>
+<td>Italian</td>
+<td>it</td>
+<td>Italiano</td>
+<td></td>
+</tr>
+<tr>
+<td>Japanese</td>
+<td>ja</td>
+<td>&#26085;&#26412;&#35486;</td>
+<td></td>
+</tr>
+<tr>
+<td>Korean</td>
+<td>ko</td>
+<td>&#54620;&#44397;&#50612;</td>
+<td></td>
+</tr>
+<tr>
+<td>Norwegian</td>
+<td>no</td>
+<td>Norsk</td>
+<td></td>
+</tr>
+<tr>
+<td>Polish</td>
+<td>pl</td>
+<td>Polski</td>
+<td></td>
+</tr>
+<tr>
+<td>Portuguese</td>
+<td>pt</td>
+<td>Portugu&ecirc;s</td>
+<td></td>
+</tr>
+<tr>
+<td>Portuguese (Brazil)</td>
+<td>pt-br</td>
+<td>Portugu&ecirc;s (Brasil)</td>
+<td></td>
+</tr>
+<tr>
+<td>Russian</td>
+<td>ru</td>
+<td>&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</td>
+<td></td>
+</tr>
+<tr>
+<td>Spanish</td>
+<td>es</td>
+<td>Espa&ntilde;ol</td>
+<td></td>
+</tr>
+<tr>
+<td>Spanish (Latin America)</td>
+<td>es-419</td>
+<td>Espa&ntilde;ol (Latinoamericano)</td>
+<td></td>
+</tr>
+<tr>
+<td>Swedish</td>
+<td>sv</td>
+<td>Svenska</td>
+<td></td>
+</tr>
+<tr>
+<td>Thai</td>
+<td>th</td>
+<td>&#3616;&#3634;&#3625;&#3634;&#3652;&#3607;&#3618;</td>
+<td></td>
+</tr>
+<tr>
+<td>Turkish</td>
+<td>tr</td>
+<td>T&uuml;rk&ccedil;e</td>
+<td></td>
+</tr>
+</tbody>
+</table>

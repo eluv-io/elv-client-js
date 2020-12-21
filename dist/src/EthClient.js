@@ -1,10 +1,10 @@
 var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
+var _typeof = require("@babel/runtime/helpers/typeof");
+
 var _toConsumableArray = require("@babel/runtime/helpers/toConsumableArray");
 
 var _regeneratorRuntime = require("@babel/runtime/regenerator");
-
-var _typeof = require("@babel/runtime/helpers/typeof");
 
 var _classCallCheck = require("@babel/runtime/helpers/classCallCheck");
 
@@ -31,6 +31,9 @@ var AccessibleContract = require("./contracts/v3/Accessible");
 
 var Utils = require("./Utils");
 
+var _require = require("./LogMessage"),
+    LogMessage = _require.LogMessage;
+
 var Topics = require("./events/Topics");
 
 var EthClient =
@@ -42,18 +45,7 @@ function () {
     key: "Log",
     value: function Log(message) {
       var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-
-      if (!this.debug) {
-        return;
-      }
-
-      if (_typeof(message) === "object") {
-        message = JSON.stringify(message);
-      }
-
-      error ? // eslint-disable-next-line no-console
-      console.error("\n(elv-client-js#EthClient) ".concat(message, "\n")) : // eslint-disable-next-line no-console
-      console.log("\n(elv-client-js#EthClient) ".concat(message, "\n")); // eslint-disable-next-line no-console
+      LogMessage(this, message, error);
     }
   }]);
 
@@ -80,6 +72,16 @@ function () {
   }
 
   _createClass(EthClient, [{
+    key: "SetEthereumURIs",
+    value: function SetEthereumURIs(uris) {
+      this.ethereumURIs = uris;
+      this.ethereumURIIndex = 0;
+      this.HttpClient = new HttpClient({
+        uris: this.ethereumURIs,
+        debug: this.debug
+      });
+    }
+  }, {
     key: "Provider",
     value: function Provider() {
       if (!this.provider) {
@@ -196,6 +198,10 @@ function () {
 
       if (!overrideCachedContract) {
         contract = this.cachedContracts[contractAddress];
+      }
+
+      if (!abi) {
+        throw Error("No ABI for contract ".concat(contractAddress, " - Wrong network?"));
       }
 
       if (!contract) {
@@ -434,7 +440,7 @@ function () {
               throw Error("Unknown method: " + methodName);
 
             case 11:
-              this.Log("Calling contract method:\n        Address: ".concat(contract.address, "\n        Method: ").concat(methodName, "\n        Args: [").concat(methodArgs.join(", "), "]"));
+              this.Log("Calling contract method:\n        Provider: ".concat(this.Provider().connection.url, "\n        Address: ").concat(contract.address, "\n        Method: ").concat(methodName, "\n        Args: [").concat(methodArgs.join(", "), "]"));
               methodAbi = contract["interface"].abi.find(function (method) {
                 return method.name === methodName;
               }); // Lock if performing a transaction

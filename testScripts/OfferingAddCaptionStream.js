@@ -69,6 +69,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
     const label = this.args.label;
     const language = this.args.language;
     const timeShift = this.args.timeShift;
+    const streamKey = this.args.streamKey;
 
     // ===============================================================
     // retrieve metadata from object and validate presence of offering
@@ -143,7 +144,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
     let offeringMetadata = metadata.offerings[offeringKey];
 
     // create stream key
-    const slugInput = "captions-" + label + fileName;
+    const slugInput = streamKey || ("captions-" + label + fileName);
 
     let captionStreamKey = countableSlugify(slugInput);
     // make sure key doesn't already exist in media_struct.streams
@@ -264,6 +265,11 @@ class OfferingAddCaptionStream extends ScriptOffering {
         demandOption: false,
         describe: "Number of seconds to add or (-) subtract from timestamps in captions file",
         type: "number"
+      })
+      .option("streamKey", {
+        alias: "stream-key",
+        describe: "Key for new caption stream (if omitted, will be generated from label and filename)",
+        type: "string"
       });
   }
 }

@@ -14,7 +14,7 @@ const {
   ValidateVersion,
   ValidatePartHash,
   ValidateWriteToken,
-  ValidateParameters
+  ValidateParameters,
 } = require("../Validation");
 
 
@@ -144,13 +144,27 @@ exports.Permission = async function({objectId}) {
 /* Content Spaces */
 
 /**
- * Get the address of the default KMS of the content space
+ * Get the address of the default KMS of the content space or the provided tenant
  *
  * @methodGroup Content Space
+ * @namedParams
+ * @param {string=} tenantId - An ID of a tenant contract - if not specified, the content space contract will be used
  *
  * @returns {Promise<string>} - Address of the KMS
  */
-exports.DefaultKMSAddress = async function() {
+exports.DefaultKMSAddress = async function({tenantId}={}) {
+  // Ensure tenant ID, if specified, is a tenant contract and not a group contract
+  if(tenantId && (await this.AccessType({id: tenantId})) === this.authClient.ACCESS_TYPES.TENANT) {
+    const kmsAddress = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(tenantId),
+      methodName: "addressKMS",
+    });
+
+    if(kmsAddress) {
+      return kmsAddress;
+    }
+  }
+
   return await this.CallContractMethod({
     contractAddress: this.contentSpaceAddress,
     methodName: "addressKMS",
@@ -451,7 +465,6 @@ exports.LibraryContentTypes = async function({libraryId}) {
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {object=} filterOptions - Pagination, sorting and filtering options
- * @param {boolean=} filterOptions.latestOnly=true - If specified, only latest version of objects will be included
  * @param {number=} filterOptions.start - Start index for pagination
  * @param {number=} filterOptions.limit - Max number of objects to return
  * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
@@ -506,10 +519,6 @@ exports.ContentObjects = async function({libraryId, filterOptions={}}) {
     if(filterOptions.sortDesc) {
       queryParams.sort_descending = true;
     }
-  }
-
-  if(filterOptions.latestOnly === false) {
-    queryParams.latest_version_only = false;
   }
 
   // Filters
@@ -643,6 +652,8 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
 
         throw error;
       }
+    case this.authClient.ACCESS_TYPES.OTHER:
+      throw Error(`Unable to retrieve library ID for ${versionHash || objectId}: Unknown type. (wrong network or deleted object?)`);
     default:
       return this.contentSpaceLibraryId;
   }
@@ -735,12 +746,22 @@ exports.MetadataAuth = async function({
     }
   }
 
-  if(isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth) {
+  if(!this.inaccessibleLibraries[libraryId] && isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth) {
     // Content object public metadata can be accessed using library access request
-    return await this.authClient.AuthorizationToken({
-      libraryId: libraryId || await this.ContentObjectLibraryId({objectId, versionHash}),
-      noAuth
-    });
+    try {
+      return await this.authClient.AuthorizationToken({
+        libraryId: libraryId || await this.ContentObjectLibraryId({objectId, versionHash}),
+        noAuth
+      });
+    } catch(error) {
+      if(error.message && error.message.toLowerCase().startsWith("access denied")) {
+        this.inaccessibleLibraries[libraryId] = true;
+
+        return await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noAuth, channelAuth});
+      }
+
+      throw error;
+    }
   } else {
     return await this.authClient.AuthorizationToken({libraryId, objectId, versionHash, noAuth, channelAuth});
   }
@@ -781,7 +802,6 @@ exports.MetadataAuth = async function({
  * @param {number=} linkDepthLimit=1 - Limit link resolution to the specified depth. Default link depth is 1 (only links directly in the object's metadata will be resolved)
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
- * @param {boolean=} noAuth=false - If specified, authorization will not be performed for this call
  *
  * @returns {Promise<Object | string>} - Metadata of the content object
  */
@@ -813,7 +833,10 @@ exports.ContentObjectMetadata = async function({
 
   let metadata;
   try {
-    const authToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
+    const authToken =
+      queryParams.authorization ?
+        queryParams.authorization :
+        await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
 
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
@@ -1174,6 +1197,23 @@ exports.PlayoutOptions = async function({
   }
 
   const libraryId = await this.ContentObjectLibraryId({objectId});
+
+  try {
+    // If public/asset_metadata/sources/<offering> exists, use that instead of directly calling on object
+
+    if(!linkPath) {
+      const offeringPath = UrlJoin("public", "asset_metadata", "sources", offering);
+      const link = await this.ContentObjectMetadata({
+        libraryId,
+        objectId,
+        versionHash,
+        metadataSubtree: offeringPath
+      });
+
+      if(link) { linkPath = offeringPath; }
+    }
+  // eslint-disable-next-line no-empty
+  } catch(error) {}
 
   let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
   if(linkPath) {
@@ -1923,9 +1963,9 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
   }
 
   queryParams = {
+    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}),
     ...queryParams,
-    resolve: true,
-    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth})
+    resolve: true
   };
 
   if(mimeType) { queryParams["header-accept"] = mimeType; }
@@ -2045,12 +2085,14 @@ exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash,
  * @namedParams
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
- * @param {string} objectId - Version hash of the object
+ * @param {string} versionHash - Version hash of the object
  * @param {string=} writeToken - Write token of the content object draft
+ * @param {boolean=} download=false - If specified, will return keys appropriate for download (if the current user is not
+ * the owner of the object, download will be performed via proxy-reencryption)
  *
  * @return Promise<Object> - The encryption conk for the object
  */
-exports.EncryptionConk = async function({libraryId, objectId, versionHash, writeToken}) {
+exports.EncryptionConk = async function({libraryId, objectId, versionHash, writeToken, download=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
@@ -2061,12 +2103,11 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
   const owner = await this.authClient.Owner({id: objectId});
 
   if(!this.utils.EqualAddress(owner, this.signer.address)) {
-    // Target decryption
-    if(!this.reencryptionConks[objectId]) {
-      this.reencryptionConks[objectId] = await this.authClient.ReEncryptionConk({libraryId, objectId});
+    if(download) {
+      return await this.authClient.ReEncryptionConk({libraryId, objectId, versionHash});
+    } else {
+      return await this.authClient.EncryptionConk({libraryId, objectId, versionHash});
     }
-
-    return this.reencryptionConks[objectId];
   }
 
   // Primary encryption
@@ -2134,7 +2175,7 @@ exports.Encrypt = async function({libraryId, objectId, writeToken, chunk}) {
 exports.Decrypt = async function({libraryId, objectId, writeToken, chunk}) {
   ValidateParameters({libraryId, objectId});
 
-  const conk = await this.EncryptionConk({libraryId, objectId, writeToken});
+  const conk = await this.EncryptionConk({libraryId, objectId, writeToken, download: true});
   const data = await this.Crypto.Decrypt(conk, chunk);
 
   // Convert to ArrayBuffer

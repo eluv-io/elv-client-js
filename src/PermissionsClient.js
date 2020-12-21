@@ -107,6 +107,7 @@ class PermissionsClient {
    */
   constructor(client) {
     this.client = client;
+    this.subjectNames = {};
   }
 
   FormatDate(date) {
@@ -166,6 +167,62 @@ class PermissionsClient {
     });
 
     return profileSpec;
+  }
+
+  async FormatPermission({policyId, policyWriteToken, permission}) {
+    const subjectSource = permission.subject.type.startsWith("oauth") ? "oauth" : "fabric";
+    const subjectType = permission.subject.type === "otp" ? "ntp" :
+      permission.subject.type.includes("group") ? "group" : "user";
+    const subjectId = permission.subject.type === "otp" ? permission.subject.id :
+      subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
+
+    const id = permission.subject.oauth_id || permission.subject.id;
+    const cachedName = this.subjectNames[id];
+    let subjectName = cachedName || permission.subject.id;
+    if(!cachedName && subjectSource === "fabric") {
+      if(subjectType === "group") {
+        const contentSpaceLibraryId = (await this.client.ContentSpaceId()).replace("ispc", "ilib");
+        subjectName = (await this.client.ContentObjectMetadata({
+          libraryId: contentSpaceLibraryId,
+          objectId: this.client.utils.AddressToObjectId(subjectId),
+          metadataSubtree: UrlJoin("public", "name")
+        })) || subjectId;
+      } else if(subjectType === "user") {
+        subjectName = ((await this.client.ContentObjectMetadata({
+          libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+          objectId: policyId,
+          writeToken: policyWriteToken,
+          metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", subjectId)
+        })) || {}).name || subjectId;
+      } else if(subjectType === "ntp") {
+        subjectName = ((await this.client.ContentObjectMetadata({
+          libraryId: await this.client.ContentObjectLibraryId({objectId: policyId}),
+          objectId: policyId,
+          writeToken: policyWriteToken,
+          metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
+        })) || {}).name || subjectId;
+      }
+    }
+
+    this.subjectNames[id] = subjectName;
+
+    let permissionSpec = {
+      profileName: permission.profile,
+      subjectSource,
+      subjectType,
+      subjectId,
+      subjectName
+    };
+
+    if(permission.start) {
+      permissionSpec.start = permission.start;
+    }
+
+    if(permission.end) {
+      permissionSpec.end = permission.end;
+    }
+
+    return permissionSpec;
   }
 
   /* Add / remove overall item permission */
@@ -394,57 +451,7 @@ class PermissionsClient {
     })) || [];
 
     return await Promise.all(
-      permissions.map(async permission => {
-        const subjectSource = permission.subject.type.startsWith("oauth") ? "oauth" : "fabric";
-        const subjectType = permission.subject.type === "otp" ? "ntp" :
-          permission.subject.type.includes("group") ? "group" : "user";
-        const subjectId = permission.subject.type === "otp" ? permission.subject.id :
-          subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
-
-        let subjectName = permission.subject.id;
-        if(subjectSource === "fabric") {
-          if(subjectType === "group") {
-            const contentSpaceLibraryId = (await this.client.ContentSpaceId()).replace("ispc", "ilib");
-            subjectName = (await this.client.ContentObjectMetadata({
-              libraryId: contentSpaceLibraryId,
-              objectId: this.client.utils.AddressToObjectId(subjectId),
-              metadataSubtree: UrlJoin("public", "name")
-            })) || subjectId;
-          } else if(subjectType === "user") {
-            subjectName = ((await this.client.ContentObjectMetadata({
-              libraryId,
-              objectId: policyId,
-              writeToken: policyWriteToken,
-              metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", subjectId)
-            })) || {}).name || subjectId;
-          } else if(subjectType === "ntp") {
-            subjectName = ((await this.client.ContentObjectMetadata({
-              libraryId,
-              objectId: policyId,
-              writeToken: policyWriteToken,
-              metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
-            })) || {}).name || subjectId;
-          }
-        }
-
-        let permissionSpec = {
-          profileName: permission.profile,
-          subjectSource,
-          subjectType,
-          subjectId,
-          subjectName
-        };
-
-        if(permission.start) {
-          permissionSpec.start = permission.start;
-        }
-
-        if(permission.end) {
-          permissionSpec.end = permission.end;
-        }
-
-        return permissionSpec;
-      })
+      permissions.map(async permission => await this.FormatPermission({policyId, policyWriteToken, permission}))
     );
   }
 
@@ -672,18 +679,101 @@ class PermissionsClient {
       }
     }
 
-    const index = permissions.findIndex(permission => {
-      return permission.subject.id === subjectId || permission.subject.oauth_id === subjectId;
-    });
+    await Promise.all(
+      permissions.map(async (permission, index) => {
+        if(permission.subject.id === subjectId || permission.subject.oauth_id === subjectId) {
+          await this.client.DeleteMetadata({
+            libraryId: policyLibraryId,
+            objectId: policyId,
+            writeToken: policyWriteToken,
+            metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions", index.toString())
+          });
+        }
+      })
+    );
+  }
 
-    if(index < 0) { return; }
+  /**
+   * Retrieve all permissions for the specified subject.
+   *
+   * @methodGroup Permissions
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string=} policyWriteToken - Write token for the policy object - if specified, info will be retrieved from the write draft instead of the last finalized policy object
+   * @param {string} subjectId - The ID of the subject
+   *
+   * @returns {Object} - All permissions pertaining to the given subject. Format of result for each item is identical to the format of `ItemPolicy`
+   */
+  async SubjectPermissions({policyId, policyWriteToken, subjectId}) {
+    ValidatePresence("policyId", policyId);
+    ValidatePresence("subjectId", subjectId);
 
-    await this.client.DeleteMetadata({
+    // Convert address to appropriate ID
+    if(subjectId.startsWith("0x")) {
+      const id = this.client.utils.AddressToObjectId(subjectId);
+      if((await this.client.AccessType({id})) === "group") {
+        subjectId = `igrp${this.client.utils.AddressToHash(subjectId)}`;
+      } else {
+        subjectId = `iusr${this.client.utils.AddressToHash(subjectId)}`;
+      }
+    }
+
+    const policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+    const policy = await this.client.ContentObjectMetadata({
       libraryId: policyLibraryId,
       objectId: policyId,
       writeToken: policyWriteToken,
-      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions", index.toString())
+      metadataSubtree: UrlJoin("auth_policy_spec")
     });
+
+    let allSubjectPermissions = {};
+    for(const itemId of Object.keys(policy)) {
+      const itemPermissions = policy[itemId].permissions || [];
+      const subjectPermissions =
+        await Promise.all(
+          itemPermissions
+            .filter(permission =>
+              (permission.subject || {}).oauth_id === subjectId ||
+              (permission.subject || {}).id === subjectId
+            )
+            .map(async permission => await this.FormatPermission({policyId, policyWriteToken, permission}))
+        );
+
+      if(subjectPermissions.length > 0) {
+        allSubjectPermissions[itemId] = {
+          ...policy[itemId],
+          permissions: subjectPermissions
+        };
+      }
+    }
+
+    return allSubjectPermissions;
+  }
+
+
+  /**
+   * Remove all permissions for the specified subject.
+   *
+   * @methodGroup Permissions
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyWriteToken - Write token for the policy
+   * @param {string} subjectId - The ID of the subject
+   */
+  async RemoveSubjectPermissions({policyId, policyWriteToken, subjectId}) {
+    ValidatePresence("policyId", policyId);
+    ValidatePresence("policyWriteToken", policyWriteToken);
+    ValidatePresence("subjectId", subjectId);
+
+    const subjectPermissions = await this.SubjectPermissions({policyId, policyWriteToken, subjectId});
+
+    await this.client.utils.LimitedMap(
+      5,
+      Object.keys(subjectPermissions),
+      async itemId => {
+        await this.RemovePermission({policyId, policyWriteToken, subjectId, itemId});
+      }
+    );
   }
 }
 
