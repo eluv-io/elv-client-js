@@ -3,6 +3,7 @@ const Ethers = require("ethers");
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
 const bs58 = require("bs58");
+const {LogMessage} = require("./LogMessage");
 
 /*
 // -- Contract javascript files built using build/BuildContracts.js
@@ -55,17 +56,7 @@ const CONTRACTS = {
 
 class AuthorizationClient {
   Log(message, error=false) {
-    if(!this.debug) { return; }
-
-    if(typeof message === "object") {
-      message = JSON.stringify(message);
-    }
-
-    error ?
-      // eslint-disable-next-line no-console
-      console.error(`\n(elv-client-js#AuthorizationClient) ${message}\n`) :
-      // eslint-disable-next-line no-console
-      console.log(`\n(elv-client-js#AuthorizationClient) ${message}\n`);
+    LogMessage(this, message, error);
   }
 
   constructor({client, contentSpaceId, debug=false, noCache=false, noAuth=false}) {
