@@ -1,7 +1,10 @@
+// Get mezzanine job status and optionally finalize
 const moment = require("moment");
+
 // amount of time allowed to elapse since last LRO update before raising 'stalled' error
 const MAX_REPORTED_DURATION_TOLERANCE = 15 * 60; // 15 minutes
 
+const {opts, composeOpts, newOpt} = require("./lib/options");
 const ScriptBase = require("./lib/ScriptBase");
 
 function etaString(seconds) {
@@ -36,6 +39,22 @@ function etaString(seconds) {
   return result;
 }
 
+const STATE_UNKNOWN = "unknown";
+const STATE_FINISHED = "finished";
+const STATE_RUNNING = "running";
+const STATE_STALLED = "stalled";
+const STATE_BAD_PCT = "bad_percentage";
+const STATE_ERROR = "error";
+const StatePrecedence = {
+  [STATE_UNKNOWN]: 0,
+  [STATE_FINISHED]: 1,
+  [STATE_RUNNING]: 2,
+  [STATE_STALLED]: 3,
+  [STATE_BAD_PCT]: 4,
+  [STATE_ERROR]: 5
+};
+const higherRunState = (a, b) => StatePrecedence[a] > StatePrecedence[b] ? a : b;
+
 class MezzanineJobStatus extends ScriptBase {
   async body() {
     const client = await this.client();
@@ -48,14 +67,17 @@ class MezzanineJobStatus extends ScriptBase {
     const force = this.args.force;
 
     const libraryId = await client.ContentObjectLibraryId({objectId});
-
     const status = await client.LROStatus({libraryId, objectId, offeringKey});
 
     let warningsAdded = false;
 
+    let summary_run_state = STATE_UNKNOWN;
+    let summary_est_seconds = 0;
+
     for(const lroKey in status) {
       let statusEntry = status[lroKey];
-      if(statusEntry.run_state === "running") {
+      let lro_run_state = statusEntry.run_state;
+      if(statusEntry.run_state === STATE_RUNNING) {
         const start = moment.utc(statusEntry.start).valueOf();
         const now = moment.utc().valueOf();
         const actualElapsedSeconds = Math.round((now - start) / 1000);
@@ -66,6 +88,8 @@ class MezzanineJobStatus extends ScriptBase {
         if(secondsSinceLastUpdate > MAX_REPORTED_DURATION_TOLERANCE) {
           statusEntry.warning = "status has not been updated in " + secondsSinceLastUpdate + " seconds, process may have terminated";
           logger.warn(statusEntry.warning);
+          lro_run_state = STATE_STALLED;
+          summary_est_seconds = null;
           warningsAdded = true;
         } else {
           const estSecondsLeft = (
@@ -75,22 +99,37 @@ class MezzanineJobStatus extends ScriptBase {
                 (statusEntry.duration_ms / 1000) / (statusEntry.progress.percentage / 100) - (statusEntry.duration_ms / 1000) :
               null
           );
-          statusEntry.estimated_time_left_seconds = Math.round(estSecondsLeft);
-          statusEntry.estimated_time_left_h_m_s = etaString(estSecondsLeft);
+          statusEntry.estimated_time_left_seconds = estSecondsLeft && Math.round(estSecondsLeft);
+          if(summary_est_seconds !== null
+            && statusEntry.estimated_time_left_seconds !== null
+            && statusEntry.estimated_time_left_seconds > summary_est_seconds) {
+            summary_est_seconds = statusEntry.estimated_time_left_seconds;
+          }
+          statusEntry.estimated_time_left_h_m_s = estSecondsLeft && etaString(estSecondsLeft);
         }
       } else {
         if(status[lroKey].progress.percentage !== 100) {
           statusEntry.warning = "Job " + lroKey + " is not running, but progress does not equal 100";
           logger.warn(statusEntry.warning);
+          lro_run_state = STATE_BAD_PCT;
           warningsAdded = true;
         }
+        summary_est_seconds = null;
       }
+      summary_run_state = higherRunState(summary_run_state, lro_run_state);
     }
     const logLines = JSON.stringify(status, null, 2).split("\n");
     for(const line of logLines) {
       logger.log(line);
     }
     logger.data("jobs", status);
+
+    const status_summary = {run_state: summary_run_state};
+    if(summary_est_seconds !== null) {
+      status_summary.estimated_time_left_seconds = summary_est_seconds;
+      status_summary.estimated_time_left_h_m_s = etaString(summary_est_seconds);
+    }
+    logger.data("status_summary", status_summary);
 
     if(warningsAdded && !(finalize && force)) {
       throw Error("Warnings raised for job status, exiting script!");
@@ -135,35 +174,33 @@ class MezzanineJobStatus extends ScriptBase {
   }
 
   options() {
-    return super.options()
-      .option("objectId", {
-        alias: "object-id",
-        demandOption: true,
-        description: "Object ID of the mezzanine",
-        type: "string"
-      })
-      .option("offeringKey", {
-        alias: "offering-key",
-        default: "default",
-        description: "Object ID of the mezzanine",
-        type: "string"
-      })
-      .option("finalize", {
+    return composeOpts(
+      super.options(),
+      opts.objectId({demandOption: true, ofX: "mezzanine"}),
+      opts.offeringKey({forX: "job(s)"}),
+      newOpt("finalize", {
         description: "If specified, will finalize the mezzanine if completed",
         type: "boolean"
-      })
-      .option("noWait", {
+      }),
+      newOpt("noWait", {
         alias: "no-wait",
         description: "When finalizing, exit script immediately after finalize call rather than waiting for publish to finish",
+        implies: "finalize",
         type: "boolean"
-      })
-      .option("force", {
+      }),
+      newOpt("force", {
         description: "When finalizing, proceed even if warning raised",
+        implies: "finalize",
         type: "boolean"
       })
-      .usage("\nUsage: PRIVATE_KEY=<private-key> node MezzanineStatus.js --objectId <mezzanine-object-id> (--finalize) (--wait) (--force)\n");
+    );
   }
 }
 
-const script = new MezzanineJobStatus;
-script.run();
+
+if(require.main === module) {
+  const script = new MezzanineJobStatus;
+  script.run();
+} else {
+  module.exports = ProductionMasterCreate;
+}

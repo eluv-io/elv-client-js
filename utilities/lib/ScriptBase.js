@@ -1,43 +1,81 @@
 // abstract base class for scripts
-//
-// Properties
-//
-//   args        Arguments supplied to command, either via command line or via testArgs parameter during instantiation
-//   elvClient   An elv-client-js client instance
-//
 
+const R = require("ramda");
 const yargs = require("yargs");
+
 const {ElvClient} = require("../../src/ElvClient");
 const Logger = require("./Logger");
+const {opts, composeOpts, newOpt} = require("./options");
 
 module.exports = class ScriptBase {
-  constructor(testArgs = null) {
+  constructor(opts = {}) {
+    this.env = R.clone(process.env);
+
+    // check how we were invoked
+    if(R.equals(opts, {})) {
+      // via command line / shell
+      this.args = yargs.options(
+        this.options())
+        .check(this.checkFunctionFactory(this.OptionsChecks()))
+        .strict()
+        .version(false)
+        .usage("").argv;
+    } else {
+      // via require()
+      if(opts.env) {
+        this.env = R.mergeRight(this.env, opts.env);
+      }
+      if(!Array.isArray(opts.argList)) {
+        throw Error("argList must be an Array");
+      }
+      if(!R.all(x => typeof x === "string", opts.argList)) {
+        throw Error("all items in args array must be strings");
+      }
+      this.args = this.args = yargs.options(
+        this.options())
+        .check(this.checkFunctionFactory(this.OptionsChecks()))
+        .strict()
+        .version(false)
+        .usage("").parse(opts.argList);
+    }
+
     // make sure env var PRIVATE_KEY is set
-    if(!process.env.PRIVATE_KEY) {
+    if(!this.env.PRIVATE_KEY) {
       throw Error("Please set environment variable PRIVATE_KEY");
     }
 
-    // if testArgs is present, we are running a test, use testArgs instead of yargs
-    if(testArgs) {
-      this.args = testArgs;
-    } else {
-      this.args = this.options().argv;
+    if(this.args.debugArgs) {
+      // eslint-disable-next-line no-console
+      console.log(JSON.stringify(this.args, null, 2));
+      process.exit(0);
     }
 
-    this.logger = new Logger(this.args.json);
+    this.logger = Logger(this.args);
+    this.logger.data("args", this.args);
 
     // if --configUrl was not passed in, try to read from env var
     if(!this.args.configUrl) {
-      if(!process.env.FABRIC_CONFIG_URL) {
+      if(!this.env.FABRIC_CONFIG_URL) {
         throw Error("Please either supply --configUrl or set environment variable FABRIC_CONFIG_URL");
       }
-      this.args.configUrl = process.env.FABRIC_CONFIG_URL;
+      this.args.configUrl = this.env.FABRIC_CONFIG_URL;
     }
   }
 
   // actual work specific to individual script
   async body() {
     throw Error("call to abstract base class method body()");
+  }
+
+  checkFunctionFactory(checksArray) {
+    return (argv, options) => {
+      for(const f of checksArray) {
+        if(!f(argv, options)) {
+          return false;
+        }
+      }
+      return true;
+    };
   }
 
   async client() {
@@ -49,10 +87,18 @@ module.exports = class ScriptBase {
       });
       let wallet = this.elvClient.GenerateWallet();
       let signer = wallet.AddAccount({
-        privateKey: process.env.PRIVATE_KEY
+        privateKey: this.env.PRIVATE_KEY
       });
       await this.elvClient.SetSigner({signer});
-      this.elvClient.ToggleLogging(this.args.debug);
+
+      this.elvClient.ToggleLogging(
+        this.args.debug,
+        {
+          log: this.logger.log,
+          error: this.logger.error,
+        }
+      );
+
     }
     return this.elvClient;
   }
@@ -83,35 +129,34 @@ module.exports = class ScriptBase {
   //    }
   // }
   options() {
-    return yargs
-      .option("debug", {
-        describe: "Print debug logging for API calls",
+    return composeOpts(
+      opts.help(),
+      opts.debug(),
+      opts.configUrl(),
+      opts.elvGeo(),
+      opts.json(),
+      opts.timestamps(),
+      newOpt("debugArgs", {
+        desc: "print processed arguments and exit without executing",
+        hidden: true,
         type: "boolean"
       })
-      .option("configUrl", {
-        alias: "config-url",
-        describe: "URL pointing to the Fabric configuration, enclosed in quotes. e.g. for Eluvio demo network: --configUrl \"https://demov3.net955210.contentfabric.io/config\"",
-        type: "string"
-      })
-      .option("elvGeo", {
-        alias: "elv-geo",
-        choices: ["as-east", "au-east", "eu-east", "eu-west", "na-east", "na-west-north", "na-west-south"],
-        describe: "Geographic region for the fabric nodes.",
-        type: "string",
-      })
-      .option("json", {
-        type: "boolean",
-        description: "Output results in JSON format"
-      })
-      .strict().version(false);
+    );
+  }
+
+  OptionsChecks() {
+    return [];
   }
 
   run() {
     this.logger.log();
     this.logger.log(this.header());
+    this.logger.log();
     this.body().then(successValue => {
+      this.logger.log();
       this.logger.log(this.footer());
       this.logger.log();
+      // this.logger.data("successValue", successValue);
       this.logger.output_json();
       return successValue;
     }, failureReason => {
