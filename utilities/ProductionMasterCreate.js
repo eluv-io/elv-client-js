@@ -1,12 +1,17 @@
+// Create new production master from specified file(s)
 const fs = require("fs");
 const Path = require("path");
 const mime = require("mime-types");
+
+const V = require("./lib/models/Variant");
+const Variant = V.Production_Variant;
+
+const {opts, composeOpts} = require("./lib/options");
 const ScriptBase = require("./lib/ScriptBase");
 
 class ProductionMasterCreate extends ScriptBase {
 
   async body() {
-    const client = await this.client();
     const logger = this.logger;
 
     const libraryId = this.args.libraryId;
@@ -15,25 +20,32 @@ class ProductionMasterCreate extends ScriptBase {
     const title = this.args.title;
     const displayTitle = this.args.displayTitle;
     const slug = this.args.slug;
-    let ipTitleId = this.args.ipTitleId;
-    // force ipTitleId to be a string, if present
-    if(ipTitleId) {
-      ipTitleId = ipTitleId.toString();
-    }
+    const ipTitleId = this.args.ipTitleId;
     let metadata = this.args.metadata;
     const files = this.args.files;
     const encrypt = this.args.encrypt;
     const s3Copy = this.args.s3Copy;
     const s3Reference = this.args.s3Reference;
     const credentials = this.args.credentials;
+    let streams = this.args.streams;
+
+    // initial sanity checking of --streams if present
+    if(streams) {
+      if(streams.startsWith("@")) {
+        streams = fs.readFileSync(streams.substring(1));
+      }
+      const s = JSON.parse(streams);
+      const v = {streams: s};
+      streams = Variant(v);
+    }
 
     let access;
     if(s3Reference || s3Copy) {
       if(credentials) {
         access = JSON.parse(fs.readFileSync(credentials));
       } else {
-        if(!process.env.AWS_REGION || !process.env.AWS_BUCKET || !process.env.AWS_KEY || !process.env.AWS_SECRET) {
-          throw new Error("Missing required S3 environment variables: AWS_REGION AWS_BUCKET AWS_KEY AWS_SECRET");
+        if(!this.env.AWS_REGION || !this.env.AWS_BUCKET || !this.env.AWS_KEY || !this.env.AWS_SECRET) {
+          throw Error("Missing required S3 environment variables: AWS_REGION AWS_BUCKET AWS_KEY AWS_SECRET");
         }
         access = [
           {
@@ -41,13 +53,13 @@ class ProductionMasterCreate extends ScriptBase {
             remote_access: {
               protocol: "s3",
               platform: "aws",
-              path: process.env.AWS_BUCKET + "/",
+              path: this.env.AWS_BUCKET + "/",
               storage_endpoint: {
-                region: process.env.AWS_REGION
+                region: this.env.AWS_REGION
               },
               cloud_credentials: {
-                access_key_id: process.env.AWS_KEY,
-                secret_access_key: process.env.AWS_SECRET
+                access_key_id: this.env.AWS_KEY,
+                secret_access_key: this.env.AWS_SECRET
               }
             }
           }
@@ -116,6 +128,10 @@ class ProductionMasterCreate extends ScriptBase {
       });
     }
 
+    // delay getting elvClient until this point so script exits faster
+    // if there is a validation error above
+    const client = await this.client();
+
     const originalType = type;
     if(type.startsWith("iq__")) {
       type = await client.ContentType({typeId: type});
@@ -132,7 +148,7 @@ class ProductionMasterCreate extends ScriptBase {
     type = type.hash;
 
     try {
-      const {errors, warnings, id, hash} = await client.CreateProductionMaster({
+      const createResponse = await client.CreateProductionMaster({
         libraryId,
         type,
         name,
@@ -157,62 +173,93 @@ class ProductionMasterCreate extends ScriptBase {
           }
         }
       });
+      const {errors, warnings, id} = createResponse;
+      // Log object id immediately, in case of error later in script
+      // Don't log hash yet, it will change if --streams was provided (or any other revision to object is needed)
+      logger.data("object_id", id);
+
+      let hash = createResponse.hash;
 
       // Close file handles
       fileHandles.forEach(descriptor => fs.closeSync(descriptor));
 
       await client.SetVisibility({id, visibility: 0});
 
-      logger.log();
-      logger.log("Production master object created:");
-      logger.log("  Object ID: " + id);
-      logger.data("object_id", id);
-      logger.log("  Version Hash: " + hash);
-      logger.data("version_hash", hash);
-      logger.log();
-
       if(errors.length > 0) {
         logger.log("Errors:");
-        for(const e of errors) {
-          logger.error(e);
-        }
+        logger.error_list(errors);
         logger.log();
       }
 
       if(warnings.length) {
         logger.log("Warnings:");
-        for(const w of warnings) {
-          logger.warn(w);
+        logger.warn_list(warnings);
+        logger.log();
+      }
+
+      // was stream info supplied at command line?
+      if(streams) {
+        // replace variant stream info
+        const {write_token} = await client.EditContentObject(
+          {
+            libraryId,
+            objectId: id
+          }
+        );
+
+        await client.ReplaceMetadata({
+          libraryId,
+          objectId: id,
+          writeToken: write_token,
+          metadata: streams,
+          metadataSubtree: "/production_master/variants/default"
+        });
+
+        const finalizeResponse = await client.FinalizeContentObject({
+          libraryId,
+          objectId: id,
+          writeToken: write_token
+        });
+        hash = finalizeResponse.hash;
+      }
+
+      logger.log_list([
+        "",
+        "Production master object created:",
+        `  Object ID: ${id}`,
+        `  Version Hash: ${hash}`,
+        ""
+      ]);
+
+      logger.data("version_hash", hash);
+
+      if(!streams) {
+        // Check if resulting variant has an audio and video stream
+        const streamsFromServer = (await client.ContentObjectMetadata({
+          libraryId,
+          objectId: id,
+          versionHash: hash,
+          metadataSubtree: "/production_master/variants/default/streams"
+        }));
+        if(!streamsFromServer.hasOwnProperty("audio")) {
+          logger.log();
+          logger.warn("WARNING: no audio stream found");
+          logger.log();
+          logger.data("audio_found", false);
+        } else {
+          logger.data("audio_found", true);
         }
-        logger.log();
-      }
 
-      // Check if resulting variant has an audio and video stream
-      const streams = (await client.ContentObjectMetadata({
-        libraryId,
-        objectId: id,
-        versionHash: hash,
-        metadataSubtree: "/production_master/variants/default/streams"
-      }));
-      if(!streams.hasOwnProperty("audio")) {
-        logger.log();
-        logger.warn("WARNING: no audio stream found");
-        logger.log();
-        logger.data("audio_found", false);
-      } else {
-        logger.data("audio_found", true);
+        if(!streamsFromServer.hasOwnProperty("video")) {
+          logger.log();
+          logger.warn("WARNING: no video stream found");
+          logger.log();
+          logger.data("video_found", false);
+        } else {
+          logger.data("video_found", true);
+        }
+        logger.data("variant_streams", streamsFromServer);
       }
-
-      if(!streams.hasOwnProperty("video")) {
-        logger.log();
-        logger.warn("WARNING: no video stream found");
-        logger.log();
-        logger.data("video_found", false);
-      } else {
-        logger.data("video_found", true);
-      }
-
-      logger.data("variant_streams", streams);
 
       // add info on source files to data if --json selected
       if(this.args.json) {
@@ -236,69 +283,44 @@ class ProductionMasterCreate extends ScriptBase {
   }
 
   options() {
-    return super.options()
-      .option("libraryId", {
-        alias: "library-id",
-        demandOption: true,
-        describe: "ID of the library in which to create the master (should start with 'ilib')",
-        type: "string"
-      })
-      .option("type", {
-        demandOption: true,
-        description: "Name, object ID, or version hash of the type for the master"
-      })
-      .option("name", {
-        description: "Name for the master object (derived from ipTitleId and title if not specified)"
-      })
-      .option("title", {
-        demandOption: true,
-        description: "Title for the asset"
-      })
-      .option("displayTitle", {
-        alias: "display-title",
-        description: "Display title for the asset (set to title if not specified)"
-      })
-      .option("slug", {
-        description: "Slug for the master (generated based on title if not specified)"
-      })
-      .option("ipTitleId", {
-        alias: "ip-title-id",
-        description: "IP title ID for the master (equivalent to slug if not specified)",
-        type: "string"
-      })
-      .option("metadata", {
-        description: "Metadata JSON string (or file path if prefixed with '@') to include in the object metadata",
-      })
-      .option("files", {
-        demandOption: true,
-        description: "List of files to upload to the master object",
-        type: "array"
-      })
-      .option("encrypt", {
-        conflicts: "s3-reference",
-        description: "If specified, files will be encrypted (incompatible with s3Reference)",
-        type: "boolean"
-      })
-      .option("s3Copy", {
-        alias: "s3-copy",
-        conflicts: "s3-reference",
-        description: "If specified, files will be copied from an S3 bucket instead of uploaded from the local filesystem",
-        type: "boolean"
-      })
-      .option("s3Reference", {
-        alias: "s3-reference",
-        conflicts: "s3-copy",
-        type: "boolean",
-        description: "If specified, files will be referenced as links to an S3 bucket instead of copied to fabric"
-      })
-      .option("credentials", {
-        type: "string",
-        description: "Path to JSON file containing credential sets for files stored in cloud"
-      }).usage("\nUsage: PRIVATE_KEY=<private-key> node ProductionMasterCreate.js --libraryId <master-library-id> --type <type> --title <title> --metadata '<metadata-json>' --files <file1> (<file2>...) (--s3-copy || --s3-reference)\n");
+    return composeOpts(
+      super.options(),
+      opts.libraryId({demandOption: true, forX: "new production master"}),
+      opts.name({forX: "new production master object (derived from ipTitleId and title if not specified)"}),
+      opts.type({demand: true, forX: "new production master"}),
+      opts.title({demand: true}),
+      opts.displayTitle(),
+      opts.slug(),
+      opts.ipTitleId(),
+      opts.metadata({ofX: "production master object"}),
+      opts.files({demand: true, forX: "for new production master"}),
+      opts.encrypt({X: "uploaded files"}),
+      opts.streams({forX: "variant in new production master"}),
+      opts.s3Copy(),
+      opts.s3Reference(),
+      opts.credentials()
+    );
+  }
+
+  OptionsChecks() {
+    const inherited = super.OptionsChecks();
+    inherited.push(
+      (argv) => {
+        if(argv.credentials) {
+          if(!argv.s3Copy && !argv.s3Reference) {
+            throw Error("--credentials supplied but neither --s3Copy nor --s3Reference specified");
+          }
+        }
+        return true; // tell Yargs that the arguments passed the check
+      }
+    );
+    return inherited;
   }
 }
 
-const script = new ProductionMasterCreate;
-script.run();
-
-
+if(require.main === module) {
+  const script = new ProductionMasterCreate;
+  script.run();
+} else {
+  module.exports = ProductionMasterCreate;
+}

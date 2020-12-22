@@ -1,7 +1,8 @@
 !.keep
 
 .idea/
-
+**.ignore.json
+**.ignore.sh
 **.DS_STORE
 
 deploy-docs.sh

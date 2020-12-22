@@ -1,9 +1,12 @@
+// Create a new mezzanine and start jobs
 const fs = require("fs");
 
-const ScriptBase = require("./lib/ScriptBase");
+const R = require("ramda");
+const slugify = require("@sindresorhus/slugify");
+const countableSlugify = slugify.counter();
 
-const Slugify = str =>
-  (str || "").toLowerCase().replace(/ /g, "-").replace(/[^a-z0-9-]/g, "");
+const {opts, composeOpts, newOpt} = require("./lib/options");
+const ScriptBase = require("./lib/ScriptBase");
 
 
 class MezzanineCreate extends ScriptBase {
@@ -13,88 +16,133 @@ class MezzanineCreate extends ScriptBase {
 
     const libraryId = this.args.libraryId;
     const masterHash = this.args.masterHash;
-    let type = this.args.type;
-    let name = this.args.name;
-    const title = this.args.title;
-    const displayTitle = this.args.displayTitle;
-    const slug = this.args.slug;
-    let ipTitleId = this.args.ipTitleId;
-    // force ipTitleId to be a string, if present
-    if(ipTitleId) {
-      ipTitleId = ipTitleId.toString();
-    }
-    const titleType = this.args.titleType;
-    const assetType = this.args.assetType;
-    let metadata = this.args.metadata;
+    const argAssetMetadata = this.args.assetMetadata;
+    const argType = this.args.type;
+    const argName = this.args.name;
+    const argTitle = this.args.title;
+    const argDisplayTitle = this.args.displayTitle;
+    const argSlug = this.args.slug;
+    const argIpTitleId = this.args.ipTitleId;
+    let argMetadata = this.args.metadata;
     const variant = this.args.variant;
     const offeringKey = this.args.offeringKey;
     const existingMezId = this.args.existingMezId;
-    let abrProfile = this.args.abrProfile;
+    const argAbrProfile = this.args.abrProfile;
     const credentials = this.args.credentials;
     const wait = this.args.wait;
 
-    if(!existingMezId && !title) {
-      throw Error("--title argument is required unless --existingMezId is specified");
+    let existingPublicMetadata = {};
+
+    if(existingMezId) {
+      existingPublicMetadata = (await client.ContentObjectMetadata({
+        libraryId,
+        objectId: existingMezId,
+        metadataSubtree: "public"
+      })) || {};
     }
 
-    if(metadata) {
+    if(!existingPublicMetadata.asset_metadata) {
+      existingPublicMetadata.asset_metadata = {};
+    }
+
+    const existingName = existingPublicMetadata.name;
+
+    const {
+      existingTitle,
+      existingDisplayTitle,
+      existingSlug,
+      existingIpTitleId
+    } = existingPublicMetadata.asset_metadata;
+
+    const abrProfile = argAbrProfile
+      ? JSON.parse(fs.readFileSync(argAbrProfile))
+      : undefined;
+
+    let suppliedMetadata = {};
+    if(argMetadata) {
+      if(argMetadata.startsWith("@")) {
+        argMetadata = fs.readFileSync(argMetadata.substring(1));
+      }
       try {
-        if(metadata.startsWith("@")) {
-          metadata = fs.readFileSync(metadata.substring(1));
-        }
-
-        metadata = JSON.parse(metadata) || {};
-        if(!metadata.public) {
-          metadata.public = {};
-        }
-
-        name = name || metadata.public.name || metadata.name;
+        suppliedMetadata = JSON.parse(argMetadata) || {};
       } catch(error) {
         logger.error("Error parsing metadata:");
         throw error;
       }
-    } else if(existingMezId) {
-      const assetMetadata = (await client.ContentObjectMetadata({
-        libraryId,
-        objectId: existingMezId,
-        metadataSubtree: "public/asset_metadata"
-      })) || {};
+    }
+    if(!suppliedMetadata.public) {
+      suppliedMetadata.public = {};
+    }
+    if(!suppliedMetadata.public.asset_metadata) {
+      suppliedMetadata.public.asset_metadata = {};
+    }
 
-      const existingName = (await client.ContentObjectMetadata({
-        libraryId,
-        objectId: existingMezId,
-        metadataSubtree: "public/name"
-      })) || {};
+    // apply --assetMetadata.FIELD_NAME arg(s), if any
+    if(argAssetMetadata) {
+      suppliedMetadata = R.mergeDeepRight(
+        suppliedMetadata,
+        {public: {asset_metadata: argAssetMetadata}}
+      );
+    }
 
-      metadata = {
+    const suppliedName = suppliedMetadata.public.name || suppliedMetadata.name;
+    const {
+      suppliedTitle,
+      suppliedSlug,
+      suppliedDisplayTitle,
+      suppliedIpTitleId
+    } = suppliedMetadata.public.asset_metadata;
+
+    const title = argTitle || suppliedTitle || existingTitle;
+    if(!title) {
+      throw Error("--title not provided and could not derive from other arguments or existing mezzanine object");
+    }
+
+    // Fill in missing values
+    // Precedence:
+    //  1: present as arg at command line (other than via --assetMetadata.FIELD_NAME)
+    //  1: present as arg at command line via --assetMetadata.FIELD_NAME (handled by R.mergeDeepRight above)
+    //  2: supplied in --metadata
+    //  3: pre-existing value (if --existingMezId specified)
+    //  4: derive from other values
+
+    const display_title = argDisplayTitle
+      || suppliedDisplayTitle
+      || existingDisplayTitle
+      || title;
+
+    const slug = argSlug
+      || suppliedSlug
+      || existingSlug
+      || countableSlugify(display_title);
+
+    const name = argName
+      || suppliedName
+      || existingName
+      || `${title} MEZ`;
+
+    const ip_title_id = argIpTitleId
+      || suppliedIpTitleId
+      || existingIpTitleId
+      || slug;
+
+    const metadata = R.mergeDeepRight(
+      R.mergeDeepRight(
+        {public: existingPublicMetadata},
+        suppliedMetadata
+      ),
+      {
         public: {
-          asset_metadata: assetMetadata || {},
-          name: name || existingName || ""
+          asset_metadata: {
+            title,
+            display_title,
+            slug,
+            ip_title_id
+          },
+          name: name
         }
-      };
-
-      if(!title && !metadata.public.asset_metadata.title) {
-        throw Error("Existing mez does not have 'title' set and title argument was not provided");
       }
-    } else {
-      metadata = {public: {asset_metadata: {}}};
-    }
-
-    if(abrProfile) {
-      abrProfile = JSON.parse(fs.readFileSync(abrProfile));
-    }
-
-    metadata.public.asset_metadata = {
-      title,
-      display_title: displayTitle || title,
-      slug: slug || Slugify(displayTitle || title),
-      ip_title_id: ipTitleId || slug || Slugify(displayTitle || title),
-      title_type: titleType,
-      asset_type: assetType,
-      ...(metadata.public.asset_metadata || {})
-    };
-
-    name = name || metadata.public.name || metadata.public.asset_metadata.title + " MEZ";
+    );
 
     let access;
     if(credentials) {
@@ -106,33 +154,33 @@ class MezzanineCreate extends ScriptBase {
           remote_access: {
             protocol: "s3",
             platform: "aws",
-            path: process.env.AWS_BUCKET + "/",
+            path: this.env.AWS_BUCKET + "/",
             storage_endpoint: {
-              region: process.env.AWS_REGION
+              region: this.env.AWS_REGION
             },
             cloud_credentials: {
-              access_key_id: process.env.AWS_KEY,
-              secret_access_key: process.env.AWS_SECRET
+              access_key_id: this.env.AWS_KEY,
+              secret_access_key: this.env.AWS_SECRET
             }
           }
         }
       ];
     }
 
-    const originalType = type;
-    if(type.startsWith("iq__")) {
-      type = await client.ContentType({typeId: type});
-    } else if(type.startsWith("hq__")) {
-      type = await client.ContentType({versionHash: type});
-    } else {
-      type = await client.ContentType({name: type});
+    let type = null;
+    if(argType) {
+      if(argType.startsWith("iq__")) {
+        type = await client.ContentType({typeId: argType});
+      } else if(argType.startsWith("hq__")) {
+        type = await client.ContentType({versionHash: argType});
+      } else {
+        type = await client.ContentType({name: argType});
+      }
+      if(!type) {
+        throw Error(`Unable to find content type "${argType}"`);
+      }
+      type = type.hash;
     }
-
-    if(!type) {
-      throw Error(`Unable to find content type "${originalType}"`);
-    }
-
-    type = type.hash;
 
     const createResponse = await client.CreateABRMezzanine({
       name,
@@ -141,7 +189,7 @@ class MezzanineCreate extends ScriptBase {
       type,
       masterVersionHash: masterHash,
       variant,
-      offeringKey: offeringKey,
+      offeringKey,
       metadata,
       abrProfile
     });
@@ -162,22 +210,24 @@ class MezzanineCreate extends ScriptBase {
 
     this.report(startResponse);
 
-    logger.log();
-    logger.log("Library ID: ", libraryId);
+    const lroWriteToken = R.path(["lro_draft", "write_token"], startResponse);
+    const lroNode = R.path(["lro_draft", "node"], startResponse);
+
     logger.data("library_id", libraryId);
-
-    logger.log("Object ID", objectId);
     logger.data("object_id", objectId);
-
-    logger.log("Offering:", offeringKey);
     logger.data("offering_key", offeringKey);
+    logger.data("write_token", lroWriteToken);
+    logger.data("write_node", lroNode);
 
-    logger.log("Write Token:", startResponse.lro_draft.write_token);
-    logger.data("write_token", startResponse.lro_draft.write_token);
-
-    logger.log("Write Node:", startResponse.lro_draft.node);
-    logger.data("write_node", startResponse.lro_draft.node);
-    logger.log();
+    logger.log_list([
+      "",
+      `Library ID: ${libraryId}`,
+      `Object ID: ${objectId}`,
+      `Offering: ${offeringKey}`,
+      `Write Token: ${lroWriteToken}`,
+      `Write Node: ${lroNode}`,
+      ""
+    ]);
 
     if(!wait) {
       return;
@@ -187,7 +237,11 @@ class MezzanineCreate extends ScriptBase {
 
     // eslint-disable-next-line no-constant-condition
     while(true) {
-      const status = await client.LROStatus({libraryId: libraryId, objectId, offeringKey});
+      const status = await client.LROStatus({
+        libraryId,
+        objectId,
+        offeringKey
+      });
 
       let done = true;
       const progress = Object.keys(status).map(id => {
@@ -221,121 +275,87 @@ class MezzanineCreate extends ScriptBase {
 
     this.report(finalizeResponse);
 
-    logger.log();
-    logger.log("ABR mezzanine object created:");
-    logger.log("  Object ID:", objectId);
-    logger.log("  Version Hash:", finalizeResponse.hash);
-    logger.data("version_hash", finalizeResponse.hash);
-    logger.log();
-  }
+    logger.log_list([
+      "",
+      "ABR mezzanine object created:",
+      `  Object ID: ${objectId}`,
+      `  Version Hash: ${finalizeResponse.hash}`,
+      ""
+    ]);
 
+    logger.data("version_hash", finalizeResponse.hash);
+  }
 
   header() {
     return "Creating Mezzanine...";
   }
 
   options() {
-    return super.options()
-      .option("libraryId", {
-        alias: "library-id",
-        demandOption: true,
-        description: "ID of the library in which to create the mezzanine"
-      })
-      .option("masterHash", {
-        alias: "master-hash",
-        demandOption: true,
-        description: "Version hash of the master object"
-      })
-      .option("type", {
-        demandOption: true,
-        description: "Name, object ID, or version hash of the type for the mezzanine",
+    return composeOpts(
+      super.options(),
+      opts.libraryId({demandOption: true, forX: "mezzanine"}),
+      opts.name({ofX: "mezzanine object (set to title + ' MEZ' if not supplied and --existingMezId and --metadata not specified)"}),
+      opts.type({forX: "mezzanine"}),
+      opts.title(),
+      opts.displayTitle(),
+      opts.slug(),
+      opts.ipTitleId(),
+      opts.metadata({ofX: "mezzanine object"}),
+      opts.assetMetadata(),
+      opts.credentials(),
+      opts.offeringKey({X: "to assign to new offering"}),
+      opts.variantKey({X: "to use from production master"}),
+      newOpt("masterHash", {
+        demand: true,
+        description: "Version hash of the master object",
         type: "string"
-      })
-      .option("name", {
-        description: "Name for the mezzanine object (derived from ip-title-id and title if not provided)",
+      }),
+      newOpt("existingMezId", {
+        description: "Create the offering in existing mezzanine object with specified ID",
         type: "string"
-      })
-      .option("title", {
-        description: "Title for the mezzanine",
+      }),
+      newOpt("abrProfile", {
+        description: "Path to JSON file containing ABR profile with transcoding parameters and resolution ladders (if omitted, will be read from library metadata)",
+        normalize: true,
         type: "string"
-      })
-      .option("displayTitle", {
-        alias: "display-title",
-        description: "Display title for the mezzanine (set to title if not specified)",
-        type: "string"
-      })
-      .option("slug", {
-        description: "Slug for the mezzanine (generated based on title if not specified)",
-        type: "string"
-      })
-      .option("ipTitleId", {
-        alias: "ip-title-id",
-        description: "IP title ID for the mezzanine (equivalent to slug if not specified)",
-        type: "string"
-      })
-      .option("titleType", {
-        alias: "title-type",
-        description: "Title type for the mezzanine",
-        default: "title",
-        type: "string"
-      })
-      .option("assetType", {
-        alias: "asset-type",
-        description: "Asset type for the mezzanine",
-        default: "primary",
-        type: "string"
-      })
-      .option("metadata", {
-        description: "Metadata JSON string (or file path if prefixed with '@') to include in the object metadata",
-        type: "string"
-      })
-      .option("variant", {
-        description: "Variant of the mezzanine",
-        default: "default",
-        type: "string"
-      })
-      .option("offeringKey", {
-        alias: "offering-key",
-        description: "Offering key for the new mezzanine",
-        default: "default",
-        type: "string"
-      })
-      .option("existingMezId", {
-        alias: "existing-mez-id",
-        description: "If re-running the mezzanine process, the ID of an existing mezzanine object",
-        type: "string"
-      })
-      .option("abrProfile", {
-        alias: "abr-profile",
-        description: "Path to JSON file containing alternative ABR profile",
-        type: "string"
-      })
-      .option("credentials", {
-        description: "Path to JSON file containing credential sets for files stored in cloud",
-        type: "string"
-      })
-      .option("wait", {
-        description: "Wait for mezzanine to finish transcoding, then finalize before exiting script",
+      }),
+      newOpt("wait", {
+        description: "Wait for mezzanine to finish transcoding, then finalize before exiting script (not recommended except for very short titles)",
         type: "boolean"
       })
-      .usage("\nUsage: PRIVATE_KEY=<private-key> node MezzanineCreate.js --libraryId <mezzanine-library-id> --masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezId <object-id>) (--elv-geo eu-west)\n");
+    );
   }
 
-  report({errors, warnings}) {
-    if(errors.length > 0) {
-      this.logger.log("Errors:");
-      for(const e of errors) {
-        this.logger.error(e);
+  OptionsChecks() {
+    const inherited = super.OptionsChecks();
+    inherited.push(
+      (argv) => {
+        if(!argv.existingMezId) {
+          if(!argv.type) {
+            throw Error("--type must be supplied unless --existingMezId is present");
+          }
+          if(!argv.title) {
+            throw Error("--title must be supplied unless --existingMezId is present");
+          }
+        }
+        return true; // tell Yargs that the arguments passed the check
       }
-      this.logger.log();
+    );
+    return inherited;
+  }
+
+  report({warnings, errors}) {
+    const logger = this.logger;
+    if(warnings.length) {
+      logger.log("Warnings:");
+      logger.warn_list(warnings);
+      logger.log();
     }
 
-    if(warnings.length) {
-      this.logger.log("Warnings:");
-      for(const w of warnings) {
-        this.logger.warn(w);
-      }
-      this.logger.log();
+    if(errors.length > 0) {
+      logger.log("Errors:");
+      logger.error_list(errors);
+      logger.log();
     }
   }
 }
