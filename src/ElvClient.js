@@ -539,7 +539,7 @@ class ElvClient {
     };
 
     if(libraryId) {
-      token.lid = libraryId;
+      token.lib = libraryId;
     }
 
     if(objectId) {
