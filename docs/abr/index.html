@@ -8,6 +8,7 @@
 <li><a href="#find-your-content-fabric-private-key-and-record-it-in-a-safe-place">Find your Content Fabric private key and record it in a safe place</a></li>
 <li><a href="#download-and-set-up-the-elv-client-js-library">Download and set up the elv-client-js library</a></li>
 <li><a href="#updating-your-copy-of-elv-client-js">Updating your copy of elv-client-js</a></li></ul></li>
+<li><a href="#deprecation-notice">DEPRECATION NOTICE</a></li>
 <li><a href="#create-a-production-master-object">Create a Production Master object</a><ul>
 <li><a href="#get-your-production-master-content-type-name-andor-id">Get your Production Master Content Type name and/or ID</a></li>
 <li><a href="#get-your-production-master-library-id">Get your Production Master Library ID</a></li>
@@ -84,7 +85,7 @@
 <li>What streaming protocol(s) to offer (DASH and/or HLS) and what kind(s) of DRM to use for each (an <strong>Offering</strong> can include both DRM and clear playout options if desired)</li>
 <li>Watermark text or image (if any)</li>
 <li>Caption/subtitle streams (if any)</li>
-<li>Whether to trim the from beginning and/or end of the <strong>Production Master</strong>'s <strong>Variant</strong> and if so how much</li>
+<li>Whether to trim media from the beginning and/or end of the <strong>Production Master</strong>'s <strong>Variant</strong> and if so how much</li>
 <li>An <strong>Offering</strong> initially contains the same streams as the <strong>Production Master</strong> <strong>Variant</strong> that was used to create it, but can be edited after creation to add or remove streams (e.g. adding a subtitle stream or removing an audio language track)</li></ul></li></ul></li>
 </ul>
 <p>The ingest process consists of the following steps:</p>
@@ -151,6 +152,14 @@
 git pull
 npm install
 </code></pre>
+<p><a id="deprecation-notice"></a></p>
+<h2 id="deprecationnoticenbsp8673contents">DEPRECATION NOTICE&nbsp;<a href="#contents">&#8673;</a></h2>
+<p>This documentation uses scripts in directory <code>/elv-client-js/testScripts</code>.</p>
+<p>These will eventually be replaced by new scripts in directory <code>/elv-client-js/utilities</code>. To minimize disruption to existing customer workflows, the existing <code>testScripts</code> directory and its contents will remain for the time being, but deprecation warning messages will be added to the old scripts as corresponding replacements become available.</p>
+<p>Differences between old and new scripts are detailed in the following Google doc: </p>
+<ul>
+<li><a href="https://docs.google.com/document/d/1iKQZhea02rVGNg4qI59ig-RyxecUXsJC8KcGhHhrut8/edit?usp=sharing">elv-client-js: The new "/utilities" directory</a></li>
+</ul>
 <p><a id="create-a-production-master-object"></a></p>
 <h2 id="createaproductionmasterobjectnbsp8673contents">Create a Production Master object&nbsp;<a href="#contents">&#8673;</a></h2>
 <p>The <strong>Production Master</strong> object contains links to your original source material. It is not directly playable, but is used to generate a playable <strong>Mezzanine</strong> object.</p>

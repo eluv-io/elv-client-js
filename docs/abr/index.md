@@ -11,6 +11,7 @@
     * [Find your Content Fabric private key and record it in a safe place](#find-your-content-fabric-private-key-and-record-it-in-a-safe-place)
     * [Download and set up the elv-client-js library](#download-and-set-up-the-elv-client-js-library)
     * [Updating your copy of elv-client-js](#updating-your-copy-of-elv-client-js)
+  * [DEPRECATION NOTICE](#deprecation-notice)
   * [Create a Production Master object](#create-a-production-master-object)
     * [Get your Production Master Content Type name and/or ID](#get-your-production-master-content-type-name-andor-id)
     * [Get your Production Master Library ID](#get-your-production-master-library-id)
@@ -87,7 +88,7 @@ In the Content Fabric, ingesting video for streaming involves two kinds of objec
 		* What streaming protocol(s) to offer (DASH and/or HLS) and what kind(s) of DRM to use for each (an **Offering** can include both DRM and clear playout options if desired)
 		* Watermark text or image (if any)
 		* Caption/subtitle streams (if any)
-		* Whether to trim the from beginning and/or end of the **Production Master**'s **Variant** and if so how much
+		* Whether to trim media from the beginning and/or end of the **Production Master**'s **Variant** and if so how much
 		* An **Offering** initially contains the same streams as the **Production Master** **Variant** that was used to create it, but can be edited after creation to add or remove streams (e.g. adding a subtitle stream or removing an audio language track)
 
 The ingest process consists of the following steps:
@@ -157,6 +158,18 @@ If you need to update to the latest version of elv-client-js, you can do so with
     cd elv-client-js
     git pull
     npm install
+
+<a id="deprecation-notice"></a>
+## DEPRECATION NOTICE&nbsp;[&#8673;](#contents)
+
+This documentation uses scripts in directory `/elv-client-js/testScripts`.
+
+These will eventually be replaced by new scripts in directory `/elv-client-js/utilities`. To minimize disruption to existing customer workflows, the existing `testScripts` directory and its contents will remain for the time being, but deprecation warning messages will be added to the old scripts as corresponding replacements become available.
+
+Differences between old and new scripts are detailed in the following Google doc: 
+
+ * [elv-client-js: The new "/utilities" directory](https://docs.google.com/document/d/1iKQZhea02rVGNg4qI59ig-RyxecUXsJC8KcGhHhrut8/edit?usp=sharing)
+
 
 <a id="create-a-production-master-object"></a>
 ## Create a Production Master object&nbsp;[&#8673;](#contents)
