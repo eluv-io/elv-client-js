@@ -5,7 +5,6 @@
  */
 
 const Utils = require("../Utils");
-const bs58 = require("bs58");
 
 let fs;
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
@@ -135,7 +134,7 @@ exports.UploadFilesFromS3 = async function({
       secret_key: ""
     };
 
-    encryption_key = `kp__${bs58.encode(Buffer.from(JSON.stringify(conk)))}`;
+    encryption_key = `kp__${this.utils.B58(Buffer.from(JSON.stringify(conk)))}`;
   }
 
   let cloudCredentials = {

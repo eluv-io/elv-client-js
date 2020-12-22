@@ -2,7 +2,6 @@ if(typeof Buffer === "undefined") { Buffer = require("buffer/").Buffer; }
 
 const bs58 = require("bs58");
 const BigNumber = require("bignumber.js").default;
-const MultiHash = require("multihashes");
 const VarInt = require("varint");
 const URI = require("urijs");
 
@@ -113,7 +112,7 @@ const Utils = {
     versionHash = versionHash.replace("hq__", "");
 
     // Decode base58 payload
-    let bytes = MultiHash.fromB58String(versionHash);
+    let bytes = Utils.FromB58(versionHash);
 
     // Remove 32 byte SHA256 digest
     const digestBytes = bytes.slice(0, 32);
@@ -133,10 +132,10 @@ const Utils = {
     bytes = bytes.slice(sizeLength);
 
     // Remaining bytes is object ID
-    const objectId = "iq__" + MultiHash.toB58String(bytes);
+    const objectId = "iq__" + Utils.B58(bytes);
 
     // Part hash is B58 encoded version hash without the ID
-    const partHash = "hqp_" + MultiHash.toB58String(Buffer.concat([digestBytes, sizeBytes]));
+    const partHash = "hqp_" + Utils.B58(Buffer.concat([digestBytes, sizeBytes]));
 
     return {
       digest,
@@ -265,6 +264,14 @@ const Utils = {
 
   FromB64: str => {
     return Buffer.from(str, "base64").toString("utf-8");
+  },
+
+  B58: arr => {
+    return bs58.encode(Buffer.from(arr));
+  },
+
+  FromB58: str => {
+    return bs58.decode(str);
   },
 
   /**

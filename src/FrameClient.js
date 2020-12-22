@@ -328,6 +328,7 @@ class FrameClient {
       "CreateNTPInstance",
       "CreatePart",
       "CreateProductionMaster",
+      "CreateSignedToken",
       "CurrentAccountAddress",
       "CustomContractAddress",
       "Decrypt",
