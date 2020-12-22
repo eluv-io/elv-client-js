@@ -1,4 +1,5 @@
 // Create a new content fabric library
+const {opts, composeOpts} = require("./lib/options");
 
 const ScriptBase = require("./lib/ScriptBase");
 
@@ -27,21 +28,12 @@ class LibraryCreate extends ScriptBase {
   }
 
   options() {
-    return super.options()
-      .option("name", {
-        demandOption: true,
-        describe: "Name for new library",
-        type: "string"
-      })
-      .option("description", {
-        describe: "Library description",
-        type: "string"
-      })
-      .option("kmsId", {
-        alias: "kms-id",
-        describe: "ID of the KMS to use for content in this library. If not specified, the default KMS will be used.",
-        type: "string"
-      });
+    return composeOpts(
+      super.options(),
+      opts.name({forX: "new library", demand: true}),
+      opts.description({forX: "new library"}),
+      opts.kmsId({forX: "content in new library"})
+    );
   }
 }
 
