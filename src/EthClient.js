@@ -102,7 +102,7 @@ class EthClient {
     }
 
     if(!abi) {
-      throw Error(`No ABI for contract ${contractAddress} - Wrong network?`);
+      throw Error(`No ABI for contract ${contractAddress} - Wrong network or deleted item?`);
     }
 
     if(!contract) {

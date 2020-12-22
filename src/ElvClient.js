@@ -15,6 +15,8 @@ const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 const {LogMessage} = require("./LogMessage");
 
+const Pako = require("pako");
+
 const {
   ValidatePresence
 } = require("./Validation");
@@ -491,6 +493,71 @@ class ElvClient {
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
     await this.InitializeClients();
+  }
+
+  /**
+   * Issue a self-signed authorization token
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string=} libraryId - Library ID to authorize
+   * @param {string=} objectId - Object ID to authorize
+   * @param {string=} policyId - The object ID of the policy for this token
+   * @param {string=} subject - The subject of the token
+   * @param {string} grantType=read - Permissions to grant for this token. Options: "access", "read", "create", "update", "read-crypt"
+   * @param {number} duration - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000)
+   * @param {boolean} allowDecryption=false - If specified, the re-encryption key will be included in the token,
+   * enabling the user of this token to download encrypted content from the specified object
+   * @param {Object=} context - Additional JSON context
+   */
+  async CreateSignedToken({
+    libraryId,
+    objectId,
+    policyId,
+    subject,
+    grantType="read",
+    allowDecryption=false,
+    duration,
+    context={}
+  }) {
+    if(!subject) {
+      subject = `iusr${this.utils.AddressToHash(await this.CurrentAccountAddress())}`;
+    }
+
+    if(policyId) {
+      context["elv:delegation-id"] = policyId;
+    }
+
+    let token = {
+      adr: Buffer.from(await this.CurrentAccountAddress().replace(/^0x/, ""), "hex").toString("base64"),
+      sub: subject,
+      spc: await this.ContentSpaceId(),
+      iat: Date.now(),
+      exp: Date.now() + duration,
+      gra: grantType,
+      ctx: context
+    };
+
+    if(libraryId) {
+      token.lid = libraryId;
+    }
+
+    if(objectId) {
+      token.qid = objectId;
+    }
+
+    if(allowDecryption) {
+      const cap = await this.authClient.ReEncryptionConk({libraryId, objectId});
+      token.apk = cap.public_key;
+    }
+
+    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+    const signature = await this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
+
+    return `aessjc${this.utils.B58(Buffer.concat([
+      Buffer.from(signature.replace(/^0x/, ""), "hex"), 
+      Buffer.from(compressedToken)
+    ]))}`;
   }
 
   /**

@@ -52,21 +52,25 @@ exports.Visibility = async function({id}) {
     const address = this.utils.HashToAddress(id);
 
     if(!this.visibilityInfo[address]) {
-      this.visibilityInfo[address] = new Promise(async resolve => {
-        const hasVisibility = await this.authClient.ContractHasMethod({
-          contractAddress: address,
-          methodName: "visibility"
-        });
+      this.visibilityInfo[address] = new Promise(async (resolve, reject) => {
+        try {
+          const hasVisibility = await this.authClient.ContractHasMethod({
+            contractAddress: address,
+            methodName: "visibility"
+          });
 
-        if(!hasVisibility) {
-          resolve(0);
-          return;
+          if(!hasVisibility) {
+            resolve(0);
+            return;
+          }
+
+          resolve(await this.CallContractMethod({
+            contractAddress: this.utils.HashToAddress(id),
+            methodName: "visibility"
+          }));
+        } catch(error) {
+          reject(error);
         }
-
-        resolve(await this.CallContractMethod({
-          contractAddress: this.utils.HashToAddress(id),
-          methodName: "visibility"
-        }));
       });
     }
 
@@ -633,16 +637,20 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
       if(!this.objectLibraryIds[objectId]) {
         this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
 
-        this.objectLibraryIds[objectId] = new Promise(async resolve =>
-          resolve(
-            this.utils.AddressToLibraryId(
-              await this.CallContractMethod({
-                contractAddress: this.utils.HashToAddress(objectId),
-                methodName: "libraryAddress"
-              })
-            )
-          )
-        );
+        this.objectLibraryIds[objectId] = new Promise(async (resolve, reject) => {
+          try {
+            resolve(
+              this.utils.AddressToLibraryId(
+                await this.CallContractMethod({
+                  contractAddress: this.utils.HashToAddress(objectId),
+                  methodName: "libraryAddress"
+                })
+              )
+            );
+          } catch(error) {
+            reject(error);
+          }
+        });
       }
 
       try {
@@ -1016,6 +1024,10 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
       contractAddress: this.utils.HashToAddress(objectId),
       methodName: "countVersionHashes"
     });
+
+    if(!versionCount.toNumber()) {
+      throw Error(`Unable to determine latest version hash for ${versionHash || objectId} - Item deleted?`);
+    }
 
     latestHash = await this.CallContractMethod({
       contractAddress: this.utils.HashToAddress(objectId),
