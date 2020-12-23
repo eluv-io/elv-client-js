@@ -584,6 +584,7 @@ function () {
      * @namedParams
      * @param {string=} libraryId - Library ID to authorize
      * @param {string=} objectId - Object ID to authorize
+     * @param {string=} versionHash - Version hash to authorize
      * @param {string=} policyId - The object ID of the policy for this token
      * @param {string=} subject - The subject of the token
      * @param {string} grantType=read - Permissions to grant for this token. Options: "access", "read", "create", "update", "read-crypt"
@@ -596,13 +597,13 @@ function () {
   }, {
     key: "CreateSignedToken",
     value: function CreateSignedToken(_ref9) {
-      var libraryId, objectId, policyId, subject, _ref9$grantType, grantType, _ref9$allowDecryption, allowDecryption, duration, _ref9$context, context, token, cap, compressedToken, signature;
+      var libraryId, objectId, versionHash, policyId, subject, _ref9$grantType, grantType, _ref9$allowDecryption, allowDecryption, duration, _ref9$context, context, token, cap, compressedToken, signature;
 
       return _regeneratorRuntime.async(function CreateSignedToken$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              libraryId = _ref9.libraryId, objectId = _ref9.objectId, policyId = _ref9.policyId, subject = _ref9.subject, _ref9$grantType = _ref9.grantType, grantType = _ref9$grantType === void 0 ? "read" : _ref9$grantType, _ref9$allowDecryption = _ref9.allowDecryption, allowDecryption = _ref9$allowDecryption === void 0 ? false : _ref9$allowDecryption, duration = _ref9.duration, _ref9$context = _ref9.context, context = _ref9$context === void 0 ? {} : _ref9$context;
+              libraryId = _ref9.libraryId, objectId = _ref9.objectId, versionHash = _ref9.versionHash, policyId = _ref9.policyId, subject = _ref9.subject, _ref9$grantType = _ref9.grantType, grantType = _ref9$grantType === void 0 ? "read" : _ref9$grantType, _ref9$allowDecryption = _ref9.allowDecryption, allowDecryption = _ref9$allowDecryption === void 0 ? false : _ref9$allowDecryption, duration = _ref9.duration, _ref9$context = _ref9.context, context = _ref9$context === void 0 ? {} : _ref9$context;
 
               if (subject) {
                 _context7.next = 9;
@@ -651,39 +652,60 @@ function () {
                 ctx: _context7.t12
               };
 
-              if (libraryId) {
-                token.lib = libraryId;
+              if (versionHash) {
+                objectId = this.utils.DecodeVersionHash(versionHash).objectId;
               }
 
-              if (objectId) {
-                token.qid = objectId;
-              }
-
-              if (!allowDecryption) {
+              if (!objectId) {
                 _context7.next = 31;
                 break;
               }
 
-              _context7.next = 29;
+              token.qid = objectId;
+
+              if (libraryId) {
+                _context7.next = 31;
+                break;
+              }
+
+              _context7.next = 30;
+              return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+                objectId: objectId
+              }));
+
+            case 30:
+              libraryId = _context7.sent;
+
+            case 31:
+              if (libraryId) {
+                token.lib = libraryId;
+              }
+
+              if (!allowDecryption) {
+                _context7.next = 37;
+                break;
+              }
+
+              _context7.next = 35;
               return _regeneratorRuntime.awrap(this.authClient.ReEncryptionConk({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
-            case 29:
+            case 35:
               cap = _context7.sent;
               token.apk = cap.public_key;
 
-            case 31:
+            case 37:
               compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-              _context7.next = 34;
+              _context7.next = 40;
               return _regeneratorRuntime.awrap(this.authClient.Sign(Ethers.utils.keccak256(compressedToken)));
 
-            case 34:
+            case 40:
               signature = _context7.sent;
               return _context7.abrupt("return", "aessjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
 
-            case 36:
+            case 42:
             case "end":
               return _context7.stop();
           }
