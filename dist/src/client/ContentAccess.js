@@ -89,47 +89,55 @@ exports.Visibility = function _callee2(_ref) {
           address = this.utils.HashToAddress(id);
 
           if (!this.visibilityInfo[address]) {
-            this.visibilityInfo[address] = new Promise(function _callee(resolve) {
+            this.visibilityInfo[address] = new Promise(function _callee(resolve, reject) {
               var hasVisibility;
               return _regeneratorRuntime.async(function _callee$(_context) {
                 while (1) {
                   switch (_context.prev = _context.next) {
                     case 0:
-                      _context.next = 2;
+                      _context.prev = 0;
+                      _context.next = 3;
                       return _regeneratorRuntime.awrap(_this.authClient.ContractHasMethod({
                         contractAddress: address,
                         methodName: "visibility"
                       }));
 
-                    case 2:
+                    case 3:
                       hasVisibility = _context.sent;
 
                       if (hasVisibility) {
-                        _context.next = 6;
+                        _context.next = 7;
                         break;
                       }
 
                       resolve(0);
                       return _context.abrupt("return");
 
-                    case 6:
+                    case 7:
                       _context.t0 = resolve;
-                      _context.next = 9;
+                      _context.next = 10;
                       return _regeneratorRuntime.awrap(_this.CallContractMethod({
                         contractAddress: _this.utils.HashToAddress(id),
                         methodName: "visibility"
                       }));
 
-                    case 9:
+                    case 10:
                       _context.t1 = _context.sent;
                       (0, _context.t0)(_context.t1);
+                      _context.next = 17;
+                      break;
 
-                    case 11:
+                    case 14:
+                      _context.prev = 14;
+                      _context.t2 = _context["catch"](0);
+                      reject(_context.t2);
+
+                    case 17:
                     case "end":
                       return _context.stop();
                   }
                 }
-              });
+              }, null, null, [[0, 14]]);
             });
           }
 
@@ -1202,30 +1210,38 @@ exports.ContentObjectLibraryId = function _callee18(_ref13) {
         case 9:
           if (!this.objectLibraryIds[objectId]) {
             this.Log("Retrieving content object library ID: ".concat(objectId || versionHash));
-            this.objectLibraryIds[objectId] = new Promise(function _callee17(resolve) {
+            this.objectLibraryIds[objectId] = new Promise(function _callee17(resolve, reject) {
               return _regeneratorRuntime.async(function _callee17$(_context17) {
                 while (1) {
                   switch (_context17.prev = _context17.next) {
                     case 0:
+                      _context17.prev = 0;
                       _context17.t0 = resolve;
                       _context17.t1 = _this6.utils;
-                      _context17.next = 4;
+                      _context17.next = 5;
                       return _regeneratorRuntime.awrap(_this6.CallContractMethod({
                         contractAddress: _this6.utils.HashToAddress(objectId),
                         methodName: "libraryAddress"
                       }));
 
-                    case 4:
+                    case 5:
                       _context17.t2 = _context17.sent;
                       _context17.t3 = _context17.t1.AddressToLibraryId.call(_context17.t1, _context17.t2);
-                      return _context17.abrupt("return", (0, _context17.t0)(_context17.t3));
+                      (0, _context17.t0)(_context17.t3);
+                      _context17.next = 13;
+                      break;
 
-                    case 7:
+                    case 10:
+                      _context17.prev = 10;
+                      _context17.t4 = _context17["catch"](0);
+                      reject(_context17.t4);
+
+                    case 13:
                     case "end":
                       return _context17.stop();
                   }
                 }
-              });
+              }, null, null, [[0, 10]]);
             });
           }
 
@@ -1903,7 +1919,7 @@ exports.LatestVersionHash = function _callee26(_ref19) {
 
         case 11:
           if (latestHash) {
-            _context26.next = 18;
+            _context26.next = 20;
             break;
           }
 
@@ -1915,20 +1931,29 @@ exports.LatestVersionHash = function _callee26(_ref19) {
 
         case 14:
           versionCount = _context26.sent;
-          _context26.next = 17;
+
+          if (versionCount.toNumber()) {
+            _context26.next = 17;
+            break;
+          }
+
+          throw Error("Unable to determine latest version hash for ".concat(versionHash || objectId, " - Item deleted?"));
+
+        case 17:
+          _context26.next = 19;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: this.utils.HashToAddress(objectId),
             methodName: "versionHashes",
             methodArgs: [versionCount - 1]
           }));
 
-        case 17:
+        case 19:
           latestHash = _context26.sent;
 
-        case 18:
+        case 20:
           return _context26.abrupt("return", latestHash);
 
-        case 19:
+        case 21:
         case "end":
           return _context26.stop();
       }

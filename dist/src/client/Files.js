@@ -13,8 +13,6 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
  */
 var Utils = require("../Utils");
 
-var bs58 = require("bs58");
-
 var fs;
 
 if (Utils.Platform() === Utils.PLATFORM_NODE) {
@@ -196,7 +194,7 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
           conk = _objectSpread({}, conk, {
             secret_key: ""
           });
-          encryption_key = "kp__".concat(bs58.encode(Buffer.from(JSON.stringify(conk))));
+          encryption_key = "kp__".concat(this.utils.B58(Buffer.from(JSON.stringify(conk))));
 
         case 25:
           cloudCredentials = {
