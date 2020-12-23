@@ -18,8 +18,6 @@ var bs58 = require("bs58");
 
 var BigNumber = require("bignumber.js")["default"];
 
-var MultiHash = require("multihashes");
-
 var VarInt = require("varint");
 
 var URI = require("urijs");
@@ -132,7 +130,7 @@ var Utils = {
 
     versionHash = versionHash.replace("hq__", ""); // Decode base58 payload
 
-    var bytes = MultiHash.fromB58String(versionHash); // Remove 32 byte SHA256 digest
+    var bytes = Utils.FromB58(versionHash); // Remove 32 byte SHA256 digest
 
     var digestBytes = bytes.slice(0, 32);
     var digest = digestBytes.toString("hex");
@@ -150,9 +148,9 @@ var Utils = {
     var size = VarInt.decode(sizeBytes);
     bytes = bytes.slice(sizeLength); // Remaining bytes is object ID
 
-    var objectId = "iq__" + MultiHash.toB58String(bytes); // Part hash is B58 encoded version hash without the ID
+    var objectId = "iq__" + Utils.B58(bytes); // Part hash is B58 encoded version hash without the ID
 
-    var partHash = "hqp_" + MultiHash.toB58String(Buffer.concat([digestBytes, sizeBytes]));
+    var partHash = "hqp_" + Utils.B58(Buffer.concat([digestBytes, sizeBytes]));
     return {
       digest: digest,
       size: size,
@@ -276,6 +274,12 @@ var Utils = {
   },
   FromB64: function FromB64(str) {
     return Buffer.from(str, "base64").toString("utf-8");
+  },
+  B58: function B58(arr) {
+    return bs58.encode(Buffer.from(arr));
+  },
+  FromB58: function FromB58(str) {
+    return bs58.decode(str);
   },
 
   /**

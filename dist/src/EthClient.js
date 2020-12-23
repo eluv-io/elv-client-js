@@ -201,7 +201,7 @@ function () {
       }
 
       if (!abi) {
-        throw Error("No ABI for contract ".concat(contractAddress, " - Wrong network?"));
+        throw Error("No ABI for contract ".concat(contractAddress, " - Wrong network or deleted item?"));
       }
 
       if (!contract) {

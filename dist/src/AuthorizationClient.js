@@ -20,8 +20,6 @@ var Utils = require("./Utils");
 
 var UrlJoin = require("url-join");
 
-var bs58 = require("bs58");
-
 var _require = require("./LogMessage"),
     LogMessage = _require.LogMessage;
 /*
@@ -1618,7 +1616,7 @@ function () {
 
             case 16:
               cap = _context20.sent;
-              return _context20.abrupt("return", JSON.parse(bs58.decode(cap.replace(/^kp__/, "")).toString("utf-8")));
+              return _context20.abrupt("return", JSON.parse(Utils.FromB58(cap.replace(/^kp__/, "")).toString("utf-8")));
 
             case 18:
             case "end":
@@ -1909,7 +1907,7 @@ function () {
                 break;
               }
 
-              throw Error("No ABI for specified contract (wrong network?)");
+              throw Error("No ABI for contract ".concat(contractAddress, " - Wrong network or deleted item?"));
 
             case 11:
               method = abi.find(function (method) {
