@@ -502,6 +502,7 @@ class ElvClient {
    * @namedParams
    * @param {string=} libraryId - Library ID to authorize
    * @param {string=} objectId - Object ID to authorize
+   * @param {string=} versionHash - Version hash to authorize
    * @param {string=} policyId - The object ID of the policy for this token
    * @param {string=} subject - The subject of the token
    * @param {string} grantType=read - Permissions to grant for this token. Options: "access", "read", "create", "update", "read-crypt"
@@ -513,6 +514,7 @@ class ElvClient {
   async CreateSignedToken({
     libraryId,
     objectId,
+    versionHash,
     policyId,
     subject,
     grantType="read",
@@ -538,12 +540,20 @@ class ElvClient {
       ctx: context
     };
 
-    if(libraryId) {
-      token.lib = libraryId;
+    if(versionHash) {
+      objectId = this.utils.DecodeVersionHash(versionHash).objectId;
     }
 
     if(objectId) {
       token.qid = objectId;
+
+      if(!libraryId) {
+        libraryId = await this.ContentObjectLibraryId({objectId});
+      }
+    }
+
+    if(libraryId) {
+      token.lib = libraryId;
     }
 
     if(allowDecryption) {

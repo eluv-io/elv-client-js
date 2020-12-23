@@ -1343,7 +1343,7 @@ automatically import the client settings from the fabric</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="CreateSignedToken">
-      <span class="type-signature">async </span>CreateSignedToken<span class="signature">({<div class="block-param">libraryId<span class="signature-attributes">optional</span>,</div><div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">policyId<span class="signature-attributes">optional</span>,</div><div class="block-param">subject<span class="signature-attributes">optional</span>,</div><div class="block-param">grantType,</div><div class="block-param">duration,</div><div class="block-param">allowDecryption,</div><div class="block-param">context<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
+      <span class="type-signature">async </span>CreateSignedToken<span class="signature">({<div class="block-param">libraryId<span class="signature-attributes">optional</span>,</div><div class="block-param">objectId<span class="signature-attributes">optional</span>,</div><div class="block-param">versionHash<span class="signature-attributes">optional</span>,</div><div class="block-param">policyId<span class="signature-attributes">optional</span>,</div><div class="block-param">subject<span class="signature-attributes">optional</span>,</div><div class="block-param">grantType,</div><div class="block-param">duration,</div><div class="block-param">allowDecryption,</div><div class="block-param">context<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -1472,6 +1472,49 @@ automatically import the client settings from the fabric</p>
 
         <td class="description last">
           <p>Object ID to authorize</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>versionHash</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>Version hash to authorize</p>
           
         </td>
       </tr>
@@ -1784,7 +1827,7 @@ enabling the user of this token to download encrypted content from the specified
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line513">line 513</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line514">line 514</a>
         </li>
       </ul>
     </dd>
@@ -1882,7 +1925,7 @@ enabling the user of this token to download encrypted content from the specified
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line569">line 569</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line579">line 579</a>
         </li>
       </ul>
     </dd>
@@ -2035,7 +2078,7 @@ enabling the user of this token to download encrypted content from the specified
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line715">line 715</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line725">line 725</a>
         </li>
       </ul>
     </dd>
@@ -2243,7 +2286,7 @@ enabling the user of this token to download encrypted content from the specified
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line697">line 697</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line707">line 707</a>
         </li>
       </ul>
     </dd>
@@ -2982,7 +3025,7 @@ enabling the user of this token to download encrypted content from the specified
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line736">line 736</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line746">line 746</a>
         </li>
       </ul>
     </dd>
@@ -3608,7 +3651,7 @@ enabling the user of this token to download encrypted content from the specified
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line580">line 580</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line590">line 590</a>
         </li>
       </ul>
     </dd>
@@ -3755,7 +3798,7 @@ enabling the user of this token to download encrypted content from the specified
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line682">line 682</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line692">line 692</a>
         </li>
       </ul>
     </dd>
@@ -4049,7 +4092,7 @@ for the user's private key using the KMS specified in the configuration.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line599">line 599</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line609">line 609</a>
         </li>
       </ul>
     </dd>
@@ -4355,7 +4398,7 @@ Useful for integrating with MetaMask</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line662">line 662</a>
+          <a href="ElvClient.js.html">ElvClient.js</a>, <a href="ElvClient.js.html#line672">line 672</a>
         </li>
       </ul>
     </dd>
