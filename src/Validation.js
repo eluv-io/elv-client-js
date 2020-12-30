@@ -33,7 +33,7 @@ exports.ValidateVersion = (versionHash) => {
 exports.ValidateWriteToken = (writeToken) => {
   if(!writeToken) {
     throw Error("Write token not specified");
-  } else if(!writeToken.toString().startsWith("tqw_")) {
+  } else if(!["tq__", "tqw_", "tqpw"].find(prefix => writeToken.toString().startsWith(prefix))) {
     throw Error(`Invalid write token: ${writeToken}`);
   }
 };

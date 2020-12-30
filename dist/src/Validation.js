@@ -33,7 +33,9 @@ exports.ValidateVersion = function (versionHash) {
 exports.ValidateWriteToken = function (writeToken) {
   if (!writeToken) {
     throw Error("Write token not specified");
-  } else if (!writeToken.toString().startsWith("tqw_")) {
+  } else if (!["tq__", "tqw_", "tqpw"].find(function (prefix) {
+    return writeToken.toString().startsWith(prefix);
+  })) {
     throw Error("Invalid write token: ".concat(writeToken));
   }
 };
