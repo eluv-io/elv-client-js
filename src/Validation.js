@@ -9,7 +9,7 @@ exports.ValidatePresence = (name, thing) => {
 exports.ValidateLibrary = (libraryId) => {
   if(!libraryId) {
     throw Error("Library ID not specified");
-  } else if(!libraryId.toString().startsWith("ilib")) {
+  } else if(!libraryId.toString().startsWith("i")) {
     throw Error(`Invalid library ID: ${libraryId}`);
   }
 };
@@ -17,7 +17,7 @@ exports.ValidateLibrary = (libraryId) => {
 exports.ValidateObject = (objectId) => {
   if(!objectId) {
     throw Error("Object ID not specified");
-  } else if(!objectId.toString().startsWith("iq__")) {
+  } else if(!objectId.toString().startsWith("i")) {
     throw Error(`Invalid object ID: ${objectId}`);
   }
 };
@@ -25,7 +25,7 @@ exports.ValidateObject = (objectId) => {
 exports.ValidateVersion = (versionHash) => {
   if(!versionHash) {
     throw Error("Version hash not specified");
-  } else if(!versionHash.toString().startsWith("hq__")) {
+  } else if(!versionHash.toString().startsWith("h")) {
     throw Error(`Invalid version hash: ${versionHash}`);
   }
 };
@@ -33,7 +33,7 @@ exports.ValidateVersion = (versionHash) => {
 exports.ValidateWriteToken = (writeToken) => {
   if(!writeToken) {
     throw Error("Write token not specified");
-  } else if(!["tq__", "tqw_", "tqpw"].find(prefix => writeToken.toString().startsWith(prefix))) {
+  } else if(!writeToken.toString().startsWith("t")) {
     throw Error(`Invalid write token: ${writeToken}`);
   }
 };
