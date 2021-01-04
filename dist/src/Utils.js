@@ -124,11 +124,11 @@ var Utils = {
    * @returns {Object} - Components of the version hash.
    */
   DecodeVersionHash: function DecodeVersionHash(versionHash) {
-    if (!versionHash.startsWith("hq__")) {
+    if (!(versionHash.startsWith("hq__") || versionHash.startsWith("tq__"))) {
       throw new Error("Invalid version hash: \"".concat(versionHash, "\""));
     }
 
-    versionHash = versionHash.replace("hq__", ""); // Decode base58 payload
+    versionHash = versionHash.slice(4); // Decode base58 payload
 
     var bytes = Utils.FromB58(versionHash); // Remove 32 byte SHA256 digest
 

@@ -105,11 +105,11 @@ const Utils = {
    * @returns {Object} - Components of the version hash.
    */
   DecodeVersionHash: (versionHash) => {
-    if(!versionHash.startsWith("hq__")) {
+    if(!(versionHash.startsWith("hq__") || versionHash.startsWith("tq__"))) {
       throw new Error(`Invalid version hash: "${versionHash}"`);
     }
 
-    versionHash = versionHash.replace("hq__", "");
+    versionHash = versionHash.slice(4);
 
     // Decode base58 payload
     let bytes = Utils.FromB58(versionHash);
