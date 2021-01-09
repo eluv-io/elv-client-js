@@ -1,13 +1,22 @@
-// Delete a content fabric library
-const {opts, composeOpts} = require("./lib/options");
+// Delete all visible objects in a content fabric library
+const {StdOpt} = require("./lib/options");
+const Utility = require("./lib/Utility");
 
-const ScriptBase = require("./lib/ScriptBase");
+const Client = require("./lib/concerns/Client");
 
-class LibraryDeleteAllObjects extends ScriptBase {
+class LibraryDeleteAllObjects extends Utility {
+  blueprint() {
+    return {
+      concerns: [Client],
+      options: [
+        StdOpt("libraryId", {X: " containing objects to delete", demand: true})
+      ]
+    };
+  }
 
   async body() {
     const logger = this.logger;
-    const client = await this.client();
+    const client = await this.concerns.Client.get();
 
     const libraryId = this.args.libraryId;
 
@@ -43,14 +52,10 @@ class LibraryDeleteAllObjects extends ScriptBase {
   header() {
     return `Deleting all objects from library '${this.args.libraryId}'...`;
   }
-
-  options() {
-    return composeOpts(
-      super.options(),
-      opts.libraryId({X: " containing objects to delete", demand: true})
-    );
-  }
 }
 
-const script = new LibraryDeleteAllObjects;
-script.run();
+if(require.main === module) {
+  Utility.cmdLineInvoke(LibraryDeleteAllObjects);
+} else {
+  module.exports = LibraryDeleteAllObjects;
+}

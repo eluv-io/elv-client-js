@@ -1,206 +1,113 @@
 // Get mezzanine job status and optionally finalize
-const moment = require("moment");
 
-// amount of time allowed to elapse since last LRO update before raising 'stalled' error
-const MAX_REPORTED_DURATION_TOLERANCE = 15 * 60; // 15 minutes
+const {NewOpt, ModOpt} = require("./lib/options");
+const Utility = require("./lib/Utility");
 
-const {opts, composeOpts, newOpt} = require("./lib/options");
-const ScriptBase = require("./lib/ScriptBase");
+const Client = require("./lib/concerns/Client");
+const ExistingObject = require("./lib/concerns/ExistingObject");
+const Finalization = require("./lib/concerns/Finalization");
+const Logger = require("./lib/concerns/Logger");
+const LRO = require("./lib/concerns/LRO");
 
-function etaString(seconds) {
-  const days = Math.trunc(seconds / 86400);
-  const unixTimestamp = moment.unix(seconds).utc();
-  const hoursString = unixTimestamp.format("HH");
-  const minutesString = unixTimestamp.format("mm");
-  const secondsString = unixTimestamp.format("ss");
-
-  let dataStarted = false;
-  let result = "";
-  if(days > 0) {
-    dataStarted = true;
+class MezzanineJobStatus extends Utility {
+  blueprint() {
+    return {
+      concerns: [Logger, ExistingObject, Client, LRO, Finalization],
+      options: [
+        ModOpt("objectId", {ofX: "mezzanine"}),
+        ModOpt("libraryId", {forX: "mezzanine"}),
+        NewOpt("finalize", {
+          descTemplate: "If specified, will finalize the mezzanine if all jobs are completed",
+          type: "boolean"
+        }),
+        NewOpt("force", {
+          descTemplate: "When finalizing, proceed even if warning raised",
+          implies: "finalize",
+          type: "boolean"
+        }),
+        ModOpt("noWait", {implies: "finalize"})
+      ]
+    };
   }
-  result += dataStarted ? days.padStart(2) + "d " : "    ";
 
-  if(hoursString !== "00") {
-    dataStarted = true;
-  }
-  result += dataStarted ? hoursString + "h " : "    ";
-
-  if(minutesString !== "00") {
-    dataStarted = true;
-  }
-  result += dataStarted ? minutesString + "m " : "    ";
-
-  if(secondsString !== "00") {
-    dataStarted = true;
-  }
-  result += dataStarted ? secondsString + "s " : "    ";
-
-  return result;
-}
-
-const STATE_UNKNOWN = "unknown";
-const STATE_FINISHED = "finished";
-const STATE_RUNNING = "running";
-const STATE_STALLED = "stalled";
-const STATE_BAD_PCT = "bad_percentage";
-const STATE_ERROR = "error";
-const StatePrecedence = {
-  [STATE_UNKNOWN]: 0,
-  [STATE_FINISHED]: 1,
-  [STATE_RUNNING]: 2,
-  [STATE_STALLED]: 3,
-  [STATE_BAD_PCT]: 4,
-  [STATE_ERROR]: 5
-};
-const higherRunState = (a, b) => StatePrecedence[a] > StatePrecedence[b] ? a : b;
-
-class MezzanineJobStatus extends ScriptBase {
   async body() {
-    const client = await this.client();
+    const client = await this.concerns.Client.get();
     const logger = this.logger;
+    const lro = this.concerns.LRO;
 
-    const objectId = this.args.objectId;
-    const offeringKey = this.args.offeringKey;
-    const finalize = this.args.finalize;
-    const noWait = this.args.noWait;
-    const force = this.args.force;
+    const {finalize, objectId, force} = this.args;
+    //const offeringKey = this.args.offeringKey;
 
-    const libraryId = await client.ContentObjectLibraryId({objectId});
-    const status = await client.LROStatus({libraryId, objectId, offeringKey});
+    const libraryId = await this.concerns.ExistingObject.libraryId();
 
-    let warningsAdded = false;
-
-    let summary_run_state = STATE_UNKNOWN;
-    let summary_est_seconds = 0;
-
-    for(const lroKey in status) {
-      let statusEntry = status[lroKey];
-      let lro_run_state = statusEntry.run_state;
-      if(statusEntry.run_state === STATE_RUNNING) {
-        const start = moment.utc(statusEntry.start).valueOf();
-        const now = moment.utc().valueOf();
-        const actualElapsedSeconds = Math.round((now - start) / 1000);
-        const reportedElapsed = Math.round(statusEntry.duration_ms / 1000);
-        const secondsSinceLastUpdate = actualElapsedSeconds - reportedElapsed;
-
-        // off by more than tolerance?
-        if(secondsSinceLastUpdate > MAX_REPORTED_DURATION_TOLERANCE) {
-          statusEntry.warning = "status has not been updated in " + secondsSinceLastUpdate + " seconds, process may have terminated";
-          logger.warn(statusEntry.warning);
-          lro_run_state = STATE_STALLED;
-          summary_est_seconds = null;
-          warningsAdded = true;
-        } else {
-          const estSecondsLeft = (
-            statusEntry.progress.percentage ?
-              statusEntry.progress.percentage === 100 ?
-                0 :
-                (statusEntry.duration_ms / 1000) / (statusEntry.progress.percentage / 100) - (statusEntry.duration_ms / 1000) :
-              null
-          );
-          statusEntry.estimated_time_left_seconds = estSecondsLeft && Math.round(estSecondsLeft);
-          if(summary_est_seconds !== null
-            && statusEntry.estimated_time_left_seconds !== null
-            && statusEntry.estimated_time_left_seconds > summary_est_seconds) {
-            summary_est_seconds = statusEntry.estimated_time_left_seconds;
-          }
-          statusEntry.estimated_time_left_h_m_s = estSecondsLeft && etaString(estSecondsLeft);
-        }
+    let statusMap;
+    try {
+      statusMap = await lro.status({libraryId, objectId}); // TODO: check how offering key is used, if at all
+    } catch(e) {
+      if(finalize && force && e.message === "Received no job status information from server - object already finalized?") {
+        logger.warn(e.message);
+        logger.warn("--force specified, will attempt to finalize anyway");
       } else {
-        if(status[lroKey].progress.percentage !== 100) {
-          statusEntry.warning = "Job " + lroKey + " is not running, but progress does not equal 100";
-          logger.warn(statusEntry.warning);
-          lro_run_state = STATE_BAD_PCT;
-          warningsAdded = true;
-        }
-        summary_est_seconds = null;
+        throw e;
       }
-      summary_run_state = higherRunState(summary_run_state, lro_run_state);
     }
-    const logLines = JSON.stringify(status, null, 2).split("\n");
-    for(const line of logLines) {
-      logger.log(line);
-    }
-    logger.data("jobs", status);
 
-    const status_summary = {run_state: summary_run_state};
-    if(summary_est_seconds !== null) {
-      status_summary.estimated_time_left_seconds = summary_est_seconds;
-      status_summary.estimated_time_left_h_m_s = etaString(summary_est_seconds);
-    }
-    logger.data("status_summary", status_summary);
+    let status_summary;
+    if(statusMap) {
+      logger.logList(
+        ...JSON.stringify(statusMap, null, 2)
+          .split("\n")
+      );
+      logger.data("jobs", statusMap);
 
-    if(warningsAdded && !(finalize && force)) {
-      throw Error("Warnings raised for job status, exiting script!");
+      status_summary = lro.statusSummary(statusMap);
+
+      logger.data("status_summary", status_summary);
+      logger.logList(
+        ...JSON.stringify({status_summary}, null, 2)
+          .split("\n")
+      );
+
+      if(lro.warningFound(statusMap) && !(finalize && force)) {
+        throw Error("Warnings raised for job status, exiting script!");
+      }
     }
 
     if(finalize) {
-      if(!Object.values(status).every(job => job.run_state === "finished")) {
-        throw Error("Error finalizing mezzanine: Not all jobs not finished");
-      }
-
-      const finalizeResponse = await client.FinalizeABRMezzanine({libraryId, objectId, offeringKey});
-
-      logger.log();
-      logger.log("ABR mezzanine object finalized:");
-      logger.log("  Object ID:", objectId);
-      logger.log("  Version Hash:", finalizeResponse.hash);
-      logger.data("version_hash", finalizeResponse.hash);
-      logger.data("finalized", true);
-      logger.log();
-
-      if(noWait) {
-        logger.log("--no-wait specified, exiting script without waiting for publishing to finish (finalized new object version may take up to several minutes to become visible.");
-      } else {
-        logger.log("Waiting for publishing to finish and new object version to become visible...");
-        let publishFinished = false;
-        let latestObjectData = {};
-        while(!publishFinished) {
-          latestObjectData = await client.ContentObject({libraryId, objectId});
-          if(latestObjectData.hash === finalizeResponse.hash) {
-            publishFinished = true;
-          } else {
-            logger.log("  waiting 15 seconds...");
-            await new Promise(resolve => setTimeout(resolve, 15 * 1000));
-          }
+      const safeSummaryRunState = status_summary && status_summary.run_state;
+      if(safeSummaryRunState !== LRO.STATE_FINISHED) {
+        if(force) {
+          logger.warn(`Overall run state is "${safeSummaryRunState}" rather than "${LRO.STATE_FINISHED}", but --force specified, attempting finalization...`);
+        } else {
+          throw Error(`Error finalizing mezzanine - overall run state is "${safeSummaryRunState}" rather than "${LRO.STATE_FINISHED}"`);
         }
+      } else {
+        logger.log("Finalizing mezzanine...");
       }
+
+      const finalizeResponse = await client.FinalizeABRMezzanine({libraryId, objectId});
+      const latestHash = finalizeResponse.hash;
+      logger.logList(
+        "",
+        "ABR mezzanine object finalized:",
+        `  Object ID: ${objectId}`,
+        `  Version Hash: ${latestHash}`,
+        ""
+      );
+      logger.data("version_hash", latestHash);
+      logger.data("finalized", true);
+
+      await this.concerns.Finalization.waitOrNot({libraryId, objectId, latestHash});
     }
   }
 
   header() {
     return "Getting status for mezzanine job(s)...";
   }
-
-  options() {
-    return composeOpts(
-      super.options(),
-      opts.objectId({demandOption: true, ofX: "mezzanine"}),
-      opts.offeringKey({forX: "job(s)"}),
-      newOpt("finalize", {
-        description: "If specified, will finalize the mezzanine if completed",
-        type: "boolean"
-      }),
-      newOpt("noWait", {
-        alias: "no-wait",
-        description: "When finalizing, exit script immediately after finalize call rather than waiting for publish to finish",
-        implies: "finalize",
-        type: "boolean"
-      }),
-      newOpt("force", {
-        description: "When finalizing, proceed even if warning raised",
-        implies: "finalize",
-        type: "boolean"
-      })
-    );
-  }
 }
 
-
 if(require.main === module) {
-  const script = new MezzanineJobStatus;
-  script.run();
+  Utility.cmdLineInvoke(MezzanineJobStatus);
 } else {
-  module.exports = ProductionMasterCreate;
+  module.exports = MezzanineJobStatus;
 }

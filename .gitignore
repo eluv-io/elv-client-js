@@ -1,6 +1,7 @@
 !.keep
 
 .idea/
+**.ignore.js
 **.ignore.json
 **.ignore.sh
 **.DS_STORE
