@@ -1,20 +1,23 @@
+// Validators used for Production Master Variants
+
 const R = require("ramda");
 
 const {
   ArrayModel,
   BasicModel,
+  CheckedResult,
   KVMapModelFactory,
   NonNegativeInteger,
   ObjectModel,
   PositiveNumber
-} = require("./ModelsBase");
+} = require("./Models");
 
 const MIX_2CHANNELS_1STEREO = "2CHANNELS_1STEREO";
 const MIX_2MONO_1STEREO = "2MONO_1STEREO";
 
 const MappingInfo = BasicModel([MIX_2MONO_1STEREO, MIX_2CHANNELS_1STEREO]);
 
-const Production_SourceStreamSpec = ObjectModel({
+const Variant_SourceStreamSpecModel = ObjectModel({
   channel_index: [NonNegativeInteger],
   files_api_path: String,
   multiplier: [PositiveNumber],
@@ -46,27 +49,30 @@ const channelsAllSameStreamIndex = R.pipe(
   R.gt(2) // 2 is greater than number of unique stream_indexes == good
 );
 
-const Production_Sources = ArrayModel(Production_SourceStreamSpec)
+const Production_SourcesModel = ArrayModel(Variant_SourceStreamSpecModel)
   .assert(filesApiPathAllSame, "a single output stream cannot mix sources from multiple files")
   .assert(channelsAllOrNone, "a single output stream cannot mix a sources with null and non-null channelIndexes")
   .assert(channelsAllSameStreamIndex, "a single output stream cannot mix channels from more than one input stream");
 
-const Production_VariantStream = ObjectModel({
+const VariantStreamModel = ObjectModel({
   default_for_media_type: [Boolean],
   label: [String],
   language: [String],
   mapping_info: [MappingInfo],
-  sources: Production_Sources
+  sources: Production_SourcesModel
 });
 
-const Production_Variant = ObjectModel({
-  streams: KVMapModelFactory(Production_VariantStream)
+const VariantModel = ObjectModel({
+  streams: KVMapModelFactory(VariantStreamModel)
 });
+
+const CheckedVariant = CheckedResult(VariantModel);
 
 module.exports = {
+  CheckedVariant,
   MIX_2CHANNELS_1STEREO,
   MIX_2MONO_1STEREO,
-  Production_SourceStreamSpec,
-  Production_Variant,
-  Production_VariantStream
+  Variant_SourceStreamSpecModel,
+  VariantModel,
+  VariantStreamModel
 };
