@@ -26,6 +26,7 @@
     "publish": "npm publish --access public",
     "test": "node test/RunTests.js",
     "test-docs": "GENERATE_METHOD_LOGS=true node test/RunTests.js",
+    "test-utilities": "mocha --recursive utilities/tests/unit",
     "jest": "jest",
     "test-cov": "jest --coverage --coverageDirectory 'test/coverage'",
     "test-build": "USE_BUILD=true jest"
@@ -62,6 +63,7 @@
     "bs58": "^4.0.1",
     "buffer": "^5.2.1",
     "cbor": "^4.1.5",
+    "crocks": "^0.12.4",
     "deep-equal": "^1.0.1",
     "ethers": "^4.0.26",
     "fraction.js": "^4.0.12",
@@ -69,6 +71,7 @@
     "image-type": "^4.1.0",
     "js-polyfills": "^0.1.42",
     "jsonpath-plus": "^4.0.0",
+    "kind-of": "^6.0.3",
     "mime-types": "^2.1.24",
     "moment": "^2.27.0",
     "multicodec": "^0.5.3",
@@ -87,12 +90,14 @@
     "urijs": "^1.19.1",
     "url-join": "^4.0.0",
     "varint": "^5.0.0",
-    "yargs": "^14.2.0"
+    "yargs": "^16.2.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
     "@babel/plugin-transform-runtime": "^7.8.3",
     "@babel/preset-env": "^7.4.5",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
     "colors": "^1.4.0",
     "copy-webpack-plugin": "^6.0.2",
     "eslint": "^5.15.0",
@@ -103,6 +108,7 @@
     "lodash": "^4.17.19",
     "lodash.isequal": "^4.5.0",
     "minami": "^1.2.3",
+    "mocha": "^8.2.1",
     "pre-commit": "^1.2.2",
     "raw-loader": "^0.5.1",
     "shell-quote": "^1.7.2",

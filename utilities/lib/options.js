@@ -1,243 +1,106 @@
 const R = require("ramda");
-const subst = require("./stringTemplate");
 
-// return desc string created by doing var substitution on descTemplate
-const descString = optionSpec => {
-  const descTemplate = optionSpec.descTemplate || "";
-  const forX = optionSpec.forX ? ` for ${optionSpec.forX}` : null;
-  const ofX = optionSpec.ofX ? ` of ${optionSpec.ofX}` : null;
-  const X = optionSpec.X ? ` ${optionSpec.X}` : null;
-  const finalX = forX || ofX || X || "";
-  return subst({X: finalX}, descTemplate);
+const assign = require("crocks/helpers/assign");
+const curry = require("crocks/helpers/curry");
+const getProp = require("crocks/Maybe/getProp");
+const getPropOr = require("crocks/helpers/getPropOr");
+const liftA2 = require("crocks/helpers/liftA2");
+const liftA3 = require("crocks/helpers/liftA3");
+const map = require("crocks/pointfree/map");
+const maybeToResult = require("crocks/Result/maybeToResult");
+const Result = require("crocks/Result");
+const {Ok} = Result;
+const setProp = require("crocks/helpers/setProp");
+const unsetProp = require("crocks/helpers/unsetProp");
+
+const {CheckedNonBlankString, CheckedAbsentPropName, CheckedPresentPropName} = require("./models/Models");
+const {CheckedWidgetData, EmptyWidgetData} = require("./models/WidgetData");
+const {CheckedOptDef, CheckedOptDefMap, CheckedOptDefOverride, yargsOptFields} = require("./models/OptDef");
+const {CheckedBlueprint} = require("./models/Blueprint");
+
+const StandardOptions = require("./StandardOptions");
+
+const {
+  camel2kebab, compare, join,
+  objUnwrapValues, subst,
+  valOrThrow
+} = require("./helpers");
+
+// =====================================
+// utility functions
+// =====================================
+
+const fEnsureOptNameAlreadyExists = (rAccOptDefMap, rName) => join(liftA2(CheckedPresentPropName("not found"), rAccOptDefMap, rName));
+const fEnsureOptNameNotAlreadyAdded = (rAccOptDefMap, rName) => join(liftA2(CheckedAbsentPropName("already added"), rAccOptDefMap, rName));
+const fEnsureIsStdOptName = (rName) => join(map(CheckedPresentPropName("is not a standard option", StandardOptions), rName));
+const fGetPropResult = curry((propName, object) => maybeToResult(Error(`property "${propName}" not found.`), getProp(propName, object)));
+const fGetStdOption = (optName) => StandardOptions[optName];
+const fLiftedAssign = liftA2(assign);
+const fLiftedSetProp = liftA3(setProp);
+const fLiftedUnsetProp = liftA2(unsetProp);
+const fLiftedCheckedOptDef = (rOptDef) => join(map(CheckedOptDef, rOptDef));
+
+// =====================================
+// Handlers for option add/modify/delete/standard
+// =====================================
+
+const _addStdOpt = curry((accOptDefMap, optName, overrides) => {
+  // console.log(`_addStdOpt(${JSON.stringify(accOptDefMap)}, ${JSON.stringify(optName)}, ${JSON.stringify(overrides)})`);
+  const rAccOptDefMap = CheckedOptDefMap(accOptDefMap);
+
+  const rSafeNonBlankName = CheckedNonBlankString(optName);
+  const rSafeNewName = fEnsureOptNameNotAlreadyAdded(rAccOptDefMap, rSafeNonBlankName);
+  const rSafeStdOptName = fEnsureIsStdOptName(rSafeNewName);
+  const rStdOption = map(fGetStdOption, rSafeStdOptName);
+
+  const rOverrides = CheckedOptDefOverride(overrides);
+  const rStdOptWithOverrides = fLiftedAssign(rOverrides, rStdOption);
+  const rValStdOptWithOverrides = fLiftedCheckedOptDef(rStdOptWithOverrides);
+  return fLiftedSetProp(rSafeStdOptName, rValStdOptWithOverrides, rAccOptDefMap);
+});
+
+const _delOpt = curry((accOptDefMap, optName) => {
+  // console.log(`_delOpt(${JSON.stringify(accOptDefMap)}, ${JSON.stringify(optName)})`);
+  const rAccOptDefMap = CheckedOptDefMap(accOptDefMap);
+
+  const rSafeNonBlankName = CheckedNonBlankString(optName);
+  const rSafeExistingName = fEnsureOptNameAlreadyExists(rAccOptDefMap, rSafeNonBlankName);
+
+  return fLiftedUnsetProp(rSafeExistingName, rAccOptDefMap);
+});
+
+const _modOpt = curry((accOptDefMap, optName, overrides) => {
+  // console.log(`_modOpt(${JSON.stringify(accOptDefMap)}, ${JSON.stringify(optName)}, ${JSON.stringify(overrides)})`);
+  const rAccOptDefMap = CheckedOptDefMap(accOptDefMap);
+
+  const rSafeNonBlankName = CheckedNonBlankString(optName);
+  const rSafeExistingName = fEnsureOptNameAlreadyExists(rAccOptDefMap, rSafeNonBlankName);
+  const rExistingOptDef = join(liftA2(fGetPropResult, rSafeExistingName, rAccOptDefMap));
+
+  const rOverrides = CheckedOptDefOverride(overrides);
+  const rExistingOptWithOverrides = fLiftedAssign(rOverrides, rExistingOptDef);
+  const rValOptWithOverrides = fLiftedCheckedOptDef(rExistingOptWithOverrides);
+  return fLiftedSetProp(rSafeExistingName, rValOptWithOverrides, rAccOptDefMap);
+});
+
+const _newOpt = (accOptDefMap, optName, newOptDef) => {
+  // console.log(`_newOpt(${JSON.stringify(accOptDefMap)}, ${JSON.stringify(optName)}, ${JSON.stringify(spec)})`);
+  const rAccOptDefMap = CheckedOptDefMap(accOptDefMap);
+
+  const rSafeNonBlankName = CheckedNonBlankString(optName);
+  const rSafeNewName = fEnsureOptNameNotAlreadyAdded(rAccOptDefMap, rSafeNonBlankName);
+
+  const rNewOptDef = CheckedOptDef(newOptDef);
+  return fLiftedSetProp(rSafeNewName, rNewOptDef, rAccOptDefMap);
 };
 
-// convert camelCase to kebab-case
-const camel2kebab = s => {
-  return s
-    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
-    .replace(/([A-Z])([A-Z])(?=[a-z])/g, "$1-$2")
-    .toLowerCase();
-};
-
-// Commonly used options (shared by more than one script)
-
-const optionSpecs = {
-  assetMetadata: {
-    coerce: (arg) => {
-      if(arg.constructor.name === "Object") {
-        return arg;
-      } else {
-        throw Error("--assetMetadata must be used with a .FIELD_NAME suffix, e.g.: --assetMetadata.catalog_id movie12345");
-      }
-    },
-    descTemplate: "Additional asset metadata fields: use --assetMetadata.FIELD_NAME to specify each, e.g. --assetMetadata.catalog_id movie12345 --assetMetadata.imdb_title_id tt00000",
-    group: "Asset"
-  },
-
-  configUrl: {
-    descTemplate: "URL to query for Fabric configuration, enclosed in quotes - e.g. for Eluvio demo network: --configUrl \"https://demov3.net955210.contentfabric.io/config\"",
-    group: "API",
-    type: "string"
-  },
-
-  credentials: {
-    descTemplate: "Path to JSON file containing credential sets for files stored in cloud",
-    group: "Cloud",
-    normalize: true,
-    type: "string"
-  },
-
-  debug: {
-    descTemplate: "Print debug logging for API calls",
-    group: "API",
-    type: "boolean"
-  },
-
-  description: {
-    descTemplate: "Description{X}",
-    type: "string"
-  },
-
-  displayTitle: {
-    descTemplate: "Display title{X} (set to title if not specified)",
-    group: "Asset",
-    type: "string"
-  },
-
-  encrypt: {
-    descTemplate: "Encrypt{X}",
-    type: "boolean"
-  },
-
-  elvGeo: {
-    choices: ["as-east", "au-east", "eu-east", "eu-west", "na-east", "na-west-north", "na-west-south"],
-    descTemplate: "Geographic region for the fabric nodes.",
-    group: "API",
-    type: "string"
-  },
-
-  files: {
-    descTemplate: "List of files{X}, separated by spaces.",
-    string: true,
-    type: "array"
-  },
-
-  help: {
-    descTemplate: "Show help",
-    group: "General",
-    type: "boolean"
-  },
-
-  ipTitleId: {
-    descTemplate: "Internal title/asset ID{X} (equivalent to slug if not specified)",
-    group: "Asset",
-    type: "string"
-  },
-
-  json: {
-    descTemplate: "Output results in JSON format",
-    group: "Logging",
-    type: "boolean"
-  },
-
-  kmsId: {
-    descTemplate: "ID of the KMS to use{X}. If not specified, the default KMS will be used.",
-    type: "string"
-  },
-
-  libraryId: {
-    descTemplate: "Library ID{X} (should start with 'ilib')",
-    type: "string"
-  },
-
-  metadata: {
-    descTemplate: "JSON string (or file path if prefixed with '@') to merge into metadata{X}",
-    type: "string"
-  },
-
-  name: {
-    descTemplate: "Name{X}",
-    type: "string"
-  },
-
-  objectId: {
-    descTemplate: "Name{X}",
-    type: "string"
-  },
-
-  offeringKey: {
-    default: "default",
-    descTemplate: "Offering key{X}",
-    type: "string"
-  },
-
-  slug: {
-    descTemplate: "Slug for asset (generated based on title if not specified)",
-    group: "Asset",
-    type: "string"
-  },
-
-  streams: {
-    descTemplate: "JSON string (or file path if prefixed with '@') containing stream specifications{X}",
-    type: "string"
-  },
-
-  s3Copy: {
-    conflicts: "s3-reference",
-    descTemplate: "If specified, files will be copied from an S3 bucket instead of uploaded from the local filesystem",
-    group: "Cloud",
-    type: "boolean"
-  },
-
-  s3Reference: {
-    conflicts: ["s3-copy", "encrypt"],
-    descTemplate: "If specified, files will be referenced as links to an S3 bucket instead of copied to fabric",
-    group: "Cloud",
-    type: "boolean"
-  },
-
-  timestamps: {
-    descTemplate: "Prefix log messages with timestamps",
-    group: "Logging",
-    type: "boolean"
-  },
-
-  title: {
-    descTemplate: "Title of asset",
-    group: "Asset",
-    type: "string"
-  },
-
-  type: {
-    descTemplate: "Name, object ID, or version hash of content type{X}",
-    type: "string"
-  },
-
-  variantKey: {
-    descTemplate: "Variant key{X}",
-    default: "default",
-    type: "string"
-  }
-};
-
-
-// Creates a function for the option.
-// Invoke the returned function with {forX: "description modifier", ...any additional or replacement attributes}
-const optionFactory = (spec, name) => {
-  return (modifiers = {}) => {
-    // copy name to object body for convenience, apply any overrides
-    let revisedSpec = R.mergeAll([
-      {name},
-      spec,
-      modifiers
-    ]);
-
-    // create description from descTemplate, substituting {forX, ofX} if needed
-    revisedSpec.desc = descString(revisedSpec);
-
-    // add alias if option is camel-cased
-    const kebabCase = camel2kebab(name);
-    if(kebabCase !== name) {
-      if(revisedSpec.alias) {
-        revisedSpec.alias = R.uniq([revisedSpec.alias, kebabCase].flat());
-      } else {
-        revisedSpec.alias = kebabCase;
-      }
-    }
-
-    // add string: true if type == "string"
-    if(revisedSpec.type === "string") {
-      revisedSpec.string = true;
-    }
-
-    if(revisedSpec.group) {
-      // if group: exists, convert to "Options: (group_name)"
-      revisedSpec.group = `Options: (${revisedSpec.group})`;
-    } else {
-      // otherwise set to "Options: (Main)"
-      revisedSpec.group = "Options: (Main)";
-    }
-
-    // set requiresArg if not boolean
-    if(revisedSpec.type !== "boolean") {
-      revisedSpec.requiresArg = true;
-    }
-
-    return {[name]: revisedSpec};
-  };
-};
-
-const comp = (a, b) => {
-  return a < b
-    ? -1
-    : a > b
-      ? 1
-      : 0;
-};
+// =====================================
+// Conversion to yargs
+// =====================================
 
 // Used to sort [name, spec] pairs
 // Forces "Options: (Main)" group to be last
-const compareOptionKVPairs = (a, b) => {
+const compareYargsOptKVPairs = (a, b) => {
   const aName = a[0].toUpperCase();
   const bName = b[0].toUpperCase();
 
@@ -250,27 +113,155 @@ const compareOptionKVPairs = (a, b) => {
     : b[1].group.toUpperCase();
 
   return aGroup === bGroup
-    ? comp(aName, bName) // both are in same group, sort by arg name
-    : comp(aGroup, bGroup); // they are in different groups, sort by group name
+    ? compare(aName, bName) // both are in same group, sort by arg name
+    : compare(aGroup, bGroup); // they are in different groups, sort by group name
+};
+
+// return desc string created by doing var substitution on descTemplate
+const renderDesc = optDef => {
+  const descTemplate = optDef.descTemplate || "";
+  const forX = optDef.forX ? ` for ${optDef.forX}` : null;
+  const ofX = optDef.ofX ? ` of ${optDef.ofX}` : null;
+  const X = optDef.X ? ` ${optDef.X}` : null;
+  const finalX = forX || ofX || X || "";
+  return subst({X: finalX}, descTemplate);
+};
+
+// returns an array [...old alias(es), aliasToAdd]
+const mergedAliases = curry((aliasToAdd, optDef) => {
+  const oldAliases = getPropOr([], "alias", optDef);
+  return R.uniq([oldAliases, aliasToAdd].flat());
+});
+
+const optDef2YargsOpt = (kvPair) => {
+  const [optName, optDef] = kvPair;
+
+  // validate
+  const rOptDef = CheckedOptDef(optDef);
+
+  // create description from descTemplate, substituting {forX, ofX} if needed
+  const itemsToMerge = {
+    desc: join(rOptDef.map(renderDesc))
+  };
+
+  // add alias if option is camel-cased
+  const kebabCase = camel2kebab(optName);
+  if(kebabCase !== optName) {
+    itemsToMerge.alias = join(rOptDef.map(mergedAliases(kebabCase)));
+  }
+
+  // add string: true if type == "string"
+  if(join(rOptDef.map(getPropOr("", "type"))) === "string") {
+    itemsToMerge.string = true;
+  }
+
+  const oldGroup = join(rOptDef.map(getPropOr(false, "group")));
+  itemsToMerge.group = `Options: (${oldGroup ? oldGroup : "Main"})`;
+
+  // set requiresArg if not boolean
+  const type = join(rOptDef.map(getPropOr(false, "type")));
+  if(type !== "boolean") {
+    itemsToMerge.requiresArg = true;
+  }
+  const rMergedOptDef = rOptDef.map(assign(itemsToMerge));
+  // remove props that don't belong in a YargsOpt
+  const rYargsOpt = rMergedOptDef.map(R.pick(R.keys(yargsOptFields)));
+
+  return [optName, rYargsOpt];
 };
 
 // create a new object with properties added in an order which alphabetizes by group
 // then arg name, with "Options (Main)" last
-const sortOptions = R.pipe(
+const sortYargsOptMap = R.pipe(
   R.toPairs,
-  R.sort(compareOptionKVPairs),
-  R.fromPairs);
+  R.sort(compareYargsOptKVPairs),
+  R.fromPairs
+);
 
-// convert specs to collection of functions
-const opts = R.mapObjIndexed(optionFactory, optionSpecs);
 
-// combine an array of option specs into a single item (later elements overwrite options with same name in earlier elements)
-const composeOpts = (...args) => sortOptions(R.mergeAll(args));
+const OptDefMap2YargsOptMap = (optDefMap) => {
+  // validate
+  const rOptDefMap = CheckedOptDefMap(optDefMap);
+  return rOptDefMap.map((optDefMap) => {
+    const kvPairs = R.toPairs(optDefMap);
+    const yargsKVPairs = kvPairs.map(optDef2YargsOpt);
+    return R.fromPairs(yargsKVPairs);
+  });
+};
 
-const newOpt = (name, spec) => optionFactory(spec, name)();
+// =====================================
+// Compilation and concerns
+// =====================================
+
+const reduceOptions = curry((rAccumulator, optionsList) => optionsList.reduce(fOptDefMapReducer, rAccumulator));
+
+const fOptDefMapReducer = (rAccOptDefMap, optFunc) => join(rAccOptDefMap.map(optFunc));
+
+const fConcernsReducer = (rAccWidget, concern) => {
+  // console.log("fConcernsReducer: " + concern.blueprint.name);
+  const rConcernWidgetData = CheckedWidgetData(WidgetDataFromBlueprint(concern.blueprint));
+  const rConcernOptDefMap = rConcernWidgetData.map(getPropOr({}, "optDefMap"));
+  const rAccOptDefMap = rAccWidget.map(getPropOr({}, "optDefMap"));
+  const mergedOptDefMap = fLiftedAssign(rConcernOptDefMap, rAccOptDefMap);
+  const rConcernChecksMap = rConcernWidgetData.map(getPropOr({}, "checksMap"));
+  const rAccChecksMap = rAccWidget.map(getPropOr({}, "checksMap"));
+  const mergedChecksMap = fLiftedAssign(rConcernChecksMap, rAccChecksMap);
+  const rAccWidgetWithMergedOptSpecs = fLiftedSetProp(Ok("optDefMap"), mergedOptDefMap, rAccWidget);
+  return fLiftedSetProp(Ok("checksMap"), mergedChecksMap, rAccWidgetWithMergedOptSpecs);
+};
+
+const concernsToWidget = (concernArray) => concernArray.reduce(fConcernsReducer, Ok(EmptyWidgetData()));
+
+const WidgetDataFromBlueprint = (blueprint) => {
+  // console.log("WidgetDataFromBlueprint called: " + blueprint.concerns.length
+  //   + " concern(s), " + blueprint.options.length + " option(s)");
+
+  const rCheckedBlueprint = CheckedBlueprint(blueprint);
+
+  // assemble concerns
+  const rConcerns = rCheckedBlueprint.map(getPropOr([], "concerns"));
+  const rConcernsWidget = join(rConcerns.map(concernsToWidget));
+  const rConcernsOptDefMap = rConcernsWidget.map(getPropOr({}, "optDefMap"));
+  const rBlueprintOptions = rCheckedBlueprint.map(getPropOr([], "options"));
+  const rBlueprintOptDefMap = join(rBlueprintOptions.map(reduceOptions(rConcernsOptDefMap)));
+
+  const rWidgetWithOptDefMap = fLiftedSetProp(Ok("optDefMap"), rBlueprintOptDefMap, Ok({}));
+
+  const rConcernsChecksMap = rConcernsWidget.map(getPropOr({}, "checksMap"));
+  // merge self's checks (if any)
+  const rBlueprintChecksMap = rCheckedBlueprint.map(getPropOr({}, "checksMap"));
+  const rMergedChecksMap = fLiftedAssign(rBlueprintChecksMap, rConcernsChecksMap);
+
+  const rWidgetWithChecksMap = fLiftedSetProp(Ok("checksMap"), rMergedChecksMap, rWidgetWithOptDefMap);
+
+  const rYargsOptMap = join(rBlueprintOptDefMap.map(OptDefMap2YargsOptMap));
+  const rUnwrappedValYargsOptMap = join(rYargsOptMap.map(objUnwrapValues));
+  const rSortedYargsOptMap = rUnwrappedValYargsOptMap.map(sortYargsOptMap);
+  const rWidgetWithYargsOpts = fLiftedSetProp(Ok("yargsOptMap"), rSortedYargsOptMap, rWidgetWithChecksMap);
+  // validate, then either throw error or return
+  const rCheckedWidgetData = join(rWidgetWithYargsOpts.map(CheckedWidgetData));
+  return valOrThrow(rCheckedWidgetData);
+};
+
+const BuildWidget = (blueprint) => {
+  const widgetData = WidgetDataFromBlueprint(blueprint);
+  const data = () => widgetData;
+  return {data};
+};
+
+
+// The four functions available to use in Blueprint.options array
+const DelOpt = (optName) => accOptDefMap => _delOpt(accOptDefMap, optName);
+const ModOpt = (optName, overrides) => accOptDefMap => _modOpt(accOptDefMap, optName, overrides);
+const NewOpt = (optName, newOptDef) => accOptDefMap => _newOpt(accOptDefMap, optName, newOptDef);
+const StdOpt = (optName, overrides = {}) => accOptDefMap => _addStdOpt(accOptDefMap, optName, overrides);
 
 module.exports = {
-  composeOpts,
-  newOpt,
-  opts
+  BuildWidget,
+  DelOpt,
+  ModOpt,
+  NewOpt,
+  StdOpt,
+  _addStdOpt,
+  fConcernsReducer
 };
