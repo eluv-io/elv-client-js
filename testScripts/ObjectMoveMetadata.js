@@ -55,9 +55,14 @@ class ObjectMoveMetadata extends MetadataMixin(ScriptBase) {
       throw new Error("Metadata path '" + oldKey + "' not found.");
     }
 
-    // make sure newKey does NOT exist
+    // make sure newKey does NOT exist, or --force specified
     if(!validateObjectPath(metadata, newKeyArr)) {
-      throw new Error("Metadata path '" + newKey + "' is invalid.");
+      const existingMetadata = JSON.stringify(objectPath.get(metadata, newKeyArr), null, 2);
+      if(this.args.force) {
+        console.warn("Data already exists at '" + newKey + "', --force specified, replacing...\nOverwritten data: " + existingMetadata );
+      } else {
+        throw new Error("Metadata path '" + newKey + "' is invalid (already exists, use --force to replace). Existing data: " + existingMetadata);
+      }
     }
 
     // move oldKey attribute to newKey
@@ -90,13 +95,17 @@ class ObjectMoveMetadata extends MetadataMixin(ScriptBase) {
       })
       .option("oldKey", {
         demandOption: true,
-        describe: "Old metadata object path to indicating attribute to be moved (include leading '/')",
+        describe: "Old metadata path pointing to value or subtree to be moved (include leading '/')",
         type: "string"
       })
       .option("newKey", {
         demandOption: true,
-        describe: "New metadata file path within object indicating attribute to be added (include leading '/')",
+        describe: "New metadata path within object indicating new location for value or subtree (include leading '/')",
         type: "string"
+      })
+      .option("force", {
+        describe: "If target new metadata path within object exists, overwrite and replace",
+        type: "boolean"
       });
   }
 }

@@ -1,17 +1,35 @@
-// Create a new content fabric library
-const {opts, composeOpts} = require("./lib/options");
+const {NewOpt, StdOpt} = require("./lib/options");
+const Utility = require("./lib/Utility");
 
-const ScriptBase = require("./lib/ScriptBase");
+const Client = require("./lib/concerns/Client");
 
-class LibraryCreate extends ScriptBase {
+class LibraryCreate extends Utility {
+  blueprint() {
+    return {
+      concerns: [Client],
+      options: [
+        StdOpt("name",
+          {
+            demand: true,
+            forX: "new library"
+          }),
+        StdOpt("description",
+          {
+            forX: "new library"
+          }),
+        NewOpt("kmsId",
+          {
+            descTemplate: "ID of the KMS to use for new library. If not specified, the default KMS will be used.",
+            type: "string"
+          })
+      ]
+    };
+  }
 
   async body() {
-    const client = await this.client();
+    const client = await this.concerns.Client.get();
     const logger = this.logger;
-
-    const description = this.args.description;
-    const name = this.args.name;
-    const kmsId = this.args.kmsId;
+    const {description, name, kmsId} = this.args;
 
     const response = await client.CreateContentLibrary({
       name,
@@ -26,16 +44,10 @@ class LibraryCreate extends ScriptBase {
   header() {
     return `Creating library '${this.args.name}'...`;
   }
-
-  options() {
-    return composeOpts(
-      super.options(),
-      opts.name({forX: "new library", demand: true}),
-      opts.description({forX: "new library"}),
-      opts.kmsId({forX: "content in new library"})
-    );
-  }
 }
 
-const script = new LibraryCreate;
-script.run();
+if(require.main === module) {
+  Utility.cmdLineInvoke(LibraryCreate);
+} else {
+  module.exports = LibraryCreate;
+}
