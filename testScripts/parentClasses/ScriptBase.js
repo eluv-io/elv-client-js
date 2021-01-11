@@ -12,6 +12,19 @@ const yargs = require("yargs");
 const {ElvClient} = require("../../src/ElvClient");
 
 module.exports = class ScriptBase {
+  static deprecationNotice(newFileName) {
+    console.log(`
+***** DEPRECATION NOTICE *****
+
+  This script will be removed later this year, please switch
+  to /utilities/${newFileName} at your earliest convenience.
+
+  More info: https://docs.google.com/document/d/1iKQZhea02rVGNg4qI59ig-RyxecUXsJC8KcGhHhrut8/edit#
+
+******************************
+`);
+  }
+
   constructor(testArgs = null) {
     // make sure env var PRIVATE_KEY is set
     if(!process.env.PRIVATE_KEY) {
@@ -107,7 +120,7 @@ module.exports = class ScriptBase {
   run() {
     console.log("\n" + this.header());
     this.body().then(successValue => {
-      console.log(this.footer()+ "\n");
+      console.log(this.footer() + "\n");
       return successValue;
     }, failureReason => {
       console.error(failureReason);

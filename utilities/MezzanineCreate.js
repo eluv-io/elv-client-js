@@ -2,15 +2,23 @@
 const R = require("ramda");
 
 const {seconds} = require("./lib/helpers");
-const {ModOpt, NewOpt, StdOpt} = require("./lib/options");
+const {ModOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const Asset = require("./lib/concerns/Asset");
 const Client = require("./lib/concerns/Client");
 const CloudAccess = require("./lib/concerns/CloudAccess");
+const ExistingObject = require("./lib/concerns/ExistingObject");
 const Metadata = require("./lib/concerns/Metadata");
 const JSON = require("./lib/concerns/JSON");
 const ContentType = require("./lib/concerns/ContentType");
+
+const checkLibraryPresent = (argv) => {
+  if(!argv.existingMezId && !argv.libraryId) {
+    throw Error("--libraryId must be supplied unless --existingMezId is present");
+  }
+  return true;
+};
 
 const checkTypePresent = (argv) => {
   if(!argv.existingMezId && !argv.type) {
@@ -29,19 +37,20 @@ const checkTitlePresent = (argv) => {
 class MezzanineCreate extends Utility {
   blueprint() {
     return {
-      concerns: [Client, CloudAccess, Asset, Metadata, JSON, ContentType],
+      concerns: [Client, CloudAccess, Asset, Metadata, JSON, ContentType, ExistingObject],
       options: [
-        StdOpt("libraryId", {demand: true, forX: "mezzanine"}),
+        ModOpt("libraryId", {forX: "mezzanine"}),
+        ModOpt("objectId", {
+          alias: "existingMezId",
+          demand: false,
+          descTemplate: "Create the offering in existing mezzanine object with specified ID",
+        }),
         ModOpt("type", {forX: "mezzanine"}),
         ModOpt("metadata", {ofX: "mezzanine object"}),
         ModOpt("name", {ofX: "mezzanine object (set to title + ' MEZ' if not supplied and --existingMezId and --metadata not specified)"}),
         NewOpt("masterHash", {
           demand: true,
           descTemplate: "Version hash of the master object",
-          type: "string"
-        }),
-        NewOpt("existingMezId", {
-          descTemplate: "Create the offering in existing mezzanine object with specified ID",
           type: "string"
         }),
         NewOpt("offeringKey", {
@@ -64,7 +73,7 @@ class MezzanineCreate extends Utility {
           type: "string"
         })
       ],
-      checksMap: {checkTypePresent, checkTitlePresent} // TODO: change to list of commands NewCheck()
+      checksMap: {checkTypePresent, checkTitlePresent, checkLibraryPresent} // TODO: change to list of commands NewCheck()
     };
   }
 
@@ -95,6 +104,7 @@ class MezzanineCreate extends Utility {
 
     let existingPublicMetadata = {};
     if(existingMezId) {
+      logger.log("Retrieving metadata from existing mezzanine object...");
       existingPublicMetadata = (await client.ContentObjectMetadata({
         libraryId,
         objectId: existingMezId,
@@ -121,6 +131,13 @@ class MezzanineCreate extends Utility {
     const type = (existingMezId && !this.args.type)
       ? await this.concerns.ContentType.getForObject({libraryId, objectId: existingMezId})
       : await this.concerns.ContentType.hashLookup();
+
+    if(existingMezId) {
+      logger.log("Updating existing mezzanine object...");
+    } else {
+      logger.log("Creating new mezzanine object...");
+    }
+
 
     const createResponse = await client.CreateABRMezzanine({
       name: metadata.public.name,
@@ -216,7 +233,7 @@ class MezzanineCreate extends Utility {
   }
 
   header() {
-    return "Creating Mezzanine...";
+    return "Create Mezzanine for master " + this.args.masterHash + "...";
   }
 }
 

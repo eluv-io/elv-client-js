@@ -13,7 +13,7 @@ describe("LibraryCreate", () => {
 
   it("should complain if --name not supplied", () => {
     expect(() => {
-      new LibraryCreate({argList: []});
+      new LibraryCreate(argList2Params());
     }).to.throw("Missing required argument: name");
   });
 
@@ -22,8 +22,5 @@ describe("LibraryCreate", () => {
       new LibraryCreate(argList2Params("--name", "new lib", "--illegalOption"));
     }).to.throw("Unknown argument: illegalOption");
   });
-
-
-
 
 });

@@ -1,5 +1,7 @@
 const {ElvClient} = require("../../../src/ElvClient");
 
+const elvRegions = require("../data/elv_regions");
+
 const {NewOpt} = require("../options");
 
 const Logger = require("./Logger");
@@ -19,7 +21,7 @@ const blueprint = {
       type: "boolean"
     }),
     NewOpt("elvGeo", {
-      choices: ["as-east", "au-east", "eu-east", "eu-west", "na-east", "na-west-north", "na-west-south"],
+      choices: Object.keys(elvRegions).sort(),
       descTemplate: "Geographic region for the fabric nodes.",
       group: "API",
       type: "string"
@@ -52,6 +54,7 @@ const New = (context) => {
         throw Error("Please either supply --configUrl or set environment variable FABRIC_CONFIG_URL");
       }
 
+      logger.log(`Initializing elv-client-js... (config URL: ${configUrl})`);
       elvClient = await ElvClient.FromConfigurationUrl({
         configUrl,
         region

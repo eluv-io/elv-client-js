@@ -1,8 +1,9 @@
-const kindOf = require("kind-of");
 const R = require("ramda");
 const yargs = require("yargs/yargs");
 const yargsTerminalWidth = require("yargs").terminalWidth;
 
+const {loadConcerns} = require("./concerns");
+const {callContext, cmdLineContext} = require("./context");
 const {BuildWidget} = require("./options");
 
 const Logger = require("./concerns/Logger");
@@ -12,48 +13,8 @@ const addNameAndLogger = (blueprint) => {
     checksMap: blueprint.checksMap ? R.clone(blueprint.checksMap) : undefined,
     concerns: [Logger, R.clone(blueprint.concerns) || []].flat(),
     name: "Utility",
-    options: R.clone([blueprint.options].flat())
+    options: blueprint.options ? R.clone(blueprint.options) : []
   };
-};
-
-const cmdLineContext = () => {
-  return {
-    argList: R.clone(process.argv),
-    args: {},
-    concerns: {},
-    cwd: process.cwd(),
-    env: R.clone(process.env)
-  };
-};
-
-const callContext = params => {
-  if(!Array.isArray(params.argList)) {
-    throw Error("argList must be an Array");
-  }
-  if(!R.all(x => kindOf(x) === "string", params.argList)) {
-    throw Error("all items in argList array must be strings");
-  }
-
-  if((params.hasOwnProperty("cwd")) && kindOf(params.cwd) !== "string") {
-    throw Error("cwd must be a string");
-  }
-
-  const context = {
-    argList: R.clone(params.argList),
-    args: {},
-    concerns: {},
-    cwd: params.cwd || process.cwd(),
-    env: R.clone(process.env)
-  };
-
-  if(params.hasOwnProperty("env")) {
-    if(kindOf(params.env) !== "object") {
-      throw Error("env must be an object");
-    }
-    context.env = R.mergeRight(context.env, params.env);
-  }
-
-  return context;
 };
 
 const checkFunctionFactory = checksMap => {
@@ -65,23 +26,6 @@ const checkFunctionFactory = checksMap => {
     }
     return true;
   };
-};
-
-const loadConcerns = (context, concerns) => {
-  for(const concern of concerns) {
-    // if not already loaded into context
-    if(!context.concerns.hasOwnProperty(concern.blueprint.name)) {
-      // first load any child concerns recursively
-      if(concern.blueprint.concerns) {
-        loadConcerns(context, concern.blueprint.concerns);
-      }
-      if(context.concerns.hasOwnProperty(concern.blueprint.name)) {
-        throw Error("LoadConcerns error - child caused parent to load? :" + concern.blueprint.name);
-      } else {
-        context.concerns[concern.blueprint.name] = concern.New(context);
-      }
-    }
-  }
 };
 
 module.exports = class Utility {

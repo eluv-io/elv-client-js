@@ -76,6 +76,11 @@ const New = context => {
     const statusMap = await client.LROStatus({libraryId, objectId}); // TODO: check how offering key is used, if at all
 
     if(kindOf(statusMap)==="undefined") throw Error("Received no job status information from server - object already finalized?");
+    return statusMapProcess(statusMap);
+  };
+
+  const statusMapProcess = statusMap => {
+    if(kindOf(statusMap)!=="object") throw Error(`statusMap must be an object, got ${kindOf(statusMap)}`);
 
     // examine each entry, add fields
     for(const [lroKey, statusEntry] of Object.entries(statusMap)) {
@@ -104,8 +109,8 @@ const New = context => {
           }
         }
       } else {
-        if(safePct(statusEntry) > 100) {
-          statusEntry.warning = `Job ${lroKey} is not running, but progress does not equal 100`;
+        if(safePct(statusEntry) !== 100 && statusEntry.run_state === STATE_FINISHED) {
+          statusEntry.warning = `Job ${lroKey} has run_state '${STATE_FINISHED}', but progress pct is ${safePct(statusEntry)}`;
           logger.warn(statusEntry.warning);
           setBadRunState(statusEntry, STATE_BAD_PCT);
         }
@@ -129,6 +134,7 @@ const New = context => {
 
   return {
     status,
+    statusMapProcess,
     statusSummary,
     warningFound
   };
