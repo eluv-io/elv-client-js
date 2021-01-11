@@ -2,7 +2,6 @@ const getProp = require("crocks/Maybe/getProp");
 const kindOf = require("kind-of");
 const R = require("ramda");
 const slugify = require("@sindresorhus/slugify");
-const countableSlugify = slugify.counter();
 
 const {throwError} = require("../helpers");
 const {NonBlankString} = require("../models/Models");
@@ -30,7 +29,7 @@ const blueprint = {
       group: "Asset",
       type: "string"
     }),
-    StdOpt("name",{
+    StdOpt("name", {
       descTemplate: "Object name (derived from ipTitleId and title if not specified)",
       group: "Asset"
     }),
@@ -58,6 +57,16 @@ const New = (context) => {
   // -------------------------------------
 
   const assetMetadataArgField = fieldName => getProp(fieldName, args.assetMetadata).option(undefined);
+
+  const assetMetadataCustomFields = () => R.omit(
+    [
+      "display_title",
+      "ip_title_id",
+      "slug",
+      "title"
+    ],
+    args.assetMetadata || {}
+  );
 
   const backupName = (existingPublicMetadata, backupNameSuffix) => {
     const existingAssetMetadata = existingPublicMetadata.asset_metadata || {};
@@ -94,13 +103,13 @@ const New = (context) => {
   const slug = (existingAssetMetadata = {}) => args.slug
     || assetMetadataArgField("slug")
     || existingAssetMetadata.slug
-    || countableSlugify(displayTitle(existingAssetMetadata));
+    || slugify(displayTitle(existingAssetMetadata));
 
   // existingAssetMetadata == pre-existing value stored under /public/asset_metadata/
   const title = (existingAssetMetadata = {}) => {
     const t = args.title
-    || assetMetadataArgField("title")
-    || existingAssetMetadata.title;
+      || assetMetadataArgField("title")
+      || existingAssetMetadata.title;
     try {
       NonBlankString(t);
     } catch(e) {
@@ -112,12 +121,14 @@ const New = (context) => {
   // ** NOTE: this function takes value under /public/, e.g. {asset_metadata:{...}, name: "existing_name"}
   const publicMetadata = (existingPublicMetadata = {}, backupNameSuffix) => {
     const existingAssetMetadata = existingPublicMetadata.asset_metadata || {};
+
     const itemsToMerge = {
       asset_metadata: {
         title: title(existingAssetMetadata),
         display_title: displayTitle(existingAssetMetadata),
         slug: slug(existingAssetMetadata),
-        ip_title_id: ipTitleId(existingAssetMetadata)
+        ip_title_id: ipTitleId(existingAssetMetadata),
+        ...assetMetadataCustomFields()
       },
       name: name(existingPublicMetadata, backupNameSuffix)
     };
