@@ -1,5 +1,6 @@
 const path = require("path");
 
+const Fraction = require("fraction.js");
 const kindOf = require("kind-of");
 const moment = require("moment");
 const R = require("ramda");
@@ -121,6 +122,16 @@ const formattedInspect = (result) => result.inspect().split("\n").map((x) => x.t
 // eslint-disable-next-line no-console
 const dumpResult = R.pipe(formattedInspect, console.log);
 
+// --------------------------------------------
+// aspect ratio
+// --------------------------------------------
+
+// Returns integer width for a given height and aspect ratio
+//
+// ratio can be anything that fraction.js will accept,
+// but most common case is to pass in a fraction as a string, e.g. "16/9"
+const widthForRatioAndHeight = (ratio, h) => Fraction(ratio).mul(h).round(0).valueOf();
+
 
 // --------------------------------------------
 // functional programming helpers
@@ -177,5 +188,6 @@ module.exports = {
   suppressNully,
   tapJson,
   throwError,
-  valOrThrow
+  valOrThrow,
+  widthForRatioAndHeight
 };

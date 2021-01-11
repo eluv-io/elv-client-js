@@ -1,4 +1,6 @@
 // Delete a single object
+const {ModOpt} = require("./lib/options");
+
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
@@ -7,7 +9,11 @@ const ExistingObject = require("./lib/concerns/ExistingObject");
 class ObjectDelete extends Utility {
   blueprint() {
     return {
-      concerns: [ExistingObject, Client]
+      concerns: [ExistingObject, Client],
+      options: [
+        ModOpt("objectId", {ofX:" item to delete"}),
+        ModOpt("libraryId", {ofX:" object to delete"})
+      ]
     };
   }
 

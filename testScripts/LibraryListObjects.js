@@ -1,4 +1,5 @@
 const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("LibraryListObjects.js");
 
 class LibraryListObjects extends ScriptBase {
 
