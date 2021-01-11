@@ -7,10 +7,7 @@ const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 
 const MezzanineCreate = require("../../MezzanineCreate");
 
-const dummyRequiredArgs = [
-  "--masterHash", "myHash",
-  "--libraryId", "myLibId",
-];
+const dummyRequiredArgs = ["--masterHash", "myHash"];
 
 removeElvEnvVars();
 
@@ -19,7 +16,7 @@ describe("MezzanineCreate", () => {
   it("should complain if required args not supplied", () => {
     expect(() => {
       new MezzanineCreate(argList2Params("--existingMezId", "mezId"));
-    }).to.throw("Missing required arguments: libraryId, masterHash");
+    }).to.throw("Missing required argument: masterHash");
   });
 
   it("should complain if unrecognized option supplied", () => {
