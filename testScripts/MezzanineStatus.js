@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("MezzanineJobStatus.js");
 
 const moment = require("moment");
 // amount of time allowed to elapse since last LRO update before raising 'stalled' error

@@ -21,7 +21,7 @@ const commonOptFields = {
   conflicts: [NonBlankStringOrArrayOfSame],
   coerce: [FunctionModel(NonNull).return(NonNull)],
   default: [NonNull],
-  demand: [true],
+  demand: [Boolean],
   group: [NonBlankString],
   implies: [NonBlankStringOrArrayOfSame],
   normalize: [true],

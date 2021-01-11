@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("ObjectAddGroupPerms.js");
 
 const { ElvClient } = require("../src/ElvClient");
 

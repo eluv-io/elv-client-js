@@ -32,11 +32,11 @@ class ObjectMoveMetadata extends MetadataMixin(ScriptBase) {
     const oldKey = this.args.oldKey;
 
     // Check that keys are valid path strings
-    if(newKey.match(regex)[0] !== newKey) {
-      throw new Error(newKey + " is not a valid metadata path.");
+    if(!newKey.match(regex) || newKey.match(regex)[0] !== newKey) {
+      throw new Error("\"" + newKey + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
     }
-    if(oldKey.match(regex)[0] !== oldKey) {
-      throw new Error(oldKey + " is not a valid metadata path.");
+    if(!oldKey.match(regex) || oldKey.match(regex)[0] !== oldKey) {
+      throw new Error("\"" + oldKey + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
     }
 
     // split object path into arrays
