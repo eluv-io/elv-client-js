@@ -9,7 +9,7 @@ const Asset = concern("Asset");
 
 describe("Asset.statusMapProcess()", () => {
 
-  it("should include --asset-metadata.FIELD_NAME args in metadata under /public/asset-metadata", () => {
+  it("should include --asset-metadata.FIELD_NAME args in metadata under /public/asset-metadata, and also compute derived fields correctly", () => {
     const assetUtility = concern2utility(
       Asset,
       [
@@ -19,9 +19,14 @@ describe("Asset.statusMapProcess()", () => {
       ]);
 
     const publicMetadata = assetUtility.concerns.Asset.publicMetadata({},"FOO");
+
     expect(publicMetadata.asset_metadata.title_type).to.equal("clip");
     expect(publicMetadata.asset_metadata.asset_type).to.equal("episode");
     expect(publicMetadata.asset_metadata.title).to.equal("myTitle");
+    expect(publicMetadata.asset_metadata.display_title).to.equal("myTitle");
+    expect(publicMetadata.asset_metadata.slug).to.equal("my-title");
+    expect(publicMetadata.asset_metadata.ip_title_id).to.equal("my-title");
+    expect(publicMetadata.name).to.equal("myTitle FOO");
   });
 
 });
