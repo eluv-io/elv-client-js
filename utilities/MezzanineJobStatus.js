@@ -38,7 +38,7 @@ class MezzanineJobStatus extends Utility {
     const {finalize, objectId, force} = this.args;
     //const offeringKey = this.args.offeringKey;
 
-    const libraryId = await this.concerns.ExistingObject.libraryId();
+    const libraryId = await this.concerns.ExistingObject.libraryIdGet();
 
     let statusMap;
     try {
@@ -63,6 +63,9 @@ class MezzanineJobStatus extends Utility {
       status_summary = lro.statusSummary(statusMap);
 
       logger.data("status_summary", status_summary);
+
+      logger.log();
+      logger.log();
       logger.logList(
         ...JSON.stringify({status_summary}, null, 2)
           .split("\n")

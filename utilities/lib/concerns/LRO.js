@@ -1,5 +1,6 @@
 const kindOf = require("kind-of");
 const moment = require("moment");
+const R = require("ramda");
 
 const {etaString} = require("../helpers");
 
@@ -58,13 +59,14 @@ const New = context => {
   const higherRunState = (a, b) => StatePrecedence[a] > StatePrecedence[b] ? a : b;
   const highestRunState = statusMap => highestReduce(statusMap, "run_state", higherRunState, STATE_UNKNOWN);
   const higherSecondsLeft = (a, b) => kindOf(a) === "undefined"
-    ? b
+    ? a
     : kindOf(b) === "undefined"
-      ? a
+      ? b
       : a > b ? a : b;
 
-  const highestSecondsLeft = statusMap => highestReduce(statusMap, "estimated_time_left_seconds", higherSecondsLeft, undefined);
+  const highestSecondsLeft = statusMap => highestReduce(R.filter(isRunning, statusMap), "estimated_time_left_seconds", higherSecondsLeft, null);
 
+  const isRunning = x => x.run_state === STATE_RUNNING;
 
   const setBadRunState = (statusEntry, state) => {
     statusEntry.reported_run_state = statusEntry.run_state;

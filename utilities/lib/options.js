@@ -13,6 +13,9 @@ const {Ok} = Result;
 const setProp = require("crocks/helpers/setProp");
 const unsetProp = require("crocks/helpers/unsetProp");
 
+const kindOf = require("kind-of");
+const objectPath = require("object-path");
+
 const {CheckedNonBlankString, CheckedAbsentPropName, CheckedPresentPropName} = require("./models/Models");
 const {CheckedWidgetData, EmptyWidgetData} = require("./models/WidgetData");
 const {CheckedOptDef, CheckedOptDefMap, CheckedOptDefOverride, yargsOptFields} = require("./models/OptDef");
@@ -249,6 +252,51 @@ const BuildWidget = (blueprint) => {
   return {data};
 };
 
+const objectPathList = (obj, parentKeys=[]) => {
+  let ret = [];
+  for(const [k,v] of R.toPairs(obj)) {
+    switch(kindOf(v)) {
+      case "object":
+        ret.concat(objectPathList(v,[...parentKeys, k]));
+        break;
+      case "undefined":
+      case "null":
+        break;
+      default:
+        ret.concat([...parentKeys, k]);
+    }
+  }
+  return ret;
+};
+
+// convert an args object back into a command line arguments list
+const argsMapToArgList = (argsMap) => {
+  let list = [];
+  for(const [k,v] of R.toPairs(argsMap)) {
+    if(v !== undefined && v !== null) { // omit any options without values
+      if(v !== true) { // skip value for boolean flag values
+        switch(kindOf(v)) {
+          case "array":
+            list.push(`--${k}`);
+            list = list.concat(v.map(x=>x.toString()));
+            break;
+          case "object":
+            const pathArrayList = objectPathList(v);
+            for(const onePathArray of pathArrayList){
+              list.push(`--${k}.${onePathArray.join(".")}`);
+              list.push(objectPath.get(v, `${onePathArray}`));
+            }
+            break;
+          default:
+            list.push(`--${k}`);
+            list.push(`${v}`);
+        }
+      }
+    }
+  }
+  return list;
+};
+
 
 // The four functions available to use in Blueprint.options array
 const DelOpt = (optName) => accOptDefMap => _delOpt(accOptDefMap, optName);
@@ -257,6 +305,7 @@ const NewOpt = (optName, newOptDef) => accOptDefMap => _newOpt(accOptDefMap, opt
 const StdOpt = (optName, overrides = {}) => accOptDefMap => _addStdOpt(accOptDefMap, optName, overrides);
 
 module.exports = {
+  argsMapToArgList,
   BuildWidget,
   DelOpt,
   ModOpt,
