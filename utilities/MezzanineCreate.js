@@ -8,10 +8,12 @@ const Utility = require("./lib/Utility");
 const Asset = require("./lib/concerns/Asset");
 const Client = require("./lib/concerns/Client");
 const CloudAccess = require("./lib/concerns/CloudAccess");
+const ContentType = require("./lib/concerns/ContentType");
 const ExistingObject = require("./lib/concerns/ExistingObject");
+const Finalization = require("./lib/concerns/Finalization");
 const Metadata = require("./lib/concerns/Metadata");
 const JSON = require("./lib/concerns/JSON");
-const ContentType = require("./lib/concerns/ContentType");
+const LRO =  require("./lib/concerns/LRO");
 
 const checkLibraryPresent = (argv) => {
   if(!argv.existingMezId && !argv.libraryId) {
@@ -37,11 +39,21 @@ const checkTitlePresent = (argv) => {
 class MezzanineCreate extends Utility {
   blueprint() {
     return {
-      concerns: [Client, CloudAccess, Asset, Metadata, JSON, ContentType, ExistingObject],
+      concerns: [
+        Asset,
+        Client,
+        CloudAccess,
+        ContentType,
+        ExistingObject,
+        Finalization,
+        JSON,
+        LRO,
+        Metadata
+      ],
       options: [
         ModOpt("libraryId", {forX: "mezzanine"}),
         ModOpt("objectId", {
-          alias: "existingMezId",
+          alias: ["existingMezId","existing-mez-id"],
           demand: false,
           descTemplate: "Create the offering in existing mezzanine object with specified ID",
         }),
@@ -80,8 +92,9 @@ class MezzanineCreate extends Utility {
   async body() {
     const logger = this.logger;
     const J = this.concerns.JSON;
+    const lro = this.concerns.LRO;
 
-    const {existingMezId, libraryId, offeringKey, masterHash} = this.args;
+    const {existingMezId, offeringKey, masterHash} = this.args;
 
     // do steps that don't require network access first
     // ----------------------------------------------------
@@ -101,11 +114,12 @@ class MezzanineCreate extends Utility {
     // operations that need to wait on network access
     // ----------------------------------------------------
     const client = await this.concerns.Client.get();
+    const libraryId = await this.concerns.ExistingObject.libraryIdGet();
 
     let existingPublicMetadata = {};
     if(existingMezId) {
       logger.log("Retrieving metadata from existing mezzanine object...");
-      existingPublicMetadata = (await client.ContentObjectMetadata({
+      existingPublicMetadata = (await this.concerns.ExistingObject.readMetadata({
         libraryId,
         objectId: existingMezId,
         metadataSubtree: "public"
@@ -192,27 +206,19 @@ class MezzanineCreate extends Utility {
 
     logger.log("Progress:");
 
-    // eslint-disable-next-line no-constant-condition
-    while(true) {
-      const status = await client.LROStatus({
-        libraryId,
-        objectId,
-        offeringKey
-      });
+    let done = false;
+    let lastStatus;
 
-      let done = true;
-      const progress = Object.keys(status).map(id => {
-        const info = status[id];
-        if(!info.end) done = false;
-        if(done && info.run_state !== "finished") {
-          throw Error(`LRO ${id} failed with status ${info.run_state}`);
-        }
-        return `${id}: ${parseFloat(info.progress.percentage || 0).toFixed(1)}%`;
-      });
-      logger.log(progress.join(" "));
+    while(!done) {
 
-      if(done) break;
-      await seconds(10);
+      const statusMap = await lro.status({libraryId, objectId}); // TODO: check how offering key is used, if at all
+      const statusSummary =  lro.statusSummary(statusMap);
+      lastStatus = statusSummary.run_state;
+      if(lastStatus !== LRO.STATE_RUNNING) done = true;
+      logger.log(`run_state: ${lastStatus}`);
+      const eta = statusSummary.estimated_time_left_h_m_s;
+      if(eta) logger.log(`estimated time left: ${eta}`);
+      await seconds(15);
     }
 
     const finalizeResponse = await client.FinalizeABRMezzanine({
@@ -220,20 +226,26 @@ class MezzanineCreate extends Utility {
       objectId,
       offeringKey
     });
+    const latestHash = finalizeResponse.hash;
 
     logger.errorsAndWarnings(finalizeResponse);
     logger.logList(
       "",
       "ABR mezzanine object created:",
       `  Object ID: ${objectId}`,
-      `  Version Hash: ${finalizeResponse.hash}`,
+      `  Version Hash: ${latestHash}`,
       ""
     );
-    logger.data("version_hash", finalizeResponse.hash);
+    logger.data("version_hash", latestHash);
+    await this.concerns.Finalization.waitOrNot({
+      libraryId,
+      objectId,
+      latestHash
+    });
   }
 
   header() {
-    return "Create Mezzanine for master " + this.args.masterHash + "...";
+    return "Create Mezzanine default offering for master " + this.args.masterHash + "...";
   }
 }
 

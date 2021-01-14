@@ -19,7 +19,7 @@ class ObjectDelete extends Utility {
 
   async body() {
     const client = await this.concerns.Client.get();
-    const libraryId = await this.concerns.ExistingObject.libraryId();
+    const libraryId = await this.concerns.ExistingObject.libraryIdGet();
     const objectId = this.args.objectId;
 
     await client.DeleteContentObject({

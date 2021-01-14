@@ -187,7 +187,7 @@ class ProductionMasterCreate extends Utility {
   }
 
   header() {
-    return "Creating production master...";
+    return "Create production master:";
   }
 }
 
