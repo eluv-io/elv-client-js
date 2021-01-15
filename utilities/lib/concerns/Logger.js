@@ -143,7 +143,7 @@ const New = (context) => {
     }
   };
 
-  const dataGet = () => output.data;
+  const dataGet = () => output && output.data;
 
   const errorList = (...args) => R.map(error, args);
 

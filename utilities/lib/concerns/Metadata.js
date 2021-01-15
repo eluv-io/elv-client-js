@@ -79,6 +79,7 @@ const New = context => {
 module.exports = {
   blueprint,
   pathExists,
+  pathPieces,
   New,
   validPathFormat,
   validTargetPath,
