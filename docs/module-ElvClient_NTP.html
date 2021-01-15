@@ -920,7 +920,7 @@ including Unix epoch timestamps and ISO strings</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".IssueNTPCode">
-      <span class="type-signature">static </span>IssueNTPCode<span class="signature">({<div class="block-param">tenantId,</div><div class="block-param">ntpId,</div><div class="block-param">email<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+      <span class="type-signature">static </span>IssueNTPCode<span class="signature">({<div class="block-param">tenantId,</div><div class="block-param">ntpId,</div><div class="block-param">email<span class="signature-attributes">optional</span>,</div><div class="block-param">maxRedemptions<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -1100,6 +1100,46 @@ be provided along with the ticket code in order to redeem the ticket.</p>
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>maxRedemptions</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      number
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>Maximum number of times this ticket may be redeemed. If less than the max redemptions
+of the NTP instance, the lower limit will be used.</p>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -1178,7 +1218,7 @@ be provided along with the ticket code in order to redeem the ticket.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line334">line 334</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line336">line 336</a>
         </li>
       </ul>
     </dd>
@@ -2199,7 +2239,7 @@ be provided along with the ticket code in order to redeem the ticket.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line366">line 366</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line372">line 372</a>
         </li>
       </ul>
     </dd>

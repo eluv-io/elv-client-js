@@ -392,16 +392,22 @@ exports.NTPInstance = async function({tenantId, ntpId}) {
  * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
  * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
  * be provided along with the ticket code in order to redeem the ticket.
+ * @param {number=} maxRedemptions - Maximum number of times this ticket may be redeemed. If less than the max redemptions
+ * of the NTP instance, the lower limit will be used.
  *
  * @return {Promise&lt;Object>} - The generated ticket code and additional information about the ticket.
  */
-exports.IssueNTPCode = async function({tenantId, ntpId, email}) {
+exports.IssueNTPCode = async function({tenantId, ntpId, email, maxRedemptions}) {
   ValidatePresence("tenantId", tenantId);
   ValidatePresence("ntpId", ntpId);
 
   let options = [];
   if(email) {
     options.push(`eml:${email}`);
+  }
+
+  if(maxRedemptions) {
+    options.push(`cnt:${parseInt(maxRedemptions)}`);
   }
 
   const params = [tenantId, ntpId, JSON.stringify(options), Date.now()];
