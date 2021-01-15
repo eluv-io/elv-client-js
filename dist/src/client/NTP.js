@@ -357,18 +357,20 @@ exports.NTPInstance = function _callee6(_ref8) {
  * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
  * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
  * be provided along with the ticket code in order to redeem the ticket.
+ * @param {number=} maxRedemptions - Maximum number of times this ticket may be redeemed. If less than the max redemptions
+ * of the NTP instance, the lower limit will be used.
  *
  * @return {Promise<Object>} - The generated ticket code and additional information about the ticket.
  */
 
 
 exports.IssueNTPCode = function _callee7(_ref9) {
-  var tenantId, ntpId, email, options, params, paramTypes;
+  var tenantId, ntpId, email, maxRedemptions, options, params, paramTypes;
   return _regeneratorRuntime.async(function _callee7$(_context7) {
     while (1) {
       switch (_context7.prev = _context7.next) {
         case 0:
-          tenantId = _ref9.tenantId, ntpId = _ref9.ntpId, email = _ref9.email;
+          tenantId = _ref9.tenantId, ntpId = _ref9.ntpId, email = _ref9.email, maxRedemptions = _ref9.maxRedemptions;
           ValidatePresence("tenantId", tenantId);
           ValidatePresence("ntpId", ntpId);
           options = [];
@@ -377,19 +379,23 @@ exports.IssueNTPCode = function _callee7(_ref9) {
             options.push("eml:".concat(email));
           }
 
+          if (maxRedemptions) {
+            options.push("cnt:".concat(parseInt(maxRedemptions)));
+          }
+
           params = [tenantId, ntpId, JSON.stringify(options), Date.now()];
           paramTypes = ["string", "string", "string", "uint"];
-          _context7.next = 9;
+          _context7.next = 10;
           return _regeneratorRuntime.awrap(this.authClient.MakeKMSCall({
             methodName: "elv_issueOTPCode",
             params: params,
             paramTypes: paramTypes
           }));
 
-        case 9:
+        case 10:
           return _context7.abrupt("return", _context7.sent);
 
-        case 10:
+        case 11:
         case "end":
           return _context7.stop();
       }
