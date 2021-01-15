@@ -7,6 +7,7 @@ const testEnv = {
 
 const argList2Params = (...argList) => {
   argList = argList || [];
+  argList = argList.concat("--silent");
   return {
     argList,
     ...testEnv

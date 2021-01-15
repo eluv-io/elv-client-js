@@ -11,22 +11,25 @@ const blueprint = {
 const New = context => {
   const logger = context.concerns.Logger;
 
-  const writeMetadata =  async ({libraryId, objectId, metadata}) => {
+  const writeMetadata =  async ({libraryId, metadata, metadataSubtree, objectId, writeToken}) => {
     objectId = objectId || context.args.objectId;
-    libraryId = libraryId || await context.concerns.ExistingObject.libraryIdGet({objectId});
+    libraryId = libraryId || await context.concerns.ExistingObject.libraryIdGet(objectId);
 
     const client = await context.concerns.Client.get();
-    const editResponse = await client.EditContentObject({
-      libraryId,
-      objectId
-    });
 
-    const writeToken = editResponse.write_token;
+    if(!writeToken) {
+      const editResponse = await client.EditContentObject({
+        libraryId,
+        objectId
+      });
+      writeToken = editResponse.write_token;
+    }
 
     logger.log("Writing metadata back to object...");
     await client.ReplaceMetadata({
       libraryId,
       metadata,
+      metadataSubtree,
       objectId,
       writeToken
     });
