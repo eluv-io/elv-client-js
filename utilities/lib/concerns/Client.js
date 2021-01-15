@@ -33,7 +33,11 @@ const New = (context) => {
   // -------------------------------------
   // closures
   // -------------------------------------
-  const configUrl = context.args.configUrl || context.env.FABRIC_CONFIG_URL;
+  let configUrl = context.args.configUrl || context.env.FABRIC_CONFIG_URL;
+  // strip beginning/end quotes if included
+  if(/^".+"$/.test(configUrl)) {
+    configUrl = configUrl.slice(1,-1);
+  }
   const {debug} = context.args;
   const region = context.args.elvGeo;
   const logger = context.concerns.Logger;
