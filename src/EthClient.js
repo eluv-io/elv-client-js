@@ -23,12 +23,14 @@ class EthClient {
     LogMessage(this, message, error);
   }
 
-  constructor({client, uris, debug}) {
+  constructor({client, uris, debug, timeout = 10}) {
     this.client = client;
     this.ethereumURIs = uris;
     this.ethereumURIIndex = 0;
     this.locked = false;
     this.debug = debug;
+    // convert to milliseconds
+    this.timeout = Math.floor(timeout * 1000);
 
     this.cachedContracts = {};
     this.contractNames = {};
@@ -303,11 +305,13 @@ class EthClient {
     methodName,
     methodArgs,
     value,
-    timeout=10000,
+    timeout,
     formatArguments=true,
     cacheContract=true,
     overrideCachedContract=false,
   }) {
+    timeout = timeout || this.timeout || 10000;
+
     if(!abi) { abi = await this.client.ContractAbi({contractAddress}); }
 
     const contract = this.Contract({contractAddress, abi, cacheContract, overrideCachedContract});
