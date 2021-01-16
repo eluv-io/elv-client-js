@@ -46,7 +46,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ProductionMasterCreate.js" \
   --title "$TITLE $TIMESTAMP" \
   --s3Reference \
   --json -v \
-  --files "$S3_PATH")
+  --files $S3_PATH)
 
 if [ "$VERBOSE" = "1" ]
 then

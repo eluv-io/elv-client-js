@@ -44,9 +44,9 @@ class ProductionMasterCreate extends Utility {
 
     let metadataFromArg;
     if(this.args.metadata) {
-      metadataFromArg = this.concerns.Metadata.asObject();
+      metadataFromArg = this.concerns.Metadata.argAsObject();
     } else {
-      metadataFromArg = this.concerns.Metadata.skeleton();
+      metadataFromArg = Metadata.skeleton();
     }
 
     let streams;

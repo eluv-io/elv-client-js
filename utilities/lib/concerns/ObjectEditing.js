@@ -13,7 +13,7 @@ const New = context => {
 
   const writeMetadata =  async ({libraryId, metadata, metadataSubtree, objectId, writeToken}) => {
     objectId = objectId || context.args.objectId;
-    libraryId = libraryId || await context.concerns.ExistingObject.libraryIdGet(objectId);
+    libraryId = libraryId || await context.concerns.ExistingObject.libraryIdGet({objectId});
 
     const client = await context.concerns.Client.get();
 

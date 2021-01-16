@@ -4,7 +4,7 @@
 # (make your own copy of this file and replace values)
 
 # MEDIA FILE INFO
-S3_PATH="s3://MY_S3_BUCKET_NAME/MY_FILE_PATH"
+S3_PATH=\"s3://MY_S3_BUCKET_NAME/MY_FILE_PATH\"
 TITLE="myTitle"
 
 # FLAGS

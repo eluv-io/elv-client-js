@@ -1,3 +1,4 @@
+// code related to opening local files (generally for upload to fabric)
 const fs = require("fs");
 const path = require("path");
 const mime = require("mime-types");
