@@ -13,6 +13,12 @@ const pathExists = (metadata, path) => objectPath.has(metadata, pathPieces(path)
 
 const pathPieces = metadataPath => metadataPath.split("/").slice(1);
 
+const pretty = obj => JSON.stringify(obj, null, 2);
+
+const skeleton = () => {
+  return {public: {}};
+};
+
 const valueAtPath = (metadata, path) => objectPath.get(metadata, pathPieces(path));
 
 const validPathFormat = metadataPath => metadataPath.match(pathRegex) && metadataPath.match(pathRegex)[0] === metadataPath;
@@ -53,7 +59,7 @@ const New = context => {
   const argMetadata = context.args.metadata;
   const J = context.concerns.JSON;
 
-  const asObject = () => {
+  const argAsObject = () => {
     if(argMetadata) {
       const metadataObj = J.parseStringOrFile(argMetadata);
 
@@ -69,18 +75,16 @@ const New = context => {
     }
   };
 
-  const skeleton = () => {
-    return {public: {}};
-  };
-
-  return {asObject, skeleton};
+  return {argAsObject};
 };
 
 module.exports = {
   blueprint,
   pathExists,
   pathPieces,
+  pretty,
   New,
+  skeleton,
   validPathFormat,
   validTargetPath,
   valueAtPath

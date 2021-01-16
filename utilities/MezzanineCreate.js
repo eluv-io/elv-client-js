@@ -15,21 +15,21 @@ const Metadata = require("./lib/concerns/Metadata");
 const JSON = require("./lib/concerns/JSON");
 const LRO =  require("./lib/concerns/LRO");
 
-const checkLibraryPresent = (argv) => {
+const chkLibraryPresent = (argv) => {
   if(!argv.existingMezId && !argv.libraryId) {
     throw Error("--libraryId must be supplied unless --existingMezId is present");
   }
   return true;
 };
 
-const checkTypePresent = (argv) => {
+const chkTypePresent = (argv) => {
   if(!argv.existingMezId && !argv.type) {
     throw Error("--type must be supplied unless --existingMezId is present");
   }
   return true;
 };
 
-const checkTitlePresent = (argv) => {
+const chkTitlePresent = (argv) => {
   if(!argv.existingMezId && !argv.title) {
     throw Error("--title must be supplied unless --existingMezId is present");
   }
@@ -85,7 +85,7 @@ class MezzanineCreate extends Utility {
           type: "string"
         })
       ],
-      checksMap: {checkTypePresent, checkTitlePresent, checkLibraryPresent} // TODO: change to list of commands NewCheck()
+      checksMap: {chkTypePresent, chkTitlePresent, chkLibraryPresent} // TODO: change to list of commands NewCheck()
     };
   }
 
@@ -104,7 +104,7 @@ class MezzanineCreate extends Utility {
 
     let metadataFromArg;
     if(this.args.metadata) {
-      metadataFromArg = this.concerns.Metadata.asObject();
+      metadataFromArg = this.concerns.Metadata.argAsObject();
     } else {
       metadataFromArg = {};
     }

@@ -15,9 +15,10 @@ class ObjectMoveMetadata extends Utility {
     return {
       concerns: [ExistingObject, ObjectEditing],
       options: [
-        ModOpt("objectId", {ofX:" item to delete"}),
-        ModOpt("libraryId", {ofX:" object to delete"}),
+        ModOpt("objectId", {ofX:" item to modify"}),
+        ModOpt("libraryId", {ofX:" object to modify"}),
         NewOpt("oldPath", {
+          demand: true,
           descTemplate: "Old metadata path pointing to value or subtree to be moved (include leading '/')",
           type: "string"
         }),

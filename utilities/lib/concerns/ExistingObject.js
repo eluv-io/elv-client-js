@@ -20,21 +20,21 @@ const New = context => {
     context.args.libraryId = await libraryIdGet();
   };
 
-  const libraryIdGet = async (objectId) => {
-    objectId = objectId || context.args.objectId;
-
+  const libraryIdGet = async ({objectId} = {}) => {
     if(context.args.libraryId) return context.args.libraryId;
+
+    objectId = objectId || context.args.objectId;
 
     const client = await context.concerns.Client.get();
     logger.log(`Looking up library ID for ${objectId}...`);
     const libId = await client.ContentObjectLibraryId({objectId});
-    logger.log(`Found library ID: ${libId}...`);
+    logger.log(`Found library ID: ${libId}`);
     return libId;
   };
 
   const readMetadata = async ({objectId, libraryId, metadataSubtree} = {}) => {
     objectId = objectId || context.args.objectId;
-    libraryId = libraryId || await libraryIdGet(objectId);
+    libraryId = libraryId || await libraryIdGet({objectId});
 
     const client = await context.concerns.Client.get();
     return await client.ContentObjectMetadata({

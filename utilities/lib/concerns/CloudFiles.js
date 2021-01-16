@@ -5,7 +5,7 @@ const {StdOpt, NewOpt} = require("../options");
 const CloudAccess = require("./CloudAccess");
 const Logger = require("./Logger");
 
-const credentialsButNoS3 = (argv) => {
+const chkCredsButNoS3 = (argv) => {
   if(argv.credentials) {
     if(!argv.s3Copy && !argv.s3Reference) {
       throw Error("--credentials supplied but neither --s3Copy nor --s3Reference specified");
@@ -32,7 +32,7 @@ const blueprint = {
       type: "boolean"
     })
   ],
-  checksMap: {credentialsButNoS3}
+  checksMap: {chkCredsButNoS3}
 };
 
 const New = context => {

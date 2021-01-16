@@ -45,4 +45,9 @@ const New = (context) => {
   return {parse, parseFile, parseString, parseStringOrFile, stringify};
 };
 
-module.exports = {blueprint, New};
+module.exports = {
+  blueprint,
+  New,
+  parse,
+  stringify
+};

@@ -19,6 +19,7 @@ class ObjectAddGroupPerms extends Utility {
         NewOpt("groupAddress",{
           demand: true,
           descTemplate: "address of group to grant permissions to",
+          string: true,
           type: "string"
         }),
         NewOpt("permissions", {
