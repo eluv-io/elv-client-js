@@ -1935,7 +1935,7 @@ describe("Test ElvClient", () => {
       }
     });
 
-    test("Playout Options Through Public Link", async () => {
+    test("Playout Options Through Public Links", async () => {
       try {
         // Create a new object that accessClient should not have access to,
         // then attempt to access playout options through a link in that object
@@ -1956,12 +1956,20 @@ describe("Test ElvClient", () => {
           libraryId: linkLibraryId,
           objectId: linkObjectId,
           writeToken: write_token,
-          links: [{
-            type: "rep",
-            path: "public/videoLink",
-            targetHash: await client.LatestVersionHash({objectId: mezzanineId}),
-            target: "playout/default/options.json"
-          }]
+          links: [
+            {
+              type: "rep",
+              path: "public/videoLink",
+              targetHash: await client.LatestVersionHash({objectId: mezzanineId}),
+              target: "playout/default/options.json"
+            },
+            {
+              type: "rep",
+              path: "public/multiOfferingVideoLink",
+              targetHash: await client.LatestVersionHash({objectId: mezzanineId}),
+              target: "playout"
+            }
+          ]
         });
 
         await client.FinalizeContentObject({
@@ -1993,6 +2001,24 @@ describe("Test ElvClient", () => {
         expect(playoutOptions.hls.playoutUrl).toBeDefined();
         expect(playoutOptions.hls.playoutMethods.clear).toBeDefined();
 
+        // Produce playout options from multi offering link
+        const moPlayoutOptions = await accessClient.PlayoutOptions({
+          objectId: id,
+          protocols: ["hls", "dash"],
+          linkPath: "public/multiOfferingVideoLink",
+          offering: "default",
+          drms: []
+        });
+
+        expect(moPlayoutOptions.dash).toBeDefined();
+        expect(moPlayoutOptions.dash.playoutUrl).toBeDefined();
+        expect(moPlayoutOptions.dash.playoutMethods.clear).toBeDefined();
+
+        expect(moPlayoutOptions.hls).toBeDefined();
+        expect(moPlayoutOptions.hls.playoutUrl).toBeDefined();
+        expect(moPlayoutOptions.hls.playoutMethods.clear).toBeDefined();
+
+
         const bitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
           objectId: linkObjectId,
           linkPath: "public/videoLink",
@@ -2001,6 +2027,15 @@ describe("Test ElvClient", () => {
         });
 
         expect(bitmovinPlayoutOptions).toBeDefined();
+
+        const moBitmovinPlayoutOptions = await accessClient.BitmovinPlayoutOptions({
+          objectId: linkObjectId,
+          linkPath: "public/multiOfferingVideoLink",
+          protocols: ["hls", "dash"],
+          drms: []
+        });
+
+        expect(moBitmovinPlayoutOptions).toBeDefined();
       } catch(error) {
         console.error("ERROR:");
         console.error(JSON.stringify(error, null, 2));
