@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
+const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("ObjectMoveMetadata.js");
 
 const objectPath = require("object-path");
-const ScriptBase = require("./parentClasses/ScriptBase");
 const MetadataMixin = require("./parentClasses/MetadataMixin");
 
 const regex = /^(\/[^/]+)+$/;

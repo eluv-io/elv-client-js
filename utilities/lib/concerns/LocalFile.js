@@ -1,3 +1,4 @@
+// code related to opening local files (generally for upload to fabric)
 const fs = require("fs");
 const path = require("path");
 const mime = require("mime-types");
@@ -5,17 +6,30 @@ const mime = require("mime-types");
 const {absPath} = require("../helpers");
 const {StdOpt} = require("../options");
 
+const Client = require("./Client");
 const Logger = require("./Logger");
 
 const blueprint = {
-  name: "LocalFiles",
-  concerns: [Logger],
+  name: "LocalFile",
+  concerns: [Logger, Client],
   options: [
     StdOpt("files", {demand: true}),
   ]
 };
 
 const New = context => {
+
+  const add = async ({libraryId, objectId, writeToken, fileInfo, encrypt}) => {
+    const client = await context.concerns.Client.get();
+    await client.UploadFiles({
+      libraryId,
+      objectId,
+      writeToken,
+      fileInfo,
+      callback,
+      encryption: encrypt ? "cgck" : "none"
+    });
+  };
 
   const callback = progress => {
     Object.keys(progress).sort().forEach(filename => {
@@ -45,7 +59,7 @@ const New = context => {
     });
   };
 
-  return {callback, closeFileHandles, fileInfo};
+  return {add, callback, closeFileHandles, fileInfo};
 };
 
 module.exports = {blueprint, New};

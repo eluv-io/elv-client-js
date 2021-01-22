@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 
 const Fraction = require("fraction.js");
@@ -40,6 +41,8 @@ const camel2kebab = s => {
 };
 
 const padStart = width => str => str.padStart(width);
+
+const removeTrailingSlash = str => str.replace(/\/$/, "");
 
 const namedArgs = /{([0-9a-zA-Z_]+)}/g;
 // string template replacement
@@ -94,7 +97,7 @@ const etaString = seconds => {
 };
 
 // --------------------------------------------
-// path processing
+// path/file processing
 // --------------------------------------------
 
 const absPath = (pathStr, workingDir) => path.isAbsolute(pathStr)
@@ -102,6 +105,17 @@ const absPath = (pathStr, workingDir) => path.isAbsolute(pathStr)
   : path.isAbsolute(workingDir)
     ? path.resolve(workingDir, pathStr)
     : path.resolve(path.resolve(workingDir), pathStr);
+
+const readFile = (filePath, cwd = ".", logger) => {
+  const fullPath = absPath(filePath, cwd);
+  if(logger) logger.log(`Reading file ${fullPath}...`);
+  return fs.readFileSync(fullPath);
+};
+
+const stringOrFileContents = (str, cwd = ".", logger) => str.startsWith("@")
+  ? readFile(str.substring(1), cwd, logger)
+  : str;
+
 
 // --------------------------------------------
 // logging / debugging
@@ -180,10 +194,13 @@ module.exports = {
   ll,
   objUnwrapValues,
   padStart,
+  readFile,
+  removeTrailingSlash,
   resolve,
   resultValue,
   seconds,
   singleEntryMap,
+  stringOrFileContents,
   subst,
   suppressNully,
   tapJson,

@@ -1,6 +1,8 @@
 const {NewOpt, StdOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
+const drmCert = require("./lib/data/elv.media.drm.fps.cert.json");
+
 const Client = require("./lib/concerns/Client");
 
 class LibraryCreate extends Utility {
@@ -21,20 +23,30 @@ class LibraryCreate extends Utility {
           {
             descTemplate: "ID of the KMS to use for new library. If not specified, the default KMS will be used.",
             type: "string"
+          }),
+        NewOpt("addDrmCert",
+          {
+            descTemplate: "Add standard DRM certificate to library metadata.",
+            type: "boolean"
           })
       ]
     };
   }
 
   async body() {
-    const client = await this.concerns.Client.get();
     const logger = this.logger;
-    const {description, name, kmsId} = this.args;
+    const {description, kmsId, name} = this.args;
 
+    const metadata = this.args.addDrmCert
+      ? drmCert
+      : undefined;
+
+    const client = await this.concerns.Client.get();
     const response = await client.CreateContentLibrary({
-      name,
       description,
-      kmsId
+      kmsId,
+      name,
+      metadata
     });
 
     logger.log(`New library ID: ${response}`);

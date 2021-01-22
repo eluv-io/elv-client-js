@@ -83,7 +83,7 @@ const argv = yargs
     ["library", "masterHash", "type"],
     "\nUsage: PRIVATE_KEY=<private-key> node CreateABRMezzanine.js --library <mezzanine-library-id> --type <type> </type>--masterHash <production-master-hash> --title <title> (--variant <variant>) (--metadata '<metadata-json>') (--existingMezzId <object-id>) (--elv-geo eu-west)\n"
   )
-  .argv;
+  .strict().argv;
 
 const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 

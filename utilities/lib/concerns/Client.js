@@ -20,6 +20,12 @@ const blueprint = {
       group: "API",
       type: "boolean"
     }),
+    NewOpt("ethContractTimeout", {
+      default: 10,
+      descTemplate: "Number of seconds to wait for ethereum contract calls",
+      group: "API",
+      type: "number"
+    }),
     NewOpt("elvGeo", {
       choices: Object.keys(elvRegions).sort(),
       descTemplate: "Geographic region for the fabric nodes.",
@@ -33,8 +39,12 @@ const New = (context) => {
   // -------------------------------------
   // closures
   // -------------------------------------
-  const configUrl = context.args.configUrl || context.env.FABRIC_CONFIG_URL;
-  const {debug} = context.args;
+  let configUrl = context.args.configUrl || context.env.FABRIC_CONFIG_URL;
+  // strip beginning/end quotes if included
+  if(/^".+"$/.test(configUrl)) {
+    configUrl = configUrl.slice(1,-1);
+  }
+  const {debug, ethContractTimeout} = context.args;
   const region = context.args.elvGeo;
   const logger = context.concerns.Logger;
   const privateKey = context.env.PRIVATE_KEY;
@@ -57,7 +67,8 @@ const New = (context) => {
       logger.log(`Initializing elv-client-js... (config URL: ${configUrl})`);
       elvClient = await ElvClient.FromConfigurationUrl({
         configUrl,
-        region
+        region,
+        ethereumContractTimeout: ethContractTimeout
       });
 
       let wallet = elvClient.GenerateWallet();

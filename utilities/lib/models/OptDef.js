@@ -23,11 +23,12 @@ const commonOptFields = {
   default: [NonNull],
   demand: [Boolean],
   group: [NonBlankString],
+  hidden: [Boolean],
   implies: [NonBlankStringOrArrayOfSame],
-  normalize: [true],
-  number: [true],
-  requiresArg: [true],
-  string: [true],
+  normalize: [Boolean],
+  number: [Boolean],
+  requiresArg: [Boolean],
+  string: [Boolean],
   type: [BasicModel(["array", "boolean", "number", "string"])]
 };
 

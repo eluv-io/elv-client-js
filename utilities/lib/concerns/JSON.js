@@ -1,6 +1,7 @@
-const fs = require("fs");
+// code related to loading / parsing JSON
+const {JSONPath} = require("jsonpath-plus");
 
-const {absPath} = require("../helpers");
+const {readFile, stringOrFileContents} = require("../helpers");
 
 const Logger = require("./Logger");
 
@@ -14,22 +15,23 @@ const blueprint = {
 const parse = JSON.parse;
 const stringify = JSON.stringify;
 
+
+const jPath = ({pattern, metadata}) => {
+  return JSONPath({
+    json: metadata,
+    path: pattern,
+    wrap: false
+  });
+};
+
+
 const New = (context) => {
   const logger = context.concerns.Logger;
+  const cwd = context.cwd;
 
-  const readFile = (filePath) => {
-    const fullPath = absPath(filePath, context.cwd);
-    logger.log(`Reading JSON from ${fullPath}...`);
-    return fs.readFileSync(fullPath);
-  };
+  const parseFile = (pathStr) => parseString(readFile(pathStr, cwd, logger));
 
-  const stringOrFileContents = (str) => str.startsWith("@")
-    ? readFile(str.substring(1))
-    : str;
-
-  const parseFile = (pathStr) => parseString(readFile(pathStr));
-
-  const parseStringOrFile = (str) => parseString(stringOrFileContents(str));
+  const parseStringOrFile = (str) => parseString(stringOrFileContents(str, cwd, logger));
 
   const parseString = (str) => {
     let parsed;
@@ -45,4 +47,10 @@ const New = (context) => {
   return {parse, parseFile, parseString, parseStringOrFile, stringify};
 };
 
-module.exports = {blueprint, New};
+module.exports = {
+  blueprint,
+  jPath,
+  New,
+  parse,
+  stringify
+};
