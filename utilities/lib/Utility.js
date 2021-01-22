@@ -127,7 +127,7 @@ module.exports = class Utility {
       this.logger.error(failureReason);
       this.logger.log();
       if(this.env.ELV_THROW_ON_ERROR) throw Error(failureReason);
-      if(process.exitCode === 0) process.exitCode = 1;
+      if(!process.exitCode) process.exitCode = 1;
       this.logger.data("exit_code", process.exitCode);
       this.logger.data("failure_reason", failureReason);
       this.logger.outputJSON();

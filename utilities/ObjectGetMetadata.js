@@ -8,20 +8,21 @@ const kindOf = require("kind-of");
 // })
 
 
-
-const {NewOpt} = require("./lib/options");
+const {ModOpt, NewOpt} = require("./lib/options");
 
 const Utility = require("./lib/Utility");
 
-const ExistingVersion = require("./lib/concerns/ExistingVersion");
+const JPath = require("./lib/concerns/JPath");
 const Metadata = require("./lib/concerns/Metadata");
+const ObjectOrVersion = require("./lib/concerns/ObjectOrVersion");
 const Outfile = require("./lib/concerns/Outfile");
 
-class ObjectMoveMetadata extends Utility {
+class ObjectGetMetadata extends Utility {
   blueprint() {
     return {
-      concerns: [ExistingVersion, Outfile],
+      concerns: [JPath, ObjectOrVersion, Outfile],
       options: [
+        ModOpt("jpath", {X: "to extract"}),
         NewOpt("subtree", {
           descTemplate: "Path of subtree to retrieve (include leading '/'). If omitted, all metadata is retrieved.",
           type: "string"
@@ -38,17 +39,21 @@ class ObjectMoveMetadata extends Utility {
       throw Error("\"" + subtree + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
     }
 
-    await this.concerns.ExistingVersion.libraryIdArgPopulate();
+    await this.concerns.ObjectOrVersion.libraryIdArgPopulate();
 
-    const metadata = await this.concerns.ExistingVersion.readMetadata({metadataSubtree: subtree});
+    const metadata = await this.concerns.ObjectOrVersion.getMetadata({metadataSubtree: subtree});
     if(kindOf(metadata) === "undefined") throw Error("no metadata found");
-    const data = Metadata.pretty(metadata);
+    const filteredMetadata = this.args.jpath
+      ? this.concerns.JPath.match({metadata})
+      : metadata;
+    if(kindOf(filteredMetadata) === "undefined") throw Error("no metadata matched --jpath filter");
+
     if(outfile) {
-      this.concerns.Outfile.write({data});
+      this.concerns.Outfile.writeJson({obj: filteredMetadata});
     } else {
-      this.logger.log(data);
+      this.logger.logObject(filteredMetadata);
     }
-    this.logger.data("metadata", metadata);
+    this.logger.data("metadata", filteredMetadata);
   }
 
   header() {
@@ -57,7 +62,7 @@ class ObjectMoveMetadata extends Utility {
 }
 
 if(require.main === module) {
-  Utility.cmdLineInvoke(ObjectMoveMetadata);
+  Utility.cmdLineInvoke(ObjectGetMetadata);
 } else {
-  module.exports = ObjectMoveMetadata;
+  module.exports = ObjectGetMetadata;
 }

@@ -312,5 +312,6 @@ module.exports = {
   NewOpt,
   StdOpt,
   _addStdOpt,
-  fConcernsReducer
+  fConcernsReducer,
+  optDef2YargsOpt
 };

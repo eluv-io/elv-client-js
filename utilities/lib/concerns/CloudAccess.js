@@ -19,19 +19,17 @@ const blueprint = {
 const New = context => {
   const J = context.concerns.JSON;
 
-  const access = (errOnMissing = true) => {
-    let credentialSet;
+  const credentialSet = (errOnMissing = true) => {
+    let retVal;
     if(context.args.credentials) {
-      credentialSet = J.parseFile(context.args.credentials);
-      // validate
-      CredentialSetModel(credentialSet);
+      retVal = J.parseFile(context.args.credentials);
     } else {
       if(!context.env.AWS_REGION || !context.env.AWS_BUCKET || !context.env.AWS_KEY || !context.env.AWS_SECRET) {
         if(errOnMissing) {
           throw Error("Missing required S3 environment variables: AWS_REGION AWS_BUCKET AWS_KEY AWS_SECRET");
         }
       } else {
-        credentialSet = [
+        retVal = [
           {
             path_matchers: [".*"],
             remote_access: {
@@ -50,10 +48,12 @@ const New = context => {
         ];
       }
     }
-    return credentialSet;
+    // validate
+    CredentialSetModel(retVal);
+    return retVal;
   };
 
-  return {access};
+  return {credentialSet};
 };
 
 module.exports = {blueprint, New};

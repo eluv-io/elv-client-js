@@ -9,15 +9,15 @@ const VariantModel = V.VariantModel;
 
 const Asset = require("./lib/concerns/Asset");
 const Client = require("./lib/concerns/Client");
-const CloudFiles = require("./lib/concerns/CloudFiles");
-const LocalFiles = require("./lib/concerns/LocalFiles");
-const Metadata = require("./lib/concerns/Metadata");
+const CloudFile = require("./lib/concerns/CloudFile");
+const LocalFile = require("./lib/concerns/LocalFile");
+const MetadataArg = require("./lib/concerns/MetadataArg");
 const ContentType = require("./lib/concerns/ContentType");
 
 class ProductionMasterCreate extends Utility {
   blueprint() {
     return {
-      concerns: [Client, CloudFiles, LocalFiles, Asset, Metadata, ContentType],
+      concerns: [Client, CloudFile, LocalFile, Asset, MetadataArg, ContentType],
       options: [
         StdOpt("libraryId",{demand: true, forX: "new production master"}),
         ModOpt("type",{demand: true, forX: "new production master"}),
@@ -39,15 +39,10 @@ class ProductionMasterCreate extends Utility {
 
     let access;
     if(this.args.s3Reference || this.args.s3Copy) {
-      access = this.concerns.CloudFiles.access();
+      access = this.concerns.CloudFile.credentialSet();
     }
 
-    let metadataFromArg;
-    if(this.args.metadata) {
-      metadataFromArg = this.concerns.Metadata.argAsObject();
-    } else {
-      metadataFromArg = Metadata.skeleton();
-    }
+    const metadataFromArg = this.concerns.MetadataArg.asObject() || {};
 
     let streams;
     if(this.args.streams) {
@@ -62,8 +57,8 @@ class ProductionMasterCreate extends Utility {
 
     let fileHandles = [];
     const fileInfo = access
-      ? this.concerns.CloudFiles.fileInfo()
-      : this.concerns.LocalFiles.fileInfo(fileHandles);
+      ? this.concerns.CloudFile.fileInfo()
+      : this.concerns.LocalFile.fileInfo(fileHandles);
 
     // delay getting elvClient until this point so script exits faster
     // if there is a validation error above
@@ -82,7 +77,7 @@ class ProductionMasterCreate extends Utility {
       encrypt,
       access,
       copy: s3Copy && !s3Reference,
-      callback: (access ? this.concerns.CloudFiles : this.concerns.LocalFiles).callback
+      callback: (access ? this.concerns.CloudFile : this.concerns.LocalFile).callback
     });
 
     const {errors, warnings, id} = createResponse;
@@ -93,21 +88,11 @@ class ProductionMasterCreate extends Utility {
     let hash = createResponse.hash;
 
     // Close file handles (if any)
-    this.concerns.LocalFiles.closeFileHandles(fileHandles);
+    this.concerns.LocalFile.closeFileHandles(fileHandles);
 
     await client.SetVisibility({id, visibility: 0});
 
-    if(errors.length > 0) {
-      logger.log("Errors:");
-      logger.errorList(...errors);
-      logger.log();
-    }
-
-    if(warnings.length) {
-      logger.log("Warnings:");
-      logger.warnList(...warnings);
-      logger.log();
-    }
+    logger.errorsAndWarnings({errors, warnings});
 
     // was stream info supplied at command line?
     if(streams) {

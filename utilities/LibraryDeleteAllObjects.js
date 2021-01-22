@@ -1,43 +1,32 @@
 // Delete all visible objects in a content fabric library
-const {StdOpt} = require("./lib/options");
+const {ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
+const Library = require("./lib/concerns/Library");
 
 class LibraryDeleteAllObjects extends Utility {
   blueprint() {
     return {
-      concerns: [Client],
+      concerns: [Client, Library],
       options: [
-        StdOpt("libraryId", {X: " containing objects to delete", demand: true})
+        ModOpt("libraryId", {X: " containing objects to delete", demand: true})
       ]
     };
   }
 
   async body() {
     const logger = this.logger;
-    const client = await this.concerns.Client.get();
-
     const libraryId = this.args.libraryId;
 
-    const response = await client.ContentObjects({
-      libraryId: libraryId,
-      filterOptions: {
-        limit: 100000
-      }
-    });
-
-    const rows = response.contents;
-    logger.log(`Objects found: ${rows.length}`);
-    logger.data("objects_found_count", rows.length);
+    const list = await this.concerns.Library.objectList();
+    logger.log(`Objects found: ${list.length}`);
+    logger.data("objects_found_count", list.length);
 
     let objects_deleted_count = 0;
     const deletedIds = [];
-    logger.data("objects_deleted_count", objects_deleted_count);
-    logger.data("deleted_object_ids", deletedIds);
-
-    for(const r of rows) {
-      const objectId = r.id;
+    const client = await this.concerns.Client.get();
+    for(const {objectId} of list) {
       logger.log(`  Deleting ${objectId}...`);
       await client.DeleteContentObject({
         libraryId,
@@ -47,6 +36,8 @@ class LibraryDeleteAllObjects extends Utility {
       logger.data("objects_deleted_count", objects_deleted_count);
       deletedIds.push(objectId);
     }
+    logger.data("objects_deleted_count", objects_deleted_count);
+    logger.data("deleted_object_ids", deletedIds);
   }
 
   header() {
