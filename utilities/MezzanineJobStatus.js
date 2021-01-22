@@ -4,15 +4,15 @@ const {NewOpt, ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
-const ExistingObject = require("./lib/concerns/ExistingObject");
-const Finalization = require("./lib/concerns/Finalization");
+const FabricObject = require("./lib/concerns/FabricObject");
+const FinalizeAndWait = require("./lib/concerns/FinalizeAndWait");
 const Logger = require("./lib/concerns/Logger");
 const LRO = require("./lib/concerns/LRO");
 
 class MezzanineJobStatus extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, ExistingObject, Client, LRO, Finalization],
+      concerns: [Logger, FabricObject, Client, LRO, FinalizeAndWait],
       options: [
         ModOpt("objectId", {ofX: "mezzanine"}),
         ModOpt("libraryId", {forX: "mezzanine"}),
@@ -38,7 +38,7 @@ class MezzanineJobStatus extends Utility {
     const {finalize, objectId, force} = this.args;
     //const offeringKey = this.args.offeringKey;
 
-    const libraryId = await this.concerns.ExistingObject.libraryId();
+    const libraryId = await this.concerns.FabricObject.libraryIdGet();
 
     let statusMap;
     try {
@@ -63,14 +63,15 @@ class MezzanineJobStatus extends Utility {
       status_summary = lro.statusSummary(statusMap);
 
       logger.data("status_summary", status_summary);
+
       logger.logList(
+        "",
+        "",
         ...JSON.stringify({status_summary}, null, 2)
           .split("\n")
       );
 
-      if(lro.warningFound(statusMap) && !(finalize && force)) {
-        throw Error("Warnings raised for job status, exiting script!");
-      }
+      if(lro.warningFound(statusMap) && !(finalize && force)) throw Error("Warnings raised for job status, exiting script!");
     }
 
     if(finalize) {
@@ -97,7 +98,7 @@ class MezzanineJobStatus extends Utility {
       logger.data("version_hash", latestHash);
       logger.data("finalized", true);
 
-      await this.concerns.Finalization.waitOrNot({libraryId, objectId, latestHash});
+      await this.concerns.FinalizeAndWait.waitUnlessNo({libraryId, objectId, latestHash});
     }
   }
 

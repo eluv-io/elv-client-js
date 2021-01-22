@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("MasterInit.js");
 
 // initialize production master without uploading any files
 // - use to turn a manually created object into a production master

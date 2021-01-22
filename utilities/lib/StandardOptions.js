@@ -30,6 +30,11 @@ const StandardOptions = {
   objectId: {
     descTemplate: "Object ID{X} (should start with 'iq__')",
     type: "string"
+  },
+
+  versionHash: {
+    descTemplate: "Version hash{X} (should start with 'hq__')",
+    type: "string"
   }
 };
 

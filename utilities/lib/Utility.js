@@ -119,14 +119,19 @@ module.exports = class Utility {
         ""
       );
       // this.logger.data("successValue", successValue);
+      this.logger.data("exit_code", 0);
+      this.logger.data("success_value", successValue);
       this.logger.outputJSON();
-      return successValue;
+      return this.logger.dataGet();
     }, failureReason => {
       this.logger.error(failureReason);
       this.logger.log();
       if(this.env.ELV_THROW_ON_ERROR) throw Error(failureReason);
-      process.exitCode = 1;
+      if(!process.exitCode) process.exitCode = 1;
+      this.logger.data("exit_code", process.exitCode);
+      this.logger.data("failure_reason", failureReason);
       this.logger.outputJSON();
+      return this.logger.dataGet();
     });
   }
 };

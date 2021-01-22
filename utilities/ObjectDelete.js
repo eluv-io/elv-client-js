@@ -4,12 +4,12 @@ const {ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
-const ExistingObject = require("./lib/concerns/ExistingObject");
+const FabricObject = require("./lib/concerns/FabricObject");
 
 class ObjectDelete extends Utility {
   blueprint() {
     return {
-      concerns: [ExistingObject, Client],
+      concerns: [FabricObject, Client],
       options: [
         ModOpt("objectId", {ofX:" item to delete"}),
         ModOpt("libraryId", {ofX:" object to delete"})
@@ -19,7 +19,7 @@ class ObjectDelete extends Utility {
 
   async body() {
     const client = await this.concerns.Client.get();
-    const libraryId = await this.concerns.ExistingObject.libraryId();
+    const libraryId = await this.concerns.FabricObject.libraryIdGet();
     const objectId = this.args.objectId;
 
     await client.DeleteContentObject({

@@ -14,6 +14,12 @@ const blueprint = {
       type: "boolean"
     }),
 
+    NewOpt("silent", {
+      descTemplate: "Suppress logging to stdout",
+      group: "Logger",
+      type: "boolean"
+    }),
+
     NewOpt("timestamps", {
       alias: "ts",
       descTemplate: "Prefix messages with timestamps",
@@ -34,7 +40,7 @@ const New = (context) => {
   // -------------------------------------
   // closures
   // -------------------------------------
-  const {json, timestamps, verbose} = context.args;
+  const {json, silent, timestamps, verbose} = context.args;
   const output = json
     ? {
       data: {},
@@ -100,7 +106,7 @@ const New = (context) => {
       jsonConsole("errors", ...args);
     } else {
       // eslint-disable-next-line no-console
-      console.error(format(...args));
+      if(!silent) console.error(format(...args));
     }
   };
 
@@ -111,7 +117,7 @@ const New = (context) => {
       jsonConsole("log", ...args);
     } else {
       // eslint-disable-next-line no-console
-      console.log(...args);
+      if(!silent) console.log(...args);
     }
   };
 
@@ -122,7 +128,7 @@ const New = (context) => {
       jsonConsole("warnings", ...args);
     } else {
       // eslint-disable-next-line no-console
-      console.warn(...args);
+      if(!silent) console.warn(...args);
     }
   };
 
@@ -137,9 +143,11 @@ const New = (context) => {
     }
   };
 
+  const dataGet = () => output && output.data;
+
   const errorList = (...args) => R.map(error, args);
 
-  const errorsAndWarnings = ({errors, warnings}) => {
+  const errorsAndWarnings = ({errors = [], warnings = []}) => {
     if(warnings.length) {
       log("Warnings:");
       warnList(...warnings);
@@ -154,11 +162,13 @@ const New = (context) => {
 
   const logList = (...args) => R.map(log, args);
 
+  const logObject = obj => logList(...(JSON.stringify(obj, null, 2).split("\n")));
+
   // print out json output object (if configured)
   const outputJSON = () => {
     if(json) {
       // eslint-disable-next-line no-console
-      console.log(JSON.stringify(output, null, 2));
+      if(!silent) console.log(JSON.stringify(output, null, 2));
     }
   };
 
@@ -166,11 +176,13 @@ const New = (context) => {
 
   return {
     data,
+    dataGet,
     error,
     errorList,
     errorsAndWarnings,
     log,
     logList,
+    logObject,
     outputJSON,
     warn,
     warnList

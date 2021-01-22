@@ -1,8 +1,10 @@
 /* eslint-disable no-console */
+const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("ObjectGetMetadata.js");
+
 const fs = require("fs");
 const {JSONPath} = require("jsonpath-plus");
 
-const ScriptBase = require("./parentClasses/ScriptBase");
 const MetadataMixin = require("./parentClasses/MetadataMixin");
 
 class ObjectDownloadMetadata extends MetadataMixin(ScriptBase) {

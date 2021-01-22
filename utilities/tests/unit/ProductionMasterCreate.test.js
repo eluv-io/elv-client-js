@@ -37,7 +37,7 @@ describe("ProductionMasterCreate", () => {
         "--s3Copy",
         "--s3Reference"
       ));
-    }).to.throw("Arguments s3Copy and s3-reference are mutually exclusive");
+    }).to.throw("Arguments s3Copy and s3Reference are mutually exclusive");
   });
 
   it("should complain if credentials specified but no s3Copy or s3Reference specified", () => {
