@@ -63,6 +63,9 @@ then
   exit 1
 fi
 
+MASTER_OBJECT_ID=$(echo $OUTPUT | jq '.data.object_id' | tr -d '"')
+echo object_id=$MASTER_OBJECT_ID
+
 VERSION_HASH=$(echo $OUTPUT | jq '.data.version_hash' | tr -d '"')
 echo version_hash=$VERSION_HASH
 
@@ -100,8 +103,8 @@ then
 fi
 
 
-OBJECT_ID=$(echo $OUTPUT | jq '.data.object_id' | tr -d '"')
-echo object_id=$OBJECT_ID
+MEZ_OBJECT_ID=$(echo $OUTPUT | jq '.data.object_id' | tr -d '"')
+echo object_id=$MEZ_OBJECT_ID
 
 RUN_STATE=running
 
@@ -118,7 +121,7 @@ do
   echo
 
   OUTPUT=$(node $ELV_CLIENT_PATH/utilities/MezzanineJobStatus.js \
-    --objectId $OBJECT_ID \
+    --objectId $MEZ_OBJECT_ID \
     --json)
 
 
@@ -171,7 +174,7 @@ echo -------------------
 echo
 
 OUTPUT=$(node $ELV_CLIENT_PATH/utilities/MezzanineJobStatus.js \
-  --objectId $OBJECT_ID \
+  --objectId $MEZ_OBJECT_ID \
   --finalize \
   --json)
 
@@ -189,6 +192,125 @@ then
   echo
   exit 1
 fi
+
+
+# -------------------------
+# ADD GROUP PERMISSIONS
+# -------------------------
+
+echo
+echo -------------------
+echo Add group permission: Master
+echo -------------------
+echo
+
+OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
+  --objectId $MASTER_OBJECT_ID \
+  --groupAddress $ADMINS_GROUP_ADDRESS \
+  --permissions manage \
+  --json)
+
+if [ "$VERBOSE" = "1" ]
+then
+  echo
+  echo $OUTPUT | jq
+  echo
+fi
+
+if [ $? -ne 0 ]
+then
+  echo
+  echo FAIL
+  echo
+  exit 1
+fi
+
+
+echo
+echo -------------------
+echo Add group permission: Mez
+echo -------------------
+echo
+
+OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
+  --objectId $MEZ_OBJECT_ID \
+  --groupAddress $ADMINS_GROUP_ADDRESS \
+  --permissions manage \
+  --json)
+
+if [ "$VERBOSE" = "1" ]
+then
+  echo
+  echo $OUTPUT | jq
+  echo
+fi
+
+if [ $? -ne 0 ]
+then
+  echo
+  echo FAIL
+  echo
+  exit 1
+fi
+
+echo
+echo -------------------
+echo Disable playback: Mez
+echo -------------------
+echo
+
+OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
+  --objectId $MEZ_OBJECT_ID \
+  --oldPath /offerings \
+  --newPath /xofferings \
+  --json)
+
+if [ "$VERBOSE" = "1" ]
+then
+  echo
+  echo $OUTPUT | jq
+  echo
+fi
+
+if [ $? -ne 0 ]
+then
+  echo
+  echo FAIL
+  echo
+  exit 1
+fi
+
+
+
+echo
+echo -------------------
+echo Re-enable playback: Mez
+echo -------------------
+echo
+
+OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
+  --objectId $MEZ_OBJECT_ID \
+  --oldPath /xofferings \
+  --newPath /offerings \
+  --json)
+
+if [ "$VERBOSE" = "1" ]
+then
+  echo
+  echo $OUTPUT | jq
+  echo
+fi
+
+if [ $? -ne 0 ]
+then
+  echo
+  echo FAIL
+  echo
+  exit 1
+fi
+
+
+
 
 echo
 echo SUCCESS

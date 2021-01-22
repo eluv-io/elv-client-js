@@ -9,9 +9,9 @@ const Asset = require("./lib/concerns/Asset");
 const Client = require("./lib/concerns/Client");
 const CloudAccess = require("./lib/concerns/CloudAccess");
 const ContentType = require("./lib/concerns/ContentType");
-const ExistingObject = require("./lib/concerns/ExistingObject");
-const Finalization = require("./lib/concerns/Finalization");
-const Metadata = require("./lib/concerns/Metadata");
+const FabricObject = require("./lib/concerns/FabricObject");
+const FinalizeAndWait = require("./lib/concerns/FinalizeAndWait");
+const MetadataArg = require("./lib/concerns/MetadataArg");
 const JSON = require("./lib/concerns/JSON");
 const LRO =  require("./lib/concerns/LRO");
 
@@ -44,11 +44,11 @@ class MezzanineCreate extends Utility {
         Client,
         CloudAccess,
         ContentType,
-        ExistingObject,
-        Finalization,
+        FabricObject,
+        FinalizeAndWait,
         JSON,
         LRO,
-        Metadata
+        MetadataArg
       ],
       options: [
         ModOpt("libraryId", {forX: "mezzanine"}),
@@ -85,14 +85,13 @@ class MezzanineCreate extends Utility {
           type: "string"
         })
       ],
-      checksMap: {chkTypePresent, chkTitlePresent, chkLibraryPresent} // TODO: change to list of commands NewCheck()
+      checksMap: {chkTypePresent, chkTitlePresent, chkLibraryPresent}
     };
   }
 
   async body() {
     const logger = this.logger;
     const J = this.concerns.JSON;
-    const lro = this.concerns.LRO;
 
     const {existingMezId, offeringKey, masterHash} = this.args;
 
@@ -102,33 +101,26 @@ class MezzanineCreate extends Utility {
       ? J.parseFile(this.args.abrProfile)
       : undefined;
 
-    let metadataFromArg;
-    if(this.args.metadata) {
-      metadataFromArg = this.concerns.Metadata.argAsObject();
-    } else {
-      metadataFromArg = {};
-    }
+    const metadataFromArg =  this.concerns.MetadataArg.asObject() || {};
 
-    let access = this.concerns.CloudAccess.access(false);
+    let access = this.concerns.CloudAccess.credentialSet(false);
 
     // operations that need to wait on network access
     // ----------------------------------------------------
     const client = await this.concerns.Client.get();
-    const libraryId = await this.concerns.ExistingObject.libraryIdGet();
+    const libraryId = await this.concerns.FabricObject.libraryIdGet();
 
     let existingPublicMetadata = {};
     if(existingMezId) {
       logger.log("Retrieving metadata from existing mezzanine object...");
-      existingPublicMetadata = (await this.concerns.ExistingObject.readMetadata({
+      existingPublicMetadata = (await this.concerns.FabricObject.getMetadata({
         libraryId,
         objectId: existingMezId,
         metadataSubtree: "public"
       })) || {};
     }
 
-    if(!existingPublicMetadata.asset_metadata) {
-      existingPublicMetadata.asset_metadata = {};
-    }
+    if(!existingPublicMetadata.asset_metadata) existingPublicMetadata.asset_metadata = {};
 
     const mergedExistingAndArgMetadata = R.mergeRight(
       {public: existingPublicMetadata},
@@ -151,7 +143,6 @@ class MezzanineCreate extends Utility {
     } else {
       logger.log("Creating new mezzanine object...");
     }
-
 
     const createResponse = await client.CreateABRMezzanine({
       name: metadata.public.name,
@@ -200,17 +191,14 @@ class MezzanineCreate extends Utility {
       ""
     );
 
-    if(!this.args.wait) {
-      return;
-    }
+    if(!this.args.wait) return;
 
     logger.log("Progress:");
 
+    const lro = this.concerns.LRO;
     let done = false;
     let lastStatus;
-
     while(!done) {
-
       const statusMap = await lro.status({libraryId, objectId}); // TODO: check how offering key is used, if at all
       const statusSummary =  lro.statusSummary(statusMap);
       lastStatus = statusSummary.run_state;
@@ -221,14 +209,14 @@ class MezzanineCreate extends Utility {
       await seconds(15);
     }
 
-    const finalizeResponse = await client.FinalizeABRMezzanine({
+    const finalizeAbrResponse = await client.FinalizeABRMezzanine({
       libraryId,
       objectId,
       offeringKey
     });
-    const latestHash = finalizeResponse.hash;
+    const latestHash = finalizeAbrResponse.hash;
 
-    logger.errorsAndWarnings(finalizeResponse);
+    logger.errorsAndWarnings(finalizeAbrResponse);
     logger.logList(
       "",
       "ABR mezzanine object created:",
@@ -237,7 +225,7 @@ class MezzanineCreate extends Utility {
       ""
     );
     logger.data("version_hash", latestHash);
-    await this.concerns.Finalization.waitOrNot({
+    await this.concerns.FinalizeAndWait.waitUnlessNo({
       libraryId,
       objectId,
       latestHash

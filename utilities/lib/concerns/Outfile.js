@@ -14,6 +14,10 @@ const blueprint = {
       descTemplate: "Path of file to save{X} to.",
       normalize: true,
       type: "string"
+    }),
+    NewOpt("overwrite", {
+      descTemplate: "Replace file if it already exists.",
+      type: "boolean"
     })
   ]
 };
@@ -21,15 +25,28 @@ const blueprint = {
 const New = (context) => {
   const logger = context.concerns.Logger;
 
-  const write = ({data, outfile}) => {
+  const write = ({text, outfile}) => {
     outfile = outfile || context.args.outfile;
     const fullPath = absPath(outfile, context.cwd);
-    if(fs.existsSync(fullPath)) throw Error(`File '${fullPath}' already exists.`);
+    if(fs.existsSync(fullPath)) {
+      if(context.args.overwrite) {
+        logger.warn(`File '${fullPath}' already exists, --overwrite specified, replacing...`);
+      } else {
+        throw Error(`File '${fullPath}' already exists.`);
+      }
+    }
     logger.log(`Writing data to ${fullPath}...`);
-    return fs.writeFileSync(fullPath, data);
+    return fs.writeFileSync(fullPath, text);
   };
 
-  return {write};
+  const writeJson = ({obj, outfile}) => write(
+    {
+      text: JSON.stringify(obj, null, 2),
+      outfile
+    }
+  );
+
+  return {write, writeJson};
 };
 
 module.exports = {

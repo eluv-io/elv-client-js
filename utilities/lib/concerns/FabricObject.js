@@ -1,20 +1,18 @@
+// code relating to working with fabric objects. Named 'FabricObject' instead of 'Object' to prevent conflicts with built-in JS 'Object'
 const {StdOpt} = require("../options");
 
-const Client = require("./Client");
-const Logger = require("./Logger");
+const Library = require("./Library");
+const Metadata = require("./Metadata");
 
 const blueprint = {
-  name: "ExistingObject",
-  concerns: [Logger, Client],
+  name: "FabricObject",
+  concerns: [Library, Metadata],
   options: [
-    StdOpt("libraryId", ),
     StdOpt("objectId", {demand: true})
   ]
 };
 
 const New = context => {
-  const logger = context.concerns.Logger;
-
   // populate --libraryId if missing, to prevent multiple lookups
   const libraryIdArgPopulate = async () => {
     context.args.libraryId = await libraryIdGet();
@@ -22,29 +20,21 @@ const New = context => {
 
   const libraryIdGet = async ({objectId} = {}) => {
     if(context.args.libraryId) return context.args.libraryId;
-
     objectId = objectId || context.args.objectId;
-
-    const client = await context.concerns.Client.get();
-    logger.log(`Looking up library ID for ${objectId}...`);
-    const libId = await client.ContentObjectLibraryId({objectId});
-    logger.log(`Found library ID: ${libId}`);
-    return libId;
+    return await context.concerns.Library.forObject({objectId});
   };
 
-  const readMetadata = async ({objectId, libraryId, metadataSubtree} = {}) => {
+  const getMetadata = async ({objectId, libraryId, metadataSubtree} = {}) => {
     objectId = objectId || context.args.objectId;
     libraryId = libraryId || await libraryIdGet({objectId});
-
-    const client = await context.concerns.Client.get();
-    return await client.ContentObjectMetadata({
+    return await context.concerns.Metadata.get({
       libraryId,
       objectId,
       metadataSubtree
     });
   };
 
-  return {libraryIdArgPopulate, libraryIdGet, readMetadata};
+  return {libraryIdArgPopulate, libraryIdGet, getMetadata};
 };
 
 module.exports = {

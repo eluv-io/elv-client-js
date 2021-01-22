@@ -2,9 +2,7 @@ const kindOf = require("kind-of");
 const objectPath = require("object-path");
 const R = require("ramda");
 
-const {NewOpt} = require("../options");
-
-const JSON = require("./JSON");
+const Client = require("./Client");
 const Logger = require("./Logger");
 
 const pathRegex = /^(\/[^/]+)+$/;
@@ -43,39 +41,27 @@ const validTargetPath = (metadata, targetPath) => {
   return currentSubtree === undefined;
 };
 
-
 const blueprint = {
   name: "Metadata",
-  concerns: [JSON, Logger],
-  options: [
-    NewOpt("metadata", {
-      descTemplate: "JSON string (or file path if prefixed with '@') to merge into metadata{X}",
-      type: "string"
-    })
-  ]
+  concerns: [Logger, Client]
 };
 
 const New = context => {
-  const argMetadata = context.args.metadata;
-  const J = context.concerns.JSON;
+  const logger = context.concerns.Logger;
 
-  const argAsObject = () => {
-    if(argMetadata) {
-      const metadataObj = J.parseStringOrFile(argMetadata);
-
-      if(!metadataObj.hasOwnProperty("public")) {
-        metadataObj.public = {};
-      }
-
-      if(kindOf(metadataObj.public) !== "object") {
-        throw Error(`Expected metadata /public to be object, got ${kindOf(metadataObj.public)} instead`);
-      }
-    } else {
-      return null;
-    }
+  const get = async ({objectId, libraryId, versionHash, writeToken, metadataSubtree} = {}) => {
+    const client = await context.concerns.Client.get();
+    logger.log("Retrieving metadata from object...");
+    return await client.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      writeToken,
+      metadataSubtree
+    });
   };
 
-  return {argAsObject};
+  return {get};
 };
 
 module.exports = {

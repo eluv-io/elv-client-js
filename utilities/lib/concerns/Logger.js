@@ -147,7 +147,7 @@ const New = (context) => {
 
   const errorList = (...args) => R.map(error, args);
 
-  const errorsAndWarnings = ({errors, warnings}) => {
+  const errorsAndWarnings = ({errors = [], warnings = []}) => {
     if(warnings.length) {
       log("Warnings:");
       warnList(...warnings);
@@ -161,6 +161,8 @@ const New = (context) => {
   };
 
   const logList = (...args) => R.map(log, args);
+
+  const logObject = obj => logList(...(JSON.stringify(obj, null, 2).split("\n")));
 
   // print out json output object (if configured)
   const outputJSON = () => {
@@ -180,6 +182,7 @@ const New = (context) => {
     errorsAndWarnings,
     log,
     logList,
+    logObject,
     outputJSON,
     warn,
     warnList

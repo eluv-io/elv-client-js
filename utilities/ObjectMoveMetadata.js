@@ -6,14 +6,14 @@ const {ModOpt, NewOpt} = require("./lib/options");
 
 const Utility = require("./lib/Utility");
 
-const ExistingObject = require("./lib/concerns/ExistingObject");
+const FabricObject = require("./lib/concerns/FabricObject");
 const Metadata = require("./lib/concerns/Metadata");
-const ObjectEditing = require("./lib/concerns/ObjectEditing");
+const ObjectEdit = require("./lib/concerns/ObjectEdit");
 
 class ObjectMoveMetadata extends Utility {
   blueprint() {
     return {
-      concerns: [ExistingObject, ObjectEditing],
+      concerns: [FabricObject, ObjectEdit],
       options: [
         ModOpt("objectId", {ofX:" item to modify"}),
         ModOpt("libraryId", {ofX:" object to modify"}),
@@ -46,9 +46,9 @@ class ObjectMoveMetadata extends Utility {
       throw new Error("\"" + newPath + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
     }
 
-    await this.concerns.ExistingObject.libraryIdArgPopulate();
+    await this.concerns.FabricObject.libraryIdArgPopulate();
 
-    const currentMetadata = await this.concerns.ExistingObject.readMetadata();
+    const currentMetadata = await this.concerns.FabricObject.getMetadata();
 
     // check to make sure oldKey exists
     if(!Metadata.pathExists(currentMetadata, oldPath)) {
@@ -73,7 +73,7 @@ class ObjectMoveMetadata extends Utility {
     objectPath.set(revisedMetadata, Metadata.pathPieces(newPath), valueToMove);
 
     // Write back metadata
-    const newHash = await this.concerns.ObjectEditing.writeMetadata({metadata: revisedMetadata});
+    const newHash = await this.concerns.ObjectEdit.writeMetadata({metadata: revisedMetadata});
     this.logger.data("version_hash", newHash);
   }
 
