@@ -14,6 +14,8 @@ const blueprint = {
   ]
 };
 
+const stdDrmCert = require("../data/elv.media.drm.fps.cert.json");
+
 const New = context => {
   const logger = context.concerns.Logger;
 
@@ -33,20 +35,40 @@ const New = context => {
     return libId;
   };
 
-  const info = async ({libraryId}={}) => {
+  const info = async ({libraryId} = {}) => {
     libraryId = libraryId || context.args.libraryId;
     logger.log(`Getting info for library ${libraryId}...`);
     const client = await context.concerns.Client.get();
+
     const libResponse = await client.ContentLibrary({libraryId});
+    const contractMetadata = libResponse.meta;
     const objectId = libResponse.qid;
+
     const objResponse = await client.ContentObject({libraryId, objectId});
+    const latestHash = objResponse.hash;
+    const type = objResponse.type;
+
     const metadata = await client.ContentObjectMetadata({libraryId, objectId});
+
     return {
+      contractMetadata,
+      latestHash,
+      metadata,
       objectId,
-      latestHash: objResponse.hash,
-      type: objResponse.type,
-      metadata
+      type
     };
+  };
+
+  const list = async () => {
+    const logger = context.concerns.Logger;
+    logger.log("Getting list of libraries...");
+    const client = await context.concerns.Client.get();
+    return await client.ContentLibraries();
+    // const libIds = await client.ContentLibraries();
+    // if(libIds.length > 0) {
+    //   logger.log("Getting library names...");
+    // }
+
   };
 
   const objectList = async ({libraryId, filterOptions} = {}) => {
@@ -60,16 +82,18 @@ const New = context => {
     const logger = context.concerns.Logger;
     logger.log("Getting list of objects...");
     const client = await context.concerns.Client.get();
-    return await client.ContentObjects({
+    const reply = await client.ContentObjects({
       libraryId,
       filterOptions
     });
+    return reply.contents.map(x => ({objectId: x.id, latestHash: x.versions[0].hash, metadata: x.versions[0].meta}));
   };
 
-  return {argPopulate, forObject, info, objectList};
+  return {argPopulate, forObject, info, list, objectList};
 };
 
 module.exports = {
   blueprint,
-  New
+  New,
+  stdDrmCert
 };

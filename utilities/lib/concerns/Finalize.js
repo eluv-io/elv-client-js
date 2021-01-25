@@ -33,6 +33,7 @@ const New = context => {
     while(!publishFinished) {
       latestObjectData = await client.ContentObject({libraryId, objectId});
       if(latestObjectData.hash === latestHash) {
+        logger.log(`New object version ${latestHash} now visible`);
         publishFinished = true;
       } else {
         logger.log("  new version not visible yet, waiting 15 seconds...");

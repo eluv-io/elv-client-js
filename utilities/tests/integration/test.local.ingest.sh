@@ -24,7 +24,7 @@ echo
 echo -------------------
 echo TEST START
 echo Title: $TITLE
-echo $S3_PATH
+echo $LOCAL_PATH
 echo -------------------
 echo
 
@@ -44,9 +44,8 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ProductionMasterCreate.js" \
   --type $MASTER_TYPE \
   --libraryId $MASTER_LIB \
   --title "$TITLE $TIMESTAMP" \
-  --s3Reference \
   --json -v \
-  --files $S3_PATH)
+  --files $LOCAL_PATH)
 
 if [ "$VERBOSE" = "1" ]
 then

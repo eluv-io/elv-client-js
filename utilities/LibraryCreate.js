@@ -1,9 +1,8 @@
 const {NewOpt, StdOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
-const drmCert = require("./lib/data/elv.media.drm.fps.cert.json");
-
 const Client = require("./lib/concerns/Client");
+const Library = require("./lib/concerns/Library");
 
 class LibraryCreate extends Utility {
   blueprint() {
@@ -38,7 +37,7 @@ class LibraryCreate extends Utility {
     const {description, kmsId, name} = this.args;
 
     const metadata = this.args.addDrmCert
-      ? drmCert
+      ? Library.stdDrmCert
       : undefined;
 
     const client = await this.concerns.Client.get();
@@ -54,7 +53,7 @@ class LibraryCreate extends Utility {
   }
 
   header() {
-    return `Creating library '${this.args.name}'...`;
+    return `Create library '${this.args.name}':`;
   }
 }
 

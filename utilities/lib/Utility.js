@@ -40,6 +40,7 @@ module.exports = class Utility {
       process.exit(1);
     }
     await utility.run();
+    process.exit(0);
   }
 
   constructor(params) {
@@ -109,7 +110,7 @@ module.exports = class Utility {
   async run() {
     this.logger.logList(
       "",
-      this.header(),
+      this.header() + ":",
       ""
     );
     return this.body().then(successValue => {

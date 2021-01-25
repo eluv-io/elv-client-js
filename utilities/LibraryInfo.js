@@ -30,7 +30,7 @@ class LibraryInfo extends Utility {
   }
 
   header() {
-    return `Get info for library ${this.args.libraryId}...`;
+    return `Get info for library ${this.args.libraryId}`;
   }
 
 }
