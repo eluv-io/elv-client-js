@@ -29,7 +29,7 @@ class ObjectDelete extends Utility {
   }
 
   header() {
-    return "Deleting object " + this.args.objectId + "... ";
+    return `Delete object ${this.args.objectId}`;
   }
 }
 

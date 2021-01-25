@@ -151,10 +151,10 @@ const widthForRatioAndHeight = (ratio, h) => Fraction(ratio).mul(h).round(0).val
 // functional programming helpers
 // --------------------------------------------
 
-const identity = (x) => x;
+const identity = x => x;
 
-const join = (x) => x.either(Err, identity);
-const resolve = (x) => x.either(throwError, identity);
+const join = x => x.either(Err, identity);
+const resolve = x => x.either(throwError, identity);
 
 const singleEntryMap = curry((key, value) => Object({[key]: value}));
 

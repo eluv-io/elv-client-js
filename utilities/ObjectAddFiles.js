@@ -68,7 +68,7 @@ class ObjectAddFiles extends Utility {
   }
 
   header() {
-    return `Add file(s) to object: ${this.args.objectId}`;
+    return `Add file(s) to object ${this.args.objectId}`;
   }
 }
 

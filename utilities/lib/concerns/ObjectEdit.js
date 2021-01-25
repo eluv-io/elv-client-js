@@ -11,9 +11,9 @@ const blueprint = {
 const New = context => {
   const logger = context.concerns.Logger;
 
-  const addFiles = async () => {
-
-  };
+  // const addFiles = async () => {
+  //
+  // };
 
   const finalize = async ({libraryId, objectId, writeToken}) => {
     objectId = objectId || context.args.objectId;
@@ -62,7 +62,7 @@ const New = context => {
     });
   };
 
-  return {addFiles, finalize, getWriteToken, libraryIdArgPopulate, writeMetadata};
+  return {finalize, getWriteToken, libraryIdArgPopulate, writeMetadata};
 };
 
 module.exports = {

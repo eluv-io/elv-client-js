@@ -77,7 +77,7 @@ class MasterInit extends Utility {
   }
 
   header() {
-    return "Initialize production master metadata for object " + this.args.objectId + "... ";
+    return `Initialize production master metadata for object ${this.args.objectId}`;
   }
 }
 

@@ -78,7 +78,7 @@ class ObjectMoveMetadata extends Utility {
   }
 
   header() {
-    return "Move metadata for object " + this.args.objectId + "... ";
+    return `Move metadata for object ${this.args.objectId}`;
   }
 }
 

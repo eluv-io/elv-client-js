@@ -103,7 +103,7 @@ class MezzanineJobStatus extends Utility {
   }
 
   header() {
-    return "Getting status for mezzanine job(s)...";
+    return "Get status for mezzanine job(s)";
   }
 }
 

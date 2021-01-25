@@ -1,8 +1,10 @@
 const util = require("util");
 
+const columnify = require("columnify");
 const moment = require("moment");
 const R = require("ramda");
 
+const {identity} = require("../helpers");
 const {NewOpt} = require("../options");
 
 const blueprint = {
@@ -136,10 +138,21 @@ const New = (context) => {
   // interface: Logger
   // -------------------------------------
 
-  // merge an item into JSON output @ /data/(key)/
+  // set/replace data for a a key in JSON output @ /data/(key)/
   const data = (key, obj) => {
     if(json) {
       output.data[key] = obj;
+    }
+  };
+
+  // set/concat data for a a key in JSON output @ /data/(key)/
+  const dataConcat = (key, obj) => {
+    if(json) {
+      if(output.data[key]) {
+        output.data[key] = output.data[key].concat(obj);
+      } else {
+        output.data[key] = obj;
+      }
     }
   };
 
@@ -164,6 +177,16 @@ const New = (context) => {
 
   const logObject = obj => logList(...(JSON.stringify(obj, null, 2).split("\n")));
 
+  const logTable = (arg, options = {}) => {
+    options = R.mergeDeepRight(
+      {headingTransform: identity},
+      options
+    );
+    logList("",
+      ...columnify(arg, options).split("\n"),
+      "");
+  };
+
   // print out json output object (if configured)
   const outputJSON = () => {
     if(json) {
@@ -176,6 +199,7 @@ const New = (context) => {
 
   return {
     data,
+    dataConcat,
     dataGet,
     error,
     errorList,
@@ -183,6 +207,7 @@ const New = (context) => {
     log,
     logList,
     logObject,
+    logTable,
     outputJSON,
     warn,
     warnList

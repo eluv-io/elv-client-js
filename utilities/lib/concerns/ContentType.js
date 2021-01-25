@@ -24,11 +24,10 @@ const New = context => {
     return response.type;
   };
 
-  // make sure to call with 'await'
-  const hashLookup = async () => {
+  const hashLookup = async ({type} = {}) => {
     const client = await context.concerns.Client.get();
 
-    const typeArg = context.args.type;
+    const typeArg = type || context.args.type;
     if(!typeArg) throw Error("--type not supplied");
 
     let fieldName = "name";

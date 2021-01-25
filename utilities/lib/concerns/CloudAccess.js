@@ -1,4 +1,4 @@
-const {CredentialSetModel} = require("../models/CredentialSet");
+const {CheckedCredentialSet, CredentialSetModel} = require("../models/CredentialSet");
 const {NewOpt} = require("../options");
 
 const JSON = require("./JSON");
@@ -48,9 +48,19 @@ const New = context => {
         ];
       }
     }
+
     // validate
-    CredentialSetModel(retVal);
-    return retVal;
+    return CheckedCredentialSet(retVal).either(
+      () => { // error case
+        if(errOnMissing) {
+          // throw error
+          CredentialSetModel(retVal);
+        } else {
+          return null;
+        }
+      },
+      () => retVal // ok case
+    );
   };
 
   return {credentialSet};
