@@ -91,7 +91,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectCopyMetadata.js" \
 check_exit_code $?
 
 VERSION_HASH=$(echo $OUTPUT | jq '.data.version_hash' | tr -d '"')
-echo version_hash=$VERSION_HASH
+print_spaced version_hash=$VERSION_HASH
 
 # -------------------------
 # Add simple_watermark
@@ -107,7 +107,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectSetMetadata.js" \
 check_exit_code $?
 
 VERSION_HASH=$(echo $OUTPUT | jq '.data.version_hash' | tr -d '"')
-echo version_hash=$VERSION_HASH
+print_spaced version_hash=$VERSION_HASH
 
 # -------------------------
 # Retrieve and check metadata
