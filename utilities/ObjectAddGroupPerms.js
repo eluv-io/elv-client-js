@@ -51,7 +51,7 @@ class ObjectAddGroupPerms extends Utility {
   }
 
   header() {
-    return `Adding permissions to ${this.args.objectId} for group ${this.args.groupAddress}...`;
+    return `Add permission(s) to ${this.args.objectId} for group ${this.args.groupAddress}`;
   }
 }
 
