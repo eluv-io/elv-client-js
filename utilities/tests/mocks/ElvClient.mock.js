@@ -47,7 +47,7 @@ const contentObjectsReply = R.curry((libId, [objId, objInfo]) => {
 const ContentObjects = async (args) => {
   calls.push("ContentObjects: " + JSON.stringify(args));
   const {libraryId} = args;
-  return R.toPairs(libraries[libraryId].objects).map(contentObjectsReply(libraryId));
+  return {contents: R.toPairs(libraries[libraryId].objects).map(contentObjectsReply(libraryId))};
 };
 
 const DeleteContentObject = async (args) => {

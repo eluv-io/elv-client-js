@@ -25,6 +25,7 @@ class LibraryDeleteAllObjects extends Utility {
 
     let objects_deleted_count = 0;
     const deletedIds = [];
+    logger.data("deleted_object_ids", deletedIds);
     const client = await this.concerns.Client.get();
     for(const {objectId} of list) {
       logger.log(`  Deleting ${objectId}...`);
@@ -34,14 +35,13 @@ class LibraryDeleteAllObjects extends Utility {
       });
       objects_deleted_count += 1;
       logger.data("objects_deleted_count", objects_deleted_count);
+      logger.dataConcat("deleted_object_ids", objectId);
       deletedIds.push(objectId);
     }
-    logger.data("objects_deleted_count", objects_deleted_count);
-    logger.data("deleted_object_ids", deletedIds);
   }
 
   header() {
-    return `Deleting all objects from library '${this.args.libraryId}'...`;
+    return `Delete all objects from library ${this.args.libraryId}`;
   }
 }
 

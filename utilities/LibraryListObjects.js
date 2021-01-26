@@ -1,5 +1,4 @@
 // List all object IDs in a library
-const R = require("ramda");
 
 const {ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
@@ -18,16 +17,20 @@ class LibraryListObjects extends Utility {
 
   async body() {
     const logger = this.logger;
-    const list = await this.concerns.Library.objectList();
+    const objectList = await this.concerns.Library.objectList({filterOptions:{select:["/public/name"]}});
+    const formattedObjList = objectList.map(x => ({
+      object_id: x.objectId,
+      latest_hash: x.latestHash,
+      name: x.metadata.public.name
+    }));
+    logger.data("object_list", formattedObjList);
 
-    const object_ids = R.map(R.prop("objectId"))(list);
-    logger.data("object_ids", object_ids);
-    logger.logList(...object_ids);
-    if(object_ids.length === 0) logger.warn("No visible objects found using supplied private key.");
+    logger.logTable(formattedObjList);
+    if(formattedObjList.length === 0) logger.warn("No visible objects found using supplied private key.");
   }
 
   header() {
-    return `Getting list of object IDs from ${this.args.libraryId}...`;
+    return `List objects in library ${this.args.libraryId}`;
   }
 
 }

@@ -233,7 +233,7 @@ class MezzanineCreate extends Utility {
   }
 
   header() {
-    return "Create Mezzanine default offering for master " + this.args.masterHash + "...";
+    return `Create Mezzanine default offering for master ${this.args.masterHash}`;
   }
 }
 
