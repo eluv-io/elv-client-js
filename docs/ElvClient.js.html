@@ -149,6 +149,7 @@ class ElvClient {
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array&lt;string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array&lt;string>} ethereumURIs - A list of full URIs to ethereum nodes
+   * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
@@ -161,6 +162,7 @@ class ElvClient {
     fabricVersion,
     fabricURIs,
     ethereumURIs,
+    ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
     noCache=false,
@@ -177,6 +179,7 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.ethereumContractTimeout = ethereumContractTimeout;
 
     this.trustAuthorityId = trustAuthorityId;
 
@@ -313,7 +316,7 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
-    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug});
+    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     this.authClient = new AuthorizationClient({
       client: this,

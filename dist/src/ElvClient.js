@@ -105,6 +105,7 @@ function () {
      * @param {number} fabricVersion - The version of the target content fabric
      * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
      * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+     * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
      * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
      * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
      * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
@@ -120,6 +121,8 @@ function () {
         fabricVersion = _ref.fabricVersion,
         fabricURIs = _ref.fabricURIs,
         ethereumURIs = _ref.ethereumURIs,
+        _ref$ethereumContract = _ref.ethereumContractTimeout,
+        ethereumContractTimeout = _ref$ethereumContract === void 0 ? 10 : _ref$ethereumContract,
         trustAuthorityId = _ref.trustAuthorityId,
         staticToken = _ref.staticToken,
         _ref$noCache = _ref.noCache,
@@ -137,6 +140,7 @@ function () {
     this.fabricVersion = fabricVersion;
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.ethereumContractTimeout = ethereumContractTimeout;
     this.trustAuthorityId = trustAuthorityId;
     this.noCache = noCache;
     this.noAuth = noAuth;
@@ -188,7 +192,8 @@ function () {
               this.ethClient = new EthClient({
                 client: this,
                 uris: this.ethereumURIs,
-                debug: this.debug
+                debug: this.debug,
+                timeout: this.ethereumContractTimeout
               });
               this.authClient = new AuthorizationClient({
                 client: this,

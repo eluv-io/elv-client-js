@@ -2068,14 +2068,14 @@ exports.AvailableDRMs = function _callee27() {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {string=} handler=playout - The handler to use for playout
+ * @param {string=} handler=playout - The handler to use for playout (not used with links)
  *
  * @return {Promise<Object>} - The available offerings
  */
 
 
 exports.AvailableOfferings = function _callee28(_ref20) {
-  var objectId, versionHash, writeToken, linkPath, _ref20$handler, handler, path;
+  var objectId, versionHash, writeToken, linkPath, _ref20$handler, handler, libraryId, path;
 
   return _regeneratorRuntime.async(function _callee28$(_context28) {
     while (1) {
@@ -2083,62 +2083,36 @@ exports.AvailableOfferings = function _callee28(_ref20) {
         case 0:
           objectId = _ref20.objectId, versionHash = _ref20.versionHash, writeToken = _ref20.writeToken, linkPath = _ref20.linkPath, _ref20$handler = _ref20.handler, handler = _ref20$handler === void 0 ? "playout" : _ref20$handler;
 
-          if (objectId) {
-            _context28.next = 5;
-            break;
+          if (!objectId) {
+            objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
-          objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-          _context28.next = 9;
-          break;
-
-        case 5:
-          if (versionHash) {
-            _context28.next = 9;
-            break;
-          }
-
-          _context28.next = 8;
-          return _regeneratorRuntime.awrap(this.LatestVersionHash({
+          _context28.next = 4;
+          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: objectId
           }));
 
-        case 8:
-          versionHash = _context28.sent;
+        case 4:
+          libraryId = _context28.sent;
+          path = UrlJoin("qlibs", libraryId, "q", writeToken || objectId, "rep", handler, "options.json");
 
-        case 9:
-          if (!linkPath) {
-            _context28.next = 14;
-            break;
+          if (linkPath) {
+            path = UrlJoin("qlibs", libraryId, "q", writeToken || objectId, "meta", linkPath, "options.json");
           }
 
-          _context28.next = 12;
-          return _regeneratorRuntime.awrap(this.LinkTarget({
-            objectId: objectId,
-            versionHash: versionHash,
-            writeToken: writeToken,
-            linkPath: linkPath
-          }));
-
-        case 12:
-          versionHash = _context28.sent;
-          objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-
-        case 14:
-          path = UrlJoin("q", versionHash, "rep", handler, "options.json");
-          _context28.prev = 15;
+          _context28.prev = 7;
           _context28.t0 = _regeneratorRuntime;
           _context28.t1 = this.utils;
           _context28.t2 = this.HttpClient;
           _context28.t3 = path;
-          _context28.next = 22;
+          _context28.next = 14;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             objectId: objectId,
             channelAuth: true,
             oauthToken: this.oauthToken
           }));
 
-        case 22:
+        case 14:
           _context28.t4 = _context28.sent;
           _context28.t5 = {
             path: _context28.t3,
@@ -2147,32 +2121,32 @@ exports.AvailableOfferings = function _callee28(_ref20) {
           };
           _context28.t6 = _context28.t2.Request.call(_context28.t2, _context28.t5);
           _context28.t7 = _context28.t1.ResponseToJson.call(_context28.t1, _context28.t6);
-          _context28.next = 28;
+          _context28.next = 20;
           return _context28.t0.awrap.call(_context28.t0, _context28.t7);
 
-        case 28:
+        case 20:
           return _context28.abrupt("return", _context28.sent);
 
-        case 31:
-          _context28.prev = 31;
-          _context28.t8 = _context28["catch"](15);
+        case 23:
+          _context28.prev = 23;
+          _context28.t8 = _context28["catch"](7);
 
           if (!(_context28.t8.status && parseInt(_context28.t8.status) === 500)) {
-            _context28.next = 35;
+            _context28.next = 27;
             break;
           }
 
           return _context28.abrupt("return", {});
 
-        case 35:
+        case 27:
           throw _context28.t8;
 
-        case 36:
+        case 28:
         case "end":
           return _context28.stop();
       }
     }
-  }, null, this, [[15, 31]]);
+  }, null, this, [[7, 23]]);
 };
 /**
  * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
@@ -2192,7 +2166,7 @@ exports.AvailableOfferings = function _callee28(_ref20) {
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
- * @param {string=} handler=playout - The handler to use for playout
+ * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {string=} offering=default - The offering to play
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
@@ -2202,7 +2176,7 @@ exports.AvailableOfferings = function _callee28(_ref20) {
 
 
 exports.PlayoutOptions = function _callee29(_ref21) {
-  var objectId, versionHash, writeToken, linkPath, _ref21$protocols, protocols, _ref21$handler, handler, _ref21$offering, offering, playoutType, _ref21$drms, drms, context, _ref21$hlsjsProfile, hlsjsProfile, authorizationToken, libraryId, offeringPath, link, path, linkTargetLibraryId, linkTargetId, linkTargetHash, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
+  var objectId, versionHash, writeToken, linkPath, _ref21$protocols, protocols, _ref21$handler, handler, _ref21$offering, offering, playoutType, _ref21$drms, drms, context, _ref21$hlsjsProfile, hlsjsProfile, authorizationToken, libraryId, offeringPath, link, path, linkTargetLibraryId, linkTargetId, linkTargetHash, signedLink, multiOfferingLink, linkInfo, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee29$(_context29) {
     while (1) {
@@ -2281,28 +2255,52 @@ exports.PlayoutOptions = function _callee29(_ref21) {
 
         case 26:
           if (!linkPath) {
-            _context29.next = 37;
+            _context29.next = 45;
             break;
           }
 
           _context29.next = 29;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            versionHash: versionHash,
+            writeToken: writeToken,
+            metadataSubtree: linkPath,
+            resolveLinks: false,
+            resolveIgnoreErrors: true,
+            resolveIncludeSource: true
+          }));
+
+        case 29:
+          linkInfo = _context29.sent;
+          signedLink = linkInfo && linkInfo["."] && linkInfo["."].authorization;
+          multiOfferingLink = !linkInfo["/"].endsWith("options.json");
+          path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash, "meta", linkPath);
+
+          if (signedLink) {
+            _context29.next = 42;
+            break;
+          }
+
+          _context29.next = 36;
           return _regeneratorRuntime.awrap(this.LinkTarget({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
             writeToken: writeToken,
-            linkPath: linkPath
+            linkPath: linkPath,
+            linkInfo: linkInfo
           }));
 
-        case 29:
+        case 36:
           linkTargetHash = _context29.sent;
           linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
-          _context29.next = 33;
+          _context29.next = 40;
           return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: linkTargetId
           }));
 
-        case 33:
+        case 40:
           linkTargetLibraryId = _context29.sent;
 
           if (writeToken) {
@@ -2311,31 +2309,37 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
 
-          _context29.next = 38;
+        case 42:
+          if (multiOfferingLink) {
+            // The link points to rep/playout instead of rep/playout/<offering>/options.json
+            path = UrlJoin(path, offering, "options.json");
+          }
+
+          _context29.next = 46;
           break;
 
-        case 37:
+        case 45:
           path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
 
-        case 38:
+        case 46:
           _context29.t1 = this.authClient;
           _context29.t2 = linkTargetId || objectId;
           _context29.t3 = linkTargetHash || versionHash;
 
           if (_context29.t3) {
-            _context29.next = 45;
+            _context29.next = 53;
             break;
           }
 
-          _context29.next = 44;
+          _context29.next = 52;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 44:
+        case 52:
           _context29.t3 = _context29.sent;
 
-        case 45:
+        case 53:
           _context29.t4 = _context29.t3;
           _context29.t5 = protocols;
           _context29.t6 = drms;
@@ -2351,11 +2355,11 @@ exports.PlayoutOptions = function _callee29(_ref21) {
           _context29.t9 = authorizationToken;
 
           if (_context29.t9) {
-            _context29.next = 56;
+            _context29.next = 64;
             break;
           }
 
-          _context29.next = 55;
+          _context29.next = 63;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
@@ -2364,10 +2368,10 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             audienceData: audienceData
           }));
 
-        case 55:
+        case 63:
           _context29.t9 = _context29.sent;
 
-        case 56:
+        case 64:
           _context29.t10 = _context29.t9;
           queryParams = {
             authorization: _context29.t10
@@ -2378,22 +2382,22 @@ exports.PlayoutOptions = function _callee29(_ref21) {
           }
 
           _context29.t11 = Object;
-          _context29.next = 62;
+          _context29.next = 70;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             path: path,
             method: "GET",
             queryParams: queryParams
           })));
 
-        case 62:
+        case 70:
           _context29.t12 = _context29.sent;
           playoutOptions = _context29.t11.values.call(_context29.t11, _context29.t12);
           playoutMap = {};
           i = 0;
 
-        case 66:
+        case 74:
           if (!(i < playoutOptions.length)) {
-            _context29.next = 100;
+            _context29.next = 116;
             break;
           }
 
@@ -2408,7 +2412,12 @@ exports.PlayoutOptions = function _callee29(_ref21) {
           }
 
           licenseServers = option.properties.license_servers;
-          cert = option.properties.cert; // Create full playout URLs for this protocol / drm combo
+          cert = option.properties.cert;
+
+          if (hlsjsProfile && protocol === "hls" && drm === "aes-128") {
+            queryParams.player_profile = "hls-js";
+          } // Create full playout URLs for this protocol / drm combo
+
 
           _context29.t13 = _objectSpread;
           _context29.t14 = {};
@@ -2419,7 +2428,26 @@ exports.PlayoutOptions = function _callee29(_ref21) {
           _context29.t19 = _defineProperty;
           _context29.t20 = {};
           _context29.t21 = drm || "clear";
-          _context29.next = 85;
+
+          if (!signedLink) {
+            _context29.next = 98;
+            break;
+          }
+
+          _context29.next = 95;
+          return _regeneratorRuntime.awrap(this.LinkUrl({
+            versionHash: versionHash,
+            linkPath: UrlJoin(linkPath, offering, playoutPath),
+            queryParams: queryParams
+          }));
+
+        case 95:
+          _context29.t22 = _context29.sent;
+          _context29.next = 101;
+          break;
+
+        case 98:
+          _context29.next = 100;
           return _regeneratorRuntime.awrap(this.Rep({
             libraryId: linkTargetLibraryId || libraryId,
             objectId: linkTargetId || objectId,
@@ -2427,58 +2455,56 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             rep: UrlJoin(handler, offering, playoutPath),
             channelAuth: true,
             noAuth: !!authorizationToken,
-            queryParams: hlsjsProfile && protocol === "hls" && drm === "aes-128" ? {
-              authorization: authorizationToken,
-              player_profile: "hls-js"
-            } : {
-              authorization: authorizationToken
-            }
+            queryParams: queryParams
           }));
 
-        case 85:
+        case 100:
           _context29.t22 = _context29.sent;
-          _context29.t23 = drm ? _defineProperty({}, drm, {
+
+        case 101:
+          _context29.t23 = _context29.t22;
+          _context29.t24 = drm ? _defineProperty({}, drm, {
             licenseServers: licenseServers,
             cert: cert
           }) : undefined;
-          _context29.t24 = {
-            playoutUrl: _context29.t22,
-            drms: _context29.t23
+          _context29.t25 = {
+            playoutUrl: _context29.t23,
+            drms: _context29.t24
           };
-          _context29.t25 = (0, _context29.t19)(_context29.t20, _context29.t21, _context29.t24);
-          _context29.t26 = (0, _context29.t16)(_context29.t17, _context29.t18, _context29.t25);
-          _context29.t27 = {
-            playoutMethods: _context29.t26
+          _context29.t26 = (0, _context29.t19)(_context29.t20, _context29.t21, _context29.t25);
+          _context29.t27 = (0, _context29.t16)(_context29.t17, _context29.t18, _context29.t26);
+          _context29.t28 = {
+            playoutMethods: _context29.t27
           };
-          playoutMap[protocol] = (0, _context29.t13)(_context29.t14, _context29.t15, _context29.t27);
+          playoutMap[protocol] = (0, _context29.t13)(_context29.t14, _context29.t15, _context29.t28);
           // Exclude any options that do not satisfy the specified protocols and/or DRMs
           protocolMatch = protocols.includes(protocol);
           drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
           if (!(!protocolMatch || !drmMatch)) {
-            _context29.next = 96;
+            _context29.next = 112;
             break;
           }
 
-          return _context29.abrupt("continue", 97);
+          return _context29.abrupt("continue", 113);
 
-        case 96:
+        case 112:
           // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
           if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
             playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
             playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
           }
 
-        case 97:
+        case 113:
           i++;
-          _context29.next = 66;
+          _context29.next = 74;
           break;
 
-        case 100:
+        case 116:
           this.Log(playoutMap);
           return _context29.abrupt("return", playoutMap);
 
-        case 102:
+        case 118:
         case "end":
           return _context29.stop();
       }
@@ -3370,7 +3396,7 @@ exports.LinkTarget = function _callee39(_ref31) {
     while (1) {
       switch (_context39.prev = _context39.next) {
         case 0:
-          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath;
+          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath, linkInfo = _ref31.linkInfo;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3399,7 +3425,12 @@ exports.LinkTarget = function _callee39(_ref31) {
           libraryId = _context39.sent;
 
         case 8:
-          _context39.next = 10;
+          if (linkInfo) {
+            _context39.next = 12;
+            break;
+          }
+
+          _context39.next = 11;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -3411,11 +3442,12 @@ exports.LinkTarget = function _callee39(_ref31) {
             resolveIncludeSource: true
           }));
 
-        case 10:
+        case 11:
           linkInfo = _context39.sent;
 
+        case 12:
           if (!(linkInfo && linkInfo["/"])) {
-            _context39.next = 26;
+            _context39.next = 27;
             break;
           }
 
@@ -3427,41 +3459,41 @@ exports.LinkTarget = function _callee39(_ref31) {
           }
 
           if (!targetHash) {
-            _context39.next = 18;
+            _context39.next = 19;
             break;
           }
 
           return _context39.abrupt("return", targetHash);
 
-        case 18:
+        case 19:
           if (!versionHash) {
-            _context39.next = 20;
+            _context39.next = 21;
             break;
           }
 
           return _context39.abrupt("return", versionHash);
 
-        case 20:
+        case 21:
           _context39.t0 = versionHash;
 
           if (_context39.t0) {
-            _context39.next = 25;
+            _context39.next = 26;
             break;
           }
 
-          _context39.next = 24;
+          _context39.next = 25;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 24:
+        case 25:
           _context39.t0 = _context39.sent;
 
-        case 25:
+        case 26:
           return _context39.abrupt("return", _context39.t0);
 
-        case 26:
-          _context39.next = 28;
+        case 27:
+          _context39.next = 29;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -3471,66 +3503,66 @@ exports.LinkTarget = function _callee39(_ref31) {
             resolveIncludeSource: true
           }));
 
-        case 28:
+        case 29:
           linkInfo = _context39.sent;
 
           if (!(!linkInfo || !linkInfo["."])) {
-            _context39.next = 48;
+            _context39.next = 49;
             break;
           }
 
           if (!(_typeof(linkInfo) === "object")) {
-            _context39.next = 37;
+            _context39.next = 38;
             break;
           }
 
           _context39.t1 = versionHash;
 
           if (_context39.t1) {
-            _context39.next = 36;
+            _context39.next = 37;
             break;
           }
 
-          _context39.next = 35;
+          _context39.next = 36;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 35:
+        case 36:
           _context39.t1 = _context39.sent;
 
-        case 36:
+        case 37:
           return _context39.abrupt("return", _context39.t1);
 
-        case 37:
+        case 38:
           // linkPath is not a direct link, but points to a literal value - back up one path element to find the container
           subPath = linkPath.split("/").slice(0, -1).join("/");
 
           if (subPath) {
-            _context39.next = 45;
+            _context39.next = 46;
             break;
           }
 
           _context39.t2 = versionHash;
 
           if (_context39.t2) {
-            _context39.next = 44;
+            _context39.next = 45;
             break;
           }
 
-          _context39.next = 43;
+          _context39.next = 44;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 43:
+        case 44:
           _context39.t2 = _context39.sent;
 
-        case 44:
+        case 45:
           return _context39.abrupt("return", _context39.t2);
 
-        case 45:
-          _context39.next = 47;
+        case 46:
+          _context39.next = 48;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -3540,13 +3572,13 @@ exports.LinkTarget = function _callee39(_ref31) {
             resolveIncludeSource: true
           }));
 
-        case 47:
+        case 48:
           linkInfo = _context39.sent;
 
-        case 48:
+        case 49:
           return _context39.abrupt("return", linkInfo["."].source);
 
-        case 49:
+        case 50:
         case "end":
           return _context39.stop();
       }
