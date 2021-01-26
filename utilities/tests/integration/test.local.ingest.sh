@@ -22,7 +22,7 @@ source $1
 
 echo
 echo -------------------
-echo TEST START
+echo INTEGRATION TEST START: LOCAL FILE INGEST
 echo Title: $TITLE
 echo $LOCAL_PATH
 echo -------------------

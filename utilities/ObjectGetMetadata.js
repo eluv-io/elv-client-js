@@ -57,7 +57,7 @@ class ObjectGetMetadata extends Utility {
   }
 
   header() {
-    return `Get metadata for ${this.args.versionHash || this.args.objectId}`;
+    return `Get metadata for ${this.args.versionHash || this.args.objectId}${this.args.subtree ? ` subtree: ${this.args.subtree}` : ""}`;
   }
 }
 

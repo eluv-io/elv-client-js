@@ -22,7 +22,7 @@ source $1
 
 echo
 echo -------------------
-echo TEST START
+echo INTEGRATION TEST START: S3 INGEST
 echo Title: $TITLE
 echo $S3_PATH
 echo -------------------

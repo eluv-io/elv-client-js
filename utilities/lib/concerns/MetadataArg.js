@@ -1,5 +1,3 @@
-const kindOf = require("kind-of");
-
 const {NewOpt} = require("../options");
 
 const JSON = require("./JSON");
@@ -19,16 +17,9 @@ const New = context => {
   const argMetadata = context.args.metadata;
 
   // convert --metadata argument to object (either literal JSON or @filePath)
-  const asObject = () => {
-    if(argMetadata) {
-      const metadataObj = context.concerns.JSON.parseStringOrFile(argMetadata);
-      if(!metadataObj.hasOwnProperty("public")) metadataObj.public = {};
-      if(kindOf(metadataObj.public) !== "object") throw Error(`Expected metadata /public to be object, got ${kindOf(metadataObj.public)} instead`);
-      return metadataObj;
-    } else {
-      return null;
-    }
-  };
+  const asObject = () => argMetadata
+    ? context.concerns.JSON.parseStringOrFile(argMetadata)
+    : null;
 
   return {asObject};
 };

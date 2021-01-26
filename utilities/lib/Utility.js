@@ -40,7 +40,11 @@ module.exports = class Utility {
       process.exit(1);
     }
     await utility.run();
-    process.exit(0);
+    if(!process.exitCode) {
+      process.exit(0);
+    } else {
+      process.exit();
+    }
   }
 
   constructor(params) {
@@ -132,6 +136,8 @@ module.exports = class Utility {
       this.logger.data("exit_code", process.exitCode);
       this.logger.data("failure_reason", failureReason);
       this.logger.outputJSON();
+      this.logger.error("FAILED!");
+      this.logger.log("");
       return this.logger.dataGet();
     });
   }
