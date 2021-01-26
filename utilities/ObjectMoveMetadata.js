@@ -28,7 +28,7 @@ class ObjectMoveMetadata extends Utility {
           type: "string"
         }),
         NewOpt("force", {
-          descTemplate: "If target new metadata path within object exists, overwrite and replace",
+          descTemplate: "If target new metadata path within object exists, overwrite and replace existing value/subtree",
           type: "boolean"
         })
       ]
@@ -38,7 +38,7 @@ class ObjectMoveMetadata extends Utility {
   async body() {
     const {newPath, oldPath} = this.args;
 
-    // Check that keys are valid path strings
+    // Check that paths are valid path strings
     if(!Metadata.validPathFormat(oldPath)) {
       throw new Error("\"" + oldPath + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
     }
@@ -50,12 +50,12 @@ class ObjectMoveMetadata extends Utility {
 
     const currentMetadata = await this.concerns.FabricObject.getMetadata();
 
-    // check to make sure oldKey exists
+    // check to make sure oldPath exists
     if(!Metadata.pathExists(currentMetadata, oldPath)) {
       throw new Error("Metadata path '" + oldPath + "' not found.");
     }
 
-    // make sure newKey does NOT exist, or --force specified
+    // make sure newPath does NOT exist, or --force specified
     if(!Metadata.validTargetPath(currentMetadata, newPath)) {
       const existingTargetValue = JSON.stringify(Metadata.valueAtPath(currentMetadata, newPath), null, 2);
       if(this.args.force) {
@@ -78,7 +78,7 @@ class ObjectMoveMetadata extends Utility {
   }
 
   header() {
-    return `Move metadata for object ${this.args.objectId}`;
+    return `Move metadata for object ${this.args.objectId} from ${this.args.oldPath} to ${this.args.newPath}`;
   }
 }
 
