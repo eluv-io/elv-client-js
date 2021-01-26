@@ -52,7 +52,9 @@ function () {
   function EthClient(_ref) {
     var client = _ref.client,
         uris = _ref.uris,
-        debug = _ref.debug;
+        debug = _ref.debug,
+        _ref$timeout = _ref.timeout,
+        timeout = _ref$timeout === void 0 ? 10 : _ref$timeout;
 
     _classCallCheck(this, EthClient);
 
@@ -60,7 +62,9 @@ function () {
     this.ethereumURIs = uris;
     this.ethereumURIIndex = 0;
     this.locked = false;
-    this.debug = debug;
+    this.debug = debug; // convert to milliseconds
+
+    this.timeout = Math.floor(timeout * 1000);
     this.cachedContracts = {};
     this.contractNames = {}; // HTTP client for making misc calls to elv-master
 
@@ -546,28 +550,29 @@ function () {
   }, {
     key: "CallContractMethodAndWait",
     value: function CallContractMethodAndWait(_ref8) {
-      var contractAddress, abi, methodName, methodArgs, value, _ref8$timeout, timeout, _ref8$formatArguments, formatArguments, _ref8$cacheContract, cacheContract, _ref8$overrideCachedC, overrideCachedContract, contract, createMethodCall, interval, elapsed, methodEvent;
+      var contractAddress, abi, methodName, methodArgs, value, timeout, _ref8$formatArguments, formatArguments, _ref8$cacheContract, cacheContract, _ref8$overrideCachedC, overrideCachedContract, contract, createMethodCall, interval, elapsed, methodEvent;
 
       return _regeneratorRuntime.async(function CallContractMethodAndWait$(_context7) {
         while (1) {
           switch (_context7.prev = _context7.next) {
             case 0:
-              contractAddress = _ref8.contractAddress, abi = _ref8.abi, methodName = _ref8.methodName, methodArgs = _ref8.methodArgs, value = _ref8.value, _ref8$timeout = _ref8.timeout, timeout = _ref8$timeout === void 0 ? 10000 : _ref8$timeout, _ref8$formatArguments = _ref8.formatArguments, formatArguments = _ref8$formatArguments === void 0 ? true : _ref8$formatArguments, _ref8$cacheContract = _ref8.cacheContract, cacheContract = _ref8$cacheContract === void 0 ? true : _ref8$cacheContract, _ref8$overrideCachedC = _ref8.overrideCachedContract, overrideCachedContract = _ref8$overrideCachedC === void 0 ? false : _ref8$overrideCachedC;
+              contractAddress = _ref8.contractAddress, abi = _ref8.abi, methodName = _ref8.methodName, methodArgs = _ref8.methodArgs, value = _ref8.value, timeout = _ref8.timeout, _ref8$formatArguments = _ref8.formatArguments, formatArguments = _ref8$formatArguments === void 0 ? true : _ref8$formatArguments, _ref8$cacheContract = _ref8.cacheContract, cacheContract = _ref8$cacheContract === void 0 ? true : _ref8$cacheContract, _ref8$overrideCachedC = _ref8.overrideCachedContract, overrideCachedContract = _ref8$overrideCachedC === void 0 ? false : _ref8$overrideCachedC;
+              timeout = timeout || this.timeout || 10000;
 
               if (abi) {
-                _context7.next = 5;
+                _context7.next = 6;
                 break;
               }
 
-              _context7.next = 4;
+              _context7.next = 5;
               return _regeneratorRuntime.awrap(this.client.ContractAbi({
                 contractAddress: contractAddress
               }));
 
-            case 4:
+            case 5:
               abi = _context7.sent;
 
-            case 5:
+            case 6:
               contract = this.Contract({
                 contractAddress: contractAddress,
                 abi: abi,
@@ -575,7 +580,7 @@ function () {
                 overrideCachedContract: overrideCachedContract
               }); // Make method call
 
-              _context7.next = 8;
+              _context7.next = 9;
               return _regeneratorRuntime.awrap(this.CallContractMethod({
                 contract: contract,
                 abi: abi,
@@ -586,61 +591,61 @@ function () {
                 cacheContract: cacheContract
               }));
 
-            case 8:
+            case 9:
               createMethodCall = _context7.sent;
               this.Log("Awaiting transaction completion: ".concat(createMethodCall.hash)); // Poll for transaction completion
 
               interval = this.Provider().pollingInterval;
               elapsed = 0;
 
-            case 12:
+            case 13:
               if (!(elapsed < timeout)) {
-                _context7.next = 24;
+                _context7.next = 25;
                 break;
               }
 
-              _context7.next = 15;
+              _context7.next = 16;
               return _regeneratorRuntime.awrap(this.MakeProviderCall({
                 methodName: "getTransactionReceipt",
                 args: [createMethodCall.hash]
               }));
 
-            case 15:
+            case 16:
               methodEvent = _context7.sent;
 
               if (!methodEvent) {
-                _context7.next = 19;
+                _context7.next = 20;
                 break;
               }
 
               methodEvent.logs = methodEvent.logs.map(function (log) {
                 return _objectSpread({}, log, {}, contract["interface"].parseLog(log));
               });
-              return _context7.abrupt("break", 24);
+              return _context7.abrupt("break", 25);
 
-            case 19:
+            case 20:
               elapsed += interval;
-              _context7.next = 22;
+              _context7.next = 23;
               return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                 return setTimeout(resolve, interval);
               }));
 
-            case 22:
-              _context7.next = 12;
+            case 23:
+              _context7.next = 13;
               break;
 
-            case 24:
+            case 25:
               if (methodEvent) {
-                _context7.next = 26;
+                _context7.next = 27;
                 break;
               }
 
               throw Error("Timed out waiting for completion of ".concat(methodName, ". TXID: ").concat(createMethodCall.hash));
 
-            case 26:
+            case 27:
               return _context7.abrupt("return", methodEvent);
 
-            case 27:
+            case 28:
             case "end":
               return _context7.stop();
           }
