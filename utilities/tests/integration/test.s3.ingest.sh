@@ -1,12 +1,46 @@
 #!/bin/bash
 
-if [ -z "$1" ]
+print_spaced() {
+  echo
+  echo $*
+  echo
+}
+
+print_heading() {
+  echo
+  echo ---------------------------------------
+  echo $*
+  echo ---------------------------------------
+  echo
+}
+
+check_exit_code() {
+  EXIT_CODE=$1
+
+  if [ "$VERBOSE" = "1" ]
   then
     echo
-    echo Missing name of variable setting script file.
-    echo
-    echo Usage: $0 NAME_OF_SCRIPT_TO_SET_VARS
-    echo
+    JSON_OUTPUT=$(echo $OUTPUT | jq)
+    if [ $? -ne 0 ]
+    then
+      echo $OUTPUT
+    else
+      echo $JSON_OUTPUT
+    fi
+  fi
+
+  if [ $EXIT_CODE -ne 0 ]
+  then
+    print_spaced FAIL
+    exit 1
+  fi
+}
+
+
+if [ -z "$1" ]
+  then
+    print_spaced Missing name of variable setting script file.
+    print_spaced Usage: $0 NAME_OF_SCRIPT_TO_SET_VARS
     exit 1
 fi
 
@@ -28,17 +62,12 @@ echo $S3_PATH
 echo -------------------
 echo
 
+TIMESTAMP=$(date +%Y-%m-%dT%H:%M:%S%z)
+
 # -------------------------
 # CREATE PRODUCTION MASTER
 # -------------------------
-
-TIMESTAMP=$(date +%Y-%m-%dT%H:%M:%S%z)
-
-echo
-echo -------------------
-echo Create Master
-echo -------------------
-echo
+print_heading Create Master
 
 OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ProductionMasterCreate.js" \
   --type $MASTER_TYPE \
@@ -48,20 +77,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ProductionMasterCreate.js" \
   --json -v \
   --files $S3_PATH)
 
-if [ "$VERBOSE" = "1" ]
-then
-  echo
-  echo $OUTPUT | jq
-  echo
-fi
-
-if [ $? -ne 0 ]
-then
-  echo
-  echo FAIL
-  echo
-  exit 1
-fi
+check_exit_code $?
 
 MASTER_OBJECT_ID=$(echo $OUTPUT | jq '.data.object_id' | tr -d '"')
 echo object_id=$MASTER_OBJECT_ID
@@ -72,12 +88,7 @@ echo version_hash=$VERSION_HASH
 # -------------------------
 # CREATE MEZZANINE
 # -------------------------
-
-echo
-echo -------------------
-echo Create Mez
-echo -------------------
-echo
+print_heading Create Mez
 
 OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/MezzanineCreate.js" \
   --type $MEZ_TYPE \
@@ -114,32 +125,13 @@ RUN_STATE=running
 
 while [ "$RUN_STATE" = "running" ]
 do
-  echo
-  echo -------------------
-  echo Check Mez Status
-  echo -------------------
-  echo
+  print_heading Check Mez Status
 
   OUTPUT=$(node $ELV_CLIENT_PATH/utilities/MezzanineJobStatus.js \
     --objectId $MEZ_OBJECT_ID \
     --json -v)
 
-
-  if [ "$VERBOSE" = "1" ]
-  then
-    echo
-    echo $OUTPUT | jq
-    echo
-  fi
-
-  if [ $? -ne 0 ]
-  then
-    echo $OUTPUT
-    echo
-    echo FAIL
-    echo
-    exit 1
-  fi
+  check_exit_code $?
 
   RUN_STATE=$(echo $OUTPUT | jq '.data.status_summary.run_state' | tr -d '"')
   echo run_state=$RUN_STATE
@@ -149,16 +141,17 @@ do
 
   if [ "$RUN_STATE" = "running" ]
   then
-    echo sleep 30
-    sleep 30
+    echo sleep 15
+    sleep 15
   fi
 
 done
 
-echo Final run state: $RUN_STATE
+print_spaced Final run state: $RUN_STATE
 
 if [ "$RUN_STATE" != "finished" ]
 then
+  print_spaced ERROR bad run state: $RUN_STATE
   exit 1
 fi
 
@@ -166,43 +159,19 @@ fi
 # -------------------------
 # FINALIZE
 # -------------------------
-
-echo
-echo -------------------
-echo Finalize Mez
-echo -------------------
-echo
+print_heading Finalize Mez
 
 OUTPUT=$(node $ELV_CLIENT_PATH/utilities/MezzanineJobStatus.js \
   --objectId $MEZ_OBJECT_ID \
   --finalize \
   --json -v)
 
-if [ "$VERBOSE" = "1" ]
-then
-  echo
-  echo $OUTPUT | jq
-  echo
-fi
-
-if [ $? -ne 0 ]
-then
-  echo
-  echo FAIL
-  echo
-  exit 1
-fi
-
+check_exit_code $?
 
 # -------------------------
 # ADD GROUP PERMISSIONS
 # -------------------------
-
-echo
-echo -------------------
-echo Add group permission: Master
-echo -------------------
-echo
+print_heading Add group permission: Master
 
 OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
   --objectId $MASTER_OBJECT_ID \
@@ -210,27 +179,9 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
   --permissions manage \
   --json -v)
 
-if [ "$VERBOSE" = "1" ]
-then
-  echo
-  echo $OUTPUT | jq
-  echo
-fi
+check_exit_code $?
 
-if [ $? -ne 0 ]
-then
-  echo
-  echo FAIL
-  echo
-  exit 1
-fi
-
-
-echo
-echo -------------------
-echo Add group permission: Mez
-echo -------------------
-echo
+print_heading Add group permission: Mez
 
 OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
   --objectId $MEZ_OBJECT_ID \
@@ -238,26 +189,12 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
   --permissions manage \
   --json -v)
 
-if [ "$VERBOSE" = "1" ]
-then
-  echo
-  echo $OUTPUT | jq
-  echo
-fi
+check_exit_code $?
 
-if [ $? -ne 0 ]
-then
-  echo
-  echo FAIL
-  echo
-  exit 1
-fi
-
-echo
-echo -------------------
-echo Disable playback: Mez
-echo -------------------
-echo
+# -------------------------
+# TEST METADATA MODIFICATION
+# -------------------------
+print_heading Disable playback: Mez
 
 OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
   --objectId $MEZ_OBJECT_ID \
@@ -265,28 +202,9 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
   --newPath /xofferings \
   --json -v)
 
-if [ "$VERBOSE" = "1" ]
-then
-  echo
-  echo $OUTPUT | jq
-  echo
-fi
+check_exit_code $?
 
-if [ $? -ne 0 ]
-then
-  echo
-  echo FAIL
-  echo
-  exit 1
-fi
-
-
-
-echo
-echo -------------------
-echo Re-enable playback: Mez
-echo -------------------
-echo
+print_heading Re-enable playback: Mez
 
 OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
   --objectId $MEZ_OBJECT_ID \
@@ -294,23 +212,7 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
   --newPath /offerings \
   --json -v)
 
-if [ "$VERBOSE" = "1" ]
-then
-  echo
-  echo $OUTPUT | jq
-  echo
-fi
-
-if [ $? -ne 0 ]
-then
-  echo
-  echo FAIL
-  echo
-  exit 1
-fi
-
-
-
+check_exit_code $?
 
 echo
 echo SUCCESS
