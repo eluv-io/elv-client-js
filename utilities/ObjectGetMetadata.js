@@ -1,15 +1,7 @@
-// Retrieve metadata form object
+// Retrieve metadata from object
 const kindOf = require("kind-of");
 
-// .option("jsonPath", {
-//   alias: "json-path",
-//   describe: "JSON Path expression for subset to save (see https://www.npmjs.com/package/jsonpath-plus for examples). If omitted, all metadata will be saved.",
-//   type: "string"
-// })
-
-
 const {ModOpt, NewOpt} = require("./lib/options");
-
 const Utility = require("./lib/Utility");
 
 const JPath = require("./lib/concerns/JPath");

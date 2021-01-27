@@ -17,7 +17,7 @@ class ListLibraries extends Utility {
   async body() {
     const logger = this.logger;
     const libList = await this.concerns.Library.list();
-    logger.data("library_ids", libList);
+    logger.data("libraries", libList);
 
     logger.logList(libList);
     if(libList.length === 0) logger.warn("No visible libraries found using supplied private key.");

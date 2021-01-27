@@ -3,16 +3,27 @@ const {StdOpt} = require("../options");
 
 const Library = require("./Library");
 const Metadata = require("./Metadata");
+const Part = require("./Part");
 
 const blueprint = {
   name: "FabricObject",
-  concerns: [Library, Metadata],
+  concerns: [Part, Library, Metadata],
   options: [
     StdOpt("objectId", {demand: true})
   ]
 };
 
 const New = context => {
+  const getMetadata = async ({objectId, libraryId, metadataSubtree} = {}) => {
+    objectId = objectId || context.args.objectId;
+    libraryId = libraryId || await libraryIdGet({objectId});
+    return await context.concerns.Metadata.get({
+      libraryId,
+      objectId,
+      metadataSubtree
+    });
+  };
+
   // populate --libraryId if missing, to prevent multiple lookups
   const libraryIdArgPopulate = async () => {
     context.args.libraryId = await libraryIdGet();
@@ -24,17 +35,21 @@ const New = context => {
     return await context.concerns.Library.forObject({objectId});
   };
 
-  const getMetadata = async ({objectId, libraryId, metadataSubtree} = {}) => {
+
+
+  const partList = async ({libraryId, objectId, versionHash} = {}) => {
     objectId = objectId || context.args.objectId;
-    libraryId = libraryId || await libraryIdGet({objectId});
-    return await context.concerns.Metadata.get({
-      libraryId,
-      objectId,
-      metadataSubtree
-    });
+    versionHash = versionHash || context.args.versionHash;
+    libraryId = libraryId || await libraryIdGet({objectId, versionHash});
+    return await context.concerns.Part.list({libraryId, objectId, versionHash});
   };
 
-  return {libraryIdArgPopulate, libraryIdGet, getMetadata};
+  return {
+    getMetadata,
+    libraryIdArgPopulate,
+    libraryIdGet,
+    partList
+  };
 };
 
 module.exports = {
