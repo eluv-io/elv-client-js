@@ -107,16 +107,24 @@ class OfferingAddImageWatermark extends ScriptOffering {
     return super.options()
       .option("watermarkJson", {
         demandOption: true,
-        describe: "Path to JSON file specifying watermark contents. \nSample WatermarkJsonFile contents:\n \n    {\n" +
-                    "      \"align_h\": \"right\",\n" +
-                    "      \"align_v\": \"bottom\",\n" +
-                    "      \"image\": \"./logo.png\",\n" +
-                    "      \"margin_h\": \"1/20\",\n" +
-                    "      \"margin_v\": \"1/10\",\n" +
-                    "      \"target_video_height\": 1080\n" +
-                    "    }",
+        describe: "Path to JSON file specifying watermark contents.",
         type: "string"
-      });
+      }).epilogue("Sample --watermarkJson file contents:\n" +
+        "  {\n" +
+        "    \"align_h\": \"right\",\n" +
+        "    \"align_v\": \"bottom\",\n" +
+        "    \"image\": \"./logo.png\",\n" +
+        "    \"margin_h\": \"1/20\",\n" +
+        "    \"margin_v\": \"1/10\",\n" +
+        "    \"target_video_height\": 1080\n" +
+        "  }\n" +
+        "Attributes:\n" +
+        "  align_h               horizontal alignment for image: left | center | right\n" +
+        "  align_v               vertical alignment for image: top | middle | bottom\n" +
+        "  image                 path (within object) of image file to be used\n" +
+        "  margin_h              horizontal margin as fraction of video frame width (ignored if align_h is \"center\")\n" +
+        "  margin_v              vertical margin, as fraction of video frame height (ignored if align_v is \"middle\")\n" +
+        "  target_video_height   video frame height in pixels that image was designed for\n");
   }
 }
 
