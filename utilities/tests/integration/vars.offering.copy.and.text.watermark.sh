@@ -20,3 +20,4 @@ ELV_CLIENT_PATH=~/elv-client-js # <- change if elv-client-js installed at a diff
 # NETWORK / ACCOUNT
 export FABRIC_CONFIG_URL=MY_CONFIG_URL
 export PRIVATE_KEY=MY_FABRIC_PRIVATE_KEY
+ETH_CONTRACT_TIMEOUT=20

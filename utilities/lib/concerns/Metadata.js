@@ -3,6 +3,7 @@ const objectPath = require("object-path");
 const R = require("ramda");
 
 const Client = require("./Client");
+const JSON = require("./JSON");
 const Logger = require("./Logger");
 
 const pathRegex = /^(\/[^/]+)+$/;
@@ -49,6 +50,17 @@ const blueprint = {
 const New = context => {
   const logger = context.concerns.Logger;
 
+  const checkExisting = ({metadata, targetPath, force}) => {
+    if(!validTargetPath(metadata, targetPath)) {
+      const existingExcerpt = JSON.shortString(valueAtPath(metadata, targetPath));
+      if(force) {
+        logger.warn(`Data already exists at '${targetPath}', --force specified, replacing...\nOverwritten data: ${existingExcerpt}`);
+      } else {
+        throw new Error(`Metadata path '${targetPath}' is invalid (already exists, use --force to replace). Existing data: ${existingExcerpt}`);
+      }
+    }
+  };
+
   const get = async ({objectId, libraryId, versionHash, writeToken, metadataSubtree} = {}) => {
     const client = await context.concerns.Client.get();
     logger.log("Retrieving metadata from object...");
@@ -61,7 +73,7 @@ const New = context => {
     });
   };
 
-  return {get};
+  return {checkExisting, get};
 };
 
 module.exports = {

@@ -1,7 +1,7 @@
 // code related to loading / parsing JSON
 const {JSONPath} = require("jsonpath-plus");
 
-const {readFile, stringOrFileContents} = require("../helpers");
+const {ellipsize, readFile, stringOrFileContents} = require("../helpers");
 
 const Logger = require("./Logger");
 
@@ -15,6 +15,7 @@ const blueprint = {
 const parse = JSON.parse;
 const stringify = JSON.stringify;
 
+const shortString = (obj, width=30) => ellipsize(JSON.stringify(obj),width);
 
 const jPath = ({pattern, metadata}) => {
   return JSONPath({
@@ -44,7 +45,14 @@ const New = (context) => {
     return parsed;
   };
 
-  return {parse, parseFile, parseString, parseStringOrFile, stringify};
+  return {
+    parse,
+    parseFile,
+    parseString,
+    parseStringOrFile,
+    shortString,
+    stringify
+  };
 };
 
 module.exports = {
@@ -52,5 +60,6 @@ module.exports = {
   jPath,
   New,
   parse,
+  shortString,
   stringify
 };
