@@ -14,25 +14,41 @@ print_heading() {
   echo
 }
 
-check_exit_code() {
-  EXIT_CODE=$1
 
-  if [ "$VERBOSE" = "1" ]
+print_output() {
+  echo
+  JSON_OUTPUT=$(echo $OUTPUT | jq 2>/dev/null)
+  if [ $? -ne 0 ]
   then
-    echo
-    JSON_OUTPUT=$(echo $OUTPUT | jq)
-    if [ $? -ne 0 ]
+    echo $OUTPUT
+  else
+    echo $JSON_OUTPUT
+    ERRORS=$(echo $OUTPUT | jq '.errors' 2>/dev/null)
+    if [ $? -eq 0 ]
     then
-      echo $OUTPUT
-    else
-      echo $JSON_OUTPUT
+      if [ "$ERRORS" != "[]" ]
+      then
+        echo
+        echo ERRORS:
+        echo $ERRORS
+        echo
+      fi
     fi
   fi
+}
 
+check_exit_code() {
+  EXIT_CODE=$1
   if [ $EXIT_CODE -ne 0 ]
   then
+    print_output
     print_spaced FAIL
     exit 1
+  else
+    if [ "$VERBOSE" = "1" ]
+    then
+      print_output
+    fi
   fi
 }
 
@@ -57,6 +73,7 @@ source $1
 echo
 echo -------------------
 echo INTEGRATION TEST START: S3 INGEST
+echo $0
 echo Title: $TITLE
 echo $S3_PATH
 echo -------------------
@@ -75,6 +92,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ProductionMasterCreate.js" \
   --title "$TITLE $TIMESTAMP" \
   --s3Reference \
   --json -v \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --files $S3_PATH)
 
 check_exit_code $?
@@ -96,6 +114,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/MezzanineCreate.js" \
   --title "$TITLE $TIMESTAMP" \
   --masterHash $VERSION_HASH \
   --abrProfile $ABR_PROFILE_PATH \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 if [ "$VERBOSE" = "1" ]
@@ -129,6 +148,7 @@ do
 
   OUTPUT=$(node $ELV_CLIENT_PATH/utilities/MezzanineJobStatus.js \
     --objectId $MEZ_OBJECT_ID \
+    --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
     --json -v)
 
   check_exit_code $?
@@ -164,6 +184,7 @@ print_heading Finalize Mez
 OUTPUT=$(node $ELV_CLIENT_PATH/utilities/MezzanineJobStatus.js \
   --objectId $MEZ_OBJECT_ID \
   --finalize \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 check_exit_code $?
@@ -177,6 +198,7 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
   --objectId $MASTER_OBJECT_ID \
   --groupAddress $ADMINS_GROUP_ADDRESS \
   --permissions manage \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 check_exit_code $?
@@ -187,6 +209,7 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
   --objectId $MEZ_OBJECT_ID \
   --groupAddress $ADMINS_GROUP_ADDRESS \
   --permissions manage \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 check_exit_code $?
@@ -200,6 +223,7 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
   --objectId $MEZ_OBJECT_ID \
   --oldPath /offerings \
   --newPath /xofferings \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 check_exit_code $?
@@ -210,6 +234,7 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
   --objectId $MEZ_OBJECT_ID \
   --oldPath /xofferings \
   --newPath /offerings \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 check_exit_code $?

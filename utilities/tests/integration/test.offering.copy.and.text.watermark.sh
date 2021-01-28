@@ -14,27 +14,43 @@ print_heading() {
   echo
 }
 
-check_exit_code() {
-  EXIT_CODE=$1
-
-  if [ "$VERBOSE" = "1" ]
+print_output() {
+  echo
+  JSON_OUTPUT=$(echo $OUTPUT | jq 2>/dev/null)
+  if [ $? -ne 0 ]
   then
-    echo
-    JSON_OUTPUT=$(echo $OUTPUT | jq)
-    if [ $? -ne 0 ]
+    echo $OUTPUT
+  else
+    echo $JSON_OUTPUT
+    ERRORS=$(echo $OUTPUT | jq '.errors' 2>/dev/null)
+    if [ $? -eq 0 ]
     then
-      echo $OUTPUT
-    else
-      echo $JSON_OUTPUT
+      if [ "$ERRORS" != "[]" ]
+      then
+        echo
+        echo ERRORS:
+        echo $ERRORS
+        echo
+      fi
     fi
   fi
+}
 
+check_exit_code() {
+  EXIT_CODE=$1
   if [ $EXIT_CODE -ne 0 ]
   then
+    print_output
     print_spaced FAIL
     exit 1
+  else
+    if [ "$VERBOSE" = "1" ]
+    then
+      print_output
+    fi
   fi
 }
+
 
 
 if [ -z "$1" ]
@@ -73,6 +89,7 @@ print_heading Check metadata for existence of media_struct at /offerings/$SOURCE
 OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectGetMetadata.js" \
   --objectId $MEZ_ID \
   --subtree "/offerings/$SOURCE_OFFERING_KEY/media_struct" \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 check_exit_code $?
@@ -86,6 +103,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectCopyMetadata.js" \
   --objectId $MEZ_ID \
   --sourcePath "/offerings/$SOURCE_OFFERING_KEY" \
   --targetPath "/offerings/$TARGET_OFFERING_KEY" \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 check_exit_code $?
@@ -102,6 +120,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectSetMetadata.js" \
   --objectId $MEZ_ID \
   --path "/offerings/$TARGET_OFFERING_KEY/simple_watermark" \
   --metadata \'$TEXT_WATERMARK\' \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --force --json -v)
 
 check_exit_code $?
@@ -117,6 +136,7 @@ print_heading Check new offering metadata
 OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectGetMetadata.js" \
   --versionHash $VERSION_HASH \
   --subtree "/offerings/$TARGET_OFFERING_KEY/simple_watermark" \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
 
 check_exit_code $?

@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
+const ellipsize = require("ellipsize");
 const Fraction = require("fraction.js");
 const kindOf = require("kind-of");
 const moment = require("moment");
@@ -186,6 +187,7 @@ module.exports = {
   dumpJson,
   dumpKeys,
   dumpResult,
+  ellipsize,
   etaString,
   formattedInspect,
   identity,

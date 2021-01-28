@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# SET VARIABLES FOR USE BY test.s3.ingest.sh
+# SET VARIABLES FOR USE BY test.local.ingest.sh
 # (make your own copy of this file and replace values)
 
 # MEDIA FILE INFO
-S3_PATH=\"s3://MY_S3_BUCKET_NAME/MY_FILE_PATH\"
+LOCAL_PATH=\"/MY_FILE_PATH\"
 TITLE="myTitle"
 
 # FLAGS
@@ -15,15 +15,16 @@ ELV_CLIENT_PATH=~/elv-client-js # <- change if elv-client-js installed at a diff
 ABR_PROFILE_PATH=$ELV_CLIENT_PATH/testScripts/abr_profile_clear.json
 
 # S3 INFO
-export AWS_BUCKET=MY_S3_BUCKET_NAME
-export AWS_KEY=MY_AWS_KEY
-export AWS_REGION=MY_S3_BUCKET_REGION
-export AWS_SECRET=MY_AWS_SECRET
+unset AWS_BUCKET
+unset AWS_KEY
+unset AWS_REGION
+unset AWS_SECRET
 
 # NETWORK / ACCOUNT / GROUP
 export FABRIC_CONFIG_URL=MY_CONFIG_URL
 export PRIVATE_KEY=MY_FABRIC_PRIVATE_KEY
 ADMINS_GROUP_ADDRESS=MY_GROUP_ADDRESS
+ETH_CONTRACT_TIMEOUT=20
 
 # CONTENT TYPES
 MASTER_TYPE=MY_MASTER_CONTENT_TYPE_ID

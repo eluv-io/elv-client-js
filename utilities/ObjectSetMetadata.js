@@ -18,6 +18,7 @@ class ObjectSetMetadata extends Utility {
         Client,
         ObjectEdit,
         FabricObject,
+        Metadata,
         MetadataArg,
         ObjectEdit
       ],
@@ -56,15 +57,8 @@ class ObjectSetMetadata extends Utility {
       objectId
     });
 
-    // make sure subtree does NOT exist, or --force specified
-    if(!Metadata.validTargetPath(currentMetadata, path)) {
-      const existingTargetValue = JSON.stringify(Metadata.valueAtPath(currentMetadata, path), null, 2);
-      if(this.args.force) {
-        this.logger.warn("Data already exists at '" + path + "', --force specified, replacing...\nOverwritten data: " + existingTargetValue);
-      } else {
-        throw new Error("Metadata path '" + path + "' is invalid (already exists, use --force to replace). Existing data: " + existingTargetValue);
-      }
-    }
+    // make sure path does NOT exist, or --force specified
+    this.concerns.Metadata.checkExisting({metadata: currentMetadata, targetPath: path, force: this.args.force});
 
     const revisedMetadata = R.clone(currentMetadata);
     objectPath.set(revisedMetadata, Metadata.pathPieces(path), metadataFromArg);

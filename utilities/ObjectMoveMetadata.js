@@ -13,7 +13,7 @@ const ObjectEdit = require("./lib/concerns/ObjectEdit");
 class ObjectMoveMetadata extends Utility {
   blueprint() {
     return {
-      concerns: [FabricObject, ObjectEdit],
+      concerns: [FabricObject, ObjectEdit, Metadata],
       options: [
         ModOpt("objectId", {ofX:" item to modify"}),
         ModOpt("libraryId", {ofX:" object to modify"}),
@@ -56,14 +56,7 @@ class ObjectMoveMetadata extends Utility {
     }
 
     // make sure newPath does NOT exist, or --force specified
-    if(!Metadata.validTargetPath(currentMetadata, newPath)) {
-      const existingTargetValue = JSON.stringify(Metadata.valueAtPath(currentMetadata, newPath), null, 2);
-      if(this.args.force) {
-        this.logger.warn("Data already exists at '" + newPath + "', --force specified, replacing...\nOverwritten data: " + existingTargetValue);
-      } else {
-        throw new Error("Metadata path '" + newPath + "' is invalid (already exists, use --force to replace). Existing data: " + existingTargetValue);
-      }
-    }
+    this.concerns.Metadata.checkExisting({metadata: currentMetadata, targetPath: newPath, force: this.args.force});
 
     // move oldPath attribute to newPath
     const valueToMove = Metadata.valueAtPath(currentMetadata, oldPath);
