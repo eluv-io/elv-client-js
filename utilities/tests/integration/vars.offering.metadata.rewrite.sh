@@ -1,17 +1,14 @@
 #!/bin/bash
-# SET VARIABLES FOR USE BY test.offering.copy.and.text.watermark.sh
+# SET VARIABLES FOR USE BY test.offering.metadata.rewrite.sh
 # (make your own copy of this file and replace values)
 
 # -----------------------------------------------------------------
 # TEST-SPECIFIC VARS
 # -----------------------------------------------------------------
-export MEZ_ID=iq__MY_MEZ_OBJECT_ID
-SOURCE_OFFERING_KEY="default"
-TARGET_OFFERING_KEY="watermark-large"
-TEXT_WATERMARK='{"font_color":"white@0.2","font_relative_height":0.1,"shadow":true,"shadow_color":"black@0.15","template":"$USERNAME","x":"(w-tw)/100*85","y":"(h-th)/100*20"}'
+export MEZ_ID=iq__MY_MEZ_OBJECT_ID # <- should start with 'iq__'
 
 # -----------------------------------------------------------------
-# ACCOUNT / NETWORK INFO
+# ACCOUNT / NETWORK / CREDENTIALS INFO
 # -----------------------------------------------------------------
 export FABRIC_CONFIG_URL=MY_CONFIG_URL # <- https://demov3.net955210.contentfabric.io/config for demo network, https://main.net955305.contentfabric.io/config for production network
 export PRIVATE_KEY=MY_FABRIC_PRIVATE_KEY # <- should start with 0x

@@ -1,4 +1,5 @@
 #!/bin/bash
+unset ELV_ENABLE_CHAINING
 
 print_spaced() {
   echo
@@ -64,6 +65,7 @@ fi
 # SET VARIABLES
 # =========================
 
+export ELV_CALLER_SHELL_LEVEL=$SHLVL
 source $1
 
 # =========================
@@ -72,7 +74,7 @@ source $1
 
 echo
 echo -------------------
-echo INTEGRATION TEST START: S3 INGEST
+echo INTEGRATION TEST START
 echo $0
 echo Title: $TITLE
 echo $S3_PATH
@@ -215,32 +217,7 @@ OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectAddGroupPerms.js \
 check_exit_code $?
 
 # -------------------------
-# TEST METADATA MODIFICATION
+# SIGNAL SUCCESS
 # -------------------------
-print_heading Disable playback: Mez
-
-OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
-  --objectId $MEZ_OBJECT_ID \
-  --oldPath /offerings \
-  --newPath /xofferings \
-  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
-  --json -v)
-
-check_exit_code $?
-
-print_heading Re-enable playback: Mez
-
-OUTPUT=$(node $ELV_CLIENT_PATH/utilities/ObjectMoveMetadata.js \
-  --objectId $MEZ_OBJECT_ID \
-  --oldPath /xofferings \
-  --newPath /offerings \
-  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
-  --json -v)
-
-check_exit_code $?
-
-echo
-echo SUCCESS
-echo
-
+print_spaced SUCCESS
 exit 0

@@ -28,6 +28,15 @@ const checkFunctionFactory = checksMap => {
   };
 };
 
+const chainedArgInfo = envVarMap => {
+  if(envVarMap.ELV_ENABLE_CHAINING) {
+    const chain_arg_keys = Object.keys(envVarMap).filter(x => x.startsWith("ELV_CHAIN_")).sort();
+    const chain_arg_info = chain_arg_keys.map(x => new Object({argName: x.slice(10), argVal: envVarMap[x] }));
+    if(chain_arg_keys.length > 0) return chain_arg_info.map(x=>`${x.argName}=${x.argVal}`);
+    return nil;
+  }
+};
+
 module.exports = class Utility {
   static async cmdLineInvoke(klass) {
     let utility;
@@ -56,12 +65,20 @@ module.exports = class Utility {
       ? cmdLineContext() // assume invoked at command line
       : callContext(params); // module call
 
-    this.context.args = yargs()
-      .option("debugArgs",{type:"boolean", hidden: true})
-      .option("help",{
-        desc:  "Show help for command line options",
+    const chainedArgs = chainedArgInfo(this.context.env);
+
+    let yargsParser = yargs()
+      .option("debugArgs", {hidden: true, type: "boolean"})
+      .option("chain", {
+        hidden: true,
+        requiresArg: true,
+        string: true,
+        type: "array"
+      })
+      .option("help", {
+        desc: "Show help for command line options",
         group: "General",
-        type:"boolean"
+        type: "boolean"
       })
       .options(this.widget.data().yargsOptMap)
       .check(checkFunctionFactory(this.widget.data().checksMap))
@@ -73,9 +90,22 @@ module.exports = class Utility {
         if(err) throw err; // preserve stack
         // eslint-disable-next-line no-console
         if(!this.context.env.ELV_SUPPRESS_USAGE) console.error(yargs.help());
+        if(chainedArgs) {
+          // eslint-disable-next-line no-console
+          console.warn("\nWARNING: Env var ELV_ENABLE_CHAINING is set, this may introduce unwanted arguments, use 'unset ELV_ENABLE_CHAINING' if this was unintended.\n");
+          for(const a of chainedArg) {
+            // eslint-disable-next-line no-console
+            console.warn(`   ${a}`);
+          }
+          // eslint-disable-next-line no-console
+          console.warn();
+        }
         throw Error(msg);
-      })
-      .parse(this.context.argList);
+      });
+
+    if(this.context.env.ELV_ENABLE_CHAINING) yargsParser = yargsParser.env("ELV_CHAIN");
+
+    this.context.args = yargsParser.parse(this.context.argList);
 
     if(this.context.args.debugArgs) {
       // eslint-disable-next-line no-console
@@ -91,6 +121,17 @@ module.exports = class Utility {
     this.env = this.context.env;
     this.logger = this.concerns.Logger;
     this.logger.data("args", this.args);
+
+    if(chainedArgs) {
+      this.logger.data("arg_chaining_vars", chainedArgs);
+      this.logger.logList(
+        "",
+        "----------------------------------------------------",
+        "ELV_ENABLE_CHAINING in use for the following arg(s):",
+        ...chainedArgs,
+        "----------------------------------------------------"
+      );
+    }
   }
 
   blueprint() {
