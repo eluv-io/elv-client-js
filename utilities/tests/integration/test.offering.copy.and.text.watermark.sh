@@ -1,4 +1,5 @@
 #!/bin/bash
+unset ELV_ENABLE_CHAINING
 
 print_spaced() {
   echo
@@ -64,6 +65,7 @@ fi
 # SET VARIABLES
 # =========================
 
+export ELV_CALLER_SHELL_LEVEL=$SHLVL
 source $1
 
 # =========================
@@ -72,7 +74,8 @@ source $1
 
 echo
 echo -------------------
-echo INTEGRATION TEST START: OFFERING COPY AND TEXT WATERMARK
+echo INTEGRATION TEST START
+echo $0
 echo Mez ID: $MEZ_ID
 echo Source offering: $SOURCE_OFFERING_KEY
 echo Target offering: $TARGET_OFFERING_KEY
