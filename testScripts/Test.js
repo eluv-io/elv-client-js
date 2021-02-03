@@ -17,6 +17,8 @@ const Test = async () => {
     console.error(error);
     console.error(JSON.stringify(error, null, 2));
   }
+
+  process.exit(0);
 };
 
 Test();
