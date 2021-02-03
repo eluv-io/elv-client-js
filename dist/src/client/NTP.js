@@ -5,6 +5,8 @@ var _regeneratorRuntime = require("@babel/runtime/regenerator");
  *
  * @module ElvClient/NTP
  */
+var UrlJoin = require("url-join");
+
 var _require = require("../Validation"),
     ValidateAddress = _require.ValidateAddress,
     ValidateDate = _require.ValidateDate,
@@ -409,7 +411,7 @@ exports.IssueNTPCode = function _callee7(_ref9) {
  * @namedParams
  * @param {string=} issuer - Issuer to authorize against
  * @param {string=} tenantId - The ID of the tenant from which the ticket was issued
- * @param {string} ntpId - The ID of the NTP instance from which the ticket was issued
+ * @param {string=} ntpId - The ID of the NTP instance from which the ticket was issued
  * @param {string} code - Access code
  * @param {string=} email - Email address associated with the code
  *
@@ -454,10 +456,10 @@ exports.RedeemCode = function _callee8(_ref10) {
 
         case 12:
           // Ticket API
-          ValidatePresence("issuer or tenantId and ntpId", issuer || tenantId && ntpId);
+          ValidatePresence("issuer or tenantId", issuer || tenantId);
 
           if (!issuer) {
-            issuer = "/otp/ntp/".concat(tenantId, "/").concat(ntpId);
+            issuer = UrlJoin("/otp", "ntp", tenantId, ntpId || "");
           }
 
           _context8.prev = 14;

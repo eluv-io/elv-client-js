@@ -4,6 +4,8 @@
  * @module ElvClient/NTP
  */
 
+const UrlJoin = require("url-join");
+
 const {
   ValidateAddress,
   ValidateDate,
@@ -363,7 +365,7 @@ exports.IssueNTPCode = async function({tenantId, ntpId, email, maxRedemptions}) 
  * @namedParams
  * @param {string=} issuer - Issuer to authorize against
  * @param {string=} tenantId - The ID of the tenant from which the ticket was issued
- * @param {string} ntpId - The ID of the NTP instance from which the ticket was issued
+ * @param {string=} ntpId - The ID of the NTP instance from which the ticket was issued
  * @param {string} code - Access code
  * @param {string=} email - Email address associated with the code
  *
@@ -387,10 +389,10 @@ exports.RedeemCode = async function({issuer, tenantId, ntpId, code, email}) {
   } else {
     // Ticket API
 
-    ValidatePresence("issuer or tenantId and ntpId", issuer || (tenantId && ntpId));
+    ValidatePresence("issuer or tenantId", issuer || tenantId);
 
     if(!issuer) {
-      issuer = `/otp/ntp/${tenantId}/${ntpId}`;
+      issuer = UrlJoin("/otp", "ntp", tenantId, ntpId || "");
     }
 
     try {
