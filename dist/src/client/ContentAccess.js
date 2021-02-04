@@ -1275,13 +1275,13 @@ exports.ContentObjectLibraryId = function _callee18(_ref13) {
 exports.ProduceMetadataLinks = function _callee21(_ref14) {
   var _this7 = this;
 
-  var libraryId, objectId, versionHash, _ref14$path, path, metadata, result;
+  var libraryId, objectId, versionHash, _ref14$path, path, metadata, authorizationToken, result;
 
   return _regeneratorRuntime.async(function _callee21$(_context21) {
     while (1) {
       switch (_context21.prev = _context21.next) {
         case 0:
-          libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash, _ref14$path = _ref14.path, path = _ref14$path === void 0 ? "/" : _ref14$path, metadata = _ref14.metadata;
+          libraryId = _ref14.libraryId, objectId = _ref14.objectId, versionHash = _ref14.versionHash, _ref14$path = _ref14.path, path = _ref14$path === void 0 ? "/" : _ref14$path, metadata = _ref14.metadata, authorizationToken = _ref14.authorizationToken;
 
           if (!(!metadata || _typeof(metadata) !== "object")) {
             _context21.next = 3;
@@ -1308,7 +1308,8 @@ exports.ProduceMetadataLinks = function _callee21(_ref14) {
                       objectId: objectId,
                       versionHash: versionHash,
                       path: UrlJoin(path, i.toString()),
-                      metadata: entry
+                      metadata: entry,
+                      authorizationToken: authorizationToken
                     }));
 
                   case 2:
@@ -1339,7 +1340,8 @@ exports.ProduceMetadataLinks = function _callee21(_ref14) {
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            linkPath: path
+            linkPath: path,
+            authorizationToken: authorizationToken
           }));
 
         case 13:
@@ -1363,7 +1365,8 @@ exports.ProduceMetadataLinks = function _callee21(_ref14) {
                       objectId: objectId,
                       versionHash: versionHash,
                       path: UrlJoin(path, key),
-                      metadata: metadata[key]
+                      metadata: metadata[key],
+                      authorizationToken: authorizationToken
                     }));
 
                   case 2:
@@ -1556,6 +1559,7 @@ exports.MetadataAuth = function _callee22(_ref15) {
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
+ * @param {string=} authorizationToken - Override default authorization with alternate token
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -1583,13 +1587,13 @@ exports.MetadataAuth = function _callee22(_ref15) {
 
 
 exports.ContentObjectMetadata = function _callee23(_ref16) {
-  var libraryId, objectId, versionHash, writeToken, _ref16$metadataSubtre, metadataSubtree, _ref16$queryParams, queryParams, _ref16$select, select, _ref16$remove, remove, _ref16$resolveLinks, resolveLinks, _ref16$resolveInclude, resolveIncludeSource, _ref16$resolveIgnoreE, resolveIgnoreErrors, _ref16$linkDepthLimit, linkDepthLimit, _ref16$produceLinkUrl, produceLinkUrls, path, metadata, authToken;
+  var libraryId, objectId, versionHash, writeToken, _ref16$metadataSubtre, metadataSubtree, _ref16$queryParams, queryParams, _ref16$select, select, _ref16$remove, remove, authorizationToken, _ref16$resolveLinks, resolveLinks, _ref16$resolveInclude, resolveIncludeSource, _ref16$resolveIgnoreE, resolveIgnoreErrors, _ref16$linkDepthLimit, linkDepthLimit, _ref16$produceLinkUrl, produceLinkUrls, path, metadata, authToken;
 
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
-          libraryId = _ref16.libraryId, objectId = _ref16.objectId, versionHash = _ref16.versionHash, writeToken = _ref16.writeToken, _ref16$metadataSubtre = _ref16.metadataSubtree, metadataSubtree = _ref16$metadataSubtre === void 0 ? "/" : _ref16$metadataSubtre, _ref16$queryParams = _ref16.queryParams, queryParams = _ref16$queryParams === void 0 ? {} : _ref16$queryParams, _ref16$select = _ref16.select, select = _ref16$select === void 0 ? [] : _ref16$select, _ref16$remove = _ref16.remove, remove = _ref16$remove === void 0 ? [] : _ref16$remove, _ref16$resolveLinks = _ref16.resolveLinks, resolveLinks = _ref16$resolveLinks === void 0 ? false : _ref16$resolveLinks, _ref16$resolveInclude = _ref16.resolveIncludeSource, resolveIncludeSource = _ref16$resolveInclude === void 0 ? false : _ref16$resolveInclude, _ref16$resolveIgnoreE = _ref16.resolveIgnoreErrors, resolveIgnoreErrors = _ref16$resolveIgnoreE === void 0 ? false : _ref16$resolveIgnoreE, _ref16$linkDepthLimit = _ref16.linkDepthLimit, linkDepthLimit = _ref16$linkDepthLimit === void 0 ? 1 : _ref16$linkDepthLimit, _ref16$produceLinkUrl = _ref16.produceLinkUrls, produceLinkUrls = _ref16$produceLinkUrl === void 0 ? false : _ref16$produceLinkUrl;
+          libraryId = _ref16.libraryId, objectId = _ref16.objectId, versionHash = _ref16.versionHash, writeToken = _ref16.writeToken, _ref16$metadataSubtre = _ref16.metadataSubtree, metadataSubtree = _ref16$metadataSubtre === void 0 ? "/" : _ref16$metadataSubtre, _ref16$queryParams = _ref16.queryParams, queryParams = _ref16$queryParams === void 0 ? {} : _ref16$queryParams, _ref16$select = _ref16.select, select = _ref16$select === void 0 ? [] : _ref16$select, _ref16$remove = _ref16.remove, remove = _ref16$remove === void 0 ? [] : _ref16$remove, authorizationToken = _ref16.authorizationToken, _ref16$resolveLinks = _ref16.resolveLinks, resolveLinks = _ref16$resolveLinks === void 0 ? false : _ref16$resolveLinks, _ref16$resolveInclude = _ref16.resolveIncludeSource, resolveIncludeSource = _ref16$resolveInclude === void 0 ? false : _ref16$resolveInclude, _ref16$resolveIgnoreE = _ref16.resolveIgnoreErrors, resolveIgnoreErrors = _ref16$resolveIgnoreE === void 0 ? false : _ref16$resolveIgnoreE, _ref16$linkDepthLimit = _ref16.linkDepthLimit, linkDepthLimit = _ref16$linkDepthLimit === void 0 ? 1 : _ref16$linkDepthLimit, _ref16$produceLinkUrl = _ref16.produceLinkUrls, produceLinkUrls = _ref16$produceLinkUrl === void 0 ? false : _ref16$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1603,18 +1607,24 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
 
           path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
           _context23.prev = 5;
+          _context23.t0 = authorizationToken;
 
-          if (!queryParams.authorization) {
-            _context23.next = 10;
+          if (_context23.t0) {
+            _context23.next = 16;
             break;
           }
 
-          _context23.t0 = queryParams.authorization;
-          _context23.next = 13;
+          if (!queryParams.authorization) {
+            _context23.next = 12;
+            break;
+          }
+
+          _context23.t1 = queryParams.authorization;
+          _context23.next = 15;
           break;
 
-        case 10:
-          _context23.next = 12;
+        case 12:
+          _context23.next = 14;
           return _regeneratorRuntime.awrap(this.MetadataAuth({
             libraryId: libraryId,
             objectId: objectId,
@@ -1622,12 +1632,15 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             path: metadataSubtree
           }));
 
-        case 12:
-          _context23.t0 = _context23.sent;
+        case 14:
+          _context23.t1 = _context23.sent;
 
-        case 13:
+        case 15:
+          _context23.t0 = _context23.t1;
+
+        case 16:
           authToken = _context23.t0;
-          _context23.next = 16;
+          _context23.next = 19;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             headers: {
               "Authorization": "Bearer ".concat(authToken)
@@ -1644,52 +1657,53 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             path: path
           })));
 
-        case 16:
+        case 19:
           metadata = _context23.sent;
-          _context23.next = 24;
+          _context23.next = 27;
           break;
 
-        case 19:
-          _context23.prev = 19;
-          _context23.t1 = _context23["catch"](5);
+        case 22:
+          _context23.prev = 22;
+          _context23.t2 = _context23["catch"](5);
 
-          if (!(_context23.t1.status !== 404)) {
-            _context23.next = 23;
+          if (!(_context23.t2.status !== 404)) {
+            _context23.next = 26;
             break;
           }
 
-          throw _context23.t1;
+          throw _context23.t2;
 
-        case 23:
+        case 26:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 24:
+        case 27:
           if (produceLinkUrls) {
-            _context23.next = 26;
+            _context23.next = 29;
             break;
           }
 
           return _context23.abrupt("return", metadata);
 
-        case 26:
-          _context23.next = 28;
+        case 29:
+          _context23.next = 31;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
             path: metadataSubtree,
-            metadata: metadata
+            metadata: metadata,
+            authorizationToken: authorizationToken
           }));
 
-        case 28:
+        case 31:
           return _context23.abrupt("return", _context23.sent);
 
-        case 29:
+        case 32:
         case "end":
           return _context23.stop();
       }
     }
-  }, null, this, [[5, 19]]);
+  }, null, this, [[5, 22]]);
 };
 /** Retrive public/asset_metadata from the specified object, performing automatic localization override based on the specified localization info.
  *
@@ -2235,7 +2249,8 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            metadataSubtree: offeringPath
+            metadataSubtree: offeringPath,
+            authorizationToken: authorizationToken
           }));
 
         case 20:
@@ -2268,7 +2283,8 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             metadataSubtree: linkPath,
             resolveLinks: false,
             resolveIgnoreErrors: true,
-            resolveIncludeSource: true
+            resolveIncludeSource: true,
+            authorizationToken: authorizationToken
           }));
 
         case 29:
@@ -2289,7 +2305,8 @@ exports.PlayoutOptions = function _callee29(_ref21) {
             versionHash: versionHash,
             writeToken: writeToken,
             linkPath: linkPath,
-            linkInfo: linkInfo
+            linkInfo: linkInfo,
+            authorizationToken: authorizationToken
           }));
 
         case 36:
@@ -2593,15 +2610,25 @@ exports.BitmovinPlayoutOptions = function _callee30(_ref23) {
           linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
 
         case 15:
-          _context30.next = 17;
+          _context30.t0 = authorizationToken;
+
+          if (_context30.t0) {
+            _context30.next = 20;
+            break;
+          }
+
+          _context30.next = 19;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             objectId: linkTargetId || objectId,
             channelAuth: true,
             oauthToken: this.oauthToken
           }));
 
-        case 17:
-          authToken = _context30.sent;
+        case 19:
+          _context30.t0 = _context30.sent;
+
+        case 20:
+          authToken = _context30.t0;
           config = {
             drm: {}
           };
@@ -2645,7 +2672,7 @@ exports.BitmovinPlayoutOptions = function _callee30(_ref23) {
           });
           return _context30.abrupt("return", config);
 
-        case 21:
+        case 24:
         case "end":
           return _context30.stop();
       }
@@ -3385,18 +3412,19 @@ exports.ContentObjectGraph = function _callee38(_ref30) {
  * @param {string=} versionHash - Hash of an object version
  * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
+ * @param {string=} authorizationToken - Override default authorization with alternate token
  *
  * @returns {Promise<string>} - Version hash of the link's target
  */
 
 
 exports.LinkTarget = function _callee39(_ref31) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, linkInfo, targetHash, subPath;
+  var libraryId, objectId, versionHash, writeToken, linkPath, authorizationToken, linkInfo, targetHash, subPath;
   return _regeneratorRuntime.async(function _callee39$(_context39) {
     while (1) {
       switch (_context39.prev = _context39.next) {
         case 0:
-          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath, linkInfo = _ref31.linkInfo;
+          libraryId = _ref31.libraryId, objectId = _ref31.objectId, versionHash = _ref31.versionHash, writeToken = _ref31.writeToken, linkPath = _ref31.linkPath, authorizationToken = _ref31.authorizationToken, linkInfo = _ref31.linkInfo;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3439,7 +3467,8 @@ exports.LinkTarget = function _callee39(_ref31) {
             metadataSubtree: linkPath,
             resolveLinks: false,
             resolveIgnoreErrors: true,
-            resolveIncludeSource: true
+            resolveIncludeSource: true,
+            authorizationToken: authorizationToken
           }));
 
         case 11:
@@ -3500,7 +3529,8 @@ exports.LinkTarget = function _callee39(_ref31) {
             versionHash: versionHash,
             writeToken: writeToken,
             metadataSubtree: linkPath,
-            resolveIncludeSource: true
+            resolveIncludeSource: true,
+            authorizationToken: authorizationToken
           }));
 
         case 29:
@@ -3569,7 +3599,8 @@ exports.LinkTarget = function _callee39(_ref31) {
             versionHash: versionHash,
             writeToken: writeToken,
             metadataSubtree: subPath,
-            resolveIncludeSource: true
+            resolveIncludeSource: true,
+            authorizationToken: authorizationToken
           }));
 
         case 48:
@@ -3597,6 +3628,7 @@ exports.LinkTarget = function _callee39(_ref31) {
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {string=} authorizationToken - Override default authorization with alternate token
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
@@ -3604,13 +3636,13 @@ exports.LinkTarget = function _callee39(_ref31) {
 
 
 exports.LinkUrl = function _callee40(_ref32) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, _ref32$queryParams, queryParams, _ref32$channelAuth, channelAuth, path;
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, authorizationToken, _ref32$queryParams, queryParams, _ref32$channelAuth, channelAuth, path;
 
   return _regeneratorRuntime.async(function _callee40$(_context40) {
     while (1) {
       switch (_context40.prev = _context40.next) {
         case 0:
-          libraryId = _ref32.libraryId, objectId = _ref32.objectId, versionHash = _ref32.versionHash, writeToken = _ref32.writeToken, linkPath = _ref32.linkPath, mimeType = _ref32.mimeType, _ref32$queryParams = _ref32.queryParams, queryParams = _ref32$queryParams === void 0 ? {} : _ref32$queryParams, _ref32$channelAuth = _ref32.channelAuth, channelAuth = _ref32$channelAuth === void 0 ? false : _ref32$channelAuth;
+          libraryId = _ref32.libraryId, objectId = _ref32.objectId, versionHash = _ref32.versionHash, writeToken = _ref32.writeToken, linkPath = _ref32.linkPath, mimeType = _ref32.mimeType, authorizationToken = _ref32.authorizationToken, _ref32$queryParams = _ref32.queryParams, queryParams = _ref32$queryParams === void 0 ? {} : _ref32$queryParams, _ref32$channelAuth = _ref32.channelAuth, channelAuth = _ref32$channelAuth === void 0 ? false : _ref32$channelAuth;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3640,7 +3672,14 @@ exports.LinkUrl = function _callee40(_ref32) {
           }
 
           _context40.t0 = _objectSpread;
-          _context40.next = 10;
+          _context40.t1 = authorizationToken || queryParams.authorization;
+
+          if (_context40.t1) {
+            _context40.next = 13;
+            break;
+          }
+
+          _context40.next = 12;
           return _regeneratorRuntime.awrap(this.MetadataAuth({
             libraryId: libraryId,
             objectId: objectId,
@@ -3649,16 +3688,19 @@ exports.LinkUrl = function _callee40(_ref32) {
             channelAuth: channelAuth
           }));
 
-        case 10:
+        case 12:
           _context40.t1 = _context40.sent;
-          _context40.t2 = {
-            authorization: _context40.t1
+
+        case 13:
+          _context40.t2 = _context40.t1;
+          _context40.t3 = {
+            authorization: _context40.t2
           };
-          _context40.t3 = queryParams;
-          _context40.t4 = {
+          _context40.t4 = queryParams;
+          _context40.t5 = {
             resolve: true
           };
-          queryParams = (0, _context40.t0)(_context40.t2, _context40.t3, _context40.t4);
+          queryParams = (0, _context40.t0)(_context40.t3, _context40.t4, _context40.t5);
 
           if (mimeType) {
             queryParams["header-accept"] = mimeType;
@@ -3669,7 +3711,7 @@ exports.LinkUrl = function _callee40(_ref32) {
             queryParams: queryParams
           }));
 
-        case 17:
+        case 20:
         case "end":
           return _context40.stop();
       }

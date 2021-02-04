@@ -1247,7 +1247,7 @@ function () {
      * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
      * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
      * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
-     *
+     * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
      * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
      *
      * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
@@ -1256,13 +1256,13 @@ function () {
   }, {
     key: "FromConfigurationUrl",
     value: function FromConfigurationUrl(_ref19) {
-      var configUrl, region, trustAuthorityId, staticToken, _ref19$noCache, noCache, _ref19$noAuth, noAuth, _ref20, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
+      var configUrl, region, trustAuthorityId, staticToken, _ref19$ethereumContra, ethereumContractTimeout, _ref19$noCache, noCache, _ref19$noAuth, noAuth, _ref20, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context15) {
         while (1) {
           switch (_context15.prev = _context15.next) {
             case 0:
-              configUrl = _ref19.configUrl, region = _ref19.region, trustAuthorityId = _ref19.trustAuthorityId, staticToken = _ref19.staticToken, _ref19$noCache = _ref19.noCache, noCache = _ref19$noCache === void 0 ? false : _ref19$noCache, _ref19$noAuth = _ref19.noAuth, noAuth = _ref19$noAuth === void 0 ? false : _ref19$noAuth;
+              configUrl = _ref19.configUrl, region = _ref19.region, trustAuthorityId = _ref19.trustAuthorityId, staticToken = _ref19.staticToken, _ref19$ethereumContra = _ref19.ethereumContractTimeout, ethereumContractTimeout = _ref19$ethereumContra === void 0 ? 10 : _ref19$ethereumContra, _ref19$noCache = _ref19.noCache, noCache = _ref19$noCache === void 0 ? false : _ref19$noCache, _ref19$noAuth = _ref19.noAuth, noAuth = _ref19$noAuth === void 0 ? false : _ref19$noAuth;
               _context15.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
@@ -1280,6 +1280,7 @@ function () {
                 fabricVersion: fabricVersion,
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
+                ethereumContractTimeout: ethereumContractTimeout,
                 trustAuthorityId: trustAuthorityId,
                 staticToken: staticToken,
                 noCache: noCache,

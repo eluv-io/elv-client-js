@@ -102,7 +102,7 @@ function () {
    *
    *  - A permission may have `start` and `end` times. As mentioned above, the effective start and end times of a permission are the *most restrictive* of all applicable start and end times.
    *
-   *  - A permission must have a subject, which can be either a user, a group, or an NTP instance, either from the Fabric or from an OAuth provider
+   *  - A permission must have a subject, which can be either a user or group, either from the Fabric or from an OAuth provider, or an NTP instance or an NTP Subject
    *
    *  - A subject must have an ID and a name. In the case of certain OAuth providers, the name may be used as an ID in most cases, but the immutable ID for that subject must be used as the ID. For example, in Okta, a group may be specified by its name "Content Admins", but have the Okta ID "00g102tklfAorixGi4x7". The former should be used as the subjectName, and the latter as the subjectId
    *
@@ -183,165 +183,194 @@ function () {
         }
       });
       return profileSpec;
-    }
+    } // Convert from fabric metadata spec to client spec
+
   }, {
     key: "FormatPermission",
     value: function FormatPermission(_ref) {
-      var policyId, policyWriteToken, permission, subjectSource, subjectType, subjectId, id, cachedName, subjectName, contentSpaceLibraryId, permissionSpec;
+      var policyId, policyWriteToken, permission, subjectSource, subjectType, subjectId, subjectName, subjectNTPId, id, cachedName, contentSpaceLibraryId, permissionSpec;
       return _regeneratorRuntime.async(function FormatPermission$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
               policyId = _ref.policyId, policyWriteToken = _ref.policyWriteToken, permission = _ref.permission;
               subjectSource = permission.subject.type.startsWith("oauth") ? "oauth" : "fabric";
-              subjectType = permission.subject.type === "otp" ? "ntp" : permission.subject.type.includes("group") ? "group" : "user";
-              subjectId = permission.subject.type === "otp" ? permission.subject.id : subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
+              _context.t0 = permission.subject.type;
+              _context.next = _context.t0 === "otp" ? 5 : _context.t0 === "otp_subject" ? 8 : _context.t0 === "group" ? 13 : _context.t0 === "oauth_group" ? 13 : _context.t0 === "user" ? 16 : _context.t0 === "oauth_user" ? 16 : 19;
+              break;
+
+            case 5:
+              subjectType = "ntp";
+              subjectId = permission.subject.id;
+              return _context.abrupt("break", 20);
+
+            case 8:
+              subjectType = "ntp_subject";
+              subjectId = permission.subject.id;
+              subjectName = subjectId;
+              subjectNTPId = permission.subject.otp_id;
+              return _context.abrupt("break", 20);
+
+            case 13:
+              subjectType = "group";
+              subjectId = subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
+              return _context.abrupt("break", 20);
+
+            case 16:
+              subjectType = "user";
+              subjectId = subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
+              return _context.abrupt("break", 20);
+
+            case 19:
+              throw Error("Unknown subject type: " + permission.subject.type);
+
+            case 20:
               id = permission.subject.oauth_id || permission.subject.id;
               cachedName = this.subjectNames[id];
-              subjectName = cachedName || permission.subject.id;
+              subjectName = subjectName || cachedName || permission.subject.id;
 
               if (!(!cachedName && subjectSource === "fabric")) {
-                _context.next = 62;
+                _context.next = 78;
                 break;
               }
 
               if (!(subjectType === "group")) {
-                _context.next = 20;
+                _context.next = 36;
                 break;
               }
 
-              _context.next = 11;
+              _context.next = 27;
               return _regeneratorRuntime.awrap(this.client.ContentSpaceId());
 
-            case 11:
+            case 27:
               contentSpaceLibraryId = _context.sent.replace("ispc", "ilib");
-              _context.next = 14;
+              _context.next = 30;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: contentSpaceLibraryId,
                 objectId: this.client.utils.AddressToObjectId(subjectId),
                 metadataSubtree: UrlJoin("public", "name")
               }));
 
-            case 14:
-              _context.t0 = _context.sent;
-
-              if (_context.t0) {
-                _context.next = 17;
-                break;
-              }
-
-              _context.t0 = subjectId;
-
-            case 17:
-              subjectName = _context.t0;
-              _context.next = 62;
-              break;
-
-            case 20:
-              if (!(subjectType === "user")) {
-                _context.next = 42;
-                break;
-              }
-
-              _context.t3 = _regeneratorRuntime;
-              _context.t4 = this.client;
-              _context.next = 25;
-              return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
-                objectId: policyId
-              }));
-
-            case 25:
-              _context.t5 = _context.sent;
-              _context.t6 = policyId;
-              _context.t7 = policyWriteToken;
-              _context.t8 = UrlJoin("auth_policy_settings", "fabric_users", subjectId);
-              _context.t9 = {
-                libraryId: _context.t5,
-                objectId: _context.t6,
-                writeToken: _context.t7,
-                metadataSubtree: _context.t8
-              };
-              _context.t10 = _context.t4.ContentObjectMetadata.call(_context.t4, _context.t9);
-              _context.next = 33;
-              return _context.t3.awrap.call(_context.t3, _context.t10);
-
-            case 33:
-              _context.t2 = _context.sent;
-
-              if (_context.t2) {
-                _context.next = 36;
-                break;
-              }
-
-              _context.t2 = {};
-
-            case 36:
-              _context.t1 = _context.t2.name;
+            case 30:
+              _context.t1 = _context.sent;
 
               if (_context.t1) {
-                _context.next = 39;
+                _context.next = 33;
                 break;
               }
 
               _context.t1 = subjectId;
 
-            case 39:
+            case 33:
               subjectName = _context.t1;
-              _context.next = 62;
+              _context.next = 78;
               break;
 
-            case 42:
-              if (!(subjectType === "ntp")) {
-                _context.next = 62;
-                break;
-              }
-
-              _context.t13 = _regeneratorRuntime;
-              _context.t14 = this.client;
-              _context.next = 47;
-              return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
-                objectId: policyId
-              }));
-
-            case 47:
-              _context.t15 = _context.sent;
-              _context.t16 = policyId;
-              _context.t17 = policyWriteToken;
-              _context.t18 = UrlJoin("auth_policy_settings", "ntp_instances", subjectId);
-              _context.t19 = {
-                libraryId: _context.t15,
-                objectId: _context.t16,
-                writeToken: _context.t17,
-                metadataSubtree: _context.t18
-              };
-              _context.t20 = _context.t14.ContentObjectMetadata.call(_context.t14, _context.t19);
-              _context.next = 55;
-              return _context.t13.awrap.call(_context.t13, _context.t20);
-
-            case 55:
-              _context.t12 = _context.sent;
-
-              if (_context.t12) {
+            case 36:
+              if (!(subjectType === "user")) {
                 _context.next = 58;
                 break;
               }
 
-              _context.t12 = {};
+              _context.t4 = _regeneratorRuntime;
+              _context.t5 = this.client;
+              _context.next = 41;
+              return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
+                objectId: policyId
+              }));
 
-            case 58:
-              _context.t11 = _context.t12.name;
+            case 41:
+              _context.t6 = _context.sent;
+              _context.t7 = policyId;
+              _context.t8 = policyWriteToken;
+              _context.t9 = UrlJoin("auth_policy_settings", "fabric_users", subjectId);
+              _context.t10 = {
+                libraryId: _context.t6,
+                objectId: _context.t7,
+                writeToken: _context.t8,
+                metadataSubtree: _context.t9
+              };
+              _context.t11 = _context.t5.ContentObjectMetadata.call(_context.t5, _context.t10);
+              _context.next = 49;
+              return _context.t4.awrap.call(_context.t4, _context.t11);
 
-              if (_context.t11) {
-                _context.next = 61;
+            case 49:
+              _context.t3 = _context.sent;
+
+              if (_context.t3) {
+                _context.next = 52;
                 break;
               }
 
-              _context.t11 = subjectId;
+              _context.t3 = {};
 
-            case 61:
-              subjectName = _context.t11;
+            case 52:
+              _context.t2 = _context.t3.name;
 
-            case 62:
+              if (_context.t2) {
+                _context.next = 55;
+                break;
+              }
+
+              _context.t2 = subjectId;
+
+            case 55:
+              subjectName = _context.t2;
+              _context.next = 78;
+              break;
+
+            case 58:
+              if (!(subjectType === "ntp")) {
+                _context.next = 78;
+                break;
+              }
+
+              _context.t14 = _regeneratorRuntime;
+              _context.t15 = this.client;
+              _context.next = 63;
+              return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
+                objectId: policyId
+              }));
+
+            case 63:
+              _context.t16 = _context.sent;
+              _context.t17 = policyId;
+              _context.t18 = policyWriteToken;
+              _context.t19 = UrlJoin("auth_policy_settings", "ntp_instances", subjectId);
+              _context.t20 = {
+                libraryId: _context.t16,
+                objectId: _context.t17,
+                writeToken: _context.t18,
+                metadataSubtree: _context.t19
+              };
+              _context.t21 = _context.t15.ContentObjectMetadata.call(_context.t15, _context.t20);
+              _context.next = 71;
+              return _context.t14.awrap.call(_context.t14, _context.t21);
+
+            case 71:
+              _context.t13 = _context.sent;
+
+              if (_context.t13) {
+                _context.next = 74;
+                break;
+              }
+
+              _context.t13 = {};
+
+            case 74:
+              _context.t12 = _context.t13.name;
+
+              if (_context.t12) {
+                _context.next = 77;
+                break;
+              }
+
+              _context.t12 = subjectId;
+
+            case 77:
+              subjectName = _context.t12;
+
+            case 78:
               this.subjectNames[id] = subjectName;
               permissionSpec = {
                 profileName: permission.profile,
@@ -350,6 +379,10 @@ function () {
                 subjectId: subjectId,
                 subjectName: subjectName
               };
+
+              if (subjectNTPId) {
+                permissionSpec.subjectNTPId = subjectNTPId;
+              }
 
               if (permission.start) {
                 permissionSpec.start = permission.start;
@@ -361,7 +394,7 @@ function () {
 
               return _context.abrupt("return", permissionSpec);
 
-            case 67:
+            case 84:
             case "end":
               return _context.stop();
           }
@@ -904,9 +937,10 @@ function () {
      * @param {string} policyWriteToken - Write token for the policy
      * @param {string} itemId - Object ID of the item
      * @param {string} subjectSource="fabric" - ("fabric" | "oauth") - The source of the subject
-     * @param {string} subjectType="group - ("user" | "group" | "ntp") - The type of the subject
-     * @param {string} subjectName - The name of the subject
+     * @param {string} subjectType="group - ("user" | "group" | "ntp" | "ntp_subject") - The type of the subject
+     * @param {string=} subjectName - The name of the subject
      * @param {string} subjectId - The ID of the subject
+     * @param {string=} subjectNTPId - (For subjectType "ntp_subject") The NTP ID associated with the subject
      * @param {string} profileName - The profile to apply for the permission
      * @param {string | number} start - The start time for the permission
      * @param {string | number} end - The end time for the permission
@@ -915,13 +949,13 @@ function () {
   }, {
     key: "SetPermission",
     value: function SetPermission(_ref10) {
-      var policyId, policyWriteToken, itemId, _ref10$subjectSource, subjectSource, _ref10$subjectType, subjectType, subjectName, subjectId, profileName, start, end, policyLibraryId, existingPermissions, index, permissionSpec, subjectInfo, userInfo, _userInfo;
+      var policyId, policyWriteToken, itemId, _ref10$subjectSource, subjectSource, _ref10$subjectType, subjectType, subjectName, subjectId, subjectNTPId, profileName, start, end, policyLibraryId, existingPermissions, index, permissionSpec, subjectInfo, userInfo, _userInfo;
 
       return _regeneratorRuntime.async(function SetPermission$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              policyId = _ref10.policyId, policyWriteToken = _ref10.policyWriteToken, itemId = _ref10.itemId, _ref10$subjectSource = _ref10.subjectSource, subjectSource = _ref10$subjectSource === void 0 ? "fabric" : _ref10$subjectSource, _ref10$subjectType = _ref10.subjectType, subjectType = _ref10$subjectType === void 0 ? "group" : _ref10$subjectType, subjectName = _ref10.subjectName, subjectId = _ref10.subjectId, profileName = _ref10.profileName, start = _ref10.start, end = _ref10.end;
+              policyId = _ref10.policyId, policyWriteToken = _ref10.policyWriteToken, itemId = _ref10.itemId, _ref10$subjectSource = _ref10.subjectSource, subjectSource = _ref10$subjectSource === void 0 ? "fabric" : _ref10$subjectSource, _ref10$subjectType = _ref10.subjectType, subjectType = _ref10$subjectType === void 0 ? "group" : _ref10$subjectType, subjectName = _ref10.subjectName, subjectId = _ref10.subjectId, subjectNTPId = _ref10.subjectNTPId, profileName = _ref10.profileName, start = _ref10.start, end = _ref10.end;
               ValidatePresence("policyId", policyId);
               ValidatePresence("policyWriteToken", policyWriteToken);
               ValidatePresence("itemId", itemId);
@@ -1004,7 +1038,7 @@ function () {
               }
 
               if (!(subjectSource === "fabric")) {
-                _context11.next = 42;
+                _context11.next = 46;
                 break;
               }
 
@@ -1017,7 +1051,7 @@ function () {
                 id: subjectId,
                 type: "group"
               };
-              _context11.next = 40;
+              _context11.next = 44;
               break;
 
             case 31:
@@ -1030,7 +1064,7 @@ function () {
                 id: subjectId,
                 type: "user"
               };
-              _context11.next = 40;
+              _context11.next = 44;
               break;
 
             case 35:
@@ -1043,24 +1077,38 @@ function () {
                 id: subjectId,
                 type: "otp"
               };
-              _context11.next = 40;
+              _context11.next = 44;
               break;
 
             case 39:
-              throw Error("Invalid subject type: ".concat(subjectType));
+              if (!(subjectType === "ntp_subject")) {
+                _context11.next = 43;
+                break;
+              }
 
-            case 40:
-              _context11.next = 55;
+              subjectInfo = {
+                id: subjectId,
+                otp_id: subjectNTPId,
+                type: "otp_subject"
+              };
+              _context11.next = 44;
               break;
 
-            case 42:
+            case 43:
+              throw Error("Invalid subject type: ".concat(subjectType));
+
+            case 44:
+              _context11.next = 59;
+              break;
+
+            case 46:
               if (!(subjectSource === "oauth")) {
-                _context11.next = 54;
+                _context11.next = 58;
                 break;
               }
 
               if (!(subjectType === "group")) {
-                _context11.next = 47;
+                _context11.next = 51;
                 break;
               }
 
@@ -1069,12 +1117,12 @@ function () {
                 oauth_id: subjectId,
                 type: "oauth_group"
               };
-              _context11.next = 52;
+              _context11.next = 56;
               break;
 
-            case 47:
+            case 51:
               if (!(subjectType === "user")) {
-                _context11.next = 51;
+                _context11.next = 55;
                 break;
               }
 
@@ -1083,23 +1131,23 @@ function () {
                 oauth_id: subjectId,
                 type: "oauth_user"
               };
-              _context11.next = 52;
+              _context11.next = 56;
               break;
-
-            case 51:
-              throw Error("Invalid subject type: ".concat(subjectType));
-
-            case 52:
-              _context11.next = 55;
-              break;
-
-            case 54:
-              throw Error("Invalid subject source: ".concat(subjectSource));
 
             case 55:
+              throw Error("Invalid subject type: ".concat(subjectType));
+
+            case 56:
+              _context11.next = 59;
+              break;
+
+            case 58:
+              throw Error("Invalid subject source: ".concat(subjectSource));
+
+            case 59:
               permissionSpec.subject = subjectInfo;
               existingPermissions.permissions[index] = permissionSpec;
-              _context11.next = 59;
+              _context11.next = 63;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1108,13 +1156,13 @@ function () {
                 metadata: existingPermissions.permissions
               }));
 
-            case 59:
+            case 63:
               if (!(subjectSource === "fabric" && subjectType === "user")) {
-                _context11.next = 68;
+                _context11.next = 72;
                 break;
               }
 
-              _context11.next = 62;
+              _context11.next = 66;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1122,15 +1170,15 @@ function () {
                 metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId))
               }));
 
-            case 62:
+            case 66:
               userInfo = _context11.sent;
 
               if (userInfo) {
-                _context11.next = 66;
+                _context11.next = 70;
                 break;
               }
 
-              _context11.next = 66;
+              _context11.next = 70;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1142,17 +1190,17 @@ function () {
                 }
               }));
 
-            case 66:
-              _context11.next = 75;
+            case 70:
+              _context11.next = 79;
               break;
 
-            case 68:
+            case 72:
               if (!(subjectSource === "fabric" && subjectType === "ntp")) {
-                _context11.next = 75;
+                _context11.next = 79;
                 break;
               }
 
-              _context11.next = 71;
+              _context11.next = 75;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1160,15 +1208,15 @@ function () {
                 metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
               }));
 
-            case 71:
+            case 75:
               _userInfo = _context11.sent;
 
               if (_userInfo) {
-                _context11.next = 75;
+                _context11.next = 79;
                 break;
               }
 
-              _context11.next = 75;
+              _context11.next = 79;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1182,7 +1230,7 @@ function () {
                 }
               }));
 
-            case 75:
+            case 79:
             case "end":
               return _context11.stop();
           }
