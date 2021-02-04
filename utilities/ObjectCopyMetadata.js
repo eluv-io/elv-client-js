@@ -3,20 +3,18 @@ const objectPath = require("object-path");
 const R = require("ramda");
 
 const {ModOpt, NewOpt} = require("./lib/options");
-
 const Utility = require("./lib/Utility");
 
-const FabricObject = require("./lib/concerns/FabricObject");
+const ExistObj = require("./lib/concerns/ExistObj");
 const Metadata = require("./lib/concerns/Metadata");
-const ObjectEdit = require("./lib/concerns/ObjectEdit");
 
 class ObjectCopyMetadata extends Utility {
   blueprint() {
     return {
-      concerns: [FabricObject, ObjectEdit, Metadata],
+      concerns: [ExistObj, Metadata],
       options: [
-        ModOpt("objectId", {ofX:" item to modify"}),
-        ModOpt("libraryId", {ofX:" object to modify"}),
+        ModOpt("objectId", {ofX: " item to modify"}),
+        ModOpt("libraryId", {ofX: " object to modify"}),
         NewOpt("sourcePath", {
           demand: true,
           descTemplate: "Metadata path pointing to value or subtree to be copied (include leading '/')",
@@ -39,33 +37,36 @@ class ObjectCopyMetadata extends Utility {
     const {targetPath, sourcePath} = this.args;
 
     // Check that paths are valid path strings
-    if(!Metadata.validPathFormat(sourcePath)) {
-      throw new Error("\"" + sourcePath + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
-    }
-    if(!Metadata.validPathFormat(targetPath)) {
-      throw new Error("\"" + targetPath + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
-    }
+    Metadata.validatePathFormat({path: sourcePath});
+    Metadata.validatePathFormat({path: targetPath});
 
-    await this.concerns.FabricObject.libraryIdArgPopulate();
-
-    const currentMetadata = await this.concerns.FabricObject.getMetadata();
+    const {libraryId, objectId} = await this.concerns.ExistObj.argsProc();
+    const currentMetadata = await this.concerns.ExistObj.metadata();
 
     // check to make sure sourcePath exists
-    if(!Metadata.pathExists(currentMetadata, sourcePath)) {
-      throw new Error("Metadata path '" + sourcePath + "' not found.");
-    }
+    Metadata.validatePathExists({metadata: currentMetadata, path: sourcePath});
 
     // make sure targetPath does NOT exist, or --force specified
-    this.concerns.Metadata.checkExisting({metadata: currentMetadata, targetPath, force: this.args.force});
+    this.concerns.Metadata.checkTargetPath({
+      force: this.args.force,
+      metadata: currentMetadata,
+      targetPath
+    });
 
     // copy sourcePath attribute to targetPath
-    const valueToCopy = Metadata.valueAtPath(currentMetadata, sourcePath);
+    const valueToCopy = Metadata.valueAtPath({
+      metadata: currentMetadata,
+      path: sourcePath
+    });
     const revisedMetadata = R.clone(currentMetadata);
-
-    objectPath.set(revisedMetadata, Metadata.pathPieces(targetPath), valueToCopy);
+    objectPath.set(revisedMetadata, Metadata.pathPieces({path: targetPath}), valueToCopy);
 
     // Write back metadata
-    const newHash = await this.concerns.ObjectEdit.writeMetadata({metadata: revisedMetadata});
+    const newHash = await this.concerns.Metadata.write({
+      libraryId,
+      metadata: revisedMetadata,
+      objectId
+    });
     this.logger.data("version_hash", newHash);
   }
 

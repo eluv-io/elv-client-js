@@ -13,12 +13,6 @@ removeElvEnvVars();
 
 describe("ObjectAddGroupPerms", () => {
 
-  it("should complain if --libraryId supplied", () => {
-    expect(() => {
-      new ObjectAddGroupPerms(argList2Params("--libraryId","myLibId", "--objectId", "myObjId", "--groupAddress", "0x67b70ea8be90b566337b9533d8335fcc3c5fc302", "--permissions", "manage"));
-    }).to.throw("Unknown argument: libraryId");
-  });
-
   it("should complain if --objectId missing", () => {
     expect(() => {
       new ObjectAddGroupPerms(argList2Params("--groupAddress", "myGroup", "--permissions", "manage"));

@@ -41,22 +41,34 @@ const camel2kebab = s => {
     .toLowerCase();
 };
 
+// construct a descriptor to use in log messages
+const fabricItemDesc = ({objectId, versionHash, writeToken}) => writeToken
+  ? `draft ${writeToken}`
+  : versionHash
+    ? `version ${versionHash}`
+    : objectId
+      ? `object ${objectId}`
+      : throwError("fabricItemDesc(): no objectId, versionHash, or writeToken");
+
 const padStart = width => str => str.padStart(width);
 
 const removeTrailingSlash = str => str.replace(/\/$/, "");
 
-const namedArgs = /{([0-9a-zA-Z_]+)}/g;
+// return item with a space after, if it exists, else empty string
+const spaceAfter = x => x ? `${x} ` : "";
+
 // string template replacement
 const subst = curry(
   (substitutions, stringTemplate) =>
     stringTemplate.replace(
-      namedArgs,
+      substNamedArgs,
       (match, substName) => substitutions.hasOwnProperty(substName) ? substitutions[substName] : ""
     )
 );
+const substNamedArgs = /{([0-9a-zA-Z_]+)}/g;
 
 // prevent 'null' and 'undefined' from getting put into strings
-const suppressNully = x => kindOf(x) === "null" || kindOf(x) === "undefined"
+const suppressNullLike = x => kindOf(x) === "null" || kindOf(x) === "undefined"
   ? ""
   : x;
 
@@ -66,7 +78,7 @@ const suppressNully = x => kindOf(x) === "null" || kindOf(x) === "undefined"
 // --------------------------------------------
 
 // Converts seconds to right-aligned string in "##d ##h ##m ##s " format
-// Uneeded larger units are omitted, e.g.
+// Unneeded larger units are omitted, e.g.
 //
 // etaString(0)      == "             0s"
 // etaString(1)      == "             1s"
@@ -128,7 +140,7 @@ const dumpJson = R.pipe(jsonCurry, console.log);
 // eslint-disable-next-line no-console
 const dumpKeys = R.pipe(Object.keys, console.log);
 // eslint-disable-next-line no-console
-const ll = (char = "=") => console.log(char.repeat(30)); // output horizontal line to log
+const logLine = (char = "=") => console.log(char.repeat(30)); // output horizontal line to log
 const tapJson = R.tap(dumpJson);
 
 // logging for type: Result
@@ -154,15 +166,11 @@ const widthForRatioAndHeight = (ratio, h) => Fraction(ratio).mul(h).round(0).val
 
 const identity = x => x;
 
-const join = x => x.either(Err, identity);
-const resolve = x => x.either(throwError, identity);
+// unwrap a Result object
+const join = x => x.either(identity, identity);
 
-const singleEntryMap = curry((key, value) => Object({[key]: value}));
-
-const throwError = message => {
-  throw Error(message);
-};
-
+// Accumulate an array of unwrapped objects, return Ok(array) or Err(error)
+// Returns Err(error) if accumulator is already an Err object or if kvPair value is an Err object
 const objUnwrapReducer = (rAccPairs, kvPair) => {
   return join(rAccPairs.map(
     (accPairs) => {
@@ -175,9 +183,19 @@ const objUnwrapReducer = (rAccPairs, kvPair) => {
   ));
 };
 
+// take flat object where each value is a Result, return new object with same keys but each Result unwrapped
 const objUnwrapValues = obj => R.toPairs(obj).reduce(objUnwrapReducer, Ok([])).map(R.fromPairs);
 
-const resultValue = result => result.either(identity, identity);
+const singleEntryMap = curry((key, value) => Object({[key]: value}));
+
+const throwError = message => {
+  throw Error(message);
+};
+
+// returns fixed singleton value
+const unit = () => true;
+
+// unwrap a Result object and throw an error if it contains Err object, else return an Ok object
 const valOrThrow = result => result.either(throwError, identity);
 
 module.exports = {
@@ -189,24 +207,25 @@ module.exports = {
   dumpResult,
   ellipsize,
   etaString,
+  fabricItemDesc,
   formattedInspect,
   identity,
   join,
   jsonCurry,
-  ll,
+  logLine,
   objUnwrapValues,
   padStart,
   readFile,
   removeTrailingSlash,
-  resolve,
-  resultValue,
   seconds,
   singleEntryMap,
+  spaceAfter,
   stringOrFileContents,
   subst,
-  suppressNully,
+  suppressNullLike,
   tapJson,
   throwError,
+  unit,
   valOrThrow,
   widthForRatioAndHeight
 };

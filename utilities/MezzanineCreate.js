@@ -5,13 +5,14 @@ const {seconds} = require("./lib/helpers");
 const {ModOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
+const ArgObjectId = require("./lib/concerns/ArgObjectId");
 const Asset = require("./lib/concerns/Asset");
 const Client = require("./lib/concerns/Client");
 const CloudAccess = require("./lib/concerns/CloudAccess");
 const ContentType = require("./lib/concerns/ContentType");
 const FabricObject = require("./lib/concerns/FabricObject");
 const FinalizeAndWait = require("./lib/concerns/FinalizeAndWait");
-const MetadataArg = require("./lib/concerns/MetadataArg");
+const ArgMetadata = require("./lib/concerns/ArgMetadata");
 const JSON = require("./lib/concerns/JSON");
 const LRO =  require("./lib/concerns/LRO");
 
@@ -40,6 +41,7 @@ class MezzanineCreate extends Utility {
   blueprint() {
     return {
       concerns: [
+        ArgObjectId,
         Asset,
         Client,
         CloudAccess,
@@ -48,7 +50,7 @@ class MezzanineCreate extends Utility {
         FinalizeAndWait,
         JSON,
         LRO,
-        MetadataArg
+        ArgMetadata
       ],
       options: [
         ModOpt("libraryId", {forX: "mezzanine"}),
@@ -101,22 +103,23 @@ class MezzanineCreate extends Utility {
       ? J.parseFile(this.args.abrProfile)
       : undefined;
 
-    const metadataFromArg =  this.concerns.MetadataArg.asObject() || {};
+    const metadataFromArg =  this.concerns.ArgMetadata.asObject() || {};
 
     let access = this.concerns.CloudAccess.credentialSet(false);
 
-    // operations that need to wait on network access
+    // operations that may need to wait on network access
     // ----------------------------------------------------
-    const client = await this.concerns.Client.get();
-    const libraryId = await this.concerns.FabricObject.libraryIdGet();
+    if(existingMezId) await this.concerns.ArgObjectId.argsProc();
+    const {libraryId} = this.args;
 
+    const client = await this.concerns.Client.get();
     let existingPublicMetadata = {};
     if(existingMezId) {
       logger.log("Retrieving metadata from existing mezzanine object...");
-      existingPublicMetadata = (await this.concerns.FabricObject.getMetadata({
+      existingPublicMetadata = (await this.concerns.FabricObject.metadata({
         libraryId,
         objectId: existingMezId,
-        metadataSubtree: "public"
+        subtree: "public"
       })) || {};
     }
 

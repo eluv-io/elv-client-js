@@ -1,23 +1,23 @@
 // Retrieve part list from object
 const Utility = require("./lib/Utility");
 
-const ObjectOrVersion = require("./lib/concerns/ObjectOrVersion");
-const Outfile = require("./lib/concerns/Outfile");
+const ExistObjOrVer = require("./lib/concerns/ExistObjOrVer");
+const ArgOutfile = require("./lib/concerns/ArgOutfile");
 
 class ListParts extends Utility {
   blueprint() {
     return {
-      concerns: [ObjectOrVersion, Outfile]
+      concerns: [ExistObjOrVer, ArgOutfile]
     };
   }
 
   async body() {
     const {outfile} = this.args;
-    const partList = await this.concerns.ObjectOrVersion.partList();
+    const partList = await this.concerns.ExistObjOrVer.partList();
     this.logger.data("parts", partList);
 
     if(outfile) {
-      this.concerns.Outfile.writeJson({obj: partList});
+      this.concerns.ArgOutfile.writeJson({obj: partList});
     } else {
       this.logger.logTable(partList);
     }

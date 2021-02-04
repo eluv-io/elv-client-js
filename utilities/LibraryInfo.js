@@ -4,14 +4,14 @@ const {ModOpt} = require("./lib/options");
 
 const Utility = require("./lib/Utility");
 
-const Library = require("./lib/concerns/Library");
+const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
 const Logger = require("./lib/concerns/Logger");
-const Outfile = require("./lib/concerns/Outfile");
+const ArgOutfile = require("./lib/concerns/ArgOutfile");
 
 class LibraryInfo extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, Library, Outfile],
+      concerns: [Logger, ArgLibraryId, ArgOutfile],
       options: [
         ModOpt("libraryId", {demand: true})
       ]
@@ -20,10 +20,10 @@ class LibraryInfo extends Utility {
 
   async body() {
     const logger = this.logger;
-    const obj = await this.concerns.Library.info();
+    const obj = await this.concerns.ArgLibraryId.libInfo();
     logger.data("library_info", obj);
     if(this.args.outfile) {
-      this.concerns.Outfile.writeJson({obj});
+      this.concerns.ArgOutfile.writeJson({obj});
     } else {
       this.logger.logObject(obj);
     }

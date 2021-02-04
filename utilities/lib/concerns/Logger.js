@@ -178,12 +178,12 @@ const New = (context) => {
   const logObject = obj => logList(...(JSON.stringify(obj, null, 2).split("\n")));
 
   const logTable = (arg, options = {}) => {
-    options = R.mergeDeepRight(
+    mergedOptions = R.mergeDeepRight(
       {headingTransform: identity},
       options
     );
     logList("",
-      ...columnify(arg, options).split("\n"),
+      ...columnify(arg, mergedOptions).split("\n"),
       "");
   };
 

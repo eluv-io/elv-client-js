@@ -12,13 +12,32 @@ const reMasterLib = /Title Masters: (ilib\S+)/m;
 const reMezLib = /Title Mezzanines: (ilib\S+)/m;
 
 
-const [ , , varFilePath, tenantFilePath ] = process.argv;
+const [ , , varFilePath, tenantFilePath, network ] = process.argv;
 
-if(!varFilePath || !tenantFilePath ) {
+if(!varFilePath || !tenantFilePath || !network) {
   // eslint-disable-next-line no-console
-  console.error("\nUsage: node CreateVarsFile.js varFilePath tenantFilePath\n");
+  console.error("\nUsage: node CreateVarsFile.js varFilePath tenantFilePath (prod|demo|test|local)\n");
   process.exit(1);
 }
+
+let configUrl;
+switch(network) {
+  case "prod":
+    configUrl = "https://main.net955305.contentfabric.io/config";
+    break;
+  case "demo":
+    configUrl = "https://demov3.net955210.contentfabric.io/config";
+    break;
+  case "test":
+    configUrl = "https://test.net955203.contentfabric.io/config ";
+    break;
+  case "local":
+    configUrl = "http://localhost:8008/config?qspace=dev&self";
+    break;
+  default:
+    throw Error(`unrecognized network ${network}`);
+}
+
 
 const tenantFile = fs.readFileSync(tenantFilePath, "utf8");
 const varFile = fs.readFileSync(varFilePath, "utf8");
@@ -31,6 +50,7 @@ const mezType = reMezType.exec(tenantFile)[1];
 const masterLib = reMasterLib.exec(tenantFile)[1];
 const mezLib = reMezLib.exec(tenantFile)[1];
 
+
 let revisedVarFile = varFile.replace("export MASTER_TYPE=MY_MASTER_CONTENT_TYPE_ID", `export MASTER_TYPE=${masterType}`);
 revisedVarFile = revisedVarFile.replace("export PRIVATE_KEY=MY_FABRIC_PRIVATE_KEY", `export PRIVATE_KEY=${privateKey}`);
 revisedVarFile = revisedVarFile.replace("export ADMINS_GROUP_ADDRESS=MY_GROUP_ADDRESS", `export ADMINS_GROUP_ADDRESS=${contentAdmins}`);
@@ -38,6 +58,7 @@ revisedVarFile = revisedVarFile.replace("export MASTER_TYPE=MY_MASTER_CONTENT_TY
 revisedVarFile = revisedVarFile.replace("export MEZ_TYPE=MY_MEZZANINE_CONTENT_TYPE_ID", `export MEZ_TYPE=${mezType}`);
 revisedVarFile = revisedVarFile.replace("export MASTER_LIB=MY_MASTER_LIBRARY_ID", `export MASTER_LIB=${masterLib}`);
 revisedVarFile = revisedVarFile.replace("export MEZ_LIB=MY_MEZ_LIBRARY_ID", `export MEZ_LIB=${mezLib}`);
+revisedVarFile = revisedVarFile.replace("export FABRIC_CONFIG_URL=MY_CONFIG_URL", `export FABRIC_CONFIG_URL="${configUrl}"`);
 revisedVarFile = revisedVarFile.replace(/TENANT_NAME/g, tenantName);
 
 const varFileNamePieces = path.basename(varFilePath).split(".");
@@ -46,7 +67,7 @@ const revisedPieces = [varFileNamePieces[0], tenantName, ...varFileNamePieces.sl
 const revisedVarFilePath = path.join(varFileDir, revisedPieces.join("."));
 
 // eslint-disable-next-line no-console
-console.log("writing to " + revisedVarFilePath);
+console.log(`\nWriting to ${revisedVarFilePath}\n`);
 fs.writeFileSync(revisedVarFilePath, revisedVarFile);
 // eslint-disable-next-line no-console
-console.log("done.");
+console.log("\nDone.\n");
