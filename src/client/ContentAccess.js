@@ -672,7 +672,8 @@ exports.ProduceMetadataLinks = async function({
   objectId,
   versionHash,
   path="/",
-  metadata
+  metadata,
+  authorizationToken
 }) {
   // Primitive
   if(!metadata || typeof metadata !== "object") { return metadata; }
@@ -687,7 +688,8 @@ exports.ProduceMetadataLinks = async function({
         objectId,
         versionHash,
         path: UrlJoin(path, i.toString()),
-        metadata: entry
+        metadata: entry,
+        authorizationToken
       })
     );
   }
@@ -700,7 +702,7 @@ exports.ProduceMetadataLinks = async function({
     // Is file or rep link - produce a url
     return {
       ...metadata,
-      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path})
+      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path, authorizationToken})
     };
   }
 
@@ -714,7 +716,8 @@ exports.ProduceMetadataLinks = async function({
         objectId,
         versionHash,
         path: UrlJoin(path, key),
-        metadata: metadata[key]
+        metadata: metadata[key],
+        authorizationToken
       });
     }
   );
@@ -789,6 +792,7 @@ exports.MetadataAuth = async function({
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
+ * @param {string=} authorizationToken - Override default authorization with alternate token
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -822,11 +826,12 @@ exports.ContentObjectMetadata = async function({
   queryParams={},
   select=[],
   remove=[],
+  authorizationToken,
   resolveLinks=false,
   resolveIncludeSource=false,
   resolveIgnoreErrors=false,
   linkDepthLimit=1,
-  produceLinkUrls=false
+  produceLinkUrls=false,
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
 
@@ -842,9 +847,12 @@ exports.ContentObjectMetadata = async function({
   let metadata;
   try {
     const authToken =
-      queryParams.authorization ?
-        queryParams.authorization :
-        await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
+      authorizationToken ||
+      (
+        queryParams.authorization ?
+          queryParams.authorization :
+          await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree})
+      );
 
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
@@ -877,7 +885,8 @@ exports.ContentObjectMetadata = async function({
     objectId,
     versionHash,
     path: metadataSubtree,
-    metadata
+    metadata,
+    authorizationToken
   });
 };
 
@@ -1221,7 +1230,8 @@ exports.PlayoutOptions = async function({
         libraryId,
         objectId,
         versionHash,
-        metadataSubtree: offeringPath
+        metadataSubtree: offeringPath,
+        authorizationToken
       });
 
       if(link) { linkPath = offeringPath; }
@@ -1239,7 +1249,8 @@ exports.PlayoutOptions = async function({
       metadataSubtree: linkPath,
       resolveLinks: false,
       resolveIgnoreErrors: true,
-      resolveIncludeSource: true
+      resolveIncludeSource: true,
+      authorizationToken
     });
 
     signedLink = linkInfo && linkInfo["."] && linkInfo["."].authorization;
@@ -1249,7 +1260,15 @@ exports.PlayoutOptions = async function({
 
     if(!signedLink) {
       // Unless the link is signed, we want to authorize against the target object instead of the source object
-      linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, writeToken, linkPath, linkInfo});
+      linkTargetHash = await this.LinkTarget({
+        libraryId,
+        objectId,
+        versionHash,
+        writeToken,
+        linkPath,
+        linkInfo,
+        authorizationToken
+      });
       linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
       linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
 
@@ -1429,11 +1448,13 @@ exports.BitmovinPlayoutOptions = async function({
     linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
   }
 
-  const authToken = await this.authClient.AuthorizationToken({
-    objectId: linkTargetId || objectId,
-    channelAuth: true,
-    oauthToken: this.oauthToken,
-  });
+  const authToken =
+    authorizationToken ||
+    await this.authClient.AuthorizationToken({
+      objectId: linkTargetId || objectId,
+      channelAuth: true,
+      oauthToken: this.oauthToken,
+    });
 
   let config = {
     drm: {}
@@ -1899,10 +1920,11 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
  * @param {string=} versionHash - Hash of an object version
  * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
+ * @param {string=} authorizationToken - Override default authorization with alternate token
  *
  * @returns {Promise<string>} - Version hash of the link's target
  */
-exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToken, linkPath, linkInfo}) {
+exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToken, linkPath, authorizationToken, linkInfo}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
@@ -1922,7 +1944,8 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
       metadataSubtree: linkPath,
       resolveLinks: false,
       resolveIgnoreErrors: true,
-      resolveIncludeSource: true
+      resolveIncludeSource: true,
+      authorizationToken
     });
   }
 
@@ -1950,7 +1973,8 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
     versionHash,
     writeToken,
     metadataSubtree: linkPath,
-    resolveIncludeSource: true
+    resolveIncludeSource: true,
+    authorizationToken
   });
 
   if(!linkInfo || !linkInfo["."]) {
@@ -1973,7 +1997,8 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
       versionHash,
       writeToken,
       metadataSubtree: subPath,
-      resolveIncludeSource: true
+      resolveIncludeSource: true,
+      authorizationToken
     });
   }
 
@@ -1992,11 +2017,22 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {string=} authorizationToken - Override default authorization with alternate token
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
  */
-exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, linkPath, mimeType, queryParams={}, channelAuth=false}) {
+exports.LinkUrl = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  linkPath,
+  mimeType,
+  authorizationToken,
+  queryParams={},
+  channelAuth=false
+}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
@@ -2012,7 +2048,10 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
   }
 
   queryParams = {
-    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}),
+    authorization:
+      authorizationToken ||
+      queryParams.authorization ||
+      await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}),
     ...queryParams,
     resolve: true
   };

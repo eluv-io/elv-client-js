@@ -178,7 +178,7 @@
 <p>A permission may have <code>start</code> and <code>end</code> times. As mentioned above, the effective start and end times of a permission are the <em>most restrictive</em> of all applicable start and end times.</p>
 </li>
 <li>
-<p>A permission must have a subject, which can be either a user, a group, or an NTP instance, either from the Fabric or from an OAuth provider</p>
+<p>A permission must have a subject, which can be either a user or group, either from the Fabric or from an OAuth provider, or an NTP instance or an NTP Subject</p>
 </li>
 <li>
 <p>A subject must have an ID and a name. In the case of certain OAuth providers, the name may be used as an ID in most cases, but the immutable ID for that subject must be used as the ID. For example, in Okta, a group may be specified by its name &quot;Content Admins&quot;, but have the Okta ID &quot;00g102tklfAorixGi4x7&quot;. The former should be used as the subjectName, and the latter as the subjectId</p>
@@ -584,9 +584,9 @@
 
 
   <pre>async CreateItemPolicy({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_DZacffHJWaMxwv6UK8YcECkuGJSNPY1dU",
-  "itemId": "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMPPDaTV7tsbNXYk86eoNCR5",
+  "itemId": "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah",
   "profiles": {
     "default": {}
   }
@@ -596,9 +596,9 @@
 &lt;No Return Value></pre>
 
   <pre>async CreateItemPolicy({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_GdPYcTS49KsDCX7J7WQGJ4FehUbngRhw2",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrLz1cVo4xgmzreHeTGFRVYvK",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
   "profiles": {
     "all-access": {
       "assets": {
@@ -609,18 +609,18 @@
       }
     },
     "special-access": {
-      "start": "2020-11-24T19:46:06.201Z",
-      "end": "2021-11-24T19:46:06.201Z",
+      "start": "2021-02-03T20:27:11.564Z",
+      "end": "2022-02-03T20:27:11.564Z",
       "assets": {
         "default_permission": "no-access",
         "custom_permissions": {
           "asset-id-1": {
-            "start": "2020-11-24T19:46:06.201Z",
-            "end": "2021-11-24T19:46:06.201Z",
+            "start": "2021-02-03T20:27:11.564Z",
+            "end": "2022-02-03T20:27:11.564Z",
             "permission": "full-access"
           },
           "asset-id-2": {
-            "start": "2020-11-24T19:46:06.201Z",
+            "start": "2021-02-03T20:27:11.564Z",
             "permission": "full-access"
           },
           "asset-id-3": {
@@ -632,12 +632,12 @@
         "default_permission": "no-access",
         "custom_permissions": {
           "offering-id-1": {
-            "start": "2020-11-24T19:46:06.201Z",
-            "end": "2021-11-24T19:46:06.201Z",
+            "start": "2021-02-03T20:27:11.564Z",
+            "end": "2022-02-03T20:27:11.564Z",
             "permission": "full-access"
           },
           "offering-id-2": {
-            "end": "2021-11-24T19:46:06.201Z",
+            "end": "2022-02-03T20:27:11.564Z",
             "permission": "full-access"
           },
           "offering-id-3": {
@@ -647,8 +647,8 @@
       }
     },
     "no-access": {
-      "start": 1606247166201,
-      "end": 1637783166201,
+      "start": 1612384031564,
+      "end": 1643920031564,
       "assets": {
         "default_permission": "no-access"
       },
@@ -700,7 +700,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line283">line 283</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line314">line 314</a>
         </li>
       </ul>
     </dd>
@@ -918,16 +918,16 @@
 
 
   <pre>async ItemPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8"
 });
 
 
 []</pre>
 
   <pre>async ItemPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8"
 });
 
 
@@ -936,16 +936,16 @@
     "profileName": "all-access",
     "subjectSource": "fabric",
     "subjectType": "user",
-    "subjectId": "0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77",
+    "subjectId": "0x6f7dfc3a46526039780045a1d61310bd139259c6",
     "subjectName": "Test Account"
   },
   {
     "profileName": "no-access",
     "subjectSource": "fabric",
     "subjectType": "group",
-    "subjectId": "0xafe6b198480e23ca9ef3781b493ead12f9af9be5",
+    "subjectId": "0xca73c2e38b7ed97e94bc919664696ffa3b39832d",
     "subjectName": "Test Group",
-    "start": "2020-11-24T19:46:06.201Z"
+    "start": "2021-02-03T20:27:11.564Z"
   },
   {
     "profileName": "special-access",
@@ -953,8 +953,8 @@
     "subjectType": "group",
     "subjectId": "00uyyha6cjm2Q7Zgv4x6",
     "subjectName": "OAuth Group",
-    "start": "2020-11-24T19:46:06.201Z",
-    "end": "2021-11-24T19:46:06.201Z"
+    "start": "2021-02-03T20:27:11.564Z",
+    "end": "2022-02-03T20:27:11.564Z"
   },
   {
     "profileName": "special-access",
@@ -969,12 +969,20 @@
     "subjectType": "ntp",
     "subjectId": "QOTPQVagZQv7Mkt",
     "subjectName": "Special Event NTP Instance"
+  },
+  {
+    "profileName": "special-access",
+    "subjectSource": "fabric",
+    "subjectType": "ntp_subject",
+    "subjectId": "special.event.subject@ntp.com",
+    "subjectName": "special.event.subject@ntp.com",
+    "subjectNTPId": "QOTPQVagZQv7Mkt"
   }
 ]</pre>
 
   <pre>async ItemPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8"
 });
 
 
@@ -983,18 +991,18 @@
     "profileName": "no-access",
     "subjectSource": "fabric",
     "subjectType": "user",
-    "subjectId": "0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77",
+    "subjectId": "0x6f7dfc3a46526039780045a1d61310bd139259c6",
     "subjectName": "Test Account",
-    "start": "2020-11-24T19:46:06.201Z",
-    "end": "2021-11-24T19:46:06.201Z"
+    "start": "2021-02-03T20:27:11.564Z",
+    "end": "2022-02-03T20:27:11.564Z"
   },
   {
     "profileName": "no-access",
     "subjectSource": "fabric",
     "subjectType": "group",
-    "subjectId": "0xafe6b198480e23ca9ef3781b493ead12f9af9be5",
+    "subjectId": "0xca73c2e38b7ed97e94bc919664696ffa3b39832d",
     "subjectName": "Test Group",
-    "start": "2020-11-24T19:46:06.201Z"
+    "start": "2021-02-03T20:27:11.564Z"
   },
   {
     "profileName": "special-access",
@@ -1002,7 +1010,7 @@
     "subjectType": "group",
     "subjectId": "00uyyha6cjm2Q7Zgv4x6",
     "subjectName": "OAuth Group",
-    "start": "2021-11-24T19:46:06.201Z"
+    "start": "2022-02-03T20:27:11.564Z"
   },
   {
     "profileName": "special-access",
@@ -1017,6 +1025,14 @@
     "subjectType": "ntp",
     "subjectId": "QOTPQVagZQv7Mkt",
     "subjectName": "Special Event NTP Instance"
+  },
+  {
+    "profileName": "special-access",
+    "subjectSource": "fabric",
+    "subjectType": "ntp_subject",
+    "subjectId": "special.event.subject@ntp.com",
+    "subjectName": "special.event.subject@ntp.com",
+    "subjectNTPId": "QOTPQVagZQv7Mkt"
   },
   {
     "profileName": "special-access",
@@ -1028,7 +1044,7 @@
 ]</pre>
 
   <pre>async ItemPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
   "itemId": "uninitializedId"
 });
 
@@ -1036,8 +1052,8 @@
 []</pre>
 
   <pre>async ItemPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8"
 });
 
 
@@ -1046,9 +1062,9 @@
     "profileName": "no-access",
     "subjectSource": "fabric",
     "subjectType": "group",
-    "subjectId": "0xafe6b198480e23ca9ef3781b493ead12f9af9be5",
+    "subjectId": "0xca73c2e38b7ed97e94bc919664696ffa3b39832d",
     "subjectName": "Test Group",
-    "start": "2020-11-24T19:46:06.201Z"
+    "start": "2021-02-03T20:27:11.564Z"
   },
   {
     "profileName": "special-access",
@@ -1118,7 +1134,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line444">line 444</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line475">line 475</a>
         </li>
       </ul>
     </dd>
@@ -1336,8 +1352,8 @@
 
 
   <pre>async ItemPolicy({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8"
 });
 
 
@@ -1355,23 +1371,23 @@
       "assets": {
         "default_permission": "no-access"
       },
-      "end": "2021-11-24T19:46:06.201Z",
+      "end": "2022-02-03T20:27:11.564Z",
       "offerings": {
         "default_permission": "no-access"
       },
-      "start": "2020-11-24T19:46:06.201Z"
+      "start": "2021-02-03T20:27:11.564Z"
     },
     "special-access": {
       "assets": {
         "custom_permissions": {
           "asset-id-1": {
-            "end": "2021-11-24T19:46:06.201Z",
+            "end": "2022-02-03T20:27:11.564Z",
             "permission": "full-access",
-            "start": "2020-11-24T19:46:06.201Z"
+            "start": "2021-02-03T20:27:11.564Z"
           },
           "asset-id-2": {
             "permission": "full-access",
-            "start": "2020-11-24T19:46:06.201Z"
+            "start": "2021-02-03T20:27:11.564Z"
           },
           "asset-id-3": {
             "permission": "no-access"
@@ -1379,16 +1395,16 @@
         },
         "default_permission": "no-access"
       },
-      "end": "2021-11-24T19:46:06.201Z",
+      "end": "2022-02-03T20:27:11.564Z",
       "offerings": {
         "custom_permissions": {
           "offering-id-1": {
-            "end": "2021-11-24T19:46:06.201Z",
+            "end": "2022-02-03T20:27:11.564Z",
             "permission": "full-access",
-            "start": "2020-11-24T19:46:06.201Z"
+            "start": "2021-02-03T20:27:11.564Z"
           },
           "offering-id-2": {
-            "end": "2021-11-24T19:46:06.201Z",
+            "end": "2022-02-03T20:27:11.564Z",
             "permission": "full-access"
           },
           "offering-id-3": {
@@ -1397,7 +1413,7 @@
         },
         "default_permission": "no-access"
       },
-      "start": "2020-11-24T19:46:06.201Z"
+      "start": "2021-02-03T20:27:11.564Z"
     }
   },
   "permissions": [
@@ -1405,18 +1421,18 @@
       "profileName": "no-access",
       "subjectSource": "fabric",
       "subjectType": "user",
-      "subjectId": "0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77",
+      "subjectId": "0x6f7dfc3a46526039780045a1d61310bd139259c6",
       "subjectName": "Test Account",
-      "start": "2020-11-24T19:46:06.201Z",
-      "end": "2021-11-24T19:46:06.201Z"
+      "start": "2021-02-03T20:27:11.564Z",
+      "end": "2022-02-03T20:27:11.564Z"
     },
     {
       "profileName": "no-access",
       "subjectSource": "fabric",
       "subjectType": "group",
-      "subjectId": "0xafe6b198480e23ca9ef3781b493ead12f9af9be5",
+      "subjectId": "0xca73c2e38b7ed97e94bc919664696ffa3b39832d",
       "subjectName": "Test Group",
-      "start": "2020-11-24T19:46:06.201Z"
+      "start": "2021-02-03T20:27:11.564Z"
     },
     {
       "profileName": "special-access",
@@ -1424,7 +1440,7 @@
       "subjectType": "group",
       "subjectId": "00uyyha6cjm2Q7Zgv4x6",
       "subjectName": "OAuth Group",
-      "start": "2021-11-24T19:46:06.201Z"
+      "start": "2022-02-03T20:27:11.564Z"
     },
     {
       "profileName": "special-access",
@@ -1442,6 +1458,14 @@
     },
     {
       "profileName": "special-access",
+      "subjectSource": "fabric",
+      "subjectType": "ntp_subject",
+      "subjectId": "special.event.subject@ntp.com",
+      "subjectName": "special.event.subject@ntp.com",
+      "subjectNTPId": "QOTPQVagZQv7Mkt"
+    },
+    {
+      "profileName": "special-access",
       "subjectSource": "oauth",
       "subjectType": "group",
       "subjectId": "00uqyha3cjm2Q7Zgv492",
@@ -1451,7 +1475,7 @@
 }</pre>
 
   <pre>async ItemPolicy({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
   "itemId": "uninitializedId"
 });
 
@@ -1496,7 +1520,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line259">line 259</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line290">line 290</a>
         </li>
       </ul>
     </dd>
@@ -1746,8 +1770,8 @@
 
 
   <pre>async ItemProfiles({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah",
   "profileName": "Special Access"
 });
 
@@ -1756,17 +1780,17 @@
   "assets": {
     "default_permission": "no-access"
   },
-  "end": "2021-11-24T19:46:06.201Z",
+  "end": "2022-02-03T20:27:11.564Z",
   "offerings": {
     "custom_permissions": {
       "offering-id-1": {
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "permission": "full-access",
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       },
       "offering-id-2": {
         "permission": "full-access",
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       },
       "offering-id-3": {
         "permission": "no-access"
@@ -1774,12 +1798,12 @@
     },
     "default_permission": "full-access"
   },
-  "start": "2020-11-24T19:46:06.201Z"
+  "start": "2021-02-03T20:27:11.564Z"
 }</pre>
 
   <pre>async ItemProfiles({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah",
   "profileName": "Special Access"
 });
 
@@ -1788,13 +1812,13 @@
   "assets": {
     "custom_permissions": {
       "asset-id-1": {
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "permission": "full-access",
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       },
       "asset-id-2": {
         "permission": "full-access",
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       },
       "asset-id-3": {
         "permission": "no-access"
@@ -1809,8 +1833,8 @@
 }</pre>
 
   <pre>async ItemProfiles({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8"
 });
 
 
@@ -1827,23 +1851,23 @@
     "assets": {
       "default_permission": "no-access"
     },
-    "end": "2021-11-24T19:46:06.201Z",
+    "end": "2022-02-03T20:27:11.564Z",
     "offerings": {
       "default_permission": "no-access"
     },
-    "start": "2020-11-24T19:46:06.201Z"
+    "start": "2021-02-03T20:27:11.564Z"
   },
   "special-access": {
     "assets": {
       "custom_permissions": {
         "asset-id-1": {
-          "end": "2021-11-24T19:46:06.201Z",
+          "end": "2022-02-03T20:27:11.564Z",
           "permission": "full-access",
-          "start": "2020-11-24T19:46:06.201Z"
+          "start": "2021-02-03T20:27:11.564Z"
         },
         "asset-id-2": {
           "permission": "full-access",
-          "start": "2020-11-24T19:46:06.201Z"
+          "start": "2021-02-03T20:27:11.564Z"
         },
         "asset-id-3": {
           "permission": "no-access"
@@ -1851,16 +1875,16 @@
       },
       "default_permission": "no-access"
     },
-    "end": "2021-11-24T19:46:06.201Z",
+    "end": "2022-02-03T20:27:11.564Z",
     "offerings": {
       "custom_permissions": {
         "offering-id-1": {
-          "end": "2021-11-24T19:46:06.201Z",
+          "end": "2022-02-03T20:27:11.564Z",
           "permission": "full-access",
-          "start": "2020-11-24T19:46:06.201Z"
+          "start": "2021-02-03T20:27:11.564Z"
         },
         "offering-id-2": {
-          "end": "2021-11-24T19:46:06.201Z",
+          "end": "2022-02-03T20:27:11.564Z",
           "permission": "full-access"
         },
         "offering-id-3": {
@@ -1869,12 +1893,12 @@
       },
       "default_permission": "no-access"
     },
-    "start": "2020-11-24T19:46:06.201Z"
+    "start": "2021-02-03T20:27:11.564Z"
   }
 }</pre>
 
   <pre>async ItemProfiles({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
   "itemId": "uninitializedId"
 });
 
@@ -1882,8 +1906,8 @@
 &lt;No Return Value></pre>
 
   <pre>async ItemProfiles({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "itemId": "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "itemId": "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah",
   "profileName": "Special Access"
 });
 
@@ -1928,7 +1952,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line356">line 356</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line387">line 387</a>
         </li>
       </ul>
     </dd>
@@ -2109,16 +2133,16 @@
 
 
   <pre>async PolicyItems({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc"
 });
 
 
 {
-  "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb": {
-    "display_title": "Item 1"
-  },
-  "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5": {
+  "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8": {
     "display_title": "Item 2"
+  },
+  "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah": {
+    "display_title": "Item 1"
   }
 }</pre>
 
@@ -2160,7 +2184,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line239">line 239</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line270">line 270</a>
         </li>
       </ul>
     </dd>
@@ -2343,18 +2367,18 @@
 
 
   <pre>async RemoveItemPolicy({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_4aHc9NgzM29hirTbE22tvusG53XHcneEj",
-  "itemId": "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMSZ4k3nCCnLUPikNfsJ6UtH",
+  "itemId": "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah"
 });
 
 
 &lt;No Return Value></pre>
 
   <pre>async RemoveItemPolicy({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_M38Km7vjBXkZTS59P9Q6ckkTM5X9VZqf6",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMGhmhew5dTX36QAzcJLHtWv",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8"
 });
 
 
@@ -2398,7 +2422,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line330">line 330</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line361">line 361</a>
         </li>
       </ul>
     </dd>
@@ -2610,19 +2634,19 @@
 
 
   <pre>async RemovePermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_A7HFWDRxiVBS249M4gvauf9ZPGVDLfCPH",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
-  "subjectId": "0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMD9q5DdqfFZmBt912QRvxq7",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
+  "subjectId": "0x6f7dfc3a46526039780045a1d61310bd139259c6"
 });
 
 
 &lt;No Return Value></pre>
 
   <pre>async RemovePermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_A7HFWDRxiVBS249M4gvauf9ZPGVDLfCPH",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMD9q5DdqfFZmBt912QRvxq7",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
   "subjectId": "00uyyha6cjm2Q7Zgv4x6"
 });
 
@@ -2630,10 +2654,20 @@
 &lt;No Return Value></pre>
 
   <pre>async RemovePermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_Pbjju62tYf8KX2SoBbwwC9rfaGX9dg6rD",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMD9q5DdqfFZmBt912QRvxq7",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
+  "subjectId": "special.event.subject@ntp.com"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async RemovePermission({
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrM5pKwWUSYy6Nhng9pUnQApd",
   "subjectId": "QOTPQVagZQv7Mkt",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5"
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8"
 });
 
 
@@ -2677,7 +2711,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line655">line 655</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line694">line 694</a>
         </li>
       </ul>
     </dd>
@@ -2919,9 +2953,9 @@ will default to no access for both assets and offerings</p>
 
 
   <pre>async RemoveProfile({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_H7EyMWhn3Fn5ST9Yq6JuK6VeWpGMc8bS6",
-  "itemId": "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMSAQGjMxd8yx3r3yfWDG6eb",
+  "itemId": "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah",
   "profileName": "Special Access"
 });
 
@@ -2966,7 +3000,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line411">line 411</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line442">line 442</a>
         </li>
       </ul>
     </dd>
@@ -3149,8 +3183,8 @@ will default to no access for both assets and offerings</p>
 
 
   <pre>async RemoveSubjectPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_Pbjju62tYf8KX2SoBbwwC9rfaGX9dg6rD",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrM5pKwWUSYy6Nhng9pUnQApd",
   "subjectId": "QOTPQVagZQv7Mkt"
 });
 
@@ -3195,7 +3229,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line763">line 763</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line802">line 802</a>
         </li>
       </ul>
     </dd>
@@ -3218,7 +3252,7 @@ will default to no access for both assets and offerings</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="SetPermission">
-      <span class="type-signature">async </span>SetPermission<span class="signature">({<div class="block-param">policyId,</div><div class="block-param">policyWriteToken,</div><div class="block-param">itemId,</div><div class="block-param">subjectSource,</div><div class="block-param">subjectType,</div><div class="block-param">subjectName,</div><div class="block-param">subjectId,</div><div class="block-param">profileName,</div><div class="block-param">start,</div><div class="block-param">end</div>})</span><span class="type-signature"></span>
+      <span class="type-signature">async </span>SetPermission<span class="signature">({<div class="block-param">policyId,</div><div class="block-param">policyWriteToken,</div><div class="block-param">itemId,</div><div class="block-param">subjectSource,</div><div class="block-param">subjectType,</div><div class="block-param">subjectName<span class="signature-attributes">optional</span>,</div><div class="block-param">subjectId,</div><div class="block-param">subjectNTPId<span class="signature-attributes">optional</span>,</div><div class="block-param">profileName,</div><div class="block-param">start,</div><div class="block-param">end</div>})</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -3253,6 +3287,8 @@ will default to no access for both assets and offerings</p>
       <th>Type</th>
 
       
+        <th>Attributes</th>
+      
 
       
         <th>Default</th>
@@ -3282,6 +3318,14 @@ will default to no access for both assets and offerings</p>
           
         </td>
 
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
         
 
         
@@ -3316,6 +3360,14 @@ will default to no access for both assets and offerings</p>
         </td>
 
         
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
 
         
           <td class="default">
@@ -3349,6 +3401,14 @@ will default to no access for both assets and offerings</p>
         </td>
 
         
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
 
         
           <td class="default">
@@ -3381,6 +3441,14 @@ will default to no access for both assets and offerings</p>
           
         </td>
 
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
         
 
         
@@ -3417,6 +3485,14 @@ will default to no access for both assets and offerings</p>
         </td>
 
         
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
 
         
           <td class="default">
@@ -3427,7 +3503,7 @@ will default to no access for both assets and offerings</p>
         
 
         <td class="description last">
-          <p>(&quot;user&quot; | &quot;group&quot; | &quot;ntp&quot;) - The type of the subject</p>
+          <p>(&quot;user&quot; | &quot;group&quot; | &quot;ntp&quot; | &quot;ntp_subject&quot;) - The type of the subject</p>
           
         </td>
       </tr>
@@ -3451,6 +3527,16 @@ will default to no access for both assets and offerings</p>
           
         </td>
 
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
         
 
         
@@ -3485,6 +3571,14 @@ will default to no access for both assets and offerings</p>
         </td>
 
         
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
 
         
           <td class="default">
@@ -3494,6 +3588,49 @@ will default to no access for both assets and offerings</p>
 
         <td class="description last">
           <p>The ID of the subject</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>subjectNTPId</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      string
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>(For subjectType &quot;ntp_subject&quot;) The NTP ID associated with the subject</p>
           
         </td>
       </tr>
@@ -3517,6 +3654,14 @@ will default to no access for both assets and offerings</p>
           
         </td>
 
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
         
 
         
@@ -3557,6 +3702,14 @@ will default to no access for both assets and offerings</p>
         </td>
 
         
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
 
         
           <td class="default">
@@ -3595,6 +3748,14 @@ will default to no access for both assets and offerings</p>
           
         </td>
 
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
         
 
         
@@ -3639,10 +3800,10 @@ will default to no access for both assets and offerings</p>
 
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_Laxv9QjGPohttdbXNFaeQNrTXNMDEM7iG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
-  "subjectId": "0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMRTEBjrhYkvi7fCpRDUtekx",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
+  "subjectId": "0x6f7dfc3a46526039780045a1d61310bd139259c6",
   "subjectName": "Test Account",
   "subjectType": "user",
   "subjectSource": "fabric",
@@ -3653,40 +3814,40 @@ will default to no access for both assets and offerings</p>
 &lt;No Return Value></pre>
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_Laxv9QjGPohttdbXNFaeQNrTXNMDEM7iG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
-  "subjectId": "0xafe6b198480e23ca9ef3781b493ead12f9af9be5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMRTEBjrhYkvi7fCpRDUtekx",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
+  "subjectId": "0xca73c2e38b7ed97e94bc919664696ffa3b39832d",
   "subjectName": "Test Group",
   "subjectType": "group",
   "subjectSource": "fabric",
   "profileName": "no-access",
-  "start": 1606247166201
+  "start": 1612384031564
 });
 
 
 &lt;No Return Value></pre>
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_Laxv9QjGPohttdbXNFaeQNrTXNMDEM7iG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMRTEBjrhYkvi7fCpRDUtekx",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
   "subjectId": "00uyyha6cjm2Q7Zgv4x6",
   "subjectName": "OAuth Group",
   "subjectType": "group",
   "subjectSource": "oauth",
   "profileName": "special-access",
-  "start": "2020-11-24T19:46:06.201Z",
-  "end": "2021-11-24T19:46:06.201Z"
+  "start": "2021-02-03T20:27:11.564Z",
+  "end": "2022-02-03T20:27:11.564Z"
 });
 
 
 &lt;No Return Value></pre>
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_Laxv9QjGPohttdbXNFaeQNrTXNMDEM7iG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMRTEBjrhYkvi7fCpRDUtekx",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
   "subjectId": "00g102v1ayVs5WQOu4x7",
   "subjectName": "OAuth User (oauth@user.com)",
   "subjectType": "user",
@@ -3698,9 +3859,9 @@ will default to no access for both assets and offerings</p>
 &lt;No Return Value></pre>
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_Laxv9QjGPohttdbXNFaeQNrTXNMDEM7iG",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMRTEBjrhYkvi7fCpRDUtekx",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
   "subjectId": "QOTPQVagZQv7Mkt",
   "subjectName": "Special Event NTP Instance",
   "subjectType": "ntp",
@@ -3712,31 +3873,45 @@ will default to no access for both assets and offerings</p>
 &lt;No Return Value></pre>
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_7gdDyMPyrxcf8Q91HJ9BGwFxXWyWnxRcg",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
-  "subjectId": "0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77",
-  "subjectName": "Test Account",
-  "subjectType": "user",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMRTEBjrhYkvi7fCpRDUtekx",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
+  "subjectId": "special.event.subject@ntp.com",
+  "subjectNTPId": "QOTPQVagZQv7Mkt",
+  "subjectType": "ntp_subject",
   "subjectSource": "fabric",
-  "profileName": "no-access",
-  "start": 1606247166201,
-  "end": 1637783166201
+  "profileName": "special-access"
 });
 
 
 &lt;No Return Value></pre>
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_7gdDyMPyrxcf8Q91HJ9BGwFxXWyWnxRcg",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMA8qJuPwgscpyvPMd4AV1tj",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
+  "subjectId": "0x6f7dfc3a46526039780045a1d61310bd139259c6",
+  "subjectName": "Test Account",
+  "subjectType": "user",
+  "subjectSource": "fabric",
+  "profileName": "no-access",
+  "start": 1612384031564,
+  "end": 1643920031564
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async SetPermission({
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMA8qJuPwgscpyvPMd4AV1tj",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
   "subjectId": "00uyyha6cjm2Q7Zgv4x6",
   "subjectName": "OAuth Group",
   "subjectType": "group",
   "subjectSource": "oauth",
   "profileName": "special-access",
-  "start": "2021-11-24T19:46:06.201Z",
+  "start": "2022-02-03T20:27:11.564Z",
   "end": null
 });
 
@@ -3744,9 +3919,9 @@ will default to no access for both assets and offerings</p>
 &lt;No Return Value></pre>
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_7gdDyMPyrxcf8Q91HJ9BGwFxXWyWnxRcg",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMA8qJuPwgscpyvPMd4AV1tj",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
   "subjectId": "00uqyha3cjm2Q7Zgv492",
   "subjectName": "OAuth Group 2",
   "subjectType": "group",
@@ -3758,9 +3933,9 @@ will default to no access for both assets and offerings</p>
 &lt;No Return Value></pre>
 
   <pre>async SetPermission({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_A7HFWDRxiVBS249M4gvauf9ZPGVDLfCPH",
-  "itemId": "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMD9q5DdqfFZmBt912QRvxq7",
+  "itemId": "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8",
   "subjectId": "00qqwe3ZXm2Q8Zgq494",
   "subjectName": "OAuth Group 3",
   "subjectType": "group",
@@ -3809,7 +3984,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line474">line 474</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line506">line 506</a>
         </li>
       </ul>
     </dd>
@@ -4051,13 +4226,13 @@ will default to no access for both assets and offerings</p>
 
 
   <pre>async SetProfile({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_3aqMjYy7ZcU6YvbcupxaidCHN86BpUCfK",
-  "itemId": "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrMG8gPeWoTjMtwmLWooXZroe",
+  "itemId": "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah",
   "profileName": "Special Access",
   "profileSpec": {
-    "start": "2020-11-24T19:46:06.201Z",
-    "end": "2021-11-24T19:46:06.201Z",
+    "start": "2021-02-03T20:27:11.564Z",
+    "end": "2022-02-03T20:27:11.564Z",
     "assets": {
       "default_permission": "no-access"
     },
@@ -4065,12 +4240,12 @@ will default to no access for both assets and offerings</p>
       "default_permission": "full-access",
       "custom_permissions": {
         "offering-id-1": {
-          "start": "2020-11-24T19:46:06.201Z",
-          "end": "2021-11-24T19:46:06.201Z",
+          "start": "2021-02-03T20:27:11.564Z",
+          "end": "2022-02-03T20:27:11.564Z",
           "permission": "full-access"
         },
         "offering-id-2": {
-          "start": "2020-11-24T19:46:06.201Z",
+          "start": "2021-02-03T20:27:11.564Z",
           "permission": "full-access"
         },
         "offering-id-3": {
@@ -4085,9 +4260,9 @@ will default to no access for both assets and offerings</p>
 &lt;No Return Value></pre>
 
   <pre>async SetProfile({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_2HMXJTQUfLm5P9zc1bQFzv1gAkzqDZhUS",
-  "itemId": "iq__3XUR87YHPauksf6rfiHXnQ6HYxyb",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrM7GbvCSuNshtSbXuGRRZVk1",
+  "itemId": "iq__gEYdf5ZrkVpkWbneAuHqaFYjkah",
   "profileName": "Special Access",
   "profileSpec": {
     "start": null,
@@ -4096,12 +4271,12 @@ will default to no access for both assets and offerings</p>
       "default_permission": "full-access",
       "custom_permissions": {
         "asset-id-1": {
-          "start": "2020-11-24T19:46:06.201Z",
-          "end": "2021-11-24T19:46:06.201Z",
+          "start": "2021-02-03T20:27:11.564Z",
+          "end": "2022-02-03T20:27:11.564Z",
           "permission": "full-access"
         },
         "asset-id-2": {
-          "start": "2020-11-24T19:46:06.201Z",
+          "start": "2021-02-03T20:27:11.564Z",
           "permission": "full-access"
         },
         "asset-id-3": {
@@ -4157,7 +4332,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line377">line 377</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line408">line 408</a>
         </li>
       </ul>
     </dd>
@@ -4375,13 +4550,13 @@ will default to no access for both assets and offerings</p>
 
 
   <pre>async SubjectPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
   "subjectId": "00uyyha6cjm2Q7Zgv4x6"
 });
 
 
 {
-  "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5": {
+  "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8": {
     "display_title": "Item 2",
     "permissions": [
       {
@@ -4390,7 +4565,7 @@ will default to no access for both assets and offerings</p>
         "subjectType": "group",
         "subjectId": "00uyyha6cjm2Q7Zgv4x6",
         "subjectName": "OAuth Group",
-        "start": "2021-11-24T19:46:06.201Z"
+        "start": "2022-02-03T20:27:11.564Z"
       }
     ],
     "profiles": {
@@ -4406,23 +4581,23 @@ will default to no access for both assets and offerings</p>
         "assets": {
           "default_permission": "no-access"
         },
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "offerings": {
           "default_permission": "no-access"
         },
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       },
       "special-access": {
         "assets": {
           "custom_permissions": {
             "asset-id-1": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "asset-id-2": {
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "asset-id-3": {
               "permission": "no-access"
@@ -4430,16 +4605,16 @@ will default to no access for both assets and offerings</p>
           },
           "default_permission": "no-access"
         },
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "offerings": {
           "custom_permissions": {
             "offering-id-1": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "offering-id-2": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access"
             },
             "offering-id-3": {
@@ -4448,30 +4623,30 @@ will default to no access for both assets and offerings</p>
           },
           "default_permission": "no-access"
         },
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       }
     }
   }
 }</pre>
 
   <pre>async SubjectPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "subjectId": "0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77"
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "subjectId": "0x6f7dfc3a46526039780045a1d61310bd139259c6"
 });
 
 
 {
-  "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5": {
+  "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8": {
     "display_title": "Item 2",
     "permissions": [
       {
         "profileName": "no-access",
         "subjectSource": "fabric",
         "subjectType": "user",
-        "subjectId": "0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77",
+        "subjectId": "0x6f7dfc3a46526039780045a1d61310bd139259c6",
         "subjectName": "Test Account",
-        "start": "2020-11-24T19:46:06.201Z",
-        "end": "2021-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z",
+        "end": "2022-02-03T20:27:11.564Z"
       }
     ],
     "profiles": {
@@ -4487,23 +4662,23 @@ will default to no access for both assets and offerings</p>
         "assets": {
           "default_permission": "no-access"
         },
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "offerings": {
           "default_permission": "no-access"
         },
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       },
       "special-access": {
         "assets": {
           "custom_permissions": {
             "asset-id-1": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "asset-id-2": {
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "asset-id-3": {
               "permission": "no-access"
@@ -4511,16 +4686,16 @@ will default to no access for both assets and offerings</p>
           },
           "default_permission": "no-access"
         },
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "offerings": {
           "custom_permissions": {
             "offering-id-1": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "offering-id-2": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access"
             },
             "offering-id-3": {
@@ -4529,20 +4704,100 @@ will default to no access for both assets and offerings</p>
           },
           "default_permission": "no-access"
         },
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       }
     }
   }
 }</pre>
 
   <pre>async SubjectPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "subjectId": "special.event.subject@ntp.com"
+});
+
+
+{
+  "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8": {
+    "display_title": "Item 2",
+    "permissions": [
+      {
+        "profileName": "special-access",
+        "subjectSource": "fabric",
+        "subjectType": "ntp_subject",
+        "subjectId": "special.event.subject@ntp.com",
+        "subjectName": "special.event.subject@ntp.com",
+        "subjectNTPId": "QOTPQVagZQv7Mkt"
+      }
+    ],
+    "profiles": {
+      "all-access": {
+        "assets": {
+          "default_permission": "full-access"
+        },
+        "offerings": {
+          "default_permission": "full-access"
+        }
+      },
+      "no-access": {
+        "assets": {
+          "default_permission": "no-access"
+        },
+        "end": "2022-02-03T20:27:11.564Z",
+        "offerings": {
+          "default_permission": "no-access"
+        },
+        "start": "2021-02-03T20:27:11.564Z"
+      },
+      "special-access": {
+        "assets": {
+          "custom_permissions": {
+            "asset-id-1": {
+              "end": "2022-02-03T20:27:11.564Z",
+              "permission": "full-access",
+              "start": "2021-02-03T20:27:11.564Z"
+            },
+            "asset-id-2": {
+              "permission": "full-access",
+              "start": "2021-02-03T20:27:11.564Z"
+            },
+            "asset-id-3": {
+              "permission": "no-access"
+            }
+          },
+          "default_permission": "no-access"
+        },
+        "end": "2022-02-03T20:27:11.564Z",
+        "offerings": {
+          "custom_permissions": {
+            "offering-id-1": {
+              "end": "2022-02-03T20:27:11.564Z",
+              "permission": "full-access",
+              "start": "2021-02-03T20:27:11.564Z"
+            },
+            "offering-id-2": {
+              "end": "2022-02-03T20:27:11.564Z",
+              "permission": "full-access"
+            },
+            "offering-id-3": {
+              "permission": "no-access"
+            }
+          },
+          "default_permission": "no-access"
+        },
+        "start": "2021-02-03T20:27:11.564Z"
+      }
+    }
+  }
+}</pre>
+
+  <pre>async SubjectPermissions({
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
   "subjectId": "QOTPQVagZQv7Mkt"
 });
 
 
 {
-  "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5": {
+  "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8": {
     "display_title": "Item 2",
     "permissions": [
       {
@@ -4566,23 +4821,23 @@ will default to no access for both assets and offerings</p>
         "assets": {
           "default_permission": "no-access"
         },
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "offerings": {
           "default_permission": "no-access"
         },
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       },
       "special-access": {
         "assets": {
           "custom_permissions": {
             "asset-id-1": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "asset-id-2": {
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "asset-id-3": {
               "permission": "no-access"
@@ -4590,16 +4845,16 @@ will default to no access for both assets and offerings</p>
           },
           "default_permission": "no-access"
         },
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "offerings": {
           "custom_permissions": {
             "offering-id-1": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "offering-id-2": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access"
             },
             "offering-id-3": {
@@ -4608,21 +4863,21 @@ will default to no access for both assets and offerings</p>
           },
           "default_permission": "no-access"
         },
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       }
     }
   }
 }</pre>
 
   <pre>async SubjectPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
-  "policyWriteToken": "tqw_Pbjju62tYf8KX2SoBbwwC9rfaGX9dg6rD",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
+  "policyWriteToken": "tqw__HSW1RWGrYcc9KkqjiGBTLhnmuFQ1FFDGdx33VuVTpkMGz8JQEmnewTnNm2KrM5pKwWUSYy6Nhng9pUnQApd",
   "subjectId": "QOTPQVagZQv7Mkt"
 });
 
 
 {
-  "iq__3bHYikt7r3C4Kf1miukvYaC7P6j5": {
+  "iq__3iz3A5ZxZWK7zEFPygYnuv5dVhS8": {
     "display_title": "Item 2",
     "permissions": [
       {
@@ -4646,23 +4901,23 @@ will default to no access for both assets and offerings</p>
         "assets": {
           "default_permission": "no-access"
         },
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "offerings": {
           "default_permission": "no-access"
         },
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       },
       "special-access": {
         "assets": {
           "custom_permissions": {
             "asset-id-1": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "asset-id-2": {
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "asset-id-3": {
               "permission": "no-access"
@@ -4670,16 +4925,16 @@ will default to no access for both assets and offerings</p>
           },
           "default_permission": "no-access"
         },
-        "end": "2021-11-24T19:46:06.201Z",
+        "end": "2022-02-03T20:27:11.564Z",
         "offerings": {
           "custom_permissions": {
             "offering-id-1": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access",
-              "start": "2020-11-24T19:46:06.201Z"
+              "start": "2021-02-03T20:27:11.564Z"
             },
             "offering-id-2": {
-              "end": "2021-11-24T19:46:06.201Z",
+              "end": "2022-02-03T20:27:11.564Z",
               "permission": "full-access"
             },
             "offering-id-3": {
@@ -4688,14 +4943,14 @@ will default to no access for both assets and offerings</p>
           },
           "default_permission": "no-access"
         },
-        "start": "2020-11-24T19:46:06.201Z"
+        "start": "2021-02-03T20:27:11.564Z"
       }
     }
   }
 }</pre>
 
   <pre>async SubjectPermissions({
-  "policyId": "iq__2LFhd7iBv9NrPpCku2fHemCjHUaG",
+  "policyId": "iq__3826gJD6B3KYeSPK3LbCXm644RWc",
   "subjectId": "QOTPQVagZQv7Mkt"
 });
 
@@ -4740,7 +4995,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line707">line 707</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line746">line 746</a>
         </li>
       </ul>
     </dd>

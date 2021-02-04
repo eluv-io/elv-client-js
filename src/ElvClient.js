@@ -202,7 +202,7 @@ class ElvClient {
    * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
-   *
+   * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
    * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
@@ -212,6 +212,7 @@ class ElvClient {
     region,
     trustAuthorityId,
     staticToken,
+    ethereumContractTimeout=10,
     noCache=false,
     noAuth=false
   }) {
@@ -230,6 +231,7 @@ class ElvClient {
       fabricVersion,
       fabricURIs,
       ethereumURIs,
+      ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
       noCache,
