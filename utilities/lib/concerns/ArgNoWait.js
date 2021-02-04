@@ -1,4 +1,4 @@
-// code related to --noWait arg (skip wait for finalize to become visible)
+// code related to --noWait arg (skip wait for finalized new version to become available)
 const {NewOpt} = require("../options");
 
 const Finalize = require("./Finalize");
@@ -32,7 +32,7 @@ const New = context => {
   // Needed as a separate function to call after client.FinalizeABRMezzanine()
   const waitUnlessNo = async ({latestHash, libraryId, objectId}) => {
     if(noWait) {
-      logger.log("--no-wait specified, bypassing wait for publish to finish (finalized new object version may take up to several minutes to become visible, depending on size and number of parts.");
+      logger.log("--no-wait specified, bypassing wait for publish to finish (finalized new object version may take up to several minutes to become available, depending on size and number of parts.");
     } else {
       await context.concerns.Finalize.waitForPublish({libraryId,objectId,latestHash});
     }
