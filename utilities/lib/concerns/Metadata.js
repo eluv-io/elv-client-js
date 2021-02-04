@@ -11,7 +11,7 @@ const Logger = require("./Logger");
 
 const pathRegex = /^(\/[^/]+)+$/;
 
-const pathDesc = path => path ? `path '${path}' ` : null;
+const pathDesc = path => path ? `path '${path}' ` : "";
 
 const pathExists = ({metadata, path}) => objectPath.has(metadata, pathPieces({path}));
 
