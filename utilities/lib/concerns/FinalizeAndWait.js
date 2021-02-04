@@ -20,14 +20,14 @@ const New = context => {
   const finalize = async ({libraryId, objectId, writeToken}) => {
     const latestHash = await context.concerns.Finalize.finalize({libraryId, objectId, writeToken, wait: !context.args.noWait});
     // Did prior line wait? If not, inform user
-    if(context.args.noWait) logger.log("--no-wait specified, bypassing wait for publish to finish (finalized new object version may take up to several minutes to become visible, depending on size and number of parts.");
+    if(context.args.noWait) logger.log("--no-wait specified, bypassing wait for publish to finish (finalized new object version may take up to several minutes to become available, depending on size and number of parts.");
     return latestHash;
   };
 
   // Needed as a separate function to call after client.FinalizeABRMezzanine()
   const waitUnlessNo = async ({libraryId,objectId,latestHash}) => {
     if(context.args.noWait) {
-      logger.log("--no-wait specified, bypassing wait for publish to finish (finalized new object version may take up to several minutes to become visible, depending on size and number of parts.");
+      logger.log("--no-wait specified, bypassing wait for publish to finish (finalized new object version may take up to several minutes to become available, depending on size and number of parts.");
     } else {
       await context.concerns.Finalize.waitForPublish({libraryId,objectId,latestHash});
     }
