@@ -6,17 +6,16 @@ const {ModOpt, NewOpt} = require("./lib/options");
 
 const Utility = require("./lib/Utility");
 
-const FabricObject = require("./lib/concerns/FabricObject");
+const ExistObj = require("./lib/concerns/ExistObj");
 const Metadata = require("./lib/concerns/Metadata");
-const ObjectEdit = require("./lib/concerns/ObjectEdit");
 
 class ObjectMoveMetadata extends Utility {
   blueprint() {
     return {
-      concerns: [FabricObject, ObjectEdit, Metadata],
+      concerns: [ExistObj, Metadata],
       options: [
-        ModOpt("objectId", {ofX:" item to modify"}),
-        ModOpt("libraryId", {ofX:" object to modify"}),
+        ModOpt("objectId", {ofX: " item to modify"}),
+        ModOpt("libraryId", {ofX: " object to modify"}),
         NewOpt("oldPath", {
           demand: true,
           descTemplate: "Old metadata path pointing to value or subtree to be moved (include leading '/')",
@@ -39,34 +38,41 @@ class ObjectMoveMetadata extends Utility {
     const {newPath, oldPath} = this.args;
 
     // Check that paths are valid path strings
-    if(!Metadata.validPathFormat(oldPath)) {
-      throw new Error("\"" + oldPath + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
-    }
-    if(!Metadata.validPathFormat(newPath)) {
-      throw new Error("\"" + newPath + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
-    }
+    Metadata.validatePathFormat({path: oldPath});
+    Metadata.validatePathFormat({path: newPath});
 
-    await this.concerns.FabricObject.libraryIdArgPopulate();
-
-    const currentMetadata = await this.concerns.FabricObject.getMetadata();
+    const {libraryId, objectId} = await this.concerns.ExistObj.argsProc();
+    const currentMetadata = await this.concerns.ExistObj.metadata();
 
     // check to make sure oldPath exists
-    if(!Metadata.pathExists(currentMetadata, oldPath)) {
-      throw new Error("Metadata path '" + oldPath + "' not found.");
-    }
+    if(!Metadata.pathExists({
+      metadata: currentMetadata,
+      path: oldPath
+    })) throw new Error("Metadata path '" + oldPath + "' not found.");
 
     // make sure newPath does NOT exist, or --force specified
-    this.concerns.Metadata.checkExisting({metadata: currentMetadata, targetPath: newPath, force: this.args.force});
+    this.concerns.Metadata.checkTargetPath({
+      force: this.args.force,
+      metadata: currentMetadata,
+      targetPath: newPath
+    });
 
     // move oldPath attribute to newPath
-    const valueToMove = Metadata.valueAtPath(currentMetadata, oldPath);
+    const valueToMove = Metadata.valueAtPath({
+      metadata: currentMetadata,
+      path: oldPath
+    });
     const revisedMetadata = R.clone(currentMetadata);
 
-    objectPath.del(revisedMetadata,  Metadata.pathPieces(oldPath));
-    objectPath.set(revisedMetadata, Metadata.pathPieces(newPath), valueToMove);
+    objectPath.del(revisedMetadata, Metadata.pathPieces({path: oldPath}));
+    objectPath.set(revisedMetadata, Metadata.pathPieces({path: newPath}), valueToMove);
 
     // Write back metadata
-    const newHash = await this.concerns.ObjectEdit.writeMetadata({metadata: revisedMetadata});
+    const newHash = await this.concerns.Metadata.write({
+      libraryId,
+      metadata: revisedMetadata,
+      objectId
+    });
     this.logger.data("version_hash", newHash);
   }
 

@@ -1,4 +1,4 @@
-// code related to parts
+// code related to working with a specific content part
 const Client = require("./Client");
 const Logger = require("./Logger");
 
@@ -8,19 +8,9 @@ const blueprint = {
 };
 
 const New = context => {
-  const logger = context.concerns.Logger;
+  // const logger = context.concerns.Logger;
 
-  const list = async ({objectId, libraryId, versionHash} = {}) => {
-    const client = await context.concerns.Client.get();
-    logger.log("Retrieving part list from object...");
-    return await client.ContentParts({
-      libraryId,
-      objectId,
-      versionHash
-    });
-  };
-
-  return {list};
+  return {};
 };
 
 module.exports = {

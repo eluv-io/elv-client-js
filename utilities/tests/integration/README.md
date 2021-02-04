@@ -1,5 +1,5 @@
 ##elv-client-js/utilities
-### integration tests
+### Integration tests
 
 * These test run against a fabric node containing libraries and content types
 * To run:
@@ -13,17 +13,29 @@
 
 ### CreateVarsFile.js
 
-* This is a utility script that will create a `vars.TENANCY_NAME.*.ignore.sh` file for you, substituting in information from your tenancy info. You will need to save your tenancy info to a text file, then run with:
+* This is a utility script that will create a `vars.TENANCY_NAME.TEST_NAME.ignore.sh` file for you for the named test, substituting in information from your tenancy info. You will need to save your tenancy info to a text file, then run with:
 
     
     cd elv-client-js/utilities/test/integration/  
-    node CreateVarsFile.js vars.local.ingest.sh PATH_TO_MY_TENANCY_TEXT_FILE
-      
+    node CreateVarsFile.js vars.local.ingest.sh  PATH_TO_MY_TENANCY_TEXT_FILE  NETWORK
+
+* `NETWORK` is one of the following: `prod`, `demo`, `test`, or `local`
+* In the above example, `TEST_NAME` is `local.ingest`
 * Above would create a file named `vars.YOUR_TENANT_NAME.local.ingest.ignore.sh`
-* You will still need to edit the created file to replace `MY_CONFIG_URL`
+* You may still need to edit the created file to replace other environment variables
 * Depending on the particular test, you may also need to replace additional items like S3 credentials
 
-###Sample tenant info file contents:
+### run_all_tests.sh
+
+* Once you have created tenant-specific versions of all the vars.TEST_NAME.sh files, you can run all the tests with:
+
+    
+    cd elv-client-js/utilities/test/integration/  
+    ./run_all_tests.sh YOUR_TENANT_NAME
+
+ * This script will abort as soon as any individual test fails.
+
+### Sample tenant info file contents:
 
 ```
 Setting up tenant 'tenant-name'

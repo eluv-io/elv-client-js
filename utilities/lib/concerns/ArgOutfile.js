@@ -1,13 +1,16 @@
 // code related to writing results to file
 const fs = require("fs");
 
-const {absPath} = require("../helpers");
+const columnify = require("columnify");
+const R = require("ramda");
+
+const {absPath, identity} = require("../helpers");
 const {NewOpt} = require("../options");
 
 const Logger = require("./Logger");
 
 const blueprint = {
-  name: "Outfile",
+  name: "ArgOutfile",
   concerns: [Logger],
   options: [
     NewOpt("outfile", {
@@ -25,8 +28,9 @@ const blueprint = {
 const New = (context) => {
   const logger = context.concerns.Logger;
 
-  const write = ({text, outfile}) => {
-    outfile = outfile || context.args.outfile;
+  const write = ({text}) => {
+    const {outfile} = context.args;
+    if(!outfile) throw Error("ArgOutfile.write() - missing --outfile");
     const fullPath = absPath(outfile, context.cwd);
     if(fs.existsSync(fullPath)) {
       if(context.args.overwrite) {
@@ -39,14 +43,17 @@ const New = (context) => {
     return fs.writeFileSync(fullPath, text);
   };
 
-  const writeJson = ({obj, outfile}) => write(
-    {
-      text: JSON.stringify(obj, null, 2),
-      outfile
-    }
-  );
+  const writeJson = ({obj}) => write({text: JSON.stringify(obj, null, 2)});
 
-  return {write, writeJson};
+  const writeTable = ({list, options = {}}) => {
+    const mergedOptions = R.mergeDeepRight(
+      {headingTransform: identity},
+      options
+    );
+    write({text: columnify(list, mergedOptions)});
+  };
+
+  return {write, writeJson, writeTable};
 };
 
 module.exports = {

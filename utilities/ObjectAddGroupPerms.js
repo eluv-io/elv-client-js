@@ -1,10 +1,10 @@
 // Give a group permissions to an object
-const {DelOpt, ModOpt, NewOpt} = require("./lib/options");
+const {ModOpt, NewOpt} = require("./lib/options");
 
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
-const FabricObject = require("./lib/concerns/FabricObject");
+const ArgObjectId = require("./lib/concerns/ArgObjectId");
 const Logger = require("./lib/concerns/Logger");
 
 const permissionTypes = ["see","access","manage"];
@@ -12,10 +12,9 @@ const permissionTypes = ["see","access","manage"];
 class ObjectAddGroupPerms extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, FabricObject, Client],
+      concerns: [Logger, ArgObjectId, Client],
       options: [
-        ModOpt("objectId", {X:" to add group permissions to"}),
-        DelOpt("libraryId"),
+        ModOpt("objectId", {demand: true, X:" to add group permissions to"}),
         NewOpt("groupAddress",{
           demand: true,
           descTemplate: "address of group to grant permissions to",
@@ -36,7 +35,7 @@ class ObjectAddGroupPerms extends Utility {
     const logger = this.concerns.Logger;
     const client = await this.concerns.Client.get();
 
-    const {objectId, groupAddress} = this.args;
+    const {objectId, groupAddress} = await this.concerns.ArgObjectId.argsProc();
 
     for(const permission of permissionTypes) {
       if(this.args.permissions.includes(permission)) {

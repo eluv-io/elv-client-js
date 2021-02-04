@@ -11,13 +11,13 @@ const Asset = require("./lib/concerns/Asset");
 const Client = require("./lib/concerns/Client");
 const CloudFile = require("./lib/concerns/CloudFile");
 const LocalFile = require("./lib/concerns/LocalFile");
-const MetadataArg = require("./lib/concerns/MetadataArg");
+const ArgMetadata = require("./lib/concerns/ArgMetadata");
 const ContentType = require("./lib/concerns/ContentType");
 
 class ProductionMasterCreate extends Utility {
   blueprint() {
     return {
-      concerns: [Client, CloudFile, LocalFile, Asset, MetadataArg, ContentType],
+      concerns: [Client, CloudFile, LocalFile, Asset, ArgMetadata, ContentType],
       options: [
         StdOpt("libraryId",{demand: true, forX: "new production master"}),
         ModOpt("type",{demand: true, forX: "new production master"}),
@@ -42,7 +42,7 @@ class ProductionMasterCreate extends Utility {
       access = this.concerns.CloudFile.credentialSet();
     }
 
-    const metadataFromArg = this.concerns.MetadataArg.asObject() || {};
+    const metadataFromArg = this.concerns.ArgMetadata.asObject() || {};
 
     let streams;
     if(this.args.streams) {

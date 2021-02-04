@@ -1,5 +1,4 @@
 // List all libraries visible to the current private key
-const {DelOpt} = require("./lib/options");
 
 const Utility = require("./lib/Utility");
 
@@ -9,8 +8,7 @@ const Logger = require("./lib/concerns/Logger");
 class ListLibraries extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, Library],
-      options: [DelOpt("libraryId")]
+      concerns: [Logger, Library]
     };
   }
 

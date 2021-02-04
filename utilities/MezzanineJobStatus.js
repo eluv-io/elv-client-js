@@ -4,7 +4,7 @@ const {NewOpt, ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
-const FabricObject = require("./lib/concerns/FabricObject");
+const ArgObjectId = require("./lib/concerns/ArgObjectId");
 const FinalizeAndWait = require("./lib/concerns/FinalizeAndWait");
 const Logger = require("./lib/concerns/Logger");
 const LRO = require("./lib/concerns/LRO");
@@ -12,9 +12,9 @@ const LRO = require("./lib/concerns/LRO");
 class MezzanineJobStatus extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, FabricObject, Client, LRO, FinalizeAndWait],
+      concerns: [Logger, ArgObjectId, Client, LRO, FinalizeAndWait],
       options: [
-        ModOpt("objectId", {ofX: "mezzanine"}),
+        ModOpt("objectId", {ofX: "mezzanine", demand: true}),
         ModOpt("libraryId", {forX: "mezzanine"}),
         NewOpt("finalize", {
           descTemplate: "If specified, will finalize the mezzanine if all jobs are completed",
@@ -38,7 +38,7 @@ class MezzanineJobStatus extends Utility {
     const {finalize, objectId, force} = this.args;
     //const offeringKey = this.args.offeringKey;
 
-    const libraryId = await this.concerns.FabricObject.libraryIdGet();
+    const libraryId = this.args.libraryId || await this.concerns.FabricObject.libraryId({objectId});
 
     let statusMap;
     try {

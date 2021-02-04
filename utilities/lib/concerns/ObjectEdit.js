@@ -17,7 +17,7 @@ const New = context => {
 
   const finalize = async ({libraryId, objectId, writeToken}) => {
     objectId = objectId || context.args.objectId;
-    libraryId = libraryId || await context.concerns.FabricObject.libraryIdGet({objectId});
+    libraryId = libraryId || await context.concerns.FabricObject.libraryId({objectId});
 
     return await context.concerns.FinalizeAndWait.finalize({
       libraryId,
@@ -28,7 +28,7 @@ const New = context => {
 
   const getWriteToken = async ({libraryId, objectId} = {}) => {
     objectId = objectId || context.args.objectId;
-    libraryId = libraryId || await context.concerns.FabricObject.libraryIdGet({objectId});
+    libraryId = libraryId || await context.concerns.FabricObject.libraryId({objectId});
 
     const client = await context.concerns.Client.get();
     const editResponse = await client.EditContentObject({
@@ -42,7 +42,7 @@ const New = context => {
 
   const writeMetadata =  async ({libraryId, metadata, metadataSubtree, objectId, writeToken}) => {
     objectId = objectId || context.args.objectId;
-    libraryId = libraryId || await context.concerns.FabricObject.libraryIdGet({objectId});
+    libraryId = libraryId || await context.concerns.FabricObject.libraryId({objectId});
     writeToken = writeToken || await getWriteToken({libraryId, objectId});
 
     logger.log("Writing metadata to object...");

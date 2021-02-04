@@ -3,7 +3,7 @@ const {NewOpt} = require("../options");
 const JSON = require("./JSON");
 
 const blueprint = {
-  name: "MetadataArg",
+  name: "ArgMetadata",
   concerns: [JSON],
   options: [
     NewOpt("metadata", {

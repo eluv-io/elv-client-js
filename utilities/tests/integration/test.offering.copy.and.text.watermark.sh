@@ -97,6 +97,23 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectGetMetadata.js" \
 
 check_exit_code $?
 
+
+# -------------------------
+# SAVE CURRENT VERSION COUNT
+# -------------------------
+print_heading Counting number of versions
+
+OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectListVersions.js" \
+  --objectId $MEZ_ID \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
+  --json -v)
+
+check_exit_code $?
+
+ORIGINAL_VERSION_COUNT=$(echo $OUTPUT | jq '.data.version_count' | tr -d '"')
+print_spaced Original version count: $ORIGINAL_VERSION_COUNT
+
+
 # -------------------------
 # COPY OFFERING
 # -------------------------
@@ -149,9 +166,25 @@ SIMPLE_WATERMARK_CHECK=$(echo $OUTPUT | jq '.data.metadata')
 
 if [[ $SIMPLE_WATERMARK_ORIGINAL == $SIMPLE_WATERMARK_CHECK ]]
 then
-  print_spaced SUCCESS
-  exit 0
+  print_spaced metadata at /offerings/$TARGET_OFFERING_KEY/simple_metadata matches
 else
   print_spaced FAIL - metadata at /offerings/$TARGET_OFFERING_KEY/simple_metadata does not match
-  exit 0
+  exit 1
 fi
+
+# -------------------------
+# Delete versions added by test
+# -------------------------
+print_heading Removing versions added by test
+
+OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ObjectPruneVersions.js" \
+  --objectId $MEZ_ID \
+  --keep $ORIGINAL_VERSION_COUNT \
+  --keepOld \
+  --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
+  --json -v)
+
+check_exit_code $?
+
+print_spaced SUCCESS
+exit 0
