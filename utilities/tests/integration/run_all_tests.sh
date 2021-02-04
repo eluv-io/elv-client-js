@@ -12,6 +12,7 @@ fi
 
 declare -a TESTS=(
 	"local.ingest"
+	"local.ingest.existing.mez"
 	"s3.ingest"
 	"offering.copy.and.text.watermark"
 	"offering.metadata.rewrite"
