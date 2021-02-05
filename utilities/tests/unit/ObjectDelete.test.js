@@ -9,26 +9,27 @@ const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 removeElvEnvVars();
 beforeEach(removeStubs);
 
-const ListLibraries = require("../../ListLibraries");
+const ObjectDelete = require("../../ObjectDelete");
 
-describe("ListLibraries", () => {
+describe("ObjectDelete", () => {
 
-  it("should complain if unrecognized option supplied", () => {
+  it("should complain if --objectId missing", () => {
     expect(() => {
-      new ListLibraries(argList2Params("--illegalOption"));
-    }).to.throw("Unknown argument: illegalOption");
+      new ObjectDelete(argList2Params());
+    }).to.throw("Missing required argument: objectId");
   });
 
-  it("should call ElvClient.ContentLibraries() and return list", () => {
-    const utility = new ListLibraries(argList2Params("--json"));
+  it("should call ElvClient.DeleteContentObject()", () => {
+    const utility = new ObjectDelete(argList2Params("--objectId", "iq__001xxx001xxxxxxxxxxxxxxxxxxx", "--json"));
     const stub = stubClient(utility.concerns.Client);
     stub.resetHistory();
-    return utility.run().then( (retVal) => {
-      expect(retVal.libraries.length).to.be.greaterThan(0);
+    return utility.run().then(() => {
       // console.log(JSON.stringify(retVal, null, 2));
       expect(stub.callHistoryMismatches([
-        "ContentLibraries"
+        "ContentObjectLibraryId",
+        "DeleteContentObject"
       ]).length).to.equal(0);
     });
   });
+
 });

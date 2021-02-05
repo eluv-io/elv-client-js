@@ -17,6 +17,8 @@ const New = context => {
   // fill in any implied missing args
   const argsProc = async () => await context.concerns.ArgObjectId.argsProc();
 
+  const del = async () => await context.concerns.ArgObjectId.objDelete();
+
   const libraryId = async () => await argsProc().libraryId;
 
   const metadata = async ({subtree} = {}) => await context.concerns.ArgObjectId.objMetadata({subtree});
@@ -27,6 +29,7 @@ const New = context => {
 
   return {
     argsProc,
+    del,
     libraryId,
     metadata,
     partList,

@@ -4,14 +4,12 @@ const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 const {removeStubs, stubClient} = require("../mocks/ElvClient.mock");
-
 const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 
-const LibraryListObjects = require("../../LibraryListObjects");
-
 removeElvEnvVars();
-
 beforeEach(removeStubs);
+
+const LibraryListObjects = require("../../LibraryListObjects");
 
 describe("LibraryListObjects", () => {
 
@@ -34,7 +32,9 @@ describe("LibraryListObjects", () => {
     return utility.run().then( (retVal) => {
       expect(retVal.object_list.length).to.be.greaterThan(0);
       // console.log(JSON.stringify(retVal, null, 2));
-      expect(stub.callHistory()[0]).to.include("ContentObjects");
+      expect(stub.callHistoryMismatches([
+        "ContentObjects"
+      ]).length).to.equal(0);
     });
   });
 });

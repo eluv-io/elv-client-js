@@ -4,14 +4,12 @@ const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 const {removeStubs, stubClient} = require("../mocks/ElvClient.mock");
-
 const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 
-const LibraryCreate = require("../../LibraryCreate");
-
 removeElvEnvVars();
-
 beforeEach(removeStubs);
+
+const LibraryCreate = require("../../LibraryCreate");
 
 describe("LibraryCreate", () => {
 
@@ -33,7 +31,10 @@ describe("LibraryCreate", () => {
     stub.resetHistory();
     return utility.run().then( (retVal) => {
       expect(retVal.library_id).to.equal("ilib_dummy_new_lib");
-      expect(stub.callHistory()[0]).to.include("CreateContentLibrary");
+
+      expect(stub.callHistoryMismatches([
+        "CreateContentLibrary"
+      ]).length).to.equal(0);
     });
   });
 

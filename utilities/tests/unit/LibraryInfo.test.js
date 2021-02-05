@@ -4,14 +4,12 @@ const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 const {removeStubs, stubClient} = require("../mocks/ElvClient.mock");
-
 const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 
-const LibraryInfo = require("../../LibraryInfo");
-
 removeElvEnvVars();
-
 beforeEach(removeStubs);
+
+const LibraryInfo = require("../../LibraryInfo");
 
 describe("LibraryInfo", () => {
 
@@ -34,9 +32,11 @@ describe("LibraryInfo", () => {
     return utility.run().then( (retVal) => {
       expect(retVal.library_info.metadata.public.name).to.equal("dev-tenant - Title Masters");
       // console.log(JSON.stringify(retVal, null, 2));
-      expect(stub.callHistory()[0]).to.include("ContentLibrary");
-      expect(stub.callHistory()[1]).to.include("ContentObject");
-      expect(stub.callHistory()[2]).to.include("ContentObjectMetadata");
+      expect(stub.callHistoryMismatches([
+        "ContentLibrary",
+        "ContentObject",
+        "ContentObjectMetadata"
+      ]).length).to.equal(0);
     });
   });
 });

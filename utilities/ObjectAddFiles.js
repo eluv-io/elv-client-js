@@ -3,15 +3,17 @@
 const {ModOpt, StdOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
+const ArgNoWait = require("./lib/concerns/ArgNoWait");
+const ExistObj = require("./lib/concerns/ExistObj");
 const CloudFile = require("./lib/concerns/CloudFile");
-const ObjectEdit = require("./lib/concerns/ObjectEdit");
+const Edit = require("./lib/concerns/Edit");
 const LocalFile = require("./lib/concerns/LocalFile");
 const Logger = require("./lib/concerns/Logger");
 
 class ObjectAddFiles extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, ObjectEdit, LocalFile, CloudFile],
+      concerns: [Logger, ExistObj, Edit, ArgNoWait, LocalFile, CloudFile],
       options: [
         ModOpt("files", {X: "to add"}),
         StdOpt("encrypt", {X: "uploaded files"})
@@ -21,8 +23,7 @@ class ObjectAddFiles extends Utility {
 
   async body() {
     const logger = this.logger;
-    await this.concerns.ObjectEdit.libraryIdArgPopulate();
-    const {libraryId, objectId, encrypt} = this.args;
+    const {encrypt, noWait} = this.args;
 
     let access;
     if(this.args.s3Reference || this.args.s3Copy) access = this.concerns.CloudFile.credentialSet();
@@ -32,7 +33,12 @@ class ObjectAddFiles extends Utility {
       ? this.concerns.CloudFile.fileInfo()
       : this.concerns.LocalFile.fileInfo(fileHandles);
 
-    const writeToken = await this.concerns.ObjectEdit.getWriteToken();
+    const {libraryId, objectId} = await this.concerns.ExistObj.argsProc();
+
+    const writeToken = await this.concerns.Edit.getWriteToken({
+      libraryId,
+      objectId
+    });
 
     if(access) {
       await this.concerns.CloudFile.add({
@@ -55,7 +61,12 @@ class ObjectAddFiles extends Utility {
       this.concerns.LocalFile.closeFileHandles(fileHandles);
     }
 
-    const hash = await this.concerns.ObjectEdit.finalize({writeToken});
+    const hash = await this.concerns.Edit.finalize({
+      libraryId,
+      noWait,
+      objectId,
+      writeToken
+    });
 
     logger.logList(
       "",
