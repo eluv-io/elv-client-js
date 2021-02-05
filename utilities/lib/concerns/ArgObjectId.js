@@ -31,6 +31,14 @@ const New = context => {
     return argsProcMemo;
   };
 
+  const objDelete = async () => {
+    const {libraryId, objectId} = await argsProc();
+    return await context.concerns.FabricObject.del({
+      libraryId,
+      objectId
+    });
+  };
+
   const objMetadata = async ({subtree} = {}) => {
     const {libraryId, objectId} = await argsProc();
     return await context.concerns.FabricObject.metadata({
@@ -59,6 +67,7 @@ const New = context => {
   // instance interface
   return {
     argsProc,
+    objDelete,
     objMetadata,
     objPartList,
     objVersionList

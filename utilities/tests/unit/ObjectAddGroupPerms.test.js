@@ -5,11 +5,13 @@ chai.use(chaiAsPromised);
 
 const kindOf = require("kind-of");
 
+const {removeStubs, stubClient} = require("../mocks/ElvClient.mock");
 const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 
-const ObjectAddGroupPerms = require("../../ObjectAddGroupPerms");
-
 removeElvEnvVars();
+beforeEach(removeStubs);
+
+const ObjectAddGroupPerms = require("../../ObjectAddGroupPerms");
 
 describe("ObjectAddGroupPerms", () => {
 
@@ -37,4 +39,21 @@ describe("ObjectAddGroupPerms", () => {
     expect(kindOf(utility.args.groupAddress)).to.equal("string");
   });
 
+  it("should call ElvClient.AddContentObjectGroupPermission()", () => {
+    const utility = new ObjectAddGroupPerms(argList2Params(
+      "--objectId", "iq__001xxx001xxxxxxxxxxxxxxxxxxx",
+      "--groupAddress", "0x67b70ea8be90b566337b9533d8335fcc3c5fc302",
+      "--permissions", "manage",
+      "--json"
+    ));
+    const stub = stubClient(utility.concerns.Client);
+    stub.resetHistory();
+    return utility.run().then(() => {
+      // console.log(JSON.stringify(retVal, null, 2));
+      expect(stub.callHistoryMismatches([
+        "ContentObjectLibraryId",
+        "AddContentObjectGroupPermission"
+      ]).length).to.equal(0);
+    });
+  });
 });

@@ -2,128 +2,63 @@ const objectPath = require("object-path");
 const R = require("ramda");
 const simple = require("simple-mock");
 
-const libraries = {
-  ilib001xxxxxxxxxxxxxxxxxxxxxxxx: {
-    contractMetadata: {},
-    qid: "iq__001xxxxxxxxxxxxxxxxxxxxxxxx",
-    objects: ["iq__001xxx001xxxxxxxxxxxxxxxxxxx"]
-  },
-  ilib002xxxxxxxxxxxxxxxxxxxxxxxx: {
-    contractMetadata: {},
-    qid: "iq__002xxxxxxxxxxxxxxxxxxxxxxxx",
-    objects: ["iq__002xxx001xxxxxxxxxxxxxxxxxxx"]
-  }
-};
+const {loadFixture} = require("../helpers/fixtures");
 
-const objects = {
-  iq__001xxxxxxxxxxxxxxxxxxxxxxxx: {  // library 001 object (masters)
-    libraryId: "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
-    versions: [
-      {
-        metadata: {
-          commit: {
-            author: "dev-tenant-elv-admin",
-            author_address: "0x1f6c0ed40c63fdcc519cf609f7cae444b5108133",
-            message: "",
-            timestamp: "2021-02-01T22:13:51.994Z"
-          },
-          name: "dev-tenant - Title Masters",
-          public: {
-            name: "dev-tenant - Title Masters"
-          }
-        },
-        parts: [],
-        type: "",
-        version_hash: "hq__001xxxxxxxxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      }
-    ]
-  },
-  iq__001xxx001xxxxxxxxxxxxxxxxxxx: {
-    libraryId: "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
-    versions: [
-      {
-        metadata: {public: {name: "mock generic object 001 version 001"}},
-        parts: [
-          {
-            part_hash: "hqp_001xxx001xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxx",
-            size: 100
-          }
-        ],
-        type: "",
-        version_hash: "hq__001xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-      }
-    ]
-  },
-  iq__001xxx002xxxxxxxxxxxxxxxxxxx: {
-    libraryId: "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
-    versions: [
-      {
-        metadata: {public: {name: "mock master object 002 version 001"}},
-        parts: [
-          {
-            part_hash: "hqp_001xxx002xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxx",
-            size: 100
-          }
-        ],
-        type: "",
-        version_hash: "hq__001xxx002xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-      }
-    ]
-  },
-  iq__002xxxxxxxxxxxxxxxxxxxxxxxx: {  // library 002 object - Content Types
-    libraryId: "ilib002xxxxxxxxxxxxxxxxxxxxxxxx",
-    versions: [
-      {
-        metadata: {
-          public: {
-            name: "Content Types"
-          }
-        },
-        parts: [],
-        type: "",
-        version_hash: "hq__002xxxxxxxxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      }
-    ]
-  },
-  iq__002xxx001xxxxxxxxxxxxxxxxxx: {  // master type
-    libraryId: "ilib002xxxxxxxxxxxxxxxxxxxxxxxx",
-    versions: [
-      {
-        metadata: {
-          public: {
-            name: "dev-tenant - Title Master"
-          }
-        },
-        parts: [],
-        type: "",
-        version_hash: "hq__002xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      }
-    ]
-  },
-  iq__002xxx002xxxxxxxxxxxxxxxxxx: {  // mez type
-    libraryId: "ilib002xxxxxxxxxxxxxxxxxxxxxxxx",
-    versions: [
-      {
-        metadata: {
-          public: {
-            name: "dev-tenant - Title"
-          }
-        },
-        parts: [],
-        type: "",
-        version_hash: "hq__002xxx002xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      }
-    ]
-  }
-};
-
-const writeTokens = {};
+// ==========================================
+// Stub local var
+// ==========================================
 
 let calls = [];
 
+// ==========================================
+// Exported methods: activate / remove stub
+// ==========================================
+
+const removeStubs = () => simple.restore();
+
+const stubClient = (clientConcern) => {
+  simple.mock(clientConcern, "get").resolveWith(MockClient);
+  return Stub;
+};
+
+
+// ==========================================
+// Stub query/control methods
+// ==========================================
+
 const callHistory = () => R.clone(calls);
 
+const callHistoryMismatches = list => {
+  const result = [];
+  const history = callHistory();
+  if(list.length !== history.length) result.push(`call count mismatch - expected ${list.length}, actual ${history.length}`);
+  for(let i = 0; i < list.length; i++) {
+    const matchString = list[i];
+    const callDesc = (history.length > i ? history[i] : "");
+    if(!callDesc.includes(matchString)) result.push(`mismatch on call #${i+1}, ${matchString} not found in ${callDesc}`);
+  }
+  if(history.length > list.length) {
+    for(let i = list.length; i < history.length; i++) {
+      result.push(`Unexpected call #${i+1}, ${history[i]}`);
+    }
+  }
+
+  if(result.length > 0){
+    // eslint-disable-next-line no-console
+    console.warn(JSON.stringify(result,null,2));
+  }
+  return result;
+};
+
+const resetHistory = () => calls = [];
+
+// ==========================================
 // mocked ElvClient methods
+// ==========================================
+
+const AddContentObjectGroupPermission = async (args) => {
+  calls.push("AddContentObjectGroupPermission: " + JSON.stringify(args));
+};
 
 const CallBitcodeMethod = async (args) => {
   calls.push("CallBitcodeMethod: " + JSON.stringify(args));
@@ -194,6 +129,7 @@ const ContentLibrary = async (args) => {
 
 const ContentObject = async (args) => {
   calls.push("ContentObject: " + JSON.stringify(args));
+  // eslint-disable-next-line no-unused-vars
   const {libraryId, objectId, versionHash} = args;
   if(objects.hasOwnProperty(objectId)) {
     const obj = objects[objectId];
@@ -222,6 +158,7 @@ const ContentObjectLibraryId = async (args) => {
 
 const ContentObjectMetadata = async (args) => {
   calls.push("ContentObjectMetadata: " + JSON.stringify(args));
+  // eslint-disable-next-line no-unused-vars
   const {libraryId, objectId, versionHash, writeToken} = args;
   if(objects.hasOwnProperty(objectId)) {
     const obj = objects[objectId];
@@ -308,6 +245,17 @@ const CreateContentLibrary = async (args) => {
   return "ilib_dummy_new_lib";
 };
 
+
+const CreateProductionMaster = async (args) => {
+  calls.push("CreateProductionMaster: " + JSON.stringify(args));
+  return {
+    errors: [],
+    hash: "hq__001xxx002xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    id: "iq__001xxx002xxxxxxxxxxxxxxxxxxx",
+    warnings: []
+  };
+};
+
 const DeleteContentObject = async (args) => {
   calls.push("DeleteContentObject: " + JSON.stringify(args));
 };
@@ -333,6 +281,11 @@ const FinalizeContentObject = async (args) => {
   return {hash: writeTokens[writeToken].draft.version_hash};
 };
 
+const LROStatus = async (args) => {
+  const lroStatus = loadFixture("lro.status.finished.good.json");
+  calls.push("LROStatus: " + JSON.stringify(args));
+  return lroStatus;
+};
 
 const ReplaceMetadata = async (args) => {
   calls.push("ReplaceMetadata: " + JSON.stringify(args));
@@ -354,11 +307,13 @@ const StartABRMezzanineJobs = async (args) => {
   };
 };
 
-const resetHistory = () => calls = [];
+const UploadFiles = async (args) => {
+  calls.push("UploadFiles: " + JSON.stringify(args));
+};
 
 const MockClient = {
+  AddContentObjectGroupPermission,
   CallBitcodeMethod,
-  callHistory,
   ContentLibraries,
   ContentLibrary,
   ContentObject,
@@ -369,20 +324,156 @@ const MockClient = {
   ContentType,
   CreateABRMezzanine,
   CreateContentLibrary,
+  CreateProductionMaster,
   DeleteContentObject,
   EditContentObject,
   FinalizeContentObject,
+  LROStatus,
   ReplaceMetadata,
   SetVisibility,
   StartABRMezzanineJobs,
+  UploadFiles
+};
+
+const Stub = {
+  callHistory,
+  callHistoryMismatches,
   resetHistory
 };
 
-const removeStubs = () => simple.restore();
+// ==========================================
+// Mock node data
+// ==========================================
 
-const stubClient = (clientConcern) => {
-  simple.mock(clientConcern, "get").resolveWith(MockClient);
-  return {callHistory, resetHistory};
+const libraries = {
+  ilib001xxxxxxxxxxxxxxxxxxxxxxxx: {
+    contractMetadata: {},
+    qid: "iq__001xxxxxxxxxxxxxxxxxxxxxxxx",
+    objects: ["iq__001xxx001xxxxxxxxxxxxxxxxxxx"]
+  },
+  ilib002xxxxxxxxxxxxxxxxxxxxxxxx: {
+    contractMetadata: {},
+    qid: "iq__002xxxxxxxxxxxxxxxxxxxxxxxx",
+    objects: ["iq__002xxx001xxxxxxxxxxxxxxxxxxx"]
+  }
 };
+
+const objects = {
+  iq__001xxxxxxxxxxxxxxxxxxxxxxxx: {  // library 001 object (masters)
+    libraryId: "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
+    versions: [
+      {
+        metadata: {
+          commit: {
+            author: "dev-tenant-elv-admin",
+            author_address: "0x0000000000000000000000000000000000000000",
+            message: "",
+            timestamp: "2021-02-01T22:13:51.994Z"
+          },
+          name: "dev-tenant - Title Masters",
+          public: {
+            name: "dev-tenant - Title Masters"
+          }
+        },
+        parts: [],
+        type: "",
+        version_hash: "hq__001xxxxxxxxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      }
+    ]
+  },
+  iq__001xxx001xxxxxxxxxxxxxxxxxxx: {
+    libraryId: "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
+    versions: [
+      {
+        metadata: {public: {name: "mock generic object 001 version 001"}},
+        parts: [
+          {
+            part_hash: "hqp_001xxx001xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            size: 100
+          }
+        ],
+        type: "",
+        version_hash: "hq__001xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    ]
+  },
+  iq__001xxx002xxxxxxxxxxxxxxxxxxx: {
+    libraryId: "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
+    versions: [
+      {
+        metadata: {
+          production_master: {
+            variants: {
+              default: {
+                streams: {
+                  audio: {},
+                  video: {}
+                }
+              }
+            }
+          },
+          public: {name: "mock master object 002 version 001"}},
+        parts: [
+          {
+            part_hash: "hqp_001xxx002xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            size: 100
+          }
+        ],
+        type: "",
+        version_hash: "hq__001xxx002xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    ]
+  },
+  iq__002xxxxxxxxxxxxxxxxxxxxxxxx: {  // library 002 object - Content Types
+    libraryId: "ilib002xxxxxxxxxxxxxxxxxxxxxxxx",
+    versions: [
+      {
+        metadata: {
+          public: {
+            name: "Content Types"
+          }
+        },
+        parts: [],
+        type: "",
+        version_hash: "hq__002xxxxxxxxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      }
+    ]
+  },
+  iq__002xxx001xxxxxxxxxxxxxxxxxx: {  // master type
+    libraryId: "ilib002xxxxxxxxxxxxxxxxxxxxxxxx",
+    versions: [
+      {
+        metadata: {
+          public: {
+            name: "dev-tenant - Title Master"
+          }
+        },
+        parts: [],
+        type: "",
+        version_hash: "hq__002xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      }
+    ]
+  },
+  iq__002xxx002xxxxxxxxxxxxxxxxxx: {  // mez type
+    libraryId: "ilib002xxxxxxxxxxxxxxxxxxxxxxxx",
+    versions: [
+      {
+        metadata: {
+          public: {
+            name: "dev-tenant - Title"
+          }
+        },
+        parts: [],
+        type: "",
+        version_hash: "hq__002xxx002xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      }
+    ]
+  }
+};
+
+const writeTokens = {};
+
+
+
 
 module.exports = {removeStubs, stubClient};

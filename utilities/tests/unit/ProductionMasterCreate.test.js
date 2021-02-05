@@ -3,11 +3,14 @@ const chaiAsPromised = require("chai-as-promised");
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
+const {fixturePath} = require("../helpers/fixtures");
+const {removeStubs, stubClient} = require("../mocks/ElvClient.mock");
 const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 
-const ProductionMasterCreate = require("../../ProductionMasterCreate");
-
 removeElvEnvVars();
+beforeEach(removeStubs);
+
+const ProductionMasterCreate = require("../../ProductionMasterCreate");
 
 const dummyRequiredArgs = [
   "--title", "myTitle",
@@ -67,6 +70,28 @@ describe("ProductionMasterCreate", () => {
       "../fixtures/bad_format.fixture.json"
     ));
     return expect(utility.run()).to.eventually.be.rejectedWith("Unexpected token");
+  });
+
+  it("should call ElvClient.CreateProductionMaster()", () => {
+    const utility = new ProductionMasterCreate(argList2Params(
+      "--title", "myTitle",
+      "--files", fixturePath("lro.status.2.progress.fixture.json"),
+      "--type", "iq__002xxx001xxxxxxxxxxxxxxxxxx",
+      "--libraryId", "iq__001xxxxxxxxxxxxxxxxxxxxxxxx",
+      "--json"
+    ));
+    const stub = stubClient(utility.concerns.Client);
+    stub.resetHistory();
+    return utility.run().then(() => {
+      // console.log(JSON.stringify(retVal, null, 2));
+      expect(stub.callHistoryMismatches([
+        "ContentType",
+        "CreateProductionMaster",
+        "SetVisibility",
+        "ContentObjectMetadata", // checks stream info
+        "ContentObjectMetadata" // get sources info
+      ]).length).to.equal(0);
+    });
   });
 
 });

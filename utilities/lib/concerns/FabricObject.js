@@ -2,6 +2,7 @@
 // Named 'FabricObject' instead of 'Object' to prevent conflicts with built-in JS 'Object'
 const R = require("ramda");
 
+const Client = require("./Client");
 const Library = require("./Library");
 const Logger = require("./Logger");
 const Metadata = require("./Metadata");
@@ -9,11 +10,20 @@ const Fabric = require("./Fabric");
 
 const blueprint = {
   name: "FabricObject",
-  concerns: [Fabric, Library, Metadata, Logger]
+  concerns: [Client, Fabric, Library, Metadata, Logger]
 };
 
 const New = context => {
   const logger = context.concerns.Logger;
+
+  const del = async ({libraryId, objectId}) => {
+    if(!objectId) throw Error("FabricObject.del() - missing objectId");
+    const client = await context.concerns.Client.get();
+    await client.DeleteContentObject({
+      libraryId,
+      objectId
+    });
+  };
 
   const libraryId = async ({objectId}) => {
     if(!objectId) throw Error("FabricObject.libraryId() - missing objectId");
@@ -52,6 +62,7 @@ const New = context => {
 
   // instance interface
   return {
+    del,
     libraryId,
     metadata,
     partList,
