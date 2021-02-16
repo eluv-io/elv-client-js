@@ -92,6 +92,69 @@ function () {
         this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\n\t\t").concat(this.ethereumURIs.join(", \n\t\t"), "\n\t]"));
       }
     }
+  }, {
+    key: "EnableMethodLogging",
+    value: function EnableMethodLogging() {
+      var MethodLogger = function MethodLogger(klass) {
+        Object.getOwnPropertyNames(Object.getPrototypeOf(klass)).filter(function (method) {
+          return typeof klass[method] === "function";
+        }).forEach(function (methodName) {
+          var originalMethod = klass[methodName].bind(klass);
+
+          if (originalMethod.constructor.name === "AsyncFunction") {
+            klass[methodName] = function _callee() {
+              var start,
+                  _len,
+                  args,
+                  _key,
+                  result,
+                  _args = arguments;
+
+              return _regeneratorRuntime.async(function _callee$(_context) {
+                while (1) {
+                  switch (_context.prev = _context.next) {
+                    case 0:
+                      start = Date.now();
+
+                      for (_len = _args.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+                        args[_key] = _args[_key];
+                      }
+
+                      _context.next = 4;
+                      return _regeneratorRuntime.awrap(originalMethod.apply(void 0, args));
+
+                    case 4:
+                      result = _context.sent;
+                      // eslint-disable-next-line no-console
+                      console.log(methodName, Date.now() - start, "ms", JSON.stringify(args));
+                      return _context.abrupt("return", result);
+
+                    case 7:
+                    case "end":
+                      return _context.stop();
+                  }
+                }
+              });
+            };
+          } else {
+            klass[methodName] = function () {
+              var start = Date.now();
+
+              for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+                args[_key2] = arguments[_key2];
+              }
+
+              var result = originalMethod.apply(void 0, args); // eslint-disable-next-line no-console
+
+              console.log(methodName, Date.now() - start, "ms", JSON.stringify(args));
+              return result;
+            };
+          }
+        });
+      };
+
+      MethodLogger(this);
+    }
     /**
      * Create a new ElvClient
      *
@@ -173,9 +236,9 @@ function () {
       var _this = this;
 
       var workingEthURIs;
-      return _regeneratorRuntime.async(function InitializeClients$(_context2) {
+      return _regeneratorRuntime.async(function InitializeClients$(_context3) {
         while (1) {
-          switch (_context2.prev = _context2.next) {
+          switch (_context3.prev = _context3.next) {
             case 0:
               // Cached info
               this.contentTypes = {};
@@ -211,15 +274,15 @@ function () {
               this.Crypto = Crypto;
               this.Crypto.ElvCrypto(); // Test each eth url
 
-              _context2.next = 15;
-              return _regeneratorRuntime.awrap(Promise.all(this.ethereumURIs.map(function _callee(uri) {
+              _context3.next = 15;
+              return _regeneratorRuntime.awrap(Promise.all(this.ethereumURIs.map(function _callee2(uri) {
                 var response;
-                return _regeneratorRuntime.async(function _callee$(_context) {
+                return _regeneratorRuntime.async(function _callee2$(_context2) {
                   while (1) {
-                    switch (_context.prev = _context.next) {
+                    switch (_context2.prev = _context2.next) {
                       case 0:
-                        _context.prev = 0;
-                        _context.next = 3;
+                        _context2.prev = 0;
+                        _context2.next = 3;
                         return _regeneratorRuntime.awrap(Promise.race([HttpClient.Fetch(uri, {
                           method: "post",
                           headers: {
@@ -240,46 +303,46 @@ function () {
                         })]));
 
                       case 3:
-                        response = _context.sent;
+                        response = _context2.sent;
 
                         if (!response.ok) {
-                          _context.next = 6;
+                          _context2.next = 6;
                           break;
                         }
 
-                        return _context.abrupt("return", uri);
+                        return _context2.abrupt("return", uri);
 
                       case 6:
                         // eslint-disable-next-line no-console
                         _this.Log("Eth node unavailable: " + uri, true);
 
-                        _context.next = 13;
+                        _context2.next = 13;
                         break;
 
                       case 9:
-                        _context.prev = 9;
-                        _context.t0 = _context["catch"](0);
+                        _context2.prev = 9;
+                        _context2.t0 = _context2["catch"](0);
 
                         // eslint-disable-next-line no-console
                         _this.Log("Eth node unavailable: " + uri, true); // eslint-disable-next-line no-console
 
 
-                        _this.Log(_context.t0, true);
+                        _this.Log(_context2.t0, true);
 
                       case 13:
                       case "end":
-                        return _context.stop();
+                        return _context2.stop();
                     }
                   }
                 }, null, null, [[0, 9]]);
               })));
 
             case 15:
-              _context2.t0 = function (uri) {
+              _context3.t0 = function (uri) {
                 return uri;
               };
 
-              workingEthURIs = _context2.sent.filter(_context2.t0);
+              workingEthURIs = _context3.sent.filter(_context3.t0);
 
               // If any eth urls are bad, discard them
               if (workingEthURIs.length !== this.ethereumURIs.length) {
@@ -289,7 +352,7 @@ function () {
 
             case 18:
             case "end":
-              return _context2.stop();
+              return _context3.stop();
           }
         }
       }, null, this);
@@ -323,28 +386,28 @@ function () {
     value: function UseRegion(_ref2) {
       var region, _ref3, fabricURIs, ethereumURIs;
 
-      return _regeneratorRuntime.async(function UseRegion$(_context3) {
+      return _regeneratorRuntime.async(function UseRegion$(_context4) {
         while (1) {
-          switch (_context3.prev = _context3.next) {
+          switch (_context4.prev = _context4.next) {
             case 0:
               region = _ref2.region;
 
               if (this.configUrl) {
-                _context3.next = 3;
+                _context4.next = 3;
                 break;
               }
 
               throw Error("Unable to change region: Configuration URL not set");
 
             case 3:
-              _context3.next = 5;
+              _context4.next = 5;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: this.configUrl,
                 region: region
               }));
 
             case 5:
-              _ref3 = _context3.sent;
+              _ref3 = _context4.sent;
               fabricURIs = _ref3.fabricURIs;
               ethereumURIs = _ref3.ethereumURIs;
               this.fabricURIs = fabricURIs;
@@ -353,14 +416,14 @@ function () {
               this.HttpClient.uriIndex = 0;
               this.ethClient.ethereumURIs = ethereumURIs;
               this.ethClient.ethereumURIIndex = 0;
-              return _context3.abrupt("return", {
+              return _context4.abrupt("return", {
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs
               });
 
             case 15:
             case "end":
-              return _context3.stop();
+              return _context4.stop();
           }
         }
       }, null, this);
@@ -378,29 +441,29 @@ function () {
   }, {
     key: "ResetRegion",
     value: function ResetRegion() {
-      return _regeneratorRuntime.async(function ResetRegion$(_context4) {
+      return _regeneratorRuntime.async(function ResetRegion$(_context5) {
         while (1) {
-          switch (_context4.prev = _context4.next) {
+          switch (_context5.prev = _context5.next) {
             case 0:
               if (this.configUrl) {
-                _context4.next = 2;
+                _context5.next = 2;
                 break;
               }
 
               throw Error("Unable to change region: Configuration URL not set");
 
             case 2:
-              _context4.next = 4;
+              _context5.next = 4;
               return _regeneratorRuntime.awrap(this.UseRegion({
                 region: ""
               }));
 
             case 4:
-              return _context4.abrupt("return", _context4.sent);
+              return _context5.abrupt("return", _context5.sent);
 
             case 5:
             case "end":
-              return _context4.stop();
+              return _context5.stop();
           }
         }
       }, null, this);
@@ -423,25 +486,25 @@ function () {
     value: function NodeId(_ref4) {
       var region, _ref5, nodeId;
 
-      return _regeneratorRuntime.async(function NodeId$(_context5) {
+      return _regeneratorRuntime.async(function NodeId$(_context6) {
         while (1) {
-          switch (_context5.prev = _context5.next) {
+          switch (_context6.prev = _context6.next) {
             case 0:
               region = _ref4.region;
-              _context5.next = 3;
+              _context6.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: this.configUrl,
                 region: region
               }));
 
             case 3:
-              _ref5 = _context5.sent;
+              _ref5 = _context6.sent;
               nodeId = _ref5.nodeId;
-              return _context5.abrupt("return", nodeId);
+              return _context6.abrupt("return", nodeId);
 
             case 6:
             case "end":
-              return _context5.stop();
+              return _context6.stop();
           }
         }
       }, null, this);
@@ -559,25 +622,25 @@ function () {
     key: "SetSignerFromWeb3Provider",
     value: function SetSignerFromWeb3Provider(_ref8) {
       var provider, ethProvider;
-      return _regeneratorRuntime.async(function SetSignerFromWeb3Provider$(_context6) {
+      return _regeneratorRuntime.async(function SetSignerFromWeb3Provider$(_context7) {
         while (1) {
-          switch (_context6.prev = _context6.next) {
+          switch (_context7.prev = _context7.next) {
             case 0:
               provider = _ref8.provider;
               ethProvider = new Ethers.providers.Web3Provider(provider);
               ethProvider.pollingInterval = 250;
               this.signer = ethProvider.getSigner();
-              _context6.next = 6;
+              _context7.next = 6;
               return _regeneratorRuntime.awrap(this.signer.getAddress());
 
             case 6:
-              this.signer.address = _context6.sent;
-              _context6.next = 9;
+              this.signer.address = _context7.sent;
+              _context7.next = 9;
               return _regeneratorRuntime.awrap(this.InitializeClients());
 
             case 9:
             case "end":
-              return _context6.stop();
+              return _context7.stop();
           }
         }
       }, null, this);
@@ -604,57 +667,57 @@ function () {
     value: function CreateSignedToken(_ref9) {
       var libraryId, objectId, versionHash, policyId, subject, _ref9$grantType, grantType, _ref9$allowDecryption, allowDecryption, duration, _ref9$context, context, token, cap, compressedToken, signature;
 
-      return _regeneratorRuntime.async(function CreateSignedToken$(_context7) {
+      return _regeneratorRuntime.async(function CreateSignedToken$(_context8) {
         while (1) {
-          switch (_context7.prev = _context7.next) {
+          switch (_context8.prev = _context8.next) {
             case 0:
               libraryId = _ref9.libraryId, objectId = _ref9.objectId, versionHash = _ref9.versionHash, policyId = _ref9.policyId, subject = _ref9.subject, _ref9$grantType = _ref9.grantType, grantType = _ref9$grantType === void 0 ? "read" : _ref9$grantType, _ref9$allowDecryption = _ref9.allowDecryption, allowDecryption = _ref9$allowDecryption === void 0 ? false : _ref9$allowDecryption, duration = _ref9.duration, _ref9$context = _ref9.context, context = _ref9$context === void 0 ? {} : _ref9$context;
 
               if (subject) {
-                _context7.next = 9;
+                _context8.next = 9;
                 break;
               }
 
-              _context7.t0 = "iusr";
-              _context7.t1 = this.utils;
-              _context7.next = 6;
+              _context8.t0 = "iusr";
+              _context8.t1 = this.utils;
+              _context8.next = 6;
               return _regeneratorRuntime.awrap(this.CurrentAccountAddress());
 
             case 6:
-              _context7.t2 = _context7.sent;
-              _context7.t3 = _context7.t1.AddressToHash.call(_context7.t1, _context7.t2);
-              subject = _context7.t0.concat.call(_context7.t0, _context7.t3);
+              _context8.t2 = _context8.sent;
+              _context8.t3 = _context8.t1.AddressToHash.call(_context8.t1, _context8.t2);
+              subject = _context8.t0.concat.call(_context8.t0, _context8.t3);
 
             case 9:
               if (policyId) {
                 context["elv:delegation-id"] = policyId;
               }
 
-              _context7.t4 = Buffer;
-              _context7.next = 13;
+              _context8.t4 = Buffer;
+              _context8.next = 13;
               return _regeneratorRuntime.awrap(this.CurrentAccountAddress().replace(/^0x/, ""));
 
             case 13:
-              _context7.t5 = _context7.sent;
-              _context7.t6 = _context7.t4.from.call(_context7.t4, _context7.t5, "hex").toString("base64");
-              _context7.t7 = subject;
-              _context7.next = 18;
+              _context8.t5 = _context8.sent;
+              _context8.t6 = _context8.t4.from.call(_context8.t4, _context8.t5, "hex").toString("base64");
+              _context8.t7 = subject;
+              _context8.next = 18;
               return _regeneratorRuntime.awrap(this.ContentSpaceId());
 
             case 18:
-              _context7.t8 = _context7.sent;
-              _context7.t9 = Date.now();
-              _context7.t10 = Date.now() + duration;
-              _context7.t11 = grantType;
-              _context7.t12 = context;
+              _context8.t8 = _context8.sent;
+              _context8.t9 = Date.now();
+              _context8.t10 = Date.now() + duration;
+              _context8.t11 = grantType;
+              _context8.t12 = context;
               token = {
-                adr: _context7.t6,
-                sub: _context7.t7,
-                spc: _context7.t8,
-                iat: _context7.t9,
-                exp: _context7.t10,
-                gra: _context7.t11,
-                ctx: _context7.t12
+                adr: _context8.t6,
+                sub: _context8.t7,
+                spc: _context8.t8,
+                iat: _context8.t9,
+                exp: _context8.t10,
+                gra: _context8.t11,
+                ctx: _context8.t12
               };
 
               if (versionHash) {
@@ -662,24 +725,24 @@ function () {
               }
 
               if (!objectId) {
-                _context7.next = 31;
+                _context8.next = 31;
                 break;
               }
 
               token.qid = objectId;
 
               if (libraryId) {
-                _context7.next = 31;
+                _context8.next = 31;
                 break;
               }
 
-              _context7.next = 30;
+              _context8.next = 30;
               return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
                 objectId: objectId
               }));
 
             case 30:
-              libraryId = _context7.sent;
+              libraryId = _context8.sent;
 
             case 31:
               if (libraryId) {
@@ -687,32 +750,32 @@ function () {
               }
 
               if (!allowDecryption) {
-                _context7.next = 37;
+                _context8.next = 37;
                 break;
               }
 
-              _context7.next = 35;
+              _context8.next = 35;
               return _regeneratorRuntime.awrap(this.authClient.ReEncryptionConk({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
             case 35:
-              cap = _context7.sent;
+              cap = _context8.sent;
               token.apk = cap.public_key;
 
             case 37:
               compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-              _context7.next = 40;
+              _context8.next = 40;
               return _regeneratorRuntime.awrap(this.authClient.Sign(Ethers.utils.keccak256(compressedToken)));
 
             case 40:
-              signature = _context7.sent;
-              return _context7.abrupt("return", "aessjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
+              signature = _context8.sent;
+              return _context8.abrupt("return", "aessjc".concat(this.utils.B58(Buffer.concat([Buffer.from(signature.replace(/^0x/, ""), "hex"), Buffer.from(compressedToken)]))));
 
             case 42:
             case "end":
-              return _context7.stop();
+              return _context8.stop();
           }
         }
       }, null, this);
@@ -741,9 +804,9 @@ function () {
     key: "SetOauthToken",
     value: function SetOauthToken(_ref10) {
       var token, wallet, signer;
-      return _regeneratorRuntime.async(function SetOauthToken$(_context8) {
+      return _regeneratorRuntime.async(function SetOauthToken$(_context9) {
         while (1) {
-          switch (_context8.prev = _context8.next) {
+          switch (_context9.prev = _context9.next) {
             case 0:
               token = _ref10.token;
               this.oauthToken = token;
@@ -757,7 +820,7 @@ function () {
 
             case 5:
             case "end":
-              return _context8.stop();
+              return _context9.stop();
           }
         }
       }, null, this);
@@ -778,14 +841,14 @@ function () {
     value: function SetSignerFromOauthToken(_ref11) {
       var token, wallet, client, _ref12, urls, path, httpClient, response, privateKey;
 
-      return _regeneratorRuntime.async(function SetSignerFromOauthToken$(_context9) {
+      return _regeneratorRuntime.async(function SetSignerFromOauthToken$(_context10) {
         while (1) {
-          switch (_context9.prev = _context9.next) {
+          switch (_context10.prev = _context10.next) {
             case 0:
               token = _ref11.token;
 
               if (this.trustAuthorityId) {
-                _context9.next = 3;
+                _context10.next = 3;
                 break;
               }
 
@@ -793,36 +856,36 @@ function () {
 
             case 3:
               wallet = this.GenerateWallet();
-              _context9.prev = 4;
+              _context10.prev = 4;
 
               if (this.kmsURIs) {
-                _context9.next = 17;
+                _context10.next = 17;
                 break;
               }
 
-              _context9.next = 8;
+              _context10.next = 8;
               return _regeneratorRuntime.awrap(ElvClient.FromConfigurationUrl({
                 configUrl: this.configUrl
               }));
 
             case 8:
-              client = _context9.sent;
+              client = _context10.sent;
               client.SetSigner({
                 signer: wallet.AddAccountFromMnemonic({
                   mnemonic: wallet.GenerateMnemonic()
                 })
               });
-              _context9.next = 12;
+              _context10.next = 12;
               return _regeneratorRuntime.awrap(client.authClient.KMSInfo({
                 kmsId: this.trustAuthorityId
               }));
 
             case 12:
-              _ref12 = _context9.sent;
+              _ref12 = _context10.sent;
               urls = _ref12.urls;
 
               if (!(!urls || urls.length === 0)) {
-                _context9.next = 16;
+                _context10.next = 16;
                 break;
               }
 
@@ -838,7 +901,7 @@ function () {
                 uris: this.kmsURIs,
                 debug: this.debug
               });
-              _context9.next = 22;
+              _context10.next = 22;
               return _regeneratorRuntime.awrap(this.utils.ResponseToJson(httpClient.Request({
                 headers: {
                   Authorization: "Bearer ".concat(token)
@@ -849,7 +912,7 @@ function () {
               })));
 
             case 22:
-              response = _context9.sent;
+              response = _context10.sent;
               privateKey = response["UserSKHex"];
               this.SetSigner({
                 signer: wallet.AddAccount({
@@ -857,27 +920,27 @@ function () {
                 })
               }); // Ensure wallet is initialized
 
-              _context9.next = 27;
+              _context10.next = 27;
               return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
             case 27:
-              _context9.next = 36;
+              _context10.next = 36;
               break;
 
             case 29:
-              _context9.prev = 29;
-              _context9.t0 = _context9["catch"](4);
+              _context10.prev = 29;
+              _context10.t0 = _context10["catch"](4);
               this.Log("Failed to set signer from OAuth token:", true);
-              this.Log(_context9.t0, true);
-              _context9.next = 35;
+              this.Log(_context10.t0, true);
+              _context10.next = 35;
               return _regeneratorRuntime.awrap(this.ClearSigner());
 
             case 35:
-              throw _context9.t0;
+              throw _context10.t0;
 
             case 36:
             case "end":
-              return _context9.stop();
+              return _context10.stop();
           }
         }
       }, null, this, [[4, 29]]);
@@ -920,28 +983,28 @@ function () {
     key: "SetPolicyAuthorization",
     value: function SetPolicyAuthorization(_ref14) {
       var objectId;
-      return _regeneratorRuntime.async(function SetPolicyAuthorization$(_context10) {
+      return _regeneratorRuntime.async(function SetPolicyAuthorization$(_context11) {
         while (1) {
-          switch (_context10.prev = _context10.next) {
+          switch (_context11.prev = _context11.next) {
             case 0:
               objectId = _ref14.objectId;
-              _context10.t0 = this;
-              _context10.next = 4;
+              _context11.t0 = this;
+              _context11.next = 4;
               return _regeneratorRuntime.awrap(this.GenerateStateChannelToken({
                 objectId: objectId
               }));
 
             case 4:
-              _context10.t1 = _context10.sent;
-              _context10.t2 = {
-                token: _context10.t1
+              _context11.t1 = _context11.sent;
+              _context11.t2 = {
+                token: _context11.t1
               };
 
-              _context10.t0.SetStaticToken.call(_context10.t0, _context10.t2);
+              _context11.t0.SetStaticToken.call(_context11.t0, _context11.t2);
 
             case 7:
             case "end":
-              return _context10.stop();
+              return _context11.stop();
           }
         }
       }, null, this);
@@ -960,14 +1023,14 @@ function () {
     key: "EncryptECIES",
     value: function EncryptECIES(_ref15) {
       var message, publicKey;
-      return _regeneratorRuntime.async(function EncryptECIES$(_context11) {
+      return _regeneratorRuntime.async(function EncryptECIES$(_context12) {
         while (1) {
-          switch (_context11.prev = _context11.next) {
+          switch (_context12.prev = _context12.next) {
             case 0:
               message = _ref15.message, publicKey = _ref15.publicKey;
 
               if (this.signer) {
-                _context11.next = 3;
+                _context12.next = 3;
                 break;
               }
 
@@ -975,15 +1038,15 @@ function () {
 
             case 3:
               ValidatePresence("message", message);
-              _context11.next = 6;
+              _context12.next = 6;
               return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(message, publicKey || this.signer.signingKey.keyPair.publicKey));
 
             case 6:
-              return _context11.abrupt("return", _context11.sent);
+              return _context12.abrupt("return", _context12.sent);
 
             case 7:
             case "end":
-              return _context11.stop();
+              return _context12.stop();
           }
         }
       }, null, this);
@@ -1001,14 +1064,14 @@ function () {
     key: "DecryptECIES",
     value: function DecryptECIES(_ref16) {
       var message;
-      return _regeneratorRuntime.async(function DecryptECIES$(_context12) {
+      return _regeneratorRuntime.async(function DecryptECIES$(_context13) {
         while (1) {
-          switch (_context12.prev = _context12.next) {
+          switch (_context13.prev = _context13.next) {
             case 0:
               message = _ref16.message;
 
               if (this.signer) {
-                _context12.next = 3;
+                _context13.next = 3;
                 break;
               }
 
@@ -1016,15 +1079,15 @@ function () {
 
             case 3:
               ValidatePresence("message", message);
-              _context12.next = 6;
+              _context13.next = 6;
               return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(message, this.signer.signingKey.privateKey));
 
             case 6:
-              return _context12.abrupt("return", _context12.sent);
+              return _context13.abrupt("return", _context13.sent);
 
             case 7:
             case "end":
-              return _context12.stop();
+              return _context13.stop();
           }
         }
       }, null, this);
@@ -1066,7 +1129,7 @@ function () {
     value: function FrameAllowedMethods() {
       var _this2 = this;
 
-      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "SetSigner", "SetSignerFromWeb3Provider", "ToggleLogging"];
+      var forbiddenMethods = ["constructor", "AccessGroupMembershipMethod", "CallFromFrameMessage", "ClearSigner", "EnableMethodLogging", "FormatBlockNumbers", "FrameAllowedMethods", "FromConfigurationUrl", "GenerateWallet", "InitializeClients", "Log", "SetSigner", "SetSignerFromWeb3Provider", "ToggleLogging"];
       return Object.getOwnPropertyNames(Object.getPrototypeOf(this)).filter(function (method) {
         return typeof _this2[method] === "function" && !forbiddenMethods.includes(method);
       });
@@ -1078,16 +1141,16 @@ function () {
       var _this3 = this;
 
       var callback, method, methodResults, responseError;
-      return _regeneratorRuntime.async(function CallFromFrameMessage$(_context13) {
+      return _regeneratorRuntime.async(function CallFromFrameMessage$(_context14) {
         while (1) {
-          switch (_context13.prev = _context13.next) {
+          switch (_context14.prev = _context14.next) {
             case 0:
               if (!(message.type !== "ElvFrameRequest")) {
-                _context13.next = 2;
+                _context14.next = 2;
                 break;
               }
 
-              return _context13.abrupt("return");
+              return _context14.abrupt("return");
 
             case 2:
               if (message.callbackId) {
@@ -1102,44 +1165,44 @@ function () {
                 message.args.callback = callback;
               }
 
-              _context13.prev = 3;
+              _context14.prev = 3;
               method = message.calledMethod;
 
               if (!(message.module === "userProfileClient")) {
-                _context13.next = 13;
+                _context14.next = 13;
                 break;
               }
 
               if (this.userProfileClient.FrameAllowedMethods().includes(method)) {
-                _context13.next = 8;
+                _context14.next = 8;
                 break;
               }
 
               throw Error("Invalid user profile method: " + method);
 
             case 8:
-              _context13.next = 10;
+              _context14.next = 10;
               return _regeneratorRuntime.awrap(this.userProfileClient[method](message.args));
 
             case 10:
-              methodResults = _context13.sent;
-              _context13.next = 18;
+              methodResults = _context14.sent;
+              _context14.next = 18;
               break;
 
             case 13:
               if (this.FrameAllowedMethods().includes(method)) {
-                _context13.next = 15;
+                _context14.next = 15;
                 break;
               }
 
               throw Error("Invalid method: " + method);
 
             case 15:
-              _context13.next = 17;
+              _context14.next = 17;
               return _regeneratorRuntime.awrap(this[method](message.args));
 
             case 17:
-              methodResults = _context13.sent;
+              methodResults = _context14.sent;
 
             case 18:
               Respond(this.utils.MakeClonable({
@@ -1147,17 +1210,17 @@ function () {
                 requestId: message.requestId,
                 response: methodResults
               }));
-              _context13.next = 27;
+              _context14.next = 27;
               break;
 
             case 21:
-              _context13.prev = 21;
-              _context13.t0 = _context13["catch"](3);
+              _context14.prev = 21;
+              _context14.t0 = _context14["catch"](3);
               // eslint-disable-next-line no-console
-              this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2), "\n        Error: ").concat(_typeof(_context13.t0) === "object" ? JSON.stringify(_context13.t0, null, 2) : _context13.t0), true); // eslint-disable-next-line no-console
+              this.Log("Frame Message Error:\n        Method: ".concat(message.calledMethod, "\n        Arguments: ").concat(JSON.stringify(message.args, null, 2), "\n        Error: ").concat(_typeof(_context14.t0) === "object" ? JSON.stringify(_context14.t0, null, 2) : _context14.t0), true); // eslint-disable-next-line no-console
 
-              console.error(_context13.t0);
-              responseError = _context13.t0 instanceof Error ? _context13.t0.message : _context13.t0;
+              console.error(_context14.t0);
+              responseError = _context14.t0 instanceof Error ? _context14.t0.message : _context14.t0;
               Respond(this.utils.MakeClonable({
                 type: "ElvFrameResponse",
                 requestId: message.requestId,
@@ -1166,7 +1229,7 @@ function () {
 
             case 27:
             case "end":
-              return _context13.stop();
+              return _context14.stop();
           }
         }
       }, null, this, [[3, 21]]);
@@ -1176,23 +1239,23 @@ function () {
     value: function Configuration(_ref18) {
       var configUrl, _ref18$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, fabricVersion;
 
-      return _regeneratorRuntime.async(function Configuration$(_context14) {
+      return _regeneratorRuntime.async(function Configuration$(_context15) {
         while (1) {
-          switch (_context14.prev = _context14.next) {
+          switch (_context15.prev = _context15.next) {
             case 0:
               configUrl = _ref18.configUrl, _ref18$kmsUrls = _ref18.kmsUrls, kmsUrls = _ref18$kmsUrls === void 0 ? [] : _ref18$kmsUrls, region = _ref18.region;
-              _context14.prev = 1;
+              _context15.prev = 1;
               uri = new URI(configUrl);
 
               if (region) {
                 uri.addSearch("elvgeo", region);
               }
 
-              _context14.next = 6;
+              _context15.next = 6;
               return _regeneratorRuntime.awrap(Utils.ResponseToJson(HttpClient.Fetch(uri.toString())));
 
             case 6:
-              fabricInfo = _context14.sent;
+              fabricInfo = _context15.sent;
 
               // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
               filterHTTPS = function filterHTTPS(uri) {
@@ -1212,7 +1275,7 @@ function () {
               }
 
               fabricVersion = Math.max.apply(Math, _toConsumableArray(fabricInfo.network.api_versions || [2]));
-              return _context14.abrupt("return", {
+              return _context15.abrupt("return", {
                 nodeId: fabricInfo.node_id,
                 contentSpaceId: fabricInfo.qspace.id,
                 fabricURIs: fabricURIs,
@@ -1222,17 +1285,17 @@ function () {
               });
 
             case 16:
-              _context14.prev = 16;
-              _context14.t0 = _context14["catch"](1);
+              _context15.prev = 16;
+              _context15.t0 = _context15["catch"](1);
               // eslint-disable-next-line no-console
               console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
 
-              console.error(_context14.t0);
-              throw _context14.t0;
+              console.error(_context15.t0);
+              throw _context15.t0;
 
             case 21:
             case "end":
-              return _context14.stop();
+              return _context15.stop();
           }
         }
       }, null, null, [[1, 16]]);
@@ -1258,19 +1321,19 @@ function () {
     value: function FromConfigurationUrl(_ref19) {
       var configUrl, region, trustAuthorityId, staticToken, _ref19$ethereumContra, ethereumContractTimeout, _ref19$noCache, noCache, _ref19$noAuth, noAuth, _ref20, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
 
-      return _regeneratorRuntime.async(function FromConfigurationUrl$(_context15) {
+      return _regeneratorRuntime.async(function FromConfigurationUrl$(_context16) {
         while (1) {
-          switch (_context15.prev = _context15.next) {
+          switch (_context16.prev = _context16.next) {
             case 0:
               configUrl = _ref19.configUrl, region = _ref19.region, trustAuthorityId = _ref19.trustAuthorityId, staticToken = _ref19.staticToken, _ref19$ethereumContra = _ref19.ethereumContractTimeout, ethereumContractTimeout = _ref19$ethereumContra === void 0 ? 10 : _ref19$ethereumContra, _ref19$noCache = _ref19.noCache, noCache = _ref19$noCache === void 0 ? false : _ref19$noCache, _ref19$noAuth = _ref19.noAuth, noAuth = _ref19$noAuth === void 0 ? false : _ref19$noAuth;
-              _context15.next = 3;
+              _context16.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
                 region: region
               }));
 
             case 3:
-              _ref20 = _context15.sent;
+              _ref20 = _context16.sent;
               contentSpaceId = _ref20.contentSpaceId;
               fabricURIs = _ref20.fabricURIs;
               ethereumURIs = _ref20.ethereumURIs;
@@ -1287,11 +1350,11 @@ function () {
                 noAuth: noAuth
               });
               client.configUrl = configUrl;
-              return _context15.abrupt("return", client);
+              return _context16.abrupt("return", client);
 
             case 11:
             case "end":
-              return _context15.stop();
+              return _context16.stop();
           }
         }
       });

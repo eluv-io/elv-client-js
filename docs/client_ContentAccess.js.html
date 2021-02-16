@@ -974,8 +974,10 @@ exports.ContentObjectMetadata = async function({
      ]
 
  * @returns {Promise&lt;Object>} - public/asset_metadata of the specified object, overwritten with specified localization
+ * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
+ * full URL
  */
-exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization}) {
+exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization, produceLinkUrls=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   if(!objectId) {
@@ -991,9 +993,9 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
       resolveLinks: true,
       linkDepthLimit: 2,
       resolveIgnoreErrors: true,
-      produceLinkUrls: true
+      produceLinkUrls
     })) || {};
-  } else {
+  } else if(produceLinkUrls) {
     metadata = await this.ProduceMetadataLinks({
       libraryId,
       objectId,
