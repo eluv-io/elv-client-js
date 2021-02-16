@@ -1724,18 +1724,21 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
      ]
 
  * @returns {Promise<Object>} - public/asset_metadata of the specified object, overwritten with specified localization
+ * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
+ * full URL
  */
 
 
 exports.AssetMetadata = function _callee24(_ref17) {
   var _this8 = this;
 
-  var libraryId, objectId, versionHash, metadata, localization;
+  var libraryId, objectId, versionHash, metadata, localization, _ref17$produceLinkUrl, produceLinkUrls;
+
   return _regeneratorRuntime.async(function _callee24$(_context24) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
-          libraryId = _ref17.libraryId, objectId = _ref17.objectId, versionHash = _ref17.versionHash, metadata = _ref17.metadata, localization = _ref17.localization;
+          libraryId = _ref17.libraryId, objectId = _ref17.objectId, versionHash = _ref17.versionHash, metadata = _ref17.metadata, localization = _ref17.localization, _ref17$produceLinkUrl = _ref17.produceLinkUrls, produceLinkUrls = _ref17$produceLinkUrl === void 0 ? false : _ref17$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1760,7 +1763,7 @@ exports.AssetMetadata = function _callee24(_ref17) {
             resolveLinks: true,
             linkDepthLimit: 2,
             resolveIgnoreErrors: true,
-            produceLinkUrls: true
+            produceLinkUrls: produceLinkUrls
           }));
 
         case 6:
@@ -1775,11 +1778,16 @@ exports.AssetMetadata = function _callee24(_ref17) {
 
         case 9:
           metadata = _context24.t0;
-          _context24.next = 15;
+          _context24.next = 16;
           break;
 
         case 12:
-          _context24.next = 14;
+          if (!produceLinkUrls) {
+            _context24.next = 16;
+            break;
+          }
+
+          _context24.next = 15;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
@@ -1788,10 +1796,10 @@ exports.AssetMetadata = function _callee24(_ref17) {
             metadata: metadata
           }));
 
-        case 14:
+        case 15:
           metadata = _context24.sent;
 
-        case 15:
+        case 16:
           if (!metadata.info) {
             metadata.info = {};
           }
@@ -1832,7 +1840,7 @@ exports.AssetMetadata = function _callee24(_ref17) {
 
           return _context24.abrupt("return", metadata);
 
-        case 18:
+        case 19:
         case "end":
           return _context24.stop();
       }

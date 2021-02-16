@@ -136,6 +136,36 @@ class ElvClient {
     }
   }
 
+  EnableMethodLogging() {
+    const MethodLogger = (klass) => {
+      Object.getOwnPropertyNames(Object.getPrototypeOf(klass))
+        .filter(method => typeof klass[method] === "function")
+        .forEach(methodName => {
+          const originalMethod = klass[methodName].bind(klass);
+
+          if(originalMethod.constructor.name === "AsyncFunction") {
+            klass[methodName] = async (...args) => {
+              const start = Date.now();
+              const result = await originalMethod(...args);
+              // eslint-disable-next-line no-console
+              console.log(methodName, Date.now() - start, "ms", JSON.stringify(args));
+              return result;
+            };
+          } else {
+            klass[methodName] = (...args) => {
+              const start = Date.now();
+              const result = originalMethod(...args);
+              // eslint-disable-next-line no-console
+              console.log(methodName, Date.now() - start, "ms", JSON.stringify(args));
+              return result;
+            };
+          }
+        });
+    };
+
+    MethodLogger(this);
+  }
+
   /**
    * Create a new ElvClient
    *
@@ -835,6 +865,7 @@ class ElvClient {
       "AccessGroupMembershipMethod",
       "CallFromFrameMessage",
       "ClearSigner",
+      "EnableMethodLogging",
       "FormatBlockNumbers",
       "FrameAllowedMethods",
       "FromConfigurationUrl",

@@ -68,7 +68,8 @@ const FormatResult = (result) => {
 
   // Remove unnecessary quotes object representations
   const match = (formattedResult.match(/^"<(.*)>"$/) || []);
-  return match[1] ? `<${match[1]}>` : formattedResult;};
+  return match[1] ? `<${match[1]}>` : formattedResult;
+};
 
 /*
  * Dynamically wrap class methods in logging functionality. Each time the method is called, it will
