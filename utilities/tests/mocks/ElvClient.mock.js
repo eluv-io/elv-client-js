@@ -359,6 +359,33 @@ const libraries = {
 };
 
 const objects = {
+  iq__USKPjhGXje6aGaqEN5VBjdH3n12: { // object for test: ObjectGetMetadata.test.hs
+    libraryId: "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
+    versions: [
+      {
+        metadata: {
+          production_master: {
+            variants: {
+              default: {
+                streams: {
+                  audio: {},
+                  video: {}
+                }
+              }
+            }
+          },
+          public: {name: "mock master object for hash hq__6VrSGdAq5cwtzdueW35LukHXfXj2U7tsKNK3xBgVKZ6JewmtaHARFzWRZv8kL2SyEdjuFwi8U4"}},
+        parts: [
+          {
+            part_hash: "hqp_001xxx002xxx001xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxx",
+            size: 100
+          }
+        ],
+        type: "",
+        version_hash: "hq__6VrSGdAq5cwtzdueW35LukHXfXj2U7tsKNK3xBgVKZ6JewmtaHARFzWRZv8kL2SyEdjuFwi8U4"
+      }
+    ]
+  },
   iq__001xxxxxxxxxxxxxxxxxxxxxxxx: {  // library 001 object (masters)
     libraryId: "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
     versions: [
