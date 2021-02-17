@@ -18,7 +18,7 @@ const New = context => {
 
   // convert --metadata argument to object (either literal JSON or @filePath)
   const asObject = () => argMetadata
-    ? context.concerns.JSON.parseStringOrFile(argMetadata)
+    ? context.concerns.JSON.parseStringOrFile({strOrPath: argMetadata})
     : null;
 
   return {asObject};

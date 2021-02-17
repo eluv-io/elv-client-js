@@ -15,8 +15,6 @@ const blueprint = {
 const parse = JSON.parse;
 const stringify = JSON.stringify;
 
-const shortString = (obj, width=30) => ellipsize(JSON.stringify(obj),width);
-
 const jPath = ({pattern, metadata}) => {
   return JSONPath({
     json: metadata,
@@ -25,16 +23,18 @@ const jPath = ({pattern, metadata}) => {
   });
 };
 
+const shortString = ({obj, width=30}) => ellipsize(JSON.stringify(obj),width);
+
 
 const New = (context) => {
   const logger = context.concerns.Logger;
   const cwd = context.cwd;
 
-  const parseFile = (pathStr) => parseString(readFile(pathStr, cwd, logger));
+  const parseFile = ({path}) => parseString({
+    str: readFile(path, cwd, logger)
+  });
 
-  const parseStringOrFile = (str) => parseString(stringOrFileContents(str, cwd, logger));
-
-  const parseString = (str) => {
+  const parseString = ({str}) => {
     let parsed;
     try {
       parsed = JSON.parse(str);
@@ -44,6 +44,10 @@ const New = (context) => {
     }
     return parsed;
   };
+
+  const parseStringOrFile = ({strOrPath}) => parseString({
+    str: stringOrFileContents(strOrPath, cwd, logger)
+  });
 
   return {
     parse,

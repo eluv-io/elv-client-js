@@ -1,5 +1,4 @@
 #!/bin/bash
-unset ELV_ENABLE_CHAINING
 
 print_spaced() {
   echo
@@ -60,6 +59,9 @@ if [ -z "$1" ]
     exit 1
 fi
 
+set_elv_chain_in() {
+  export ELV_CHAIN_IN=$(echo $OUTPUT | jq '.data.chain_out')
+}
 
 # =========================
 # SET VARIABLES
@@ -93,6 +95,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/ProductionMasterCreate.js" \
   --libraryId $MASTER_LIB \
   --title "$TITLE $TIMESTAMP" \
   --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
+  --chainOut masterHash version_hash \
   --json -v \
   --files $LOCAL_PATH)
 
@@ -104,6 +107,8 @@ echo object_id=$MASTER_OBJECT_ID
 VERSION_HASH=$(echo $OUTPUT | jq '.data.version_hash' | tr -d '"')
 echo version_hash=$VERSION_HASH
 
+set_elv_chain_in
+
 # -------------------------
 # CREATE MEZZANINE
 # -------------------------
@@ -113,7 +118,7 @@ OUTPUT=$(node "$ELV_CLIENT_PATH/utilities/MezzanineCreate.js" \
   --type $MEZ_TYPE \
   --libraryId $MEZ_LIB \
   --title "$TITLE $TIMESTAMP" \
-  --masterHash $VERSION_HASH \
+  --chainOut objectId object_id \
   --abrProfile $ABR_PROFILE_PATH \
   --ethContractTimeout $ETH_CONTRACT_TIMEOUT \
   --json -v)
@@ -122,6 +127,8 @@ check_exit_code $?
 
 MEZ_OBJECT_ID=$(echo $OUTPUT | jq '.data.object_id' | tr -d '"')
 echo object_id=$MEZ_OBJECT_ID
+
+set_elv_chain_in
 
 RUN_STATE=running
 

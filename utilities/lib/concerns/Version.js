@@ -1,4 +1,6 @@
 // Code relating to working with a specific fabric object version
+const {fabricItemDesc} = require("../helpers");
+
 const Utils = require("../../../src/Utils");
 
 const Client = require("./Client");
@@ -27,9 +29,20 @@ const New = context => {
     await client.DeleteContentVersion({versionHash});
   };
 
+  const list = async ({libraryId, objectId}) => {
+    if(!objectId) throw Error("Version.list() - missing objectId");
+    const client = await context.concerns.Client.get();
+    logger.log(`Retrieving version list for object ${objectId}...`);
+    const response = await client.ContentObjectVersions({
+      libraryId,
+      objectId
+    });
+    return R.map(R.pick(["hash", "type"]), response.versions);
+  };
+
   const metadata = async ({libraryId, objectId, subtree, versionHash}) => {
     if(!versionHash) throw Error("Version.metadata() - missing versionHash");
-    logger.log(`Reading metadata from object version ${versionHash}...`);
+    logger.log(`Reading metadata from ${fabricItemDesc(versionHash)}...`);
     return await context.concerns.Metadata.get({
       libraryId,
       objectId,
@@ -54,6 +67,7 @@ const New = context => {
   return {
     decode,
     del,
+    list,
     metadata,
     objectId,
     partList

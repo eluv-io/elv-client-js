@@ -1,5 +1,4 @@
 #!/bin/bash
-unset ELV_ENABLE_CHAINING
 
 print_spaced() {
   echo

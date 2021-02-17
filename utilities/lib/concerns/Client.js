@@ -86,7 +86,11 @@ const New = (context) => {
     return elvClient;
   };
 
+  // instance interface
   return {get};
 };
 
-module.exports = {blueprint, New};
+module.exports = {
+  blueprint,
+  New
+};

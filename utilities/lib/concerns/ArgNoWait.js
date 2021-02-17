@@ -5,7 +5,7 @@ const Finalize = require("./Finalize");
 const Logger = require("./Logger");
 
 const blueprint = {
-  name: "FinalizeAndWait",
+  name: "ArgNoWait",
   concerns: [Logger, Finalize],
   options: [
     NewOpt("noWait", {

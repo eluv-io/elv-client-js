@@ -1,9 +1,13 @@
+// base class for utility scripts
+
 const R = require("ramda");
 const yargs = require("yargs/yargs");
 const yargsTerminalWidth = require("yargs").terminalWidth;
 
 const {loadConcerns} = require("./concerns");
 const {callContext, cmdLineContext} = require("./context");
+const {trimSlashes} = require("./helpers");
+const {ChainOutArgModel} = require("./models/ChainOutArg");
 const {BuildWidget} = require("./options");
 
 const Logger = require("./concerns/Logger");
@@ -17,6 +21,26 @@ const addNameAndLogger = (blueprint) => {
   };
 };
 
+const chainOutArgValidate = arg => {
+  if(arg === undefined) return;
+  try {
+    ChainOutArgModel(arg);
+  } catch(e) {
+    throw Error(`--chainOut value(s) invalid: ${e.message}`);
+  }
+  return arg;
+};
+
+const chainOutString = ({chainOutArg, data}) => {
+  const obj = {};
+  const pairs = R.splitEvery(2, chainOutArg);
+  for(const [argName, dataPath] of pairs) {
+    obj[argName] = R.path(trimSlashes(dataPath).split("/"),data);
+  }
+  return obj;
+  // return shellEscape([JSON.stringify(obj)]);
+};
+
 const checkFunctionFactory = checksMap => {
   return (argv, options) => {
     for(const key in checksMap) {
@@ -26,15 +50,6 @@ const checkFunctionFactory = checksMap => {
     }
     return true;
   };
-};
-
-const chainedArgInfo = envVarMap => {
-  if(envVarMap.ELV_ENABLE_CHAINING) {
-    const chain_arg_keys = Object.keys(envVarMap).filter(x => x.startsWith("ELV_CHAIN_")).sort();
-    const chain_arg_info = chain_arg_keys.map(x => new Object({argName: x.slice(10), argVal: envVarMap[x] }));
-    if(chain_arg_keys.length > 0) return chain_arg_info.map(x=>`${x.argName}=${x.argVal}`);
-    return nil;
-  }
 };
 
 module.exports = class Utility {
@@ -65,11 +80,10 @@ module.exports = class Utility {
       ? cmdLineContext() // assume invoked at command line
       : callContext(params); // module call
 
-    const chainedArgs = chainedArgInfo(this.context.env);
-
     let yargsParser = yargs()
       .option("debugArgs", {hidden: true, type: "boolean"})
-      .option("chain", {
+      .option("chainOut", {
+        coerce: chainOutArgValidate,
         hidden: true,
         requiresArg: true,
         string: true,
@@ -90,20 +104,13 @@ module.exports = class Utility {
         if(err) throw err; // preserve stack
         // eslint-disable-next-line no-console
         if(!this.context.env.ELV_SUPPRESS_USAGE) console.error(yargs.help());
-        if(chainedArgs) {
-          // eslint-disable-next-line no-console
-          console.warn("\nWARNING: Env var ELV_ENABLE_CHAINING is set, this may introduce unwanted arguments, use 'unset ELV_ENABLE_CHAINING' if this was unintended.\n");
-          for(const a of chainedArg) {
-            // eslint-disable-next-line no-console
-            console.warn(`   ${a}`);
-          }
-          // eslint-disable-next-line no-console
-          console.warn();
-        }
         throw Error(msg);
       });
 
-    if(this.context.env.ELV_ENABLE_CHAINING) yargsParser = yargsParser.env("ELV_CHAIN");
+    if(this.context.env.ELV_CHAIN_IN) {
+
+      yargsParser = yargsParser.config(JSON.parse(this.context.env.ELV_CHAIN_IN));
+    }
 
     this.context.args = yargsParser.parse(this.context.argList);
 
@@ -121,17 +128,6 @@ module.exports = class Utility {
     this.env = this.context.env;
     this.logger = this.concerns.Logger;
     this.logger.data("args", this.args);
-
-    if(chainedArgs) {
-      this.logger.data("arg_chaining_vars", chainedArgs);
-      this.logger.logList(
-        "",
-        "----------------------------------------------------",
-        "ELV_ENABLE_CHAINING in use for the following arg(s):",
-        ...chainedArgs,
-        "----------------------------------------------------"
-      );
-    }
   }
 
   blueprint() {
@@ -164,6 +160,12 @@ module.exports = class Utility {
         this.footer(),
         ""
       );
+      if(this.args.chainOut) {
+        this.logger.data("chain_out",chainOutString({
+          chainOutArg: this.args.chainOut,
+          data: this.logger.dataGet()
+        }));
+      }
       // this.logger.data("successValue", successValue);
       this.logger.data("exit_code", 0);
       this.logger.data("success_value", successValue);

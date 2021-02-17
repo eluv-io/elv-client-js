@@ -20,7 +20,12 @@ const New = context => {
 
   const libObjectList = async ({filterOptions} = {}) => await context.concerns.Library.objectList({filterOptions, libraryId: context.args.libraryId});
 
-  return {libInfo, libMetadata, libObjectList};
+  // instance interface
+  return {
+    libInfo,
+    libMetadata,
+    libObjectList
+  };
 };
 
 module.exports = {

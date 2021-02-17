@@ -74,7 +74,12 @@ const New = context => {
 
   const checkTargetPath = ({force, metadata, targetPath}) => {
     if(!validTargetPath({metadata, targetPath})) {
-      const existingExcerpt = JSON.shortString(valueAtPath({metadata, path:targetPath}));
+      const existingExcerpt = JSON.shortString({
+        obj: valueAtPath({
+          metadata,
+          path:targetPath
+        })
+      });
       if(force) {
         logger.warn(`Data already exists at '${targetPath}', --force specified, replacing...\nOverwritten data: ${existingExcerpt}`);
       } else {

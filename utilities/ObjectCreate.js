@@ -1,15 +1,16 @@
 const {ModOpt, StdOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
+const ArgNoWait = require("./lib/concerns/ArgNoWait");
+const ArgType = require("./lib/concerns/ArgType");
 const Client = require("./lib/concerns/Client");
-const ContentType = require("./lib/concerns/ContentType");
-const FinalizeAndWait = require("./lib/concerns/FinalizeAndWait");
+const FabricObject = require("./lib/concerns/FabricObject");
 const Library = require("./lib/concerns/Library");
 
 class ObjectCreate extends Utility {
   blueprint() {
     return {
-      concerns: [Client, Library, ContentType, FinalizeAndWait],
+      concerns: [Client, Library, FabricObject, ArgType, ArgNoWait],
       options: [
         ModOpt("libraryId", {demand: true}),
         StdOpt("name",
@@ -25,7 +26,7 @@ class ObjectCreate extends Utility {
   async body() {
     const logger = this.logger;
     const {libraryId, name} = this.args;
-    const type = await this.concerns.ContentType.hashLookup();
+    const type = await this.concerns.ArgType.typVersionHash();
     const options = {
       meta: {public: {name}},
       type

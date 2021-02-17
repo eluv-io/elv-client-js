@@ -53,7 +53,12 @@ const New = (context) => {
     write({text: columnify(list, mergedOptions)});
   };
 
-  return {write, writeJson, writeTable};
+  // instance interface
+  return {
+    write,
+    writeJson,
+    writeTable
+  };
 };
 
 module.exports = {

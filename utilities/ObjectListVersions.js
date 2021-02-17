@@ -66,7 +66,7 @@ class ObjectListVersions extends Utility {
         this.concerns.ArgOutfile.writeTable({list: versionList});
       }
     } else {
-      this.logger.logTable(versionList);
+      this.logger.logTable({list: versionList});
     }
   }
 
