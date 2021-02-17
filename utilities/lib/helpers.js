@@ -15,6 +15,7 @@ const curry = require("crocks/helpers/curry");
 // wait
 // --------------------------------------------
 
+// use 'await seconds(n);' to pause program execution
 const seconds = seconds => new Promise(resolve => setTimeout(resolve, Math.round(seconds * 1000.0)));
 
 // --------------------------------------------
@@ -52,6 +53,8 @@ const fabricItemDesc = ({objectId, versionHash, writeToken}) => writeToken
 
 const padStart = width => str => str.padStart(width);
 
+const removeLeadingSlash = str => str.replace(/^\//, "");
+
 const removeTrailingSlash = str => str.replace(/\/$/, "");
 
 // return item with a space after, if it exists, else empty string
@@ -72,6 +75,7 @@ const suppressNullLike = x => kindOf(x) === "null" || kindOf(x) === "undefined"
   ? ""
   : x;
 
+const trimSlashes = R.compose(removeLeadingSlash, removeTrailingSlash);
 
 // --------------------------------------------
 // time formatting
@@ -125,6 +129,7 @@ const readFile = (filePath, cwd = ".", logger) => {
   return fs.readFileSync(fullPath);
 };
 
+// if string starts with '@', interpret as path and read, else return string
 const stringOrFileContents = (str, cwd = ".", logger) => str.startsWith("@")
   ? readFile(str.substring(1), cwd, logger)
   : str;
@@ -216,6 +221,7 @@ module.exports = {
   objUnwrapValues,
   padStart,
   readFile,
+  removeLeadingSlash,
   removeTrailingSlash,
   seconds,
   singleEntryMap,
@@ -225,6 +231,7 @@ module.exports = {
   suppressNullLike,
   tapJson,
   throwError,
+  trimSlashes,
   unit,
   valOrThrow,
   widthForRatioAndHeight

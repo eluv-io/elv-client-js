@@ -3,18 +3,28 @@
 const R = require("ramda");
 
 const Client = require("./Client");
+const Draft = require("./Draft");
+const Finalize = require("./Finalize");
 const Library = require("./Library");
 const Logger = require("./Logger");
 const Metadata = require("./Metadata");
-const Fabric = require("./Fabric");
+const Part = require("./Part");
+const Version = require("./Version");
 
 const blueprint = {
   name: "FabricObject",
-  concerns: [Client, Fabric, Library, Metadata, Logger]
+  concerns: [Client, Draft, Finalize, Part, Library, Logger, Metadata, Version]
 };
 
 const New = context => {
   const logger = context.concerns.Logger;
+
+  const create = async ({libraryId, options}) => {
+    if(!libraryId) throw Error("FabricObject.create() - missing libraryId");
+    const {objectId, writeToken} = await Draft.create({libraryId, options});
+    await Finalize.finalize({libraryId, objectId, writeToken});
+    return {objectId};
+  };
 
   const del = async ({libraryId, objectId}) => {
     if(!objectId) throw Error("FabricObject.del() - missing objectId");
@@ -41,7 +51,7 @@ const New = context => {
 
   const partList = async ({libraryId, objectId}) => {
     if(!objectId) throw Error("FabricObject.partList() - missing objectId");
-    return await context.concerns.Fabric.partList({libraryId, objectId});
+    return await context.concerns.Part.list({libraryId, objectId});
   };
 
   const size = async ({libraryId, objectId}) => {
@@ -49,19 +59,20 @@ const New = context => {
     logger.log("Calculating size of object...");
     const list = await partList({libraryId, objectId});
     const deduped = R.uniq(list);
-    const regularVal = list.reduce((accumulator, element)=> accumulator + element.size, 0);
-    const dedupedVal = deduped.reduce((accumulator, element)=> accumulator + element.size, 0);
+    const regularVal = list.reduce((accumulator, element) => accumulator + element.size, 0);
+    const dedupedVal = deduped.reduce((accumulator, element) => accumulator + element.size, 0);
     if(regularVal !== dedupedVal) logger.warn(`Part list has duplicates: sum=${regularVal}, deduped sum=${dedupedVal}`);
     return dedupedVal;
   };
 
   const versionList = async ({libraryId, objectId}) => {
     if(!objectId) throw Error("FabricObject.versionList() - missing objectId");
-    return await context.concerns.Fabric.versionList({libraryId, objectId});
+    return await context.concerns.Version.list({libraryId, objectId});
   };
 
   // instance interface
   return {
+    create,
     del,
     libraryId,
     metadata,

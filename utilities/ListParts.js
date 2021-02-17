@@ -19,7 +19,7 @@ class ListParts extends Utility {
     if(outfile) {
       this.concerns.ArgOutfile.writeJson({obj: partList});
     } else {
-      this.logger.logTable(partList);
+      this.logger.logTable({list: partList});
     }
 
     if(partList.length === 0) logger.warn("No parts found.");

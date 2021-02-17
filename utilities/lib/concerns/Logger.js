@@ -177,13 +177,14 @@ const New = (context) => {
 
   const logObject = obj => logList(...(JSON.stringify(obj, null, 2).split("\n")));
 
-  const logTable = (arg, options = {}) => {
+  // formats a list of objects in tabular format
+  const logTable = ({list, options = {}}) => {
     mergedOptions = R.mergeDeepRight(
       {headingTransform: identity},
       options
     );
     logList("",
-      ...columnify(arg, mergedOptions).split("\n"),
+      ...columnify(list, mergedOptions).split("\n"),
       "");
   };
 
@@ -197,6 +198,7 @@ const New = (context) => {
 
   const warnList  = (...args) => R.map(warn, args);
 
+  // instance interface
   return {
     data,
     dataConcat,
