@@ -1129,7 +1129,7 @@ exports.AvailableDRMs = async function() {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {string=} handler=playout - The handler to use for playout (not used with links)
+ * @param {string=} handler=playout - The handler to use for playout
  *
  * @return {Promise<Object>} - The available offerings
  */
@@ -1142,14 +1142,17 @@ exports.AvailableOfferings = async function({
 }) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  } else if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
   }
 
-  const libraryId = await this.ContentObjectLibraryId({objectId});
-
-  let path = UrlJoin("qlibs", libraryId, "q", writeToken || objectId, "rep", handler, "options.json");
+  // If link path specified, switch object ID + version hash to link target
   if(linkPath) {
-    path = UrlJoin("qlibs", libraryId, "q", writeToken || objectId, "meta", linkPath, "options.json");
+    versionHash = await this.LinkTarget({objectId, versionHash, writeToken, linkPath});
+    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
+
+  const path = UrlJoin("q", versionHash, "rep", handler, "options.json");
 
   try {
     return await this.utils.ResponseToJson(
