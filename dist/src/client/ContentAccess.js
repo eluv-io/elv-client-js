@@ -2090,14 +2090,14 @@ exports.AvailableDRMs = function _callee27() {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {string=} handler=playout - The handler to use for playout (not used with links)
+ * @param {string=} handler=playout - The handler to use for playout
  *
  * @return {Promise<Object>} - The available offerings
  */
 
 
 exports.AvailableOfferings = function _callee28(_ref20) {
-  var objectId, versionHash, writeToken, linkPath, _ref20$handler, handler, libraryId, path;
+  var objectId, versionHash, writeToken, linkPath, _ref20$handler, handler, path;
 
   return _regeneratorRuntime.async(function _callee28$(_context28) {
     while (1) {
@@ -2105,36 +2105,62 @@ exports.AvailableOfferings = function _callee28(_ref20) {
         case 0:
           objectId = _ref20.objectId, versionHash = _ref20.versionHash, writeToken = _ref20.writeToken, linkPath = _ref20.linkPath, _ref20$handler = _ref20.handler, handler = _ref20$handler === void 0 ? "playout" : _ref20$handler;
 
-          if (!objectId) {
-            objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+          if (objectId) {
+            _context28.next = 5;
+            break;
           }
 
-          _context28.next = 4;
-          return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
+          objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+          _context28.next = 9;
+          break;
+
+        case 5:
+          if (versionHash) {
+            _context28.next = 9;
+            break;
+          }
+
+          _context28.next = 8;
+          return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 4:
-          libraryId = _context28.sent;
-          path = UrlJoin("qlibs", libraryId, "q", writeToken || objectId, "rep", handler, "options.json");
+        case 8:
+          versionHash = _context28.sent;
 
-          if (linkPath) {
-            path = UrlJoin("qlibs", libraryId, "q", writeToken || objectId, "meta", linkPath, "options.json");
+        case 9:
+          if (!linkPath) {
+            _context28.next = 14;
+            break;
           }
 
-          _context28.prev = 7;
+          _context28.next = 12;
+          return _regeneratorRuntime.awrap(this.LinkTarget({
+            objectId: objectId,
+            versionHash: versionHash,
+            writeToken: writeToken,
+            linkPath: linkPath
+          }));
+
+        case 12:
+          versionHash = _context28.sent;
+          objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+
+        case 14:
+          path = UrlJoin("q", versionHash, "rep", handler, "options.json");
+          _context28.prev = 15;
           _context28.t0 = _regeneratorRuntime;
           _context28.t1 = this.utils;
           _context28.t2 = this.HttpClient;
           _context28.t3 = path;
-          _context28.next = 14;
+          _context28.next = 22;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             objectId: objectId,
             channelAuth: true,
             oauthToken: this.oauthToken
           }));
 
-        case 14:
+        case 22:
           _context28.t4 = _context28.sent;
           _context28.t5 = {
             path: _context28.t3,
@@ -2143,32 +2169,32 @@ exports.AvailableOfferings = function _callee28(_ref20) {
           };
           _context28.t6 = _context28.t2.Request.call(_context28.t2, _context28.t5);
           _context28.t7 = _context28.t1.ResponseToJson.call(_context28.t1, _context28.t6);
-          _context28.next = 20;
+          _context28.next = 28;
           return _context28.t0.awrap.call(_context28.t0, _context28.t7);
 
-        case 20:
+        case 28:
           return _context28.abrupt("return", _context28.sent);
 
-        case 23:
-          _context28.prev = 23;
-          _context28.t8 = _context28["catch"](7);
+        case 31:
+          _context28.prev = 31;
+          _context28.t8 = _context28["catch"](15);
 
           if (!(_context28.t8.status && parseInt(_context28.t8.status) === 500)) {
-            _context28.next = 27;
+            _context28.next = 35;
             break;
           }
 
           return _context28.abrupt("return", {});
 
-        case 27:
+        case 35:
           throw _context28.t8;
 
-        case 28:
+        case 36:
         case "end":
           return _context28.stop();
       }
     }
-  }, null, this, [[7, 23]]);
+  }, null, this, [[15, 31]]);
 };
 /**
  * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
