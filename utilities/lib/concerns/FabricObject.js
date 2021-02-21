@@ -19,11 +19,11 @@ const blueprint = {
 const New = context => {
   const logger = context.concerns.Logger;
 
-  const create = async ({libraryId, options}) => {
+  const create = async ({libraryId, metadata, noWait, type}) => {
     if(!libraryId) throw Error("FabricObject.create() - missing libraryId");
-    const {objectId, writeToken} = await Draft.create({libraryId, options});
-    await Finalize.finalize({libraryId, objectId, writeToken});
-    return {objectId};
+    const {objectId, writeToken} = await context.concerns.Draft.create({libraryId, metadata, type});
+    const versionHash = await context.concerns.Finalize.finalize({libraryId, noWait, objectId, writeToken});
+    return {objectId, versionHash};
   };
 
   const del = async ({libraryId, objectId}) => {

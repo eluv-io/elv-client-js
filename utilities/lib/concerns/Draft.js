@@ -10,9 +10,14 @@ const blueprint = {
 const New = context => {
   const logger = context.concerns.Logger;
 
-  const create = async ({libraryId, objectId, options}) => {
+  const create = async ({libraryId, objectId, metadata, type}) => {
     if(!libraryId && !objectId) throw Error("Draft.create() - no libraryId or objectId supplied");
     const client = await context.concerns.Client.get();
+    const options = {
+      meta: metadata,
+      type
+    };
+
     let response;
     if(objectId) {
       // create new draft version
