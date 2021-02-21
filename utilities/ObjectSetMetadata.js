@@ -2,7 +2,7 @@
 const objectPath = require("object-path");
 const R = require("ramda");
 
-const {NewOpt} = require("./lib/options");
+const {ModOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const ExistObj = require("./lib/concerns/ExistObj");
@@ -25,7 +25,8 @@ class ObjectSetMetadata extends Utility {
         NewOpt("force", {
           descTemplate: "If target metadata path within object exists, overwrite and replace",
           type: "boolean"
-        })
+        }),
+        ModOpt("metadata", {demand:true})
       ]
     };
   }

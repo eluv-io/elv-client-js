@@ -15,6 +15,13 @@ const pathDesc = path => path ? `path '${path}' ` : "";
 
 const pathExists = ({metadata, path}) => objectPath.has(metadata, pathPieces({path}));
 
+// convert path piece to int if it is a string representation of an int
+const pathPieceCast = str => pathPieceIsInt(str) ? parseInt(str, 10) : str;
+
+const pathPieceIsInt = str => parseInt(str, 10).toString() === str;
+
+// convert path in slash format to an array for use with object-path
+// numbers are assumed to be array indexes rather than map keys
 // path must start with "/"
 const pathPieces = ({path}) => {
   if(path.slice(0,1) !== "/") throw Error("Metadata.pathPieces(): path must start with '/'");
@@ -22,7 +29,8 @@ const pathPieces = ({path}) => {
   // remove empty string at beginning (should always be present)
   result.shift();
   if(result.slice(-1)==="") result.pop();
-  return result;
+
+  return result.map(pathPieceCast);
 };
 
 const pretty = ({obj}) => JSON.stringify(obj, null, 2);

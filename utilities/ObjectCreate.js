@@ -1,59 +1,47 @@
+const R = require("ramda");
+
 const {ModOpt, StdOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
+const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
+const ArgMetadata = require("./lib/concerns/ArgMetadata");
 const ArgNoWait = require("./lib/concerns/ArgNoWait");
 const ArgType = require("./lib/concerns/ArgType");
-const Client = require("./lib/concerns/Client");
-const FabricObject = require("./lib/concerns/FabricObject");
-const Library = require("./lib/concerns/Library");
 
 class ObjectCreate extends Utility {
   blueprint() {
     return {
-      concerns: [Client, Library, FabricObject, ArgType, ArgNoWait],
+      concerns: [ArgLibraryId, ArgType, ArgNoWait, ArgMetadata],
       options: [
         ModOpt("libraryId", {demand: true}),
         StdOpt("name",
           {
             demand: true,
             forX: "new object"
-          }),
-        ModOpt("type", {demand: true})
+          })
       ]
     };
   }
 
   async body() {
     const logger = this.logger;
-    const {libraryId, name} = this.args;
-    const type = await this.concerns.ArgType.typVersionHash();
-    const options = {
-      meta: {public: {name}},
-      type
-    };
+    const {name, noWait} = this.args;
+    const type = this.args.type
+      ? await this.concerns.ArgType.typVersionHash()
+      : undefined;
+    const metadataFromArg = this.concerns.ArgMetadata.asObject() || {};
+    const metadata = R.mergeDeepRight(metadataFromArg, {"public":{name}});
 
-    const client = await this.concerns.Client.get();
-    const {objectId, writeToken} = await client.CreateContentObject({
-      libraryId,
-      options
+    const {objectId, versionHash} = await this.concerns.ArgLibraryId.libCreateObject({
+      metadata,
+      noWait,
+      type
     });
 
     logger.log(`New object ID: ${objectId}`);
     logger.data("object_id", objectId);
-    logger.log(`write_token: ${writeToken}`);
-    logger.data("write_token", writeToken);
-
-    const latestHash = await this.concerns.FinalizeAndWait.finalize(
-      {
-        libraryId,
-        objectId,
-        writeToken
-      }
-    );
-
-    logger.log(`version_hash: ${latestHash}`);
-    logger.data("version_hash", latestHash);
-
+    logger.log(`version_hash: ${versionHash}`);
+    logger.data("version_hash", versionHash);
   }
 
   header() {
