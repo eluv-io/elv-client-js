@@ -1121,6 +1121,84 @@ exports.AvailableDRMs = async function() {
   return availableDRMs;
 };
 
+exports.PlayoutPathResolution = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  linkPath,
+  handler,
+  offering="",
+  signedLink=false,
+  authorizationToken
+}) {
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
+  }
+
+  let path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash, "rep", handler, offering, "options.json");
+
+  let linkTargetLibraryId, linkTargetId, linkTargetHash, multiOfferingLink;
+  if(linkPath) {
+    const linkInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      writeToken,
+      metadataSubtree: linkPath,
+      resolveLinks: false,
+      resolveIgnoreErrors: true,
+      resolveIncludeSource: true,
+      authorizationToken
+    });
+
+    multiOfferingLink = !!linkInfo && !!linkInfo["/"] && !linkInfo["/"].endsWith("options.json");
+
+    // Default case: Use link path directly
+    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash, "meta", linkPath);
+
+    if(!signedLink) {
+      // If the link is not signed, we want to authorize against the target object instead of the source object
+      linkTargetHash = await this.LinkTarget({
+        libraryId,
+        objectId,
+        versionHash,
+        writeToken,
+        linkPath,
+        linkInfo,
+        authorizationToken
+      });
+      linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+      linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
+
+      if(!multiOfferingLink && !offering) {
+        // If the offering is not specified, the intent is to get available offerings. For a single offering link, must
+        // access available offerings on the object directly
+        path = UrlJoin("q", linkTargetHash, "rep", handler, "options.json");
+      }
+    }
+
+    if(multiOfferingLink) {
+      // The link points to rep/<handler> instead of rep/<handler>/<offering>/options.json
+      path = UrlJoin(path, offering, "options.json");
+    }
+  }
+
+  return {
+    path,
+    multiOfferingLink,
+    linkTarget: {
+      libraryId: linkTargetLibraryId,
+      objectId: linkTargetId,
+      versionHash: linkTargetHash
+    }
+  };
+};
+
 /**
  * Retrieve available playout offerings for the specified content
  *
@@ -1129,7 +1207,8 @@ exports.AvailableDRMs = async function() {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {string=} handler=playout - The handler to use for playout
+ * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
+ * @param {string=} handler=playout - The handler to use for playout (not used with links)
  *
  * @return {Promise<Object>} - The available offerings
  */
@@ -1138,21 +1217,23 @@ exports.AvailableOfferings = async function({
   versionHash,
   writeToken,
   linkPath,
+  signedLink,
   handler="playout"
 }) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-  } else if(!versionHash) {
-    versionHash = await this.LatestVersionHash({objectId});
   }
 
-  // If link path specified, switch object ID + version hash to link target
-  if(linkPath) {
-    versionHash = await this.LinkTarget({objectId, versionHash, writeToken, linkPath});
-    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-  }
-
-  const path = UrlJoin("q", versionHash, "rep", handler, "options.json");
+  const {
+    path
+  } = await this.PlayoutPathResolution({
+    objectId,
+    versionHash,
+    writeToken,
+    linkPath,
+    signedLink,
+    handler
+  });
 
   try {
     return await this.utils.ResponseToJson(
@@ -1191,6 +1272,7 @@ exports.AvailableOfferings = async function({
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
@@ -1205,6 +1287,7 @@ exports.PlayoutOptions = async function({
   versionHash,
   writeToken,
   linkPath,
+  signedLink=false,
   protocols=["dash", "hls"],
   handler="playout",
   offering="default",
@@ -1244,68 +1327,36 @@ exports.PlayoutOptions = async function({
   // eslint-disable-next-line no-empty
   } catch(error) {}
 
-  let path, linkTargetLibraryId, linkTargetId, linkTargetHash, signedLink, multiOfferingLink;
-  if(linkPath) {
-    const linkInfo = await this.ContentObjectMetadata({
-      libraryId,
-      objectId,
-      versionHash,
-      writeToken,
-      metadataSubtree: linkPath,
-      resolveLinks: false,
-      resolveIgnoreErrors: true,
-      resolveIncludeSource: true,
-      authorizationToken
-    });
-
-    signedLink = linkInfo && linkInfo["."] && linkInfo["."].authorization;
-    multiOfferingLink = !linkInfo["/"].endsWith("options.json");
-
-    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash, "meta", linkPath);
-
-    if(!signedLink) {
-      // Unless the link is signed, we want to authorize against the target object instead of the source object
-      linkTargetHash = await this.LinkTarget({
-        libraryId,
-        objectId,
-        versionHash,
-        writeToken,
-        linkPath,
-        linkInfo,
-        authorizationToken
-      });
-      linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
-      linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
-
-      if(writeToken) {
-        path = UrlJoin("qlibs", libraryId, "q", writeToken, "meta", linkPath);
-      } else {
-        path = UrlJoin("q", versionHash, "meta", linkPath);
-      }
-    }
-
-    if(multiOfferingLink) {
-      // The link points to rep/playout instead of rep/playout/<offering>/options.json
-      path = UrlJoin(path, offering, "options.json");
-    }
-  } else {
-    path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
-  }
+  const {
+    path,
+    linkTarget
+  } = await this.PlayoutPathResolution({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    linkPath,
+    signedLink,
+    handler,
+    offering,
+    authorizationToken
+  });
 
   const audienceData = this.authClient.AudienceData({
-    objectId: linkTargetId || objectId,
-    versionHash: linkTargetHash || versionHash || await this.LatestVersionHash({objectId}),
+    objectId: linkTarget.objectId || objectId,
+    versionHash: linkTarget.versionHash || versionHash || await this.LatestVersionHash({objectId}),
     protocols,
     drms,
     context
   });
 
+  // Authorize on original object initially
   let queryParams = {
     authorization:
       authorizationToken ||
       await this.authClient.AuthorizationToken({
-        libraryId: linkTargetLibraryId || libraryId,
-        objectId: linkTargetId || objectId,
+        libraryId,
+        objectId,
         channelAuth: true,
         oauthToken: this.oauthToken,
         audienceData
@@ -1325,6 +1376,19 @@ exports.PlayoutOptions = async function({
       })
     )
   );
+
+  // If linkTarget has been specified by PlayoutPathResolution, switch auth token to target object
+  if(!signedLink && linkTarget.versionHash) {
+    queryParams.authorization =
+      authorizationToken ||
+      await this.authClient.AuthorizationToken({
+        libraryId: linkTarget.libraryId,
+        objectId: linkTarget.objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+        audienceData
+      });
+  }
 
   let playoutMap = {};
   for(let i = 0; i < playoutOptions.length; i++) {
@@ -1359,9 +1423,9 @@ exports.PlayoutOptions = async function({
                 queryParams
               }) :
               await this.Rep({
-                libraryId: linkTargetLibraryId || libraryId,
-                objectId: linkTargetId || objectId,
-                versionHash: linkTargetHash || versionHash,
+                libraryId: linkTarget.libraryId || libraryId,
+                objectId: linkTarget.objectId || objectId,
+                versionHash: linkTarget.versionHash || versionHash,
                 rep: UrlJoin(handler, offering, playoutPath),
                 channelAuth: true,
                 noAuth: !!authorizationToken,

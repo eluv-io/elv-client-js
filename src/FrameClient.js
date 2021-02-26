@@ -384,6 +384,7 @@ class FrameClient {
       "NTPInstance",
       "Permission",
       "PlayoutOptions",
+      "PlayoutPathResolution",
       "ProduceMetadataLinks",
       "Proofs",
       "PublicRep",
