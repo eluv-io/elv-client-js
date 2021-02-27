@@ -4,6 +4,9 @@ const R = require("ramda");
 
 const Utility = require("./lib/Utility");
 
+const {NewOpt} = require("./lib/options");
+
+
 const REofferingUrlParse = /^([^?]+)options.json\?(authorization=[^&]+)/;
 
 const Client = require("./lib/concerns/Client");
@@ -13,16 +16,29 @@ const Metadata = require("./lib/concerns/Metadata");
 class ChannelStartLive extends Utility {
   blueprint() {
     return {
-      concerns: [Client, ExistObj, Metadata]
+      concerns: [Client, ExistObj, Metadata],
+      options: [
+        NewOpt("delay",
+          {
+            default: 0,
+            descTemplate: "Number of seconds to delay start (default 0). Use a negative number to jump to middle/end of playout",
+            type: "number"
+          }),
+        NewOpt("addDrmCert",
+          {
+            descTemplate: "Add standard DRM certificate to library metadata.",
+            type: "boolean"
+          })
+      ]
     };
   }
 
   async body() {
     const logger = this.logger;
-    const now = (new Date).toISOString();
-
+    const now = new Date;  // ).toISOString();
+    const start = new Date(now.setSeconds(now.getSeconds() + this.args.delay)).toISOString();
     const metadataToMerge = {
-      channel: {live_start_time: now}
+      channel: {live_start_time: start}
     };
 
     // operations that need to wait on network access
@@ -79,8 +95,21 @@ class ChannelStartLive extends Utility {
           versionHash: newHash,
           rep: `channel/${offeringKey}/options.json`
         });
+        this.logger.log();
         this.logger.log(`Offering '${offeringKey}' options.json URL:`);
         this.logger.log(offeringUrl);
+
+        const viewsUrl = await client.FabricUrl({
+          libraryId,
+          objectId,
+          versionHash: newHash,
+          rep: `channel/${offeringKey}/views.json`
+        });
+        this.logger.log();
+        this.logger.log(`Offering '${offeringKey}' current available views URL:`);
+        this.logger.log(viewsUrl);
+
+
 
         const match = REofferingUrlParse.exec(offeringUrl);
         const urlBase = match && match[1];
@@ -105,7 +134,7 @@ class ChannelStartLive extends Utility {
   }
 
   header() {
-    return `Start playout of 'live' channel object ${this.args.objectId}`;
+    return `Start playout of 'live' channel object ${this.args.objectId}${this.args.delay ? ` with ${this.args.delay} second(s) delay`: ""}`;
   }
 }
 
