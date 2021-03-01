@@ -193,7 +193,7 @@ class ChannelStartLiveOffering extends Utility {
     });
 
     for(const [playoutFormatKey, playoutFormatInfo] of Object.entries(offeringOptions)) {
-      const playoutUrl = `${urlBase}${playoutFormatInfo.uri}${authToken ? `?${authToken}` : ""}`;
+      const playoutUrl = `${urlBase}${playoutFormatInfo.uri}${authToken ? (playoutFormatInfo.uri.includes("?") ? "&" : ":") + `${authToken}` : ""}`;
       this.logger.log();
       this.logger.log(`Playout URL for format '${playoutFormatKey}':`);
       this.logger.log();
