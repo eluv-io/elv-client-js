@@ -1268,7 +1268,7 @@ exports.AvailableOfferings = async function({
  *
  * @methodGroup Media
  * @namedParams
- * @param {string=} objectId - Id of the content
+ * @param {string=} objectId - ID of the content
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
@@ -1377,8 +1377,8 @@ exports.PlayoutOptions = async function({
     )
   );
 
-  // If linkTarget has been specified by PlayoutPathResolution, switch auth token to target object
   if(!signedLink && linkTarget.versionHash) {
+    // Link target is different object and not signed link - switch auth token to target object
     queryParams.authorization =
       authorizationToken ||
       await this.authClient.AuthorizationToken({
@@ -1464,9 +1464,11 @@ exports.PlayoutOptions = async function({
  *
  * @methodGroup Media
  * @namedParams
- * @param {string=} objectId - Id of the content
- * @param {string} versionHash - Version hash of the content
+ * @param {string=} objectId - ID of the content
+ * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
@@ -1479,7 +1481,9 @@ exports.PlayoutOptions = async function({
 exports.BitmovinPlayoutOptions = async function({
   objectId,
   versionHash,
+  writeToken,
   linkPath,
+  signedLink=false,
   protocols=["dash", "hls"],
   drms=[],
   handler="playout",
@@ -1497,7 +1501,9 @@ exports.BitmovinPlayoutOptions = async function({
   const playoutOptions = await this.PlayoutOptions({
     objectId,
     versionHash,
+    writeToken,
     linkPath,
+    signedLink,
     protocols,
     drms,
     handler,
@@ -1510,20 +1516,38 @@ exports.BitmovinPlayoutOptions = async function({
 
   delete playoutOptions.playoutMethods;
 
-  let linkTargetId, linkTargetHash;
-  if(linkPath) {
-    const libraryId = await this.ContentObjectLibraryId({objectId, versionHash});
-    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
-    linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
-  }
+  const {
+    linkTarget
+  } = await this.PlayoutPathResolution({
+    objectId,
+    versionHash,
+    writeToken,
+    linkPath,
+    signedLink,
+    handler,
+    offering,
+    authorizationToken
+  });
 
-  const authToken =
-    authorizationToken ||
+  let authToken;
+  if(authorizationToken) {
+    authToken = authorizationToken;
+  } else if(signedLink || !linkTarget.versionHash) {
+    // Target is same object or signed link - authorize against original object
     await this.authClient.AuthorizationToken({
-      objectId: linkTargetId || objectId,
+      objectId,
       channelAuth: true,
       oauthToken: this.oauthToken,
     });
+  } else {
+    // Target is different object and not signed link - switch auth token to target object
+    await this.authClient.AuthorizationToken({
+      libraryId: linkTarget.libraryId,
+      objectId: linkTarget.objectId,
+      channelAuth: true,
+      oauthToken: this.oauthToken
+    });
+  }
 
   let config = {
     drm: {}
