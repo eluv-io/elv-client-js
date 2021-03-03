@@ -1,15 +1,13 @@
 // convert an offering to a just-started VoD-as-Live item
 
-const R = require("ramda");
-
 const kindOf = require("kind-of");
 const Fraction = require("fraction.js");
+const R = require("ramda");
+
 const Utility = require("./lib/Utility");
 
 const {NewOpt} = require("./lib/options");
 const {PositiveInteger} = require("./lib/models/Models");
-
-const REofferingUrlParse = /^([^?]+)options.json\?(authorization=[^&]+)/;
 
 const Client = require("./lib/concerns/Client");
 const ExistObj = require("./lib/concerns/ExistObj");
@@ -73,10 +71,10 @@ class ChannelStartLiveOffering extends Utility {
     if(!currentMetadata.channel.offerings[offeringKey].items) {
       throw Error(`/channel/offerings/${offeringKey}/items not found in object metadata`);
     }
-    if(kindOf(currentMetadata.channel.offerings[offeringKey].items) != "array") {
+    if(kindOf(currentMetadata.channel.offerings[offeringKey].items) !== "array") {
       throw Error(`/channel/offerings/${offeringKey}/items in object metadata is not an array`);
     }
-    if(!currentMetadata.channel.offerings[offeringKey].items.length === 0) {
+    if(currentMetadata.channel.offerings[offeringKey].items.length === 0) {
       throw Error(`/channel/offerings/${offeringKey}/items in object metadata is empty`);
     }
 
@@ -168,23 +166,9 @@ class ChannelStartLiveOffering extends Utility {
     this.logger.log();
     this.logger.log(viewsUrl);
 
-    const match = REofferingUrlParse.exec(offeringUrl);
-    const urlBase = match && match[1];
-    const authToken = match && match[2];
-
-    const selectViewUrl = await client.FabricUrl({
-      libraryId,
-      objectId,
-      versionHash: newHash,
-      rep: `channel/${offeringKey}/select_view`
-    });
-
-    this.logger.log();
-    this.logger.log("Sample curl command to select view:");
-    this.logger.log();
-    this.logger.log(`curl -X POST '${selectViewUrl}' -d '{"view":0}'`);
-
-    // not actually retrieving available offerings: retrieving all available playback formats
+    // NOTE: although following line calls ElvClient.AvailableOfferings(), it is not actually
+    // retrieving available offerings, it is retrieving all available playback formats for channel offering
+    // (due to handler setting)
     const offeringOptions = await client.AvailableOfferings({
       libraryId,
       objectId,
@@ -192,13 +176,33 @@ class ChannelStartLiveOffering extends Utility {
       handler: `channel/${offeringKey}`
     });
 
+    let offUrlObj = new URL(offeringUrl);
+    const urlBase =  offUrlObj.origin + offUrlObj.pathname;
+    const authToken = offUrlObj.searchParams.get("authorization");
+    let sid = "";
     for(const [playoutFormatKey, playoutFormatInfo] of Object.entries(offeringOptions)) {
+      const pfUrlObj = new URL(playoutFormatInfo.uri, urlBase);
+      sid = pfUrlObj.searchParams.get("sid");
       const playoutUrl = `${urlBase}${playoutFormatInfo.uri}${authToken ? (playoutFormatInfo.uri.includes("?") ? "&" : ":") + `${authToken}` : ""}`;
       this.logger.log();
       this.logger.log(`Playout URL for format '${playoutFormatKey}':`);
       this.logger.log();
-      this.logger.log(playoutUrl);
+      this.logger.log(playoutUrl.toString());
     }
+
+    const selectViewUrl = await client.FabricUrl({
+      libraryId,
+      objectId,
+      versionHash: newHash,
+      rep: `channel/${offeringKey}/select_view`
+    });
+    const viewSelectUrlObj = new URL(selectViewUrl);
+    viewSelectUrlObj.searchParams.set("sid", sid);
+
+    this.logger.log();
+    this.logger.log("Sample curl command to select view:");
+    this.logger.log();
+    this.logger.log(`curl -X POST '${viewSelectUrlObj.toString()}' -d '{"view":1}'`);
   }
 
   header() {
