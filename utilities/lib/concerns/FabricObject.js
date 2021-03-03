@@ -35,6 +35,16 @@ const New = context => {
     });
   };
 
+  const latestVersionHash = async ({libraryId, objectId}) => {
+    if(!objectId) throw Error("FabricObject.latestVersionHash() - missing objectId");
+    const client = await context.concerns.Client.get();
+    const response = await client.ContentObject({
+      libraryId,
+      objectId
+    });
+    return response.hash;
+  };
+
   const libraryId = async ({objectId}) => {
     if(!objectId) throw Error("FabricObject.libraryId() - missing objectId");
     return await context.concerns.Library.forObject({objectId});
@@ -74,6 +84,7 @@ const New = context => {
   return {
     create,
     del,
+    latestVersionHash,
     libraryId,
     metadata,
     partList,

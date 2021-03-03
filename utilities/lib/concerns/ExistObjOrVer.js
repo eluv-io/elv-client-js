@@ -27,6 +27,9 @@ const New = context => {
         ? await context.concerns.ArgVersionHash.argsProc()
         : await context.concerns.ArgObjectId.argsProc();
     }
+    if(!argsProcMemo.versionHash) {
+      argsProcMemo.versionHash = await context.concerns.ArgObjectId.objLatestHash();
+    }
     return argsProcMemo;
   };
 
