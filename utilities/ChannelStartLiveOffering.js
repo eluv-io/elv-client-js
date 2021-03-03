@@ -183,7 +183,10 @@ class ChannelStartLiveOffering extends Utility {
     for(const [playoutFormatKey, playoutFormatInfo] of Object.entries(offeringOptions)) {
       const pfUrlObj = new URL(playoutFormatInfo.uri, urlBase);
       sid = pfUrlObj.searchParams.get("sid");
-      const playoutUrl = `${urlBase}${playoutFormatInfo.uri}${authToken ? (playoutFormatInfo.uri.includes("?") ? "&" : ":") + `${authToken}` : ""}`;
+      const playoutUrl =  new URL(playoutFormatInfo.uri, urlBase);
+      playoutUrl.searchParams.set("authorization", authToken);
+      playoutUrl.searchParams.set("sid", sid);
+
       this.logger.log();
       this.logger.log(`Playout URL for format '${playoutFormatKey}':`);
       this.logger.log();
