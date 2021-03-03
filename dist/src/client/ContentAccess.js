@@ -1559,7 +1559,7 @@ exports.MetadataAuth = function _callee22(_ref15) {
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
- * @param {string=} authorizationToken - Override default authorization with alternate token
+ * @param {string=} authorizationToken - Additional authorization token for this request
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -1587,7 +1587,7 @@ exports.MetadataAuth = function _callee22(_ref15) {
 
 
 exports.ContentObjectMetadata = function _callee23(_ref16) {
-  var libraryId, objectId, versionHash, writeToken, _ref16$metadataSubtre, metadataSubtree, _ref16$queryParams, queryParams, _ref16$select, select, _ref16$remove, remove, authorizationToken, _ref16$resolveLinks, resolveLinks, _ref16$resolveInclude, resolveIncludeSource, _ref16$resolveIgnoreE, resolveIgnoreErrors, _ref16$linkDepthLimit, linkDepthLimit, _ref16$produceLinkUrl, produceLinkUrls, path, metadata, authToken;
+  var libraryId, objectId, versionHash, writeToken, _ref16$metadataSubtre, metadataSubtree, _ref16$queryParams, queryParams, _ref16$select, select, _ref16$remove, remove, authorizationToken, _ref16$resolveLinks, resolveLinks, _ref16$resolveInclude, resolveIncludeSource, _ref16$resolveIgnoreE, resolveIgnoreErrors, _ref16$linkDepthLimit, linkDepthLimit, _ref16$produceLinkUrl, produceLinkUrls, path, authToken, metadata;
 
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
@@ -1605,26 +1605,9 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
-          path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
-          _context23.prev = 5;
-          _context23.t0 = authorizationToken;
+          path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree); // Main authorization
 
-          if (_context23.t0) {
-            _context23.next = 16;
-            break;
-          }
-
-          if (!queryParams.authorization) {
-            _context23.next = 12;
-            break;
-          }
-
-          _context23.t1 = queryParams.authorization;
-          _context23.next = 15;
-          break;
-
-        case 12:
-          _context23.next = 14;
+          _context23.next = 7;
           return _regeneratorRuntime.awrap(this.MetadataAuth({
             libraryId: libraryId,
             objectId: objectId,
@@ -1632,15 +1615,14 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             path: metadataSubtree
           }));
 
-        case 14:
-          _context23.t1 = _context23.sent;
-
-        case 15:
-          _context23.t0 = _context23.t1;
-
-        case 16:
-          authToken = _context23.t0;
-          _context23.next = 19;
+        case 7:
+          authToken = _context23.sent;
+          // Additional authorization
+          queryParams.authorization = [queryParams.authorization, authorizationToken].flat().filter(function (token) {
+            return token;
+          });
+          _context23.prev = 9;
+          _context23.next = 12;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             headers: {
               "Authorization": "Bearer ".concat(authToken)
@@ -1657,35 +1639,35 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             path: path
           })));
 
-        case 19:
+        case 12:
           metadata = _context23.sent;
-          _context23.next = 27;
+          _context23.next = 20;
           break;
 
-        case 22:
-          _context23.prev = 22;
-          _context23.t2 = _context23["catch"](5);
+        case 15:
+          _context23.prev = 15;
+          _context23.t0 = _context23["catch"](9);
 
-          if (!(_context23.t2.status !== 404)) {
-            _context23.next = 26;
+          if (!(_context23.t0.status !== 404)) {
+            _context23.next = 19;
             break;
           }
 
-          throw _context23.t2;
+          throw _context23.t0;
 
-        case 26:
+        case 19:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 27:
+        case 20:
           if (produceLinkUrls) {
-            _context23.next = 29;
+            _context23.next = 22;
             break;
           }
 
           return _context23.abrupt("return", metadata);
 
-        case 29:
-          _context23.next = 31;
+        case 22:
+          _context23.next = 24;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
@@ -1695,15 +1677,15 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             authorizationToken: authorizationToken
           }));
 
-        case 31:
+        case 24:
           return _context23.abrupt("return", _context23.sent);
 
-        case 32:
+        case 25:
         case "end":
           return _context23.stop();
       }
     }
-  }, null, this, [[5, 22]]);
+  }, null, this, [[9, 15]]);
 };
 /** Retrive public/asset_metadata from the specified object, performing automatic localization override based on the specified localization info.
  *
@@ -2213,19 +2195,20 @@ exports.PlayoutPathResolution = function _callee28(_ref20) {
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  *
  * @return {Promise<Object>} - The available offerings
  */
 
 
 exports.AvailableOfferings = function _callee29(_ref21) {
-  var objectId, versionHash, writeToken, linkPath, signedLink, _ref21$handler, handler, _ref22, path;
+  var objectId, versionHash, writeToken, linkPath, signedLink, _ref21$handler, handler, authorizationToken, _ref22, path, authorization;
 
   return _regeneratorRuntime.async(function _callee29$(_context29) {
     while (1) {
       switch (_context29.prev = _context29.next) {
         case 0:
-          objectId = _ref21.objectId, versionHash = _ref21.versionHash, writeToken = _ref21.writeToken, linkPath = _ref21.linkPath, signedLink = _ref21.signedLink, _ref21$handler = _ref21.handler, handler = _ref21$handler === void 0 ? "playout" : _ref21$handler;
+          objectId = _ref21.objectId, versionHash = _ref21.versionHash, writeToken = _ref21.writeToken, linkPath = _ref21.linkPath, signedLink = _ref21.signedLink, _ref21$handler = _ref21.handler, handler = _ref21$handler === void 0 ? "playout" : _ref21$handler, authorizationToken = _ref21.authorizationToken;
 
           if (!objectId) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -2245,52 +2228,54 @@ exports.AvailableOfferings = function _callee29(_ref21) {
           _ref22 = _context29.sent;
           path = _ref22.path;
           _context29.prev = 6;
-          _context29.t0 = _regeneratorRuntime;
-          _context29.t1 = this.utils;
-          _context29.t2 = this.HttpClient;
-          _context29.t3 = path;
-          _context29.next = 13;
-          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+          _context29.t0 = authorizationToken;
+          _context29.next = 10;
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             objectId: objectId,
             channelAuth: true,
             oauthToken: this.oauthToken
           }));
 
-        case 13:
-          _context29.t4 = _context29.sent;
-          _context29.t5 = {
-            path: _context29.t3,
-            method: "GET",
-            headers: _context29.t4
-          };
-          _context29.t6 = _context29.t2.Request.call(_context29.t2, _context29.t5);
-          _context29.t7 = _context29.t1.ResponseToJson.call(_context29.t1, _context29.t6);
-          _context29.next = 19;
-          return _context29.t0.awrap.call(_context29.t0, _context29.t7);
+        case 10:
+          _context29.t1 = _context29.sent;
 
-        case 19:
+          _context29.t2 = function (token) {
+            return token;
+          };
+
+          authorization = [_context29.t0, _context29.t1].flat().filter(_context29.t2);
+          _context29.next = 15;
+          return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
+            path: path,
+            method: "GET",
+            headers: {
+              Authorization: "Bearer ".concat(authorization.join(","))
+            }
+          })));
+
+        case 15:
           return _context29.abrupt("return", _context29.sent);
 
-        case 22:
-          _context29.prev = 22;
-          _context29.t8 = _context29["catch"](6);
+        case 18:
+          _context29.prev = 18;
+          _context29.t3 = _context29["catch"](6);
 
-          if (!(_context29.t8.status && parseInt(_context29.t8.status) === 500)) {
-            _context29.next = 26;
+          if (!(_context29.t3.status && parseInt(_context29.t3.status) === 500)) {
+            _context29.next = 22;
             break;
           }
 
           return _context29.abrupt("return", {});
 
-        case 26:
-          throw _context29.t8;
+        case 22:
+          throw _context29.t3;
 
-        case 27:
+        case 23:
         case "end":
           return _context29.stop();
       }
     }
-  }, null, this, [[6, 22]]);
+  }, null, this, [[6, 18]]);
 };
 /**
  * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
@@ -2316,12 +2301,12 @@ exports.AvailableOfferings = function _callee29(_ref21) {
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
- * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  */
 
 
 exports.PlayoutOptions = function _callee30(_ref23) {
-  var objectId, versionHash, writeToken, linkPath, _ref23$signedLink, signedLink, _ref23$protocols, protocols, _ref23$handler, handler, _ref23$offering, offering, playoutType, _ref23$drms, drms, context, _ref23$hlsjsProfile, hlsjsProfile, authorizationToken, libraryId, offeringPath, link, _ref24, path, linkTarget, audienceData, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
+  var objectId, versionHash, writeToken, linkPath, _ref23$signedLink, signedLink, _ref23$protocols, protocols, _ref23$handler, handler, _ref23$offering, offering, playoutType, _ref23$drms, drms, context, _ref23$hlsjsProfile, hlsjsProfile, authorizationToken, libraryId, offeringPath, link, _ref24, path, linkTarget, audienceData, authorization, queryParams, playoutOptions, playoutMap, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee30$(_context30) {
     while (1) {
@@ -2448,13 +2433,7 @@ exports.PlayoutOptions = function _callee30(_ref23) {
           };
           audienceData = _context30.t1.AudienceData.call(_context30.t1, _context30.t8);
           _context30.t9 = authorizationToken;
-
-          if (_context30.t9) {
-            _context30.next = 49;
-            break;
-          }
-
-          _context30.next = 48;
+          _context30.next = 47;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -2463,44 +2442,37 @@ exports.PlayoutOptions = function _callee30(_ref23) {
             audienceData: audienceData
           }));
 
-        case 48:
-          _context30.t9 = _context30.sent;
+        case 47:
+          _context30.t10 = _context30.sent;
 
-        case 49:
-          _context30.t10 = _context30.t9;
-          queryParams = {
-            authorization: _context30.t10
+          _context30.t11 = function (token) {
+            return token;
           };
 
-          if (linkPath) {
-            queryParams.resolve = true;
-          }
-
-          _context30.t11 = Object;
-          _context30.next = 55;
+          authorization = [_context30.t9, _context30.t10].flat().filter(_context30.t11);
+          queryParams = {
+            authorization: authorization,
+            resolve: !!linkPath
+          };
+          _context30.t12 = Object;
+          _context30.next = 54;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             path: path,
             method: "GET",
             queryParams: queryParams
           })));
 
-        case 55:
-          _context30.t12 = _context30.sent;
-          playoutOptions = _context30.t11.values.call(_context30.t11, _context30.t12);
+        case 54:
+          _context30.t13 = _context30.sent;
+          playoutOptions = _context30.t12.values.call(_context30.t12, _context30.t13);
 
           if (!(!signedLink && linkTarget.versionHash)) {
-            _context30.next = 64;
-            break;
-          }
-
-          _context30.t13 = authorizationToken;
-
-          if (_context30.t13) {
             _context30.next = 63;
             break;
           }
 
-          _context30.next = 62;
+          _context30.t14 = authorizationToken;
+          _context30.next = 60;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: linkTarget.libraryId,
             objectId: linkTarget.objectId,
@@ -2509,19 +2481,22 @@ exports.PlayoutOptions = function _callee30(_ref23) {
             audienceData: audienceData
           }));
 
-        case 62:
-          _context30.t13 = _context30.sent;
+        case 60:
+          _context30.t15 = _context30.sent;
+
+          _context30.t16 = function (token) {
+            return token;
+          };
+
+          queryParams.authorization = [_context30.t14, _context30.t15].flat().filter(_context30.t16);
 
         case 63:
-          queryParams.authorization = _context30.t13;
-
-        case 64:
           playoutMap = {};
           i = 0;
 
-        case 66:
+        case 65:
           if (!(i < playoutOptions.length)) {
-            _context30.next = 108;
+            _context30.next = 107;
             break;
           }
 
@@ -2543,92 +2518,92 @@ exports.PlayoutOptions = function _callee30(_ref23) {
           } // Create full playout URLs for this protocol / drm combo
 
 
-          _context30.t14 = _objectSpread;
-          _context30.t15 = {};
-          _context30.t16 = playoutMap[protocol] || {};
           _context30.t17 = _objectSpread;
           _context30.t18 = {};
-          _context30.t19 = (playoutMap[protocol] || {}).playoutMethods || {};
-          _context30.t20 = _defineProperty;
+          _context30.t19 = playoutMap[protocol] || {};
+          _context30.t20 = _objectSpread;
           _context30.t21 = {};
-          _context30.t22 = drm || "clear";
+          _context30.t22 = (playoutMap[protocol] || {}).playoutMethods || {};
+          _context30.t23 = _defineProperty;
+          _context30.t24 = {};
+          _context30.t25 = drm || "clear";
 
           if (!signedLink) {
-            _context30.next = 90;
+            _context30.next = 89;
             break;
           }
 
-          _context30.next = 87;
+          _context30.next = 86;
           return _regeneratorRuntime.awrap(this.LinkUrl({
             versionHash: versionHash,
             linkPath: UrlJoin(linkPath, offering, playoutPath),
-            queryParams: queryParams
+            queryParams: queryParams,
+            noAuth: true
           }));
 
-        case 87:
-          _context30.t23 = _context30.sent;
-          _context30.next = 93;
+        case 86:
+          _context30.t26 = _context30.sent;
+          _context30.next = 92;
           break;
 
-        case 90:
-          _context30.next = 92;
+        case 89:
+          _context30.next = 91;
           return _regeneratorRuntime.awrap(this.Rep({
             libraryId: linkTarget.libraryId || libraryId,
             objectId: linkTarget.objectId || objectId,
             versionHash: linkTarget.versionHash || versionHash,
             rep: UrlJoin(handler, offering, playoutPath),
-            channelAuth: true,
-            noAuth: !!authorizationToken,
+            noAuth: true,
             queryParams: queryParams
           }));
 
-        case 92:
-          _context30.t23 = _context30.sent;
+        case 91:
+          _context30.t26 = _context30.sent;
 
-        case 93:
-          _context30.t24 = _context30.t23;
-          _context30.t25 = drm ? _defineProperty({}, drm, {
+        case 92:
+          _context30.t27 = _context30.t26;
+          _context30.t28 = drm ? _defineProperty({}, drm, {
             licenseServers: licenseServers,
             cert: cert
           }) : undefined;
-          _context30.t26 = {
-            playoutUrl: _context30.t24,
-            drms: _context30.t25
-          };
-          _context30.t27 = (0, _context30.t20)(_context30.t21, _context30.t22, _context30.t26);
-          _context30.t28 = (0, _context30.t17)(_context30.t18, _context30.t19, _context30.t27);
           _context30.t29 = {
-            playoutMethods: _context30.t28
+            playoutUrl: _context30.t27,
+            drms: _context30.t28
           };
-          playoutMap[protocol] = (0, _context30.t14)(_context30.t15, _context30.t16, _context30.t29);
+          _context30.t30 = (0, _context30.t23)(_context30.t24, _context30.t25, _context30.t29);
+          _context30.t31 = (0, _context30.t20)(_context30.t21, _context30.t22, _context30.t30);
+          _context30.t32 = {
+            playoutMethods: _context30.t31
+          };
+          playoutMap[protocol] = (0, _context30.t17)(_context30.t18, _context30.t19, _context30.t32);
           // Exclude any options that do not satisfy the specified protocols and/or DRMs
           protocolMatch = protocols.includes(protocol);
           drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
           if (!(!protocolMatch || !drmMatch)) {
-            _context30.next = 104;
+            _context30.next = 103;
             break;
           }
 
-          return _context30.abrupt("continue", 105);
+          return _context30.abrupt("continue", 104);
 
-        case 104:
+        case 103:
           // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
           if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
             playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
             playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
           }
 
-        case 105:
+        case 104:
           i++;
-          _context30.next = 66;
+          _context30.next = 65;
           break;
 
-        case 108:
+        case 107:
           this.Log(playoutMap);
           return _context30.abrupt("return", playoutMap);
 
-        case 110:
+        case 109:
         case "end":
           return _context30.stop();
       }
@@ -2656,12 +2631,12 @@ exports.PlayoutOptions = function _callee30(_ref23) {
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
- * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  */
 
 
 exports.BitmovinPlayoutOptions = function _callee31(_ref26) {
-  var objectId, versionHash, writeToken, linkPath, _ref26$signedLink, signedLink, _ref26$protocols, protocols, _ref26$drms, drms, _ref26$handler, handler, _ref26$offering, offering, playoutType, context, authorizationToken, playoutOptions, _ref27, linkTarget, authToken, config;
+  var objectId, versionHash, writeToken, linkPath, _ref26$signedLink, signedLink, _ref26$protocols, protocols, _ref26$drms, drms, _ref26$handler, handler, _ref26$offering, offering, playoutType, context, authorizationToken, playoutOptions, _ref27, linkTarget, authorization, config;
 
   return _regeneratorRuntime.async(function _callee31$(_context31) {
     while (1) {
@@ -2709,35 +2684,36 @@ exports.BitmovinPlayoutOptions = function _callee31(_ref26) {
         case 9:
           _ref27 = _context31.sent;
           linkTarget = _ref27.linkTarget;
+          authorization = [];
 
-          if (!authorizationToken) {
-            _context31.next = 15;
-            break;
+          if (authorizationToken) {
+            authorization.push(authorizationToken);
           }
 
-          authToken = authorizationToken;
-          _context31.next = 22;
-          break;
-
-        case 15:
           if (!(signedLink || !linkTarget.versionHash)) {
-            _context31.next = 20;
+            _context31.next = 21;
             break;
           }
 
-          _context31.next = 18;
+          _context31.t0 = authorization;
+          _context31.next = 17;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             objectId: objectId,
             channelAuth: true,
             oauthToken: this.oauthToken
           }));
 
-        case 18:
-          _context31.next = 22;
+        case 17:
+          _context31.t1 = _context31.sent;
+
+          _context31.t0.push.call(_context31.t0, _context31.t1);
+
+          _context31.next = 26;
           break;
 
-        case 20:
-          _context31.next = 22;
+        case 21:
+          _context31.t2 = authorization;
+          _context31.next = 24;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: linkTarget.libraryId,
             objectId: linkTarget.objectId,
@@ -2745,7 +2721,12 @@ exports.BitmovinPlayoutOptions = function _callee31(_ref26) {
             oauthToken: this.oauthToken
           }));
 
-        case 22:
+        case 24:
+          _context31.t3 = _context31.sent;
+
+          _context31.t2.push.call(_context31.t2, _context31.t3);
+
+        case 26:
           config = {
             drm: {}
           };
@@ -2780,7 +2761,9 @@ exports.BitmovinPlayoutOptions = function _callee31(_ref26) {
                   config.drm[drm] = {
                     LA_URL: licenseUrl,
                     headers: {
-                      Authorization: "Bearer ".concat(authToken)
+                      Authorization: "Bearer ".concat(authorization.flat().filter(function (token) {
+                        return token;
+                      }).join(","))
                     }
                   };
                 }
@@ -2789,7 +2772,7 @@ exports.BitmovinPlayoutOptions = function _callee31(_ref26) {
           });
           return _context31.abrupt("return", config);
 
-        case 25:
+        case 29:
         case "end":
           return _context31.stop();
       }
@@ -3037,7 +3020,7 @@ exports.PublicRep = function _callee34(_ref30) {
 
 
 exports.FabricUrl = function _callee35(_ref31) {
-  var libraryId, objectId, versionHash, writeToken, partHash, rep, publicRep, call, _ref31$queryParams, queryParams, _ref31$channelAuth, channelAuth, _ref31$noAuth, noAuth, _ref31$noCache, noCache, path;
+  var libraryId, objectId, versionHash, writeToken, partHash, rep, publicRep, call, _ref31$queryParams, queryParams, _ref31$channelAuth, channelAuth, _ref31$noAuth, noAuth, _ref31$noCache, noCache, authorization, path;
 
   return _regeneratorRuntime.async(function _callee35$(_context35) {
     while (1) {
@@ -3057,16 +3040,8 @@ exports.FabricUrl = function _callee35(_ref31) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
-          this.Log("Building Fabric URL:\n      libraryId: ".concat(libraryId, "\n      objectId: ").concat(objectId, "\n      versionHash: ").concat(versionHash, "\n      writeToken: ").concat(writeToken, "\n      partHash: ").concat(partHash, "\n      rep: ").concat(rep, "\n      publicRep: ").concat(publicRep, "\n      call: ").concat(call, "\n      channelAuth: ").concat(channelAuth, "\n      noAuth: ").concat(noAuth, "\n      noCache: ").concat(noCache, "\n      queryParams: ").concat(JSON.stringify(queryParams || {}, null, 2))); // Clone queryParams to avoid modification of the original
-
-          queryParams = _objectSpread({}, queryParams);
-
-          if (queryParams.authorization) {
-            _context35.next = 9;
-            break;
-          }
-
-          _context35.next = 8;
+          this.Log("Building Fabric URL:\n      libraryId: ".concat(libraryId, "\n      objectId: ").concat(objectId, "\n      versionHash: ").concat(versionHash, "\n      writeToken: ").concat(writeToken, "\n      partHash: ").concat(partHash, "\n      rep: ").concat(rep, "\n      publicRep: ").concat(publicRep, "\n      call: ").concat(call, "\n      channelAuth: ").concat(channelAuth, "\n      noAuth: ").concat(noAuth, "\n      noCache: ").concat(noCache, "\n      queryParams: ").concat(JSON.stringify(queryParams || {}, null, 2)));
+          _context35.next = 6;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -3076,24 +3051,33 @@ exports.FabricUrl = function _callee35(_ref31) {
             noCache: noCache
           }));
 
-        case 8:
-          queryParams.authorization = _context35.sent;
+        case 6:
+          _context35.t0 = _context35.sent;
+          authorization = [_context35.t0];
 
-        case 9:
+          if (queryParams.authorization) {
+            authorization.push(queryParams.authorization);
+          } // Clone queryParams to avoid modification of the original
+
+
+          queryParams = _objectSpread({}, queryParams, {
+            authorization: authorization.flat()
+          });
+
           if (!((rep || publicRep) && objectId && !versionHash)) {
-            _context35.next = 13;
+            _context35.next = 14;
             break;
           }
 
-          _context35.next = 12;
+          _context35.next = 13;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 12:
+        case 13:
           versionHash = _context35.sent;
 
-        case 13:
+        case 14:
           path = "";
 
           if (libraryId) {
@@ -3121,7 +3105,7 @@ exports.FabricUrl = function _callee35(_ref31) {
             queryParams: queryParams
           }));
 
-        case 17:
+        case 18:
         case "end":
           return _context35.stop();
       }
@@ -3529,7 +3513,7 @@ exports.ContentObjectGraph = function _callee39(_ref34) {
  * @param {string=} versionHash - Hash of an object version
  * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
- * @param {string=} authorizationToken - Override default authorization with alternate token
+ * @param {string=} authorizationToken - Additional authorization token for this request
  *
  * @returns {Promise<string>} - Version hash of the link's target
  */
@@ -3745,21 +3729,22 @@ exports.LinkTarget = function _callee40(_ref35) {
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
- * @param {string=} authorizationToken - Override default authorization with alternate token
+ * @param {string=} authorizationToken - Additional authorization token
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
+ * @param {boolean=} noAuth - If specified, no authorization (other than the authorizationToken parameter and queryParams.authorization) will be added
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
  */
 
 
 exports.LinkUrl = function _callee41(_ref36) {
-  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, authorizationToken, _ref36$queryParams, queryParams, _ref36$channelAuth, channelAuth, path;
+  var libraryId, objectId, versionHash, writeToken, linkPath, mimeType, authorizationToken, _ref36$queryParams, queryParams, _ref36$channelAuth, channelAuth, _ref36$noAuth, noAuth, path, authorization;
 
   return _regeneratorRuntime.async(function _callee41$(_context41) {
     while (1) {
       switch (_context41.prev = _context41.next) {
         case 0:
-          libraryId = _ref36.libraryId, objectId = _ref36.objectId, versionHash = _ref36.versionHash, writeToken = _ref36.writeToken, linkPath = _ref36.linkPath, mimeType = _ref36.mimeType, authorizationToken = _ref36.authorizationToken, _ref36$queryParams = _ref36.queryParams, queryParams = _ref36$queryParams === void 0 ? {} : _ref36$queryParams, _ref36$channelAuth = _ref36.channelAuth, channelAuth = _ref36$channelAuth === void 0 ? false : _ref36$channelAuth;
+          libraryId = _ref36.libraryId, objectId = _ref36.objectId, versionHash = _ref36.versionHash, writeToken = _ref36.writeToken, linkPath = _ref36.linkPath, mimeType = _ref36.mimeType, authorizationToken = _ref36.authorizationToken, _ref36$queryParams = _ref36.queryParams, queryParams = _ref36$queryParams === void 0 ? {} : _ref36$queryParams, _ref36$channelAuth = _ref36.channelAuth, channelAuth = _ref36$channelAuth === void 0 ? false : _ref36$channelAuth, _ref36$noAuth = _ref36.noAuth, noAuth = _ref36$noAuth === void 0 ? false : _ref36$noAuth;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -3788,14 +3773,14 @@ exports.LinkUrl = function _callee41(_ref36) {
             path = UrlJoin("q", versionHash, "meta", linkPath);
           }
 
-          _context41.t0 = _objectSpread;
-          _context41.t1 = authorizationToken || queryParams.authorization;
+          authorization = [authorizationToken];
 
-          if (_context41.t1) {
-            _context41.next = 13;
+          if (noAuth) {
+            _context41.next = 14;
             break;
           }
 
+          _context41.t0 = authorization;
           _context41.next = 12;
           return _regeneratorRuntime.awrap(this.MetadataAuth({
             libraryId: libraryId,
@@ -3808,16 +3793,19 @@ exports.LinkUrl = function _callee41(_ref36) {
         case 12:
           _context41.t1 = _context41.sent;
 
-        case 13:
-          _context41.t2 = _context41.t1;
-          _context41.t3 = {
-            authorization: _context41.t2
-          };
-          _context41.t4 = queryParams;
-          _context41.t5 = {
+          _context41.t0.push.call(_context41.t0, _context41.t1);
+
+        case 14:
+          if (queryParams.authorization) {
+            authorization.push(queryParams.authorization);
+          }
+
+          queryParams = _objectSpread({}, queryParams, {
+            authorization: authorization.flat().filter(function (token) {
+              return token;
+            }),
             resolve: true
-          };
-          queryParams = (0, _context41.t0)(_context41.t3, _context41.t4, _context41.t5);
+          });
 
           if (mimeType) {
             queryParams["header-accept"] = mimeType;
@@ -3828,7 +3816,7 @@ exports.LinkUrl = function _callee41(_ref36) {
             queryParams: queryParams
           }));
 
-        case 20:
+        case 18:
         case "end":
           return _context41.stop();
       }
