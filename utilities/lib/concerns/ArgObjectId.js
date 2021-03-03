@@ -39,6 +39,14 @@ const New = context => {
     });
   };
 
+  const objLatestHash = async () => {
+    const {libraryId, objectId} = await argsProc();
+    return await context.concerns.FabricObject.latestVersionHash({
+      libraryId,
+      objectId
+    });
+  };
+
   const objMetadata = async ({subtree} = {}) => {
     const {libraryId, objectId} = await argsProc();
     return await context.concerns.FabricObject.metadata({
@@ -68,6 +76,7 @@ const New = context => {
   return {
     argsProc,
     objDelete,
+    objLatestHash,
     objMetadata,
     objPartList,
     objVersionList
