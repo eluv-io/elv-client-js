@@ -65,7 +65,7 @@ const FileDownload = async ({
     }
   } catch(error) {
     console.error("Error downloading file:");
-    console.error(error);
+    console.error(JSON.stringify(error, null, 2));
   }
 };
 

@@ -792,7 +792,7 @@ exports.MetadataAuth = async function({
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
- * @param {string=} authorizationToken - Override default authorization with alternate token
+ * @param {string=} authorizationToken - Additional authorization token for this request
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -844,16 +844,14 @@ exports.ContentObjectMetadata = async function({
 
   let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
 
+  // Main authorization
+  let authToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
+
+  // Additional authorization
+  queryParams.authorization = [queryParams.authorization, authorizationToken].flat().filter(token => token);
+
   let metadata;
   try {
-    const authToken =
-      authorizationToken ||
-      (
-        queryParams.authorization ?
-          queryParams.authorization :
-          await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree})
-      );
-
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
         headers: { "Authorization": `Bearer ${authToken}` },
@@ -1209,6 +1207,7 @@ exports.PlayoutPathResolution = async function({
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  *
  * @return {Promise<Object>} - The available offerings
  */
@@ -1218,7 +1217,8 @@ exports.AvailableOfferings = async function({
   writeToken,
   linkPath,
   signedLink,
-  handler="playout"
+  handler="playout",
+  authorizationToken
 }) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -1236,15 +1236,24 @@ exports.AvailableOfferings = async function({
   });
 
   try {
+    let authorization = [
+      authorizationToken,
+      await this.authClient.AuthorizationToken({
+        objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken
+      })
+    ]
+      .flat()
+      .filter(token => token);
+
     return await this.utils.ResponseToJson(
       this.HttpClient.Request({
         path: path,
         method: "GET",
-        headers: await this.authClient.AuthorizationHeader({
-          objectId,
-          channelAuth: true,
-          oauthToken: this.oauthToken
-        })
+        headers: {
+          Authorization: `Bearer ${authorization.join(",")}`
+        }
       })
     );
   } catch(error) {
@@ -1280,7 +1289,7 @@ exports.AvailableOfferings = async function({
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
- * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  */
 exports.PlayoutOptions = async function({
   objectId,
@@ -1350,22 +1359,23 @@ exports.PlayoutOptions = async function({
     context
   });
 
-  // Authorize on original object initially
-  let queryParams = {
-    authorization:
-      authorizationToken ||
-      await this.authClient.AuthorizationToken({
-        libraryId,
-        objectId,
-        channelAuth: true,
-        oauthToken: this.oauthToken,
-        audienceData
-      })
-  };
+  let authorization = [
+    authorizationToken,
+    await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      channelAuth: true,
+      oauthToken: this.oauthToken,
+      audienceData
+    })
+  ]
+    .flat()
+    .filter(token => token);
 
-  if(linkPath) {
-    queryParams.resolve = true;
-  }
+  let queryParams = {
+    authorization,
+    resolve: !!linkPath
+  };
 
   const playoutOptions = Object.values(
     await this.utils.ResponseToJson(
@@ -1379,15 +1389,18 @@ exports.PlayoutOptions = async function({
 
   if(!signedLink && linkTarget.versionHash) {
     // Link target is different object and not signed link - switch auth token to target object
-    queryParams.authorization =
-      authorizationToken ||
+    queryParams.authorization = [
+      authorizationToken,
       await this.authClient.AuthorizationToken({
         libraryId: linkTarget.libraryId,
         objectId: linkTarget.objectId,
         channelAuth: true,
         oauthToken: this.oauthToken,
         audienceData
-      });
+      })
+    ]
+      .flat()
+      .filter(token => token);
   }
 
   let playoutMap = {};
@@ -1420,16 +1433,16 @@ exports.PlayoutOptions = async function({
               await this.LinkUrl({
                 versionHash,
                 linkPath: UrlJoin(linkPath, offering, playoutPath),
-                queryParams
+                queryParams,
+                noAuth: true
               }) :
               await this.Rep({
                 libraryId: linkTarget.libraryId || libraryId,
                 objectId: linkTarget.objectId || objectId,
                 versionHash: linkTarget.versionHash || versionHash,
                 rep: UrlJoin(handler, offering, playoutPath),
-                channelAuth: true,
-                noAuth: !!authorizationToken,
-                queryParams
+                noAuth: true,
+                queryParams,
               }),
           drms: drm ? {[drm]: {licenseServers, cert}} : undefined
         }
@@ -1476,7 +1489,7 @@ exports.PlayoutOptions = async function({
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
- * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  */
 exports.BitmovinPlayoutOptions = async function({
   objectId,
@@ -1529,24 +1542,29 @@ exports.BitmovinPlayoutOptions = async function({
     authorizationToken
   });
 
-  let authToken;
-  if(authorizationToken) {
-    authToken = authorizationToken;
-  } else if(signedLink || !linkTarget.versionHash) {
+  let authorization = [];
+
+  if(authorizationToken) { authorization.push(authorizationToken); }
+
+  if(signedLink || !linkTarget.versionHash) {
     // Target is same object or signed link - authorize against original object
-    await this.authClient.AuthorizationToken({
-      objectId,
-      channelAuth: true,
-      oauthToken: this.oauthToken,
-    });
+    authorization.push(
+      await this.authClient.AuthorizationToken({
+        objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+      })
+    );
   } else {
     // Target is different object and not signed link - switch auth token to target object
-    await this.authClient.AuthorizationToken({
-      libraryId: linkTarget.libraryId,
-      objectId: linkTarget.objectId,
-      channelAuth: true,
-      oauthToken: this.oauthToken
-    });
+    authorization.push(
+      await this.authClient.AuthorizationToken({
+        libraryId: linkTarget.libraryId,
+        objectId: linkTarget.objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken
+      })
+    );
   }
 
   let config = {
@@ -1576,7 +1594,7 @@ exports.BitmovinPlayoutOptions = async function({
           config.drm[drm] = {
             LA_URL: licenseUrl,
             headers: {
-              Authorization: `Bearer ${authToken}`
+              Authorization: `Bearer ${authorization.flat().filter(token => token).join(",")}`
             }
           };
         }
@@ -1775,19 +1793,24 @@ exports.FabricUrl = async function({
       queryParams: ${JSON.stringify(queryParams || {}, null, 2)}`
   );
 
-  // Clone queryParams to avoid modification of the original
-  queryParams = {...queryParams};
-
-  if(!queryParams.authorization) {
-    queryParams.authorization = await this.authClient.AuthorizationToken({
+  let authorization = [
+    await this.authClient.AuthorizationToken({
       libraryId,
       objectId,
       versionHash,
       channelAuth,
       noAuth,
       noCache
-    });
-  }
+    })
+  ];
+
+  if(queryParams.authorization) { authorization.push(queryParams.authorization); }
+
+  // Clone queryParams to avoid modification of the original
+  queryParams = {
+    ...queryParams,
+    authorization: authorization.flat()
+  };
 
   if((rep || publicRep) && objectId && !versionHash) {
     versionHash = await this.LatestVersionHash({objectId});
@@ -2013,7 +2036,7 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
  * @param {string=} versionHash - Hash of an object version
  * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
- * @param {string=} authorizationToken - Override default authorization with alternate token
+ * @param {string=} authorizationToken - Additional authorization token for this request
  *
  * @returns {Promise<string>} - Version hash of the link's target
  */
@@ -2110,8 +2133,9 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
- * @param {string=} authorizationToken - Override default authorization with alternate token
+ * @param {string=} authorizationToken - Additional authorization token
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
+ * @param {boolean=} noAuth - If specified, no authorization (other than the authorizationToken parameter and queryParams.authorization) will be added
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
  */
@@ -2124,7 +2148,8 @@ exports.LinkUrl = async function({
   mimeType,
   authorizationToken,
   queryParams={},
-  channelAuth=false
+  channelAuth=false,
+  noAuth=false
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
@@ -2140,12 +2165,18 @@ exports.LinkUrl = async function({
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
 
+  let authorization = [ authorizationToken ];
+  if(!noAuth) {
+    authorization.push(await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}));
+  }
+
+  if(queryParams.authorization) {
+    authorization.push(queryParams.authorization);
+  }
+
   queryParams = {
-    authorization:
-      authorizationToken ||
-      queryParams.authorization ||
-      await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}),
     ...queryParams,
+    authorization: authorization.flat().filter(token => token),
     resolve: true
   };
 

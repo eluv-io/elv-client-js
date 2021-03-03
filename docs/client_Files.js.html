@@ -734,15 +734,29 @@ exports.DownloadFile = async function({
       chunkSize = 10000000;
     }
 
-    return await this.Download({
-      downloadPath: path,
-      bytesTotal,
-      headers,
-      callback,
-      format,
-      chunked,
-      chunkSize
-    });
+    try {
+      return await this.Download({
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked,
+        chunkSize
+      });
+    } catch(error) {
+      if(encrypted &amp;&amp; !clientSideDecryption) {
+        // If encrypted download with rep/files_download failed, retry with client side decryption
+        return (
+          this.DownloadFile({
+            ...arguments[0],
+            clientSideDecryption: true
+          })
+        );
+      }
+
+      throw error;
+    }
   }
 };
 
