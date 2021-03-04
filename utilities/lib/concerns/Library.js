@@ -1,17 +1,12 @@
 // code related to libraries / library IDs
 const R = require("ramda");
 
-const {StdOpt} = require("../options");
-
 const Client = require("./Client");
 const Logger = require("./Logger");
 
 const blueprint = {
   name: "Library",
-  concerns: [Client, Logger],
-  options: [
-    StdOpt("libraryId")
-  ]
+  concerns: [Client, Logger]
 };
 
 const stdDrmCert = require("../data/elv.media.drm.fps.cert.json");
@@ -19,24 +14,18 @@ const stdDrmCert = require("../data/elv.media.drm.fps.cert.json");
 const New = context => {
   const logger = context.concerns.Logger;
 
-  // populate --libraryId if missing, to prevent multiple lookups
-  const argPopulate = async ({objectId, versionHash}) => {
-    context.args.libraryId = await forObject({objectId, versionHash});
-  };
-
-  const forObject = async ({objectId, versionHash} = {}) => {
+  const forObject = async ({objectId, versionHash}) => {
     const client = await context.concerns.Client.get();
     let stringPart = " for";
-    if(objectId) stringPart += ` objectId: ${objectId}`;
-    if(versionHash) stringPart += ` versionHash: ${versionHash}`;
+    if(objectId) stringPart += ` object ${objectId}`;
+    if(versionHash) stringPart += ` version ${versionHash}`;
     logger.log(`Looking up library ID${stringPart}...`);
     const libId = await client.ContentObjectLibraryId({objectId, versionHash});
-    logger.log(`Found library ID: ${libId}...`);
+    logger.log(`Found library ID: ${libId}`);
     return libId;
   };
 
-  const info = async ({libraryId} = {}) => {
-    libraryId = libraryId || context.args.libraryId;
+  const info = async ({libraryId}) => {
     logger.log(`Getting info for library ${libraryId}...`);
     const client = await context.concerns.Client.get();
 
@@ -59,6 +48,7 @@ const New = context => {
     };
   };
 
+  // list of libraries
   const list = async () => {
     const logger = context.concerns.Logger;
     logger.log("Getting list of libraries...");
@@ -71,8 +61,8 @@ const New = context => {
 
   };
 
-  const objectList = async ({libraryId, filterOptions} = {}) => {
-    libraryId = libraryId || context.args.libraryId;
+  // list of objects within a library
+  const objectList = async ({filterOptions, libraryId}) => {
 
     filterOptions = R.mergeDeepRight(
       {limit: 100000},
@@ -89,7 +79,7 @@ const New = context => {
     return reply.contents.map(x => ({objectId: x.id, latestHash: x.versions[0].hash, metadata: x.versions[0].meta}));
   };
 
-  return {argPopulate, forObject, info, list, objectList};
+  return {forObject, info, list, objectList};
 };
 
 module.exports = {

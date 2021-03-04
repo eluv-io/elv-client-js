@@ -11,32 +11,36 @@ const blueprint = {
 const New = context => {
   const logger = context.concerns.Logger;
 
-  const finalize = async ({libraryId, objectId, writeToken, wait = true}) => {
-    logger.log("Finalizing object...");
+  const finalize = async ({libraryId, noWait, objectId, writeToken}) => {
     const client = await context.concerns.Client.get();
-
+    logger.log("Finalizing object...");
     const finalizeResponse = await client.FinalizeContentObject({
       libraryId,
       objectId,
       writeToken
     });
     const latestHash = finalizeResponse.hash;
-    if(wait) await waitForPublish({libraryId, objectId, latestHash});
+    logger.log(`Finalized, new version hash: ${latestHash}`);
+    if(noWait) {
+      logger.log("Skipping wait for new hash to become available (finalized new object version may take up to several minutes to become available, depending on size and number of parts.)");
+    } else {
+      await waitForPublish({libraryId, objectId, latestHash});
+    }
     return latestHash;
   };
 
-  const waitForPublish = async ({libraryId, objectId, latestHash}) => {
-    logger.log(`Waiting for publishing to finish and new object version ${latestHash} to become visible...`);
+  const waitForPublish = async ({latestHash, libraryId, objectId}) => {
+    logger.log("Waiting for publishing to finish and new object version to become available...");
     const client = await context.concerns.Client.get();
     let publishFinished = false;
     let latestObjectData = {};
     while(!publishFinished) {
       latestObjectData = await client.ContentObject({libraryId, objectId});
       if(latestObjectData.hash === latestHash) {
-        logger.log(`New object version ${latestHash} now visible`);
+        logger.log("New object version now available");
         publishFinished = true;
       } else {
-        logger.log("  new version not visible yet, waiting 15 seconds...");
+        logger.log("  new version not available yet, waiting 15 seconds...");
         await seconds(15);
       }
     }

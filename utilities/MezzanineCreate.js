@@ -5,13 +5,15 @@ const {seconds} = require("./lib/helpers");
 const {ModOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
-const Asset = require("./lib/concerns/Asset");
+const ArgAssetMetadata = require("./lib/concerns/ArgAssetMetadata");
+const ArgMetadata = require("./lib/concerns/ArgMetadata");
+const ArgObjectId = require("./lib/concerns/ArgObjectId");
+const ArgType = require("./lib/concerns/ArgType");
 const Client = require("./lib/concerns/Client");
 const CloudAccess = require("./lib/concerns/CloudAccess");
 const ContentType = require("./lib/concerns/ContentType");
 const FabricObject = require("./lib/concerns/FabricObject");
-const FinalizeAndWait = require("./lib/concerns/FinalizeAndWait");
-const MetadataArg = require("./lib/concerns/MetadataArg");
+const Finalize = require("./lib/concerns/Finalize");
 const JSON = require("./lib/concerns/JSON");
 const LRO =  require("./lib/concerns/LRO");
 
@@ -40,15 +42,17 @@ class MezzanineCreate extends Utility {
   blueprint() {
     return {
       concerns: [
-        Asset,
+        ArgAssetMetadata,
+        ArgMetadata,
+        ArgObjectId,
+        ArgType,
         Client,
         CloudAccess,
         ContentType,
         FabricObject,
-        FinalizeAndWait,
+        Finalize,
         JSON,
-        LRO,
-        MetadataArg
+        LRO
       ],
       options: [
         ModOpt("libraryId", {forX: "mezzanine"}),
@@ -91,32 +95,32 @@ class MezzanineCreate extends Utility {
 
   async body() {
     const logger = this.logger;
-    const J = this.concerns.JSON;
 
     const {existingMezId, offeringKey, masterHash} = this.args;
 
     // do steps that don't require network access first
     // ----------------------------------------------------
     const abrProfile = this.args.abrProfile
-      ? J.parseFile(this.args.abrProfile)
+      ? this.concerns.JSON.parseFile({path: this.args.abrProfile})
       : undefined;
 
-    const metadataFromArg =  this.concerns.MetadataArg.asObject() || {};
+    const metadataFromArg =  this.concerns.ArgMetadata.asObject() || {};
 
     let access = this.concerns.CloudAccess.credentialSet(false);
 
-    // operations that need to wait on network access
+    // operations that may need to wait on network access
     // ----------------------------------------------------
-    const client = await this.concerns.Client.get();
-    const libraryId = await this.concerns.FabricObject.libraryIdGet();
+    if(existingMezId) await this.concerns.ArgObjectId.argsProc();
+    const {libraryId} = this.args;
 
+    const client = await this.concerns.Client.get();
     let existingPublicMetadata = {};
     if(existingMezId) {
-      logger.log("Retrieving metadata from existing mezzanine object...");
-      existingPublicMetadata = (await this.concerns.FabricObject.getMetadata({
+      logger.log(`Retrieving metadata from existing mezzanine object ${existingMezId}...`);
+      existingPublicMetadata = (await this.concerns.FabricObject.metadata({
         libraryId,
         objectId: existingMezId,
-        metadataSubtree: "public"
+        subtree: "public"
       })) || {};
     }
 
@@ -127,7 +131,10 @@ class MezzanineCreate extends Utility {
       metadataFromArg
     );
 
-    const newPublicMetadata = this.concerns.Asset.publicMetadata(mergedExistingAndArgMetadata.public, "MEZ");
+    const newPublicMetadata = this.concerns.ArgAssetMetadata.publicMetadata({
+      oldPublicMetadata: mergedExistingAndArgMetadata.public,
+      backupNameSuffix: "MEZ"
+    });
 
     const metadata = R.mergeDeepRight(
       metadataFromArg,
@@ -135,8 +142,8 @@ class MezzanineCreate extends Utility {
     );
 
     const type = (existingMezId && !this.args.type)
-      ? await this.concerns.ContentType.getForObject({libraryId, objectId: existingMezId})
-      : await this.concerns.ContentType.hashLookup();
+      ? await this.concerns.ContentType.forItem({libraryId, objectId: existingMezId})
+      : await this.concerns.ArgType.typVersionHash();
 
     if(existingMezId) {
       logger.log("Updating existing mezzanine object...");
@@ -225,10 +232,10 @@ class MezzanineCreate extends Utility {
       ""
     );
     logger.data("version_hash", latestHash);
-    await this.concerns.FinalizeAndWait.waitUnlessNo({
+    await this.concerns.Finalize.waitForPublish({
+      latestHash,
       libraryId,
-      objectId,
-      latestHash
+      objectId
     });
   }
 

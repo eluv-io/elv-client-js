@@ -1,7 +1,7 @@
 // code related to loading / parsing JSON
 const {JSONPath} = require("jsonpath-plus");
 
-const {readFile, stringOrFileContents} = require("../helpers");
+const {ellipsize, readFile, stringOrFileContents} = require("../helpers");
 
 const Logger = require("./Logger");
 
@@ -15,7 +15,6 @@ const blueprint = {
 const parse = JSON.parse;
 const stringify = JSON.stringify;
 
-
 const jPath = ({pattern, metadata}) => {
   return JSONPath({
     json: metadata,
@@ -24,16 +23,18 @@ const jPath = ({pattern, metadata}) => {
   });
 };
 
+const shortString = ({obj, width=30}) => ellipsize(JSON.stringify(obj),width);
+
 
 const New = (context) => {
   const logger = context.concerns.Logger;
   const cwd = context.cwd;
 
-  const parseFile = (pathStr) => parseString(readFile(pathStr, cwd, logger));
+  const parseFile = ({path}) => parseString({
+    str: readFile(path, cwd, logger)
+  });
 
-  const parseStringOrFile = (str) => parseString(stringOrFileContents(str, cwd, logger));
-
-  const parseString = (str) => {
+  const parseString = ({str}) => {
     let parsed;
     try {
       parsed = JSON.parse(str);
@@ -44,7 +45,18 @@ const New = (context) => {
     return parsed;
   };
 
-  return {parse, parseFile, parseString, parseStringOrFile, stringify};
+  const parseStringOrFile = ({strOrPath}) => parseString({
+    str: stringOrFileContents(strOrPath, cwd, logger)
+  });
+
+  return {
+    parse,
+    parseFile,
+    parseString,
+    parseStringOrFile,
+    shortString,
+    stringify
+  };
 };
 
 module.exports = {
@@ -52,5 +64,6 @@ module.exports = {
   jPath,
   New,
   parse,
+  shortString,
   stringify
 };

@@ -1,0 +1,1 @@
+{"foo":"[{\\"op\\":\\"replace\\",\\"path\\":\\"/simple_watermark/font_relative_height\\",\\"value\\":0.1}]"}

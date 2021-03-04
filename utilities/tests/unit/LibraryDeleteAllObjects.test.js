@@ -4,14 +4,12 @@ const expect = chai.expect;
 chai.use(chaiAsPromised);
 
 const {removeStubs, stubClient} = require("../mocks/ElvClient.mock");
-
 const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 
-const LibraryDeleteAllObjects = require("../../LibraryDeleteAllObjects");
-
 removeElvEnvVars();
-
 beforeEach(removeStubs);
+
+const LibraryDeleteAllObjects = require("../../LibraryDeleteAllObjects");
 
 describe("LibraryDeleteAllObjects", () => {
 
@@ -31,9 +29,11 @@ describe("LibraryDeleteAllObjects", () => {
     const utility = new LibraryDeleteAllObjects(argList2Params("--libraryId", "ilib001xxxxxxxxxxxxxxxxxxxxxxxx", "--json"));
     const stub = stubClient(utility.concerns.Client);
     stub.resetHistory();
-    return utility.run().then((retVal) => {
-      expect(stub.callHistory()[0]).to.include("ContentObjects");
-      expect(stub.callHistory()[1]).to.include("DeleteContentObject");
+    return utility.run().then(() => {
+      expect(stub.callHistoryMismatches([
+        "ContentObjects",
+        "DeleteContentObject"
+      ]).length).to.equal(0);
     });
   });
 });

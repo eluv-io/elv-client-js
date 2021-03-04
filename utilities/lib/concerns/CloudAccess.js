@@ -22,7 +22,7 @@ const New = context => {
   const credentialSet = (errOnMissing = true) => {
     let retVal;
     if(context.args.credentials) {
-      retVal = J.parseFile(context.args.credentials);
+      retVal = J.parseFile({path: context.args.credentials});
     } else {
       if(!context.env.AWS_REGION || !context.env.AWS_BUCKET || !context.env.AWS_KEY || !context.env.AWS_SECRET) {
         if(errOnMissing) {

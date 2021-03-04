@@ -1,9 +1,13 @@
+// base class for utility scripts
+
 const R = require("ramda");
 const yargs = require("yargs/yargs");
 const yargsTerminalWidth = require("yargs").terminalWidth;
 
 const {loadConcerns} = require("./concerns");
 const {callContext, cmdLineContext} = require("./context");
+const {trimSlashes} = require("./helpers");
+const {ChainOutArgModel} = require("./models/ChainOutArg");
 const {BuildWidget} = require("./options");
 
 const Logger = require("./concerns/Logger");
@@ -15,6 +19,26 @@ const addNameAndLogger = (blueprint) => {
     name: "Utility",
     options: blueprint.options ? R.clone(blueprint.options) : []
   };
+};
+
+const chainOutArgValidate = arg => {
+  if(arg === undefined) return;
+  try {
+    ChainOutArgModel(arg);
+  } catch(e) {
+    throw Error(`--chainOut value(s) invalid: ${e.message}`);
+  }
+  return arg;
+};
+
+const chainOutString = ({chainOutArg, data}) => {
+  const obj = {};
+  const pairs = R.splitEvery(2, chainOutArg);
+  for(const [argName, dataPath] of pairs) {
+    obj[argName] = R.path(trimSlashes(dataPath).split("/"),data);
+  }
+  return obj;
+  // return shellEscape([JSON.stringify(obj)]);
 };
 
 const checkFunctionFactory = checksMap => {
@@ -40,7 +64,11 @@ module.exports = class Utility {
       process.exit(1);
     }
     await utility.run();
-    process.exit(0);
+    if(!process.exitCode) {
+      process.exit(0);
+    } else {
+      process.exit();
+    }
   }
 
   constructor(params) {
@@ -52,12 +80,19 @@ module.exports = class Utility {
       ? cmdLineContext() // assume invoked at command line
       : callContext(params); // module call
 
-    this.context.args = yargs()
-      .option("debugArgs",{type:"boolean", hidden: true})
-      .option("help",{
-        desc:  "Show help for command line options",
+    let yargsParser = yargs()
+      .option("debugArgs", {hidden: true, type: "boolean"})
+      .option("chainOut", {
+        coerce: chainOutArgValidate,
+        hidden: true,
+        requiresArg: true,
+        string: true,
+        type: "array"
+      })
+      .option("help", {
+        desc: "Show help for command line options",
         group: "General",
-        type:"boolean"
+        type: "boolean"
       })
       .options(this.widget.data().yargsOptMap)
       .check(checkFunctionFactory(this.widget.data().checksMap))
@@ -70,8 +105,14 @@ module.exports = class Utility {
         // eslint-disable-next-line no-console
         if(!this.context.env.ELV_SUPPRESS_USAGE) console.error(yargs.help());
         throw Error(msg);
-      })
-      .parse(this.context.argList);
+      });
+
+    if(this.context.env.ELV_CHAIN_IN) {
+
+      yargsParser = yargsParser.config(JSON.parse(this.context.env.ELV_CHAIN_IN));
+    }
+
+    this.context.args = yargsParser.parse(this.context.argList);
 
     if(this.context.args.debugArgs) {
       // eslint-disable-next-line no-console
@@ -119,6 +160,12 @@ module.exports = class Utility {
         this.footer(),
         ""
       );
+      if(this.args.chainOut) {
+        this.logger.data("chain_out",chainOutString({
+          chainOutArg: this.args.chainOut,
+          data: this.logger.dataGet()
+        }));
+      }
       // this.logger.data("successValue", successValue);
       this.logger.data("exit_code", 0);
       this.logger.data("success_value", successValue);
@@ -132,6 +179,8 @@ module.exports = class Utility {
       this.logger.data("exit_code", process.exitCode);
       this.logger.data("failure_reason", failureReason);
       this.logger.outputJSON();
+      this.logger.error("FAILED!");
+      this.logger.log("");
       return this.logger.dataGet();
     });
   }

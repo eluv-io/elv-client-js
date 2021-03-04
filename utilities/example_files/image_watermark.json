@@ -1,7 +1,7 @@
 {
   "align_h": "right",
   "align_v": "bottom",
-  "image": "./logo.png",
+  "image": "./image_watermark.png",
   "margin_h": "1/20",
   "margin_v": "1/10",
   "target_video_height": 1080
