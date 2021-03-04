@@ -3,12 +3,12 @@ const {ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
-const Library = require("./lib/concerns/Library");
+const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
 
 class LibraryDeleteAllObjects extends Utility {
   blueprint() {
     return {
-      concerns: [Client, Library],
+      concerns: [Client, ArgLibraryId],
       options: [
         ModOpt("libraryId", {X: " containing objects to delete", demand: true})
       ]
@@ -19,7 +19,7 @@ class LibraryDeleteAllObjects extends Utility {
     const logger = this.logger;
     const libraryId = this.args.libraryId;
 
-    const list = await this.concerns.Library.objectList();
+    const list = await this.concerns.ArgLibraryId.libObjectList();
     logger.log(`Objects found: ${list.length}`);
     logger.data("objects_found_count", list.length);
 

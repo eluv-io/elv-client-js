@@ -3,13 +3,14 @@ const chaiAsPromised = require("chai-as-promised");
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 
+const {removeStubs, stubClient} = require("../mocks/ElvClient.mock");
 const {argList2Params, removeElvEnvVars} = require("../helpers/params");
 
-const MezzanineCreate = require("../../MezzanineCreate");
-
-const dummyRequiredArgs = ["--masterHash", "myHash"];
-
 removeElvEnvVars();
+beforeEach(removeStubs);
+
+const MezzanineCreate = require("../../MezzanineCreate");
+const dummyRequiredArgs = ["--masterHash", "myHash"];
 
 describe("MezzanineCreate", () => {
 
@@ -48,4 +49,28 @@ describe("MezzanineCreate", () => {
     return expect(utility.run()).to.eventually.be.rejectedWith("Unexpected token");
   });
 
+  it("should call ElvClient.CreateABRMezzanine()", () => {
+    const utility = new MezzanineCreate(argList2Params(
+      "--masterHash",
+      "hq__001xxx002xxx001xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "--type",
+      "iq__002xxx002xxxxxxxxxxxxxxxxxx",
+      "--title",
+      "My Movie",
+      "--libraryId",
+      "ilib001xxxxxxxxxxxxxxxxxxxxxxxx",
+      "--json"));
+    const stub = stubClient(utility.concerns.Client);
+    stub.resetHistory();
+    return utility.run().then( (retVal) => {
+      expect(retVal.object_id).to.equal("iq__dummy_new_id");
+      // console.log(JSON.stringify(retVal, null, 2));
+      expect(stub.callHistoryMismatches([
+        "ContentType",
+        "CreateABRMezzanine", // finalize call is not simulated by mock.CreateABRMezzanine()
+        "SetVisibility",
+        "StartABRMezzanineJobs" // metadata editing and finalization etc not simulated by mock.StartABRMezzanineJobs()
+      ]).length).to.equal(0);
+    });
+  });
 });

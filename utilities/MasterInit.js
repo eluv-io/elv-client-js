@@ -3,28 +3,34 @@
 
 // still need to pass in cloud credentials via env vars or --credentials if files are remote
 
+const kindOf = require("kind-of");
+
+const {ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
 const CloudAccess = require("./lib/concerns/CloudAccess");
-const FabricObject = require("./lib/concerns/FabricObject");
+const ArgObjectId = require("./lib/concerns/ArgObjectId");
 const Metadata = require("./lib/concerns/Metadata");
-const ObjectEdit = require("./lib/concerns/ObjectEdit");
+const Edit = require("./lib/concerns/Edit");
 
 class MasterInit extends Utility {
   blueprint() {
     return {
-      concerns: [FabricObject, CloudAccess, Client, ObjectEdit, Metadata]
+      concerns: [ArgObjectId, CloudAccess, Client, Edit, Metadata],
+      options: [
+        ModOpt("objectId", {demand: true})
+      ]
     };
   }
 
   async body() {
     const access = this.concerns.CloudAccess.credentialSet(false);
 
-    await this.concerns.FabricObject.libraryIdArgPopulate();
+    await this.concerns.ArgObjectId.argsProc();
     const {objectId, libraryId} = this.args;
 
-    const writeToken = await this.concerns.ObjectEdit.getWriteToken({
+    const writeToken = await this.concerns.Edit.getWriteToken({
       libraryId,
       objectId
     });
@@ -42,16 +48,25 @@ class MasterInit extends Utility {
     this.logger.errorsAndWarnings({errors, warnings});
     if(logs && logs.length > 0) this.logger.logList("Log:", ...logs);
 
-    const versionHash = await this.concerns.ObjectEdit.finalize({writeToken});
+    const versionHash = await this.concerns.Edit.finalize({
+      libraryId,
+      objectId,
+      writeToken
+    });
 
-    // Check if all variants in resulting master has an audio and video stream
+    // Check if variants in resulting master has an audio and video stream
     // NOTE: only expect single Variant 'draft' after bitcode call
     const variants = (await this.concerns.Metadata.get({
       libraryId,
       objectId,
       versionHash,
-      metadataSubtree: "/production_master/variants"
+      subtree: "/production_master/variants"
     }));
+
+    if(kindOf(variants)!=="object") throw Error("no variants found after init");
+    if(Object.keys(variants).length !== 1) throw Error(`unexpected number of variants found (${variants.length})`);
+    if(!variants.hasOwnProperty("default")) throw Error(`unexpected variant key '${Object.keys(variants)[0]}' (expected 'default')`);
+
     for(let variant in variants) {
       let streams = variants[variant].streams;
       if(!streams.hasOwnProperty("audio")) {

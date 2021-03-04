@@ -9,6 +9,7 @@
 //
 
 const yargs = require("yargs");
+const yargsTerminalWidth = yargs.terminalWidth();
 const {ElvClient} = require("../../src/ElvClient");
 
 module.exports = class ScriptBase {
@@ -37,7 +38,6 @@ module.exports = class ScriptBase {
     } else {
       this.args = this.options().argv;
     }
-
     // if --configUrl was not passed in, try to read from ../TestConfiguration.json
     if(!this.args.configUrl) {
       const ClientConfiguration = require("../../TestConfiguration.json");
@@ -98,6 +98,7 @@ module.exports = class ScriptBase {
   //    }
   // }
   options() {
+
     return yargs
       .option("debug", {
         describe: "Print debug logging for API calls",
@@ -114,7 +115,7 @@ module.exports = class ScriptBase {
         describe: "Geographic region for the fabric nodes.",
         type: "string",
       })
-      .strict().version(false);
+      .strict().version(false).wrap(yargsTerminalWidth);
   }
 
   run() {

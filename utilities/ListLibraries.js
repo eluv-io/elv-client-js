@@ -1,5 +1,4 @@
 // List all libraries visible to the current private key
-const {DelOpt} = require("./lib/options");
 
 const Utility = require("./lib/Utility");
 
@@ -9,15 +8,14 @@ const Logger = require("./lib/concerns/Logger");
 class ListLibraries extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, Library],
-      options: [DelOpt("libraryId")]
+      concerns: [Logger, Library]
     };
   }
 
   async body() {
     const logger = this.logger;
     const libList = await this.concerns.Library.list();
-    logger.data("library_ids", libList);
+    logger.data("libraries", libList);
 
     logger.logList(libList);
     if(libList.length === 0) logger.warn("No visible libraries found using supplied private key.");

@@ -12,7 +12,7 @@ const coerceAssetMetadata = arg => kindOf(arg) === "object"
   : throwError("--assetMetadata must be used with a .FIELD_NAME suffix, e.g.: --assetMetadata.catalog_id movie12345");
 
 const blueprint = {
-  name: "Asset",
+  name: "ArgAssetMetadata",
   options: [
     NewOpt("assetMetadata", {
       coerce: coerceAssetMetadata,
@@ -68,48 +68,65 @@ const New = (context) => {
     args.assetMetadata || {}
   );
 
-  const backupName = (existingPublicMetadata, backupNameSuffix) => {
-    const existingAssetMetadata = existingPublicMetadata.asset_metadata || {};
-    return title(existingAssetMetadata)
+  const backupName = (oldPublicMetadata, backupNameSuffix) => {
+    const oldAssetMetadata = oldPublicMetadata.asset_metadata || {};
+    return title({oldAssetMetadata})
       ? backupNameSuffix
-        ? `${title(existingAssetMetadata)} ${backupNameSuffix}`
-        : title(existingAssetMetadata)
+        ? `${title({oldAssetMetadata})} ${backupNameSuffix}`
+        : title({oldAssetMetadata})
       : undefined;
   };
 
   // -------------------------------------
-  // interface: Asset
+  // public interface methods
   // -------------------------------------
 
-  // existingAssetMetadata == pre-existing value stored under /public/asset_metadata/
-  const displayTitle = (existingAssetMetadata = {}) => args.displayTitle
+  // oldAssetMetadata == pre-existing value stored under /public/asset_metadata/
+  const displayTitle = ({oldAssetMetadata = {}}) => args.displayTitle
     || assetMetadataArgField("display_title")
-    || existingAssetMetadata.display_title
-    || title(existingAssetMetadata);
+    || oldAssetMetadata.display_title
+    || title({oldAssetMetadata});
 
-  // existingAssetMetadata == pre-existing value stored under /public/asset_metadata/
-  const ipTitleId = (existingAssetMetadata = {}) => args.ipTitleId
+  // oldAssetMetadata == pre-existing value stored under /public/asset_metadata/
+  const ipTitleId = ({oldAssetMetadata = {}}) => args.ipTitleId
     || assetMetadataArgField("ip_title_id")
-    || existingAssetMetadata.ip_title_id
-    || slug(existingAssetMetadata);
+    || oldAssetMetadata.ip_title_id
+    || slug({oldAssetMetadata});
 
   // ** NOTE: this function takes value under /public/, e.g. {asset_metadata:{...}, name: "existing_name"}
-  const name = (existingPublicMetadata = {}, backupNameSuffix) => args.name
+  const name = ({oldPublicMetadata = {}, backupNameSuffix}) => args.name
     || assetMetadataArgField("name")
-    || existingPublicMetadata.name
-    || backupName(existingPublicMetadata, backupNameSuffix);
+    || oldPublicMetadata.name
+    || backupName(oldPublicMetadata, backupNameSuffix);
 
-  // existingAssetMetadata == pre-existing value stored under /public/asset_metadata/
-  const slug = (existingAssetMetadata = {}) => args.slug
+  // ** NOTE: this function takes value under /public/, e.g. {asset_metadata:{...}, name: "existing_name"}
+  const publicMetadata = ({oldPublicMetadata = {}, backupNameSuffix}) => {
+    const oldAssetMetadata = oldPublicMetadata.asset_metadata || {};
+
+    const itemsToMerge = {
+      asset_metadata: {
+        title: title({oldAssetMetadata}),
+        display_title: displayTitle({oldAssetMetadata}),
+        slug: slug({oldAssetMetadata}),
+        ip_title_id: ipTitleId({oldAssetMetadata}),
+        ...assetMetadataCustomFields()
+      },
+      name: name({oldPublicMetadata, backupNameSuffix})
+    };
+    return R.mergeDeepRight(oldPublicMetadata, itemsToMerge);
+  };
+  
+  // oldAssetMetadata == pre-existing value stored under /public/asset_metadata/
+  const slug = ({oldAssetMetadata = {}}) => args.slug
     || assetMetadataArgField("slug")
-    || existingAssetMetadata.slug
-    || slugify(displayTitle(existingAssetMetadata));
+    || oldAssetMetadata.slug
+    || slugify(displayTitle({oldAssetMetadata}));
 
-  // existingAssetMetadata == pre-existing value stored under /public/asset_metadata/
-  const title = (existingAssetMetadata = {}) => {
+  // oldAssetMetadata == pre-existing value stored under /public/asset_metadata/
+  const title = ({oldAssetMetadata = {}}) => {
     const t = args.title
       || assetMetadataArgField("title")
-      || existingAssetMetadata.title;
+      || oldAssetMetadata.title;
     try {
       NonBlankString(t);
     } catch(e) {
@@ -118,24 +135,18 @@ const New = (context) => {
     return t;
   };
 
-  // ** NOTE: this function takes value under /public/, e.g. {asset_metadata:{...}, name: "existing_name"}
-  const publicMetadata = (existingPublicMetadata = {}, backupNameSuffix) => {
-    const existingAssetMetadata = existingPublicMetadata.asset_metadata || {};
-
-    const itemsToMerge = {
-      asset_metadata: {
-        title: title(existingAssetMetadata),
-        display_title: displayTitle(existingAssetMetadata),
-        slug: slug(existingAssetMetadata),
-        ip_title_id: ipTitleId(existingAssetMetadata),
-        ...assetMetadataCustomFields()
-      },
-      name: name(existingPublicMetadata, backupNameSuffix)
-    };
-    return R.mergeDeepRight(existingPublicMetadata, itemsToMerge);
+  // instance interface
+  return {
+    displayTitle,
+    ipTitleId,
+    name,
+    publicMetadata,
+    slug,
+    title
   };
-
-  return {displayTitle, ipTitleId, name, publicMetadata, slug, title};
 };
 
-module.exports = {blueprint, New};
+module.exports = {
+  blueprint,
+  New
+};

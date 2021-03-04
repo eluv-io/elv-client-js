@@ -4,17 +4,17 @@ const {NewOpt, ModOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
 const Client = require("./lib/concerns/Client");
-const FabricObject = require("./lib/concerns/FabricObject");
-const FinalizeAndWait = require("./lib/concerns/FinalizeAndWait");
+const ArgNoWait = require("./lib/concerns/ArgNoWait");
+const ArgObjectId = require("./lib/concerns/ArgObjectId");
 const Logger = require("./lib/concerns/Logger");
 const LRO = require("./lib/concerns/LRO");
 
 class MezzanineJobStatus extends Utility {
   blueprint() {
     return {
-      concerns: [Logger, FabricObject, Client, LRO, FinalizeAndWait],
+      concerns: [Logger, ArgObjectId, Client, LRO, ArgNoWait],
       options: [
-        ModOpt("objectId", {ofX: "mezzanine"}),
+        ModOpt("objectId", {ofX: "mezzanine", demand: true}),
         ModOpt("libraryId", {forX: "mezzanine"}),
         NewOpt("finalize", {
           descTemplate: "If specified, will finalize the mezzanine if all jobs are completed",
@@ -35,14 +35,12 @@ class MezzanineJobStatus extends Utility {
     const logger = this.logger;
     const lro = this.concerns.LRO;
 
-    const {finalize, objectId, force} = this.args;
+    const {finalize, libraryId, objectId, force} = await this.concerns.ArgObjectId.argsProc();
     //const offeringKey = this.args.offeringKey;
-
-    const libraryId = await this.concerns.FabricObject.libraryIdGet();
 
     let statusMap;
     try {
-      statusMap = await lro.status({libraryId, objectId}); // TODO: check how offering key is used, if at all
+      statusMap = await lro.status({libraryId, objectId}); // TODO: modify client LRO code to not use offering key as part of lro_draft key
     } catch(e) {
       if(finalize && force && e.message === "Received no job status information from server - object already finalized?") {
         logger.warn(e.message);
@@ -98,7 +96,7 @@ class MezzanineJobStatus extends Utility {
       logger.data("version_hash", latestHash);
       logger.data("finalized", true);
 
-      await this.concerns.FinalizeAndWait.waitUnlessNo({libraryId, objectId, latestHash});
+      await this.concerns.ArgNoWait.waitUnlessNo({libraryId, objectId, latestHash});
     }
   }
 

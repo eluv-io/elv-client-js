@@ -11,7 +11,7 @@ const blueprint = {
   concerns: [Logger],
   options: [
     NewOpt("configUrl", {
-      descTemplate: "URL to query for Fabric configuration, enclosed in quotes - e.g. for Eluvio demo network: --configUrl \"https://demov3.net955210.contentfabric.io/config\"",
+      descTemplate: "URL to query for Fabric configuration, enclosed in quotes - e.g. for Eluvio demo network: --configUrl \"https://demov3.net955210.contentfabric.io/config\" (you can choose to set env var FABRIC_CONFIG_URL instead)",
       group: "API",
       type: "string"
     }),
@@ -86,7 +86,11 @@ const New = (context) => {
     return elvClient;
   };
 
+  // instance interface
   return {get};
 };
 
-module.exports = {blueprint, New};
+module.exports = {
+  blueprint,
+  New
+};

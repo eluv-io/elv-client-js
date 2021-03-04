@@ -2,34 +2,31 @@
 const objectPath = require("object-path");
 const R = require("ramda");
 
-const {NewOpt} = require("./lib/options");
+const {ModOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
-const Client = require("./lib/concerns/Client");
-const FabricObject = require("./lib/concerns/FabricObject");
+const ExistObj = require("./lib/concerns/ExistObj");
 const Metadata = require("./lib/concerns/Metadata");
-const MetadataArg = require("./lib/concerns/MetadataArg");
-const ObjectEdit = require("./lib/concerns/ObjectEdit");
+const ArgMetadata = require("./lib/concerns/ArgMetadata");
 
 class ObjectSetMetadata extends Utility {
   blueprint() {
     return {
       concerns: [
-        Client,
-        ObjectEdit,
-        FabricObject,
-        MetadataArg,
-        ObjectEdit
+        ExistObj,
+        Metadata,
+        ArgMetadata
       ],
       options: [
         NewOpt("path", {
-          descTemplate: "Path to store metadata (start with '/'). If omitted, all existing metadata will be replaced.",
+          descTemplate: "Path within metadata to set (start with '/'). If omitted, all existing metadata will be replaced.",
           type: "string"
         }),
         NewOpt("force", {
           descTemplate: "If target metadata path within object exists, overwrite and replace",
           type: "boolean"
-        })
+        }),
+        ModOpt("metadata", {demand:true})
       ]
     };
   }
@@ -39,44 +36,38 @@ class ObjectSetMetadata extends Utility {
     const {path} = this.args;
 
     // Check that path is a valid path string
-    if(path && !Metadata.validPathFormat(path)) {
-      throw new Error("\"" + path + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
-    }
+    Metadata.validatePathFormat({path});
 
-    const metadataFromArg = this.concerns.MetadataArg.asObject();
+    const metadataFromArg = this.concerns.ArgMetadata.asObject();
 
-    // operations that need to wait on network access
+    // operations that may need to wait on network access
     // ----------------------------------------------------
-    await this.concerns.ObjectEdit.libraryIdArgPopulate();
-    const {libraryId, objectId} = this.args;
+    const {libraryId, objectId} = await this.concerns.ExistObj.argsProc();
 
     logger.log("Retrieving existing metadata from object...");
-    const currentMetadata = await this.concerns.FabricObject.getMetadata({
-      libraryId,
-      objectId
+    const currentMetadata = await this.concerns.ExistObj.metadata();
+
+    // make sure targetPath does NOT exist, or --force specified
+    this.concerns.Metadata.checkTargetPath({
+      force: this.args.force,
+      metadata: currentMetadata,
+      targetPath: path
     });
 
-    // make sure subtree does NOT exist, or --force specified
-    if(!Metadata.validTargetPath(currentMetadata, path)) {
-      const existingTargetValue = JSON.stringify(Metadata.valueAtPath(currentMetadata, path), null, 2);
-      if(this.args.force) {
-        this.logger.warn("Data already exists at '" + path + "', --force specified, replacing...\nOverwritten data: " + existingTargetValue);
-      } else {
-        throw new Error("Metadata path '" + path + "' is invalid (already exists, use --force to replace). Existing data: " + existingTargetValue);
-      }
-    }
-
     const revisedMetadata = R.clone(currentMetadata);
-    objectPath.set(revisedMetadata, Metadata.pathPieces(path), metadataFromArg);
+    objectPath.set(revisedMetadata, Metadata.pathPieces({path}), metadataFromArg);
 
     // Write back metadata
-    const newHash = await this.concerns.ObjectEdit.writeMetadata({metadata: revisedMetadata});
+    const newHash = await this.concerns.Metadata.write({
+      libraryId,
+      metadata: revisedMetadata,
+      objectId
+    });
     this.logger.data("version_hash", newHash);
-
   }
 
   header() {
-    return `Replace metadata ${this.args.subtree ? `at ${this.args.subtree} ` : ""}for object ${this.args.objectId}`;
+    return `Replace metadata ${this.args.path ? `at ${this.args.path} ` : ""}for object ${this.args.objectId}`;
   }
 }
 

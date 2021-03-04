@@ -1,26 +1,18 @@
-// Retrieve metadata form object
+// Retrieve metadata from object
 const kindOf = require("kind-of");
 
-// .option("jsonPath", {
-//   alias: "json-path",
-//   describe: "JSON Path expression for subset to save (see https://www.npmjs.com/package/jsonpath-plus for examples). If omitted, all metadata will be saved.",
-//   type: "string"
-// })
-
-
 const {ModOpt, NewOpt} = require("./lib/options");
-
 const Utility = require("./lib/Utility");
 
 const JPath = require("./lib/concerns/JPath");
 const Metadata = require("./lib/concerns/Metadata");
-const ObjectOrVersion = require("./lib/concerns/ObjectOrVersion");
-const Outfile = require("./lib/concerns/Outfile");
+const ExistObjOrVer = require("./lib/concerns/ExistObjOrVer");
+const ArgOutfile = require("./lib/concerns/ArgOutfile");
 
 class ObjectGetMetadata extends Utility {
   blueprint() {
     return {
-      concerns: [JPath, ObjectOrVersion, Outfile],
+      concerns: [JPath, ExistObjOrVer, ArgOutfile],
       options: [
         ModOpt("jpath", {X: "to extract"}),
         NewOpt("subtree", {
@@ -35,13 +27,13 @@ class ObjectGetMetadata extends Utility {
     const {subtree, outfile} = this.args;
 
     // Check that keys are valid path strings
-    if(subtree && !Metadata.validPathFormat(subtree)) {
+    if(subtree && !Metadata.validPathFormat({path: subtree})) {
       throw Error("\"" + subtree + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
     }
 
-    await this.concerns.ObjectOrVersion.libraryIdArgPopulate();
+    await this.concerns.ExistObjOrVer.argsProc();
 
-    const metadata = await this.concerns.ObjectOrVersion.getMetadata({metadataSubtree: subtree});
+    const metadata = await this.concerns.ExistObjOrVer.metadata({subtree});
     if(kindOf(metadata) === "undefined") throw Error("no metadata found");
     const filteredMetadata = this.args.jpath
       ? this.concerns.JPath.match({metadata})
@@ -49,7 +41,7 @@ class ObjectGetMetadata extends Utility {
     if(kindOf(filteredMetadata) === "undefined") throw Error("no metadata matched --jpath filter");
 
     if(outfile) {
-      this.concerns.Outfile.writeJson({obj: filteredMetadata});
+      this.concerns.ArgOutfile.writeJson({obj: filteredMetadata});
     } else {
       this.logger.logObject(filteredMetadata);
     }
@@ -57,7 +49,7 @@ class ObjectGetMetadata extends Utility {
   }
 
   header() {
-    return `Get metadata for ${this.args.versionHash || this.args.objectId}`;
+    return `Get metadata for ${this.args.versionHash || this.args.objectId}${this.args.subtree ? ` subtree: ${this.args.subtree}` : ""}`;
   }
 }
 

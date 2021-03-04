@@ -4,6 +4,7 @@
 **.ignore.js
 **.ignore.json
 **.ignore.sh
+**.ignore.txt
 **.DS_STORE
 
 deploy-docs.sh
