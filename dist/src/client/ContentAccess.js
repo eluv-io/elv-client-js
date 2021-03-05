@@ -3041,7 +3041,19 @@ exports.FabricUrl = function _callee35(_ref31) {
           }
 
           this.Log("Building Fabric URL:\n      libraryId: ".concat(libraryId, "\n      objectId: ").concat(objectId, "\n      versionHash: ").concat(versionHash, "\n      writeToken: ").concat(writeToken, "\n      partHash: ").concat(partHash, "\n      rep: ").concat(rep, "\n      publicRep: ").concat(publicRep, "\n      call: ").concat(call, "\n      channelAuth: ").concat(channelAuth, "\n      noAuth: ").concat(noAuth, "\n      noCache: ").concat(noCache, "\n      queryParams: ").concat(JSON.stringify(queryParams || {}, null, 2)));
-          _context35.next = 6;
+          authorization = [];
+
+          if (queryParams.authorization) {
+            authorization.push(queryParams.authorization);
+          }
+
+          if (noAuth && queryParams.authorization) {
+            _context35.next = 12;
+            break;
+          }
+
+          _context35.t0 = authorization;
+          _context35.next = 10;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -3051,33 +3063,31 @@ exports.FabricUrl = function _callee35(_ref31) {
             noCache: noCache
           }));
 
-        case 6:
-          _context35.t0 = _context35.sent;
-          authorization = [_context35.t0];
+        case 10:
+          _context35.t1 = _context35.sent;
 
-          if (queryParams.authorization) {
-            authorization.push(queryParams.authorization);
-          } // Clone queryParams to avoid modification of the original
+          _context35.t0.push.call(_context35.t0, _context35.t1);
 
-
+        case 12:
+          // Clone queryParams to avoid modification of the original
           queryParams = _objectSpread({}, queryParams, {
             authorization: authorization.flat()
           });
 
           if (!((rep || publicRep) && objectId && !versionHash)) {
-            _context35.next = 14;
+            _context35.next = 17;
             break;
           }
 
-          _context35.next = 13;
+          _context35.next = 16;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: objectId
           }));
 
-        case 13:
+        case 16:
           versionHash = _context35.sent;
 
-        case 14:
+        case 17:
           path = "";
 
           if (libraryId) {
@@ -3105,7 +3115,7 @@ exports.FabricUrl = function _callee35(_ref31) {
             queryParams: queryParams
           }));
 
-        case 18:
+        case 21:
         case "end":
           return _context35.stop();
       }
