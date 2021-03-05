@@ -108,7 +108,7 @@ class ChannelStartLiveOffering extends Utility {
     const metadata = R.mergeDeepRight(currentMetadata, metadataToMerge);
 
     // Write back metadata
-    const newHash = await this.concerns.Metadata.write({
+    const versionHash = await this.concerns.Metadata.write({
       libraryId,
       metadata,
       objectId
@@ -118,53 +118,30 @@ class ChannelStartLiveOffering extends Utility {
     const url = await client.FabricUrl({
       libraryId,
       objectId,
-      versionHash: newHash,
+      versionHash,
       rep: "channel/options.json"
     });
 
-    const options = await client.AvailableOfferings({
-      libraryId,
-      objectId,
-      versionHash: newHash,
-      handler: "channel"
-    });
+    logger.data("version_hash", versionHash);
+    logger.data("options_url", url);
 
-    this.logger.data("version_hash", newHash);
-    this.logger.data("options_url", url);
-    this.logger.data("options_json", options);
-
-    this.logger.log();
-    this.logger.log(`New version hash: ${newHash}`);
-    this.logger.log();
-    this.logger.log("Channel options.json URL:");
-    this.logger.log();
-    this.logger.log(url);
-    this.logger.log();
-    this.logger.log("options.json contents:");
-    this.logger.log();
-    this.logger.logObject(options);
+    logger.log();
+    logger.log(`Version hash: ${versionHash}`);
+    logger.log();
+    logger.log("Channel options.json URL:");
+    logger.log();
+    logger.log(url);
 
     const offeringUrl = await client.FabricUrl({
       libraryId,
       objectId,
-      versionHash: newHash,
+      versionHash,
       rep: `channel/${offeringKey}/options.json`
     });
-    this.logger.log();
-    this.logger.log(`Offering '${offeringKey}' options.json URL:`);
-    this.logger.log();
-    this.logger.log(offeringUrl);
-
-    const viewsUrl = await client.FabricUrl({
-      libraryId,
-      objectId,
-      versionHash: newHash,
-      rep: `channel/${offeringKey}/views.json`
-    });
-    this.logger.log();
-    this.logger.log(`Offering '${offeringKey}' current available views URL:`);
-    this.logger.log();
-    this.logger.log(viewsUrl);
+    logger.log();
+    logger.log(`Offering '${offeringKey}' options.json URL:`);
+    logger.log();
+    logger.log(offeringUrl);
 
     // NOTE: although following line calls ElvClient.AvailableOfferings(), it is not actually
     // retrieving available offerings, it is retrieving all available playback formats for channel offering
@@ -172,7 +149,7 @@ class ChannelStartLiveOffering extends Utility {
     const offeringOptions = await client.AvailableOfferings({
       libraryId,
       objectId,
-      versionHash: newHash,
+      versionHash,
       handler: `channel/${offeringKey}`
     });
 
@@ -187,25 +164,39 @@ class ChannelStartLiveOffering extends Utility {
       playoutUrl.searchParams.set("authorization", authToken);
       playoutUrl.searchParams.set("sid", sid);
 
-      this.logger.log();
-      this.logger.log(`Playout URL for format '${playoutFormatKey}':`);
-      this.logger.log();
-      this.logger.log(playoutUrl.toString());
+      logger.log();
+      logger.log(`Sample playout URL for format '${playoutFormatKey}':`);
+      logger.log();
+      logger.log(playoutUrl.toString());
     }
+
+    const viewsUrl = await client.FabricUrl({
+      libraryId,
+      objectId,
+      versionHash,
+      rep: `channel/${offeringKey}/views.json`
+    });
+    const viewsUrlObj = new URL(viewsUrl);
+    viewsUrlObj.searchParams.set("sid", sid);
+    logger.log();
+    logger.log(`Sample offering '${offeringKey}' current available views URL (sid must be same as in playout URL):`);
+    logger.log();
+    logger.log(viewsUrlObj.toString());
+
 
     const selectViewUrl = await client.FabricUrl({
       libraryId,
       objectId,
-      versionHash: newHash,
+      versionHash,
       rep: `channel/${offeringKey}/select_view`
     });
     const viewSelectUrlObj = new URL(selectViewUrl);
     viewSelectUrlObj.searchParams.set("sid", sid);
 
-    this.logger.log();
-    this.logger.log("Sample curl command to select view:");
-    this.logger.log();
-    this.logger.log(`curl -X POST '${viewSelectUrlObj.toString()}' -d '{"view":1}'`);
+    logger.log();
+    logger.log("Sample curl command to select view (sid must be same as in playout URL):");
+    logger.log();
+    logger.log(`curl -X POST '${viewSelectUrlObj.toString()}' -d '{"view":1}'`);
   }
 
   header() {
