@@ -177,7 +177,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".CreateNTPInstance">
-      <span class="type-signature">static </span>CreateNTPInstance<span class="signature">({<div class="block-param">tenantId,</div><div class="block-param">objectId,</div><div class="block-param">groupAddresses<span class="signature-attributes">optional</span>,</div><div class="block-param">maxTickets<span class="signature-attributes">optional</span>,</div><div class="block-param">maxRedemptions<span class="signature-attributes">optional</span>,</div><div class="block-param">startTime,</div><div class="block-param">endTime,</div><div class="block-param">ticketLength<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">static </span>CreateNTPInstance<span class="signature">({<div class="block-param">tenantId,</div><div class="block-param">objectId,</div><div class="block-param">groupAddresses<span class="signature-attributes">optional</span>,</div><div class="block-param">ntpClass<span class="signature-attributes">optional</span>,</div><div class="block-param">maxTickets<span class="signature-attributes">optional</span>,</div><div class="block-param">maxRedemptions<span class="signature-attributes">optional</span>,</div><div class="block-param">startTime,</div><div class="block-param">endTime,</div><div class="block-param">ticketLength<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
     </h4>
   </span>
 
@@ -368,6 +368,51 @@ including Unix epoch timestamps and ISO strings</p>
 
         <td class="description last">
           <p>List of group addresses for the tickets to inherit permissions from</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>ntpClass</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      number
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              4
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>Class of NTP instance to create</p>
           
         </td>
       </tr>
@@ -698,7 +743,7 @@ including Unix epoch timestamps and ISO strings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line62">line 62</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line63">line 63</a>
         </li>
       </ul>
     </dd>
@@ -897,7 +942,7 @@ including Unix epoch timestamps and ISO strings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line229">line 229</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line231">line 231</a>
         </li>
       </ul>
     </dd>
@@ -1218,7 +1263,7 @@ of the NTP instance, the lower limit will be used.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line338">line 338</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line340">line 340</a>
         </li>
       </ul>
     </dd>
@@ -1469,7 +1514,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__2hbsAkfw5TKZZZsf5LH9F2Jp6NfN",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605735797887,
       "startTime": "1598036400000",
       "endTime": "1598252340000",
@@ -1483,7 +1528,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605738066424,
       "startTime": "1604361351043",
       "endTime": "1604447750043",
@@ -1497,7 +1542,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605739052238,
       "startTime": "1604361351043",
       "endTime": "1604447750043",
@@ -1511,7 +1556,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605739070892,
       "startTime": "1604361351043",
       "endTime": "1604447750043",
@@ -1525,7 +1570,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605739086758,
       "startTime": "1604361351043",
       "endTime": "1604447750043",
@@ -1554,7 +1599,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605739099231,
       "startTime": "1604361351043",
       "endTime": "1604447750043",
@@ -1568,7 +1613,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605739113234,
       "ticketLength": "5",
       "maxRedemptions": "333",
@@ -1580,7 +1625,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605740311043,
       "startTime": "1604361351043",
       "endTime": "1604447750043",
@@ -1594,7 +1639,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__38Mk1y6DoXB4FFLkS3dbMuwM2Sh7",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605745945099,
       "ticketLength": "6",
       "maxRedemptions": "100",
@@ -1606,7 +1651,7 @@ of the NTP instance, the lower limit will be used.</p>
       "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
       "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
       "objectId": "iq__38Mk1y6DoXB4FFLkS3dbMuwM2Sh7",
-      "type": "NTP",
+      "ntpClass": "Class 4",
       "updatedAt": 1605810568022,
       "ticketLength": "6",
       "maxRedemptions": "100",
@@ -1657,7 +1702,7 @@ of the NTP instance, the lower limit will be used.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line264">line 264</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line266">line 266</a>
         </li>
       </ul>
     </dd>
@@ -1828,7 +1873,7 @@ of the NTP instance, the lower limit will be used.</p>
   "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
   "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
   "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-  "type": "NTP",
+  "ntpClass": "Class 4",
   "updatedAt": 1605812427397,
   "startTime": "1541202951043",
   "endTime": "1667519750043",
@@ -1876,7 +1921,7 @@ of the NTP instance, the lower limit will be used.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line301">line 301</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line303">line 303</a>
         </li>
       </ul>
     </dd>
@@ -2241,7 +2286,7 @@ of the NTP instance, the lower limit will be used.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line374">line 374</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line376">line 376</a>
         </li>
       </ul>
     </dd>
@@ -2441,7 +2486,7 @@ of the NTP instance, the lower limit will be used.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line197">line 197</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line199">line 199</a>
         </li>
       </ul>
     </dd>
@@ -2828,7 +2873,7 @@ of the NTP instance, the lower limit will be used.</p>
   "tenantId": "iten3PumhoQT6LG4VTDZozu83a6qw9JS",
   "kmsId": "ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g",
   "objectId": "iq__iTghh4NbMVUVK7wMHSNtXrH2vq8",
-  "type": "NTP",
+  "ntpClass": "Class 4",
   "updatedAt": 1605812427397,
   "startTime": "1541202951043",
   "endTime": "1667519750043",
@@ -2875,7 +2920,7 @@ of the NTP instance, the lower limit will be used.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line133">line 133</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line135">line 135</a>
         </li>
       </ul>
     </dd>

@@ -1343,7 +1343,7 @@ await client.userProfileClient.UserMetadata()</pre>
 
 
   <pre>async PublicUserMetadata({
-  "address": "0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9"
+  "address": "0x793E41369eb3C8b579da28a41c350837c18b25Be"
 });
 
 
@@ -1352,27 +1352,27 @@ await client.userProfileClient.UserMetadata()</pre>
 }</pre>
 
   <pre>async PublicUserMetadata({
-  "address": "0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9",
+  "address": "0x793E41369eb3C8b579da28a41c350837c18b25Be",
   "metadataSubtree": "profile_image"
 });
 
 
 {
   ".": {
-    "container": "hq__HWPD8zoqeHPumG9QtX7QEcQR9KxkDGPvPMYL5uSvNxFCuUdGQYp5obJwaQ28tt5yVUnN33Br6F"
+    "container": "hq__BAozYpEmQ3miKNDipwpTAaZNoNW8zQZqkEi2BT9m9uTgvVvMzaR2xpzzWcgZXH3akhbzjjRdEE"
   },
   "/": "./files/profile_image"
 }</pre>
 
   <pre>async PublicUserMetadata({
-  "address": "0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9",
+  "address": "0x793E41369eb3C8b579da28a41c350837c18b25Be",
   "metadataSubtree": "profile_image"
 });
 
 
 {
   ".": {
-    "container": "hq__3su8yvzRBiS4bDCTvJmcawsRaSHuZEFvZDV55uSzXXVEDDgZiBtJnXd3FxAmP1YVkuyHj6WJ6f"
+    "container": "hq__CzzwaXB2QQz76BcB8gbwz81BcXShdxb6YGxCv7GHy1KkWUTjEmfgKwMvCD19PL8ndntDW1Vqmx"
   },
   "/": "./files/profile_image"
 }</pre>
@@ -2685,10 +2685,23 @@ await client.userProfileClient.UserMetadata()</pre>
       
 
 
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
+});
+
+
+&lt;No Return Value></pre>
+
   <pre>async UserMetadata();
 
 
 {
+  "commit": {
+    "author": "0x793e41369eb3c8b579da28a41c350837c18b25be",
+    "author_address": "0x793e41369eb3c8b579da28a41c350837c18b25be",
+    "message": "Merge user metadata",
+    "timestamp": "2021-03-09T19:58:53.628Z"
+  },
   "public": {
     "meta": "data"
   },
@@ -2712,10 +2725,37 @@ await client.userProfileClient.UserMetadata()</pre>
   "meta": "data"
 }</pre>
 
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
+});
+
+
+&lt;No Return Value></pre>
+
   <pre>async UserMetadata();
 
 
 {
+  "commit": {
+    "author": "0x793e41369eb3c8b579da28a41c350837c18b25be",
+    "author_address": "0x793e41369eb3c8b579da28a41c350837c18b25be",
+    "message": "Delete user metadata",
+    "timestamp": "2021-03-09T19:59:05.166Z"
+  },
   "public": {
     "meta": "data"
   },
@@ -2729,7 +2769,42 @@ await client.userProfileClient.UserMetadata()</pre>
 }</pre>
 
   <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async UserMetadata({
   "metadataSubtree": "tenantId"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
 });
 
 
@@ -2747,6 +2822,13 @@ await client.userProfileClient.UserMetadata()</pre>
 
   <pre>async UserMetadata({
   "metadataSubtree": "access_level"
+});
+
+
+&lt;No Return Value></pre>
+
+  <pre>async UserMetadata({
+  "metadataSubtree": "public/name"
 });
 
 
@@ -2997,14 +3079,14 @@ browser caching when the image is updated</p>
   <pre>async UserProfileImage();
 
 
-"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__HWPD8zoqeHPumG9QtX7QEcQR9KxkDGPvPMYL5uSvNxFCuUdGQYp5obJwaQ28tt5yVUnN33Br6F/meta/public/profile_image?resolve=true&amp;authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDU4ZDdkMWJkYWE1MWU4NTI0MDlmN2Y5YTcyMmFmZTc2MjlmZDZhZjkiLCJ0eF9pZCI6IjB4Mjc4NTVhM2Q4YmIxZjJjYzNiMzEzYWNlMTdiNzhhNjNkYTNkYzQzZGUyODEzYjk1NTZjYzhlZWVlMTlkZDBjMyJ9.RVMyNTZLX0ZmRnJZZkJnVDZSUDZzNkduQTVxN05LQUhZTEF1VG5QTTkyd0pWdnZXWVJIdnA3R21yV1kxY3N6UmN5NjV5eXRtNGR4cmV4Y01vMlRlM3Y0ZmNlOE1lZDlN"</pre>
+"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__BAozYpEmQ3miKNDipwpTAaZNoNW8zQZqkEi2BT9m9uTgvVvMzaR2xpzzWcgZXH3akhbzjjRdEE/meta/public/profile_image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDc5M2U0MTM2OWViM2M4YjU3OWRhMjhhNDFjMzUwODM3YzE4YjI1YmUifQ%3D%3D.RVMyNTZLX0pSdkx2Vm5CR0dHM3F4NG1ZWXpLcktuZnkyRENWc3BGTVFneG1IM00xWkRwZndBZXVUc2ZpTUxOQzVvNEdYVlFIM3JzSHpzR2pTY0hSN1hITDhneTNSbVNi&amp;resolve=true"</pre>
 
   <pre>async UserProfileImage({
-  "address": "0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9"
+  "address": "0x793E41369eb3C8b579da28a41c350837c18b25Be"
 });
 
 
-"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__3su8yvzRBiS4bDCTvJmcawsRaSHuZEFvZDV55uSzXXVEDDgZiBtJnXd3FxAmP1YVkuyHj6WJ6f/meta/public/profile_image?resolve=true&amp;authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDU4ZDdkMWJkYWE1MWU4NTI0MDlmN2Y5YTcyMmFmZTc2MjlmZDZhZjkiLCJ0eF9pZCI6IjB4Mjc4NTVhM2Q4YmIxZjJjYzNiMzEzYWNlMTdiNzhhNjNkYTNkYzQzZGUyODEzYjk1NTZjYzhlZWVlMTlkZDBjMyJ9.RVMyNTZLX0ZmRnJZZkJnVDZSUDZzNkduQTVxN05LQUhZTEF1VG5QTTkyd0pWdnZXWVJIdnA3R21yV1kxY3N6UmN5NjV5eXRtNGR4cmV4Y01vMlRlM3Y0ZmNlOE1lZDlN"</pre>
+"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__CzzwaXB2QQz76BcB8gbwz81BcXShdxb6YGxCv7GHy1KkWUTjEmfgKwMvCD19PL8ndntDW1Vqmx/meta/public/profile_image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDc5M2U0MTM2OWViM2M4YjU3OWRhMjhhNDFjMzUwODM3YzE4YjI1YmUifQ%3D%3D.RVMyNTZLX0pSdkx2Vm5CR0dHM3F4NG1ZWXpLcktuZnkyRENWc3BGTVFneG1IM00xWkRwZndBZXVUc2ZpTUxOQzVvNEdYVlFIM3JzSHpzR2pTY0hSN1hITDhneTNSbVNi&amp;resolve=true"</pre>
 
 
     </div>
@@ -3176,11 +3258,11 @@ browser caching when the image is updated</p>
 
 
   <pre>async UserWalletAddress({
-  "address": "0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9"
+  "address": "0x793E41369eb3C8b579da28a41c350837c18b25Be"
 });
 
 
-"0x4ed823474Df422AEd35CD6836586C53c03424EC4"</pre>
+"0x241a6aB51F92720FAe628FF193886be4844e03ef"</pre>
 
 
     </div>
@@ -3304,17 +3386,17 @@ and FinalizeContentObject to finalize the draft</p>
 
 {
   "libraryId": "ilib4BRmonTig9QSD87MRWP8F5iLfdct",
-  "objectId": "iq__26i8Yow1ivbYDn2uVL1dj6VBvdET"
+  "objectId": "iq__WB24yeBj9Hb9rsyxoDBv4z9xi1t"
 }</pre>
 
   <pre>async UserWalletObjectInfo({
-  "address": "0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9"
+  "address": "0x793E41369eb3C8b579da28a41c350837c18b25Be"
 });
 
 
 {
   "libraryId": "ilib4BRmonTig9QSD87MRWP8F5iLfdct",
-  "objectId": "iq__26i8Yow1ivbYDn2uVL1dj6VBvdET"
+  "objectId": "iq__WB24yeBj9Hb9rsyxoDBv4z9xi1t"
 }</pre>
 
 
@@ -3420,7 +3502,7 @@ and FinalizeContentObject to finalize the draft</p>
 
 
   <div class="example">
-    <h5 id="WalletAddress-examples">Example</h5>
+    <h5 id="WalletAddress-examples">Examples</h5>
     <button class="example-toggle-button">Show Examples</button>
     <div class="example-container">
       <a class="link-icon" href="#WalletAddress-examples">
@@ -3434,7 +3516,12 @@ and FinalizeContentObject to finalize the draft</p>
   <pre>async WalletAddress();
 
 
-"0x4ed823474Df422AEd35CD6836586C53c03424EC4"</pre>
+"0x241a6aB51F92720FAe628FF193886be4844e03ef"</pre>
+
+  <pre>async WalletAddress(false);
+
+
+"0x241a6aB51F92720FAe628FF193886be4844e03ef"</pre>
 
 
     </div>

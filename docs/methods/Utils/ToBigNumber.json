@@ -8,6 +8,14 @@
     "result": "\"1\""
   },
   {
+    "signature": " ToBigNumber(0);",
+    "result": "\"0\""
+  },
+  {
+    "signature": " ToBigNumber(\"0\");",
+    "result": "\"0\""
+  },
+  {
     "signature": " ToBigNumber(\"0.5\");",
     "result": "\"0.5\""
   },

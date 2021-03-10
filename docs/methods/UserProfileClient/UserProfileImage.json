@@ -1,10 +1,10 @@
 [
   {
     "signature": "async UserProfileImage();",
-    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__HWPD8zoqeHPumG9QtX7QEcQR9KxkDGPvPMYL5uSvNxFCuUdGQYp5obJwaQ28tt5yVUnN33Br6F/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDU4ZDdkMWJkYWE1MWU4NTI0MDlmN2Y5YTcyMmFmZTc2MjlmZDZhZjkiLCJ0eF9pZCI6IjB4Mjc4NTVhM2Q4YmIxZjJjYzNiMzEzYWNlMTdiNzhhNjNkYTNkYzQzZGUyODEzYjk1NTZjYzhlZWVlMTlkZDBjMyJ9.RVMyNTZLX0ZmRnJZZkJnVDZSUDZzNkduQTVxN05LQUhZTEF1VG5QTTkyd0pWdnZXWVJIdnA3R21yV1kxY3N6UmN5NjV5eXRtNGR4cmV4Y01vMlRlM3Y0ZmNlOE1lZDlN\""
+    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__BAozYpEmQ3miKNDipwpTAaZNoNW8zQZqkEi2BT9m9uTgvVvMzaR2xpzzWcgZXH3akhbzjjRdEE/meta/public/profile_image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDc5M2U0MTM2OWViM2M4YjU3OWRhMjhhNDFjMzUwODM3YzE4YjI1YmUifQ%3D%3D.RVMyNTZLX0pSdkx2Vm5CR0dHM3F4NG1ZWXpLcktuZnkyRENWc3BGTVFneG1IM00xWkRwZndBZXVUc2ZpTUxOQzVvNEdYVlFIM3JzSHpzR2pTY0hSN1hITDhneTNSbVNi&resolve=true\""
   },
   {
-    "signature": "async UserProfileImage({\n  \"address\": \"0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9\"\n});",
-    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__3su8yvzRBiS4bDCTvJmcawsRaSHuZEFvZDV55uSzXXVEDDgZiBtJnXd3FxAmP1YVkuyHj6WJ6f/meta/public/profile_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDU4ZDdkMWJkYWE1MWU4NTI0MDlmN2Y5YTcyMmFmZTc2MjlmZDZhZjkiLCJ0eF9pZCI6IjB4Mjc4NTVhM2Q4YmIxZjJjYzNiMzEzYWNlMTdiNzhhNjNkYTNkYzQzZGUyODEzYjk1NTZjYzhlZWVlMTlkZDBjMyJ9.RVMyNTZLX0ZmRnJZZkJnVDZSUDZzNkduQTVxN05LQUhZTEF1VG5QTTkyd0pWdnZXWVJIdnA3R21yV1kxY3N6UmN5NjV5eXRtNGR4cmV4Y01vMlRlM3Y0ZmNlOE1lZDlN\""
+    "signature": "async UserProfileImage({\n  \"address\": \"0x793E41369eb3C8b579da28a41c350837c18b25Be\"\n});",
+    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__CzzwaXB2QQz76BcB8gbwz81BcXShdxb6YGxCv7GHy1KkWUTjEmfgKwMvCD19PL8ndntDW1Vqmx/meta/public/profile_image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDc5M2U0MTM2OWViM2M4YjU3OWRhMjhhNDFjMzUwODM3YzE4YjI1YmUifQ%3D%3D.RVMyNTZLX0pSdkx2Vm5CR0dHM3F4NG1ZWXpLcktuZnkyRENWc3BGTVFneG1IM00xWkRwZndBZXVUc2ZpTUxOQzVvNEdYVlFIM3JzSHpzR2pTY0hSN1hITDhneTNSbVNi&resolve=true\""
   }
 ]

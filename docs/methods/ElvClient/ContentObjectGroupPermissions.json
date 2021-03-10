@@ -1,14 +1,14 @@
 [
   {
-    "signature": "async ContentObjectGroupPermissions({\n  \"objectId\": \"iq__LRjqBh8TrM8zUrWvrNQpCj7JDFG\"\n});",
+    "signature": "async ContentObjectGroupPermissions({\n  \"objectId\": \"iq__36pNatWfPEBrbutaJJZPaio37cy9\"\n});",
     "result": "{}"
   },
   {
-    "signature": "async ContentObjectGroupPermissions({\n  \"objectId\": \"iq__LRjqBh8TrM8zUrWvrNQpCj7JDFG\"\n});",
-    "result": "{\n  \"0x4cc6fda9e589325e23d8268d4f43e21b908fc159\": [\n    \"manage\",\n    \"access\",\n    \"see\"\n  ]\n}"
+    "signature": "async ContentObjectGroupPermissions({\n  \"objectId\": \"iq__36pNatWfPEBrbutaJJZPaio37cy9\"\n});",
+    "result": "{\n  \"0x7c9a679072f7320b5382577885e95a1cbf9bd0dd\": [\n    \"manage\",\n    \"access\",\n    \"see\"\n  ]\n}"
   },
   {
-    "signature": "async ContentObjectGroupPermissions({\n  \"objectId\": \"iq__LRjqBh8TrM8zUrWvrNQpCj7JDFG\"\n});",
-    "result": "{\n  \"0x4cc6fda9e589325e23d8268d4f43e21b908fc159\": [\n    \"access\",\n    \"see\"\n  ]\n}"
+    "signature": "async ContentObjectGroupPermissions({\n  \"objectId\": \"iq__36pNatWfPEBrbutaJJZPaio37cy9\"\n});",
+    "result": "{\n  \"0x7c9a679072f7320b5382577885e95a1cbf9bd0dd\": [\n    \"access\",\n    \"see\"\n  ]\n}"
   }
 ]
