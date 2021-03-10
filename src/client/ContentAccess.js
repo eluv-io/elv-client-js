@@ -1793,18 +1793,24 @@ exports.FabricUrl = async function({
       queryParams: ${JSON.stringify(queryParams || {}, null, 2)}`
   );
 
-  let authorization = [
-    await this.authClient.AuthorizationToken({
-      libraryId,
-      objectId,
-      versionHash,
-      channelAuth,
-      noAuth,
-      noCache
-    })
-  ];
+  let authorization = [];
 
-  if(queryParams.authorization) { authorization.push(queryParams.authorization); }
+  if(queryParams.authorization) {
+    authorization.push(queryParams.authorization);
+  }
+
+  if(!(noAuth && queryParams.authorization)) {
+    authorization.push(
+      await this.authClient.AuthorizationToken({
+        libraryId,
+        objectId,
+        versionHash,
+        channelAuth,
+        noAuth,
+        noCache
+      })
+    );
+  }
 
   // Clone queryParams to avoid modification of the original
   queryParams = {
