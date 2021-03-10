@@ -555,6 +555,7 @@ class PermissionsClient {
    *
    * @methodGroup Permissions
    * @namedParams
+   * @param {object} offlineMetadata - if present, update this object and return it without touching the fabric write token
    * @param {string} policyId - Object ID of the policy
    * @param {string} policyWriteToken - Write token for the policy
    * @param {string} itemId - Object ID of the item
@@ -568,6 +569,7 @@ class PermissionsClient {
    * @param {string | number} end - The end time for the permission
    */
   async SetPermission({
+    offlineMetadata,
     policyId,
     policyWriteToken,
     itemId,
@@ -581,7 +583,7 @@ class PermissionsClient {
     end
   }) {
     ValidatePresence("policyId", policyId);
-    ValidatePresence("policyWriteToken", policyWriteToken);
+    ValidatePresence("policyWriteToken or offlineMetadata", policyWriteToken || offlineMetadata);
     ValidatePresence("itemId", itemId);
     ValidatePresence("subjectType", subjectType);
     ValidatePresence("subjectSource", subjectSource);
@@ -591,7 +593,10 @@ class PermissionsClient {
     start = this.FormatDate(start);
     end = this.FormatDate(end);
 
-    const policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+    let policyLibraryId = null;
+    if(offlineMetadata != null) {
+      policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+    }
 
     // Allow address to be passed in for fabric subjects, though spec requires iusr/igrp hash
     if(subjectSource === "fabric") {
@@ -606,12 +611,18 @@ class PermissionsClient {
       }
     }
 
-    let existingPermissions = await this.client.ContentObjectMetadata({
-      libraryId: policyLibraryId,
-      objectId: policyId,
-      writeToken: policyWriteToken,
-      metadataSubtree: UrlJoin("auth_policy_spec", itemId)
-    });
+    let existingPermissions;
+
+    if(offlineMetadata != null) {
+      existingPermissions = offlineMetadata["auth_policy_spec"][itemId];
+    } else {
+      existingPermissions = await this.client.ContentObjectMetadata({
+        libraryId: policyLibraryId,
+        objectId: policyId,
+        writeToken: policyWriteToken,
+        metadataSubtree: UrlJoin("auth_policy_spec", itemId)
+      });
+    }
 
     if(!existingPermissions) {
       throw Error("Unable to add permissions to uninitialized item");
@@ -690,60 +701,88 @@ class PermissionsClient {
 
     existingPermissions.permissions[index] = permissionSpec;
 
-    await this.client.ReplaceMetadata({
-      libraryId: policyLibraryId,
-      objectId: policyId,
-      writeToken: policyWriteToken,
-      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions"),
-      metadata: existingPermissions.permissions
-    });
+    if(offlineMetadata == null) {
+      await this.client.ReplaceMetadata({
+        libraryId: policyLibraryId,
+        objectId: policyId,
+        writeToken: policyWriteToken,
+        metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions"),
+        metadata: existingPermissions.permissions
+      });
+    }
 
     // Fabric usernames and NTP info are stored in auth_policy_settings/fabric_users
     if(subjectSource === "fabric" &amp;&amp; subjectType === "user") {
-      const userInfo = await this.client.ContentObjectMetadata({
-        libraryId: policyLibraryId,
-        objectId: policyId,
-        writeToken: policyWriteToken,
-        metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId))
-      });
 
-      if(!userInfo) {
-        await this.client.ReplaceMetadata({
+      if(offlineMetadata != null) {
+
+        offlineMetadata["auth_policy_settings"]["fabric_users"][this.client.utils.HashToAddress(subjectId)] = {
+          address: this.client.utils.HashToAddress(subjectId),
+          name: subjectName
+        };
+
+      } else {
+
+        const userInfo = await this.client.ContentObjectMetadata({
           libraryId: policyLibraryId,
           objectId: policyId,
           writeToken: policyWriteToken,
-          metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId)),
-          metadata: {
-            address: this.client.utils.HashToAddress(subjectId),
-            name: subjectName
-          }
+          metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId))
         });
+
+        if(!userInfo) {
+          await this.client.ReplaceMetadata({
+            libraryId: policyLibraryId,
+            objectId: policyId,
+            writeToken: policyWriteToken,
+            metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId)),
+            metadata: {
+              address: this.client.utils.HashToAddress(subjectId),
+              name: subjectName
+            }
+          });
+        }
       }
-    } else if(subjectSource === "fabric" &amp;&amp; subjectType === "ntp") {
-      const userInfo = await this.client.ContentObjectMetadata({
-        libraryId: policyLibraryId,
-        objectId: policyId,
-        writeToken: policyWriteToken,
-        metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
-      });
 
-      if(!userInfo) {
-        await this.client.ReplaceMetadata({
+    } else if(subjectSource === "fabric" &amp;&amp; subjectType === "ntp") {
+
+      if(offlineMetadata != null) {
+
+        offlineMetadata["auth_policy_settings"]["ntp_instances"][subjectId] = {
+          address: subjectId,
+          ntpId: subjectId,
+          name: subjectName,
+          type: "ntpInstance"
+        };
+
+      } else {
+
+        const userInfo = await this.client.ContentObjectMetadata({
           libraryId: policyLibraryId,
           objectId: policyId,
           writeToken: policyWriteToken,
-          metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId),
-          metadata: {
-            address: subjectId,
-            ntpId: subjectId,
-            name: subjectName,
-            type: "ntpInstance"
-          }
+          metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
         });
+
+        if(!userInfo) {
+          await this.client.ReplaceMetadata({
+            libraryId: policyLibraryId,
+            objectId: policyId,
+            writeToken: policyWriteToken,
+            metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId),
+            metadata: {
+              address: subjectId,
+              ntpId: subjectId,
+              name: subjectName,
+              type: "ntpInstance"
+            }
+          });
+        }
       }
     }
-  }
 
+    return offlineMetadata;
+  }
 
   /**
    * Remove permission for the specified subject from the specified item policy

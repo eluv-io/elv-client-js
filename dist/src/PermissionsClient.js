@@ -933,6 +933,7 @@ function () {
      *
      * @methodGroup Permissions
      * @namedParams
+     * @param {object} offlineMetadata - if present, update this object and return it without touching the fabric write token
      * @param {string} policyId - Object ID of the policy
      * @param {string} policyWriteToken - Write token for the policy
      * @param {string} itemId - Object ID of the item
@@ -949,15 +950,15 @@ function () {
   }, {
     key: "SetPermission",
     value: function SetPermission(_ref10) {
-      var policyId, policyWriteToken, itemId, _ref10$subjectSource, subjectSource, _ref10$subjectType, subjectType, subjectName, subjectId, subjectNTPId, profileName, start, end, policyLibraryId, existingPermissions, index, permissionSpec, subjectInfo, userInfo, _userInfo;
+      var offlineMetadata, policyId, policyWriteToken, itemId, _ref10$subjectSource, subjectSource, _ref10$subjectType, subjectType, subjectName, subjectId, subjectNTPId, profileName, start, end, policyLibraryId, existingPermissions, index, permissionSpec, subjectInfo, userInfo, _userInfo;
 
       return _regeneratorRuntime.async(function SetPermission$(_context11) {
         while (1) {
           switch (_context11.prev = _context11.next) {
             case 0:
-              policyId = _ref10.policyId, policyWriteToken = _ref10.policyWriteToken, itemId = _ref10.itemId, _ref10$subjectSource = _ref10.subjectSource, subjectSource = _ref10$subjectSource === void 0 ? "fabric" : _ref10$subjectSource, _ref10$subjectType = _ref10.subjectType, subjectType = _ref10$subjectType === void 0 ? "group" : _ref10$subjectType, subjectName = _ref10.subjectName, subjectId = _ref10.subjectId, subjectNTPId = _ref10.subjectNTPId, profileName = _ref10.profileName, start = _ref10.start, end = _ref10.end;
+              offlineMetadata = _ref10.offlineMetadata, policyId = _ref10.policyId, policyWriteToken = _ref10.policyWriteToken, itemId = _ref10.itemId, _ref10$subjectSource = _ref10.subjectSource, subjectSource = _ref10$subjectSource === void 0 ? "fabric" : _ref10$subjectSource, _ref10$subjectType = _ref10.subjectType, subjectType = _ref10$subjectType === void 0 ? "group" : _ref10$subjectType, subjectName = _ref10.subjectName, subjectId = _ref10.subjectId, subjectNTPId = _ref10.subjectNTPId, profileName = _ref10.profileName, start = _ref10.start, end = _ref10.end;
               ValidatePresence("policyId", policyId);
-              ValidatePresence("policyWriteToken", policyWriteToken);
+              ValidatePresence("policyWriteToken or offlineMetadata", policyWriteToken || offlineMetadata);
               ValidatePresence("itemId", itemId);
               ValidatePresence("subjectType", subjectType);
               ValidatePresence("subjectSource", subjectSource);
@@ -965,14 +966,22 @@ function () {
               ValidatePresence("profileName", profileName);
               start = this.FormatDate(start);
               end = this.FormatDate(end);
-              _context11.next = 12;
+              policyLibraryId = null;
+
+              if (!(offlineMetadata != null)) {
+                _context11.next = 15;
+                break;
+              }
+
+              _context11.next = 14;
               return _regeneratorRuntime.awrap(this.client.ContentObjectLibraryId({
                 objectId: policyId
               }));
 
-            case 12:
+            case 14:
               policyLibraryId = _context11.sent;
 
+            case 15:
               // Allow address to be passed in for fabric subjects, though spec requires iusr/igrp hash
               if (subjectSource === "fabric") {
                 if (subjectType === "group") {
@@ -986,7 +995,17 @@ function () {
                 }
               }
 
-              _context11.next = 16;
+              if (!(offlineMetadata != null)) {
+                _context11.next = 20;
+                break;
+              }
+
+              existingPermissions = offlineMetadata["auth_policy_spec"][itemId];
+              _context11.next = 23;
+              break;
+
+            case 20:
+              _context11.next = 22;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -994,25 +1013,26 @@ function () {
                 metadataSubtree: UrlJoin("auth_policy_spec", itemId)
               }));
 
-            case 16:
+            case 22:
               existingPermissions = _context11.sent;
 
+            case 23:
               if (existingPermissions) {
-                _context11.next = 19;
+                _context11.next = 25;
                 break;
               }
 
               throw Error("Unable to add permissions to uninitialized item");
 
-            case 19:
+            case 25:
               if (existingPermissions.profiles[profileName]) {
-                _context11.next = 21;
+                _context11.next = 27;
                 break;
               }
 
               throw Error("Profile '".concat(profileName, "' does not exist"));
 
-            case 21:
+            case 27:
               index = existingPermissions.permissions.findIndex(function (permission) {
                 if (subjectSource === "fabric") {
                   return permission.subject.id === subjectId;
@@ -1038,12 +1058,12 @@ function () {
               }
 
               if (!(subjectSource === "fabric")) {
-                _context11.next = 46;
+                _context11.next = 52;
                 break;
               }
 
               if (!(subjectType === "group")) {
-                _context11.next = 31;
+                _context11.next = 37;
                 break;
               }
 
@@ -1051,12 +1071,12 @@ function () {
                 id: subjectId,
                 type: "group"
               };
-              _context11.next = 44;
+              _context11.next = 50;
               break;
 
-            case 31:
+            case 37:
               if (!(subjectType === "user")) {
-                _context11.next = 35;
+                _context11.next = 41;
                 break;
               }
 
@@ -1064,12 +1084,12 @@ function () {
                 id: subjectId,
                 type: "user"
               };
-              _context11.next = 44;
+              _context11.next = 50;
               break;
 
-            case 35:
+            case 41:
               if (!(subjectType === "ntp")) {
-                _context11.next = 39;
+                _context11.next = 45;
                 break;
               }
 
@@ -1077,12 +1097,12 @@ function () {
                 id: subjectId,
                 type: "otp"
               };
-              _context11.next = 44;
+              _context11.next = 50;
               break;
 
-            case 39:
+            case 45:
               if (!(subjectType === "ntp_subject")) {
-                _context11.next = 43;
+                _context11.next = 49;
                 break;
               }
 
@@ -1091,24 +1111,24 @@ function () {
                 otp_id: subjectNTPId,
                 type: "otp_subject"
               };
-              _context11.next = 44;
+              _context11.next = 50;
               break;
 
-            case 43:
+            case 49:
               throw Error("Invalid subject type: ".concat(subjectType));
 
-            case 44:
-              _context11.next = 59;
+            case 50:
+              _context11.next = 65;
               break;
 
-            case 46:
+            case 52:
               if (!(subjectSource === "oauth")) {
-                _context11.next = 58;
+                _context11.next = 64;
                 break;
               }
 
               if (!(subjectType === "group")) {
-                _context11.next = 51;
+                _context11.next = 57;
                 break;
               }
 
@@ -1117,12 +1137,12 @@ function () {
                 oauth_id: subjectId,
                 type: "oauth_group"
               };
-              _context11.next = 56;
+              _context11.next = 62;
               break;
 
-            case 51:
+            case 57:
               if (!(subjectType === "user")) {
-                _context11.next = 55;
+                _context11.next = 61;
                 break;
               }
 
@@ -1131,23 +1151,29 @@ function () {
                 oauth_id: subjectId,
                 type: "oauth_user"
               };
-              _context11.next = 56;
+              _context11.next = 62;
               break;
 
-            case 55:
+            case 61:
               throw Error("Invalid subject type: ".concat(subjectType));
 
-            case 56:
-              _context11.next = 59;
+            case 62:
+              _context11.next = 65;
               break;
 
-            case 58:
+            case 64:
               throw Error("Invalid subject source: ".concat(subjectSource));
 
-            case 59:
+            case 65:
               permissionSpec.subject = subjectInfo;
               existingPermissions.permissions[index] = permissionSpec;
-              _context11.next = 63;
+
+              if (!(offlineMetadata == null)) {
+                _context11.next = 70;
+                break;
+              }
+
+              _context11.next = 70;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1156,13 +1182,26 @@ function () {
                 metadata: existingPermissions.permissions
               }));
 
-            case 63:
+            case 70:
               if (!(subjectSource === "fabric" && subjectType === "user")) {
-                _context11.next = 72;
+                _context11.next = 83;
                 break;
               }
 
-              _context11.next = 66;
+              if (!(offlineMetadata != null)) {
+                _context11.next = 75;
+                break;
+              }
+
+              offlineMetadata["auth_policy_settings"]["fabric_users"][this.client.utils.HashToAddress(subjectId)] = {
+                address: this.client.utils.HashToAddress(subjectId),
+                name: subjectName
+              };
+              _context11.next = 81;
+              break;
+
+            case 75:
+              _context11.next = 77;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1170,15 +1209,15 @@ function () {
                 metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId))
               }));
 
-            case 66:
+            case 77:
               userInfo = _context11.sent;
 
               if (userInfo) {
-                _context11.next = 70;
+                _context11.next = 81;
                 break;
               }
 
-              _context11.next = 70;
+              _context11.next = 81;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1190,17 +1229,32 @@ function () {
                 }
               }));
 
-            case 70:
-              _context11.next = 79;
+            case 81:
+              _context11.next = 94;
               break;
 
-            case 72:
+            case 83:
               if (!(subjectSource === "fabric" && subjectType === "ntp")) {
-                _context11.next = 79;
+                _context11.next = 94;
                 break;
               }
 
-              _context11.next = 75;
+              if (!(offlineMetadata != null)) {
+                _context11.next = 88;
+                break;
+              }
+
+              offlineMetadata["auth_policy_settings"]["ntp_instances"][subjectId] = {
+                address: subjectId,
+                ntpId: subjectId,
+                name: subjectName,
+                type: "ntpInstance"
+              };
+              _context11.next = 94;
+              break;
+
+            case 88:
+              _context11.next = 90;
               return _regeneratorRuntime.awrap(this.client.ContentObjectMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1208,15 +1262,15 @@ function () {
                 metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
               }));
 
-            case 75:
+            case 90:
               _userInfo = _context11.sent;
 
               if (_userInfo) {
-                _context11.next = 79;
+                _context11.next = 94;
                 break;
               }
 
-              _context11.next = 79;
+              _context11.next = 94;
               return _regeneratorRuntime.awrap(this.client.ReplaceMetadata({
                 libraryId: policyLibraryId,
                 objectId: policyId,
@@ -1230,7 +1284,10 @@ function () {
                 }
               }));
 
-            case 79:
+            case 94:
+              return _context11.abrupt("return", offlineMetadata);
+
+            case 95:
             case "end":
               return _context11.stop();
           }
