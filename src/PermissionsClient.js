@@ -530,7 +530,7 @@ class PermissionsClient {
     end = this.FormatDate(end);
 
     let policyLibraryId = null;
-    if (offlineMetadata != null) {
+    if(offlineMetadata != null) {
       policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
     }
 
@@ -549,7 +549,7 @@ class PermissionsClient {
 
     let existingPermissions;
 
-    if (offlineMetadata != null) {
+    if(offlineMetadata != null) {
       existingPermissions = offlineMetadata["auth_policy_spec"][itemId];
     } else {
       existingPermissions = await this.client.ContentObjectMetadata({
@@ -637,7 +637,7 @@ class PermissionsClient {
 
     existingPermissions.permissions[index] = permissionSpec;
 
-    if (offlineMetadata == null) {
+    if(offlineMetadata == null) {
       await this.client.ReplaceMetadata({
         libraryId: policyLibraryId,
         objectId: policyId,
@@ -650,12 +650,12 @@ class PermissionsClient {
     // Fabric usernames and NTP info are stored in auth_policy_settings/fabric_users
     if(subjectSource === "fabric" && subjectType === "user") {
 
-      if (offlineMetadata != null) {
+      if(offlineMetadata != null) {
 
         offlineMetadata["auth_policy_settings"]["fabric_users"][this.client.utils.HashToAddress(subjectId)] = {
           address: this.client.utils.HashToAddress(subjectId),
           name: subjectName
-        }
+        };
 
       } else {
 
@@ -682,7 +682,7 @@ class PermissionsClient {
 
     } else if(subjectSource === "fabric" && subjectType === "ntp") {
 
-      if (offlineMetadata != null) {
+      if(offlineMetadata != null) {
 
         offlineMetadata["auth_policy_settings"]["ntp_instances"][subjectId] = {
           address: subjectId,
