@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async ContentObjectImageUrl({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__3NWYmfT3JZZFTcv4Amy1athfduDx\"\n});",
-    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__Gvbu8yjNB3yhjkkrLHYLDgSVqpoSEisb8hbC4TLV5DPaKguiYqoTD6eVADka6cDkUPk4NTotzz/meta/public/display_image?resolve=true&authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweGQ0M2UwMDYzNWYwODE2NTgwOTUwMmQ5MjlmZWNiNjgyMjgyY2NjNWMiLCJ0eF9pZCI6IjB4OWYwZWQ1Njk5NzZmMGEzM2JlM2YyYjg5MzFhNjg2NmM1Zjc0OGQzY2RiNTA1M2E5MTZiMDA1MzVhNTM2Y2M2MiJ9.RVMyNTZLX0FZU2Y2TWgyVkpMc2s0QWJwY0N1MVZFUnVMM3pvd3pocGgyZVpqNEZGVnIxazhaNXlOOUtqQThtVFo3NllzeUNQWEVVazR3cjV6OHRRZUUyM0FvamhicXdH\""
+    "signature": "async ContentObjectImageUrl({\n  \"libraryId\": \"ilib3762veoskHQtAwoUZZRX26V2qKc2\",\n  \"objectId\": \"iq__3762veoskHQtAwoUZZRX26V2qKc2\"\n});",
+    "result": "\"https://host-34-105-49-255.testv2.contentfabric.io/q/hq__M2cRBoY54E8erCzTj5HZUD8FzAgEPGU5Y2N7yQq6Lrgp35bQEshLZstSAQtJKMjWpwNLjAAc9L/meta/public/display_image?authorization=eyJxc3BhY2VfaWQiOiJpc3BjNEJSbW9uVGlnOVFTRDg3TVJXUDhGNWlMZmRjdCIsImFkZHIiOiIweDY2NWFlZTIzMjhmYTQwNDBlNTY5ZTkxYmUyM2ZhZjVhODJhNjE4NmMiLCJ0eF9pZCI6IjB4ODBlMWZiMGM2ZGY1ZTZiMjg0N2E2OTAzYjcyYTMzMTU1N2Q0ODU5MWUzY2E0MWY5MTI2NDhkOWRiZTVjODE4MSJ9.RVMyNTZLX056azNaUVRGWEVIUEFRZWNibnpUam5iM2h5SmQycWR1eEsyWWp6VmVCU2Y5ekU3b1hpbkNOV0JOS1FTdWJLaXNuMW5aY29qMk1YSmoxRFdKQ0o2YjdEeVhw&resolve=true\""
   }
 ]

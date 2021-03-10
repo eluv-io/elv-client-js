@@ -1,16 +1,16 @@
 [
   {
-    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"partHash\": \"hqp_KCLxLrUFXbPDkbW1hfGRUiUxbNuamgni7r8eArjXeHPEFcXF\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3762veoskHQtAwoUZZRX26V2qKc2\",\n  \"objectId\": \"iq__3MXtFtRdbFtPwKHmw46mgmd8GQjs\",\n  \"partHash\": \"hqp_R3rrwwWjBqFTzW4FbcDni1fmRZNtp6basgRReMau3HLVZTpR\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   },
   {
-    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"partHash\": \"hqpetcjFafGRytddkTSPVeMfCbQEG2HYmk2Webzr3EeipjA5reH\",\n  \"format\": \"arrayBuffer\"\n});",
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3762veoskHQtAwoUZZRX26V2qKc2\",\n  \"objectId\": \"iq__3MXtFtRdbFtPwKHmw46mgmd8GQjs\",\n  \"partHash\": \"hqpeLnARxBD9NXg8SwLJo7waZ2NTTgL4cQLEe4N9vZvTbheoZYjf\",\n  \"format\": \"arrayBuffer\"\n});",
     "result": "<ArrayBuffer 100000>"
   },
   {
-    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"partHash\": \"hqp_4VkWpxuTQoWdTg5LV4LD49UGp5Ag7GYQpbSUiuNGMNuppM1o\",\n  \"chunked\": true,\n  \"chunkSize\": 10000,\n  \"callback\": \"<function>\"\n});"
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3762veoskHQtAwoUZZRX26V2qKc2\",\n  \"objectId\": \"iq__3MXtFtRdbFtPwKHmw46mgmd8GQjs\",\n  \"partHash\": \"hqp_6wxaWdXqF4tv9RsHLF5GwBY2XfUDTBYqtUAtzEw6teJj1K3B\",\n  \"chunked\": true,\n  \"chunkSize\": 10000,\n  \"callback\": \"<function>\"\n});"
   },
   {
-    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\",\n  \"objectId\": \"iq__yZ7kzRmc1wVABhgJHPRysLaKQWe\",\n  \"partHash\": \"hqpeA6zR28EpcgizVm6mV9pQJg3UQVgdhXGFneEY2i4rx4oQHnHb\",\n  \"chunked\": true,\n  \"chunkSize\": 10000,\n  \"callback\": \"<function>\"\n});"
+    "signature": "async DownloadPart({\n  \"libraryId\": \"ilib3762veoskHQtAwoUZZRX26V2qKc2\",\n  \"objectId\": \"iq__3MXtFtRdbFtPwKHmw46mgmd8GQjs\",\n  \"partHash\": \"hqpeDibtoihzjUfVA5EKU8mxHxRNrBanJU85KCAM2inbzkDnWjEM\",\n  \"chunked\": true,\n  \"chunkSize\": 10000,\n  \"callback\": \"<function>\"\n});"
   }
 ]

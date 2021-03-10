@@ -17,10 +17,10 @@ var FormatNTPInfo = function FormatNTPInfo(info) {
   var params = info.pm || {};
   var response = {
     ntpId: info.id,
+    ntpClass: "Class ".concat(info.de),
     tenantId: info.ti,
     kmsId: info.ki,
     objectId: params.qid,
-    type: info.de === 4 ? "NTP" : "Other",
     updatedAt: parseInt(info.ts),
     startTime: parseInt(params.vat),
     endTime: parseInt(params.exp),
@@ -49,6 +49,7 @@ var FormatNTPInfo = function FormatNTPInfo(info) {
  * @param {string} tenantId - The ID of the tenant in which to create the NTP instance
  * @param {string} objectId - ID of the object for the tickets to be authorized to
  * @param {Array<string>=} groupAddresses - List of group addresses for the tickets to inherit permissions from
+ * @param {number=} ntpClass=4 - Class of NTP instance to create
  * @param {number=} maxTickets=0 - The maximum number of tickets that may be issued for this instance (if 0, no limit)
  * @param {number=} maxRedemptions=100 - The maximum number of times each ticket may be redeemed
  * @param {string|number=} startTime - The time when issued tickets can be redeemed
@@ -62,13 +63,13 @@ var FormatNTPInfo = function FormatNTPInfo(info) {
 exports.CreateNTPInstance = function _callee(_ref) {
   var _this = this;
 
-  var tenantId, objectId, groupAddresses, _ref$maxTickets, maxTickets, _ref$maxRedemptions, maxRedemptions, startTime, endTime, _ref$ticketLength, ticketLength, paramsJSON, groupIds;
+  var tenantId, objectId, groupAddresses, _ref$ntpClass, ntpClass, _ref$maxTickets, maxTickets, _ref$maxRedemptions, maxRedemptions, startTime, endTime, _ref$ticketLength, ticketLength, paramsJSON, groupIds;
 
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          tenantId = _ref.tenantId, objectId = _ref.objectId, groupAddresses = _ref.groupAddresses, _ref$maxTickets = _ref.maxTickets, maxTickets = _ref$maxTickets === void 0 ? 0 : _ref$maxTickets, _ref$maxRedemptions = _ref.maxRedemptions, maxRedemptions = _ref$maxRedemptions === void 0 ? 100 : _ref$maxRedemptions, startTime = _ref.startTime, endTime = _ref.endTime, _ref$ticketLength = _ref.ticketLength, ticketLength = _ref$ticketLength === void 0 ? 6 : _ref$ticketLength;
+          tenantId = _ref.tenantId, objectId = _ref.objectId, groupAddresses = _ref.groupAddresses, _ref$ntpClass = _ref.ntpClass, ntpClass = _ref$ntpClass === void 0 ? 4 : _ref$ntpClass, _ref$maxTickets = _ref.maxTickets, maxTickets = _ref$maxTickets === void 0 ? 0 : _ref$maxTickets, _ref$maxRedemptions = _ref.maxRedemptions, maxRedemptions = _ref$maxRedemptions === void 0 ? 100 : _ref$maxRedemptions, startTime = _ref.startTime, endTime = _ref.endTime, _ref$ticketLength = _ref.ticketLength, ticketLength = _ref$ticketLength === void 0 ? 6 : _ref$ticketLength;
           ValidatePresence("tenantId", tenantId);
           ValidatePresence("objectId or groupAddresses", objectId || groupAddresses);
 
@@ -107,7 +108,7 @@ exports.CreateNTPInstance = function _callee(_ref) {
           return _regeneratorRuntime.awrap(this.authClient.MakeKMSCall({
             tenantId: tenantId,
             methodName: "elv_createOTPInstance",
-            params: [tenantId, 4, JSON.stringify(paramsJSON), parseInt(maxTickets), Date.now()],
+            params: [tenantId, ntpClass, JSON.stringify(paramsJSON), parseInt(maxTickets), Date.now()],
             paramTypes: ["string", "int", "string", "int", "int"]
           }));
 

@@ -18,10 +18,10 @@ const FormatNTPInfo = info => {
 
   let response = {
     ntpId: info.id,
+    ntpClass: `Class ${info.de}`,
     tenantId: info.ti,
     kmsId: info.ki,
     objectId: params.qid,
-    type: info.de === 4 ? "NTP" : "Other",
     updatedAt: parseInt(info.ts),
     startTime: parseInt(params.vat),
     endTime: parseInt(params.exp),
@@ -51,6 +51,7 @@ const FormatNTPInfo = info => {
  * @param {string} tenantId - The ID of the tenant in which to create the NTP instance
  * @param {string} objectId - ID of the object for the tickets to be authorized to
  * @param {Array<string>=} groupAddresses - List of group addresses for the tickets to inherit permissions from
+ * @param {number=} ntpClass=4 - Class of NTP instance to create
  * @param {number=} maxTickets=0 - The maximum number of tickets that may be issued for this instance (if 0, no limit)
  * @param {number=} maxRedemptions=100 - The maximum number of times each ticket may be redeemed
  * @param {string|number=} startTime - The time when issued tickets can be redeemed
@@ -63,6 +64,7 @@ exports.CreateNTPInstance = async function({
   tenantId,
   objectId,
   groupAddresses,
+  ntpClass=4,
   maxTickets=0,
   maxRedemptions=100,
   startTime,
@@ -101,7 +103,7 @@ exports.CreateNTPInstance = async function({
     methodName: "elv_createOTPInstance",
     params: [
       tenantId,
-      4,
+      ntpClass,
       JSON.stringify(paramsJSON),
       parseInt(maxTickets),
       Date.now()

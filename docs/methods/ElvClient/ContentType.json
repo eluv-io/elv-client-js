@@ -4,20 +4,20 @@
     "result": "{\n  \"id\": \"iq__3tCKL1zJ2a2XqG5xktRDCoEMzVZv\",\n  \"hash\": \"hq__J39WocoEB1hc19t3o1YUaZM2PAzhRvLck6NVmFFviSTRM5yvVTcJ4SJeULw3VarH6mD6xkfjaC\",\n  \"name\": \"ABR Master\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"eluv.displayApp\": \"default\",\n      \"eluv.manageApp\": \"default\",\n      \"name\": \"ABR Master\"\n    }\n  }\n}"
   },
   {
-    "signature": "async ContentType({\n  \"typeId\": \"iq__T3CydLkQyiCDz3MrAumhRW7uazH\",\n  \"publicOnly\": true\n});",
-    "result": "{\n  \"id\": \"iq__T3CydLkQyiCDz3MrAumhRW7uazH\",\n  \"hash\": \"hq__7ywcAZ5Ac9rSJGTMErYj47nQpVbcz6BWVrS7oFfEASiUL2BQRxnEHj2QCYCJvQS115Djk9Nsgy\",\n  \"name\": \"Library\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"name\": \"Library\"\n    }\n  }\n}"
+    "signature": "async ContentType({\n  \"typeId\": \"iq__fTEG7r9sPawZpWqmyNxGMbdm5WR\",\n  \"publicOnly\": true\n});",
+    "result": "{\n  \"id\": \"iq__fTEG7r9sPawZpWqmyNxGMbdm5WR\",\n  \"hash\": \"hq__3MVUz8NbMXRUqR6LjUKzGgM1H43ZXWzPFYNp32Qs9f5Jb9QrFJXPX57qiXLUQdkQpJgb9yhwSR\",\n  \"name\": \"AVLive\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"eluv.displayApp\": \"default\",\n      \"eluv.manageApp\": \"manageApp/index.html\",\n      \"name\": \"AVLive\"\n    }\n  }\n}"
   },
   {
-    "signature": "async ContentType({\n  \"typeId\": \"iq__wkpaYK5tZwEBHdNyjyhw5SxRnYy\",\n  \"publicOnly\": true\n});",
-    "result": "{\n  \"id\": \"iq__wkpaYK5tZwEBHdNyjyhw5SxRnYy\",\n  \"hash\": \"hq__AsSK6q2Jh8vetffArMHiyMhEgQD4fyni1g5PgeBSPcKERMJv5hbuyAd3aNQTaeJD9ounyKTUEu\",\n  \"name\": \"Production Master\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"name\": \"Production Master\"\n    }\n  }\n}"
+    "signature": "async ContentType({\n  \"typeId\": \"iq__T3CydLkQyiCDz3MrAumhRW7uazH\",\n  \"publicOnly\": true\n});",
+    "result": "{\n  \"id\": \"iq__T3CydLkQyiCDz3MrAumhRW7uazH\",\n  \"hash\": \"hq__7ywcAZ5Ac9rSJGTMErYj47nQpVbcz6BWVrS7oFfEASiUL2BQRxnEHj2QCYCJvQS115Djk9Nsgy\",\n  \"name\": \"Library\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"name\": \"Library\"\n    }\n  }\n}"
   },
   {
     "signature": "async ContentType({\n  \"typeId\": \"iq__RCFsiwubUs5bqeCwohR2wv1P4Q5\",\n  \"publicOnly\": true\n});",
     "result": "{\n  \"id\": \"iq__RCFsiwubUs5bqeCwohR2wv1P4Q5\",\n  \"hash\": \"hq__E1nPgLBeDKWd4S25fGmSMmxQE7DzRTfMuc6j85duh2AJityFYTx9sig2vVXjXEYsVRsgrKioSm\",\n  \"name\": \"Channel\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"eluv.displayApp\": \"displayApp/index.html\",\n      \"eluv.manageApp\": \"manageApp/index.html\",\n      \"name\": \"Channel\"\n    }\n  }\n}"
   },
   {
-    "signature": "async ContentType({\n  \"typeId\": \"iq__fTEG7r9sPawZpWqmyNxGMbdm5WR\",\n  \"publicOnly\": true\n});",
-    "result": "{\n  \"id\": \"iq__fTEG7r9sPawZpWqmyNxGMbdm5WR\",\n  \"hash\": \"hq__3MVUz8NbMXRUqR6LjUKzGgM1H43ZXWzPFYNp32Qs9f5Jb9QrFJXPX57qiXLUQdkQpJgb9yhwSR\",\n  \"name\": \"AVLive\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"eluv.displayApp\": \"default\",\n      \"eluv.manageApp\": \"manageApp/index.html\",\n      \"name\": \"AVLive\"\n    }\n  }\n}"
+    "signature": "async ContentType({\n  \"typeId\": \"iq__wkpaYK5tZwEBHdNyjyhw5SxRnYy\",\n  \"publicOnly\": true\n});",
+    "result": "{\n  \"id\": \"iq__wkpaYK5tZwEBHdNyjyhw5SxRnYy\",\n  \"hash\": \"hq__AsSK6q2Jh8vetffArMHiyMhEgQD4fyni1g5PgeBSPcKERMJv5hbuyAd3aNQTaeJD9ounyKTUEu\",\n  \"name\": \"Production Master\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"name\": \"Production Master\"\n    }\n  }\n}"
   },
   {
     "signature": "async ContentType({\n  \"typeId\": \"iq__y8YShB4kZWb2vQq2tvHx7wg3TLy\",\n  \"publicOnly\": true\n});",
@@ -36,20 +36,20 @@
     "result": "{\n  \"id\": \"iq__T3CydLkQyiCDz3MrAumhRW7uazH\",\n  \"hash\": \"hq__7ywcAZ5Ac9rSJGTMErYj47nQpVbcz6BWVrS7oFfEASiUL2BQRxnEHj2QCYCJvQS115Djk9Nsgy\",\n  \"name\": \"Library\",\n  \"meta\": {\n    \"public\": {\n      \"description\": \"\",\n      \"name\": \"Library\"\n    }\n  }\n}"
   },
   {
-    "signature": "async ContentType({\n  \"typeId\": \"iq__uRxGdvPm5MnEhzdDdTqSPFKDQCq\",\n  \"publicOnly\": true\n});",
-    "result": "{\n  \"id\": \"iq__uRxGdvPm5MnEhzdDdTqSPFKDQCq\",\n  \"hash\": \"hq__BZxUx5d7ki5yVt1apU6ZBfGLMzANMmXM2wnCpb1TpUzEM25vst5VYqyPox3u4Q4ktxhhaeG9FP\",\n  \"name\": \"Test Content Type a740ff1c64ff51eca017\",\n  \"meta\": {\n    \"public\": {\n      \"name\": \"Test Content Type a740ff1c64ff51eca017\"\n    }\n  }\n}"
+    "signature": "async ContentType({\n  \"typeId\": \"iq__3ZeNik5xdThEuYsEaGj8fAE7Kcv4\",\n  \"publicOnly\": true\n});",
+    "result": "{\n  \"id\": \"iq__3ZeNik5xdThEuYsEaGj8fAE7Kcv4\",\n  \"hash\": \"hq__LVJqN7DWzCeZSQRvjxTaSGSpnpDbec1uMwDhAgaaKEPT8cydYYwBgA19foTuw3e2EYTzGe5fW8\",\n  \"name\": \"Test Content Type ccabade66b8fa5924627\",\n  \"meta\": {\n    \"public\": {\n      \"name\": \"Test Content Type ccabade66b8fa5924627\"\n    }\n  }\n}"
   },
   {
-    "signature": "async ContentType({\n  \"typeId\": \"iq__uRxGdvPm5MnEhzdDdTqSPFKDQCq\"\n});",
-    "result": "{\n  \"id\": \"iq__uRxGdvPm5MnEhzdDdTqSPFKDQCq\",\n  \"hash\": \"hq__BZxUx5d7ki5yVt1apU6ZBfGLMzANMmXM2wnCpb1TpUzEM25vst5VYqyPox3u4Q4ktxhhaeG9FP\",\n  \"name\": \"Test Content Type a740ff1c64ff51eca017\",\n  \"meta\": {\n    \"bitcode_part\": \"hqp_KCLxLrUFXbPDkbW1hfGRUiUxbNuamgni7r8eArjXeHPEFcXF\",\n    \"name\": \"Test Content Type a740ff1c64ff51eca017\",\n    \"public\": {\n      \"name\": \"Test Content Type a740ff1c64ff51eca017\"\n    }\n  }\n}"
+    "signature": "async ContentType({\n  \"typeId\": \"iq__3ZeNik5xdThEuYsEaGj8fAE7Kcv4\"\n});",
+    "result": "{\n  \"id\": \"iq__3ZeNik5xdThEuYsEaGj8fAE7Kcv4\",\n  \"hash\": \"hq__LVJqN7DWzCeZSQRvjxTaSGSpnpDbec1uMwDhAgaaKEPT8cydYYwBgA19foTuw3e2EYTzGe5fW8\",\n  \"name\": \"Test Content Type ccabade66b8fa5924627\",\n  \"meta\": {\n    \"bitcode_part\": \"hqp_R3rrwwWjBqFTzW4FbcDni1fmRZNtp6basgRReMau3HLVZTpR\",\n    \"commit\": {\n      \"author\": \"0x665aee2328fa4040e569e91be23faf5a82a6186c\",\n      \"author_address\": \"0x665aee2328fa4040e569e91be23faf5a82a6186c\",\n      \"message\": \"Create content type\",\n      \"timestamp\": \"2021-03-09T20:00:47.030Z\"\n    },\n    \"name\": \"Test Content Type ccabade66b8fa5924627\",\n    \"public\": {\n      \"name\": \"Test Content Type ccabade66b8fa5924627\"\n    }\n  }\n}"
   },
   {
-    "signature": "async ContentType({\n  \"name\": \"Test Content Type a740ff1c64ff51eca017\"\n});",
-    "result": "{\n  \"id\": \"iq__uRxGdvPm5MnEhzdDdTqSPFKDQCq\",\n  \"hash\": \"hq__BZxUx5d7ki5yVt1apU6ZBfGLMzANMmXM2wnCpb1TpUzEM25vst5VYqyPox3u4Q4ktxhhaeG9FP\",\n  \"name\": \"Test Content Type a740ff1c64ff51eca017\",\n  \"meta\": {\n    \"public\": {\n      \"name\": \"Test Content Type a740ff1c64ff51eca017\"\n    }\n  }\n}"
+    "signature": "async ContentType({\n  \"name\": \"Test Content Type ccabade66b8fa5924627\"\n});",
+    "result": "{\n  \"id\": \"iq__3ZeNik5xdThEuYsEaGj8fAE7Kcv4\",\n  \"hash\": \"hq__LVJqN7DWzCeZSQRvjxTaSGSpnpDbec1uMwDhAgaaKEPT8cydYYwBgA19foTuw3e2EYTzGe5fW8\",\n  \"name\": \"Test Content Type ccabade66b8fa5924627\",\n  \"meta\": {\n    \"public\": {\n      \"name\": \"Test Content Type ccabade66b8fa5924627\"\n    }\n  }\n}"
   },
   {
-    "signature": "async ContentType({\n  \"versionHash\": \"hq__BZxUx5d7ki5yVt1apU6ZBfGLMzANMmXM2wnCpb1TpUzEM25vst5VYqyPox3u4Q4ktxhhaeG9FP\"\n});",
-    "result": "{\n  \"id\": \"iq__uRxGdvPm5MnEhzdDdTqSPFKDQCq\",\n  \"hash\": \"hq__BZxUx5d7ki5yVt1apU6ZBfGLMzANMmXM2wnCpb1TpUzEM25vst5VYqyPox3u4Q4ktxhhaeG9FP\",\n  \"name\": \"Test Content Type a740ff1c64ff51eca017\",\n  \"meta\": {\n    \"bitcode_part\": \"hqp_KCLxLrUFXbPDkbW1hfGRUiUxbNuamgni7r8eArjXeHPEFcXF\",\n    \"name\": \"Test Content Type a740ff1c64ff51eca017\",\n    \"public\": {\n      \"name\": \"Test Content Type a740ff1c64ff51eca017\"\n    }\n  }\n}"
+    "signature": "async ContentType({\n  \"versionHash\": \"hq__LVJqN7DWzCeZSQRvjxTaSGSpnpDbec1uMwDhAgaaKEPT8cydYYwBgA19foTuw3e2EYTzGe5fW8\"\n});",
+    "result": "{\n  \"id\": \"iq__3ZeNik5xdThEuYsEaGj8fAE7Kcv4\",\n  \"hash\": \"hq__LVJqN7DWzCeZSQRvjxTaSGSpnpDbec1uMwDhAgaaKEPT8cydYYwBgA19foTuw3e2EYTzGe5fW8\",\n  \"name\": \"Test Content Type ccabade66b8fa5924627\",\n  \"meta\": {\n    \"bitcode_part\": \"hqp_R3rrwwWjBqFTzW4FbcDni1fmRZNtp6basgRReMau3HLVZTpR\",\n    \"commit\": {\n      \"author\": \"0x665aee2328fa4040e569e91be23faf5a82a6186c\",\n      \"author_address\": \"0x665aee2328fa4040e569e91be23faf5a82a6186c\",\n      \"message\": \"Create content type\",\n      \"timestamp\": \"2021-03-09T20:00:47.030Z\"\n    },\n    \"name\": \"Test Content Type ccabade66b8fa5924627\",\n    \"public\": {\n      \"name\": \"Test Content Type ccabade66b8fa5924627\"\n    }\n  }\n}"
   },
   {
     "signature": "async ContentType({\n  \"name\": \"Invalid Type Name\"\n});"

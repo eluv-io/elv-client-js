@@ -1,0 +1,38 @@
+[
+  {
+    "signature": "async PlayoutPathResolution({\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n  \"handler\": \"playout\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV/q/hq__AXQrQWT8v1Xe784ciwaFJoXphaeoXHJzsG3JY8NHTsXZcZ18jqx6dPfqT8268c8Aoq5VnsmC3/rep/playout/options.json\",\n  \"linkTarget\": {}\n}"
+  },
+  {
+    "signature": "async PlayoutPathResolution({\n  \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n  \"versionHash\": \"hq__AXQrQWT8v1Xe784ciwaFJoXphaeoXHJzsG3JY8NHTsXZcZ18jqx6dPfqT8268c8Aoq5VnsmC3\",\n  \"linkPath\": \"public/asset_metadata/sources/default\",\n  \"signedLink\": false,\n  \"handler\": \"playout\",\n  \"offering\": \"default\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV/q/hq__AXQrQWT8v1Xe784ciwaFJoXphaeoXHJzsG3JY8NHTsXZcZ18jqx6dPfqT8268c8Aoq5VnsmC3/meta/public/asset_metadata/sources/default\",\n  \"multiOfferingLink\": false,\n  \"linkTarget\": {\n    \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n    \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n    \"versionHash\": \"hq__AXQrQWT8v1Xe784ciwaFJoXphaeoXHJzsG3JY8NHTsXZcZ18jqx6dPfqT8268c8Aoq5VnsmC3\"\n  }\n}"
+  },
+  {
+    "signature": "async PlayoutPathResolution({\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n  \"signedLink\": false,\n  \"handler\": \"playout\",\n  \"offering\": \"default\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV/q/hq__AXQrQWT8v1Xe784ciwaFJoXphaeoXHJzsG3JY8NHTsXZcZ18jqx6dPfqT8268c8Aoq5VnsmC3/rep/playout/default/options.json\",\n  \"linkTarget\": {}\n}"
+  },
+  {
+    "signature": "async PlayoutPathResolution({\n  \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n  \"versionHash\": \"hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs\",\n  \"linkPath\": \"public/videoLink/default\",\n  \"signedLink\": false,\n  \"handler\": \"playout\",\n  \"offering\": \"default\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV/q/hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs/meta/public/videoLink/default\",\n  \"multiOfferingLink\": false,\n  \"linkTarget\": {\n    \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n    \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n    \"versionHash\": \"hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs\"\n  }\n}"
+  },
+  {
+    "signature": "async PlayoutPathResolution({\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n  \"versionHash\": \"hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs\",\n  \"linkPath\": \"public/videoLink/default\",\n  \"signedLink\": false,\n  \"handler\": \"playout\",\n  \"offering\": \"default\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV/q/hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs/meta/public/videoLink/default\",\n  \"multiOfferingLink\": false,\n  \"linkTarget\": {\n    \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n    \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n    \"versionHash\": \"hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs\"\n  }\n}"
+  },
+  {
+    "signature": "async PlayoutPathResolution({\n  \"libraryId\": \"ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3\",\n  \"objectId\": \"iq__3MvjYsa9bi4aywAYAXUhrvsQVHZq\",\n  \"versionHash\": \"hq__HX8rWEhiUP1koNyZvhw7ijtzpvk3Ysp7ZHuFb47Cp7vRD5GPcYxSDdAVPeXFXEyjGLHzLWXsps\",\n  \"linkPath\": \"public/videoLink\",\n  \"signedLink\": false,\n  \"handler\": \"playout\",\n  \"offering\": \"default\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3/q/hq__HX8rWEhiUP1koNyZvhw7ijtzpvk3Ysp7ZHuFb47Cp7vRD5GPcYxSDdAVPeXFXEyjGLHzLWXsps/meta/public/videoLink\",\n  \"multiOfferingLink\": false,\n  \"linkTarget\": {\n    \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n    \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n    \"versionHash\": \"hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs\"\n  }\n}"
+  },
+  {
+    "signature": "async PlayoutPathResolution({\n  \"libraryId\": \"ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3\",\n  \"objectId\": \"iq__3MvjYsa9bi4aywAYAXUhrvsQVHZq\",\n  \"versionHash\": \"hq__HX8rWEhiUP1koNyZvhw7ijtzpvk3Ysp7ZHuFb47Cp7vRD5GPcYxSDdAVPeXFXEyjGLHzLWXsps\",\n  \"linkPath\": \"public/multiOfferingVideoLink\",\n  \"signedLink\": false,\n  \"handler\": \"playout\",\n  \"offering\": \"default\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3/q/hq__HX8rWEhiUP1koNyZvhw7ijtzpvk3Ysp7ZHuFb47Cp7vRD5GPcYxSDdAVPeXFXEyjGLHzLWXsps/meta/public/multiOfferingVideoLink/default/options.json\",\n  \"multiOfferingLink\": true,\n  \"linkTarget\": {\n    \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n    \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n    \"versionHash\": \"hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs\"\n  }\n}"
+  },
+  {
+    "signature": "async PlayoutPathResolution({\n  \"objectId\": \"iq__3MvjYsa9bi4aywAYAXUhrvsQVHZq\",\n  \"linkPath\": \"public/videoLink\",\n  \"signedLink\": false,\n  \"handler\": \"playout\",\n  \"offering\": \"default\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3/q/hq__HX8rWEhiUP1koNyZvhw7ijtzpvk3Ysp7ZHuFb47Cp7vRD5GPcYxSDdAVPeXFXEyjGLHzLWXsps/meta/public/videoLink\",\n  \"multiOfferingLink\": false,\n  \"linkTarget\": {\n    \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n    \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n    \"versionHash\": \"hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs\"\n  }\n}"
+  },
+  {
+    "signature": "async PlayoutPathResolution({\n  \"objectId\": \"iq__3MvjYsa9bi4aywAYAXUhrvsQVHZq\",\n  \"linkPath\": \"public/multiOfferingVideoLink\",\n  \"signedLink\": false,\n  \"handler\": \"playout\",\n  \"offering\": \"default\"\n});",
+    "result": "{\n  \"path\": \"qlibs/ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3/q/hq__HX8rWEhiUP1koNyZvhw7ijtzpvk3Ysp7ZHuFb47Cp7vRD5GPcYxSDdAVPeXFXEyjGLHzLWXsps/meta/public/multiOfferingVideoLink/default/options.json\",\n  \"multiOfferingLink\": true,\n  \"linkTarget\": {\n    \"libraryId\": \"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\",\n    \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\",\n    \"versionHash\": \"hq__CPA8kvgi3XgZW6wUWv1F1GZCjnBuRjtx3YaepZqwyCVZXKHDyKsv4ncddX3BGvFXynZzQiU3cs\"\n  }\n}"
+  }
+]
