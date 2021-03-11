@@ -108,6 +108,7 @@ class PermissionsClient {
   constructor(client) {
     this.client = client;
     this.subjectNames = {};
+    this.drafts = [];
   }
 
   FormatDate(date) {
@@ -255,6 +256,59 @@ class PermissionsClient {
 
     return permissionSpec;
   }
+
+  /* Offline draft */
+
+  /**
+   * Open an offline draft - copies object data locally and allows the functions processing this data to operate
+   * on the local copy, much faster.  Closing the draft will copy the data back to the object's write token.
+   *
+   * @methodGroup OfflineDraft
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyLibraryId - Policy object library ID (optional)
+   * @param {string=} policyWriteToken - Write token for the policy object
+   */
+  async OpenOfflineDraft({policyId, policyLibraryId, policyWriteToken}) {
+
+    if(policyLibraryId == null) {
+      policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+    }
+    let meta = await this.client.ContentObjectMetadata({
+      libraryId: policyLibraryId,
+      objectId: policyId,
+      writeToken: policyWriteToken
+    });
+
+    this.drafts[policyId] = {
+      meta,
+      policyLibraryId,
+      policyWriteToken
+    };
+  }
+
+  /**
+   * Close an offline draft - copies the metadata stored locally back to the write token's metadata.
+   * Does not finalize the write token.
+   *
+   * @methodGroup OfflineDraft
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   */
+  async CloseOfflineDraft({policyId}) {
+    if(this.drafts[policyId] == null) {
+      throw Error("No draft open for policyId: " + policyId);
+    }
+    await this.client.ReplaceMetadata({
+      libraryId: this.drafts[policyId].policyLibraryId,
+      objectId: policyId,
+      writeToken: this.drafts[policyId].policyWriteToken,
+      metadata: this.drafts[policyId].meta
+    });
+
+    this.drafts[policyId] = null;
+  }
+
 
   /* Add / remove overall item permission */
 
@@ -491,7 +545,6 @@ class PermissionsClient {
    *
    * @methodGroup Permissions
    * @namedParams
-   * @param {object} offlineMetadata - if present, update this object and return it without touching the fabric write token
    * @param {string} policyId - Object ID of the policy
    * @param {string} policyWriteToken - Write token for the policy
    * @param {string} itemId - Object ID of the item
@@ -503,9 +556,9 @@ class PermissionsClient {
    * @param {string} profileName - The profile to apply for the permission
    * @param {string | number} start - The start time for the permission
    * @param {string | number} end - The end time for the permission
+   * @param {bool} autoCommit - Don't use an offline draft if available - read/write object metadata directly (default: false)
    */
   async SetPermission({
-    offlineMetadata,
     policyId,
     policyWriteToken,
     itemId,
@@ -516,10 +569,11 @@ class PermissionsClient {
     subjectNTPId,
     profileName,
     start,
-    end
+    end,
+    autoCommit=false
   }) {
     ValidatePresence("policyId", policyId);
-    ValidatePresence("policyWriteToken or offlineMetadata", policyWriteToken || offlineMetadata);
+    ValidatePresence("policyWriteToken", policyWriteToken);
     ValidatePresence("itemId", itemId);
     ValidatePresence("subjectType", subjectType);
     ValidatePresence("subjectSource", subjectSource);
@@ -529,8 +583,11 @@ class PermissionsClient {
     start = this.FormatDate(start);
     end = this.FormatDate(end);
 
+    // Check if we have an open offline draft for this policy
+    const offlineDraft = !autoCommit && this.drafts[policyId] != null;
+
     let policyLibraryId = null;
-    if(offlineMetadata != null) {
+    if(!offlineDraft) {
       policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
     }
 
@@ -549,8 +606,8 @@ class PermissionsClient {
 
     let existingPermissions;
 
-    if(offlineMetadata != null) {
-      existingPermissions = offlineMetadata["auth_policy_spec"][itemId];
+    if(offlineDraft) {
+      existingPermissions = this.drafts[policyId].meta["auth_policy_spec"][itemId];
     } else {
       existingPermissions = await this.client.ContentObjectMetadata({
         libraryId: policyLibraryId,
@@ -637,7 +694,7 @@ class PermissionsClient {
 
     existingPermissions.permissions[index] = permissionSpec;
 
-    if(offlineMetadata == null) {
+    if(!offlineDraft) {
       await this.client.ReplaceMetadata({
         libraryId: policyLibraryId,
         objectId: policyId,
@@ -650,15 +707,14 @@ class PermissionsClient {
     // Fabric usernames and NTP info are stored in auth_policy_settings/fabric_users
     if(subjectSource === "fabric" && subjectType === "user") {
 
-      if(offlineMetadata != null) {
+      const newMeta = {
+        address: this.client.utils.HashToAddress(subjectId),
+        name: subjectName
+      };
 
-        offlineMetadata["auth_policy_settings"]["fabric_users"][this.client.utils.HashToAddress(subjectId)] = {
-          address: this.client.utils.HashToAddress(subjectId),
-          name: subjectName
-        };
-
+      if(offlineDraft) {
+        this.drafts[policyId].meta["auth_policy_settings"]["fabric_users"][this.client.utils.HashToAddress(subjectId)] = newMeta;
       } else {
-
         const userInfo = await this.client.ContentObjectMetadata({
           libraryId: policyLibraryId,
           objectId: policyId,
@@ -672,27 +728,23 @@ class PermissionsClient {
             objectId: policyId,
             writeToken: policyWriteToken,
             metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId)),
-            metadata: {
-              address: this.client.utils.HashToAddress(subjectId),
-              name: subjectName
-            }
+            metadata: newMeta
           });
         }
       }
 
     } else if(subjectSource === "fabric" && subjectType === "ntp") {
 
-      if(offlineMetadata != null) {
+      const newMeta = {
+        address: subjectId,
+        ntpId: subjectId,
+        name: subjectName,
+        type: "ntpInstance"
+      };
 
-        offlineMetadata["auth_policy_settings"]["ntp_instances"][subjectId] = {
-          address: subjectId,
-          ntpId: subjectId,
-          name: subjectName,
-          type: "ntpInstance"
-        };
-
+      if(offlineDraft) {
+        this.drafts[policyId].meta["auth_policy_settings"]["ntp_instances"][subjectId] = newMeta;
       } else {
-
         const userInfo = await this.client.ContentObjectMetadata({
           libraryId: policyLibraryId,
           objectId: policyId,
@@ -706,18 +758,11 @@ class PermissionsClient {
             objectId: policyId,
             writeToken: policyWriteToken,
             metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId),
-            metadata: {
-              address: subjectId,
-              ntpId: subjectId,
-              name: subjectName,
-              type: "ntpInstance"
-            }
+            metadata: newMeta
           });
         }
       }
     }
-
-    return offlineMetadata;
   }
 
   /**
