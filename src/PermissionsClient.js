@@ -108,7 +108,7 @@ class PermissionsClient {
   constructor(client) {
     this.client = client;
     this.subjectNames = {};
-    this.drafts = [];
+    this.drafts = {};
   }
 
   FormatDate(date) {
