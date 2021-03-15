@@ -79,7 +79,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="PermissionsClient">
-      <span class="type-signature"></span>new PermissionsClient<span class="signature">(<span class="inline-param">client</span>)</span><span class="type-signature"></span>
+      <span class="type-signature"></span>new PermissionsClient<span class="signature">(<div class="block-param">client,</div><div class="block-param">options<span class="signature-attributes">optional</span></div>)</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -219,7 +219,11 @@
       <th>Type</th>
 
       
+        <th>Attributes</th>
+      
 
+      
+        <th>Default</th>
       
 
       <th class="last">Description</th>
@@ -238,11 +242,72 @@
         </td>
 
         
+          <td class="attributes">
+            
 
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
         
 
         <td class="description last">
           <p>An instance of ElvClient</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>options</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      object
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              {offline:
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>false} - Options for the PermissionsClient</p>
+<ul>
+<li>offline - If specified, metadata reads and updates will be done with a local copy.
+Use OpenOfflineDraft and CloseOfflineDraft</li>
+</ul>
           
         </td>
       </tr>
@@ -298,7 +363,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line108">line 108</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line111">line 111</a>
         </li>
       </ul>
     </dd>
@@ -463,7 +528,7 @@ Does not finalize the write token.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line298">line 298</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line302">line 302</a>
         </li>
       </ul>
     </dd>
@@ -847,7 +912,7 @@ Does not finalize the write token.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line368">line 368</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line373">line 373</a>
         </li>
       </ul>
     </dd>
@@ -1281,7 +1346,7 @@ Does not finalize the write token.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line529">line 529</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line534">line 534</a>
         </li>
       </ul>
     </dd>
@@ -1667,7 +1732,7 @@ Does not finalize the write token.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line344">line 344</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line349">line 349</a>
         </li>
       </ul>
     </dd>
@@ -2099,7 +2164,7 @@ Does not finalize the write token.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line441">line 441</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line446">line 446</a>
         </li>
       </ul>
     </dd>
@@ -2332,7 +2397,7 @@ on the local copy, much faster.  Closing the draft will copy the data back to th
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line272">line 272</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line276">line 276</a>
         </li>
       </ul>
     </dd>
@@ -2564,7 +2629,7 @@ on the local copy, much faster.  Closing the draft will copy the data back to th
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line324">line 324</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line329">line 329</a>
         </li>
       </ul>
     </dd>
@@ -2802,7 +2867,7 @@ on the local copy, much faster.  Closing the draft will copy the data back to th
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line415">line 415</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line420">line 420</a>
         </li>
       </ul>
     </dd>
@@ -3091,7 +3156,7 @@ on the local copy, much faster.  Closing the draft will copy the data back to th
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line778">line 778</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line781">line 781</a>
         </li>
       </ul>
     </dd>
@@ -3380,7 +3445,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line496">line 496</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line501">line 501</a>
         </li>
       </ul>
     </dd>
@@ -3609,7 +3674,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line886">line 886</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line889">line 889</a>
         </li>
       </ul>
     </dd>
@@ -3632,7 +3697,7 @@ will default to no access for both assets and offerings</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="SetPermission">
-      <span class="type-signature">async </span>SetPermission<span class="signature">({<div class="block-param">policyId,</div><div class="block-param">policyWriteToken,</div><div class="block-param">itemId,</div><div class="block-param">subjectSource,</div><div class="block-param">subjectType,</div><div class="block-param">subjectName<span class="signature-attributes">optional</span>,</div><div class="block-param">subjectId,</div><div class="block-param">subjectNTPId<span class="signature-attributes">optional</span>,</div><div class="block-param">profileName,</div><div class="block-param">start,</div><div class="block-param">end,</div><div class="block-param">autoCommit</div>})</span><span class="type-signature"></span>
+      <span class="type-signature">async </span>SetPermission<span class="signature">({<div class="block-param">policyId,</div><div class="block-param">policyWriteToken,</div><div class="block-param">itemId,</div><div class="block-param">subjectSource,</div><div class="block-param">subjectType,</div><div class="block-param">subjectName<span class="signature-attributes">optional</span>,</div><div class="block-param">subjectId,</div><div class="block-param">subjectNTPId<span class="signature-attributes">optional</span>,</div><div class="block-param">profileName,</div><div class="block-param">start,</div><div class="block-param">end</div>})</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -4151,47 +4216,6 @@ will default to no access for both assets and offerings</p>
       </tr>
 
     
-      <tr>
-        
-          <td class="name"><code>autoCommit</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      bool
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>Don't use an offline draft if available - read/write object metadata directly (default: false)</p>
-          
-        </td>
-      </tr>
-
-    
   </tbody>
 </table>
 
@@ -4405,7 +4429,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line561">line 561</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line565">line 565</a>
         </li>
       </ul>
     </dd>
@@ -4753,7 +4777,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line462">line 462</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line467">line 467</a>
         </li>
       </ul>
     </dd>
@@ -5416,7 +5440,7 @@ will default to no access for both assets and offerings</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line830">line 830</a>
+          <a href="PermissionsClient.js.html">PermissionsClient.js</a>, <a href="PermissionsClient.js.html#line833">line 833</a>
         </li>
       </ul>
     </dd>

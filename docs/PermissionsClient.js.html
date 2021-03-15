@@ -168,11 +168,15 @@ class PermissionsClient {
 
    *
    * @param client - An instance of ElvClient
+   * @param {object=} options={offline: false} - Options for the PermissionsClient
+   * - offline - If specified, metadata reads and updates will be done with a local copy.
+   * Use OpenOfflineDraft and CloseOfflineDraft
    */
-  constructor(client) {
+  constructor(client, options={offline: false}) {
     this.client = client;
     this.subjectNames = {};
-    this.drafts = [];
+    this.drafts = {};
+    this.offline = options.offline;
   }
 
   FormatDate(date) {
@@ -334,10 +338,10 @@ class PermissionsClient {
    * @param {string=} policyWriteToken - Write token for the policy object
    */
   async OpenOfflineDraft({policyId, policyLibraryId, policyWriteToken}) {
-
     if(policyLibraryId == null) {
       policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
     }
+
     let meta = await this.client.ContentObjectMetadata({
       libraryId: policyLibraryId,
       objectId: policyId,
@@ -363,6 +367,7 @@ class PermissionsClient {
     if(this.drafts[policyId] == null) {
       throw Error("No draft open for policyId: " + policyId);
     }
+
     await this.client.ReplaceMetadata({
       libraryId: this.drafts[policyId].policyLibraryId,
       objectId: policyId,
@@ -620,7 +625,6 @@ class PermissionsClient {
    * @param {string} profileName - The profile to apply for the permission
    * @param {string | number} start - The start time for the permission
    * @param {string | number} end - The end time for the permission
-   * @param {bool} autoCommit - Don't use an offline draft if available - read/write object metadata directly (default: false)
    */
   async SetPermission({
     policyId,
@@ -633,8 +637,7 @@ class PermissionsClient {
     subjectNTPId,
     profileName,
     start,
-    end,
-    autoCommit=false
+    end
   }) {
     ValidatePresence("policyId", policyId);
     ValidatePresence("policyWriteToken", policyWriteToken);
@@ -648,7 +651,7 @@ class PermissionsClient {
     end = this.FormatDate(end);
 
     // Check if we have an open offline draft for this policy
-    const offlineDraft = !autoCommit &amp;&amp; this.drafts[policyId] != null;
+    const offlineDraft = this.offline &amp;&amp; this.drafts[policyId] != null;
 
     let policyLibraryId = null;
     if(!offlineDraft) {
