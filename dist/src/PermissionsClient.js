@@ -119,13 +119,21 @@ function () {
         }
     *
    * @param client - An instance of ElvClient
+   * @param {object=} options={offline: false} - Options for the PermissionsClient
+   * - offline - If specified, metadata reads and updates will be done with a local copy.
+   * Use OpenOfflineDraft and CloseOfflineDraft
    */
   function PermissionsClient(client) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
+      offline: false
+    };
+
     _classCallCheck(this, PermissionsClient);
 
     this.client = client;
     this.subjectNames = {};
-    this.drafts = [];
+    this.drafts = {};
+    this.offline = options.offline;
   }
 
   _createClass(PermissionsClient, [{
@@ -1049,19 +1057,18 @@ function () {
      * @param {string} profileName - The profile to apply for the permission
      * @param {string | number} start - The start time for the permission
      * @param {string | number} end - The end time for the permission
-     * @param {bool} autoCommit - Don't use an offline draft if available - read/write object metadata directly (default: false)
      */
 
   }, {
     key: "SetPermission",
     value: function SetPermission(_ref12) {
-      var policyId, policyWriteToken, itemId, _ref12$subjectSource, subjectSource, _ref12$subjectType, subjectType, subjectName, subjectId, subjectNTPId, profileName, start, end, _ref12$autoCommit, autoCommit, offlineDraft, policyLibraryId, existingPermissions, index, permissionSpec, subjectInfo, newMeta, userInfo, _newMeta, _userInfo;
+      var policyId, policyWriteToken, itemId, _ref12$subjectSource, subjectSource, _ref12$subjectType, subjectType, subjectName, subjectId, subjectNTPId, profileName, start, end, offlineDraft, policyLibraryId, existingPermissions, index, permissionSpec, subjectInfo, newMeta, userInfo, _newMeta, _userInfo;
 
       return _regeneratorRuntime.async(function SetPermission$(_context13) {
         while (1) {
           switch (_context13.prev = _context13.next) {
             case 0:
-              policyId = _ref12.policyId, policyWriteToken = _ref12.policyWriteToken, itemId = _ref12.itemId, _ref12$subjectSource = _ref12.subjectSource, subjectSource = _ref12$subjectSource === void 0 ? "fabric" : _ref12$subjectSource, _ref12$subjectType = _ref12.subjectType, subjectType = _ref12$subjectType === void 0 ? "group" : _ref12$subjectType, subjectName = _ref12.subjectName, subjectId = _ref12.subjectId, subjectNTPId = _ref12.subjectNTPId, profileName = _ref12.profileName, start = _ref12.start, end = _ref12.end, _ref12$autoCommit = _ref12.autoCommit, autoCommit = _ref12$autoCommit === void 0 ? false : _ref12$autoCommit;
+              policyId = _ref12.policyId, policyWriteToken = _ref12.policyWriteToken, itemId = _ref12.itemId, _ref12$subjectSource = _ref12.subjectSource, subjectSource = _ref12$subjectSource === void 0 ? "fabric" : _ref12$subjectSource, _ref12$subjectType = _ref12.subjectType, subjectType = _ref12$subjectType === void 0 ? "group" : _ref12$subjectType, subjectName = _ref12.subjectName, subjectId = _ref12.subjectId, subjectNTPId = _ref12.subjectNTPId, profileName = _ref12.profileName, start = _ref12.start, end = _ref12.end;
               ValidatePresence("policyId", policyId);
               ValidatePresence("policyWriteToken", policyWriteToken);
               ValidatePresence("itemId", itemId);
@@ -1072,7 +1079,7 @@ function () {
               start = this.FormatDate(start);
               end = this.FormatDate(end); // Check if we have an open offline draft for this policy
 
-              offlineDraft = !autoCommit && this.drafts[policyId] != null;
+              offlineDraft = this.offline && this.drafts[policyId] != null;
               policyLibraryId = null;
 
               if (offlineDraft) {

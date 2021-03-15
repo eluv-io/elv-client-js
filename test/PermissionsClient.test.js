@@ -781,123 +781,126 @@ describe("Test Permissions Client", () => {
     });
 
     test("Add/Modify Permissions using offline draft", async () => {
+      try {
+        permissionsClient.offline = true;
 
-      await client.EditAndFinalizeContentObject({
-        libraryId,
-        objectId: policyId,
-        callback: async ({writeToken}) => {
-
-          await permissionsClient.CreateItemPolicy({
-            policyId,
-            policyWriteToken: writeToken,
-            itemId: itemId3,
-            profiles: {
-              "all-access": {
-                assets: {
-                  default_permission: "full-access"
+        await client.EditAndFinalizeContentObject({
+          libraryId,
+          objectId: policyId,
+          callback: async ({writeToken}) => {
+            await permissionsClient.CreateItemPolicy({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              profiles: {
+                "all-access": {
+                  assets: {
+                    default_permission: "full-access"
+                  },
+                  offerings: {
+                    default_permission: "full-access"
+                  }
                 },
-                offerings: {
-                  default_permission: "full-access"
-                }
-              },
-              "no-access": {
-                start: now,
-                end: later,
-                assets: {
-                  default_permission: "no-access"
-                },
-                offerings: {
-                  default_permission: "no-access"
+                "no-access": {
+                  start: now,
+                  end: later,
+                  assets: {
+                    default_permission: "no-access"
+                  },
+                  offerings: {
+                    default_permission: "no-access"
+                  }
                 }
               }
-            }
-          });
-        }
-      });
+            });
+          }
+        });
 
-      const initialPermissions = await permissionsClient.ItemPermissions({
-        policyId,
-        itemId: itemId3
-      });
+        const initialPermissions = await permissionsClient.ItemPermissions({
+          policyId,
+          itemId: itemId3
+        });
 
-      expect(initialPermissions).toBeDefined();
+        expect(initialPermissions).toBeDefined();
 
-      await client.EditAndFinalizeContentObject({
-        libraryId,
-        objectId: policyId,
-        callback: async ({writeToken}) => {
+        await client.EditAndFinalizeContentObject({
+          libraryId,
+          objectId: policyId,
+          callback: async ({writeToken}) => {
+            await permissionsClient.OpenOfflineDraft({
+              policyId,
+              policyWriteToken: writeToken,
+            });
 
-          await permissionsClient.OpenOfflineDraft({
-            policyId,
-            policyWriteToken: writeToken,
-          });
+            await permissionsClient.SetPermission({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              subjectId: client.utils.FormatAddress(client.signer.address),
+              subjectName: "Test Account Offline",
+              subjectType: "user",
+              subjectSource: "fabric",
+              profileName: "all-access"
+            });
 
-          await permissionsClient.SetPermission({
-            policyId,
-            policyWriteToken: writeToken,
-            itemId: itemId3,
-            subjectId: client.utils.FormatAddress(client.signer.address),
-            subjectName: "Test Account Offline",
-            subjectType: "user",
-            subjectSource: "fabric",
-            profileName: "all-access"
-          });
+            await permissionsClient.SetPermission({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              subjectId: groupAddress,
+              subjectName: "Test Group Offline",
+              subjectType: "group",
+              subjectSource: "fabric",
+              profileName: "no-access",
+              start: now
+            });
 
-          await permissionsClient.SetPermission({
-            policyId,
-            policyWriteToken: writeToken,
-            itemId: itemId3,
-            subjectId: groupAddress,
-            subjectName: "Test Group Offline",
-            subjectType: "group",
-            subjectSource: "fabric",
-            profileName: "no-access",
-            start: now
-          });
+            await permissionsClient.CloseOfflineDraft({
+              policyId
+            });
+          }
+        });
 
-          await permissionsClient.CloseOfflineDraft({
-            policyId
-          });
-        }
-      });
+        // Test both raw metadata and formatted result from ItemPermissions
+        const permissionsMetadata = await client.ContentObjectMetadata({
+          libraryId,
+          objectId: policyId,
+          metadataSubtree: UrlJoin("auth_policy_spec", itemId2, "permissions")
+        });
 
-      // Test both raw metadata and formatted result from ItemPermissions
-      const permissionsMetadata = await client.ContentObjectMetadata({
-        libraryId,
-        objectId: policyId,
-        metadataSubtree: UrlJoin("auth_policy_spec", itemId2, "permissions")
-      });
+        expect(permissionsMetadata).toBeDefined();
 
-      expect(permissionsMetadata).toBeDefined();
+        const permissions = await permissionsClient.ItemPermissions({
+          policyId,
+          itemId: itemId3
+        });
 
-      const permissions = await permissionsClient.ItemPermissions({
-        policyId,
-        itemId: itemId3
-      });
+        expect(permissions).toBeDefined();
+        expect(permissions.length).toEqual(2);
 
-      expect(permissions).toBeDefined();
-      expect(permissions.length).toEqual(2);
-
-      // Remove permissions added by this test
-      // PENDING - use offline draft
-      await client.EditAndFinalizeContentObject({
-        libraryId,
-        objectId: policyId,
-        callback: async ({writeToken}) => {
-          await permissionsClient.RemovePermission({
-            policyId,
-            policyWriteToken: writeToken,
-            itemId: itemId3,
-            subjectId: client.utils.FormatAddress(client.signer.address)
-          });
-          await permissionsClient.RemovePermission({
-            policyId,
-            policyWriteToken: writeToken,
-            itemId: itemId3,
-            subjectId: groupAddress
-          });
-        }
-      });
+        // Remove permissions added by this test
+        // PENDING - use offline draft
+        await client.EditAndFinalizeContentObject({
+          libraryId,
+          objectId: policyId,
+          callback: async ({writeToken}) => {
+            await permissionsClient.RemovePermission({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              subjectId: client.utils.FormatAddress(client.signer.address)
+            });
+            await permissionsClient.RemovePermission({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              subjectId: groupAddress
+            });
+          }
+        });
+      } finally {
+        permissionsClient.offline = false;
+      }
     });
 
     test("Retrieve Item Policy", async () => {
