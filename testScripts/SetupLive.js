@@ -171,8 +171,8 @@ const confLocal = {
   clientConf: {
     configUrl: "",
     contentSpaceId: "ispc36s3uwY9voTx6gXcXENn4KfY29fC",
-    fabricURIs: ["http://localhost:8009"],
-    ethereumURIs: ["http://localhost:8546"],
+    fabricURIs: ["http://localhost:8008"],
+    ethereumURIs: ["http://localhost:8545"],
     noCache: false,
     noAuth: false
   },
