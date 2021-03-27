@@ -1944,7 +1944,7 @@ of the NTP instance, the lower limit will be used.</p>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".RedeemCode">
-      <span class="type-signature">static </span>RedeemCode<span class="signature">({<div class="block-param">issuer<span class="signature-attributes">optional</span>,</div><div class="block-param">tenantId<span class="signature-attributes">optional</span>,</div><div class="block-param">ntpId<span class="signature-attributes">optional</span>,</div><div class="block-param">code,</div><div class="block-param">email<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;string></span>
+      <span class="type-signature">static </span>RedeemCode<span class="signature">({<div class="block-param">issuer<span class="signature-attributes">optional</span>,</div><div class="block-param">tenantId<span class="signature-attributes">optional</span>,</div><div class="block-param">ntpId<span class="signature-attributes">optional</span>,</div><div class="block-param">code,</div><div class="block-param">email<span class="signature-attributes">optional</span>,</div><div class="block-param">includeNTPId<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;(string|Object)></span>
     </h4>
   </span>
 
@@ -1962,7 +1962,7 @@ of the NTP instance, the lower limit will be used.</p>
 
 
   <div class="return-description-block">
-    Returns: <span class="return-description">The object ID which the ticket is authorized to</span>
+    Returns: <span class="return-description">The object ID which the ticket is authorized to, or an object containing the object ID and NTP ID if <code>includeNTPId</code> is specified</span>
   </div>
 
 
@@ -2190,6 +2190,45 @@ of the NTP instance, the lower limit will be used.</p>
       </tr>
 
     
+      <tr>
+        
+          <td class="name"><code>includeNTPId</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      boolean
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+
+        <td class="description last">
+          <p>If specified, the response will include both the target object ID as well as the NTP ID associated with the ticket</p>
+          
+        </td>
+      </tr>
+
+    
   </tbody>
 </table>
 
@@ -2286,7 +2325,7 @@ of the NTP instance, the lower limit will be used.</p>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line376">line 376</a>
+          <a href="client_NTP.js.html">client/NTP.js</a>, <a href="client_NTP.js.html#line377">line 377</a>
         </li>
       </ul>
     </dd>

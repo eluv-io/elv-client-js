@@ -434,10 +434,11 @@ exports.IssueNTPCode = async function({tenantId, ntpId, email, maxRedemptions}) 
  * @param {string=} ntpId - The ID of the NTP instance from which the ticket was issued
  * @param {string} code - Access code
  * @param {string=} email - Email address associated with the code
+ * @param {boolean=} includeNTPId - If specified, the response will include both the target object ID as well as the NTP ID associated with the ticket
  *
- * @return {Promise&lt;string>} - The object ID which the ticket is authorized to
+ * @return {Promise&lt;string|Object>} - The object ID which the ticket is authorized to, or an object containing the object ID and NTP ID if `includeNTPId` is specified
  */
-exports.RedeemCode = async function({issuer, tenantId, ntpId, code, email}) {
+exports.RedeemCode = async function({issuer, tenantId, ntpId, code, email, includeNTPId=false}) {
   const wallet = this.GenerateWallet();
 
   issuer = issuer || "";
@@ -470,7 +471,9 @@ exports.RedeemCode = async function({issuer, tenantId, ntpId, code, email}) {
 
       this.SetStaticToken({token});
 
-      return JSON.parse(this.utils.FromB64(token)).qid;
+      const response = JSON.parse(this.utils.FromB64(token));
+
+      return includeNTPId ? { objectId: response.qid, ntpId: response.oid } : response.qid;
     } catch(error) {
       this.Log("Failed to redeem code:", true);
       this.Log(error, true);
