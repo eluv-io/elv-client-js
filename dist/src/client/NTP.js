@@ -415,18 +415,20 @@ exports.IssueNTPCode = function _callee7(_ref9) {
  * @param {string=} ntpId - The ID of the NTP instance from which the ticket was issued
  * @param {string} code - Access code
  * @param {string=} email - Email address associated with the code
+ * @param {boolean=} includeNTPId - If specified, the response will include both the target object ID as well as the NTP ID associated with the ticket
  *
- * @return {Promise<string>} - The object ID which the ticket is authorized to
+ * @return {Promise<string|Object>} - The object ID which the ticket is authorized to, or an object containing the object ID and NTP ID if `includeNTPId` is specified
  */
 
 
 exports.RedeemCode = function _callee8(_ref10) {
-  var issuer, tenantId, ntpId, code, email, wallet, token, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
+  var issuer, tenantId, ntpId, code, email, _ref10$includeNTPId, includeNTPId, wallet, token, response, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
+
   return _regeneratorRuntime.async(function _callee8$(_context8) {
     while (1) {
       switch (_context8.prev = _context8.next) {
         case 0:
-          issuer = _ref10.issuer, tenantId = _ref10.tenantId, ntpId = _ref10.ntpId, code = _ref10.code, email = _ref10.email;
+          issuer = _ref10.issuer, tenantId = _ref10.tenantId, ntpId = _ref10.ntpId, code = _ref10.code, email = _ref10.email, _ref10$includeNTPId = _ref10.includeNTPId, includeNTPId = _ref10$includeNTPId === void 0 ? false : _ref10$includeNTPId;
           wallet = this.GenerateWallet();
           issuer = issuer || "";
 
@@ -444,7 +446,7 @@ exports.RedeemCode = function _callee8(_ref10) {
           }
 
           ValidateObject(issuer);
-          _context8.next = 27;
+          _context8.next = 28;
           break;
 
         case 8:
@@ -476,24 +478,28 @@ exports.RedeemCode = function _callee8(_ref10) {
           this.SetStaticToken({
             token: token
           });
-          return _context8.abrupt("return", JSON.parse(this.utils.FromB64(token)).qid);
+          response = JSON.parse(this.utils.FromB64(token));
+          return _context8.abrupt("return", includeNTPId ? {
+            objectId: response.qid,
+            ntpId: response.oid
+          } : response.qid);
 
-        case 22:
-          _context8.prev = 22;
+        case 23:
+          _context8.prev = 23;
           _context8.t0 = _context8["catch"](14);
           this.Log("Failed to redeem code:", true);
           this.Log(_context8.t0, true);
           throw _context8.t0;
 
-        case 27:
+        case 28:
           // Site selector
           objectId = issuer;
-          _context8.next = 30;
+          _context8.next = 31;
           return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: objectId
           }));
 
-        case 30:
+        case 31:
           libraryId = _context8.sent;
 
           Hash = function Hash(code) {
@@ -506,52 +512,52 @@ exports.RedeemCode = function _callee8(_ref10) {
           };
 
           codeHash = Hash(code);
-          _context8.next = 35;
+          _context8.next = 36;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             metadataSubtree: "public/codes/".concat(codeHash)
           }));
 
-        case 35:
+        case 36:
           codeInfo = _context8.sent;
 
           if (codeInfo) {
-            _context8.next = 39;
+            _context8.next = 40;
             break;
           }
 
           this.Log("Code redemption failed:\n\t".concat(issuer, "\n\t").concat(code));
           throw Error("Invalid code: " + code);
 
-        case 39:
+        case 40:
           ak = codeInfo.ak, sites = codeInfo.sites, info = codeInfo.info;
-          _context8.next = 42;
+          _context8.next = 43;
           return _regeneratorRuntime.awrap(wallet.AddAccountFromEncryptedPK({
             encryptedPrivateKey: this.utils.FromB64(ak),
             password: code
           }));
 
-        case 42:
+        case 43:
           signer = _context8.sent;
           this.SetSigner({
             signer: signer
           }); // Ensure wallet is initialized
 
-          _context8.next = 46;
+          _context8.next = 47;
           return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
-        case 46:
+        case 47:
           return _context8.abrupt("return", {
             addr: this.utils.FormatAddress(signer.address),
             sites: sites,
             info: info || {}
           });
 
-        case 47:
+        case 48:
         case "end":
           return _context8.stop();
       }
     }
-  }, null, this, [[14, 22]]);
+  }, null, this, [[14, 23]]);
 };
