@@ -1,18 +1,14 @@
 [
   {
-    "signature": "async ContentObjectLibraryId({\n  \"objectId\": \"iq__32ZmB1ekWQZLhpPE8fzJmnUjPJJ6\"\n});",
-    "result": "\"ilib33EoyrgaFph9hFMVNqcz1ZvsqBAm\""
+    "signature": "async ContentObjectLibraryId({\n  \"objectId\": \"iq__4Ym91uVyPhayTRsew3ixQ8aGDJjy\"\n});",
+    "result": "\"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\""
   },
   {
-    "signature": "async ContentObjectLibraryId({\n  \"objectId\": \"iq__32ZmB1ekWQZLhpPE8fzJmnUjPJJ6\",\n  \"versionHash\": \"hq__4oreiKQknHFcEy4cpAU8e7rDiJZRSXqWeCwk8mczDYy2byNFBzRG5zLvnvfNgX5eSS5XejxC5g\"\n});",
-    "result": "\"ilib33EoyrgaFph9hFMVNqcz1ZvsqBAm\""
+    "signature": "async ContentObjectLibraryId({\n  \"objectId\": \"iq__3MvjYsa9bi4aywAYAXUhrvsQVHZq\"\n});",
+    "result": "\"ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3\""
   },
   {
-    "signature": "async ContentObjectLibraryId({\n  \"objectId\": \"iq__fLdzZhKoE9V5gZ3nRBGic35nyMS\"\n});",
-    "result": "\"ilib3j7DvNVcwkq5qTKXmZkEhViXW7Go\""
-  },
-  {
-    "signature": "async ContentObjectLibraryId({\n  \"versionHash\": \"hq__2J6QU3fcowD3CXa4JF9CuX7RHzURRPsyPzwf4cPfHTp2oqJ84ztsDxGqi97qAt1mGUX95RJwTG\"\n});",
-    "result": "\"ilib3NWYmfT3JZZFTcv4Amy1athfduDx\""
+    "signature": "async ContentObjectLibraryId({\n  \"versionHash\": \"hq__5u5T6cb8qSAE5ms7hQF6FMcmPmDTeyZHu1Zz5rFjLCHnzeVrFMt993cDcstkW4k5AqrrRN91sP\"\n});",
+    "result": "\"ilib3762veoskHQtAwoUZZRX26V2qKc2\""
   }
 ]
