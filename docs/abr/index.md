@@ -4,7 +4,7 @@
 
 # Eluvio Content Fabric: Ingesting Media for Adaptive Bit Rate (ABR) Streaming
 
-*last revised: 2020-12-02*
+*last revised: 2021-04-14*
 
   * [Basic Concepts](#basic-concepts)
   * [Preparation](#preparation)
@@ -18,8 +18,8 @@
     * [Create from a file on AWS S3](#create-from-a-file-on-aws-s3)
     * [Create from a local file](#create-from-a-local-file)
     * [Check output from CreateProductionMaster.js script](#check-output-from-createproductionmaster)
-    * [Grant Permissions on Production Master object - via browser](#grant-permissions-on-production-master-object---via-browser)
-    * [Grant Permissions on Production Master object - via command line](#grant-permissions-on-production-master-object---via-command-line)
+    * [Grant Group Permissions on Production Master object - via browser](#grant-permissions-on-production-master-object---via-browser)
+    * [Grant Group Permissions on Production Master object - via command line](#grant-permissions-on-production-master-object---via-command-line)
   * [(If needed) Change streams on Production Master Variant](#change-streams-on-production-master-variant)
     * [Display Production Master Stream Info](#display-production-master-stream-info)
     * [Add stream to Production Master Variant](#add-stream-to-production-master-variant)
@@ -34,8 +34,10 @@
     * [Successful creation of Mezzanine object](#successful-creation-of-mezzanine-object)
     * [Checking Mezzanine transcoding status](#checking-mezzanine-transcoding-status)
   * [Finalize your Mezzanine object](#finalize-your-mezzanine-object)
-    * [Grant Permissions on Mezzanine object - via browser](#grant-permissions-on-mezzanine-object-via-browser)
-    * [Grant Permissions on Mezzanine object - via command line](#grant-permissions-on-mezzanine-object-via-command-line)
+    * [Set Mezzanine object visibility to 'Viewable' - via browser](#set-viz-mez-browser)
+    * [Set Mezzanine object visibility to 'Viewable' - via command line](#set-viz-mez-command-line)
+    * [Grant Group Permissions on Mezzanine object - via browser](#grant-permissions-on-mezzanine-object-via-browser)
+    * [Grant Group Permissions on Mezzanine object - via command line](#grant-permissions-on-mezzanine-object-via-command-line)
   * [Adding another Offering to a Mezzanine object](#adding-another-offering-to-a-mezzanine-object)
     * [Viewing Offerings other than "default"](#viewing-offerings-other-than-default)
   * [Adding / removing playout options from an Offering](#adding--removing-playout-options-from-an-offering)
@@ -279,10 +281,32 @@ A **Production Master** contains one or more **Variants**. A **Variant** is one 
 
 Clicking on the **Show Metadata** button and drilling down into *production_master* &#8594;  *variants* &#8594;  *default* &#8594;  *streams* will reveal what files and stream indexes the server has chosen to include in this "default" Variant.
 
-<a id="grant-permissions-on-production-master-object---via-browser"></a>
-### Grant Permissions on Production Master object - via browser&nbsp;[&#8673;](#contents)
+<a id="set-viz-mez-browser"></a>
+### Set Mezzanine object visibility to 'Viewable' - via browser&nbsp;[&#8673;](#contents)
 
-In order to let other Content Admins work with your Production Master object, you must grant permissions to an **Access Group**.
+In order to make the Mezzanine viewable for your site, you must set overall permission level for object to **Viewable**.
+
+From the object details page, click the **Content Info** tab, then change the **Permissions:** line to **Viewable**.
+
+If you cannot change the **Permissions:** line, make sure you are logged in to the Fabric Browser with the private key used to create the mezzanine.
+
+<a id="set-viz-mez-command-line"></a>
+### Set Mezzanine object visibility to 'Viewable' - via command line&nbsp;[&#8673;](#contents)
+
+In order to make the Mezzanine viewable using the command line, you will need to know the following:
+
+* The ID of your Mezzanine object (starts with "iq__")
+
+The command to add permissions is then:
+
+    node testScript/ObjectSetPermissions.js \
+      --objectId YOUR_OBJECT_ID \
+      --value Viewable
+
+<a id="grant-permissions-on-production-master-object---via-browser"></a>
+### Grant Group Permissions on Production Master object - via browser&nbsp;[&#8673;](#contents)
+
+In order to let other Content Admins work with your Production Master object, you must grant group permissions to an **Access Group**.
 
 From the object details page, click the blue **Groups** button at top - you should see a screen with the *Access Group* field already chosen for you, set to "*TENANT_NAME* Content Admins".
 
@@ -290,9 +314,9 @@ Check the **Manage** box, then click **Submit**.
 
 
 <a id="grant-permissions-on-production-master-object---via-command-line"></a>
-### Grant Permissions on Production Master object - via command line&nbsp;[&#8673;](#contents)
+### Grant Group Permissions on Production Master object - via command line&nbsp;[&#8673;](#contents)
 
-In order to grant permissions via the command line, you will need to know the following:
+In order to grant group permissions via the command line, you will need to know the following:
 
 * The ID of your Production Master object (starts with "iq__")
 * The Address of your "*TENANT_NAME* Content Admins" group (starts with "0x")
@@ -627,7 +651,7 @@ While the command itself should complete quickly, it can take 2-3 minutes for th
 In the browser, click the refresh icon ![image for refresh icon](images/icon_reload.png) to update your view, then click on the **Display** tab to see the finalized content.
 
 <a id="grant-permissions-on-mezzanine-object-via-browser"></a>
-### Grant Permissions on Mezzanine object - via browser&nbsp;[&#8673;](#contents)
+### Grant Group Permissions on Mezzanine object - via browser&nbsp;[&#8673;](#contents)
 
 (Identical process as for the Production Master object)
 
@@ -636,11 +660,11 @@ From the object details page, click the blue **Groups** button at top - you shou
 Check the **Manage** box, then click **Submit**.
 
 <a id="grant-permissions-on-mezzanine-object-via-command-line"></a>
-### Grant Permissions on Mezzanine object - via command line&nbsp;[&#8673;](#contents)
+### Grant Group Permissions on Mezzanine object - via command line&nbsp;[&#8673;](#contents)
 
 (Identical process as for the Production Master object)
 
-In order to grant permissions via the command line, you will need to know the following:
+In order to grant group permissions via the command line, you will need to know the following:
 
 * The ID of your Mezzanine object (starts with "iq__")
 * The Address of your "*TENANT_NAME* Content Admins" group (starts with "0x")
