@@ -1,12 +1,9 @@
 [
   {
-    "signature": " Log(\"Creating user wallet for user 0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9\");"
-  },
-  {
-    "signature": " Log(\"Creating wallet object for user 0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9\");"
-  },
-  {
     "signature": " Log(\"Merging user metadata at /\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at /\");"
@@ -18,22 +15,46 @@
     "signature": " Log(\"Merging user metadata at toMerge\");"
   },
   {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
+  },
+  {
     "signature": " Log(\"Replacing user metadata at toReplace\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
   },
   {
     "signature": " Log(\"Deleting user metadata at toDelete\");"
   },
   {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
+  },
+  {
     "signature": " Log(\"Accessing private user metadata at /\");"
   },
   {
-    "signature": " Log(\"Setting profile image for user 0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9\");"
+    "signature": " Log(\"Setting profile image for user 0x793E41369eb3C8b579da28a41c350837c18b25Be\");"
   },
   {
-    "signature": " Log(\"Setting profile image for user 0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9\");"
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
+  },
+  {
+    "signature": " Log(\"Setting profile image for user 0x793E41369eb3C8b579da28a41c350837c18b25Be\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at tenantId\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at public/links/metadataLink\");"
@@ -43,6 +64,9 @@
   },
   {
     "signature": " Log(\"Replacing user metadata at access_level\");"
+  },
+  {
+    "signature": " Log(\"Accessing private user metadata at public/name\");"
   },
   {
     "signature": " Log(\"Accessing private user metadata at access_level\");"

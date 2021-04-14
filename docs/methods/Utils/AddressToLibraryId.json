@@ -1,14 +1,74 @@
 [
   {
+    "signature": " AddressToLibraryId(\"0x875c509648a88a486f0d1d760301f3fff8470ce2\");",
+    "result": "\"ilib2tNqMTr51szPGsttFQJSq6gRdKaZ\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x2806e87e50dd3d9873c8487573ea512c6861c0df\");",
+    "result": "\"ilibZLusoJnHFwAX9pfFB2rYX2yLnsY\""
+  },
+  {
     "signature": " AddressToLibraryId(\"0xe43da44cd2f7b9ead9405c8763dc7493a5ab54f1\");",
     "result": "\"ilib4BRmonTig9QSD87MRWP8F5iLfdct\""
   },
   {
-    "signature": " AddressToLibraryId(\"0xb40515e87234f855c170dbc5c64e3dee5ed27072\");",
-    "result": "\"ilib3WTqrikm2JpYzvoFthwMLhYgdW2u\""
+    "signature": " AddressToLibraryId(\"0x29ea271b98938bbfeacf319818aec24d1b628a0d\");",
+    "result": "\"ilibasP2Nff27BWoXJMuUevk2k7MoR6\""
   },
   {
-    "signature": " AddressToLibraryId(\"0xB40515e87234f855c170dbc5c64E3dee5ED27072\");",
-    "result": "\"ilib3WTqrikm2JpYzvoFthwMLhYgdW2u\""
+    "signature": " AddressToLibraryId(\"0x29eA271B98938bbFeACf319818Aec24d1b628a0d\");",
+    "result": "\"ilibasP2Nff27BWoXJMuUevk2k7MoR6\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0xc38cfffdcf5d44f6388954605db14543ad6663c6\");",
+    "result": "\"ilib3j1iarYtn2gs3T8t6wqgufwxgtNH\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x035f22416de2b0958d95e22b05f7767b3a4940e1\");",
+    "result": "\"ilib3j1rfZFuXQQCFyJvc7fZe864Nec\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x97172a5190a9967238444e2e7983f934a8d40e47\");",
+    "result": "\"ilib3762veoskHQtAwoUZZRX26V2qKc2\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x0414e14df62371499b87c2cc0e6213b2f41bd9ab\");",
+    "result": "\"ilib4JHfGGkxT2rJvnEKeXV8LQWNSGA\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x97172A5190A9967238444e2e7983f934A8D40e47\");",
+    "result": "\"ilib3762veoskHQtAwoUZZRX26V2qKc2\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x0414E14DF62371499B87C2cC0e6213b2f41bD9Ab\");",
+    "result": "\"ilib4JHfGGkxT2rJvnEKeXV8LQWNSGA\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x22536227149886b0d4e9a32d077eba64d571316f\");",
+    "result": "\"ilibUjiUGsGnnjuGAzSLZrhCDTcddX4\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0xa570b8c292b02a0bca8e4c3f2da9abad0da8951a\");",
+    "result": "\"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0xA570b8c292b02a0bca8E4C3F2dA9aBAD0dA8951a\");",
+    "result": "\"ilib3JgZBNxZE8ZkM4jP8YUAdTnjukWV\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x8b42013151e80d738cfd81157b80be7febbccc5a\");",
+    "result": "\"ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x8B42013151E80D738cfD81157B80be7feBbCCC5a\");",
+    "result": "\"ilib2wXUwatNUvPoBWtNyiyDEsEYRxX3\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x28854923ac1308387b2738416cd82871c4b04e6a\");",
+    "result": "\"ilibZk3mVyaqoKJox34kYMEbbQtfuEh\""
+  },
+  {
+    "signature": " AddressToLibraryId(\"0x28854923AC1308387B2738416cd82871C4B04e6A\");",
+    "result": "\"ilibZk3mVyaqoKJox34kYMEbbQtfuEh\""
   }
 ]
