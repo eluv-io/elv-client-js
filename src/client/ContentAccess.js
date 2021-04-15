@@ -1206,6 +1206,7 @@ exports.PlayoutPathResolution = async function({
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
+ * @param {boolean=} signedLink - Specify if linkPath is pointing directly to the offerings endpoint
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  *
@@ -1217,6 +1218,7 @@ exports.AvailableOfferings = async function({
   writeToken,
   linkPath,
   signedLink,
+  directLink,
   handler="playout",
   authorizationToken
 }) {
@@ -1224,9 +1226,17 @@ exports.AvailableOfferings = async function({
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
   }
 
-  const {
-    path
-  } = await this.PlayoutPathResolution({
+  if(directLink) {
+    return await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId}),
+      objectId,
+      versionHash,
+      metadataSubtree: linkPath,
+      resolveLinks: true
+    });
+  }
+
+  const { path } = await this.PlayoutPathResolution({
     objectId,
     versionHash,
     writeToken,
@@ -1277,6 +1287,7 @@ exports.AvailableOfferings = async function({
  *
  * @methodGroup Media
  * @namedParams
+ * @param {string=} offeringURI - A URI pointing directly to the playout options endpoint
  * @param {string=} objectId - ID of the content
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
@@ -1292,6 +1303,7 @@ exports.AvailableOfferings = async function({
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  */
 exports.PlayoutOptions = async function({
+  offeringURI,
   objectId,
   versionHash,
   writeToken,
@@ -1306,6 +1318,17 @@ exports.PlayoutOptions = async function({
   hlsjsProfile=true,
   authorizationToken
 }) {
+  if(offeringURI) {
+    const uriInfo = offeringURI.match(/(hq__[^/]+)\/rep\/([^/]+)\/([^/]+)\/options.json/);
+    versionHash = uriInfo[1];
+    handler = uriInfo[2];
+    offering = uriInfo[3];
+
+    if(!versionHash || !handler || !offering) {
+      throw Error(`Invalid offering URI: ${offeringURI}`);
+    }
+  }
+
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
   protocols = protocols.map(p => p.toLowerCase());
@@ -1404,10 +1427,18 @@ exports.PlayoutOptions = async function({
   }
 
   let playoutMap = {};
+  let sessionId, multiview;
   for(let i = 0; i < playoutOptions.length; i++) {
     const option = playoutOptions[i];
     const protocol = option.properties.protocol;
     const drm = option.properties.drm;
+    sessionId = sessionId || option.sid;
+    multiview = multiview || !!option.properties.multiview;
+
+    if(sessionId) {
+      queryParams.sid = sessionId;
+    }
+
     // Remove authorization parameter from playout path - it's re-added by Rep
     let playoutPath = option.uri.split("?")[0];
 
@@ -1442,7 +1473,7 @@ exports.PlayoutOptions = async function({
                 versionHash: linkTarget.versionHash || versionHash,
                 rep: UrlJoin(handler, offering, playoutPath),
                 noAuth: true,
-                queryParams,
+                queryParams
               }),
           drms: drm ? {[drm]: {licenseServers, cert}} : undefined
         }
@@ -1461,6 +1492,38 @@ exports.PlayoutOptions = async function({
       playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
       playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
     }
+  }
+
+  // Callbacks for retrieving and setting multiview views
+  if(multiview && sessionId) {
+    playoutMap.sessionId = sessionId;
+    playoutMap.multiview = true;
+
+    playoutMap.AvailableViews = async () => {
+      return await this.utils.ResponseToFormat(
+        "json",
+        await this.HttpClient.Request({
+          path: UrlJoin("q", linkTarget.versionHash || versionHash, "rep", handler, offering, "views.json"),
+          method: "GET",
+          queryParams: {
+            sid: sessionId,
+            authorization
+          }
+        })
+      );
+    };
+
+    playoutMap.SwitchView = async (view) => {
+      await this.HttpClient.Request({
+        path: UrlJoin("q", linkTarget.versionHash || versionHash, "rep", handler, offering, "select_view"),
+        method: "POST",
+        queryParams: {
+          sid: sessionId,
+          authorization
+        },
+        body: { view }
+      });
+    };
   }
 
   this.Log(playoutMap);
