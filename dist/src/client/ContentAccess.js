@@ -1587,7 +1587,7 @@ exports.MetadataAuth = function _callee22(_ref15) {
 
 
 exports.ContentObjectMetadata = function _callee23(_ref16) {
-  var libraryId, objectId, versionHash, writeToken, _ref16$metadataSubtre, metadataSubtree, _ref16$queryParams, queryParams, _ref16$select, select, _ref16$remove, remove, authorizationToken, _ref16$resolveLinks, resolveLinks, _ref16$resolveInclude, resolveIncludeSource, _ref16$resolveIgnoreE, resolveIgnoreErrors, _ref16$linkDepthLimit, linkDepthLimit, _ref16$produceLinkUrl, produceLinkUrls, path, authToken, metadata;
+  var libraryId, objectId, versionHash, writeToken, _ref16$metadataSubtre, metadataSubtree, _ref16$queryParams, queryParams, _ref16$select, select, _ref16$remove, remove, authorizationToken, _ref16$resolveLinks, resolveLinks, _ref16$resolveInclude, resolveIncludeSource, _ref16$resolveIgnoreE, resolveIgnoreErrors, _ref16$linkDepthLimit, linkDepthLimit, _ref16$produceLinkUrl, produceLinkUrls, path, defaultAuthToken, authTokens, metadata;
 
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
@@ -1600,6 +1600,7 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             versionHash: versionHash
           });
           this.Log("Retrieving content object metadata: ".concat(libraryId || "", " ").concat(objectId || versionHash, " ").concat(writeToken || "", "\n       Subtree: ").concat(metadataSubtree));
+          queryParams = _objectSpread({}, queryParams || {});
 
           if (versionHash) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
@@ -1607,7 +1608,7 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
 
           path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree); // Main authorization
 
-          _context23.next = 7;
+          _context23.next = 8;
           return _regeneratorRuntime.awrap(this.MetadataAuth({
             libraryId: libraryId,
             objectId: objectId,
@@ -1615,17 +1616,20 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             path: metadataSubtree
           }));
 
-        case 7:
-          authToken = _context23.sent;
-          // Additional authorization
-          queryParams.authorization = [queryParams.authorization, authorizationToken].flat().filter(function (token) {
+        case 8:
+          defaultAuthToken = _context23.sent;
+          // All authorization
+          authTokens = [authorizationToken, queryParams.authorization, defaultAuthToken].flat().filter(function (token) {
             return token;
           });
-          _context23.prev = 9;
-          _context23.next = 12;
+          delete queryParams.authorization;
+          _context23.prev = 11;
+          _context23.next = 14;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             headers: {
-              "Authorization": "Bearer ".concat(authToken)
+              "Authorization": authTokens.map(function (token) {
+                return "Bearer ".concat(token);
+              })
             },
             queryParams: _objectSpread({}, queryParams, {
               select: select,
@@ -1639,35 +1643,35 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             path: path
           })));
 
-        case 12:
+        case 14:
           metadata = _context23.sent;
-          _context23.next = 20;
+          _context23.next = 22;
           break;
 
-        case 15:
-          _context23.prev = 15;
-          _context23.t0 = _context23["catch"](9);
+        case 17:
+          _context23.prev = 17;
+          _context23.t0 = _context23["catch"](11);
 
           if (!(_context23.t0.status !== 404)) {
-            _context23.next = 19;
+            _context23.next = 21;
             break;
           }
 
           throw _context23.t0;
 
-        case 19:
+        case 21:
           metadata = metadataSubtree === "/" ? {} : undefined;
 
-        case 20:
+        case 22:
           if (produceLinkUrls) {
-            _context23.next = 22;
+            _context23.next = 24;
             break;
           }
 
           return _context23.abrupt("return", metadata);
 
-        case 22:
-          _context23.next = 24;
+        case 24:
+          _context23.next = 26;
           return _regeneratorRuntime.awrap(this.ProduceMetadataLinks({
             libraryId: libraryId,
             objectId: objectId,
@@ -1677,15 +1681,15 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
             authorizationToken: authorizationToken
           }));
 
-        case 24:
+        case 26:
           return _context23.abrupt("return", _context23.sent);
 
-        case 25:
+        case 27:
         case "end":
           return _context23.stop();
       }
     }
-  }, null, this, [[9, 15]]);
+  }, null, this, [[11, 17]]);
 };
 /** Retrive public/asset_metadata from the specified object, performing automatic localization override based on the specified localization info.
  *
