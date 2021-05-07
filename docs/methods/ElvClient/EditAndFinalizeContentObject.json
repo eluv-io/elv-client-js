@@ -1,0 +1,6 @@
+[
+  {
+    "signature": "async EditAndFinalizeContentObject({\n  \"libraryId\": \"ilib3762veoskHQtAwoUZZRX26V2qKc2\",\n  \"objectId\": \"iq__3MXtFtRdbFtPwKHmw46mgmd8GQjs\",\n  \"commitMessage\": \"Test Commit Message\",\n  \"callback\": \"<function>\"\n});",
+    "result": "{\n  \"id\": \"iq__3MXtFtRdbFtPwKHmw46mgmd8GQjs\",\n  \"hash\": \"hq__GE8wdmmmT1gHKVnsr9EqXKhkFJL7z63JQ1dVcvajUWevgP5ZQmwVVDw3j66VFa8QHpWcmseSjB\",\n  \"write_token\": \"tqw__HSWgNH437Rr4NGVUdmRuWp9fZceiqnsHECxy4Z2RAfTzinnEYjVkCn2sAB1d7Wq2oiHWTKoFJJQNzozBWXZ\",\n  \"type\": \"hq__LVJqN7DWzCeZSQRvjxTaSGSpnpDbec1uMwDhAgaaKEPT8cydYYwBgA19foTuw3e2EYTzGe5fW8\",\n  \"qlib_id\": \"ilib3762veoskHQtAwoUZZRX26V2qKc2\"\n}"
+  }
+]

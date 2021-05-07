@@ -9,9 +9,23 @@
 //
 
 const yargs = require("yargs");
+const yargsTerminalWidth = yargs.terminalWidth();
 const {ElvClient} = require("../../src/ElvClient");
 
 module.exports = class ScriptBase {
+  static deprecationNotice(newFileName) {
+    console.log(`
+***** DEPRECATION NOTICE *****
+
+  This script will be removed later this year, please switch
+  to /utilities/${newFileName} at your earliest convenience.
+
+  More info: https://docs.google.com/document/d/1iKQZhea02rVGNg4qI59ig-RyxecUXsJC8KcGhHhrut8/edit#
+
+******************************
+`);
+  }
+
   constructor(testArgs = null) {
     // make sure env var PRIVATE_KEY is set
     if(!process.env.PRIVATE_KEY) {
@@ -24,7 +38,6 @@ module.exports = class ScriptBase {
     } else {
       this.args = this.options().argv;
     }
-
     // if --configUrl was not passed in, try to read from ../TestConfiguration.json
     if(!this.args.configUrl) {
       const ClientConfiguration = require("../../TestConfiguration.json");
@@ -85,6 +98,7 @@ module.exports = class ScriptBase {
   //    }
   // }
   options() {
+
     return yargs
       .option("debug", {
         describe: "Print debug logging for API calls",
@@ -101,13 +115,13 @@ module.exports = class ScriptBase {
         describe: "Geographic region for the fabric nodes.",
         type: "string",
       })
-      .strict().version(false);
+      .strict().version(false).wrap(yargsTerminalWidth);
   }
 
   run() {
     console.log("\n" + this.header());
     this.body().then(successValue => {
-      console.log(this.footer()+ "\n");
+      console.log(this.footer() + "\n");
       return successValue;
     }, failureReason => {
       console.error(failureReason);

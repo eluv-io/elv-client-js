@@ -1,21 +1,51 @@
-// Create a new content fabric library
+const {NewOpt, StdOpt} = require("./lib/options");
+const Utility = require("./lib/Utility");
 
-const ScriptBase = require("./lib/ScriptBase");
+const Client = require("./lib/concerns/Client");
+const Library = require("./lib/concerns/Library");
 
-class LibraryCreate extends ScriptBase {
+class LibraryCreate extends Utility {
+  blueprint() {
+    return {
+      concerns: [Client],
+      options: [
+        StdOpt("name",
+          {
+            demand: true,
+            forX: "new library"
+          }),
+        StdOpt("description",
+          {
+            forX: "new library"
+          }),
+        NewOpt("kmsId",
+          {
+            descTemplate: "ID of the KMS to use for new library. If not specified, the default KMS will be used.",
+            type: "string"
+          }),
+        NewOpt("addDrmCert",
+          {
+            descTemplate: "Add standard DRM certificate to library metadata.",
+            type: "boolean"
+          })
+      ]
+    };
+  }
 
   async body() {
-    const client = await this.client();
     const logger = this.logger;
+    const {description, kmsId, name} = this.args;
 
-    const description = this.args.description;
-    const name = this.args.name;
-    const kmsId = this.args.kmsId;
+    const metadata = this.args.addDrmCert
+      ? Library.stdDrmCert
+      : undefined;
 
+    const client = await this.concerns.Client.get();
     const response = await client.CreateContentLibrary({
-      name,
       description,
-      kmsId
+      kmsId,
+      name,
+      metadata
     });
 
     logger.log(`New library ID: ${response}`);
@@ -23,27 +53,12 @@ class LibraryCreate extends ScriptBase {
   }
 
   header() {
-    return `Creating library '${this.args.name}'...`;
-  }
-
-  options() {
-    return super.options()
-      .option("name", {
-        demandOption: true,
-        describe: "Name for new library",
-        type: "string"
-      })
-      .option("description", {
-        describe: "Library description",
-        type: "string"
-      })
-      .option("kmsId", {
-        alias: "kms-id",
-        describe: "ID of the KMS to use for content in this library. If not specified, the default KMS will be used.",
-        type: "string"
-      });
+    return `Create library '${this.args.name}':`;
   }
 }
 
-const script = new LibraryCreate;
-script.run();
+if(require.main === module) {
+  Utility.cmdLineInvoke(LibraryCreate);
+} else {
+  module.exports = LibraryCreate;
+}

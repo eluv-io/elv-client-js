@@ -5,7 +5,6 @@
  */
 
 const Utils = require("../Utils");
-const bs58 = require("bs58");
 
 let fs;
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
@@ -135,7 +134,7 @@ exports.UploadFilesFromS3 = async function({
       secret_key: ""
     };
 
-    encryption_key = `kp__${bs58.encode(Buffer.from(JSON.stringify(conk)))}`;
+    encryption_key = `kp__${this.utils.B58(Buffer.from(JSON.stringify(conk)))}`;
   }
 
   let cloudCredentials = {
@@ -671,15 +670,29 @@ exports.DownloadFile = async function({
       chunkSize = 10000000;
     }
 
-    return await this.Download({
-      downloadPath: path,
-      bytesTotal,
-      headers,
-      callback,
-      format,
-      chunked,
-      chunkSize
-    });
+    try {
+      return await this.Download({
+        downloadPath: path,
+        bytesTotal,
+        headers,
+        callback,
+        format,
+        chunked,
+        chunkSize
+      });
+    } catch(error) {
+      if(encrypted && !clientSideDecryption) {
+        // If encrypted download with rep/files_download failed, retry with client side decryption
+        return (
+          this.DownloadFile({
+            ...arguments[0],
+            clientSideDecryption: true
+          })
+        );
+      }
+
+      throw error;
+    }
   }
 };
 

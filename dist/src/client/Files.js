@@ -13,8 +13,6 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
  */
 var Utils = require("../Utils");
 
-var bs58 = require("bs58");
-
 var fs;
 
 if (Utils.Platform() === Utils.PLATFORM_NODE) {
@@ -196,7 +194,7 @@ exports.UploadFilesFromS3 = function _callee2(_ref2) {
           conk = _objectSpread({}, conk, {
             secret_key: ""
           });
-          encryption_key = "kp__".concat(bs58.encode(Buffer.from(JSON.stringify(conk))));
+          encryption_key = "kp__".concat(this.utils.B58(Buffer.from(JSON.stringify(conk))));
 
         case 25:
           cloudCredentials = {
@@ -1078,7 +1076,26 @@ exports.DeleteFiles = function _callee11(_ref12) {
 
 
 exports.DownloadFile = function _callee12(_ref13) {
-  var libraryId, objectId, versionHash, writeToken, filePath, _ref13$format, format, _ref13$chunked, chunked, chunkSize, _ref13$clientSideDecr, clientSideDecryption, callback, fileInfo, encrypted, encryption, path, headers, bytesTotal;
+  var libraryId,
+      objectId,
+      versionHash,
+      writeToken,
+      filePath,
+      _ref13$format,
+      format,
+      _ref13$chunked,
+      chunked,
+      chunkSize,
+      _ref13$clientSideDecr,
+      clientSideDecryption,
+      callback,
+      fileInfo,
+      encrypted,
+      encryption,
+      path,
+      headers,
+      bytesTotal,
+      _args14 = arguments;
 
   return _regeneratorRuntime.async(function _callee12$(_context14) {
     while (1) {
@@ -1204,7 +1221,8 @@ exports.DownloadFile = function _callee12(_ref13) {
             chunkSize = 10000000;
           }
 
-          _context14.next = 49;
+          _context14.prev = 47;
+          _context14.next = 50;
           return _regeneratorRuntime.awrap(this.Download({
             downloadPath: path,
             bytesTotal: bytesTotal,
@@ -1215,15 +1233,31 @@ exports.DownloadFile = function _callee12(_ref13) {
             chunkSize: chunkSize
           }));
 
-        case 49:
+        case 50:
           return _context14.abrupt("return", _context14.sent);
 
-        case 50:
+        case 53:
+          _context14.prev = 53;
+          _context14.t16 = _context14["catch"](47);
+
+          if (!(encrypted && !clientSideDecryption)) {
+            _context14.next = 57;
+            break;
+          }
+
+          return _context14.abrupt("return", this.DownloadFile(_objectSpread({}, _args14[0], {
+            clientSideDecryption: true
+          })));
+
+        case 57:
+          throw _context14.t16;
+
+        case 58:
         case "end":
           return _context14.stop();
       }
     }
-  }, null, this);
+  }, null, this, [[47, 53]]);
 };
 /* Parts */
 

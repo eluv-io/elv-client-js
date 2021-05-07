@@ -72,7 +72,7 @@ const expect = (value) => {
   };
 
   const errorMessage = (opName, maybeOtherValue, not) =>
-    `\n\n\tAssertion failed:\n\n\t\texpect(${typeof value === "function" ? value.methodName : JSON.stringify(value)}).${not ? "not." : ""}${opName}(${JSON.stringify(maybeOtherValue) || ""})\n`;
+    `\n\n\tAssertion failed:\n\nexpect(${typeof value === "function" ? value.methodName : JSON.stringify(value, null, 2)}).${not ? "not." : ""}${opName}(${JSON.stringify(maybeOtherValue, null, 2) || ""})\n`;
 
   const functions = {};
   Object.keys(ops).forEach(opName => {

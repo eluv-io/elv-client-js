@@ -1,18 +1,45 @@
 [
   {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
+  },
+  {
     "signature": "async UserMetadata();",
-    "result": "{\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
+    "result": "{\n  \"commit\": {\n    \"author\": \"0x793e41369eb3c8b579da28a41c350837c18b25be\",\n    \"author_address\": \"0x793e41369eb3c8b579da28a41c350837c18b25be\",\n    \"message\": \"Merge user metadata\",\n    \"timestamp\": \"2021-03-09T19:58:53.628Z\"\n  },\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toDelete\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\"\n  },\n  \"toReplace\": {\n    \"meta\": \"data\"\n  }\n}"
   },
   {
     "signature": "async UserMetadata({\n  \"metadataSubtree\": \"toMerge\"\n});",
     "result": "{\n  \"meta\": \"data\"\n}"
   },
   {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
+  },
+  {
     "signature": "async UserMetadata();",
-    "result": "{\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\",\n    \"new\": \"metadata\"\n  },\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
+    "result": "{\n  \"commit\": {\n    \"author\": \"0x793e41369eb3c8b579da28a41c350837c18b25be\",\n    \"author_address\": \"0x793e41369eb3c8b579da28a41c350837c18b25be\",\n    \"message\": \"Delete user metadata\",\n    \"timestamp\": \"2021-03-09T19:59:05.166Z\"\n  },\n  \"public\": {\n    \"meta\": \"data\"\n  },\n  \"toMerge\": {\n    \"meta\": \"data\",\n    \"new\": \"metadata\"\n  },\n  \"toReplace\": {\n    \"new\": \"metadata\"\n  }\n}"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
   },
   {
     "signature": "async UserMetadata({\n  \"metadataSubtree\": \"tenantId\"\n});"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
   },
   {
     "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/links/metadataLink\",\n  \"resolveLinks\": true\n});",
@@ -20,6 +47,9 @@
   },
   {
     "signature": "async UserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});"
+  },
+  {
+    "signature": "async UserMetadata({\n  \"metadataSubtree\": \"public/name\"\n});"
   },
   {
     "signature": "async UserMetadata({\n  \"metadataSubtree\": \"access_level\"\n});",

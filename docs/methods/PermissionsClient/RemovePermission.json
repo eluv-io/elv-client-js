@@ -1,11 +1,14 @@
 [
   {
-    "signature": "async RemovePermission({\n  \"policyId\": \"iq__2LFhd7iBv9NrPpCku2fHemCjHUaG\",\n  \"policyWriteToken\": \"tqw_A7HFWDRxiVBS249M4gvauf9ZPGVDLfCPH\",\n  \"itemId\": \"iq__3bHYikt7r3C4Kf1miukvYaC7P6j5\",\n  \"subjectId\": \"0x957ce3b307dc57affd95dfdf59f16f6bd01c8f77\"\n});"
+    "signature": "async RemovePermission({\n  \"policyId\": \"iq__BKUZ8G6FagVjK74NANSq3rwskEp\",\n  \"policyWriteToken\": \"tqw__HSQQdnKZTMbqVWkQLrCyxWkPah6faERJGoaynX7JNbPgijJJXGdPu9Rybs2avJipQXSUbooGWukAgAvZePk\",\n  \"itemId\": \"iq__127hgef9FgcHkKxmwe6vTaW99UA\",\n  \"subjectId\": \"0xb9b3a6218fe81a0b9f96a9a3140931c62ce85c82\"\n});"
   },
   {
-    "signature": "async RemovePermission({\n  \"policyId\": \"iq__2LFhd7iBv9NrPpCku2fHemCjHUaG\",\n  \"policyWriteToken\": \"tqw_A7HFWDRxiVBS249M4gvauf9ZPGVDLfCPH\",\n  \"itemId\": \"iq__3bHYikt7r3C4Kf1miukvYaC7P6j5\",\n  \"subjectId\": \"00uyyha6cjm2Q7Zgv4x6\"\n});"
+    "signature": "async RemovePermission({\n  \"policyId\": \"iq__BKUZ8G6FagVjK74NANSq3rwskEp\",\n  \"policyWriteToken\": \"tqw__HSQQdnKZTMbqVWkQLrCyxWkPah6faERJGoaynX7JNbPgijJJXGdPu9Rybs2avJipQXSUbooGWukAgAvZePk\",\n  \"itemId\": \"iq__127hgef9FgcHkKxmwe6vTaW99UA\",\n  \"subjectId\": \"00uyyha6cjm2Q7Zgv4x6\"\n});"
   },
   {
-    "signature": "async RemovePermission({\n  \"policyId\": \"iq__2LFhd7iBv9NrPpCku2fHemCjHUaG\",\n  \"policyWriteToken\": \"tqw_Pbjju62tYf8KX2SoBbwwC9rfaGX9dg6rD\",\n  \"subjectId\": \"QOTPQVagZQv7Mkt\",\n  \"itemId\": \"iq__3bHYikt7r3C4Kf1miukvYaC7P6j5\"\n});"
+    "signature": "async RemovePermission({\n  \"policyId\": \"iq__BKUZ8G6FagVjK74NANSq3rwskEp\",\n  \"policyWriteToken\": \"tqw__HSQQdnKZTMbqVWkQLrCyxWkPah6faERJGoaynX7JNbPgijJJXGdPu9Rybs2avJipQXSUbooGWukAgAvZePk\",\n  \"itemId\": \"iq__127hgef9FgcHkKxmwe6vTaW99UA\",\n  \"subjectId\": \"special.event.subject@ntp.com\"\n});"
+  },
+  {
+    "signature": "async RemovePermission({\n  \"policyId\": \"iq__BKUZ8G6FagVjK74NANSq3rwskEp\",\n  \"policyWriteToken\": \"tqw__HSQQdnKZTMbqVWkQLrCyxWkPah6faERJGoaynX7JNbPgijJJXGdPu9Rybs2auxfMamN3DKuBg3aX5NUaE9T\",\n  \"subjectId\": \"QOTPQVagZQv7Mkt\",\n  \"itemId\": \"iq__127hgef9FgcHkKxmwe6vTaW99UA\"\n});"
   }
 ]

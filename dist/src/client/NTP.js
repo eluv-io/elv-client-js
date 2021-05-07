@@ -5,6 +5,8 @@ var _regeneratorRuntime = require("@babel/runtime/regenerator");
  *
  * @module ElvClient/NTP
  */
+var UrlJoin = require("url-join");
+
 var _require = require("../Validation"),
     ValidateAddress = _require.ValidateAddress,
     ValidateDate = _require.ValidateDate,
@@ -15,10 +17,10 @@ var FormatNTPInfo = function FormatNTPInfo(info) {
   var params = info.pm || {};
   var response = {
     ntpId: info.id,
+    ntpClass: "Class ".concat(info.de),
     tenantId: info.ti,
     kmsId: info.ki,
     objectId: params.qid,
-    type: info.de === 4 ? "NTP" : "Other",
     updatedAt: parseInt(info.ts),
     startTime: parseInt(params.vat),
     endTime: parseInt(params.exp),
@@ -47,6 +49,7 @@ var FormatNTPInfo = function FormatNTPInfo(info) {
  * @param {string} tenantId - The ID of the tenant in which to create the NTP instance
  * @param {string} objectId - ID of the object for the tickets to be authorized to
  * @param {Array<string>=} groupAddresses - List of group addresses for the tickets to inherit permissions from
+ * @param {number=} ntpClass=4 - Class of NTP instance to create
  * @param {number=} maxTickets=0 - The maximum number of tickets that may be issued for this instance (if 0, no limit)
  * @param {number=} maxRedemptions=100 - The maximum number of times each ticket may be redeemed
  * @param {string|number=} startTime - The time when issued tickets can be redeemed
@@ -60,13 +63,13 @@ var FormatNTPInfo = function FormatNTPInfo(info) {
 exports.CreateNTPInstance = function _callee(_ref) {
   var _this = this;
 
-  var tenantId, objectId, groupAddresses, _ref$maxTickets, maxTickets, _ref$maxRedemptions, maxRedemptions, startTime, endTime, _ref$ticketLength, ticketLength, paramsJSON, groupIds;
+  var tenantId, objectId, groupAddresses, _ref$ntpClass, ntpClass, _ref$maxTickets, maxTickets, _ref$maxRedemptions, maxRedemptions, startTime, endTime, _ref$ticketLength, ticketLength, paramsJSON, groupIds;
 
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          tenantId = _ref.tenantId, objectId = _ref.objectId, groupAddresses = _ref.groupAddresses, _ref$maxTickets = _ref.maxTickets, maxTickets = _ref$maxTickets === void 0 ? 0 : _ref$maxTickets, _ref$maxRedemptions = _ref.maxRedemptions, maxRedemptions = _ref$maxRedemptions === void 0 ? 100 : _ref$maxRedemptions, startTime = _ref.startTime, endTime = _ref.endTime, _ref$ticketLength = _ref.ticketLength, ticketLength = _ref$ticketLength === void 0 ? 6 : _ref$ticketLength;
+          tenantId = _ref.tenantId, objectId = _ref.objectId, groupAddresses = _ref.groupAddresses, _ref$ntpClass = _ref.ntpClass, ntpClass = _ref$ntpClass === void 0 ? 4 : _ref$ntpClass, _ref$maxTickets = _ref.maxTickets, maxTickets = _ref$maxTickets === void 0 ? 0 : _ref$maxTickets, _ref$maxRedemptions = _ref.maxRedemptions, maxRedemptions = _ref$maxRedemptions === void 0 ? 100 : _ref$maxRedemptions, startTime = _ref.startTime, endTime = _ref.endTime, _ref$ticketLength = _ref.ticketLength, ticketLength = _ref$ticketLength === void 0 ? 6 : _ref$ticketLength;
           ValidatePresence("tenantId", tenantId);
           ValidatePresence("objectId or groupAddresses", objectId || groupAddresses);
 
@@ -105,7 +108,7 @@ exports.CreateNTPInstance = function _callee(_ref) {
           return _regeneratorRuntime.awrap(this.authClient.MakeKMSCall({
             tenantId: tenantId,
             methodName: "elv_createOTPInstance",
-            params: [tenantId, 4, JSON.stringify(paramsJSON), parseInt(maxTickets), Date.now()],
+            params: [tenantId, ntpClass, JSON.stringify(paramsJSON), parseInt(maxTickets), Date.now()],
             paramTypes: ["string", "int", "string", "int", "int"]
           }));
 
@@ -357,18 +360,20 @@ exports.NTPInstance = function _callee6(_ref8) {
  * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
  * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
  * be provided along with the ticket code in order to redeem the ticket.
+ * @param {number=} maxRedemptions - Maximum number of times this ticket may be redeemed. If less than the max redemptions
+ * of the NTP instance, the lower limit will be used.
  *
  * @return {Promise<Object>} - The generated ticket code and additional information about the ticket.
  */
 
 
 exports.IssueNTPCode = function _callee7(_ref9) {
-  var tenantId, ntpId, email, options, params, paramTypes;
+  var tenantId, ntpId, email, maxRedemptions, options, params, paramTypes;
   return _regeneratorRuntime.async(function _callee7$(_context7) {
     while (1) {
       switch (_context7.prev = _context7.next) {
         case 0:
-          tenantId = _ref9.tenantId, ntpId = _ref9.ntpId, email = _ref9.email;
+          tenantId = _ref9.tenantId, ntpId = _ref9.ntpId, email = _ref9.email, maxRedemptions = _ref9.maxRedemptions;
           ValidatePresence("tenantId", tenantId);
           ValidatePresence("ntpId", ntpId);
           options = [];
@@ -377,19 +382,23 @@ exports.IssueNTPCode = function _callee7(_ref9) {
             options.push("eml:".concat(email));
           }
 
+          if (maxRedemptions) {
+            options.push("cnt:".concat(parseInt(maxRedemptions)));
+          }
+
           params = [tenantId, ntpId, JSON.stringify(options), Date.now()];
           paramTypes = ["string", "string", "string", "uint"];
-          _context7.next = 9;
+          _context7.next = 10;
           return _regeneratorRuntime.awrap(this.authClient.MakeKMSCall({
             methodName: "elv_issueOTPCode",
             params: params,
             paramTypes: paramTypes
           }));
 
-        case 9:
+        case 10:
           return _context7.abrupt("return", _context7.sent);
 
-        case 10:
+        case 11:
         case "end":
           return _context7.stop();
       }
@@ -403,21 +412,23 @@ exports.IssueNTPCode = function _callee7(_ref9) {
  * @namedParams
  * @param {string=} issuer - Issuer to authorize against
  * @param {string=} tenantId - The ID of the tenant from which the ticket was issued
- * @param {string} ntpId - The ID of the NTP instance from which the ticket was issued
+ * @param {string=} ntpId - The ID of the NTP instance from which the ticket was issued
  * @param {string} code - Access code
  * @param {string=} email - Email address associated with the code
+ * @param {boolean=} includeNTPId - If specified, the response will include both the target object ID as well as the NTP ID associated with the ticket
  *
- * @return {Promise<string>} - The object ID which the ticket is authorized to
+ * @return {Promise<string|Object>} - The object ID which the ticket is authorized to, or an object containing the object ID and NTP ID if `includeNTPId` is specified
  */
 
 
 exports.RedeemCode = function _callee8(_ref10) {
-  var issuer, tenantId, ntpId, code, email, wallet, token, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
+  var issuer, tenantId, ntpId, code, email, _ref10$includeNTPId, includeNTPId, wallet, token, response, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
+
   return _regeneratorRuntime.async(function _callee8$(_context8) {
     while (1) {
       switch (_context8.prev = _context8.next) {
         case 0:
-          issuer = _ref10.issuer, tenantId = _ref10.tenantId, ntpId = _ref10.ntpId, code = _ref10.code, email = _ref10.email;
+          issuer = _ref10.issuer, tenantId = _ref10.tenantId, ntpId = _ref10.ntpId, code = _ref10.code, email = _ref10.email, _ref10$includeNTPId = _ref10.includeNTPId, includeNTPId = _ref10$includeNTPId === void 0 ? false : _ref10$includeNTPId;
           wallet = this.GenerateWallet();
           issuer = issuer || "";
 
@@ -435,7 +446,7 @@ exports.RedeemCode = function _callee8(_ref10) {
           }
 
           ValidateObject(issuer);
-          _context8.next = 27;
+          _context8.next = 28;
           break;
 
         case 8:
@@ -448,10 +459,10 @@ exports.RedeemCode = function _callee8(_ref10) {
 
         case 12:
           // Ticket API
-          ValidatePresence("issuer or tenantId and ntpId", issuer || tenantId && ntpId);
+          ValidatePresence("issuer or tenantId", issuer || tenantId);
 
           if (!issuer) {
-            issuer = "/otp/ntp/".concat(tenantId, "/").concat(ntpId);
+            issuer = UrlJoin("/otp", "ntp", tenantId, ntpId || "");
           }
 
           _context8.prev = 14;
@@ -467,24 +478,28 @@ exports.RedeemCode = function _callee8(_ref10) {
           this.SetStaticToken({
             token: token
           });
-          return _context8.abrupt("return", JSON.parse(this.utils.FromB64(token)).qid);
+          response = JSON.parse(this.utils.FromB64(token));
+          return _context8.abrupt("return", includeNTPId ? {
+            objectId: response.qid,
+            ntpId: response.oid
+          } : response.qid);
 
-        case 22:
-          _context8.prev = 22;
+        case 23:
+          _context8.prev = 23;
           _context8.t0 = _context8["catch"](14);
           this.Log("Failed to redeem code:", true);
           this.Log(_context8.t0, true);
           throw _context8.t0;
 
-        case 27:
+        case 28:
           // Site selector
           objectId = issuer;
-          _context8.next = 30;
+          _context8.next = 31;
           return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: objectId
           }));
 
-        case 30:
+        case 31:
           libraryId = _context8.sent;
 
           Hash = function Hash(code) {
@@ -497,52 +512,52 @@ exports.RedeemCode = function _callee8(_ref10) {
           };
 
           codeHash = Hash(code);
-          _context8.next = 35;
+          _context8.next = 36;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
             metadataSubtree: "public/codes/".concat(codeHash)
           }));
 
-        case 35:
+        case 36:
           codeInfo = _context8.sent;
 
           if (codeInfo) {
-            _context8.next = 39;
+            _context8.next = 40;
             break;
           }
 
           this.Log("Code redemption failed:\n\t".concat(issuer, "\n\t").concat(code));
           throw Error("Invalid code: " + code);
 
-        case 39:
+        case 40:
           ak = codeInfo.ak, sites = codeInfo.sites, info = codeInfo.info;
-          _context8.next = 42;
+          _context8.next = 43;
           return _regeneratorRuntime.awrap(wallet.AddAccountFromEncryptedPK({
             encryptedPrivateKey: this.utils.FromB64(ak),
             password: code
           }));
 
-        case 42:
+        case 43:
           signer = _context8.sent;
           this.SetSigner({
             signer: signer
           }); // Ensure wallet is initialized
 
-          _context8.next = 46;
+          _context8.next = 47;
           return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
-        case 46:
+        case 47:
           return _context8.abrupt("return", {
             addr: this.utils.FormatAddress(signer.address),
             sites: sites,
             info: info || {}
           });
 
-        case 47:
+        case 48:
         case "end":
           return _context8.stop();
       }
     }
-  }, null, this, [[14, 22]]);
+  }, null, this, [[14, 23]]);
 };

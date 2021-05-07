@@ -15,6 +15,8 @@ const Utils = require("./Utils");
 const Crypto = require("./Crypto");
 const {LogMessage} = require("./LogMessage");
 
+const Pako = require("pako");
+
 const {
   ValidatePresence
 } = require("./Validation");
@@ -70,6 +72,36 @@ class ElvClient {
     }
   }
 
+  EnableMethodLogging() {
+    const MethodLogger = (klass) => {
+      Object.getOwnPropertyNames(Object.getPrototypeOf(klass))
+        .filter(method => typeof klass[method] === "function")
+        .forEach(methodName => {
+          const originalMethod = klass[methodName].bind(klass);
+
+          if(originalMethod.constructor.name === "AsyncFunction") {
+            klass[methodName] = async (...args) => {
+              const start = Date.now();
+              const result = await originalMethod(...args);
+              // eslint-disable-next-line no-console
+              console.log(methodName, Date.now() - start, "ms", JSON.stringify(args));
+              return result;
+            };
+          } else {
+            klass[methodName] = (...args) => {
+              const start = Date.now();
+              const result = originalMethod(...args);
+              // eslint-disable-next-line no-console
+              console.log(methodName, Date.now() - start, "ms", JSON.stringify(args));
+              return result;
+            };
+          }
+        });
+    };
+
+    MethodLogger(this);
+  }
+
   /**
    * Create a new ElvClient
    *
@@ -83,6 +115,7 @@ class ElvClient {
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+   * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
@@ -95,6 +128,7 @@ class ElvClient {
     fabricVersion,
     fabricURIs,
     ethereumURIs,
+    ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
     noCache=false,
@@ -111,6 +145,7 @@ class ElvClient {
 
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
+    this.ethereumContractTimeout = ethereumContractTimeout;
 
     this.trustAuthorityId = trustAuthorityId;
 
@@ -197,7 +232,7 @@ class ElvClient {
    * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
-   *
+   * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
    *
    * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
@@ -207,6 +242,7 @@ class ElvClient {
     region,
     trustAuthorityId,
     staticToken,
+    ethereumContractTimeout=10,
     noCache=false,
     noAuth=false
   }) {
@@ -225,6 +261,7 @@ class ElvClient {
       fabricVersion,
       fabricURIs,
       ethereumURIs,
+      ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
       noCache,
@@ -247,7 +284,7 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
-    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug});
+    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     this.authClient = new AuthorizationClient({
       client: this,
@@ -494,6 +531,81 @@ class ElvClient {
   }
 
   /**
+   * Issue a self-signed authorization token
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string=} libraryId - Library ID to authorize
+   * @param {string=} objectId - Object ID to authorize
+   * @param {string=} versionHash - Version hash to authorize
+   * @param {string=} policyId - The object ID of the policy for this token
+   * @param {string=} subject - The subject of the token
+   * @param {string} grantType=read - Permissions to grant for this token. Options: "access", "read", "create", "update", "read-crypt"
+   * @param {number} duration - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000)
+   * @param {boolean} allowDecryption=false - If specified, the re-encryption key will be included in the token,
+   * enabling the user of this token to download encrypted content from the specified object
+   * @param {Object=} context - Additional JSON context
+   */
+  async CreateSignedToken({
+    libraryId,
+    objectId,
+    versionHash,
+    policyId,
+    subject,
+    grantType="read",
+    allowDecryption=false,
+    duration,
+    context={}
+  }) {
+    if(!subject) {
+      subject = `iusr${this.utils.AddressToHash(await this.CurrentAccountAddress())}`;
+    }
+
+    if(policyId) {
+      context["elv:delegation-id"] = policyId;
+    }
+
+    let token = {
+      adr: Buffer.from(await this.CurrentAccountAddress().replace(/^0x/, ""), "hex").toString("base64"),
+      sub: subject,
+      spc: await this.ContentSpaceId(),
+      iat: Date.now(),
+      exp: Date.now() + duration,
+      gra: grantType,
+      ctx: context
+    };
+
+    if(versionHash) {
+      objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+    }
+
+    if(objectId) {
+      token.qid = objectId;
+
+      if(!libraryId) {
+        libraryId = await this.ContentObjectLibraryId({objectId});
+      }
+    }
+
+    if(libraryId) {
+      token.lib = libraryId;
+    }
+
+    if(allowDecryption) {
+      const cap = await this.authClient.ReEncryptionConk({libraryId, objectId});
+      token.apk = cap.public_key;
+    }
+
+    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+    const signature = await this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
+
+    return `aessjc${this.utils.B58(Buffer.concat([
+      Buffer.from(signature.replace(/^0x/, ""), "hex"), 
+      Buffer.from(compressedToken)
+    ]))}`;
+  }
+
+  /**
    * Get the account address of the current signer
    *
    * @methodGroup Signers
@@ -689,6 +801,7 @@ class ElvClient {
       "AccessGroupMembershipMethod",
       "CallFromFrameMessage",
       "ClearSigner",
+      "EnableMethodLogging",
       "FormatBlockNumbers",
       "FrameAllowedMethods",
       "FromConfigurationUrl",

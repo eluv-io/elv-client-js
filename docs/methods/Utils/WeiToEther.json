@@ -4,6 +4,10 @@
     "result": "\"1\""
   },
   {
+    "signature": " WeiToEther(0);",
+    "result": "\"0\""
+  },
+  {
     "signature": " WeiToEther({\n  \"_hex\": \"0x06f05b59d3b20000\"\n});",
     "result": "\"0.5\""
   }

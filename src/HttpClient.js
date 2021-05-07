@@ -158,7 +158,8 @@ class HttpClient {
       this.BaseURI()
         .path(path)
         .query(queryParams)
-        .hash("").toString()
+        .hash("")
+        .toString()
     );
   }
 }
