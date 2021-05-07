@@ -52,21 +52,25 @@ exports.Visibility = async function({id}) {
     const address = this.utils.HashToAddress(id);
 
     if(!this.visibilityInfo[address]) {
-      this.visibilityInfo[address] = new Promise(async resolve => {
-        const hasVisibility = await this.authClient.ContractHasMethod({
-          contractAddress: address,
-          methodName: "visibility"
-        });
+      this.visibilityInfo[address] = new Promise(async (resolve, reject) => {
+        try {
+          const hasVisibility = await this.authClient.ContractHasMethod({
+            contractAddress: address,
+            methodName: "visibility"
+          });
 
-        if(!hasVisibility) {
-          resolve(0);
-          return;
+          if(!hasVisibility) {
+            resolve(0);
+            return;
+          }
+
+          resolve(await this.CallContractMethod({
+            contractAddress: this.utils.HashToAddress(id),
+            methodName: "visibility"
+          }));
+        } catch(error) {
+          reject(error);
         }
-
-        resolve(await this.CallContractMethod({
-          contractAddress: this.utils.HashToAddress(id),
-          methodName: "visibility"
-        }));
       });
     }
 
@@ -470,9 +474,9 @@ exports.LibraryContentTypes = async function({libraryId}) {
  * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
  * @param {(Array<string> | string)=} filterOptions.sort - Sort by the specified key(s)
  * * @param {boolean=} filterOptions.sortDesc=false - Sort in descending order
- * @param {(Array<string> | string)=} filterOptions.select - Include only the specified metadata keys
+ * @param {(Array<string> | string)=} filterOptions.select - Include only the specified metadata keys (all must start with /public)
  * @param {(Array<object> | object)=} filterOptions.filter - Filter objects by metadata
- * @param {string=} filterOptions.filter.key - Key to filter on
+ * @param {string=} filterOptions.filter.key - Key to filter on (must start with /public)
  * @param {string=} filterOptions.filter.type - Type of filter to use for the specified key:
  * - eq, neq, lt, lte, gt, gte, cnt (contains), ncnt (does not contain),
  * @param {string=} filterOptions.filter.filter - Filter for the specified key
@@ -633,16 +637,20 @@ exports.ContentObjectLibraryId = async function({objectId, versionHash}) {
       if(!this.objectLibraryIds[objectId]) {
         this.Log(`Retrieving content object library ID: ${objectId || versionHash}`);
 
-        this.objectLibraryIds[objectId] = new Promise(async resolve =>
-          resolve(
-            this.utils.AddressToLibraryId(
-              await this.CallContractMethod({
-                contractAddress: this.utils.HashToAddress(objectId),
-                methodName: "libraryAddress"
-              })
-            )
-          )
-        );
+        this.objectLibraryIds[objectId] = new Promise(async (resolve, reject) => {
+          try {
+            resolve(
+              this.utils.AddressToLibraryId(
+                await this.CallContractMethod({
+                  contractAddress: this.utils.HashToAddress(objectId),
+                  methodName: "libraryAddress"
+                })
+              )
+            );
+          } catch(error) {
+            reject(error);
+          }
+        });
       }
 
       try {
@@ -664,7 +672,8 @@ exports.ProduceMetadataLinks = async function({
   objectId,
   versionHash,
   path="/",
-  metadata
+  metadata,
+  authorizationToken
 }) {
   // Primitive
   if(!metadata || typeof metadata !== "object") { return metadata; }
@@ -679,7 +688,8 @@ exports.ProduceMetadataLinks = async function({
         objectId,
         versionHash,
         path: UrlJoin(path, i.toString()),
-        metadata: entry
+        metadata: entry,
+        authorizationToken
       })
     );
   }
@@ -692,7 +702,7 @@ exports.ProduceMetadataLinks = async function({
     // Is file or rep link - produce a url
     return {
       ...metadata,
-      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path})
+      url: await this.LinkUrl({libraryId, objectId, versionHash, linkPath: path, authorizationToken})
     };
   }
 
@@ -706,7 +716,8 @@ exports.ProduceMetadataLinks = async function({
         objectId,
         versionHash,
         path: UrlJoin(path, key),
-        metadata: metadata[key]
+        metadata: metadata[key],
+        authorizationToken
       });
     }
   );
@@ -781,6 +792,7 @@ exports.MetadataAuth = async function({
  * @param {Array<string>=} select - Limit the returned metadata to the specified attributes
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
+ * @param {string=} authorizationToken - Additional authorization token for this request
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -814,11 +826,12 @@ exports.ContentObjectMetadata = async function({
   queryParams={},
   select=[],
   remove=[],
+  authorizationToken,
   resolveLinks=false,
   resolveIncludeSource=false,
   resolveIgnoreErrors=false,
   linkDepthLimit=1,
-  produceLinkUrls=false
+  produceLinkUrls=false,
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
 
@@ -827,20 +840,24 @@ exports.ContentObjectMetadata = async function({
        Subtree: ${metadataSubtree}`
   );
 
+  queryParams = { ...(queryParams || {}) };
+
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
   let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
 
+  // Main authorization
+  let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
+
+  // All authorization
+  const authTokens = [authorizationToken, queryParams.authorization, defaultAuthToken].flat().filter(token => token);
+  delete queryParams.authorization;
+
   let metadata;
   try {
-    const authToken =
-      queryParams.authorization ?
-        queryParams.authorization :
-        await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
-
     metadata = await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        headers: { "Authorization": `Bearer ${authToken}` },
+        headers: { "Authorization": authTokens.map(token => `Bearer ${token}`) },
         queryParams: {
           ...queryParams,
           select,
@@ -869,7 +886,8 @@ exports.ContentObjectMetadata = async function({
     objectId,
     versionHash,
     path: metadataSubtree,
-    metadata
+    metadata,
+    authorizationToken
   });
 };
 
@@ -893,8 +911,10 @@ exports.ContentObjectMetadata = async function({
      ]
 
  * @returns {Promise<Object>} - public/asset_metadata of the specified object, overwritten with specified localization
+ * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
+ * full URL
  */
-exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization}) {
+exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization, produceLinkUrls=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   if(!objectId) {
@@ -910,9 +930,9 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
       resolveLinks: true,
       linkDepthLimit: 2,
       resolveIgnoreErrors: true,
-      produceLinkUrls: true
+      produceLinkUrls
     })) || {};
-  } else {
+  } else if(produceLinkUrls) {
     metadata = await this.ProduceMetadataLinks({
       libraryId,
       objectId,
@@ -1017,6 +1037,10 @@ exports.LatestVersionHash = async function({objectId, versionHash}) {
       methodName: "countVersionHashes"
     });
 
+    if(!versionCount.toNumber()) {
+      throw Error(`Unable to determine latest version hash for ${versionHash || objectId} - Item deleted?`);
+    }
+
     latestHash = await this.CallContractMethod({
       contractAddress: this.utils.HashToAddress(objectId),
       methodName: "versionHashes",
@@ -1098,6 +1122,84 @@ exports.AvailableDRMs = async function() {
   return availableDRMs;
 };
 
+exports.PlayoutPathResolution = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  linkPath,
+  handler,
+  offering="",
+  signedLink=false,
+  authorizationToken
+}) {
+  if(!libraryId) {
+    libraryId = await this.ContentObjectLibraryId({objectId});
+  }
+
+  if(!versionHash) {
+    versionHash = await this.LatestVersionHash({objectId});
+  }
+
+  let path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash, "rep", handler, offering, "options.json");
+
+  let linkTargetLibraryId, linkTargetId, linkTargetHash, multiOfferingLink;
+  if(linkPath) {
+    const linkInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      writeToken,
+      metadataSubtree: linkPath,
+      resolveLinks: false,
+      resolveIgnoreErrors: true,
+      resolveIncludeSource: true,
+      authorizationToken
+    });
+
+    multiOfferingLink = !!linkInfo && !!linkInfo["/"] && !linkInfo["/"].endsWith("options.json");
+
+    // Default case: Use link path directly
+    path = UrlJoin("qlibs", libraryId, "q", writeToken || versionHash, "meta", linkPath);
+
+    if(!signedLink) {
+      // If the link is not signed, we want to authorize against the target object instead of the source object
+      linkTargetHash = await this.LinkTarget({
+        libraryId,
+        objectId,
+        versionHash,
+        writeToken,
+        linkPath,
+        linkInfo,
+        authorizationToken
+      });
+      linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
+      linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
+
+      if(!multiOfferingLink && !offering) {
+        // If the offering is not specified, the intent is to get available offerings. For a single offering link, must
+        // access available offerings on the object directly
+        path = UrlJoin("q", linkTargetHash, "rep", handler, "options.json");
+      }
+    }
+
+    if(multiOfferingLink) {
+      // The link points to rep/<handler> instead of rep/<handler>/<offering>/options.json
+      path = UrlJoin(path, offering, "options.json");
+    }
+  }
+
+  return {
+    path,
+    multiOfferingLink,
+    linkTarget: {
+      libraryId: linkTargetLibraryId,
+      objectId: linkTargetId,
+      versionHash: linkTargetHash
+    }
+  };
+};
+
 /**
  * Retrieve available playout offerings for the specified content
  *
@@ -1106,35 +1208,65 @@ exports.AvailableDRMs = async function() {
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
- * @param {string=} handler=playout - The handler to use for playout
+ * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
+ * @param {boolean=} signedLink - Specify if linkPath is pointing directly to the offerings endpoint
+ * @param {string=} handler=playout - The handler to use for playout (not used with links)
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  *
  * @return {Promise<Object>} - The available offerings
  */
-exports.AvailableOfferings = async function({objectId, versionHash, writeToken, linkPath, handler="playout"}) {
+exports.AvailableOfferings = async function({
+  objectId,
+  versionHash,
+  writeToken,
+  linkPath,
+  signedLink,
+  directLink,
+  handler="playout",
+  authorizationToken
+}) {
   if(!objectId) {
     objectId = this.utils.DecodeVersionHash(versionHash).objectId;
-  } else if(!versionHash) {
-    versionHash = await this.LatestVersionHash({objectId});
   }
 
-  // If link path specified, switch object ID + version hash to link target
-  if(linkPath) {
-    versionHash = await this.LinkTarget({objectId, versionHash, writeToken, linkPath});
-    objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+  if(directLink) {
+    return await this.ContentObjectMetadata({
+      libraryId: await this.ContentObjectLibraryId({objectId}),
+      objectId,
+      versionHash,
+      metadataSubtree: linkPath,
+      resolveLinks: true
+    });
   }
 
-  const path = UrlJoin("q", versionHash, "rep", handler, "options.json");
+  const { path } = await this.PlayoutPathResolution({
+    objectId,
+    versionHash,
+    writeToken,
+    linkPath,
+    signedLink,
+    handler
+  });
 
   try {
+    let authorization = [
+      authorizationToken,
+      await this.authClient.AuthorizationToken({
+        objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken
+      })
+    ]
+      .flat()
+      .filter(token => token);
+
     return await this.utils.ResponseToJson(
       this.HttpClient.Request({
         path: path,
         method: "GET",
-        headers: await this.authClient.AuthorizationHeader({
-          objectId,
-          channelAuth: true,
-          oauthToken: this.oauthToken
-        })
+        headers: {
+          Authorization: `Bearer ${authorization.join(",")}`
+        }
       })
     );
   } catch(error) {
@@ -1158,24 +1290,28 @@ exports.AvailableOfferings = async function({objectId, versionHash, writeToken, 
  *
  * @methodGroup Media
  * @namedParams
- * @param {string=} objectId - Id of the content
+ * @param {string=} offeringURI - A URI pointing directly to the playout options endpoint
+ * @param {string=} objectId - ID of the content
  * @param {string=} versionHash - Version hash of the content
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "widevine")
- * @param {string=} handler=playout - The handler to use for playout
+ * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {string=} offering=default - The offering to play
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
- * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  */
 exports.PlayoutOptions = async function({
+  offeringURI,
   objectId,
   versionHash,
   writeToken,
   linkPath,
+  signedLink=false,
   protocols=["dash", "hls"],
   handler="playout",
   offering="default",
@@ -1185,6 +1321,17 @@ exports.PlayoutOptions = async function({
   hlsjsProfile=true,
   authorizationToken
 }) {
+  if(offeringURI) {
+    const uriInfo = offeringURI.match(/(hq__[^/]+)\/rep\/([^/]+)\/([^/]+)\/options.json/);
+    versionHash = uriInfo[1];
+    handler = uriInfo[2];
+    offering = uriInfo[3];
+
+    if(!versionHash || !handler || !offering) {
+      throw Error(`Invalid offering URI: ${offeringURI}`);
+    }
+  }
+
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
   protocols = protocols.map(p => p.toLowerCase());
@@ -1200,14 +1347,14 @@ exports.PlayoutOptions = async function({
 
   try {
     // If public/asset_metadata/sources/<offering> exists, use that instead of directly calling on object
-
     if(!linkPath) {
       const offeringPath = UrlJoin("public", "asset_metadata", "sources", offering);
       const link = await this.ContentObjectMetadata({
         libraryId,
         objectId,
         versionHash,
-        metadataSubtree: offeringPath
+        metadataSubtree: offeringPath,
+        authorizationToken
       });
 
       if(link) { linkPath = offeringPath; }
@@ -1215,59 +1362,86 @@ exports.PlayoutOptions = async function({
   // eslint-disable-next-line no-empty
   } catch(error) {}
 
-  let path, linkTargetLibraryId, linkTargetId, linkTargetHash;
-  if(linkPath) {
-    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, writeToken, linkPath});
-    linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
-    linkTargetLibraryId = await this.ContentObjectLibraryId({objectId: linkTargetId});
-    if(writeToken) {
-      path = UrlJoin("qlibs", libraryId, "q", writeToken, "meta", linkPath);
-    } else {
-      path = UrlJoin("q", versionHash, "meta", linkPath);
-    }
-  } else {
-    path = UrlJoin("q", versionHash, "rep", "playout", offering, "options.json");
-  }
+  const {
+    path,
+    linkTarget
+  } = await this.PlayoutPathResolution({
+    libraryId,
+    objectId,
+    versionHash,
+    writeToken,
+    linkPath,
+    signedLink,
+    handler,
+    offering,
+    authorizationToken
+  });
 
   const audienceData = this.authClient.AudienceData({
-    objectId: linkTargetId || objectId,
-    versionHash: linkTargetHash || versionHash || await this.LatestVersionHash({objectId}),
+    objectId: linkTarget.objectId || objectId,
+    versionHash: linkTarget.versionHash || versionHash || await this.LatestVersionHash({objectId}),
     protocols,
     drms,
     context
   });
 
-  let queryParams = {
-    authorization:
-      authorizationToken ||
-      await this.authClient.AuthorizationToken({
-        libraryId: linkTargetLibraryId || libraryId,
-        objectId: linkTargetId || objectId,
-        channelAuth: true,
-        oauthToken: this.oauthToken,
-        audienceData
-      })
-  };
+  let authorization = [
+    authorizationToken,
+    await this.authClient.AuthorizationToken({
+      libraryId,
+      objectId,
+      channelAuth: true,
+      oauthToken: this.oauthToken,
+      audienceData
+    })
+  ]
+    .flat()
+    .filter(token => token);
 
-  if(linkPath) {
-    queryParams.resolve = true;
-  }
+  let queryParams = {
+    authorization,
+    resolve: !!linkPath
+  };
 
   const playoutOptions = Object.values(
     await this.utils.ResponseToJson(
       this.HttpClient.Request({
-        path: path,
+        path,
         method: "GET",
         queryParams
       })
     )
   );
 
+  if(!signedLink && linkTarget.versionHash) {
+    // Link target is different object and not signed link - switch auth token to target object
+    queryParams.authorization = [
+      authorizationToken,
+      await this.authClient.AuthorizationToken({
+        libraryId: linkTarget.libraryId,
+        objectId: linkTarget.objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+        audienceData
+      })
+    ]
+      .flat()
+      .filter(token => token);
+  }
+
   let playoutMap = {};
+  let sessionId, multiview;
   for(let i = 0; i < playoutOptions.length; i++) {
     const option = playoutOptions[i];
     const protocol = option.properties.protocol;
     const drm = option.properties.drm;
+    sessionId = sessionId || option.sid;
+    multiview = multiview || !!option.properties.multiview;
+
+    if(sessionId) {
+      queryParams.sid = sessionId;
+    }
+
     // Remove authorization parameter from playout path - it's re-added by Rep
     let playoutPath = option.uri.split("?")[0];
 
@@ -1278,24 +1452,32 @@ exports.PlayoutOptions = async function({
     const licenseServers = option.properties.license_servers;
     const cert = option.properties.cert;
 
+    if(hlsjsProfile && protocol === "hls" && drm === "aes-128") {
+      queryParams.player_profile = "hls-js";
+    }
+
     // Create full playout URLs for this protocol / drm combo
     playoutMap[protocol] = {
       ...(playoutMap[protocol] || {}),
       playoutMethods: {
         ...((playoutMap[protocol] || {}).playoutMethods || {}),
         [drm || "clear"]: {
-          playoutUrl: await this.Rep({
-            libraryId: linkTargetLibraryId || libraryId,
-            objectId: linkTargetId || objectId,
-            versionHash: linkTargetHash || versionHash,
-            rep: UrlJoin(handler, offering, playoutPath),
-            channelAuth: true,
-            noAuth: !!authorizationToken,
-            queryParams:
-              (hlsjsProfile && protocol === "hls" && drm === "aes-128") ?
-                {authorization: authorizationToken, player_profile: "hls-js"} :
-                {authorization: authorizationToken}
-          }),
+          playoutUrl:
+            signedLink ?
+              await this.LinkUrl({
+                versionHash,
+                linkPath: UrlJoin(linkPath, offering, playoutPath),
+                queryParams,
+                noAuth: true
+              }) :
+              await this.Rep({
+                libraryId: linkTarget.libraryId || libraryId,
+                objectId: linkTarget.objectId || objectId,
+                versionHash: linkTarget.versionHash || versionHash,
+                rep: UrlJoin(handler, offering, playoutPath),
+                noAuth: true,
+                queryParams
+              }),
           drms: drm ? {[drm]: {licenseServers, cert}} : undefined
         }
       }
@@ -1315,6 +1497,38 @@ exports.PlayoutOptions = async function({
     }
   }
 
+  // Callbacks for retrieving and setting multiview views
+  if(multiview && sessionId) {
+    playoutMap.sessionId = sessionId;
+    playoutMap.multiview = true;
+
+    playoutMap.AvailableViews = async () => {
+      return await this.utils.ResponseToFormat(
+        "json",
+        await this.HttpClient.Request({
+          path: UrlJoin("q", linkTarget.versionHash || versionHash, "rep", handler, offering, "views.json"),
+          method: "GET",
+          queryParams: {
+            sid: sessionId,
+            authorization
+          }
+        })
+      );
+    };
+
+    playoutMap.SwitchView = async (view) => {
+      await this.HttpClient.Request({
+        path: UrlJoin("q", linkTarget.versionHash || versionHash, "rep", handler, offering, "select_view"),
+        method: "POST",
+        queryParams: {
+          sid: sessionId,
+          authorization
+        },
+        body: { view }
+      });
+    };
+  }
+
   this.Log(playoutMap);
 
   return playoutMap;
@@ -1329,9 +1543,11 @@ exports.PlayoutOptions = async function({
  *
  * @methodGroup Media
  * @namedParams
- * @param {string=} objectId - Id of the content
- * @param {string} versionHash - Version hash of the content
+ * @param {string=} objectId - ID of the content
+ * @param {string=} versionHash - Version hash of the content
+ * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
+ * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
  * @param {Array<string>} protocols=["dash","hls"]] - Acceptable playout protocols ("dash", "hls")
  * @param {Array<string>} drms - Acceptable DRM formats ("clear", "aes-128", "sample-aes", "widevine")
  * @param {string=} handler=playout - The handler to use for playout
@@ -1339,12 +1555,14 @@ exports.PlayoutOptions = async function({
  * @param {string=} playoutType - The type of playout
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
- * @param {Object=} authorizationToken - Alternate authorization token for authorizing this request
+ * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  */
 exports.BitmovinPlayoutOptions = async function({
   objectId,
   versionHash,
+  writeToken,
   linkPath,
+  signedLink=false,
   protocols=["dash", "hls"],
   drms=[],
   handler="playout",
@@ -1362,7 +1580,9 @@ exports.BitmovinPlayoutOptions = async function({
   const playoutOptions = await this.PlayoutOptions({
     objectId,
     versionHash,
+    writeToken,
     linkPath,
+    signedLink,
     protocols,
     drms,
     handler,
@@ -1375,18 +1595,43 @@ exports.BitmovinPlayoutOptions = async function({
 
   delete playoutOptions.playoutMethods;
 
-  let linkTargetId, linkTargetHash;
-  if(linkPath) {
-    const libraryId = await this.ContentObjectLibraryId({objectId, versionHash});
-    linkTargetHash = await this.LinkTarget({libraryId, objectId, versionHash, linkPath});
-    linkTargetId = this.utils.DecodeVersionHash(linkTargetHash).objectId;
-  }
-
-  const authToken = await this.authClient.AuthorizationToken({
-    objectId: linkTargetId || objectId,
-    channelAuth: true,
-    oauthToken: this.oauthToken,
+  const {
+    linkTarget
+  } = await this.PlayoutPathResolution({
+    objectId,
+    versionHash,
+    writeToken,
+    linkPath,
+    signedLink,
+    handler,
+    offering,
+    authorizationToken
   });
+
+  let authorization = [];
+
+  if(authorizationToken) { authorization.push(authorizationToken); }
+
+  if(signedLink || !linkTarget.versionHash) {
+    // Target is same object or signed link - authorize against original object
+    authorization.push(
+      await this.authClient.AuthorizationToken({
+        objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken,
+      })
+    );
+  } else {
+    // Target is different object and not signed link - switch auth token to target object
+    authorization.push(
+      await this.authClient.AuthorizationToken({
+        libraryId: linkTarget.libraryId,
+        objectId: linkTarget.objectId,
+        channelAuth: true,
+        oauthToken: this.oauthToken
+      })
+    );
+  }
 
   let config = {
     drm: {}
@@ -1415,7 +1660,7 @@ exports.BitmovinPlayoutOptions = async function({
           config.drm[drm] = {
             LA_URL: licenseUrl,
             headers: {
-              Authorization: `Bearer ${authToken}`
+              Authorization: `Bearer ${authorization.flat().filter(token => token).join(",")}`
             }
           };
         }
@@ -1614,19 +1859,30 @@ exports.FabricUrl = async function({
       queryParams: ${JSON.stringify(queryParams || {}, null, 2)}`
   );
 
-  // Clone queryParams to avoid modification of the original
-  queryParams = {...queryParams};
+  let authorization = [];
 
-  if(!queryParams.authorization) {
-    queryParams.authorization = await this.authClient.AuthorizationToken({
-      libraryId,
-      objectId,
-      versionHash,
-      channelAuth,
-      noAuth,
-      noCache
-    });
+  if(queryParams.authorization) {
+    authorization.push(queryParams.authorization);
   }
+
+  if(!(noAuth && queryParams.authorization)) {
+    authorization.push(
+      await this.authClient.AuthorizationToken({
+        libraryId,
+        objectId,
+        versionHash,
+        channelAuth,
+        noAuth,
+        noCache
+      })
+    );
+  }
+
+  // Clone queryParams to avoid modification of the original
+  queryParams = {
+    ...queryParams,
+    authorization: authorization.flat()
+  };
 
   if((rep || publicRep) && objectId && !versionHash) {
     versionHash = await this.LatestVersionHash({objectId});
@@ -1852,10 +2108,11 @@ exports.ContentObjectGraph = async function({libraryId, objectId, versionHash, a
  * @param {string=} versionHash - Hash of an object version
  * @param {string=} writeToken - The write token for the object
  * @param {string} linkPath - Path to the content object link
+ * @param {string=} authorizationToken - Additional authorization token for this request
  *
  * @returns {Promise<string>} - Version hash of the link's target
  */
-exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToken, linkPath}) {
+exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToken, linkPath, authorizationToken, linkInfo}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
@@ -1866,16 +2123,19 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
   }
 
   // Assume linkPath points directly at a link - retrieve unresolved link and extract hash
-  let linkInfo = await this.ContentObjectMetadata({
-    libraryId,
-    objectId,
-    versionHash,
-    writeToken,
-    metadataSubtree: linkPath,
-    resolveLinks: false,
-    resolveIgnoreErrors: true,
-    resolveIncludeSource: true
-  });
+  if(!linkInfo) {
+    linkInfo = await this.ContentObjectMetadata({
+      libraryId,
+      objectId,
+      versionHash,
+      writeToken,
+      metadataSubtree: linkPath,
+      resolveLinks: false,
+      resolveIgnoreErrors: true,
+      resolveIncludeSource: true,
+      authorizationToken
+    });
+  }
 
   if(linkInfo && linkInfo["/"]) {
     /* For absolute links - extract the hash from the link itself. Otherwise use "container" */
@@ -1901,7 +2161,8 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
     versionHash,
     writeToken,
     metadataSubtree: linkPath,
-    resolveIncludeSource: true
+    resolveIncludeSource: true,
+    authorizationToken
   });
 
   if(!linkInfo || !linkInfo["."]) {
@@ -1924,7 +2185,8 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
       versionHash,
       writeToken,
       metadataSubtree: subPath,
-      resolveIncludeSource: true
+      resolveIncludeSource: true,
+      authorizationToken
     });
   }
 
@@ -1943,11 +2205,24 @@ exports.LinkTarget = async function({libraryId, objectId, versionHash, writeToke
  * @param {string} linkPath - Path to the content object link
  * @param {string=} mimeType - Mime type to use when rendering the file
  * @param {Object=} queryParams - Query params to add to the URL
+ * @param {string=} authorizationToken - Additional authorization token
  * @param {boolean=} channelAuth=false - If specified, state channel authorization will be performed instead of access request authorization
+ * @param {boolean=} noAuth - If specified, no authorization (other than the authorizationToken parameter and queryParams.authorization) will be added
  *
  * @returns {Promise<string>} - URL to the specified file with authorization token
  */
-exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, linkPath, mimeType, queryParams={}, channelAuth=false}) {
+exports.LinkUrl = async function({
+  libraryId,
+  objectId,
+  versionHash,
+  writeToken,
+  linkPath,
+  mimeType,
+  authorizationToken,
+  queryParams={},
+  channelAuth=false,
+  noAuth=false
+}) {
   ValidateParameters({libraryId, objectId, versionHash});
   if(writeToken) { ValidateWriteToken(writeToken); }
 
@@ -1962,9 +2237,18 @@ exports.LinkUrl = async function({libraryId, objectId, versionHash, writeToken, 
     path = UrlJoin("q", versionHash, "meta", linkPath);
   }
 
+  let authorization = [ authorizationToken ];
+  if(!noAuth) {
+    authorization.push(await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}));
+  }
+
+  if(queryParams.authorization) {
+    authorization.push(queryParams.authorization);
+  }
+
   queryParams = {
-    authorization: await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}),
     ...queryParams,
+    authorization: authorization.flat().filter(token => token),
     resolve: true
   };
 

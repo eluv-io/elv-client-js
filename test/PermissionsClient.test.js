@@ -15,7 +15,7 @@ const PermissionsClient = require("../src/PermissionsClient");
 const OutputLogger = require("./utils/OutputLogger");
 const {CreateClient, ReturnBalance} = require("./utils/Utils");
 
-let client, permissionsClient, libraryId, policyId, itemId1, itemId2, groupAddress;
+let client, permissionsClient, libraryId, policyId, itemId1, itemId2, itemId3, groupAddress;
 
 const now = Date.now();
 const later = Date.now() + 365 * 24 * 60 * 60 * 1000;
@@ -65,9 +65,28 @@ describe("Test Permissions Client", () => {
         }
       });
 
+      const itemObject3 = await client.CreateAndFinalizeContentObject({
+        libraryId,
+        callback: async ({objectId, writeToken}) => {
+          await client.ReplaceMetadata({
+            libraryId,
+            objectId,
+            writeToken,
+            metadata: {
+              public: {
+                asset_metadata: {
+                  display_title: "Item 3"
+                }
+              }
+            }
+          });
+        }
+      });
+
       policyId = policyObject.id;
       itemId1 = itemObject1.id;
       itemId2 = itemObject2.id;
+      itemId3 = itemObject3.id;
       groupAddress = await client.CreateAccessGroup({name: "Test Group"});
     } catch(error) {
       console.error("\n\nSetup failed:");
@@ -81,6 +100,7 @@ describe("Test Permissions Client", () => {
   afterAll(async () => {
     await client.DeleteContentObject({libraryId, objectId: itemId1});
     await client.DeleteContentObject({libraryId, objectId: itemId2});
+    await client.DeleteContentObject({libraryId, objectId: itemId3});
 
     await ReturnBalance(client);
   });
@@ -483,6 +503,17 @@ describe("Test Permissions Client", () => {
             subjectSource: "fabric",
             profileName: "special-access"
           });
+
+          await permissionsClient.SetPermission({
+            policyId,
+            policyWriteToken: writeToken,
+            itemId: itemId2,
+            subjectId: "special.event.subject@ntp.com",
+            subjectNTPId: "QOTPQVagZQv7Mkt",
+            subjectType: "ntp_subject",
+            subjectSource: "fabric",
+            profileName: "special-access"
+          });
         }
       });
 
@@ -494,7 +525,7 @@ describe("Test Permissions Client", () => {
       });
 
       expect(permissionsMetadata).toBeDefined();
-      expect(permissionsMetadata.length).toEqual(5);
+      expect(permissionsMetadata.length).toEqual(6);
 
       expect(permissionsMetadata[0]).toMatchObject({
         profile: "all-access",
@@ -541,13 +572,22 @@ describe("Test Permissions Client", () => {
         }
       });
 
+      expect(permissionsMetadata[5]).toMatchObject({
+        profile: "special-access",
+        subject: {
+          id: "special.event.subject@ntp.com",
+          otp_id: "QOTPQVagZQv7Mkt",
+          type: "otp_subject"
+        }
+      });
+
       const permissions = await permissionsClient.ItemPermissions({
         policyId,
         itemId: itemId2
       });
 
       expect(permissions).toBeDefined();
-      expect(permissions.length).toEqual(5);
+      expect(permissions.length).toEqual(6);
 
       expect(permissions[0]).toMatchObject({
         profileName: "all-access",
@@ -590,6 +630,15 @@ describe("Test Permissions Client", () => {
         subjectType: "ntp",
         subjectId: "QOTPQVagZQv7Mkt",
         subjectName: "Special Event NTP Instance",
+      });
+
+      expect(permissions[5]).toMatchObject({
+        profileName: "special-access",
+        subjectSource: "fabric",
+        subjectType: "ntp_subject",
+        subjectNTPId: "QOTPQVagZQv7Mkt",
+        subjectId: "special.event.subject@ntp.com",
+        subjectName: "special.event.subject@ntp.com"
       });
 
       // Ensure fabric user name is stored properly
@@ -664,7 +713,7 @@ describe("Test Permissions Client", () => {
       });
 
       expect(modifiedPermissionsMetadata).toBeDefined();
-      expect(modifiedPermissionsMetadata.length).toEqual(6);
+      expect(modifiedPermissionsMetadata.length).toEqual(7);
 
       expect(modifiedPermissionsMetadata[0]).toMatchObject({
         profile: "no-access",
@@ -686,7 +735,7 @@ describe("Test Permissions Client", () => {
         }
       });
 
-      expect(modifiedPermissionsMetadata[5]).toMatchObject({
+      expect(modifiedPermissionsMetadata[6]).toMatchObject({
         profile: "special-access",
         subject: {
           id: "OAuth Group 2",
@@ -701,7 +750,7 @@ describe("Test Permissions Client", () => {
       });
 
       expect(modifiedPermissions).toBeDefined();
-      expect(modifiedPermissions.length).toEqual(6);
+      expect(modifiedPermissions.length).toEqual(7);
 
       expect(modifiedPermissions[0]).toMatchObject({
         profileName: "no-access",
@@ -722,13 +771,136 @@ describe("Test Permissions Client", () => {
         subjectName: "OAuth Group"
       });
 
-      expect(modifiedPermissions[5]).toMatchObject({
+      expect(modifiedPermissions[6]).toMatchObject({
         profileName: "special-access",
         subjectSource: "oauth",
         subjectType: "group",
         subjectId: "00uqyha3cjm2Q7Zgv492",
         subjectName: "OAuth Group 2"
       });
+    });
+
+    test("Add/Modify Permissions using offline draft", async () => {
+      try {
+        permissionsClient.offline = true;
+
+        await client.EditAndFinalizeContentObject({
+          libraryId,
+          objectId: policyId,
+          callback: async ({writeToken}) => {
+            await permissionsClient.CreateItemPolicy({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              profiles: {
+                "all-access": {
+                  assets: {
+                    default_permission: "full-access"
+                  },
+                  offerings: {
+                    default_permission: "full-access"
+                  }
+                },
+                "no-access": {
+                  start: now,
+                  end: later,
+                  assets: {
+                    default_permission: "no-access"
+                  },
+                  offerings: {
+                    default_permission: "no-access"
+                  }
+                }
+              }
+            });
+          }
+        });
+
+        const initialPermissions = await permissionsClient.ItemPermissions({
+          policyId,
+          itemId: itemId3
+        });
+
+        expect(initialPermissions).toBeDefined();
+
+        await client.EditAndFinalizeContentObject({
+          libraryId,
+          objectId: policyId,
+          callback: async ({writeToken}) => {
+            await permissionsClient.OpenOfflineDraft({
+              policyId,
+              policyWriteToken: writeToken,
+            });
+
+            await permissionsClient.SetPermission({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              subjectId: client.utils.FormatAddress(client.signer.address),
+              subjectName: "Test Account Offline",
+              subjectType: "user",
+              subjectSource: "fabric",
+              profileName: "all-access"
+            });
+
+            await permissionsClient.SetPermission({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              subjectId: groupAddress,
+              subjectName: "Test Group Offline",
+              subjectType: "group",
+              subjectSource: "fabric",
+              profileName: "no-access",
+              start: now
+            });
+
+            await permissionsClient.CloseOfflineDraft({
+              policyId
+            });
+          }
+        });
+
+        // Test both raw metadata and formatted result from ItemPermissions
+        const permissionsMetadata = await client.ContentObjectMetadata({
+          libraryId,
+          objectId: policyId,
+          metadataSubtree: UrlJoin("auth_policy_spec", itemId2, "permissions")
+        });
+
+        expect(permissionsMetadata).toBeDefined();
+
+        const permissions = await permissionsClient.ItemPermissions({
+          policyId,
+          itemId: itemId3
+        });
+
+        expect(permissions).toBeDefined();
+        expect(permissions.length).toEqual(2);
+
+        // Remove permissions added by this test
+        // PENDING - use offline draft
+        await client.EditAndFinalizeContentObject({
+          libraryId,
+          objectId: policyId,
+          callback: async ({writeToken}) => {
+            await permissionsClient.RemovePermission({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              subjectId: client.utils.FormatAddress(client.signer.address)
+            });
+            await permissionsClient.RemovePermission({
+              policyId,
+              policyWriteToken: writeToken,
+              itemId: itemId3,
+              subjectId: groupAddress
+            });
+          }
+        });
+      } finally {
+        permissionsClient.offline = false;
+      }
     });
 
     test("Retrieve Item Policy", async () => {
@@ -744,7 +916,7 @@ describe("Test Permissions Client", () => {
       const allItems = await permissionsClient.PolicyItems({policyId});
 
       expect(allItems).toBeDefined();
-      expect(Object.keys(allItems).length).toEqual(2);
+      expect(Object.keys(allItems).length).toEqual(3);
 
       expect(allItems[itemId1]).toBeDefined();
       expect(allItems[itemId1].display_title).toEqual("Item 1");
@@ -775,6 +947,17 @@ describe("Test Permissions Client", () => {
       expect(subjectPermissions2[itemId2]).toBeDefined();
       expect(subjectPermissions2[itemId2].permissions).toBeDefined();
       expect(subjectPermissions2[itemId2].permissions.length).toEqual(1);
+
+      const subjectPermissions3 = await permissionsClient.SubjectPermissions({
+        policyId,
+        subjectId: "special.event.subject@ntp.com"
+      });
+
+      expect(subjectPermissions3).toBeDefined();
+      expect(Object.keys(subjectPermissions3).length).toEqual(1);
+      expect(subjectPermissions3[itemId2]).toBeDefined();
+      expect(subjectPermissions3[itemId2].permissions).toBeDefined();
+      expect(subjectPermissions3[itemId2].permissions.length).toEqual(1);
     });
 
     test("Remove Permissions", async () => {
@@ -794,6 +977,13 @@ describe("Test Permissions Client", () => {
             policyWriteToken: writeToken,
             itemId: itemId2,
             subjectId: "00uyyha6cjm2Q7Zgv4x6",
+          });
+
+          await permissionsClient.RemovePermission({
+            policyId,
+            policyWriteToken: writeToken,
+            itemId: itemId2,
+            subjectId: "special.event.subject@ntp.com"
           });
 
           await permissionsClient.SetPermission({

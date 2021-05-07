@@ -9,7 +9,7 @@ exports.ValidatePresence = function (name, thing) {
 exports.ValidateLibrary = function (libraryId) {
   if (!libraryId) {
     throw Error("Library ID not specified");
-  } else if (!libraryId.toString().startsWith("ilib")) {
+  } else if (!libraryId.toString().startsWith("i")) {
     throw Error("Invalid library ID: ".concat(libraryId));
   }
 };
@@ -17,7 +17,7 @@ exports.ValidateLibrary = function (libraryId) {
 exports.ValidateObject = function (objectId) {
   if (!objectId) {
     throw Error("Object ID not specified");
-  } else if (!objectId.toString().startsWith("iq__")) {
+  } else if (!objectId.toString().startsWith("i")) {
     throw Error("Invalid object ID: ".concat(objectId));
   }
 };
@@ -25,7 +25,7 @@ exports.ValidateObject = function (objectId) {
 exports.ValidateVersion = function (versionHash) {
   if (!versionHash) {
     throw Error("Version hash not specified");
-  } else if (!versionHash.toString().startsWith("hq__")) {
+  } else if (!versionHash.toString().startsWith("h")) {
     throw Error("Invalid version hash: ".concat(versionHash));
   }
 };
@@ -33,7 +33,7 @@ exports.ValidateVersion = function (versionHash) {
 exports.ValidateWriteToken = function (writeToken) {
   if (!writeToken) {
     throw Error("Write token not specified");
-  } else if (!writeToken.toString().startsWith("tqw_")) {
+  } else if (!writeToken.toString().startsWith("t")) {
     throw Error("Invalid write token: ".concat(writeToken));
   }
 };

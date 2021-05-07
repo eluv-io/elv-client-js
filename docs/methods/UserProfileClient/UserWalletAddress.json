@@ -1,6 +1,6 @@
 [
   {
-    "signature": "async UserWalletAddress({\n  \"address\": \"0x58d7d1bdaA51E852409F7F9a722afE7629FD6AF9\"\n});",
-    "result": "\"0x4ed823474Df422AEd35CD6836586C53c03424EC4\""
+    "signature": "async UserWalletAddress({\n  \"address\": \"0x793E41369eb3C8b579da28a41c350837c18b25Be\"\n});",
+    "result": "\"0x241a6aB51F92720FAe628FF193886be4844e03ef\""
   }
 ]

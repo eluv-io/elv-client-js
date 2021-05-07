@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
+const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("ObjectMoveMetadata.js");
 
 const objectPath = require("object-path");
-const ScriptBase = require("./parentClasses/ScriptBase");
 const MetadataMixin = require("./parentClasses/MetadataMixin");
 
 const regex = /^(\/[^/]+)+$/;
@@ -32,11 +33,11 @@ class ObjectMoveMetadata extends MetadataMixin(ScriptBase) {
     const oldKey = this.args.oldKey;
 
     // Check that keys are valid path strings
-    if(newKey.match(regex)[0] !== newKey) {
-      throw new Error(newKey + " is not a valid metadata path.");
+    if(!newKey.match(regex) || newKey.match(regex)[0] !== newKey) {
+      throw new Error("\"" + newKey + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
     }
-    if(oldKey.match(regex)[0] !== oldKey) {
-      throw new Error(oldKey + " is not a valid metadata path.");
+    if(!oldKey.match(regex) || oldKey.match(regex)[0] !== oldKey) {
+      throw new Error("\"" + oldKey + "\" is not in valid format for a metadata path (make sure it starts with a '/')");
     }
 
     // split object path into arrays
@@ -55,9 +56,14 @@ class ObjectMoveMetadata extends MetadataMixin(ScriptBase) {
       throw new Error("Metadata path '" + oldKey + "' not found.");
     }
 
-    // make sure newKey does NOT exist
+    // make sure newKey does NOT exist, or --force specified
     if(!validateObjectPath(metadata, newKeyArr)) {
-      throw new Error("Metadata path '" + newKey + "' is invalid.");
+      const existingMetadata = JSON.stringify(objectPath.get(metadata, newKeyArr), null, 2);
+      if(this.args.force) {
+        console.warn("Data already exists at '" + newKey + "', --force specified, replacing...\nOverwritten data: " + existingMetadata );
+      } else {
+        throw new Error("Metadata path '" + newKey + "' is invalid (already exists, use --force to replace). Existing data: " + existingMetadata);
+      }
     }
 
     // move oldKey attribute to newKey
@@ -90,13 +96,17 @@ class ObjectMoveMetadata extends MetadataMixin(ScriptBase) {
       })
       .option("oldKey", {
         demandOption: true,
-        describe: "Old metadata object path to indicating attribute to be moved (include leading '/')",
+        describe: "Old metadata path pointing to value or subtree to be moved (include leading '/')",
         type: "string"
       })
       .option("newKey", {
         demandOption: true,
-        describe: "New metadata file path within object indicating attribute to be added (include leading '/')",
+        describe: "New metadata path within object indicating new location for value or subtree (include leading '/')",
         type: "string"
+      })
+      .option("force", {
+        describe: "If target new metadata path within object exists, overwrite and replace",
+        type: "boolean"
       });
   }
 }

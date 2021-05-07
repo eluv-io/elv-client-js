@@ -42,34 +42,135 @@ const hlsStream = {
 
 const udpTsStream = {
   audioTxParams: {
-    "audio_bitrate": 128000, // required
-    "audio_index": 0, // required
-    "dcodec": "ac3", // required
-    "ecodec": "aac", // required
-    "sample_rate": 48000, // Hz, required
-    "seg_duration_ts": 1443840, // 30s @ 48000 Hz @ 1024 samples per frame; part size, required
+    "audio_bitrate": 128000,    // required
+    "n_audio": 0,
+    "audio_index": [1,0,0,0,0,0,0,0],           // required
+    "dcodec2": "ac3",            // required
+    "ecodec2": "aac",            // required
+    "sample_rate": 48000,       // Hz, required
+    "seg_duration": "30.03",
+    "format": "fmp4-segment",
+    "audio_seg_duration_ts": 1443840, // 30s @ 48000 Hz @ 1024 samples per frame; part size, required
   },
   ingestType: "udp",
   maxDurationSec: 600,
   sourceTimescale: 90000,
   udpPort: 22001, // required for udp
+  xcType: "all",                // all, audio, video
+  simpleWatermark: {
+    "font_color": "white@0.5",
+    "font_relative_height": 0.05000000074505806,
+    "shadow": true,
+    "shadow_color": "black@0.5",
+    "template": "%{pts\:gmtime\:1602968400\:%d-%m-%Y %T}",
+    "x": "(w-tw)/2",
+    "y": "h-(2*lh)"
+  },
   videoTxParams: {
     "enc_height": 720,
     "enc_width": 1280,
     "force_keyint": 120,
     "format": "fmp4-segment",
-    "seg_duration_ts": 2702700, // 30s @ 60000/1001 fps
+    "seg_duration": "30",
+    "video_seg_duration_ts": 2702700, // 30s @ 60000/1001 fps
     "video_bitrate": 20000000, // 20 Mbps
   },
 }
 
-const streamParams = udpTsStream
+const udpTsStream2 = {
+  audioTxParams: {
+    "audio_bitrate": 128000,    // required
+    "n_audio": 1,
+    "audio_index": [1,0,0,0,0,0,0,0],           // required
+    "ecodec2": "aac",            // required
+    "sample_rate": 48000,       // Hz, required
+    "seg_duration": "30.03",
+    "format": "fmp4-segment",
+    "audio_seg_duration_ts": 1441440, // 30.03s @ 48000 Hz @ 1024 samples per frame; part size, required
+  },
+  ingestType: "udp",
+  maxDurationSec: 600,
+  sourceTimescale: 90000,
+  udpPort: 22001, // required for udp
+  xcType: "all",                // all, audio, video
+  videoTxParams: {
+    "enc_height": 720,
+    "enc_width": 1280,
+    "force_keyint": 120,
+    "format": "fmp4-segment",
+    "seg_duration": "30.03",
+    "video_seg_duration_ts": 2702700, // 30s @ 60000/1001 fps
+    "video_bitrate": 20000000, // 20 Mbps
+  },
+}
+
+const rtmpStream = {
+  audioTxParams: {
+    "audio_bitrate": 128000,    // required
+    "n_audio": 1,
+    "audio_index": [1,0,0,0,0,0,0,0],           // required
+    "ecodec2": "aac",           // required
+    "sample_rate": 48000,       // Hz, required
+    "seg_duration": "30.03",
+    "audio_seg_duration_ts": 1441440, //1443840 30s @ 48000 Hz @ 1024 samples per frame; part size, required
+  },
+  ingestType: "rtmp",
+  maxDurationSec: 600,
+  sourceTimescale: 16000,
+  udpPort: 22001,               // required for udp
+  xcType: "all",                // all, audio, video
+  partTTL: 0,                   // 0 mean, keep it forever
+  //rtmpURL: "rtmp://localhost:5000/test002",
+  rtmpURL: "rtmp://192.168.90.202:1935/rtmp/XQjNir3S",
+  listen: true,
+  videoTxParams: {
+    "enc_height": 720,
+    "enc_width": 1280,
+    "force_keyint": 120,
+    "format": "fmp4-segment",
+    "seg_duration": "30.03",
+    "video_seg_duration_ts": 480480,    // 30*16000
+    "video_bitrate": 20000000,          // 20 Mbps
+  },
+}
+
+const rtmpStream2 = {
+  audioTxParams: {
+    "audio_bitrate": 128000,    // required
+    "n_audio": 1,
+    "audio_index": [0,0,0,0,0,0,0,0],           // required
+    "ecodec2": "aac",           // required
+    "sample_rate": 48000,       // Hz, required
+    "seg_duration": "30.03",
+    "audio_seg_duration_ts": 1441440, //1443840 30s @ 48000 Hz @ 1024 samples per frame; part size, required
+  },
+  ingestType: "rtmp",
+  maxDurationSec: 600,
+  sourceTimescale: 16000,
+  udpPort: 22001,               // required for udp
+  xcType: "all",                // all, audio, video
+  partTTL: 0,
+  rtmpURL: "rtmp://localhost:5000/test002",
+  listen: true,
+  videoTxParams: {
+    "enc_height": 1080,
+    "enc_width": 1920,
+    "force_keyint": 48,
+    "format": "fmp4-segment",
+    "seg_duration": "30.03",
+    "video_seg_duration_ts": 480480,    // 30*16000
+    "video_bitrate": 20000000,          // 20 Mbps
+  },
+}
+
+const streamParams = rtmpStream
+//const streamParams = udpTsStream2
 
 const confLocal = {
   audioTxParams: streamParams.audioTxParams,
   clientConf: {
     configUrl: "",
-    contentSpaceId: "ispc2v1uV2Lr51zyAFXeV6qi5R8628nT",
+    contentSpaceId: "ispc36s3uwY9voTx6gXcXENn4KfY29fC",
     fabricURIs: ["http://localhost:8008"],
     ethereumURIs: ["http://localhost:8545"],
     noCache: false,
@@ -78,14 +179,19 @@ const confLocal = {
   ingestType: streamParams.ingestType,
   ingressNodeApiUrl: "", // "http://localhost:8008"
   ingressNodeId: "", // "inod2oZhwSumZZSYhaNaf77VVKCt3nu2"
-  libraryId: "ilib3cDtpxmqQkEgJVdihcoMphVoEBMC",
+  libraryId: "ilib8SLzhEyJWiJ41BPezhswG56MUwL",
   maxDurationSec: streamParams.maxDurationSec,
-  objectType: "hq__Fe22XS2BCcHBCebep6Q4jXm7UrEwxKCXeDnWKWdRr3mQvvDtHkogN7peEVyimjL7JqXfSTp4g8",
+  objectType: "iq__AzMAxaZXN5MPAa2SvxhGMh56JCY",
   originUrl: streamParams.originUrl,
   signerPrivateKey: process.env.PRIVATE_KEY,
   sourceTimescale: streamParams.sourceTimescale,
   udpPort: streamParams.udpPort,
   videoTxParams: streamParams.videoTxParams,
+  simpleWatermark: streamParams.simpleWatermark,
+  xcType: streamParams.xcType,
+  partTTL: streamParams.partTTL,
+  rtmpURL: streamParams.rtmpURL,
+  listen: streamParams.listen,
 }
 
 /*
@@ -182,6 +288,8 @@ const Test = async () => {
     const ethURI = client.ethereumURIs[0]
     console.log("Ethereum URI: " + ethURI)
 
+    //client.ToggleLogging(true);
+
     /*
      * Create object for live streaming.
      */
@@ -243,12 +351,17 @@ const Test = async () => {
         "ingress_node_api": conf.ingressNodeApiUrl,
         "ingress_node_id": conf.ingressNodeId,
         "max_duration_sec": conf.maxDurationSec,
+        "xc_type": conf.xcType,
+        "part_ttl": conf.partTTL,
+        "rtmp_url": conf.rtmpURL,
+        "listen": conf.listen,
         "name": "Live Test - " + Date().toLocaleString(),
         "origin_url": conf.originUrl,
         "playout_type" : "live",
         "source_timescale": conf.sourceTimescale,
         "udp_port": conf.udpPort,
         "video_tx_params": conf.videoTxParams,
+        "simple_watermark": conf.simpleWatermark,
       }
     })
 

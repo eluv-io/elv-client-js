@@ -2,7 +2,6 @@ const HttpClient = require("./HttpClient");
 const Ethers = require("ethers");
 const Utils = require("./Utils");
 const UrlJoin = require("url-join");
-const bs58 = require("bs58");
 const {LogMessage} = require("./LogMessage");
 
 /*
@@ -856,7 +855,7 @@ class AuthorizationClient {
       params: [this.client.contentSpaceId, libraryId, objectId, kmsCap || "", ""]
     });
 
-    return JSON.parse(bs58.decode(cap.replace(/^kp__/, "")).toString("utf-8"));
+    return JSON.parse(Utils.FromB58(cap.replace(/^kp__/, "")).toString("utf-8"));
   }
 
   // Retrieve symmetric key for object
@@ -940,8 +939,7 @@ class AuthorizationClient {
     }
 
     const kmsHttpClient = new HttpClient({
-      uris: kmsUrls,
-      debug: true
+      uris: kmsUrls
     });
 
     return await kmsHttpClient.Request({
@@ -967,7 +965,7 @@ class AuthorizationClient {
       }
 
       if(!abi) {
-        throw Error("No ABI for specified contract (wrong network?)");
+        throw Error(`No ABI for contract ${contractAddress} - Wrong network or deleted item?`);
       }
 
       const method = abi.find(method => method.name === methodName);

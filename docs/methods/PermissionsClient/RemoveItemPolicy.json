@@ -1,8 +1,8 @@
 [
   {
-    "signature": "async RemoveItemPolicy({\n  \"policyId\": \"iq__2LFhd7iBv9NrPpCku2fHemCjHUaG\",\n  \"policyWriteToken\": \"tqw_4aHc9NgzM29hirTbE22tvusG53XHcneEj\",\n  \"itemId\": \"iq__3XUR87YHPauksf6rfiHXnQ6HYxyb\"\n});"
+    "signature": "async RemoveItemPolicy({\n  \"policyId\": \"iq__BKUZ8G6FagVjK74NANSq3rwskEp\",\n  \"policyWriteToken\": \"tqw__HSQQdnKZTMbqVWkQLrCyxWkPah6faERJGoaynX7JNbPgijJJXGdPu9Rybs2av6PXHvaP1tVDqiZjVZySVm1\",\n  \"itemId\": \"iq__2A5mVX6SZRPD5DiumRULLKrDJ3ay\"\n});"
   },
   {
-    "signature": "async RemoveItemPolicy({\n  \"policyId\": \"iq__2LFhd7iBv9NrPpCku2fHemCjHUaG\",\n  \"policyWriteToken\": \"tqw_M38Km7vjBXkZTS59P9Q6ckkTM5X9VZqf6\",\n  \"itemId\": \"iq__3bHYikt7r3C4Kf1miukvYaC7P6j5\"\n});"
+    "signature": "async RemoveItemPolicy({\n  \"policyId\": \"iq__BKUZ8G6FagVjK74NANSq3rwskEp\",\n  \"policyWriteToken\": \"tqw__HSQQdnKZTMbqVWkQLrCyxWkPah6faERJGoaynX7JNbPgijJJXGdPu9Rybs2av9BcvrU3NsMGrjFy6X6BkN6\",\n  \"itemId\": \"iq__127hgef9FgcHkKxmwe6vTaW99UA\"\n});"
   }
 ]

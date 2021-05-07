@@ -1,6 +1,6 @@
 [
   {
     "signature": "async UpdateNTPInstance({\n  \"tenantId\": \"iten3PumhoQT6LG4VTDZozu83a6qw9JS\",\n  \"ntpId\": \"QOTP3MVczfg3b7j\",\n  \"maxTickets\": 123,\n  \"maxRedemptions\": 456,\n  \"startTime\": \"2018-11-02T23:55:51.043Z\",\n  \"endTime\": \"2022-11-03T23:55:50.043Z\"\n});",
-    "result": "{\n  \"ntpId\": \"QOTP3MVczfg3b7j\",\n  \"tenantId\": \"iten3PumhoQT6LG4VTDZozu83a6qw9JS\",\n  \"kmsId\": \"ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g\",\n  \"objectId\": \"iq__iTghh4NbMVUVK7wMHSNtXrH2vq8\",\n  \"type\": \"NTP\",\n  \"updatedAt\": 1605812427397,\n  \"startTime\": \"1541202951043\",\n  \"endTime\": \"1667519750043\",\n  \"ticketLength\": \"6\",\n  \"maxRedemptions\": \"456\",\n  \"maxTickets\": 123\n}"
+    "result": "{\n  \"ntpId\": \"QOTP3MVczfg3b7j\",\n  \"tenantId\": \"iten3PumhoQT6LG4VTDZozu83a6qw9JS\",\n  \"kmsId\": \"ikms4ZPRRaZiwQN6rxEz7D75tqzvGQ3g\",\n  \"objectId\": \"iq__iTghh4NbMVUVK7wMHSNtXrH2vq8\",\n  \"ntpClass\": \"Class 4\",\n  \"updatedAt\": 1605812427397,\n  \"startTime\": \"1541202951043\",\n  \"endTime\": \"1667519750043\",\n  \"ticketLength\": \"6\",\n  \"maxRedemptions\": \"456\",\n  \"maxTickets\": 123\n}"
   }
 ]

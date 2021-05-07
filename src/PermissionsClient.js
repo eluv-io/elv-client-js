@@ -85,7 +85,7 @@ class PermissionsClient {
    *
    *  - A permission may have `start` and `end` times. As mentioned above, the effective start and end times of a permission are the *most restrictive* of all applicable start and end times.
    *
-   *  - A permission must have a subject, which can be either a user, a group, or an NTP instance, either from the Fabric or from an OAuth provider
+   *  - A permission must have a subject, which can be either a user or group, either from the Fabric or from an OAuth provider, or an NTP instance or an NTP Subject
    *
    *  - A subject must have an ID and a name. In the case of certain OAuth providers, the name may be used as an ID in most cases, but the immutable ID for that subject must be used as the ID. For example, in Okta, a group may be specified by its name "Content Admins", but have the Okta ID "00g102tklfAorixGi4x7". The former should be used as the subjectName, and the latter as the subjectId
    *
@@ -104,10 +104,15 @@ class PermissionsClient {
 
    *
    * @param client - An instance of ElvClient
+   * @param {object=} options={offline: false} - Options for the PermissionsClient
+   * - offline - If specified, metadata reads and updates will be done with a local copy.
+   * Use OpenOfflineDraft and CloseOfflineDraft
    */
-  constructor(client) {
+  constructor(client, options={offline: false}) {
     this.client = client;
     this.subjectNames = {};
+    this.drafts = {};
+    this.offline = options.offline;
   }
 
   FormatDate(date) {
@@ -169,16 +174,43 @@ class PermissionsClient {
     return profileSpec;
   }
 
+  // Convert from fabric metadata spec to client spec
   async FormatPermission({policyId, policyWriteToken, permission}) {
     const subjectSource = permission.subject.type.startsWith("oauth") ? "oauth" : "fabric";
-    const subjectType = permission.subject.type === "otp" ? "ntp" :
-      permission.subject.type.includes("group") ? "group" : "user";
-    const subjectId = permission.subject.type === "otp" ? permission.subject.id :
-      subjectSource === "oauth" ? permission.subject.oauth_id : this.client.utils.HashToAddress(permission.subject.id);
+
+    let subjectType, subjectId, subjectName, subjectNTPId;
+    switch(permission.subject.type){
+      case "otp":
+        subjectType = "ntp";
+        subjectId = permission.subject.id;
+        break;
+      case "otp_subject":
+        subjectType = "ntp_subject";
+        subjectId = permission.subject.id;
+        subjectName = subjectId;
+        subjectNTPId = permission.subject.otp_id;
+        break;
+      case "group":
+      case "oauth_group":
+        subjectType = "group";
+        subjectId = subjectSource === "oauth" ?
+          permission.subject.oauth_id :
+          this.client.utils.HashToAddress(permission.subject.id);
+        break;
+      case "user":
+      case "oauth_user":
+        subjectType = "user";
+        subjectId = subjectSource === "oauth" ?
+          permission.subject.oauth_id :
+          this.client.utils.HashToAddress(permission.subject.id);
+        break;
+      default:
+        throw Error("Unknown subject type: " + permission.subject.type);
+    }
 
     const id = permission.subject.oauth_id || permission.subject.id;
     const cachedName = this.subjectNames[id];
-    let subjectName = cachedName || permission.subject.id;
+    subjectName = subjectName || cachedName || permission.subject.id;
     if(!cachedName && subjectSource === "fabric") {
       if(subjectType === "group") {
         const contentSpaceLibraryId = (await this.client.ContentSpaceId()).replace("ispc", "ilib");
@@ -214,6 +246,10 @@ class PermissionsClient {
       subjectName
     };
 
+    if(subjectNTPId) {
+      permissionSpec.subjectNTPId = subjectNTPId;
+    }
+
     if(permission.start) {
       permissionSpec.start = permission.start;
     }
@@ -224,6 +260,60 @@ class PermissionsClient {
 
     return permissionSpec;
   }
+
+  /* Offline draft */
+
+  /**
+   * Open an offline draft - copies object data locally and allows the functions processing this data to operate
+   * on the local copy, much faster.  Closing the draft will copy the data back to the object's write token.
+   *
+   * @methodGroup OfflineDraft
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   * @param {string} policyLibraryId - Policy object library ID (optional)
+   * @param {string=} policyWriteToken - Write token for the policy object
+   */
+  async OpenOfflineDraft({policyId, policyLibraryId, policyWriteToken}) {
+    if(policyLibraryId == null) {
+      policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+    }
+
+    let meta = await this.client.ContentObjectMetadata({
+      libraryId: policyLibraryId,
+      objectId: policyId,
+      writeToken: policyWriteToken
+    });
+
+    this.drafts[policyId] = {
+      meta,
+      policyLibraryId,
+      policyWriteToken
+    };
+  }
+
+  /**
+   * Close an offline draft - copies the metadata stored locally back to the write token's metadata.
+   * Does not finalize the write token.
+   *
+   * @methodGroup OfflineDraft
+   * @namedParams
+   * @param {string} policyId - Object ID of the policy
+   */
+  async CloseOfflineDraft({policyId}) {
+    if(this.drafts[policyId] == null) {
+      throw Error("No draft open for policyId: " + policyId);
+    }
+
+    await this.client.ReplaceMetadata({
+      libraryId: this.drafts[policyId].policyLibraryId,
+      objectId: policyId,
+      writeToken: this.drafts[policyId].policyWriteToken,
+      metadata: this.drafts[policyId].meta
+    });
+
+    this.drafts[policyId] = null;
+  }
+
 
   /* Add / remove overall item permission */
 
@@ -464,9 +554,10 @@ class PermissionsClient {
    * @param {string} policyWriteToken - Write token for the policy
    * @param {string} itemId - Object ID of the item
    * @param {string} subjectSource="fabric" - ("fabric" | "oauth") - The source of the subject
-   * @param {string} subjectType="group - ("user" | "group" | "ntp") - The type of the subject
-   * @param {string} subjectName - The name of the subject
+   * @param {string} subjectType="group - ("user" | "group" | "ntp" | "ntp_subject") - The type of the subject
+   * @param {string=} subjectName - The name of the subject
    * @param {string} subjectId - The ID of the subject
+   * @param {string=} subjectNTPId - (For subjectType "ntp_subject") The NTP ID associated with the subject
    * @param {string} profileName - The profile to apply for the permission
    * @param {string | number} start - The start time for the permission
    * @param {string | number} end - The end time for the permission
@@ -479,6 +570,7 @@ class PermissionsClient {
     subjectType="group",
     subjectName,
     subjectId,
+    subjectNTPId,
     profileName,
     start,
     end
@@ -494,7 +586,13 @@ class PermissionsClient {
     start = this.FormatDate(start);
     end = this.FormatDate(end);
 
-    const policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+    // Check if we have an open offline draft for this policy
+    const offlineDraft = this.offline && this.drafts[policyId] != null;
+
+    let policyLibraryId = null;
+    if(!offlineDraft) {
+      policyLibraryId = await this.client.ContentObjectLibraryId({objectId: policyId});
+    }
 
     // Allow address to be passed in for fabric subjects, though spec requires iusr/igrp hash
     if(subjectSource === "fabric") {
@@ -509,12 +607,18 @@ class PermissionsClient {
       }
     }
 
-    let existingPermissions = await this.client.ContentObjectMetadata({
-      libraryId: policyLibraryId,
-      objectId: policyId,
-      writeToken: policyWriteToken,
-      metadataSubtree: UrlJoin("auth_policy_spec", itemId)
-    });
+    let existingPermissions;
+
+    if(offlineDraft) {
+      existingPermissions = this.drafts[policyId].meta["auth_policy_spec"][itemId];
+    } else {
+      existingPermissions = await this.client.ContentObjectMetadata({
+        libraryId: policyLibraryId,
+        objectId: policyId,
+        writeToken: policyWriteToken,
+        metadataSubtree: UrlJoin("auth_policy_spec", itemId)
+      });
+    }
 
     if(!existingPermissions) {
       throw Error("Unable to add permissions to uninitialized item");
@@ -560,6 +664,12 @@ class PermissionsClient {
           id: subjectId,
           type: "otp"
         };
+      } else if(subjectType === "ntp_subject") {
+        subjectInfo = {
+          id: subjectId,
+          otp_id: subjectNTPId,
+          type: "otp_subject"
+        };
       } else {
         throw Error(`Invalid subject type: ${subjectType}`);
       }
@@ -587,60 +697,76 @@ class PermissionsClient {
 
     existingPermissions.permissions[index] = permissionSpec;
 
-    await this.client.ReplaceMetadata({
-      libraryId: policyLibraryId,
-      objectId: policyId,
-      writeToken: policyWriteToken,
-      metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions"),
-      metadata: existingPermissions.permissions
-    });
+    if(!offlineDraft) {
+      await this.client.ReplaceMetadata({
+        libraryId: policyLibraryId,
+        objectId: policyId,
+        writeToken: policyWriteToken,
+        metadataSubtree: UrlJoin("auth_policy_spec", itemId, "permissions"),
+        metadata: existingPermissions.permissions
+      });
+    }
 
     // Fabric usernames and NTP info are stored in auth_policy_settings/fabric_users
     if(subjectSource === "fabric" && subjectType === "user") {
-      const userInfo = await this.client.ContentObjectMetadata({
-        libraryId: policyLibraryId,
-        objectId: policyId,
-        writeToken: policyWriteToken,
-        metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId))
-      });
 
-      if(!userInfo) {
-        await this.client.ReplaceMetadata({
+      const newMeta = {
+        address: this.client.utils.HashToAddress(subjectId),
+        name: subjectName
+      };
+
+      if(offlineDraft) {
+        this.drafts[policyId].meta["auth_policy_settings"]["fabric_users"][this.client.utils.HashToAddress(subjectId)] = newMeta;
+      } else {
+        const userInfo = await this.client.ContentObjectMetadata({
           libraryId: policyLibraryId,
           objectId: policyId,
           writeToken: policyWriteToken,
-          metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId)),
-          metadata: {
-            address: this.client.utils.HashToAddress(subjectId),
-            name: subjectName
-          }
+          metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId))
         });
+
+        if(!userInfo) {
+          await this.client.ReplaceMetadata({
+            libraryId: policyLibraryId,
+            objectId: policyId,
+            writeToken: policyWriteToken,
+            metadataSubtree: UrlJoin("auth_policy_settings", "fabric_users", this.client.utils.HashToAddress(subjectId)),
+            metadata: newMeta
+          });
+        }
       }
-    } else if(subjectSource === "fabric" && subjectType === "ntp") {
-      const userInfo = await this.client.ContentObjectMetadata({
-        libraryId: policyLibraryId,
-        objectId: policyId,
-        writeToken: policyWriteToken,
-        metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
-      });
 
-      if(!userInfo) {
-        await this.client.ReplaceMetadata({
+    } else if(subjectSource === "fabric" && subjectType === "ntp") {
+
+      const newMeta = {
+        address: subjectId,
+        ntpId: subjectId,
+        name: subjectName,
+        type: "ntpInstance"
+      };
+
+      if(offlineDraft) {
+        this.drafts[policyId].meta["auth_policy_settings"]["ntp_instances"][subjectId] = newMeta;
+      } else {
+        const userInfo = await this.client.ContentObjectMetadata({
           libraryId: policyLibraryId,
           objectId: policyId,
           writeToken: policyWriteToken,
-          metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId),
-          metadata: {
-            address: subjectId,
-            ntpId: subjectId,
-            name: subjectName,
-            type: "ntpInstance"
-          }
+          metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId)
         });
+
+        if(!userInfo) {
+          await this.client.ReplaceMetadata({
+            libraryId: policyLibraryId,
+            objectId: policyId,
+            writeToken: policyWriteToken,
+            metadataSubtree: UrlJoin("auth_policy_settings", "ntp_instances", subjectId),
+            metadata: newMeta
+          });
+        }
       }
     }
   }
-
 
   /**
    * Remove permission for the specified subject from the specified item policy

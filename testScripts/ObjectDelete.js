@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
-
 const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("ObjectDelete.js");
 
 class ObjectDelete extends ScriptBase {
 

@@ -1,4 +1,6 @@
 /* eslint-disable no-console */
+const ScriptBase = require("./parentClasses/ScriptBase");
+ScriptBase.deprecationNotice("ObjectAddGroupPerms.js");
 
 const { ElvClient } = require("../src/ElvClient");
 
@@ -8,7 +10,9 @@ const argv = yargs
     description: "ID of the object"
   })
   .option("groupAddress", {
-    description: "address of group"
+    description: "address of group",
+    string: true,
+    type: "string"
   })
   .option("config-url", {
     type: "string",
@@ -23,7 +27,7 @@ const argv = yargs
     ["objectId", "groupAddress", "permissions"],
     "\nUsage: PRIVATE_KEY=<private-key> node AddGroupPermissions.js --objectId <object-id> --groupAddress <address-of-group> --permissions <see access manage> (--config-url \"<fabric-config-url>\")\n"
   )
-  .argv;
+  .strict().argv;
 
 const ClientConfiguration = (!argv["config-url"]) ? (require("../TestConfiguration.json")) : {"config-url": argv["config-url"]};
 
