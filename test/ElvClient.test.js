@@ -52,7 +52,8 @@ let partInfo = {};
 // Describe blocks and  tests within them are run in order
 describe("Test ElvClient", () => {
   beforeAll(async () => {
-    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "2"));
+
+    client = OutputLogger(ElvClient, await CreateClient("ElvClient", "2", process.env.ADMIN_GROUP != null));
     accessClient = OutputLogger(ElvClient, await CreateClient("ElvClient Access"));
 
     testFile1 = RandomBytes(testFileSize);
@@ -145,7 +146,7 @@ describe("Test ElvClient", () => {
 
   describe("Access Groups", () => {
     test("Create Access Group", async () => {
-      accessGroupAddress = await client.CreateAccessGroup({
+      accessGroupAddress = process.env.ADMIN_GROUP || await client.CreateAccessGroup({
         name: "Test Access Group",
         description: "Test Access Group Description",
         metadata: {
@@ -2603,32 +2604,3 @@ describe("Test ElvClient", () => {
 
 if(!module.parent) { runTests(); }
 module.exports = runTests;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
