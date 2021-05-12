@@ -493,7 +493,7 @@ class AuthorizationClient {
       try {
         token = await Utils.ResponseToFormat(
           "text",
-          this.MakeKMSRequest({
+          this.MakeAuthServiceRequest({
             kmsId: "ikms" + Utils.AddressToHash(kmsAddress),
             method: "POST",
             path: UrlJoin("as", issuer),
@@ -920,6 +920,22 @@ class AuthorizationClient {
         }
       }
     }
+  }
+
+  // Make an arbitrary HTTP call to an authority server
+  async MakeAuthServiceRequest({kmsId, objectId, versionHash, method="GET", path, bodyType, body={}, queryParams={}, headers}) {
+    if(this.client.authServiceURIs.length === 0) {
+      return await this.MakeKMSRequest({kmsId, objectId, versionHash, method, path, bodyType, body, queryParams, headers});
+    }
+
+    return await this.client.AuthHttpClient.Request({
+      method,
+      path,
+      bodyType,
+      body,
+      headers,
+      queryParams
+    });
   }
 
   // Make an arbitrary HTTP call to the KMS

@@ -67,7 +67,9 @@ class ElvClient {
         `Debug Logging Enabled:
         Content Space: ${this.contentSpaceId}
         Fabric URLs: [\n\t\t${this.fabricURIs.join(", \n\t\t")}\n\t]
-        Ethereum URLs: [\n\t\t${this.ethereumURIs.join(", \n\t\t")}\n\t]`
+        Ethereum URLs: [\\n\\t\\t${this.ethereumURIs.join(", \n\t\t")}\\n\\t]
+        Auth Service URLs: [\\n\\t\\t${this.authServiceURIs.join(", \n\t\t")}\\n\\t]
+        `
       );
     }
   }
@@ -115,6 +117,7 @@ class ElvClient {
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+   * @param {Array<string>} ethereumURIs - A list of full URIs to auth service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
@@ -128,6 +131,7 @@ class ElvClient {
     fabricVersion,
     fabricURIs,
     ethereumURIs,
+    authServiceURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
@@ -144,6 +148,7 @@ class ElvClient {
     this.fabricVersion = fabricVersion;
 
     this.fabricURIs = fabricURIs;
+    this.authServiceURIs = authServiceURIs;
     this.ethereumURIs = ethereumURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
 
@@ -192,14 +197,19 @@ class ElvClient {
       // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
       const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
 
-      let fabricURIs = fabricInfo.network.seed_nodes.fabric_api;
+      let fabricURIs = fabricInfo.network.services.fabric_api;
       if(fabricURIs.find(filterHTTPS)) {
         fabricURIs = fabricURIs.filter(filterHTTPS);
       }
 
-      let ethereumURIs = fabricInfo.network.seed_nodes.ethereum_api;
+      let ethereumURIs = fabricInfo.network.services.ethereum_api;
       if(ethereumURIs.find(filterHTTPS)) {
         ethereumURIs = ethereumURIs.filter(filterHTTPS);
+      }
+
+      let authServiceURIs = fabricInfo.network.services.authority_service || [];
+      if(authServiceURIs.find(filterHTTPS)) {
+        authServiceURIs = authServiceURIs.filter(filterHTTPS);
       }
 
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
@@ -209,6 +219,7 @@ class ElvClient {
         contentSpaceId: fabricInfo.qspace.id,
         fabricURIs,
         ethereumURIs,
+        authServiceURIs,
         kmsURIs: kmsUrls,
         fabricVersion
       };
@@ -250,6 +261,7 @@ class ElvClient {
       contentSpaceId,
       fabricURIs,
       ethereumURIs,
+      authServiceURIs,
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
@@ -261,6 +273,7 @@ class ElvClient {
       fabricVersion,
       fabricURIs,
       ethereumURIs,
+      authServiceURIs,
       ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
@@ -284,6 +297,7 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
+    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
     this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug, timeout: this.ethereumContractTimeout});
 
     this.authClient = new AuthorizationClient({
@@ -368,11 +382,12 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
 
+    this.authServiceURIs = authServiceURIs;
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
 
@@ -436,7 +451,8 @@ class ElvClient {
   Nodes() {
     return {
       fabricURIs: this.fabricURIs,
-      ethereumURIs: this.ethereumURIs
+      ethereumURIs: this.ethereumURIs,
+      authServiceURIs: this.authServiceURIs
     };
   }
 
@@ -446,10 +462,11 @@ class ElvClient {
    * @namedParams
    * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
    * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
+   * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -462,6 +479,12 @@ class ElvClient {
 
       this.ethClient.ethereumURIs = ethereumURIs;
       this.ethClient.ethereumURIIndex = 0;
+    }
+
+    if(authServiceURIs) {
+      this.authServiceURIs = authServiceURIs;
+      this.AuthHttpClient.uris = authServiceURIs;
+      this.AuthHttpClient.uriIndex = 0;
     }
   }
 
