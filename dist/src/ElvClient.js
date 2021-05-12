@@ -89,7 +89,7 @@ function () {
       [this, this.authClient, this.ethClient, this.HttpClient, this.userProfileClient].forEach(setDebug);
 
       if (enable) {
-        this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\n\t\t").concat(this.ethereumURIs.join(", \n\t\t"), "\n\t]"));
+        this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\\n\\t\\t").concat(this.ethereumURIs.join(", \n\t\t"), "\\n\\t]\n        Auth Service URLs: [\\n\\t\\t").concat(this.authServiceURIs.join(", \n\t\t"), "\\n\\t]\n        "));
       }
     }
   }, {
@@ -168,6 +168,7 @@ function () {
      * @param {number} fabricVersion - The version of the target content fabric
      * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
      * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+     * @param {Array<string>} ethereumURIs - A list of full URIs to auth service endpoints
      * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
      * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
      * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
@@ -184,6 +185,7 @@ function () {
         fabricVersion = _ref.fabricVersion,
         fabricURIs = _ref.fabricURIs,
         ethereumURIs = _ref.ethereumURIs,
+        authServiceURIs = _ref.authServiceURIs,
         _ref$ethereumContract = _ref.ethereumContractTimeout,
         ethereumContractTimeout = _ref$ethereumContract === void 0 ? 10 : _ref$ethereumContract,
         trustAuthorityId = _ref.trustAuthorityId,
@@ -202,6 +204,7 @@ function () {
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
     this.fabricVersion = fabricVersion;
     this.fabricURIs = fabricURIs;
+    this.authServiceURIs = authServiceURIs;
     this.ethereumURIs = ethereumURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
     this.trustAuthorityId = trustAuthorityId;
@@ -252,6 +255,10 @@ function () {
                 uris: this.fabricURIs,
                 debug: this.debug
               });
+              this.AuthHttpClient = new HttpClient({
+                uris: this.authServiceURIs,
+                debug: this.debug
+              });
               this.ethClient = new EthClient({
                 client: this,
                 uris: this.ethereumURIs,
@@ -274,7 +281,7 @@ function () {
               this.Crypto = Crypto;
               this.Crypto.ElvCrypto(); // Test each eth url
 
-              _context3.next = 15;
+              _context3.next = 16;
               return _regeneratorRuntime.awrap(Promise.all(this.ethereumURIs.map(function _callee2(uri) {
                 var response;
                 return _regeneratorRuntime.async(function _callee2$(_context2) {
@@ -337,7 +344,7 @@ function () {
                 }, null, null, [[0, 9]]);
               })));
 
-            case 15:
+            case 16:
               _context3.t0 = function (uri) {
                 return uri;
               };
@@ -350,7 +357,7 @@ function () {
                 this.ethClient.SetEthereumURIs(workingEthURIs);
               }
 
-            case 18:
+            case 19:
             case "end":
               return _context3.stop();
           }
@@ -384,7 +391,7 @@ function () {
   }, {
     key: "UseRegion",
     value: function UseRegion(_ref2) {
-      var region, _ref3, fabricURIs, ethereumURIs;
+      var region, _ref3, fabricURIs, ethereumURIs, authServiceURIs;
 
       return _regeneratorRuntime.async(function UseRegion$(_context4) {
         while (1) {
@@ -410,6 +417,8 @@ function () {
               _ref3 = _context4.sent;
               fabricURIs = _ref3.fabricURIs;
               ethereumURIs = _ref3.ethereumURIs;
+              authServiceURIs = _ref3.authServiceURIs;
+              this.authServiceURIs = authServiceURIs;
               this.fabricURIs = fabricURIs;
               this.ethereumURIs = ethereumURIs;
               this.HttpClient.uris = fabricURIs;
@@ -421,7 +430,7 @@ function () {
                 ethereumURIs: ethereumURIs
               });
 
-            case 15:
+            case 17:
             case "end":
               return _context4.stop();
           }
@@ -522,7 +531,8 @@ function () {
     value: function Nodes() {
       return {
         fabricURIs: this.fabricURIs,
-        ethereumURIs: this.ethereumURIs
+        ethereumURIs: this.ethereumURIs,
+        authServiceURIs: this.authServiceURIs
       };
     }
     /**
@@ -531,6 +541,7 @@ function () {
      * @namedParams
      * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
      * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
+     * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
      *
      * @methodGroup Nodes
      */
@@ -539,7 +550,8 @@ function () {
     key: "SetNodes",
     value: function SetNodes(_ref6) {
       var fabricURIs = _ref6.fabricURIs,
-          ethereumURIs = _ref6.ethereumURIs;
+          ethereumURIs = _ref6.ethereumURIs,
+          authServiceURIs = _ref6.authServiceURIs;
 
       if (fabricURIs) {
         this.fabricURIs = fabricURIs;
@@ -551,6 +563,12 @@ function () {
         this.ethereumURIs = ethereumURIs;
         this.ethClient.ethereumURIs = ethereumURIs;
         this.ethClient.ethereumURIIndex = 0;
+      }
+
+      if (authServiceURIs) {
+        this.authServiceURIs = authServiceURIs;
+        this.AuthHttpClient.uris = authServiceURIs;
+        this.AuthHttpClient.uriIndex = 0;
       }
     }
     /* Wallet and signers */
@@ -1237,7 +1255,7 @@ function () {
   }], [{
     key: "Configuration",
     value: function Configuration(_ref18) {
-      var configUrl, _ref18$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, fabricVersion;
+      var configUrl, _ref18$kmsUrls, kmsUrls, region, uri, fabricInfo, filterHTTPS, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion;
 
       return _regeneratorRuntime.async(function Configuration$(_context15) {
         while (1) {
@@ -1262,16 +1280,22 @@ function () {
                 return uri.toLowerCase().startsWith("https");
               };
 
-              fabricURIs = fabricInfo.network.seed_nodes.fabric_api;
+              fabricURIs = fabricInfo.network.services.fabric_api;
 
               if (fabricURIs.find(filterHTTPS)) {
                 fabricURIs = fabricURIs.filter(filterHTTPS);
               }
 
-              ethereumURIs = fabricInfo.network.seed_nodes.ethereum_api;
+              ethereumURIs = fabricInfo.network.services.ethereum_api;
 
               if (ethereumURIs.find(filterHTTPS)) {
                 ethereumURIs = ethereumURIs.filter(filterHTTPS);
+              }
+
+              authServiceURIs = fabricInfo.network.services.authority_service || [];
+
+              if (authServiceURIs.find(filterHTTPS)) {
+                authServiceURIs = authServiceURIs.filter(filterHTTPS);
               }
 
               fabricVersion = Math.max.apply(Math, _toConsumableArray(fabricInfo.network.api_versions || [2]));
@@ -1280,12 +1304,13 @@ function () {
                 contentSpaceId: fabricInfo.qspace.id,
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
+                authServiceURIs: authServiceURIs,
                 kmsURIs: kmsUrls,
                 fabricVersion: fabricVersion
               });
 
-            case 16:
-              _context15.prev = 16;
+            case 18:
+              _context15.prev = 18;
               _context15.t0 = _context15["catch"](1);
               // eslint-disable-next-line no-console
               console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
@@ -1293,12 +1318,12 @@ function () {
               console.error(_context15.t0);
               throw _context15.t0;
 
-            case 21:
+            case 23:
             case "end":
               return _context15.stop();
           }
         }
-      }, null, null, [[1, 16]]);
+      }, null, null, [[1, 18]]);
     }
     /**
      * Create a new ElvClient from the specified configuration URL
@@ -1319,7 +1344,7 @@ function () {
   }, {
     key: "FromConfigurationUrl",
     value: function FromConfigurationUrl(_ref19) {
-      var configUrl, region, trustAuthorityId, staticToken, _ref19$ethereumContra, ethereumContractTimeout, _ref19$noCache, noCache, _ref19$noAuth, noAuth, _ref20, contentSpaceId, fabricURIs, ethereumURIs, fabricVersion, client;
+      var configUrl, region, trustAuthorityId, staticToken, _ref19$ethereumContra, ethereumContractTimeout, _ref19$noCache, noCache, _ref19$noAuth, noAuth, _ref20, contentSpaceId, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context16) {
         while (1) {
@@ -1337,12 +1362,14 @@ function () {
               contentSpaceId = _ref20.contentSpaceId;
               fabricURIs = _ref20.fabricURIs;
               ethereumURIs = _ref20.ethereumURIs;
+              authServiceURIs = _ref20.authServiceURIs;
               fabricVersion = _ref20.fabricVersion;
               client = new ElvClient({
                 contentSpaceId: contentSpaceId,
                 fabricVersion: fabricVersion,
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
+                authServiceURIs: authServiceURIs,
                 ethereumContractTimeout: ethereumContractTimeout,
                 trustAuthorityId: trustAuthorityId,
                 staticToken: staticToken,
@@ -1352,7 +1379,7 @@ function () {
               client.configUrl = configUrl;
               return _context16.abrupt("return", client);
 
-            case 11:
+            case 12:
             case "end":
               return _context16.stop();
           }
