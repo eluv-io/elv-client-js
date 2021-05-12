@@ -39,7 +39,7 @@ const CreateClient = async (name, bux="2", useExistingSigner=false) => {
     global.window = undefined;
 
     const fundedClient = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
-    const client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
+    let client = await ElvClient.FromConfigurationUrl({configUrl: ClientConfiguration["config-url"]});
 
     const wallet = client.GenerateWallet();
     const fundedSigner = wallet.AddAccount({privateKey});
@@ -51,7 +51,7 @@ const CreateClient = async (name, bux="2", useExistingSigner=false) => {
 
     await fundedClient.SetSigner({signer: fundedSigner});
 
-	if(!useExistingSigner) {
+    if(!useExistingSigner) {
 
       const mnemonic = wallet.GenerateMnemonic();
       // Create a new account and send some ether
@@ -59,16 +59,16 @@ const CreateClient = async (name, bux="2", useExistingSigner=false) => {
 
       // Each test file is run in parallel, so there may be collisions when initializing - retry until success
       for(let i = 0; i < 5; i++) {
-		try {
+        try {
           await fundedSigner.sendTransaction({
-			to: signer.address,
-			value: Ethers.utils.parseEther(bux)
+            to: signer.address,
+            value: Ethers.utils.parseEther(bux)
           });
 
           break;
-		} catch(e) {
+        } catch(e) {
           await new Promise(resolve => setTimeout(resolve, 1000));
-		}
+        }
       }
 
       // Ensure transaction has time to resolve fully before continuing
@@ -76,9 +76,9 @@ const CreateClient = async (name, bux="2", useExistingSigner=false) => {
 
       await client.SetSigner({signer});
 
-	} else {
-	  client = fundedClient;
-	}
+    } else {
+      client = fundedClient;
+    }
 
     client.clientName = name;
     client.initialBalance = parseFloat(bux);
