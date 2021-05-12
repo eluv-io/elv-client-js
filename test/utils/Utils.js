@@ -32,7 +32,7 @@ const RandomString = (size) => {
   return crypto.randomBytes(size).toString("hex");
 };
 
-const CreateClient = async (name, bux="2") => {
+const CreateClient = async (name, bux="2", useExistingSigner=false) => {
   try {
     // Un-initialize global.window so that elv-crypto knows it's running in node
     const w = global.window;
@@ -51,28 +51,34 @@ const CreateClient = async (name, bux="2") => {
 
     await fundedClient.SetSigner({signer: fundedSigner});
 
-    const mnemonic = wallet.GenerateMnemonic();
-    // Create a new account and send some ether
-    const signer = wallet.AddAccountFromMnemonic({mnemonic});
+	if(!useExistingSigner) {
 
-    // Each test file is run in parallel, so there may be collisions when initializing - retry until success
-    for(let i = 0; i < 5; i++) {
-      try {
-        await fundedSigner.sendTransaction({
-          to: signer.address,
-          value: Ethers.utils.parseEther(bux)
-        });
+      const mnemonic = wallet.GenerateMnemonic();
+      // Create a new account and send some ether
+      const signer = wallet.AddAccountFromMnemonic({mnemonic});
 
-        break;
-      } catch(e) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      // Each test file is run in parallel, so there may be collisions when initializing - retry until success
+      for(let i = 0; i < 5; i++) {
+		try {
+          await fundedSigner.sendTransaction({
+			to: signer.address,
+			value: Ethers.utils.parseEther(bux)
+          });
+
+          break;
+		} catch(e) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+		}
       }
-    }
 
-    // Ensure transaction has time to resolve fully before continuing
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      // Ensure transaction has time to resolve fully before continuing
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-    await client.SetSigner({signer});
+      await client.SetSigner({signer});
+
+	} else {
+	  client = fundedClient;
+	}
 
     client.clientName = name;
     client.initialBalance = parseFloat(bux);

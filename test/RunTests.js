@@ -13,6 +13,7 @@ const Tests = {
 
 const RunTests = async () => {
   console.log(`\nUsing Configuration URL '${process.env["CONFIG_URL"] || ClientConfiguration["config-url"]}'\n`);
+  console.log(`\nUsing Admin Group '${process.env["ADMIN_GROUP"] || "unspecified (create new)"}'\n`);
 
   let keys = Object.keys(Tests);
 
