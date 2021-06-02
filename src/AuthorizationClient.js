@@ -80,6 +80,8 @@ class AuthorizationClient {
     this.encryptionKeys = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
+
+    this.providers = {};
   }
 
   // Return authorization token in appropriate headers
@@ -909,8 +911,12 @@ class AuthorizationClient {
           Params: ${params.join(", ")}`
         );
 
-        const stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
-        return await stateChannelProvider.send(methodName, params);
+        const kmsUrl = KMSUrls[i];
+        if(!this.providers[kmsUrl]) {
+          this.providers[kmsUrl] = new Ethers.providers.JsonRpcProvider(kmsUrl, this.client.networkId);
+        }
+
+        return await this.providers[kmsUrl].send(methodName, params);
       } catch(error) {
         this.Log(`KMS Call Error: ${error}`, true);
 
@@ -1008,30 +1014,10 @@ class AuthorizationClient {
   }
 
   async MakeElvMasterCall({methodName, params}) {
-    const ethUrls = this.client.ethClient.ethereumURIs;
-
-    for(let i = 0; i < ethUrls.length; i++) {
-      try {
-        const url = ethUrls[i];
-
-        this.Log(
-          `Making elv-master request:
-          URL: ${url}
-          Method: ${methodName}
-          Params: ${params.join(", ")}`
-        );
-
-        const elvMasterProvider = new Ethers.providers.JsonRpcProvider(url);
-        return await elvMasterProvider.send(methodName, params);
-      } catch(error) {
-        this.Log(`elv-master Call Error: ${error}`, true);
-
-        // If the request has been attempted on all KMS urls, throw the error
-        if(i === ethUrls.length - 1) {
-          throw error;
-        }
-      }
-    }
+    return await this.client.ethClient.MakeProviderCall({
+      methodName: "send",
+      args: [methodName, params]
+    });
   }
 
   async ReEncryptionConk({libraryId, objectId, versionHash}) {

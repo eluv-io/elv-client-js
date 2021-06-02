@@ -25,7 +25,9 @@ var _require = require("../Validation"),
     ValidateVersion = _require.ValidateVersion,
     ValidatePartHash = _require.ValidatePartHash,
     ValidateWriteToken = _require.ValidateWriteToken,
-    ValidateParameters = _require.ValidateParameters; // Note: Keep these ordered by most-restrictive to least-restrictive
+    ValidateParameters = _require.ValidateParameters;
+
+var MergeWith = require("lodash/mergeWith"); // Note: Keep these ordered by most-restrictive to least-restrictive
 
 
 exports.permissionLevels = {
@@ -1718,7 +1720,7 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
 exports.AssetMetadata = function _callee24(_ref17) {
   var _this8 = this;
 
-  var libraryId, objectId, versionHash, metadata, localization, _ref17$produceLinkUrl, produceLinkUrls;
+  var libraryId, objectId, versionHash, metadata, localization, _ref17$produceLinkUrl, produceLinkUrls, mergedMetadata;
 
   return _regeneratorRuntime.async(function _callee24$(_context24) {
     while (1) {
@@ -1790,43 +1792,22 @@ exports.AssetMetadata = function _callee24(_ref17) {
             metadata.info = {};
           }
 
+          mergedMetadata = _objectSpread({}, metadata);
+
           if (localization) {
             localization.reverse().forEach(function (keys) {
               var _this8$utils;
 
-              var overrides = (_this8$utils = _this8.utils).SafeTraverse.apply(_this8$utils, [metadata].concat(_toConsumableArray(keys)));
-
-              if (!overrides) {
-                return;
-              }
-
-              Object.keys(overrides).forEach(function (overrideKey) {
-                if (overrideKey === "info") {
-                  Object.keys(overrides.info).forEach(function (infoOverrideKey) {
-                    var value = overrides.info[infoOverrideKey];
-
-                    if (_typeof(value) === "object" && Object.keys(value).length === 0 || Array.isArray(value) && value.length === 0) {
-                      return;
-                    }
-
-                    metadata.info[infoOverrideKey] = value;
-                  });
-                } else {
-                  var value = overrides[overrideKey];
-
-                  if (_typeof(value) === "object" && Object.keys(value).length === 0 || Array.isArray(value) && value.length === 0) {
-                    return;
-                  }
-
-                  metadata[overrideKey] = value;
-                }
-              }); //delete metadata[keys[0]];
+              var localizedMetadata = (_this8$utils = _this8.utils).SafeTraverse.apply(_this8$utils, [metadata].concat(_toConsumableArray(keys))) || {};
+              mergedMetadata = MergeWith({}, mergedMetadata, localizedMetadata, function (a, b) {
+                return b === null || b === "" ? a : undefined;
+              });
             });
           }
 
-          return _context24.abrupt("return", metadata);
+          return _context24.abrupt("return", mergedMetadata);
 
-        case 19:
+        case 20:
         case "end":
           return _context24.stop();
       }
