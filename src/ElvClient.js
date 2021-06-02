@@ -114,6 +114,7 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
+   * @param {string} contentSpaceId - ID of the blockchain network
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
@@ -128,6 +129,7 @@ class ElvClient {
    */
   constructor({
     contentSpaceId,
+    networkId,
     fabricVersion,
     fabricURIs,
     ethereumURIs,
@@ -145,6 +147,8 @@ class ElvClient {
     this.contentSpaceLibraryId = this.utils.AddressToLibraryId(this.contentSpaceAddress);
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
 
+    this.networkId = networkId;
+
     this.fabricVersion = fabricVersion;
 
     this.fabricURIs = fabricURIs;
@@ -159,11 +163,7 @@ class ElvClient {
 
     this.debug = false;
 
-    this.InitializeClients();
-
-    if(staticToken) {
-      this.SetStaticToken({token: staticToken});
-    }
+    this.InitializeClients({staticToken});
   }
 
   /**
@@ -217,6 +217,7 @@ class ElvClient {
       return {
         nodeId: fabricInfo.node_id,
         contentSpaceId: fabricInfo.qspace.id,
+        networkId: (fabricInfo.qspace.ethereum || {}).network_id,
         fabricURIs,
         ethereumURIs,
         authServiceURIs,
@@ -259,6 +260,7 @@ class ElvClient {
   }) {
     const {
       contentSpaceId,
+      networkId,
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
@@ -270,6 +272,7 @@ class ElvClient {
 
     const client = new ElvClient({
       contentSpaceId,
+      networkId,
       fabricVersion,
       fabricURIs,
       ethereumURIs,
@@ -286,7 +289,7 @@ class ElvClient {
     return client;
   }
 
-  async InitializeClients() {
+  async InitializeClients({staticToken}={}) {
     // Cached info
     this.contentTypes = {};
     this.encryptionConks = {};
@@ -298,7 +301,15 @@ class ElvClient {
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
     this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
-    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug, timeout: this.ethereumContractTimeout});
+    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
+
+    if(!this.signer) {
+      const wallet = this.GenerateWallet();
+      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+
+      this.SetSigner({signer, reset: false});
+      this.SetStaticToken({token: staticToken});
+    }
 
     this.authClient = new AuthorizationClient({
       client: this,
@@ -318,6 +329,7 @@ class ElvClient {
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
 
+    /*
     // Test each eth url
     const workingEthURIs = (await Promise.all(
       this.ethereumURIs.map(async (uri) => {
@@ -354,6 +366,8 @@ class ElvClient {
       this.ethereumURIs = workingEthURIs;
       this.ethClient.SetEthereumURIs(workingEthURIs);
     }
+
+     */
   }
 
   ConfigUrl() {
@@ -527,12 +541,16 @@ class ElvClient {
    * @namedParams
    * @param {object} signer - The ethers.js signer object
    */
-  SetSigner({signer}) {
+  SetSigner({signer, reset=true}) {
+    this.staticToken = undefined;
+
     signer.connect(this.ethClient.Provider());
     signer.provider.pollingInterval = 500;
     this.signer = signer;
 
-    this.InitializeClients();
+    if(reset) {
+      this.InitializeClients();
+    }
   }
 
   /**
@@ -546,6 +564,8 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignerFromWeb3Provider({provider}) {
+    this.staticToken = undefined;
+
     let ethProvider = new Ethers.providers.Web3Provider(provider);
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
@@ -725,17 +745,14 @@ class ElvClient {
    *
    * @methodGroup Authorization
    * @namedParams
-   * @param {string} token - The static token to use
+   * @param {string=} token - The static token to use. If not provided, the default static token will be set.
    */
-  SetStaticToken({token}) {
-    this.staticToken = token;
-
-    if(!this.signer) {
-      const wallet = this.GenerateWallet();
-      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
-
-      this.SetSigner({signer});
+  SetStaticToken({token}={}) {
+    if(!token) {
+      token = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
     }
+
+    this.staticToken = token;
   }
 
   /**

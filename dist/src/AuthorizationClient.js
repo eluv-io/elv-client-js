@@ -94,6 +94,7 @@ function () {
     this.encryptionKeys = {};
     this.reencryptionKeys = {};
     this.requestIds = {};
+    this.providers = {};
   } // Return authorization token in appropriate headers
 
 
@@ -1698,7 +1699,7 @@ function () {
   }, {
     key: "MakeKMSCall",
     value: function MakeKMSCall(_ref30) {
-      var kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, _ref30$additionalPara, additionalParams, _ref30$signature, signature, packedHash, KMSUrls, i, stateChannelProvider;
+      var kmsId, tenantId, objectId, versionHash, methodName, params, paramTypes, _ref30$additionalPara, additionalParams, _ref30$signature, signature, packedHash, KMSUrls, i, kmsUrl;
 
       return _regeneratorRuntime.async(function MakeKMSCall$(_context22) {
         while (1) {
@@ -1758,42 +1759,47 @@ function () {
 
             case 22:
               if (!(i < KMSUrls.length)) {
-                _context22.next = 39;
+                _context22.next = 40;
                 break;
               }
 
               _context22.prev = 23;
               this.Log("Making KMS request:\n          URL: ".concat(KMSUrls[i], "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
-              stateChannelProvider = new Ethers.providers.JsonRpcProvider(KMSUrls[i]);
-              _context22.next = 28;
-              return _regeneratorRuntime.awrap(stateChannelProvider.send(methodName, params));
+              kmsUrl = KMSUrls[i];
 
-            case 28:
+              if (!this.providers[kmsUrl]) {
+                this.providers[kmsUrl] = new Ethers.providers.JsonRpcProvider(kmsUrl, this.client.networkId);
+              }
+
+              _context22.next = 29;
+              return _regeneratorRuntime.awrap(this.providers[kmsUrl].send(methodName, params));
+
+            case 29:
               return _context22.abrupt("return", _context22.sent);
 
-            case 31:
-              _context22.prev = 31;
+            case 32:
+              _context22.prev = 32;
               _context22.t6 = _context22["catch"](23);
               this.Log("KMS Call Error: ".concat(_context22.t6), true); // If the request has been attempted on all KMS urls, throw the error
 
               if (!(i === KMSUrls.length - 1)) {
-                _context22.next = 36;
+                _context22.next = 37;
                 break;
               }
 
               throw _context22.t6;
 
-            case 36:
+            case 37:
               i++;
               _context22.next = 22;
               break;
 
-            case 39:
+            case 40:
             case "end":
               return _context22.stop();
           }
         }
-      }, null, this, [[23, 31]]);
+      }, null, this, [[23, 32]]);
     } // Make an arbitrary HTTP call to an authority server
 
   }, {
@@ -2001,54 +2007,27 @@ function () {
   }, {
     key: "MakeElvMasterCall",
     value: function MakeElvMasterCall(_ref34) {
-      var methodName, params, ethUrls, i, url, elvMasterProvider;
+      var methodName, params;
       return _regeneratorRuntime.async(function MakeElvMasterCall$(_context26) {
         while (1) {
           switch (_context26.prev = _context26.next) {
             case 0:
               methodName = _ref34.methodName, params = _ref34.params;
-              ethUrls = this.client.ethClient.ethereumURIs;
-              i = 0;
+              _context26.next = 3;
+              return _regeneratorRuntime.awrap(this.client.ethClient.MakeProviderCall({
+                methodName: "send",
+                args: [methodName, params]
+              }));
 
             case 3:
-              if (!(i < ethUrls.length)) {
-                _context26.next = 21;
-                break;
-              }
-
-              _context26.prev = 4;
-              url = ethUrls[i];
-              this.Log("Making elv-master request:\n          URL: ".concat(url, "\n          Method: ").concat(methodName, "\n          Params: ").concat(params.join(", ")));
-              elvMasterProvider = new Ethers.providers.JsonRpcProvider(url);
-              _context26.next = 10;
-              return _regeneratorRuntime.awrap(elvMasterProvider.send(methodName, params));
-
-            case 10:
               return _context26.abrupt("return", _context26.sent);
 
-            case 13:
-              _context26.prev = 13;
-              _context26.t0 = _context26["catch"](4);
-              this.Log("elv-master Call Error: ".concat(_context26.t0), true); // If the request has been attempted on all KMS urls, throw the error
-
-              if (!(i === ethUrls.length - 1)) {
-                _context26.next = 18;
-                break;
-              }
-
-              throw _context26.t0;
-
-            case 18:
-              i++;
-              _context26.next = 3;
-              break;
-
-            case 21:
+            case 4:
             case "end":
               return _context26.stop();
           }
         }
-      }, null, this, [[4, 13]]);
+      }, null, this);
     }
   }, {
     key: "ReEncryptionConk",
