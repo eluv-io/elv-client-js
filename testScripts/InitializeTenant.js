@@ -246,8 +246,8 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     console.log(`\t${tenantName} - Title Collection: ${titleCollectionTypeId}`);
     console.log(`\t${tenantName} - Title Master: ${masterTypeId}`);
     console.log(`\t${tenantName} - Permissions: ${permissionsTypeId}`);
-    console.log(`\t${tenantName} - Channel ${channelTypeId}`);
-    console.log(`\t${tenantName} - Live Stream ${streamTypeId}`);
+    console.log(`\t${tenantName} - Channel: ${channelTypeId}`);
+    console.log(`\t${tenantName} - Live Stream: ${streamTypeId}`);
 
 
     /* Create libraries - Properties, Title Masters, Title Mezzanines and add each to the groups */
