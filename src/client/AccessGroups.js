@@ -22,6 +22,9 @@ exports.SetGroupPermission = async function({groupAddress, objectId, permission,
   const groupInfo = await this.authClient.ContractInfo({address: groupAddress});
   const objectInfo = await this.authClient.ContractInfo({id: objectId});
 
+  // check if ContractInfo returned an empty object for groupAddress
+  if(Object.keys(groupInfo).length === 0) throw Error(`No information returned for group address ${groupAddress}`);
+
   let event;
   if(!objectInfo.isV3 && objectInfo.accessType === this.authClient.ACCESS_TYPES.GROUP) {
     // V2 access group does not have "setRights" method
