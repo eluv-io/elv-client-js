@@ -7,6 +7,8 @@ var _regeneratorRuntime = require("@babel/runtime/regenerator");
  */
 var UrlJoin = require("url-join");
 
+var Ethers = require("ethers");
+
 var _require = require("../Validation"),
     ValidateAddress = _require.ValidateAddress,
     ValidateDate = _require.ValidateDate,
@@ -406,6 +408,65 @@ exports.IssueNTPCode = function _callee7(_ref9) {
   }, null, this);
 };
 /**
+ * Identical to IssueNTPCode, but the token is also signed by the current user.
+ *
+ * @see <a href="#IssueNTPCode">IssueNTPCode</a>
+ *
+ * @methodGroup Tickets
+ * @namedParams
+ * @param {string} tenantId - The ID of the tenant in the NTP instance was created
+ * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
+ * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
+ * be provided along with the ticket code in order to redeem the ticket.
+ * @param {number=} maxRedemptions - Maximum number of times this ticket may be redeemed. If less than the max redemptions
+ * of the NTP instance, the lower limit will be used.
+ *
+ * @return {Promise<Object>} - The generated signed ticket code and additional information about the ticket.
+ */
+
+
+exports.IssueSignedNTPCode = function _callee8(_ref10) {
+  var tenantId, ntpId, email, maxRedemptions, result, signature, multiSig;
+  return _regeneratorRuntime.async(function _callee8$(_context8) {
+    while (1) {
+      switch (_context8.prev = _context8.next) {
+        case 0:
+          tenantId = _ref10.tenantId, ntpId = _ref10.ntpId, email = _ref10.email, maxRedemptions = _ref10.maxRedemptions;
+          _context8.next = 3;
+          return _regeneratorRuntime.awrap(this.IssueNTPCode({
+            tenantId: tenantId,
+            ntpId: ntpId,
+            email: email,
+            maxRedemptions: maxRedemptions
+          }));
+
+        case 3:
+          result = _context8.sent;
+
+          if (!result.token) {
+            _context8.next = 10;
+            break;
+          }
+
+          _context8.next = 7;
+          return _regeneratorRuntime.awrap(this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(result.token))));
+
+        case 7:
+          signature = _context8.sent;
+          multiSig = this.utils.FormatSignature(signature);
+          result.token = "".concat(result.token, ".").concat(this.utils.B64(multiSig));
+
+        case 10:
+          return _context8.abrupt("return", result);
+
+        case 11:
+        case "end":
+          return _context8.stop();
+      }
+    }
+  }, null, this);
+};
+/**
  * Redeem the specified ticket/code to authorize the client. Must provide either issuer or tenantId and ntpId
  *
  * @methodGroup Tickets
@@ -421,14 +482,14 @@ exports.IssueNTPCode = function _callee7(_ref9) {
  */
 
 
-exports.RedeemCode = function _callee8(_ref10) {
-  var issuer, tenantId, ntpId, code, email, _ref10$includeNTPId, includeNTPId, wallet, token, response, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
+exports.RedeemCode = function _callee9(_ref11) {
+  var issuer, tenantId, ntpId, code, email, _ref11$includeNTPId, includeNTPId, wallet, token, response, objectId, libraryId, Hash, codeHash, codeInfo, ak, sites, info, signer;
 
-  return _regeneratorRuntime.async(function _callee8$(_context8) {
+  return _regeneratorRuntime.async(function _callee9$(_context9) {
     while (1) {
-      switch (_context8.prev = _context8.next) {
+      switch (_context9.prev = _context9.next) {
         case 0:
-          issuer = _ref10.issuer, tenantId = _ref10.tenantId, ntpId = _ref10.ntpId, code = _ref10.code, email = _ref10.email, _ref10$includeNTPId = _ref10.includeNTPId, includeNTPId = _ref10$includeNTPId === void 0 ? false : _ref10$includeNTPId;
+          issuer = _ref11.issuer, tenantId = _ref11.tenantId, ntpId = _ref11.ntpId, code = _ref11.code, email = _ref11.email, _ref11$includeNTPId = _ref11.includeNTPId, includeNTPId = _ref11$includeNTPId === void 0 ? false : _ref11$includeNTPId;
           wallet = this.GenerateWallet();
           issuer = issuer || "";
 
@@ -441,17 +502,17 @@ exports.RedeemCode = function _callee8(_ref10) {
           }
 
           if (!issuer.startsWith("iq__")) {
-            _context8.next = 8;
+            _context9.next = 8;
             break;
           }
 
           ValidateObject(issuer);
-          _context8.next = 28;
+          _context9.next = 28;
           break;
 
         case 8:
           if (!(issuer && !issuer.replace(/^\//, "").startsWith("otp/ntp/iten"))) {
-            _context8.next = 12;
+            _context9.next = 12;
             break;
           }
 
@@ -465,8 +526,8 @@ exports.RedeemCode = function _callee8(_ref10) {
             issuer = UrlJoin("/otp", "ntp", tenantId, ntpId || "");
           }
 
-          _context8.prev = 14;
-          _context8.next = 17;
+          _context9.prev = 14;
+          _context9.next = 17;
           return _regeneratorRuntime.awrap(this.authClient.GenerateChannelContentToken({
             issuer: issuer,
             code: code,
@@ -474,33 +535,33 @@ exports.RedeemCode = function _callee8(_ref10) {
           }));
 
         case 17:
-          token = _context8.sent;
+          token = _context9.sent;
           this.SetStaticToken({
             token: token
           });
           response = JSON.parse(this.utils.FromB64(token));
-          return _context8.abrupt("return", includeNTPId ? {
+          return _context9.abrupt("return", includeNTPId ? {
             objectId: response.qid,
             ntpId: response.oid
           } : response.qid);
 
         case 23:
-          _context8.prev = 23;
-          _context8.t0 = _context8["catch"](14);
+          _context9.prev = 23;
+          _context9.t0 = _context9["catch"](14);
           this.Log("Failed to redeem code:", true);
-          this.Log(_context8.t0, true);
-          throw _context8.t0;
+          this.Log(_context9.t0, true);
+          throw _context9.t0;
 
         case 28:
           // Site selector
           objectId = issuer;
-          _context8.next = 31;
+          _context9.next = 31;
           return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: objectId
           }));
 
         case 31:
-          libraryId = _context8.sent;
+          libraryId = _context9.sent;
 
           Hash = function Hash(code) {
             var chars = code.split("").map(function (code) {
@@ -512,7 +573,7 @@ exports.RedeemCode = function _callee8(_ref10) {
           };
 
           codeHash = Hash(code);
-          _context8.next = 36;
+          _context9.next = 36;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -520,10 +581,10 @@ exports.RedeemCode = function _callee8(_ref10) {
           }));
 
         case 36:
-          codeInfo = _context8.sent;
+          codeInfo = _context9.sent;
 
           if (codeInfo) {
-            _context8.next = 40;
+            _context9.next = 40;
             break;
           }
 
@@ -532,23 +593,23 @@ exports.RedeemCode = function _callee8(_ref10) {
 
         case 40:
           ak = codeInfo.ak, sites = codeInfo.sites, info = codeInfo.info;
-          _context8.next = 43;
+          _context9.next = 43;
           return _regeneratorRuntime.awrap(wallet.AddAccountFromEncryptedPK({
             encryptedPrivateKey: this.utils.FromB64(ak),
             password: code
           }));
 
         case 43:
-          signer = _context8.sent;
+          signer = _context9.sent;
           this.SetSigner({
             signer: signer
           }); // Ensure wallet is initialized
 
-          _context8.next = 47;
+          _context9.next = 47;
           return _regeneratorRuntime.awrap(this.userProfileClient.WalletAddress());
 
         case 47:
-          return _context8.abrupt("return", {
+          return _context9.abrupt("return", {
             addr: this.utils.FormatAddress(signer.address),
             sites: sites,
             info: info || {}
@@ -556,7 +617,7 @@ exports.RedeemCode = function _callee8(_ref10) {
 
         case 48:
         case "end":
-          return _context8.stop();
+          return _context9.stop();
       }
     }
   }, null, this, [[14, 23]]);
