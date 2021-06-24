@@ -574,6 +574,64 @@ class ElvClient {
   }
 
   /**
+   * Initialize a new account using the provided funding and group tokens.
+   *
+   * This method will redeem the tokens for the current account (or create a new one if not set) in order to
+   * retrieve funds and optionally have the user added to appropriate access groups.
+   *
+   * @methodGroup Signers
+   * @namedParams
+   * @param {string} tenantId - The ID of the tenant
+   * @param {string} fundingToken - A token permitting the user to retrieve funds
+   * @param {number=} funds=0.5 - The amount to fund this user. The maximum amount is limited by the token issuer.
+   * @param {string=} groupToken - A token permitting the user to be added to access groups
+   *
+   * @return {string} - The address of the user
+   */
+  async CreateAccount({tenantId, fundingToken, funds=0.5, groupToken}) {
+    if(!this.signer) {
+      const wallet = this.GenerateWallet();
+      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+
+      this.SetSigner({signer});
+    }
+
+    await this.authClient.MakeKMSRequest({
+      method: "POST",
+      path: `/ks/otp/fnd/${tenantId}`,
+      body: {
+        toAddr: this.signer.address,
+        amtStr: this.utils.EtherToWei(funds)
+      },
+      headers: {
+        Authorization: `Bearer ${fundingToken}`
+      }
+    });
+
+    await this.userProfileClient.CreateWallet();
+
+    await this.userProfileClient.ReplaceUserMetadata({
+      metadataSubtree: "tenantContractId",
+      metadata: tenantId
+    });
+
+    if(groupToken) {
+      await this.authClient.MakeKMSRequest({
+        method: "POST",
+        path: `/ks/otp/grp/${tenantId}`,
+        body: {
+          addAddr: this.signer.address,
+        },
+        headers: {
+          Authorization: `Bearer ${groupToken}`
+        }
+      });
+    }
+
+    return this.utils.FormatAddress(this.signer.address);
+  }
+
+  /**
    * Issue a self-signed authorization token
    *
    * @methodGroup Authorization
