@@ -829,6 +829,17 @@ class ElvClient {
   }
 
   /**
+   * Create a signature for the specified string
+   *
+   * @param {string} string - The string to sign
+   * @return {Promise<string>} - The signed string
+   */
+  async Sign(string) {
+    const signature = await this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)));
+    return this.utils.FormatSignature(signature);
+  }
+
+  /**
    * Encrypt the given string or object with the current signer's public key
    *
    * @namedParams

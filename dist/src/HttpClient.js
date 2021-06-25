@@ -153,7 +153,7 @@ function () {
 
             case 24:
               // Parse JSON error if headers indicate JSON
-              responseType = response.headers ? response.headers.get("content-type") : "";
+              responseType = response.headers ? response.headers.get("content-type") || "" : "";
               errorBody = "";
 
               if (!(response.text && response.json)) {
