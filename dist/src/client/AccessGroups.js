@@ -27,7 +27,7 @@ var _require = require("../Validation"),
     ValidateAddress = _require.ValidateAddress;
 /**
  * Retrieve a list of all available access groups
- * 
+ *
  * @methodGroup Access Groups
  * @return {Promise<Array>} - List of access groups
  */
@@ -131,54 +131,62 @@ exports.SetGroupPermission = function _callee3(_ref) {
         case 6:
           objectInfo = _context3.sent;
 
+          if (!(Object.keys(groupInfo).length === 0)) {
+            _context3.next = 9;
+            break;
+          }
+
+          throw Error("No information returned for group address ".concat(groupAddress));
+
+        case 9:
           if (!(!objectInfo.isV3 && objectInfo.accessType === this.authClient.ACCESS_TYPES.GROUP)) {
-            _context3.next = 15;
+            _context3.next = 17;
             break;
           }
 
           if (!groupInfo.isV3) {
-            _context3.next = 10;
+            _context3.next = 12;
             break;
           }
 
           throw Error("Unable to map V3 group to V2 object");
 
-        case 10:
-          _context3.next = 12;
+        case 12:
+          _context3.next = 14;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: groupAddress,
             methodName: "setAccessGroupRights",
             methodArgs: [this.utils.HashToAddress(objectId), permission === "manage" ? 2 : permission === "access" ? 1 : 0, permission === "none" || remove ? 0 : 2]
           }));
 
-        case 12:
+        case 14:
           event = _context3.sent;
-          _context3.next = 18;
+          _context3.next = 20;
           break;
 
-        case 15:
-          _context3.next = 17;
+        case 17:
+          _context3.next = 19;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(objectId),
             methodName: "setRights",
             methodArgs: [groupAddress, permission === "manage" ? 2 : permission === "access" ? 1 : 0, permission === "none" || remove ? 0 : 2]
           }));
 
-        case 17:
+        case 19:
           event = _context3.sent;
 
-        case 18:
-          _context3.next = 20;
+        case 20:
+          _context3.next = 22;
           return _regeneratorRuntime.awrap(this.ExtractEventFromLogs({
             abi: groupInfo.abi,
             event: event,
             eventName: "RightsChanged"
           }));
 
-        case 20:
+        case 22:
           return _context3.abrupt("return", _context3.sent);
 
-        case 21:
+        case 23:
         case "end":
           return _context3.stop();
       }

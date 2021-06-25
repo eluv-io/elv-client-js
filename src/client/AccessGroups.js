@@ -21,7 +21,7 @@ const {
 
 /**
  * Retrieve a list of all available access groups
- * 
+ *
  * @methodGroup Access Groups
  * @return {Promise<Array>} - List of access groups
  */
