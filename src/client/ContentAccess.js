@@ -1461,6 +1461,18 @@ exports.PlayoutOptions = async function({
       }
     };
 
+    // Add .cert_url if playoutMap[protocol].playoutMethods[].drms[].cert is present
+    // (for clients that need cert supplied as a URL reference rather than as a string literal)
+    for(const method in playoutMap[protocol].playoutMethods) {
+      if(playoutMap[protocol].playoutMethods[method].drms &&
+        playoutMap[protocol].playoutMethods[method].drms[drm].cert) {
+        // construct by replacing last part of playout URL path (e.g. "playlist.m3u8", "live.m3u8") with "drm.cert"
+        let certUrl = new URL(playoutMap[protocol].playoutMethods[method].playoutUrl);
+        certUrl.pathname = certUrl.pathname.split("/").slice(0,-1).concat(["drm.cert"]).join("/");
+        playoutMap[protocol].playoutMethods[method].drms[drm].cert_url = certUrl.toString();
+      }
+    }
+
     // Exclude any options that do not satisfy the specified protocols and/or DRMs
     const protocolMatch = protocols.includes(protocol);
     const drmMatch = drms.includes(drm || "clear") || (drms.length === 0 && !drm);
