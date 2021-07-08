@@ -1465,6 +1465,7 @@ exports.PlayoutOptions = async function({
     // (for clients that need cert supplied as a URL reference rather than as a string literal)
     for(const method in playoutMap[protocol].playoutMethods) {
       if(playoutMap[protocol].playoutMethods[method].drms &&
+        playoutMap[protocol].playoutMethods[method].drms[drm] &&
         playoutMap[protocol].playoutMethods[method].drms[drm].cert) {
         // construct by replacing last part of playout URL path (e.g. "playlist.m3u8", "live.m3u8") with "drm.cert"
         let certUrl = new URL(playoutMap[protocol].playoutMethods[method].playoutUrl);
