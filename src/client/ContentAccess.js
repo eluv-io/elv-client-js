@@ -2692,7 +2692,7 @@ exports.Collection = async function({collectionType}) {
 
   this.Log(`Retrieving ${collectionType} contract collection for user ${this.signer.address}`);
 
-  return await this.ethClient.MakeProviderCall({
+  return (await this.ethClient.MakeProviderCall({
     methodName: "send",
     args: [
       "elv_getWalletCollection",
@@ -2702,7 +2702,7 @@ exports.Collection = async function({collectionType}) {
         collectionType
       ]
     ]
-  });
+  })) || [];
 };
 
 

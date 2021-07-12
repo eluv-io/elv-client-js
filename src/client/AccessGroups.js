@@ -304,7 +304,9 @@ exports.AccessGroupMembershipMethod = async function({
   if(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress)) {
     // eslint-disable-next-line no-console
     console.error("Mismatch: " + candidate + " :: " + memberAddress);
-    throw Error("Access group method " + methodName + " failed");
+    // eslint-disable-next-line no-console
+    console.error("Is target user address wallet created?");
+    throw Error("Access group method " + methodName + " failed. Is target user address wallet created?");
   }
 
   return event.transactionHash;

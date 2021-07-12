@@ -537,18 +537,20 @@ exports.AccessGroupMembershipMethod = function _callee11(_ref8) {
           });
 
           if (!(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress))) {
-            _context11.next = 20;
+            _context11.next = 21;
             break;
           }
 
           // eslint-disable-next-line no-console
-          console.error("Mismatch: " + candidate + " :: " + memberAddress);
-          throw Error("Access group method " + methodName + " failed");
+          console.error("Mismatch: " + candidate + " :: " + memberAddress); // eslint-disable-next-line no-console
 
-        case 20:
-          return _context11.abrupt("return", event.transactionHash);
+          console.error("Is target user address wallet created?");
+          throw Error("Access group method " + methodName + " failed. Is target user address wallet created?");
 
         case 21:
+          return _context11.abrupt("return", event.transactionHash);
+
+        case 22:
         case "end":
           return _context11.stop();
       }

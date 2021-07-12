@@ -773,8 +773,10 @@ class AuthorizationClient {
   }
 
   async Sign(message) {
-    return await Promise.resolve(
-      Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message))
+    return await Ethers.utils.joinSignature(
+      this.client.signer.signDigest ?
+        await this.client.signer.signDigest(message) :
+        await this.client.signer.signingKey.signDigest(message)
     );
   }
 

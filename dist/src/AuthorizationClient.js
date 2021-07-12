@@ -1416,13 +1416,39 @@ function () {
         while (1) {
           switch (_context17.prev = _context17.next) {
             case 0:
-              _context17.next = 2;
-              return _regeneratorRuntime.awrap(Promise.resolve(Ethers.utils.joinSignature(this.client.signer.signingKey.signDigest(message))));
+              _context17.t0 = _regeneratorRuntime;
+              _context17.t1 = Ethers.utils;
 
-            case 2:
+              if (!this.client.signer.signDigest) {
+                _context17.next = 8;
+                break;
+              }
+
+              _context17.next = 5;
+              return _regeneratorRuntime.awrap(this.client.signer.signDigest(message));
+
+            case 5:
+              _context17.t2 = _context17.sent;
+              _context17.next = 11;
+              break;
+
+            case 8:
+              _context17.next = 10;
+              return _regeneratorRuntime.awrap(this.client.signer.signingKey.signDigest(message));
+
+            case 10:
+              _context17.t2 = _context17.sent;
+
+            case 11:
+              _context17.t3 = _context17.t2;
+              _context17.t4 = _context17.t1.joinSignature.call(_context17.t1, _context17.t3);
+              _context17.next = 15;
+              return _context17.t0.awrap.call(_context17.t0, _context17.t4);
+
+            case 15:
               return _context17.abrupt("return", _context17.sent);
 
-            case 3:
+            case 16:
             case "end":
               return _context17.stop();
           }
