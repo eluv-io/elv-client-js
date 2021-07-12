@@ -24,7 +24,7 @@ const STANDARD_DRM_CERT={
       }
     }
   }
-}
+};
 
 const yargs = require("yargs");
 const argv = yargs
@@ -86,6 +86,15 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     const client = await ElvClient.FromConfigurationUrl({configUrl});
     const wallet = client.GenerateWallet();
     const fundedSigner = wallet.AddAccount({privateKey: process.env.PRIVATE_KEY});
+
+    const kmsWalletAddress = await client.userProfileClient.UserWalletAddress({
+      address: client.utils.HashToAddress(kmsId)
+    });
+
+    if(!kmsWalletAddress) {
+      console.error("Error: Specified KMS does not have a wallet address. Wrong KMS ID?\n");
+      return;
+    }
 
     const mnemonic = wallet.GenerateMnemonic();
     const tenantAdminSigner = wallet.AddAccountFromMnemonic({mnemonic});

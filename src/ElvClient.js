@@ -10,6 +10,8 @@ const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
 const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
+const RemoteSigner = require("./RemoteSigner");
+
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
@@ -554,6 +556,25 @@ class ElvClient {
   }
 
   /**
+   * Set signer using OAuth ID token
+   *
+   * @methodGroup Signers
+   * @namedParams
+   * @param {string} token - OAuth ID token
+   */
+  async SetRemoteSigner({token}) {
+    const signer = new RemoteSigner({
+      rpcUris: this.authServiceURIs,
+      idToken: token,
+      provider: this.ethClient.provider
+    });
+
+    await signer.Initialize();
+
+    this.SetSigner({signer});
+  }
+
+  /**
    * Set the signer for this client to use for blockchain transactions from an existing web3 provider.
    * Useful for integrating with MetaMask
    *
@@ -910,6 +931,7 @@ class ElvClient {
       "AccessGroupMembershipMethod",
       "CallFromFrameMessage",
       "ClearSigner",
+      "CreateAccount",
       "EnableMethodLogging",
       "FormatBlockNumbers",
       "FrameAllowedMethods",
@@ -917,8 +939,10 @@ class ElvClient {
       "GenerateWallet",
       "InitializeClients",
       "Log",
+      "SetRemoteSigner",
       "SetSigner",
       "SetSignerFromWeb3Provider",
+      "Sign",
       "ToggleLogging"
     ];
 
