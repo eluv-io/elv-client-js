@@ -989,32 +989,41 @@ class ElvClient {
 
 
 
-  async MintNFT({tenantId, email, collectionId, requestBody={}}) {
-    const accountInitializationBody = {
-      ts: Date.now(),
-      email
-    };
+  async MintNFT({tenantId, email, address, collectionId, requestBody={}}) {
+    if(!address) {
+      // If address not specified, make call to initialize address for email
+      const accountInitializationBody = {
+        ts: Date.now(),
+        email
+      };
 
-    const accountInitializationSignature = await this.Sign(
-      JSON.stringify(accountInitializationBody)
-    );
+      const accountInitializationSignature = await this.Sign(
+        JSON.stringify(accountInitializationBody)
+      );
 
-    const { addr } = await this.utils.ResponseToJson(
-      await this.authClient.MakeAuthServiceRequest({
-        method: "POST",
-        path: `/as/tnt/prov/eth/${tenantId}`,
-        body: accountInitializationBody,
-        headers: {
-          "Authorization": `Bearer ${accountInitializationSignature}`
-        }
-      })
-    );
+      const {addr} = await this.utils.ResponseToJson(
+        await this.authClient.MakeAuthServiceRequest({
+          method: "POST",
+          path: `/as/tnt/prov/eth/${tenantId}`,
+          body: accountInitializationBody,
+          headers: {
+            "Authorization": `Bearer ${accountInitializationSignature}`
+          }
+        })
+      );
 
-    requestBody.email = email;
+      address = this.utils.FormatAddress(addr);
+    }
+
+    if(email) {
+      requestBody.email = email;
+    }
+
     requestBody.extra = {
       ...(requestBody.extra || {}),
-      elv_addr: addr
+      elv_addr: address
     };
+
     requestBody.ts = Date.now();
 
     const mintSignature = await this.Sign(
@@ -1031,7 +1040,7 @@ class ElvClient {
     });
 
     return {
-      address: addr
+      address
     };
   }
 
