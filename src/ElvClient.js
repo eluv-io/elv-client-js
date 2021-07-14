@@ -168,6 +168,7 @@ class ElvClient {
     this.InitializeClients({staticToken});
   }
 
+
   /**
    * Retrieve content space info and preferred fabric and blockchain URLs from the fabric
    *
@@ -176,7 +177,7 @@ class ElvClient {
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {Array<string>} kmsUrls - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
+   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
    *
    * @return {Promise<Object>} - Object containing content space ID and fabric and ethereum URLs
    */
@@ -243,7 +244,7 @@ class ElvClient {
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
+   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
@@ -389,7 +390,7 @@ class ElvClient {
    * @methodGroup Nodes
    * @namedParams
    * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
+   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
    *
    * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
    */
@@ -908,7 +909,7 @@ class ElvClient {
    *
    * @return {Promise<*>} - Response in the specified format
    */
-  Request({url, format="json", method="GET", headers = {}, body}) {
+  async Request({url, format="json", method="GET", headers = {}, body}) {
     return this.utils.ResponseToFormat(
       format,
       HttpClient.Fetch(
@@ -921,6 +922,55 @@ class ElvClient {
       )
     );
   }
+
+
+
+  async MintNFT({tenantId, email, collectionId, requestBody={}}) {
+    const accountInitializationBody = {
+      ts: Date.now(),
+      email
+    };
+
+    const accountInitializationSignature = await this.Sign(
+      JSON.stringify(accountInitializationBody)
+    );
+
+    const { addr } = await this.utils.ResponseToJson(
+      await this.authClient.MakeAuthServiceRequest({
+        method: "POST",
+        path: `/as/tnt/prov/eth/${tenantId}`,
+        body: accountInitializationBody,
+        headers: {
+          "Authorization": `Bearer ${accountInitializationSignature}`
+        }
+      })
+    );
+
+    requestBody.email = email;
+    requestBody.extra = {
+      ...(requestBody.extra || {}),
+      elv_addr: addr
+    };
+    requestBody.ts = Date.now();
+
+    const mintSignature = await this.Sign(
+      JSON.stringify(requestBody)
+    );
+
+    await this.authClient.MakeAuthServiceRequest({
+      method: "POST",
+      path: `/as/otp/webhook/base/${tenantId}/${collectionId}`,
+      body: requestBody,
+      headers: {
+        "Authorization": `Bearer ${mintSignature}`
+      }
+    });
+
+    return {
+      address: addr
+    };
+  }
+
 
   /* FrameClient related */
 
