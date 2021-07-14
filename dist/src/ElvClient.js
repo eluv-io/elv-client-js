@@ -1294,25 +1294,32 @@ function () {
   }, {
     key: "MintNFT",
     value: function MintNFT(_ref21) {
-      var tenantId, email, collectionId, _ref21$requestBody, requestBody, accountInitializationBody, accountInitializationSignature, _ref22, addr, mintSignature;
+      var tenantId, email, address, collectionId, _ref21$requestBody, requestBody, accountInitializationBody, accountInitializationSignature, _ref22, addr, mintSignature;
 
       return _regeneratorRuntime.async(function MintNFT$(_context17) {
         while (1) {
           switch (_context17.prev = _context17.next) {
             case 0:
-              tenantId = _ref21.tenantId, email = _ref21.email, collectionId = _ref21.collectionId, _ref21$requestBody = _ref21.requestBody, requestBody = _ref21$requestBody === void 0 ? {} : _ref21$requestBody;
+              tenantId = _ref21.tenantId, email = _ref21.email, address = _ref21.address, collectionId = _ref21.collectionId, _ref21$requestBody = _ref21.requestBody, requestBody = _ref21$requestBody === void 0 ? {} : _ref21$requestBody;
+
+              if (address) {
+                _context17.next = 17;
+                break;
+              }
+
+              // If address not specified, make call to initialize address for email
               accountInitializationBody = {
                 ts: Date.now(),
                 email: email
               };
-              _context17.next = 4;
+              _context17.next = 5;
               return _regeneratorRuntime.awrap(this.Sign(JSON.stringify(accountInitializationBody)));
 
-            case 4:
+            case 5:
               accountInitializationSignature = _context17.sent;
               _context17.t0 = _regeneratorRuntime;
               _context17.t1 = this.utils;
-              _context17.next = 9;
+              _context17.next = 10;
               return _regeneratorRuntime.awrap(this.authClient.MakeAuthServiceRequest({
                 method: "POST",
                 path: "/as/tnt/prov/eth/".concat(tenantId),
@@ -1322,26 +1329,32 @@ function () {
                 }
               }));
 
-            case 9:
+            case 10:
               _context17.t2 = _context17.sent;
               _context17.t3 = _context17.t1.ResponseToJson.call(_context17.t1, _context17.t2);
-              _context17.next = 13;
+              _context17.next = 14;
               return _context17.t0.awrap.call(_context17.t0, _context17.t3);
 
-            case 13:
+            case 14:
               _ref22 = _context17.sent;
               addr = _ref22.addr;
-              requestBody.email = email;
+              address = this.utils.FormatAddress(addr);
+
+            case 17:
+              if (email) {
+                requestBody.email = email;
+              }
+
               requestBody.extra = _objectSpread({}, requestBody.extra || {}, {
-                elv_addr: addr
+                elv_addr: address
               });
               requestBody.ts = Date.now();
-              _context17.next = 20;
+              _context17.next = 22;
               return _regeneratorRuntime.awrap(this.Sign(JSON.stringify(requestBody)));
 
-            case 20:
+            case 22:
               mintSignature = _context17.sent;
-              _context17.next = 23;
+              _context17.next = 25;
               return _regeneratorRuntime.awrap(this.authClient.MakeAuthServiceRequest({
                 method: "POST",
                 path: "/as/otp/webhook/base/".concat(tenantId, "/").concat(collectionId),
@@ -1351,12 +1364,12 @@ function () {
                 }
               }));
 
-            case 23:
+            case 25:
               return _context17.abrupt("return", {
-                address: addr
+                address: address
               });
 
-            case 24:
+            case 26:
             case "end":
               return _context17.stop();
           }
