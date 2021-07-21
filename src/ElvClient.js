@@ -23,6 +23,12 @@ const {
   ValidatePresence
 } = require("./Validation");
 
+const networks = {
+  "main": "https://main.net955305.contentfabric.io",
+  "demo": "https://demov3.net955210.contentfabric.io",
+  "test": "https://test.net955203.contentfabric.io"
+};
+
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
@@ -132,6 +138,7 @@ class ElvClient {
   constructor({
     contentSpaceId,
     networkId,
+    networkName,
     fabricVersion,
     fabricURIs,
     ethereumURIs,
@@ -150,6 +157,7 @@ class ElvClient {
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
 
     this.networkId = networkId;
+    this.networkName = networkName;
 
     this.fabricVersion = fabricVersion;
 
@@ -188,6 +196,7 @@ class ElvClient {
   }) {
     try {
       const uri = new URI(configUrl);
+      uri.pathname("/config");
 
       if(region) {
         uri.addSearch("elvgeo", region);
@@ -221,6 +230,7 @@ class ElvClient {
         nodeId: fabricInfo.node_id,
         contentSpaceId: fabricInfo.qspace.id,
         networkId: (fabricInfo.qspace.ethereum || {}).network_id,
+        networkName: ((fabricInfo.qspace || {}).names || [])[0],
         fabricURIs,
         ethereumURIs,
         authServiceURIs,
@@ -235,6 +245,45 @@ class ElvClient {
 
       throw error;
     }
+  }
+
+  /**
+   * Create a new ElvClient for the specified network
+   *
+   * @methodGroup Constructor
+   * @namedParams
+   * @param {string} networkName - Name of the network to connect to ("main", "demo", "test)
+   * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
+   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
+   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
+   * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
+   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   *
+   * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
+   */
+  static async FromNetworkName({
+    networkName,
+    region,
+    trustAuthorityId,
+    staticToken,
+    ethereumContractTimeout=10,
+    noCache=false,
+    noAuth=false
+  }) {
+    const configUrl = networks[networkName];
+
+    if(!configUrl) { throw Error("Invalid network name: " + networkName); }
+
+    return await this.FromConfigurationUrl({
+      configUrl,
+      region,
+      trustAuthorityId,
+      staticToken,
+      ethereumContractTimeout,
+      noCache,
+      noAuth
+    });
   }
 
   /**
@@ -264,6 +313,7 @@ class ElvClient {
     const {
       contentSpaceId,
       networkId,
+      networkName,
       fabricURIs,
       ethereumURIs,
       authServiceURIs,
@@ -276,6 +326,7 @@ class ElvClient {
     const client = new ElvClient({
       contentSpaceId,
       networkId,
+      networkName,
       fabricVersion,
       fabricURIs,
       ethereumURIs,
@@ -331,46 +382,6 @@ class ElvClient {
     // Initialize crypto wasm
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
-
-    /*
-    // Test each eth url
-    const workingEthURIs = (await Promise.all(
-      this.ethereumURIs.map(async (uri) => {
-        try {
-          const response = await Promise.race([
-            HttpClient.Fetch(
-              uri,
-              {
-                method: "post",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({method: "net_version", params: [], id: 1, jsonrpc: "2.0"})
-              }
-            ),
-            new Promise(resolve => setTimeout(() => resolve({ok: false}), 5000))
-          ]);
-
-          if(response.ok) {
-            return uri;
-          }
-
-          // eslint-disable-next-line no-console
-          this.Log("Eth node unavailable: " + uri, true);
-        } catch(error) {
-          // eslint-disable-next-line no-console
-          this.Log("Eth node unavailable: " + uri, true);
-          // eslint-disable-next-line no-console
-          this.Log(error, true);
-        }
-      })
-    )).filter(uri => uri);
-
-    // If any eth urls are bad, discard them
-    if(workingEthURIs.length !== this.ethereumURIs.length) {
-      this.ethereumURIs = workingEthURIs;
-      this.ethClient.SetEthereumURIs(workingEthURIs);
-    }
-
-     */
   }
 
   ConfigUrl() {
@@ -503,6 +514,20 @@ class ElvClient {
       this.AuthHttpClient.uris = authServiceURIs;
       this.AuthHttpClient.uriIndex = 0;
     }
+  }
+
+  /**
+   * Return information about how the client was connected to the network
+   *
+   * @methodGroup Nodes
+   * @returns {Object} - The name, ID and configuration URL of the network
+   */
+  NetworkInfo() {
+    return {
+      name: this.networkName,
+      id: this.networkId,
+      configUrl: this.configUrl
+    };
   }
 
   /* Wallet and signers */
@@ -922,8 +947,6 @@ class ElvClient {
       )
     );
   }
-
-
 
   async MintNFT({tenantId, email, address, collectionId, requestBody={}}) {
     if(!address) {

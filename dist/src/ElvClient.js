@@ -47,6 +47,12 @@ var Pako = require("pako");
 var _require2 = require("./Validation"),
     ValidatePresence = _require2.ValidatePresence;
 
+var networks = {
+  "main": "https://main.net955305.contentfabric.io",
+  "demo": "https://demov3.net955210.contentfabric.io",
+  "test": "https://test.net955203.contentfabric.io"
+};
+
 if (Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
   // eslint-disable-next-line no-global-assign
@@ -192,6 +198,7 @@ function () {
   function ElvClient(_ref) {
     var contentSpaceId = _ref.contentSpaceId,
         networkId = _ref.networkId,
+        networkName = _ref.networkName,
         fabricVersion = _ref.fabricVersion,
         fabricURIs = _ref.fabricURIs,
         ethereumURIs = _ref.ethereumURIs,
@@ -213,6 +220,7 @@ function () {
     this.contentSpaceLibraryId = this.utils.AddressToLibraryId(this.contentSpaceAddress);
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
     this.networkId = networkId;
+    this.networkName = networkName;
     this.fabricVersion = fabricVersion;
     this.fabricURIs = fabricURIs;
     this.authServiceURIs = authServiceURIs;
@@ -307,41 +315,6 @@ function () {
 
               this.Crypto = Crypto;
               this.Crypto.ElvCrypto();
-              /*
-              // Test each eth url
-              const workingEthURIs = (await Promise.all(
-                this.ethereumURIs.map(async (uri) => {
-                  try {
-                    const response = await Promise.race([
-                      HttpClient.Fetch(
-                        uri,
-                        {
-                          method: "post",
-                          headers: {"Content-Type": "application/json"},
-                          body: JSON.stringify({method: "net_version", params: [], id: 1, jsonrpc: "2.0"})
-                        }
-                      ),
-                      new Promise(resolve => setTimeout(() => resolve({ok: false}), 5000))
-                    ]);
-                     if(response.ok) {
-                      return uri;
-                    }
-                     // eslint-disable-next-line no-console
-                    this.Log("Eth node unavailable: " + uri, true);
-                  } catch(error) {
-                    // eslint-disable-next-line no-console
-                    this.Log("Eth node unavailable: " + uri, true);
-                    // eslint-disable-next-line no-console
-                    this.Log(error, true);
-                  }
-                })
-              )).filter(uri => uri);
-               // If any eth urls are bad, discard them
-              if(workingEthURIs.length !== this.ethereumURIs.length) {
-                this.ethereumURIs = workingEthURIs;
-                this.ethClient.SetEthereumURIs(workingEthURIs);
-              }
-                */
 
             case 16:
             case "end":
@@ -556,6 +529,22 @@ function () {
         this.AuthHttpClient.uris = authServiceURIs;
         this.AuthHttpClient.uriIndex = 0;
       }
+    }
+    /**
+     * Return information about how the client was connected to the network
+     *
+     * @methodGroup Nodes
+     * @returns {Object} - The name, ID and configuration URL of the network
+     */
+
+  }, {
+    key: "NetworkInfo",
+    value: function NetworkInfo() {
+      return {
+        name: this.networkName,
+        id: this.networkId,
+        configUrl: this.configUrl
+      };
     }
     /* Wallet and signers */
 
@@ -1501,15 +1490,16 @@ function () {
               configUrl = _ref23.configUrl, _ref23$kmsUrls = _ref23.kmsUrls, kmsUrls = _ref23$kmsUrls === void 0 ? [] : _ref23$kmsUrls, region = _ref23.region;
               _context19.prev = 1;
               uri = new URI(configUrl);
+              uri.pathname("/config");
 
               if (region) {
                 uri.addSearch("elvgeo", region);
               }
 
-              _context19.next = 6;
+              _context19.next = 7;
               return _regeneratorRuntime.awrap(Utils.ResponseToJson(HttpClient.Fetch(uri.toString())));
 
-            case 6:
+            case 7:
               fabricInfo = _context19.sent;
 
               // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
@@ -1540,6 +1530,7 @@ function () {
                 nodeId: fabricInfo.node_id,
                 contentSpaceId: fabricInfo.qspace.id,
                 networkId: (fabricInfo.qspace.ethereum || {}).network_id,
+                networkName: ((fabricInfo.qspace || {}).names || [])[0],
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
                 authServiceURIs: authServiceURIs,
@@ -1547,8 +1538,8 @@ function () {
                 fabricVersion: fabricVersion
               });
 
-            case 18:
-              _context19.prev = 18;
+            case 19:
+              _context19.prev = 19;
               _context19.t0 = _context19["catch"](1);
               // eslint-disable-next-line no-console
               console.error("Error retrieving fabric configuration:"); // eslint-disable-next-line no-console
@@ -1556,12 +1547,69 @@ function () {
               console.error(_context19.t0);
               throw _context19.t0;
 
-            case 23:
+            case 24:
             case "end":
               return _context19.stop();
           }
         }
-      }, null, null, [[1, 18]]);
+      }, null, null, [[1, 19]]);
+    }
+    /**
+     * Create a new ElvClient for the specified network
+     *
+     * @methodGroup Constructor
+     * @namedParams
+     * @param {string} networkName - Name of the network to connect to ("main", "demo", "test)
+     * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
+     * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
+     * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+     * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
+     * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
+     * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+     *
+     * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
+     */
+
+  }, {
+    key: "FromNetworkName",
+    value: function FromNetworkName(_ref24) {
+      var networkName, region, trustAuthorityId, staticToken, _ref24$ethereumContra, ethereumContractTimeout, _ref24$noCache, noCache, _ref24$noAuth, noAuth, configUrl;
+
+      return _regeneratorRuntime.async(function FromNetworkName$(_context20) {
+        while (1) {
+          switch (_context20.prev = _context20.next) {
+            case 0:
+              networkName = _ref24.networkName, region = _ref24.region, trustAuthorityId = _ref24.trustAuthorityId, staticToken = _ref24.staticToken, _ref24$ethereumContra = _ref24.ethereumContractTimeout, ethereumContractTimeout = _ref24$ethereumContra === void 0 ? 10 : _ref24$ethereumContra, _ref24$noCache = _ref24.noCache, noCache = _ref24$noCache === void 0 ? false : _ref24$noCache, _ref24$noAuth = _ref24.noAuth, noAuth = _ref24$noAuth === void 0 ? false : _ref24$noAuth;
+              configUrl = networks[networkName];
+
+              if (configUrl) {
+                _context20.next = 4;
+                break;
+              }
+
+              throw Error("Invalid network name: " + networkName);
+
+            case 4:
+              _context20.next = 6;
+              return _regeneratorRuntime.awrap(this.FromConfigurationUrl({
+                configUrl: configUrl,
+                region: region,
+                trustAuthorityId: trustAuthorityId,
+                staticToken: staticToken,
+                ethereumContractTimeout: ethereumContractTimeout,
+                noCache: noCache,
+                noAuth: noAuth
+              }));
+
+            case 6:
+              return _context20.abrupt("return", _context20.sent);
+
+            case 7:
+            case "end":
+              return _context20.stop();
+          }
+        }
+      }, null, this);
     }
     /**
      * Create a new ElvClient from the specified configuration URL
@@ -1581,31 +1629,33 @@ function () {
 
   }, {
     key: "FromConfigurationUrl",
-    value: function FromConfigurationUrl(_ref24) {
-      var configUrl, region, trustAuthorityId, staticToken, _ref24$ethereumContra, ethereumContractTimeout, _ref24$noCache, noCache, _ref24$noAuth, noAuth, _ref25, contentSpaceId, networkId, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
+    value: function FromConfigurationUrl(_ref25) {
+      var configUrl, region, trustAuthorityId, staticToken, _ref25$ethereumContra, ethereumContractTimeout, _ref25$noCache, noCache, _ref25$noAuth, noAuth, _ref26, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
 
-      return _regeneratorRuntime.async(function FromConfigurationUrl$(_context20) {
+      return _regeneratorRuntime.async(function FromConfigurationUrl$(_context21) {
         while (1) {
-          switch (_context20.prev = _context20.next) {
+          switch (_context21.prev = _context21.next) {
             case 0:
-              configUrl = _ref24.configUrl, region = _ref24.region, trustAuthorityId = _ref24.trustAuthorityId, staticToken = _ref24.staticToken, _ref24$ethereumContra = _ref24.ethereumContractTimeout, ethereumContractTimeout = _ref24$ethereumContra === void 0 ? 10 : _ref24$ethereumContra, _ref24$noCache = _ref24.noCache, noCache = _ref24$noCache === void 0 ? false : _ref24$noCache, _ref24$noAuth = _ref24.noAuth, noAuth = _ref24$noAuth === void 0 ? false : _ref24$noAuth;
-              _context20.next = 3;
+              configUrl = _ref25.configUrl, region = _ref25.region, trustAuthorityId = _ref25.trustAuthorityId, staticToken = _ref25.staticToken, _ref25$ethereumContra = _ref25.ethereumContractTimeout, ethereumContractTimeout = _ref25$ethereumContra === void 0 ? 10 : _ref25$ethereumContra, _ref25$noCache = _ref25.noCache, noCache = _ref25$noCache === void 0 ? false : _ref25$noCache, _ref25$noAuth = _ref25.noAuth, noAuth = _ref25$noAuth === void 0 ? false : _ref25$noAuth;
+              _context21.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
                 region: region
               }));
 
             case 3:
-              _ref25 = _context20.sent;
-              contentSpaceId = _ref25.contentSpaceId;
-              networkId = _ref25.networkId;
-              fabricURIs = _ref25.fabricURIs;
-              ethereumURIs = _ref25.ethereumURIs;
-              authServiceURIs = _ref25.authServiceURIs;
-              fabricVersion = _ref25.fabricVersion;
+              _ref26 = _context21.sent;
+              contentSpaceId = _ref26.contentSpaceId;
+              networkId = _ref26.networkId;
+              networkName = _ref26.networkName;
+              fabricURIs = _ref26.fabricURIs;
+              ethereumURIs = _ref26.ethereumURIs;
+              authServiceURIs = _ref26.authServiceURIs;
+              fabricVersion = _ref26.fabricVersion;
               client = new ElvClient({
                 contentSpaceId: contentSpaceId,
                 networkId: networkId,
+                networkName: networkName,
                 fabricVersion: fabricVersion,
                 fabricURIs: fabricURIs,
                 ethereumURIs: ethereumURIs,
@@ -1617,11 +1667,11 @@ function () {
                 noAuth: noAuth
               });
               client.configUrl = configUrl;
-              return _context20.abrupt("return", client);
+              return _context21.abrupt("return", client);
 
-            case 13:
+            case 14:
             case "end":
-              return _context20.stop();
+              return _context21.stop();
           }
         }
       });

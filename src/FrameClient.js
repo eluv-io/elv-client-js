@@ -381,6 +381,8 @@ class FrameClient {
       "MergeContractMetadata",
       "MergeMetadata",
       "MetadataAuth",
+      "MintNFT",
+      "NetworkInfo",
       "NodeId",
       "Nodes",
       "NTPInstance",
