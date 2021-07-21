@@ -128,6 +128,19 @@ describe("Test ElvClient", () => {
       await bootstrapClient.UseRegion({region: "na-west-south"});
       await bootstrapClient.UseRegion({region: "eu-west"});
     });
+
+    test("Initialization", async () => {
+      const bootstrapClient = await ElvClient.FromNetworkName({
+        networkName: "main"
+      });
+
+      expect(bootstrapClient).toBeDefined();
+      expect(bootstrapClient.fabricURIs).toBeDefined();
+      expect(bootstrapClient.fabricURIs.length).toBeGreaterThan(0);
+      expect(bootstrapClient.ethereumURIs).toBeDefined();
+      expect(bootstrapClient.ethereumURIs.length).toBeGreaterThan(0);
+      expect(bootstrapClient.ContentSpaceId()).toBeDefined();
+    });
   });
 
   describe("Access Groups", () => {
