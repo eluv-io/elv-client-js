@@ -18,9 +18,50 @@ const {
   ValidateAddress
 } = require("../Validation");
 
+
+/**
+ * Retrieve a list of all available access groups
+ *
+ * @methodGroup Access Groups
+ * @return {Promise<Array>} - List of access groups
+ */
+exports.ListAccessGroups = async function() {
+  const addresses = (await this.Collection({collectionType: "accessGroups"}))
+    .map(address => this.utils.FormatAddress(address));
+
+  const groups = await this.utils.LimitedMap(
+    5,
+    addresses,
+    async address => {
+      const id = this.utils.AddressToHash(address);
+      const meta = (await this.ContentObjectMetadata({
+        libraryId: this.contentSpaceLibraryId,
+        objectId: `iq__${id}`
+      })) || {};
+
+      return {
+        address,
+        id: `igrp${id}`,
+        meta
+      };
+    }
+  );
+
+  return groups
+    .sort((a, b) => {
+      const name1 = (a.meta.public || {}).name || `zz__${a.address}`;
+      const name2 = (b.meta.public || {}).name || `zz__${b.address}`;
+
+      return name1 < name2 ? -1 : 1;
+    });
+};
+
 exports.SetGroupPermission = async function({groupAddress, objectId, permission, remove=false}) {
   const groupInfo = await this.authClient.ContractInfo({address: groupAddress});
   const objectInfo = await this.authClient.ContractInfo({id: objectId});
+
+  // check if ContractInfo returned an empty object for groupAddress
+  if(Object.keys(groupInfo).length === 0) throw Error(`No information returned for group address ${groupAddress}`);
 
   let event;
   if(!objectInfo.isV3 && objectInfo.accessType === this.authClient.ACCESS_TYPES.GROUP) {
@@ -263,7 +304,9 @@ exports.AccessGroupMembershipMethod = async function({
   if(this.utils.FormatAddress(candidate) !== this.utils.FormatAddress(memberAddress)) {
     // eslint-disable-next-line no-console
     console.error("Mismatch: " + candidate + " :: " + memberAddress);
-    throw Error("Access group method " + methodName + " failed");
+    // eslint-disable-next-line no-console
+    console.error("Is target user address wallet created?");
+    throw Error("Access group method " + methodName + " failed. Is target user address wallet created?");
   }
 
   return event.transactionHash;

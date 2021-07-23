@@ -52,6 +52,7 @@ function () {
   function EthClient(_ref) {
     var client = _ref.client,
         uris = _ref.uris,
+        networkId = _ref.networkId,
         debug = _ref.debug,
         _ref$timeout = _ref.timeout,
         timeout = _ref$timeout === void 0 ? 10 : _ref$timeout;
@@ -59,6 +60,7 @@ function () {
     _classCallCheck(this, EthClient);
 
     this.client = client;
+    this.networkId = networkId;
     this.ethereumURIs = uris;
     this.ethereumURIIndex = 0;
     this.locked = false;
@@ -89,7 +91,7 @@ function () {
     key: "Provider",
     value: function Provider() {
       if (!this.provider) {
-        this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex]); // Ethers.js uses eth_getCode to ensure a contract is deployed and nothing else - this pulls a large chunk of pointless
+        this.provider = new Ethers.providers.JsonRpcProvider(this.ethereumURIs[this.ethereumURIIndex], this.networkId); // Ethers.js uses eth_getCode to ensure a contract is deployed and nothing else - this pulls a large chunk of pointless
         // data every time a contract is initialized in the client (often). Ethers.js just checks that the code isn't == "0x", so
         // we can give it some dummy string instead and assume the contract is fine
 

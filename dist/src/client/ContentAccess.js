@@ -25,7 +25,9 @@ var _require = require("../Validation"),
     ValidateVersion = _require.ValidateVersion,
     ValidatePartHash = _require.ValidatePartHash,
     ValidateWriteToken = _require.ValidateWriteToken,
-    ValidateParameters = _require.ValidateParameters; // Note: Keep these ordered by most-restrictive to least-restrictive
+    ValidateParameters = _require.ValidateParameters;
+
+var MergeWith = require("lodash/mergeWith"); // Note: Keep these ordered by most-restrictive to least-restrictive
 
 
 exports.permissionLevels = {
@@ -1718,7 +1720,7 @@ exports.ContentObjectMetadata = function _callee23(_ref16) {
 exports.AssetMetadata = function _callee24(_ref17) {
   var _this8 = this;
 
-  var libraryId, objectId, versionHash, metadata, localization, _ref17$produceLinkUrl, produceLinkUrls;
+  var libraryId, objectId, versionHash, metadata, localization, _ref17$produceLinkUrl, produceLinkUrls, mergedMetadata;
 
   return _regeneratorRuntime.async(function _callee24$(_context24) {
     while (1) {
@@ -1790,43 +1792,22 @@ exports.AssetMetadata = function _callee24(_ref17) {
             metadata.info = {};
           }
 
+          mergedMetadata = _objectSpread({}, metadata);
+
           if (localization) {
             localization.reverse().forEach(function (keys) {
               var _this8$utils;
 
-              var overrides = (_this8$utils = _this8.utils).SafeTraverse.apply(_this8$utils, [metadata].concat(_toConsumableArray(keys)));
-
-              if (!overrides) {
-                return;
-              }
-
-              Object.keys(overrides).forEach(function (overrideKey) {
-                if (overrideKey === "info") {
-                  Object.keys(overrides.info).forEach(function (infoOverrideKey) {
-                    var value = overrides.info[infoOverrideKey];
-
-                    if (_typeof(value) === "object" && Object.keys(value).length === 0 || Array.isArray(value) && value.length === 0) {
-                      return;
-                    }
-
-                    metadata.info[infoOverrideKey] = value;
-                  });
-                } else {
-                  var value = overrides[overrideKey];
-
-                  if (_typeof(value) === "object" && Object.keys(value).length === 0 || Array.isArray(value) && value.length === 0) {
-                    return;
-                  }
-
-                  metadata[overrideKey] = value;
-                }
-              }); //delete metadata[keys[0]];
+              var localizedMetadata = (_this8$utils = _this8.utils).SafeTraverse.apply(_this8$utils, [metadata].concat(_toConsumableArray(keys))) || {};
+              mergedMetadata = MergeWith({}, mergedMetadata, localizedMetadata, function (a, b) {
+                return b === null || b === "" ? a : undefined;
+              });
             });
           }
 
-          return _context24.abrupt("return", metadata);
+          return _context24.abrupt("return", mergedMetadata);
 
-        case 19:
+        case 20:
         case "end":
           return _context24.stop();
       }
@@ -2346,7 +2327,7 @@ exports.AvailableOfferings = function _callee29(_ref21) {
 exports.PlayoutOptions = function _callee32(_ref23) {
   var _this9 = this;
 
-  var offeringURI, objectId, versionHash, writeToken, linkPath, _ref23$signedLink, signedLink, _ref23$protocols, protocols, _ref23$handler, handler, _ref23$offering, offering, playoutType, _ref23$drms, drms, context, _ref23$hlsjsProfile, hlsjsProfile, authorizationToken, uriInfo, libraryId, offeringPath, link, _ref24, path, linkTarget, audienceData, authorization, queryParams, playoutOptions, playoutMap, sessionId, multiview, i, option, protocol, drm, playoutPath, licenseServers, cert, protocolMatch, drmMatch;
+  var offeringURI, objectId, versionHash, writeToken, linkPath, _ref23$signedLink, signedLink, _ref23$protocols, protocols, _ref23$handler, handler, _ref23$offering, offering, playoutType, _ref23$drms, drms, context, _ref23$hlsjsProfile, hlsjsProfile, authorizationToken, uriInfo, libraryId, offeringPath, link, _ref24, path, linkTarget, audienceData, authorization, queryParams, playoutOptions, playoutMap, sessionId, multiview, i, option, protocol, drm, playoutPath, licenseServers, cert, method, certUrl, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee32$(_context32) {
     while (1) {
@@ -2555,7 +2536,7 @@ exports.PlayoutOptions = function _callee32(_ref23) {
 
         case 72:
           if (!(i < playoutOptions.length)) {
-            _context32.next = 117;
+            _context32.next = 118;
             break;
           }
 
@@ -2642,30 +2623,42 @@ exports.PlayoutOptions = function _callee32(_ref23) {
             playoutMethods: _context32.t31
           };
           playoutMap[protocol] = (0, _context32.t17)(_context32.t18, _context32.t19, _context32.t32);
-          // Exclude any options that do not satisfy the specified protocols and/or DRMs
+
+          // Add .cert_url if playoutMap[protocol].playoutMethods[].drms[].cert is present
+          // (for clients that need cert supplied as a URL reference rather than as a string literal)
+          for (method in playoutMap[protocol].playoutMethods) {
+            if (playoutMap[protocol].playoutMethods[method].drms && playoutMap[protocol].playoutMethods[method].drms[drm] && playoutMap[protocol].playoutMethods[method].drms[drm].cert) {
+              // construct by replacing last part of playout URL path (e.g. "playlist.m3u8", "live.m3u8") with "drm.cert"
+              certUrl = new URL(playoutMap[protocol].playoutMethods[method].playoutUrl);
+              certUrl.pathname = certUrl.pathname.split("/").slice(0, -1).concat(["drm.cert"]).join("/");
+              playoutMap[protocol].playoutMethods[method].drms[drm].cert_url = certUrl.toString();
+            }
+          } // Exclude any options that do not satisfy the specified protocols and/or DRMs
+
+
           protocolMatch = protocols.includes(protocol);
           drmMatch = drms.includes(drm || "clear") || drms.length === 0 && !drm;
 
           if (!(!protocolMatch || !drmMatch)) {
-            _context32.next = 113;
+            _context32.next = 114;
             break;
           }
 
-          return _context32.abrupt("continue", 114);
+          return _context32.abrupt("continue", 115);
 
-        case 113:
+        case 114:
           // This protocol / DRM satisfies the specifications (prefer DRM over clear, if available)
           if (!playoutMap[protocol].playoutUrl || drm && drm !== "clear") {
             playoutMap[protocol].playoutUrl = playoutMap[protocol].playoutMethods[drm || "clear"].playoutUrl;
             playoutMap[protocol].drms = playoutMap[protocol].playoutMethods[drm || "clear"].drms;
           }
 
-        case 114:
+        case 115:
           i++;
           _context32.next = 72;
           break;
 
-        case 117:
+        case 118:
           // Callbacks for retrieving and setting multiview views
           if (multiview && sessionId) {
             playoutMap.sessionId = sessionId;
@@ -2735,7 +2728,7 @@ exports.PlayoutOptions = function _callee32(_ref23) {
           this.Log(playoutMap);
           return _context32.abrupt("return", playoutMap);
 
-        case 120:
+        case 121:
         case "end":
           return _context32.stop();
       }
@@ -4865,9 +4858,19 @@ exports.Collection = function _callee55(_ref49) {
           }));
 
         case 17:
-          return _context55.abrupt("return", _context55.sent);
+          _context55.t1 = _context55.sent;
 
-        case 18:
+          if (_context55.t1) {
+            _context55.next = 20;
+            break;
+          }
+
+          _context55.t1 = [];
+
+        case 20:
+          return _context55.abrupt("return", _context55.t1);
+
+        case 21:
         case "end":
           return _context55.stop();
       }

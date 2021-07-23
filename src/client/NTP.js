@@ -5,6 +5,7 @@
  */
 
 const UrlJoin = require("url-join");
+const Ethers = require("ethers");
 
 const {
   ValidateAddress,
@@ -358,6 +359,34 @@ exports.IssueNTPCode = async function({tenantId, ntpId, email, maxRedemptions}) 
     params,
     paramTypes
   });
+};
+
+/**
+ * Identical to IssueNTPCode, but the token is also signed by the current user.
+ *
+ * @see <a href="#IssueNTPCode">IssueNTPCode</a>
+ *
+ * @methodGroup Tickets
+ * @namedParams
+ * @param {string} tenantId - The ID of the tenant in the NTP instance was created
+ * @param {string} ntpId - The ID of the NTP instance from which to issue a ticket
+ * @param {string=} email - The email address associated with this ticket. If specified, the email address will have to
+ * be provided along with the ticket code in order to redeem the ticket.
+ * @param {number=} maxRedemptions - Maximum number of times this ticket may be redeemed. If less than the max redemptions
+ * of the NTP instance, the lower limit will be used.
+ *
+ * @return {Promise<Object>} - The generated signed ticket code and additional information about the ticket.
+ */
+exports.IssueSignedNTPCode = async function({tenantId, ntpId, email, maxRedemptions}) {
+  let result = await this.IssueNTPCode({tenantId, ntpId, email, maxRedemptions});
+
+  if(result.token) {
+    const signature = await this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(result.token)));
+    const multiSig = this.utils.FormatSignature(signature);
+    result.token = `${result.token}.${this.utils.B64(multiSig)}`;
+  }
+
+  return result;
 };
 
 /**

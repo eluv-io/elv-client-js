@@ -10,6 +10,8 @@ const ElvWallet = require("./ElvWallet");
 const EthClient = require("./EthClient");
 const UserProfileClient = require("./UserProfileClient");
 const HttpClient = require("./HttpClient");
+const RemoteSigner = require("./RemoteSigner");
+
 // const ContentObjectVerification = require("./ContentObjectVerification");
 const Utils = require("./Utils");
 const Crypto = require("./Crypto");
@@ -20,6 +22,12 @@ const Pako = require("pako");
 const {
   ValidatePresence
 } = require("./Validation");
+
+const networks = {
+  "main": "https://main.net955305.contentfabric.io",
+  "demo": "https://demov3.net955210.contentfabric.io",
+  "test": "https://test.net955203.contentfabric.io"
+};
 
 if(Utils.Platform() === Utils.PLATFORM_NODE) {
   // Define Response in node
@@ -67,7 +75,9 @@ class ElvClient {
         `Debug Logging Enabled:
         Content Space: ${this.contentSpaceId}
         Fabric URLs: [\n\t\t${this.fabricURIs.join(", \n\t\t")}\n\t]
-        Ethereum URLs: [\n\t\t${this.ethereumURIs.join(", \n\t\t")}\n\t]`
+        Ethereum URLs: [\\n\\t\\t${this.ethereumURIs.join(", \n\t\t")}\\n\\t]
+        Auth Service URLs: [\\n\\t\\t${this.authServiceURIs.join(", \n\t\t")}\\n\\t]
+        `
       );
     }
   }
@@ -112,9 +122,11 @@ class ElvClient {
    *
    * @namedParams
    * @param {string} contentSpaceId - ID of the content space
+   * @param {string} contentSpaceId - ID of the blockchain network
    * @param {number} fabricVersion - The version of the target content fabric
    * @param {Array<string>} fabricURIs - A list of full URIs to content fabric nodes
    * @param {Array<string>} ethereumURIs - A list of full URIs to ethereum nodes
+   * @param {Array<string>} ethereumURIs - A list of full URIs to auth service endpoints
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
@@ -125,9 +137,12 @@ class ElvClient {
    */
   constructor({
     contentSpaceId,
+    networkId,
+    networkName,
     fabricVersion,
     fabricURIs,
     ethereumURIs,
+    authServiceURIs,
     ethereumContractTimeout = 10,
     trustAuthorityId,
     staticToken,
@@ -141,9 +156,13 @@ class ElvClient {
     this.contentSpaceLibraryId = this.utils.AddressToLibraryId(this.contentSpaceAddress);
     this.contentSpaceObjectId = this.utils.AddressToObjectId(this.contentSpaceAddress);
 
+    this.networkId = networkId;
+    this.networkName = networkName;
+
     this.fabricVersion = fabricVersion;
 
     this.fabricURIs = fabricURIs;
+    this.authServiceURIs = authServiceURIs;
     this.ethereumURIs = ethereumURIs;
     this.ethereumContractTimeout = ethereumContractTimeout;
 
@@ -154,12 +173,9 @@ class ElvClient {
 
     this.debug = false;
 
-    this.InitializeClients();
-
-    if(staticToken) {
-      this.SetStaticToken({token: staticToken});
-    }
+    this.InitializeClients({staticToken});
   }
+
 
   /**
    * Retrieve content space info and preferred fabric and blockchain URLs from the fabric
@@ -169,7 +185,7 @@ class ElvClient {
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {Array<string>} kmsUrls - List of KMS urls to use for OAuth authentication
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
+   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
    *
    * @return {Promise<Object>} - Object containing content space ID and fabric and ethereum URLs
    */
@@ -180,6 +196,7 @@ class ElvClient {
   }) {
     try {
       const uri = new URI(configUrl);
+      uri.pathname("/config");
 
       if(region) {
         uri.addSearch("elvgeo", region);
@@ -192,14 +209,19 @@ class ElvClient {
       // If any HTTPS urls present, throw away HTTP urls so only HTTPS will be used
       const filterHTTPS = uri => uri.toLowerCase().startsWith("https");
 
-      let fabricURIs = fabricInfo.network.seed_nodes.fabric_api;
+      let fabricURIs = fabricInfo.network.services.fabric_api;
       if(fabricURIs.find(filterHTTPS)) {
         fabricURIs = fabricURIs.filter(filterHTTPS);
       }
 
-      let ethereumURIs = fabricInfo.network.seed_nodes.ethereum_api;
+      let ethereumURIs = fabricInfo.network.services.ethereum_api;
       if(ethereumURIs.find(filterHTTPS)) {
         ethereumURIs = ethereumURIs.filter(filterHTTPS);
+      }
+
+      let authServiceURIs = fabricInfo.network.services.authority_service || [];
+      if(authServiceURIs.find(filterHTTPS)) {
+        authServiceURIs = authServiceURIs.filter(filterHTTPS);
       }
 
       const fabricVersion = Math.max(...(fabricInfo.network.api_versions || [2]));
@@ -207,8 +229,11 @@ class ElvClient {
       return {
         nodeId: fabricInfo.node_id,
         contentSpaceId: fabricInfo.qspace.id,
+        networkId: (fabricInfo.qspace.ethereum || {}).network_id,
+        networkName: ((fabricInfo.qspace || {}).names || [])[0],
         fabricURIs,
         ethereumURIs,
+        authServiceURIs,
         kmsURIs: kmsUrls,
         fabricVersion
       };
@@ -223,13 +248,52 @@ class ElvClient {
   }
 
   /**
+   * Create a new ElvClient for the specified network
+   *
+   * @methodGroup Constructor
+   * @namedParams
+   * @param {string} networkName - Name of the network to connect to ("main", "demo", "test)
+   * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
+   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
+   * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
+   * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
+   * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
+   * @param {boolean=} noAuth=false - If enabled, blockchain authorization will not be performed
+   *
+   * @return {Promise<ElvClient>} - New ElvClient connected to the specified content fabric and blockchain
+   */
+  static async FromNetworkName({
+    networkName,
+    region,
+    trustAuthorityId,
+    staticToken,
+    ethereumContractTimeout=10,
+    noCache=false,
+    noAuth=false
+  }) {
+    const configUrl = networks[networkName];
+
+    if(!configUrl) { throw Error("Invalid network name: " + networkName); }
+
+    return await this.FromConfigurationUrl({
+      configUrl,
+      region,
+      trustAuthorityId,
+      staticToken,
+      ethereumContractTimeout,
+      noCache,
+      noAuth
+    });
+  }
+
+  /**
    * Create a new ElvClient from the specified configuration URL
    *
    * @methodGroup Constructor
    * @namedParams
    * @param {string} configUrl - Full URL to the config endpoint
    * @param {string=} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
+   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
    * @param {string=} trustAuthorityId - (OAuth) The ID of the trust authority to use for OAuth authentication   * @param {boolean=} noCache=false - If enabled, blockchain transactions will not be cached
    * @param {string=} staticToken - Static token that will be used for all authorization in place of normal auth
    * @param {number=} ethereumContractTimeout=10 - Number of seconds to wait for contract calls
@@ -248,8 +312,11 @@ class ElvClient {
   }) {
     const {
       contentSpaceId,
+      networkId,
+      networkName,
       fabricURIs,
       ethereumURIs,
+      authServiceURIs,
       fabricVersion
     } = await ElvClient.Configuration({
       configUrl,
@@ -258,9 +325,12 @@ class ElvClient {
 
     const client = new ElvClient({
       contentSpaceId,
+      networkId,
+      networkName,
       fabricVersion,
       fabricURIs,
       ethereumURIs,
+      authServiceURIs,
       ethereumContractTimeout,
       trustAuthorityId,
       staticToken,
@@ -273,7 +343,7 @@ class ElvClient {
     return client;
   }
 
-  async InitializeClients() {
+  async InitializeClients({staticToken}={}) {
     // Cached info
     this.contentTypes = {};
     this.encryptionConks = {};
@@ -284,7 +354,16 @@ class ElvClient {
     this.inaccessibleLibraries = {};
 
     this.HttpClient = new HttpClient({uris: this.fabricURIs, debug: this.debug});
-    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, debug: this.debug, timeout: this.ethereumContractTimeout});
+    this.AuthHttpClient = new HttpClient({uris: this.authServiceURIs, debug: this.debug});
+    this.ethClient = new EthClient({client: this, uris: this.ethereumURIs, networkId: this.networkId, debug: this.debug, timeout: this.ethereumContractTimeout});
+
+    if(!this.signer) {
+      const wallet = this.GenerateWallet();
+      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+
+      this.SetSigner({signer, reset: false});
+      this.SetStaticToken({token: staticToken});
+    }
 
     this.authClient = new AuthorizationClient({
       client: this,
@@ -303,43 +382,6 @@ class ElvClient {
     // Initialize crypto wasm
     this.Crypto = Crypto;
     this.Crypto.ElvCrypto();
-
-    // Test each eth url
-    const workingEthURIs = (await Promise.all(
-      this.ethereumURIs.map(async (uri) => {
-        try {
-          const response = await Promise.race([
-            HttpClient.Fetch(
-              uri,
-              {
-                method: "post",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({method: "net_version", params: [], id: 1, jsonrpc: "2.0"})
-              }
-            ),
-            new Promise(resolve => setTimeout(() => resolve({ok: false}), 5000))
-          ]);
-
-          if(response.ok) {
-            return uri;
-          }
-
-          // eslint-disable-next-line no-console
-          this.Log("Eth node unavailable: " + uri, true);
-        } catch(error) {
-          // eslint-disable-next-line no-console
-          this.Log("Eth node unavailable: " + uri, true);
-          // eslint-disable-next-line no-console
-          this.Log(error, true);
-        }
-      })
-    )).filter(uri => uri);
-
-    // If any eth urls are bad, discard them
-    if(workingEthURIs.length !== this.ethereumURIs.length) {
-      this.ethereumURIs = workingEthURIs;
-      this.ethClient.SetEthereumURIs(workingEthURIs);
-    }
   }
 
   ConfigUrl() {
@@ -359,7 +401,7 @@ class ElvClient {
    * @methodGroup Nodes
    * @namedParams
    * @param {string} region - Preferred region - the fabric will auto-detect the best region if not specified
-   * - Available regions: na-west-north, na-west-south, na-east, eu-west, eu-east, as-east, au-east
+   * - Available regions: as-east au-east eu-east-north eu-west-north na-east-north na-east-south na-west-north na-west-south eu-east-south eu-west-south
    *
    * @return {Promise<Object>} - An object containing the updated fabric and ethereum URLs in order of preference
    */
@@ -368,11 +410,12 @@ class ElvClient {
       throw Error("Unable to change region: Configuration URL not set");
     }
 
-    const {fabricURIs, ethereumURIs} = await ElvClient.Configuration({
+    const {fabricURIs, ethereumURIs, authServiceURIs} = await ElvClient.Configuration({
       configUrl: this.configUrl,
       region
     });
 
+    this.authServiceURIs = authServiceURIs;
     this.fabricURIs = fabricURIs;
     this.ethereumURIs = ethereumURIs;
 
@@ -436,7 +479,8 @@ class ElvClient {
   Nodes() {
     return {
       fabricURIs: this.fabricURIs,
-      ethereumURIs: this.ethereumURIs
+      ethereumURIs: this.ethereumURIs,
+      authServiceURIs: this.authServiceURIs
     };
   }
 
@@ -446,10 +490,11 @@ class ElvClient {
    * @namedParams
    * @param {Array<string>=} fabricURIs - A list of URLs for the fabric, in preference order
    * @param {Array<string>=} ethereumURIs - A list of URLs for the blockchain, in preference order
+   * @param {Array<string>=} authServiceURIs - A list of URLs for the auth service, in preference order
    *
    * @methodGroup Nodes
    */
-  SetNodes({fabricURIs, ethereumURIs}) {
+  SetNodes({fabricURIs, ethereumURIs, authServiceURIs}) {
     if(fabricURIs) {
       this.fabricURIs = fabricURIs;
 
@@ -463,6 +508,26 @@ class ElvClient {
       this.ethClient.ethereumURIs = ethereumURIs;
       this.ethClient.ethereumURIIndex = 0;
     }
+
+    if(authServiceURIs) {
+      this.authServiceURIs = authServiceURIs;
+      this.AuthHttpClient.uris = authServiceURIs;
+      this.AuthHttpClient.uriIndex = 0;
+    }
+  }
+
+  /**
+   * Return information about how the client was connected to the network
+   *
+   * @methodGroup Nodes
+   * @returns {Object} - The name, ID and configuration URL of the network
+   */
+  NetworkInfo() {
+    return {
+      name: this.networkName,
+      id: this.networkId,
+      configUrl: this.configUrl
+    };
   }
 
   /* Wallet and signers */
@@ -504,12 +569,35 @@ class ElvClient {
    * @namedParams
    * @param {object} signer - The ethers.js signer object
    */
-  SetSigner({signer}) {
+  SetSigner({signer, reset=true}) {
+    this.staticToken = undefined;
+
     signer.connect(this.ethClient.Provider());
     signer.provider.pollingInterval = 500;
     this.signer = signer;
 
-    this.InitializeClients();
+    if(reset) {
+      this.InitializeClients();
+    }
+  }
+
+  /**
+   * Set signer using OAuth ID token
+   *
+   * @methodGroup Signers
+   * @namedParams
+   * @param {string} token - OAuth ID token
+   */
+  async SetRemoteSigner({token}) {
+    const signer = new RemoteSigner({
+      rpcUris: this.authServiceURIs,
+      idToken: token,
+      provider: this.ethClient.provider
+    });
+
+    await signer.Initialize();
+
+    this.SetSigner({signer});
   }
 
   /**
@@ -523,11 +611,71 @@ class ElvClient {
    * @param {object} provider - The web3 provider object
    */
   async SetSignerFromWeb3Provider({provider}) {
+    this.staticToken = undefined;
+
     let ethProvider = new Ethers.providers.Web3Provider(provider);
     ethProvider.pollingInterval = 250;
     this.signer = ethProvider.getSigner();
     this.signer.address = await this.signer.getAddress();
     await this.InitializeClients();
+  }
+
+  /**
+   * Initialize a new account using the provided funding and group tokens.
+   *
+   * This method will redeem the tokens for the current account (or create a new one if not set) in order to
+   * retrieve funds and optionally have the user added to appropriate access groups.
+   *
+   * @methodGroup Signers
+   * @namedParams
+   * @param {string} tenantId - The ID of the tenant
+   * @param {string} fundingToken - A token permitting the user to retrieve funds
+   * @param {number=} funds=0.5 - The amount to fund this user. The maximum amount is limited by the token issuer.
+   * @param {string=} groupToken - A token permitting the user to be added to access groups
+   *
+   * @return {string} - The address of the user
+   */
+  async CreateAccount({tenantId, fundingToken, funds=0.5, groupToken}) {
+    if(!this.signer) {
+      const wallet = this.GenerateWallet();
+      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
+
+      this.SetSigner({signer});
+    }
+
+    await this.authClient.MakeKMSRequest({
+      method: "POST",
+      path: `/ks/otp/fnd/${tenantId}`,
+      body: {
+        toAddr: this.signer.address,
+        amtStr: this.utils.EtherToWei(funds)
+      },
+      headers: {
+        Authorization: `Bearer ${fundingToken}`
+      }
+    });
+
+    await this.userProfileClient.CreateWallet();
+
+    await this.userProfileClient.ReplaceUserMetadata({
+      metadataSubtree: "tenantContractId",
+      metadata: tenantId
+    });
+
+    if(groupToken) {
+      await this.authClient.MakeKMSRequest({
+        method: "POST",
+        path: `/ks/otp/grp/${tenantId}`,
+        body: {
+          addAddr: this.signer.address,
+        },
+        headers: {
+          Authorization: `Bearer ${groupToken}`
+        }
+      });
+    }
+
+    return this.utils.FormatAddress(this.signer.address);
   }
 
   /**
@@ -702,17 +850,14 @@ class ElvClient {
    *
    * @methodGroup Authorization
    * @namedParams
-   * @param {string} token - The static token to use
+   * @param {string=} token - The static token to use. If not provided, the default static token will be set.
    */
-  SetStaticToken({token}) {
-    this.staticToken = token;
-
-    if(!this.signer) {
-      const wallet = this.GenerateWallet();
-      const signer = wallet.AddAccountFromMnemonic({mnemonic: wallet.GenerateMnemonic()});
-
-      this.SetSigner({signer});
+  SetStaticToken({token}={}) {
+    if(!token) {
+      token = this.utils.B64(JSON.stringify({qspace_id: this.contentSpaceId}));
     }
+
+    this.staticToken = token;
   }
 
   /**
@@ -728,6 +873,17 @@ class ElvClient {
     this.SetStaticToken({
       token: await this.GenerateStateChannelToken({objectId})
     });
+  }
+
+  /**
+   * Create a signature for the specified string
+   *
+   * @param {string} string - The string to sign
+   * @return {Promise<string>} - The signed string
+   */
+  async Sign(string) {
+    const signature = await this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)));
+    return this.utils.FormatSignature(signature);
   }
 
   /**
@@ -778,7 +934,7 @@ class ElvClient {
    *
    * @return {Promise<*>} - Response in the specified format
    */
-  Request({url, format="json", method="GET", headers = {}, body}) {
+  async Request({url, format="json", method="GET", headers = {}, body}) {
     return this.utils.ResponseToFormat(
       format,
       HttpClient.Fetch(
@@ -792,6 +948,62 @@ class ElvClient {
     );
   }
 
+  async MintNFT({tenantId, email, address, collectionId, requestBody={}}) {
+    if(!address) {
+      // If address not specified, make call to initialize address for email
+      const accountInitializationBody = {
+        ts: Date.now(),
+        email
+      };
+
+      const accountInitializationSignature = await this.Sign(
+        JSON.stringify(accountInitializationBody)
+      );
+
+      const {addr} = await this.utils.ResponseToJson(
+        await this.authClient.MakeAuthServiceRequest({
+          method: "POST",
+          path: `/as/tnt/prov/eth/${tenantId}`,
+          body: accountInitializationBody,
+          headers: {
+            "Authorization": `Bearer ${accountInitializationSignature}`
+          }
+        })
+      );
+
+      address = this.utils.FormatAddress(addr);
+    }
+
+    if(email) {
+      requestBody.email = email;
+    }
+
+    requestBody.extra = {
+      ...(requestBody.extra || {}),
+      elv_addr: address
+    };
+
+    requestBody.ts = Date.now();
+
+    const mintSignature = await this.Sign(
+      JSON.stringify(requestBody)
+    );
+
+    await this.authClient.MakeAuthServiceRequest({
+      method: "POST",
+      path: `/as/otp/webhook/base/${tenantId}/${collectionId}`,
+      body: requestBody,
+      headers: {
+        "Authorization": `Bearer ${mintSignature}`
+      }
+    });
+
+    return {
+      address
+    };
+  }
+
+
   /* FrameClient related */
 
   // Whitelist of methods allowed to be called using the frame API
@@ -801,6 +1013,7 @@ class ElvClient {
       "AccessGroupMembershipMethod",
       "CallFromFrameMessage",
       "ClearSigner",
+      "CreateAccount",
       "EnableMethodLogging",
       "FormatBlockNumbers",
       "FrameAllowedMethods",
@@ -808,8 +1021,10 @@ class ElvClient {
       "GenerateWallet",
       "InitializeClients",
       "Log",
+      "SetRemoteSigner",
       "SetSigner",
       "SetSignerFromWeb3Provider",
+      "Sign",
       "ToggleLogging"
     ];
 
