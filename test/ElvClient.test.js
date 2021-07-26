@@ -167,7 +167,7 @@ describe("Test ElvClient", () => {
         contractAddress: accessGroupAddress
       });
 
-      if (process.env.ADMIN_GROUP === 'undefined') {
+      if(process.env.ADMIN_GROUP === "undefined") {
         expect(members.length).toEqual(2);
       }
       expect(members.includes(clientAddress)).toBeTruthy();
@@ -187,7 +187,7 @@ describe("Test ElvClient", () => {
         contractAddress: accessGroupAddress
       });
 
-      if (process.env.ADMIN_GROUP === 'undefined') {
+      if(process.env.ADMIN_GROUP === "undefined") {
         expect(managers.length).toEqual(2);
       }
       expect(managers.includes(clientAddress)).toBeTruthy();
@@ -207,7 +207,7 @@ describe("Test ElvClient", () => {
         contractAddress: accessGroupAddress
       });
 
-      if (process.env.ADMIN_GROUP === 'undefined') {
+      if(process.env.ADMIN_GROUP === "undefined") {
         expect(newMembers.length).toEqual(1);
       }
       expect(newMembers.includes(clientAddress)).toBeFalsy();
@@ -217,7 +217,7 @@ describe("Test ElvClient", () => {
         contractAddress: accessGroupAddress
       });
 
-      if (process.env.ADMIN_GROUP === 'undefined') {
+      if(process.env.ADMIN_GROUP === "undefined") {
         expect(newManagers.length).toEqual(1);
       }
       expect(newManagers.includes(clientAddress)).toBeFalsy();
