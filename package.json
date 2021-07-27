@@ -1,6 +1,6 @@
 {
   "name": "@eluvio/elv-client-js",
-  "version": "3.1.59",
+  "version": "3.1.60",
   "description": "Javascript client for the Eluvio Content Fabric",
   "main": "src/ElvClient.js",
   "author": "Kevin Talmadge",
@@ -91,8 +91,9 @@
     "sjcl": "^1.0.8",
     "typedarray": "0.0.6",
     "unorm": "^1.5.0",
-    "urijs": "^1.19.5",
+    "urijs": "^1.19.7",
     "url-join": "^4.0.0",
+    "uuid": "^8.3.2",
     "varint": "^5.0.0",
     "yargs": "^16.2.0"
   },
@@ -121,7 +122,6 @@
     "truffle": "^5.1.54",
     "truffle-contract": "^3.0.7",
     "truffle-test-utils": "^0.1.0",
-    "uuid": "^3.3.2",
     "webpack": "^4.20.2",
     "webpack-bundle-analyzer": "^3.3.2",
     "webpack-cli": "^3.1.2",
