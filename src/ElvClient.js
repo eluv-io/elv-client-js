@@ -26,6 +26,7 @@ const {
 const networks = {
   "main": "https://main.net955305.contentfabric.io",
   "demo": "https://demov3.net955210.contentfabric.io",
+  "demov3": "https://demov3.net955210.contentfabric.io",
   "test": "https://test.net955203.contentfabric.io"
 };
 
@@ -948,62 +949,6 @@ class ElvClient {
     );
   }
 
-  async MintNFT({tenantId, email, address, collectionId, requestBody={}}) {
-    if(!address) {
-      // If address not specified, make call to initialize address for email
-      const accountInitializationBody = {
-        ts: Date.now(),
-        email
-      };
-
-      const accountInitializationSignature = await this.Sign(
-        JSON.stringify(accountInitializationBody)
-      );
-
-      const {addr} = await this.utils.ResponseToJson(
-        await this.authClient.MakeAuthServiceRequest({
-          method: "POST",
-          path: `/as/tnt/prov/eth/${tenantId}`,
-          body: accountInitializationBody,
-          headers: {
-            "Authorization": `Bearer ${accountInitializationSignature}`
-          }
-        })
-      );
-
-      address = this.utils.FormatAddress(addr);
-    }
-
-    if(email) {
-      requestBody.email = email;
-    }
-
-    requestBody.extra = {
-      ...(requestBody.extra || {}),
-      elv_addr: address
-    };
-
-    requestBody.ts = Date.now();
-
-    const mintSignature = await this.Sign(
-      JSON.stringify(requestBody)
-    );
-
-    await this.authClient.MakeAuthServiceRequest({
-      method: "POST",
-      path: `/as/otp/webhook/base/${tenantId}/${collectionId}`,
-      body: requestBody,
-      headers: {
-        "Authorization": `Bearer ${mintSignature}`
-      }
-    });
-
-    return {
-      address
-    };
-  }
-
-
   /* FrameClient related */
 
   // Whitelist of methods allowed to be called using the frame API
@@ -1104,5 +1049,6 @@ Object.assign(ElvClient.prototype, require("./client/Files"));
 Object.assign(ElvClient.prototype, require("./client/ABRPublishing"));
 Object.assign(ElvClient.prototype, require("./client/ContentManagement"));
 Object.assign(ElvClient.prototype, require("./client/NTP"));
+Object.assign(ElvClient.prototype, require("./client/NFT"));
 
 exports.ElvClient = ElvClient;
