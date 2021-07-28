@@ -635,7 +635,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NFT.js.html">client/NFT.js</a>, <a href="client_NFT.js.html#line128">line 128</a>
+          <a href="client_NFT.js.html">client/NFT.js</a>, <a href="client_NFT.js.html#line129">line 129</a>
         </li>
       </ul>
     </dd>
@@ -658,7 +658,7 @@
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id=".MintNFT">
-      <span class="type-signature">static </span>MintNFT<span class="signature">({<div class="block-param">tenantId,</div><div class="block-param">email<span class="signature-attributes">optional</span>,</div><div class="block-param">address<span class="signature-attributes">optional</span>,</div><div class="block-param">collectionId,</div><div class="block-param">sku,</div><div class="block-param">tokenId<span class="signature-attributes">optional</span>,</div><div class="block-param">extraData<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
+      <span class="type-signature">static </span>MintNFT<span class="signature">({<div class="block-param">tenantId,</div><div class="block-param">email<span class="signature-attributes">optional</span>,</div><div class="block-param">address<span class="signature-attributes">optional</span>,</div><div class="block-param">collectionId,</div><div class="block-param">items,</div><div class="block-param">extraData<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"></span>
     </h4>
   </span>
 
@@ -667,7 +667,7 @@
 
 
   <div class="description">
-    <p>Mint an NFT for the specified user</p>
+    <p>Mint NFTs for the specified user</p>
   </div>
 
 
@@ -883,6 +883,69 @@
     
       <tr>
         
+          <td class="name"><code>items</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Array.&lt;Object>
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>List of items</p>
+          
+            <h6>Properties</h6>
+            
+
+<table class="params">
+  <thead>
+    <tr>
+      
+        <th>Name</th>
+      
+
+      <th>Type</th>
+
+      
+        <th>Attributes</th>
+      
+
+      
+        <th>Default</th>
+      
+
+      <th class="last">Description</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    
+      <tr>
+        
           <td class="name"><code>sku</code></td>
         
 
@@ -916,7 +979,52 @@
         
 
         <td class="description last">
-          <p>The SKU of the NFT to mint</p>
+          <p>SKU of the NFT</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>quantity</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      number
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              1
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>Number to mint</p>
           
         </td>
       </tr>
@@ -932,6 +1040,12 @@
             
     <span class="param-type">
       string
+    </span>
+
+    |
+
+    <span class="param-type">
+      Array.&lt;string>
     </span>
 
     
@@ -959,7 +1073,60 @@
         
 
         <td class="description last">
-          <p>Custom token ID for this NFT (must be unique)</p>
+          <p>Custom token IDs for these items (must be unique).</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
+          <td class="name"><code>extraData</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Object
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+              {}
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>Additional data to put in the transaction</p>
+          
+        </td>
+      </tr>
+
+    
+  </tbody>
+</table>
+
           
         </td>
       </tr>
@@ -1060,7 +1227,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="client_NFT.js.html">client/NFT.js</a>, <a href="client_NFT.js.html#line30">line 30</a>
+          <a href="client_NFT.js.html">client/NFT.js</a>, <a href="client_NFT.js.html#line33">line 33</a>
         </li>
       </ul>
     </dd>

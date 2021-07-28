@@ -78,7 +78,7 @@ const {
 } = require("../Validation");
 
 /**
- * Mint an NFT for the specified user
+ * Mint NFTs for the specified user
  *
  * @methodGroup Minting
  * @namedParams
@@ -86,17 +86,21 @@ const {
  * @param {string=} email - The email of the NFT recipient
  * @param {string=} address - The address of the NFT recipient
  * @param {string} collectionId - The ID of the NFT collection containing the NFT
- * @param {string} sku - The SKU of the NFT to mint
- * @param {string=} tokenId - Custom token ID for this NFT (must be unique)
+ * @param {Array&lt;Object>} items - List of items
+ * @param {string} items.sku - SKU of the NFT
+ * @param {number=} items.quantity=1 - Number to mint
+ * @param {(string | Array&lt;string>)=} items.tokenId - Custom token IDs for these items (must be unique).
+ * @param {Object=} items.extraData={} - Additional data to put in the transaction
  * @param {Object=} extraData={} - Additional data to put in the transaction
  *
  * @return Promise&lt;Object> - An object containing the address for whom the NFT was minted and the transactionId of the minting request.
  */
-exports.MintNFT = async function({tenantId, email, address, collectionId, sku, tokenId, extraData={}}) {
+exports.MintNFT = async function({tenantId, email, address, collectionId, items, extraData={}}) {
   ValidatePresence("tenantId", tenantId);
   ValidatePresence("email or address", email || address);
   ValidatePresence("collectionId", collectionId);
-  ValidatePresence("sku", sku);
+  ValidatePresence("items", items);
+
   ValidateObject(collectionId);
 
   if(!address) {
@@ -126,16 +130,13 @@ exports.MintNFT = async function({tenantId, email, address, collectionId, sku, t
 
   let requestBody = {
     "tickets": null,
-    "products": [
-      {
-        "sku": sku,
-        "quant": 1,
-        "extra":{
-          // NOTE: MUST BE UNIQUE IF SPECIFIED
-          "token_id": tokenId
-        }
-      }
-    ],
+    "products": items.map(item => ({
+      sku: item.sku,
+      quant: item.quantity || 1,
+      extra: item.tokenId ?
+        { ...(item.extraData || {}), token_id: item.tokenId } :
+        { ...(item.extraData || {}) }
+    })),
     "ident": email || address,
     "cust_name": email || address,
     "extra": {
