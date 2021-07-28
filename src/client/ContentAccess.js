@@ -1187,7 +1187,7 @@ exports.PlayoutPathResolution = async function({
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
- * @param {boolean=} signedLink - Specify if linkPath is pointing directly to the offerings endpoint
+ * @param {boolean=} directLink - Specify if linkPath is pointing directly to the offerings endpoint
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  *
@@ -1213,7 +1213,8 @@ exports.AvailableOfferings = async function({
       objectId,
       versionHash,
       metadataSubtree: linkPath,
-      resolveLinks: true
+      resolveLinks: true,
+      authorizationToken
     });
   }
 
@@ -1223,7 +1224,8 @@ exports.AvailableOfferings = async function({
     writeToken,
     linkPath,
     signedLink,
-    handler
+    handler,
+    authorizationToken
   });
 
   try {

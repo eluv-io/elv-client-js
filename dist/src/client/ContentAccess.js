@@ -2179,7 +2179,7 @@ exports.PlayoutPathResolution = function _callee28(_ref20) {
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
- * @param {boolean=} signedLink - Specify if linkPath is pointing directly to the offerings endpoint
+ * @param {boolean=} directLink - Specify if linkPath is pointing directly to the offerings endpoint
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  *
@@ -2201,7 +2201,7 @@ exports.AvailableOfferings = function _callee29(_ref21) {
           }
 
           if (!directLink) {
-            _context29.next = 16;
+            _context29.next = 17;
             break;
           }
 
@@ -2217,52 +2217,55 @@ exports.AvailableOfferings = function _callee29(_ref21) {
           _context29.t3 = objectId;
           _context29.t4 = versionHash;
           _context29.t5 = linkPath;
-          _context29.t6 = {
+          _context29.t6 = authorizationToken;
+          _context29.t7 = {
             libraryId: _context29.t2,
             objectId: _context29.t3,
             versionHash: _context29.t4,
             metadataSubtree: _context29.t5,
-            resolveLinks: true
+            resolveLinks: true,
+            authorizationToken: _context29.t6
           };
-          _context29.t7 = _context29.t1.ContentObjectMetadata.call(_context29.t1, _context29.t6);
-          _context29.next = 15;
-          return _context29.t0.awrap.call(_context29.t0, _context29.t7);
-
-        case 15:
-          return _context29.abrupt("return", _context29.sent);
+          _context29.t8 = _context29.t1.ContentObjectMetadata.call(_context29.t1, _context29.t7);
+          _context29.next = 16;
+          return _context29.t0.awrap.call(_context29.t0, _context29.t8);
 
         case 16:
-          _context29.next = 18;
+          return _context29.abrupt("return", _context29.sent);
+
+        case 17:
+          _context29.next = 19;
           return _regeneratorRuntime.awrap(this.PlayoutPathResolution({
             objectId: objectId,
             versionHash: versionHash,
             writeToken: writeToken,
             linkPath: linkPath,
             signedLink: signedLink,
-            handler: handler
+            handler: handler,
+            authorizationToken: authorizationToken
           }));
 
-        case 18:
+        case 19:
           _ref22 = _context29.sent;
           path = _ref22.path;
-          _context29.prev = 20;
-          _context29.t8 = authorizationToken;
-          _context29.next = 24;
+          _context29.prev = 21;
+          _context29.t9 = authorizationToken;
+          _context29.next = 25;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             objectId: objectId,
             channelAuth: true,
             oauthToken: this.oauthToken
           }));
 
-        case 24:
-          _context29.t9 = _context29.sent;
+        case 25:
+          _context29.t10 = _context29.sent;
 
-          _context29.t10 = function (token) {
+          _context29.t11 = function (token) {
             return token;
           };
 
-          authorization = [_context29.t8, _context29.t9].flat().filter(_context29.t10);
-          _context29.next = 29;
+          authorization = [_context29.t9, _context29.t10].flat().filter(_context29.t11);
+          _context29.next = 30;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
             path: path,
             method: "GET",
@@ -2271,29 +2274,29 @@ exports.AvailableOfferings = function _callee29(_ref21) {
             }
           })));
 
-        case 29:
+        case 30:
           return _context29.abrupt("return", _context29.sent);
 
-        case 32:
-          _context29.prev = 32;
-          _context29.t11 = _context29["catch"](20);
+        case 33:
+          _context29.prev = 33;
+          _context29.t12 = _context29["catch"](21);
 
-          if (!(_context29.t11.status && parseInt(_context29.t11.status) === 500)) {
-            _context29.next = 36;
+          if (!(_context29.t12.status && parseInt(_context29.t12.status) === 500)) {
+            _context29.next = 37;
             break;
           }
 
           return _context29.abrupt("return", {});
 
-        case 36:
-          throw _context29.t11;
-
         case 37:
+          throw _context29.t12;
+
+        case 38:
         case "end":
           return _context29.stop();
       }
     }
-  }, null, this, [[20, 32]]);
+  }, null, this, [[21, 33]]);
 };
 /**
  * Retrieve playout options for the specified content that satisfy the given protocol and DRM requirements
