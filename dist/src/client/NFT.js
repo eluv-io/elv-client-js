@@ -20,7 +20,7 @@ var _require = require("../Validation"),
     ValidateObject = _require.ValidateObject,
     ValidatePresence = _require.ValidatePresence;
 /**
- * Mint an NFT for the specified user
+ * Mint NFTs for the specified user
  *
  * @methodGroup Minting
  * @namedParams
@@ -28,8 +28,11 @@ var _require = require("../Validation"),
  * @param {string=} email - The email of the NFT recipient
  * @param {string=} address - The address of the NFT recipient
  * @param {string} collectionId - The ID of the NFT collection containing the NFT
- * @param {string} sku - The SKU of the NFT to mint
- * @param {string=} tokenId - Custom token ID for this NFT (must be unique)
+ * @param {Array<Object>} items - List of items
+ * @param {string} items.sku - SKU of the NFT
+ * @param {number=} items.quantity=1 - Number to mint
+ * @param {(string | Array<string>)=} items.tokenId - Custom token IDs for these items (must be unique).
+ * @param {Object=} items.extraData={} - Additional data to put in the transaction
  * @param {Object=} extraData={} - Additional data to put in the transaction
  *
  * @return Promise<Object> - An object containing the address for whom the NFT was minted and the transactionId of the minting request.
@@ -37,17 +40,17 @@ var _require = require("../Validation"),
 
 
 exports.MintNFT = function _callee(_ref) {
-  var tenantId, email, address, collectionId, sku, tokenId, _ref$extraData, extraData, accountInitializationBody, accountInitializationSignature, _ref2, addr, requestBody, transactionId, mintSignature;
+  var tenantId, email, address, collectionId, items, _ref$extraData, extraData, accountInitializationBody, accountInitializationSignature, _ref2, addr, requestBody, transactionId, mintSignature;
 
   return _regeneratorRuntime.async(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          tenantId = _ref.tenantId, email = _ref.email, address = _ref.address, collectionId = _ref.collectionId, sku = _ref.sku, tokenId = _ref.tokenId, _ref$extraData = _ref.extraData, extraData = _ref$extraData === void 0 ? {} : _ref$extraData;
+          tenantId = _ref.tenantId, email = _ref.email, address = _ref.address, collectionId = _ref.collectionId, items = _ref.items, _ref$extraData = _ref.extraData, extraData = _ref$extraData === void 0 ? {} : _ref$extraData;
           ValidatePresence("tenantId", tenantId);
           ValidatePresence("email or address", email || address);
           ValidatePresence("collectionId", collectionId);
-          ValidatePresence("sku", sku);
+          ValidatePresence("items", items);
           ValidateObject(collectionId);
 
           if (address) {
@@ -91,14 +94,15 @@ exports.MintNFT = function _callee(_ref) {
         case 22:
           requestBody = {
             "tickets": null,
-            "products": [{
-              "sku": sku,
-              "quant": 1,
-              "extra": {
-                // NOTE: MUST BE UNIQUE IF SPECIFIED
-                "token_id": tokenId
-              }
-            }],
+            "products": items.map(function (item) {
+              return {
+                sku: item.sku,
+                quant: item.quantity || 1,
+                extra: item.tokenId ? _objectSpread({}, item.extraData || {}, {
+                  token_id: item.tokenId
+                }) : _objectSpread({}, item.extraData || {})
+              };
+            }),
             "ident": email || address,
             "cust_name": email || address,
             "extra": _objectSpread({}, extraData)
