@@ -76,8 +76,8 @@ class ElvClient {
         `Debug Logging Enabled:
         Content Space: ${this.contentSpaceId}
         Fabric URLs: [\n\t\t${this.fabricURIs.join(", \n\t\t")}\n\t]
-        Ethereum URLs: [\\n\\t\\t${this.ethereumURIs.join(", \n\t\t")}\\n\\t]
-        Auth Service URLs: [\\n\\t\\t${this.authServiceURIs.join(", \n\t\t")}\\n\\t]
+        Ethereum URLs: [\n\t\t${this.ethereumURIs.join(", \n\t\t")}\n\t]
+        Auth Service URLs: [\n\t\t${this.authServiceURIs.join(", \n\t\t")}\n\t]
         `
       );
     }

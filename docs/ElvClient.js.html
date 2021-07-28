@@ -52,14 +52,14 @@
     <div class="main">
       <div class="header"></div>
       <div class="main-content">
-        
+
         <h1 class="page-title">
           ElvClient.js
         </h1>
-        
 
-        
-      
+
+
+
 
 <a class="button" href="ElvClient.html">Back</a>
 <div class="source-container">
@@ -141,8 +141,8 @@ class ElvClient {
         `Debug Logging Enabled:
         Content Space: ${this.contentSpaceId}
         Fabric URLs: [\n\t\t${this.fabricURIs.join(", \n\t\t")}\n\t]
-        Ethereum URLs: [\\n\\t\\t${this.ethereumURIs.join(", \n\t\t")}\\n\\t]
-        Auth Service URLs: [\\n\\t\\t${this.authServiceURIs.join(", \n\t\t")}\\n\\t]
+        Ethereum URLs: [\n\t\t${this.ethereumURIs.join(", \n\t\t")}\n\t]
+        Auth Service URLs: [\n\t\t${this.authServiceURIs.join(", \n\t\t")}\n\t]
         `
       );
     }
@@ -814,7 +814,7 @@ class ElvClient {
     const signature = await this.authClient.Sign(Ethers.utils.keccak256(compressedToken));
 
     return `aessjc${this.utils.B58(Buffer.concat([
-      Buffer.from(signature.replace(/^0x/, ""), "hex"), 
+      Buffer.from(signature.replace(/^0x/, ""), "hex"),
       Buffer.from(compressedToken)
     ]))}`;
   }
@@ -1120,7 +1120,7 @@ exports.ElvClient = ElvClient;
 </code></pre>
 </div>
 
-    
+
 
 
 

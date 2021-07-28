@@ -13,7 +13,7 @@ const Client = require("./lib/concerns/Client");
 const ExistObj = require("./lib/concerns/ExistObj");
 const Metadata = require("./lib/concerns/Metadata");
 
-class ChannelStartLiveOffering extends Utility {
+class ChannelStartVaLOffering extends Utility {
   blueprint() {
     return {
       concerns: [Client, ExistObj, Metadata],
@@ -99,7 +99,7 @@ class ChannelStartLiveOffering extends Utility {
             live_end_tol: liveEndTol,
             live_seg_count: liveSegCount,
             live_start_time: startTimeISO,
-            playout_type: "ch_live"
+            playout_type: "ch_val"
           }
         }
       }
@@ -205,7 +205,7 @@ class ChannelStartLiveOffering extends Utility {
 }
 
 if(require.main === module) {
-  Utility.cmdLineInvoke(ChannelStartLiveOffering);
+  Utility.cmdLineInvoke(ChannelStartVaLOffering);
 } else {
-  module.exports = ChannelStartLiveOffering;
+  module.exports = ChannelStartVaLOffering;
 }
