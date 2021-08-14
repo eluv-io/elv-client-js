@@ -606,21 +606,24 @@ function () {
      *
      * @methodGroup Signers
      * @namedParams
-     * @param {string} token - OAuth ID token
+     * @param {string=} idToken - OAuth ID token
+     * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
      */
 
   }, {
     key: "SetRemoteSigner",
     value: function SetRemoteSigner(_ref9) {
-      var token, signer;
+      var idToken, authToken, address, signer;
       return _regeneratorRuntime.async(function SetRemoteSigner$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              token = _ref9.token;
+              idToken = _ref9.idToken, authToken = _ref9.authToken, address = _ref9.address;
               signer = new RemoteSigner({
                 rpcUris: this.authServiceURIs,
-                idToken: token,
+                idToken: idToken,
+                authToken: authToken,
+                address: address,
                 provider: this.ethClient.provider
               });
               _context6.next = 4;
