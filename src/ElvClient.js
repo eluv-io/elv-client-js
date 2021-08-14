@@ -587,12 +587,15 @@ class ElvClient {
    *
    * @methodGroup Signers
    * @namedParams
-   * @param {string} token - OAuth ID token
+   * @param {string=} idToken - OAuth ID token
+   * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
    */
-  async SetRemoteSigner({token}) {
+  async SetRemoteSigner({idToken, authToken, address}) {
     const signer = new RemoteSigner({
       rpcUris: this.authServiceURIs,
-      idToken: token,
+      idToken,
+      authToken,
+      address,
       provider: this.ethClient.provider
     });
 
