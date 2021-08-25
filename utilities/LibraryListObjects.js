@@ -5,6 +5,9 @@ const R = require("ramda");
 const {ModOpt, NewOpt} = require("./lib/options");
 const Utility = require("./lib/Utility");
 
+
+const {PublicMetadataPathArrayModel} = require("./lib/models/PublicMetadataPath");
+
 const JSON = require("./lib/concerns/JSON");
 const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
 const Metadata = require("./lib/concerns/Metadata");
@@ -23,6 +26,12 @@ class LibraryListObjects extends Utility {
         NewOpt("date", {
           descTemplate: "include latest commit date/time if available",
           type: "boolean"
+        }),
+        NewOpt("fields", {
+          coerce: PublicMetadataPathArrayModel,
+          descTemplate: "Path(s) for additional metadata values to include (each must start with /public/)",
+          string: true,
+          type: "array"
         }),
         NewOpt("hash", {
           descTemplate: "include latest version hash",
@@ -44,10 +53,12 @@ class LibraryListObjects extends Utility {
     const logger = this.logger;
     const filter = this.args.filter && this.concerns.JSON.parseStringOrFile({strOrPath: this.args.filter});
 
+    const select = ["/public/name", ...this.args.fields];
+
     const objectList = await this.concerns.ArgLibraryId.libObjectList(
       {
         filterOptions: {
-          select: ["/public/name"],
+          select,
           filter
         }
       }
@@ -63,6 +74,17 @@ class LibraryListObjects extends Utility {
       const formattedObj = {object_id: e.objectId};
       if(this.args.hash) formattedObj.latest_hash = e.latestHash;
       if(this.args.name) formattedObj.name = R.path(["metadata", "public", "name"], e);
+
+      // get additional fields if requested
+      if(this.args.fields.length > 0) {
+        for(let j = 0; j < this.args.fields.length; j++) {
+          const metaPath = this.args.fields[j].split("/").slice(1);
+          // remove 'public' from start of label
+          const label = metaPath.slice(1).join("/");
+          formattedObj[label] = R.path(["metadata", ...metaPath], e);
+        }
+      }
+
       if(this.args.date) {
         const commitInfo = await this.concerns.Metadata.commitInfo({
           libraryId,
