@@ -103,30 +103,30 @@ exports.MintNFT = async function({tenantId, email, address, collectionId, items,
 
   ValidateObject(collectionId);
 
-  if(!address) {
-    // If address not specified, make call to initialize address for email
-    const accountInitializationBody = {
-      ts: Date.now(),
-      email
-    };
-
-    const accountInitializationSignature = await this.Sign(
-      JSON.stringify(accountInitializationBody)
-    );
-
-    const {addr} = await this.utils.ResponseToJson(
-      await this.authClient.MakeAuthServiceRequest({
-        method: "POST",
-        path: `/as/tnt/prov/eth/${tenantId}`,
-        body: accountInitializationBody,
-        headers: {
-          "Authorization": `Bearer ${accountInitializationSignature}`
-        }
-      })
-    );
-
-    address = this.utils.FormatAddress(addr);
+  // If address not specified, make call to initialize address for email
+  let accountInitializationBody = { ts: Date.now() };
+  if(email) {
+    accountInitializationBody.email = email;
+  } else {
+    accountInitializationBody.addr = address;
   }
+
+  const accountInitializationSignature = await this.Sign(
+    JSON.stringify(accountInitializationBody)
+  );
+
+  const {addr} = await this.utils.ResponseToJson(
+    await this.authClient.MakeAuthServiceRequest({
+      method: "POST",
+      path: `/as/tnt/prov/eth/${tenantId}`,
+      body: accountInitializationBody,
+      headers: {
+        "Authorization": `Bearer ${accountInitializationSignature}`
+      }
+    })
+  );
+
+  address = this.utils.FormatAddress(addr);
 
   let requestBody = {
     "tickets": null,
@@ -144,10 +144,13 @@ exports.MintNFT = async function({tenantId, email, address, collectionId, items,
     }
   };
 
+
   ValidateAddress(address);
 
   if(email) {
     requestBody.email = email;
+  } else {
+    requestBody.addr = address;
   }
 
   requestBody.extra.elv_addr = address;

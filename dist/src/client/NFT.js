@@ -51,18 +51,18 @@ exports.MintNFT = function _callee(_ref) {
           ValidatePresence("email or address", email || address);
           ValidatePresence("collectionId", collectionId);
           ValidatePresence("items", items);
-          ValidateObject(collectionId);
+          ValidateObject(collectionId); // If address not specified, make call to initialize address for email
 
-          if (address) {
-            _context.next = 22;
-            break;
+          accountInitializationBody = {
+            ts: Date.now()
+          };
+
+          if (email) {
+            accountInitializationBody.email = email;
+          } else {
+            accountInitializationBody.addr = address;
           }
 
-          // If address not specified, make call to initialize address for email
-          accountInitializationBody = {
-            ts: Date.now(),
-            email: email
-          };
           _context.next = 10;
           return _regeneratorRuntime.awrap(this.Sign(JSON.stringify(accountInitializationBody)));
 
@@ -90,8 +90,6 @@ exports.MintNFT = function _callee(_ref) {
           _ref2 = _context.sent;
           addr = _ref2.addr;
           address = this.utils.FormatAddress(addr);
-
-        case 22:
           requestBody = {
             "tickets": null,
             "products": items.map(function (item) {
@@ -111,6 +109,8 @@ exports.MintNFT = function _callee(_ref) {
 
           if (email) {
             requestBody.email = email;
+          } else {
+            requestBody.addr = address;
           }
 
           requestBody.extra.elv_addr = address;
