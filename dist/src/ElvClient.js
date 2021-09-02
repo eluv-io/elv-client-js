@@ -98,7 +98,7 @@ function () {
       [this, this.authClient, this.ethClient, this.HttpClient, this.userProfileClient].forEach(setDebug);
 
       if (enable) {
-        this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\\n\\t\\t").concat(this.ethereumURIs.join(", \n\t\t"), "\\n\\t]\n        Auth Service URLs: [\\n\\t\\t").concat(this.authServiceURIs.join(", \n\t\t"), "\\n\\t]\n        "));
+        this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\n\t\t").concat(this.ethereumURIs.join(", \n\t\t"), "\n\t]\n        Auth Service URLs: [\n\t\t").concat(this.authServiceURIs.join(", \n\t\t"), "\n\t]\n        "));
       }
     }
   }, {
