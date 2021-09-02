@@ -14,6 +14,8 @@ class RemoteSigner extends Ethers.Signer {
   }) {
     super();
 
+    this.remoteSigner = true;
+
     this.HttpClient = new HttpClient({uris: rpcUris});
     this.idToken = idToken;
     this.tenantId = tenantId;

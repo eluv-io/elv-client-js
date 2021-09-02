@@ -38,6 +38,7 @@ function (_Ethers$Signer) {
     _classCallCheck(this, RemoteSigner);
 
     _this = _possibleConstructorReturn(this, _getPrototypeOf(RemoteSigner).call(this));
+    _this.remoteSigner = true;
     _this.HttpClient = new HttpClient({
       uris: rpcUris
     });

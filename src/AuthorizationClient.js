@@ -134,6 +134,12 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
+      if(this.client.signer && this.client.signer.remoteSigner && channelAuth) {
+        // Channel auth not supported for remote signer, use a self-signed no-auth token instead
+        noAuth = true;
+        channelAuth = false;
+      }
+
       let authorizationToken;
       if(channelAuth) {
         authorizationToken = await this.GenerateChannelContentToken({
