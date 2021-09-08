@@ -1092,6 +1092,15 @@ function () {
       this.staticToken = token;
     }
     /**
+     * Clear the set static token for the client
+     */
+
+  }, {
+    key: "ClearStaticToken",
+    value: function ClearStaticToken() {
+      this.staticToken = undefined;
+    }
+    /**
      * Authorize the client against the specified policy.
      *
      * NOTE: After authorizing, the client will only be able to access content allowed by the policy
