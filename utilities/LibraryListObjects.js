@@ -53,6 +53,8 @@ class LibraryListObjects extends Utility {
     const logger = this.logger;
     const filter = this.args.filter && this.concerns.JSON.parseStringOrFile({strOrPath: this.args.filter});
 
+    if(!this.args.fields) this.args.fields = [];
+
     const select = ["/public/name", ...this.args.fields];
 
     const objectList = await this.concerns.ArgLibraryId.libObjectList(
