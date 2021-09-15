@@ -147,8 +147,8 @@ class ChannelCreate extends Utility {
           live_end_tol: 60,
           live_seg_count: 60,
           playout: {
-            playout_formats: firstPoFormats,
-            streams: firstPoStreams
+            playout_formats: itemOfferings[0].playout.playout_formats,
+            streams: itemOfferings[0].playout.streams
           },
           playout_type: (val ? "ch_val" : "ch_vod")
         }
