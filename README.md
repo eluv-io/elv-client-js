@@ -52,7 +52,7 @@ Initializing the client is as simple as pointing it at the appropriate Eluvio co
 
 ```javascript
 const client = await ElvClient.FromConfigurationUrl({
-  configUrl: "https://main.net955304.contentfabric.io/config"
+  configUrl: "https://main.net955305.contentfabric.io/config"
 });
 ```
 
