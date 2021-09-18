@@ -62,7 +62,7 @@ For the demo net:
 
 ```javascript
 const client = await ElvClient.FromConfigurationUrl({
-  configUrl: "https://demov3.net955310.contentfabric.io/config"
+  configUrl: "https://demov3.net955210.contentfabric.io/config"
 });
 ```
 
