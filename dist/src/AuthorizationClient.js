@@ -178,12 +178,18 @@ function () {
                 this.noCache = true;
               }
 
+              if (this.client.signer && this.client.signer.remoteSigner) {
+                // Channel auth not supported for remote signer, use a self-signed no-auth token instead
+                noAuth = true;
+                channelAuth = false;
+              }
+
               if (!channelAuth) {
-                _context2.next = 22;
+                _context2.next = 23;
                 break;
               }
 
-              _context2.next = 19;
+              _context2.next = 20;
               return _regeneratorRuntime.awrap(this.GenerateChannelContentToken({
                 objectId: objectId,
                 versionHash: versionHash,
@@ -192,13 +198,13 @@ function () {
                 oauthToken: oauthToken
               }));
 
-            case 19:
+            case 20:
               authorizationToken = _context2.sent;
-              _context2.next = 25;
+              _context2.next = 26;
               break;
 
-            case 22:
-              _context2.next = 24;
+            case 23:
+              _context2.next = 25;
               return _regeneratorRuntime.awrap(this.GenerateAuthorizationToken({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -209,28 +215,28 @@ function () {
                 noAuth: noAuth
               }));
 
-            case 24:
+            case 25:
               authorizationToken = _context2.sent;
 
-            case 25:
+            case 26:
               return _context2.abrupt("return", authorizationToken);
 
-            case 28:
-              _context2.prev = 28;
+            case 29:
+              _context2.prev = 29;
               _context2.t4 = _context2["catch"](14);
               throw _context2.t4;
 
-            case 31:
-              _context2.prev = 31;
+            case 32:
+              _context2.prev = 32;
               this.noCache = initialNoCache;
-              return _context2.finish(31);
+              return _context2.finish(32);
 
-            case 34:
+            case 35:
             case "end":
               return _context2.stop();
           }
         }
-      }, null, this, [[14, 28, 31, 34]]);
+      }, null, this, [[14, 29, 32, 35]]);
     }
   }, {
     key: "GenerateAuthorizationToken",

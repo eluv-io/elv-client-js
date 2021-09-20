@@ -126,6 +126,7 @@ class EthClient {
       await this.provider.getNetwork();
 
       this.Log(`ETH ${provider.connection.url} ${methodName} [${args.join(", ")}]`);
+
       return await provider[methodName](...args);
     } catch(error) {
       // eslint-disable-next-line no-console
