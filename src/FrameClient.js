@@ -288,6 +288,7 @@ class FrameClient {
       "CallContractMethod",
       "CallContractMethodAndWait",
       "ClearCache",
+      "ClearStaticToken",
       "Collection",
       "ConfigUrl",
       "ContentLibraries",

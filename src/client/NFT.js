@@ -13,7 +13,7 @@ const {
 } = require("../Validation");
 
 /**
- * Mint an NFT for the specified user
+ * Mint NFTs for the specified user
  *
  * @methodGroup Minting
  * @namedParams
@@ -21,56 +21,57 @@ const {
  * @param {string=} email - The email of the NFT recipient
  * @param {string=} address - The address of the NFT recipient
  * @param {string} collectionId - The ID of the NFT collection containing the NFT
- * @param {string} sku - The SKU of the NFT to mint
- * @param {string=} tokenId - Custom token ID for this NFT (must be unique)
+ * @param {Array<Object>} items - List of items
+ * @param {string} items.sku - SKU of the NFT
+ * @param {number=} items.quantity=1 - Number to mint
+ * @param {(string | Array<string>)=} items.tokenId - Custom token IDs for these items (must be unique).
+ * @param {Object=} items.extraData={} - Additional data to put in the transaction
  * @param {Object=} extraData={} - Additional data to put in the transaction
  *
  * @return Promise<Object> - An object containing the address for whom the NFT was minted and the transactionId of the minting request.
  */
-exports.MintNFT = async function({tenantId, email, address, collectionId, sku, tokenId, extraData={}}) {
+exports.MintNFT = async function({tenantId, email, address, collectionId, items, extraData={}}) {
   ValidatePresence("tenantId", tenantId);
   ValidatePresence("email or address", email || address);
   ValidatePresence("collectionId", collectionId);
-  ValidatePresence("sku", sku);
+  ValidatePresence("items", items);
+
   ValidateObject(collectionId);
 
-  if(!address) {
-    // If address not specified, make call to initialize address for email
-    const accountInitializationBody = {
-      ts: Date.now(),
-      email
-    };
-
-    const accountInitializationSignature = await this.Sign(
-      JSON.stringify(accountInitializationBody)
-    );
-
-    const {addr} = await this.utils.ResponseToJson(
-      await this.authClient.MakeAuthServiceRequest({
-        method: "POST",
-        path: `/as/tnt/prov/eth/${tenantId}`,
-        body: accountInitializationBody,
-        headers: {
-          "Authorization": `Bearer ${accountInitializationSignature}`
-        }
-      })
-    );
-
-    address = this.utils.FormatAddress(addr);
+  // If address not specified, make call to initialize address for email
+  let accountInitializationBody = { ts: Date.now() };
+  if(email) {
+    accountInitializationBody.email = email;
+  } else {
+    accountInitializationBody.addr = address;
   }
+
+  const accountInitializationSignature = await this.Sign(
+    JSON.stringify(accountInitializationBody)
+  );
+
+  const {addr} = await this.utils.ResponseToJson(
+    await this.authClient.MakeAuthServiceRequest({
+      method: "POST",
+      path: `/as/tnt/prov/eth/${tenantId}`,
+      body: accountInitializationBody,
+      headers: {
+        "Authorization": `Bearer ${accountInitializationSignature}`
+      }
+    })
+  );
+
+  address = this.utils.FormatAddress(addr);
 
   let requestBody = {
     "tickets": null,
-    "products": [
-      {
-        "sku": sku,
-        "quant": 1,
-        "extra":{
-          // NOTE: MUST BE UNIQUE IF SPECIFIED
-          "token_id": tokenId
-        }
-      }
-    ],
+    "products": items.map(item => ({
+      sku: item.sku,
+      quant: item.quantity || 1,
+      extra: item.tokenId ?
+        { ...(item.extraData || {}), token_id: item.tokenId } :
+        { ...(item.extraData || {}) }
+    })),
     "ident": email || address,
     "cust_name": email || address,
     "extra": {
@@ -78,10 +79,13 @@ exports.MintNFT = async function({tenantId, email, address, collectionId, sku, t
     }
   };
 
+
   ValidateAddress(address);
 
   if(email) {
     requestBody.email = email;
+  } else {
+    requestBody.addr = address;
   }
 
   requestBody.extra.elv_addr = address;

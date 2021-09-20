@@ -98,7 +98,7 @@ function () {
       [this, this.authClient, this.ethClient, this.HttpClient, this.userProfileClient].forEach(setDebug);
 
       if (enable) {
-        this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\\n\\t\\t").concat(this.ethereumURIs.join(", \n\t\t"), "\\n\\t]\n        Auth Service URLs: [\\n\\t\\t").concat(this.authServiceURIs.join(", \n\t\t"), "\\n\\t]\n        "));
+        this.Log("Debug Logging Enabled:\n        Content Space: ".concat(this.contentSpaceId, "\n        Fabric URLs: [\n\t\t").concat(this.fabricURIs.join(", \n\t\t"), "\n\t]\n        Ethereum URLs: [\n\t\t").concat(this.ethereumURIs.join(", \n\t\t"), "\n\t]\n        Auth Service URLs: [\n\t\t").concat(this.authServiceURIs.join(", \n\t\t"), "\n\t]\n        "));
       }
     }
   }, {
@@ -261,6 +261,7 @@ function () {
               this.contentTypes = {};
               this.encryptionConks = {};
               this.stateChannelAccess = {};
+              this.objectTenantIds = {};
               this.objectLibraryIds = {};
               this.objectImageUrls = {};
               this.visibilityInfo = {};
@@ -311,7 +312,7 @@ function () {
               this.Crypto = Crypto;
               this.Crypto.ElvCrypto();
 
-            case 16:
+            case 17:
             case "end":
               return _context2.stop();
           }
@@ -606,21 +607,26 @@ function () {
      *
      * @methodGroup Signers
      * @namedParams
-     * @param {string} token - OAuth ID token
+     * @param {string=} idToken - OAuth ID token
+     * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
+     * @param {string=} tenantId - If specified, user will be associated with the tenant
      */
 
   }, {
     key: "SetRemoteSigner",
     value: function SetRemoteSigner(_ref9) {
-      var token, signer;
+      var idToken, authToken, tenantId, address, signer;
       return _regeneratorRuntime.async(function SetRemoteSigner$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              token = _ref9.token;
+              idToken = _ref9.idToken, authToken = _ref9.authToken, tenantId = _ref9.tenantId, address = _ref9.address;
               signer = new RemoteSigner({
                 rpcUris: this.authServiceURIs,
-                idToken: token,
+                idToken: idToken,
+                authToken: authToken,
+                tenantId: tenantId,
+                address: address,
                 provider: this.ethClient.provider
               });
               _context6.next = 4;
@@ -1087,6 +1093,15 @@ function () {
       }
 
       this.staticToken = token;
+    }
+    /**
+     * Clear the set static token for the client
+     */
+
+  }, {
+    key: "ClearStaticToken",
+    value: function ClearStaticToken() {
+      this.staticToken = undefined;
     }
     /**
      * Authorize the client against the specified policy.

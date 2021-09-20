@@ -7,54 +7,45 @@ class RemoteSigner extends Ethers.Signer {
   constructor({
     rpcUris,
     idToken,
+    authToken,
+    address,
+    tenantId,
     provider
   }) {
     super();
 
+    this.remoteSigner = true;
+
     this.HttpClient = new HttpClient({uris: rpcUris});
     this.idToken = idToken;
+    this.tenantId = tenantId;
+
+    this.authToken = authToken;
+    this.address = address ? Utils.FormatAddress(address) : undefined;
+    this.id = this.address ? `ikms${Utils.AddressToHash(this.address)}` : undefined;
 
     this.provider = provider;
   }
 
   async Initialize() {
-    let accounts = await this.Accounts();
+    if(!this.authToken) {
+      const {addr, eth, token} = await Utils.ResponseToJson(
+        this.HttpClient.Request({
+          path: UrlJoin("as", "wlt", "login", "jwt"),
+          method: "POST",
+          body: this.tenantId ? {tid: this.tenantId} : {},
+          headers: {
+            Authorization: `Bearer ${this.idToken}`
+          }
+        })
+      );
 
-    if(!accounts || accounts.length === 0) {
-      await this.CreateAccount();
-      accounts = await this.Accounts();
+      this.authToken = token;
+      this.address = Utils.FormatAddress(addr);
+      this.id = eth;
     }
 
-    this.id = accounts[0];
-    this.address = Utils.HashToAddress(this.id);
-
     this.signer = this.provider.getSigner(this.address);
-  }
-
-  async CreateAccount() {
-    return await this.HttpClient.Request({
-      path: UrlJoin("as", "jwt", "generate", "eth"),
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.idToken}`
-      }
-    });
-  }
-
-  /**
-   * Get fabric IDs sorted by network.
-   * @returns {object} - returns object of networks with the ikms (fabric) IDs associated with the oauth key
-   */
-  async Accounts() {
-    return ((await Utils.ResponseToJson(
-      this.HttpClient.Request({
-        path: UrlJoin("as", "jwt", "keys"),
-        headers: {
-          Authorization: `Bearer ${this.idToken}`,
-          "Cache-Control": "no-cache",
-        }
-      })
-    )).eth || []).sort();
   }
 
   // Overrides
@@ -72,9 +63,9 @@ class RemoteSigner extends Ethers.Signer {
     let signature = await Utils.ResponseToJson(
       this.HttpClient.Request({
         method: "POST",
-        path: UrlJoin("as", "jwt", "sign", "eth", this.id),
+        path: UrlJoin("as", "wlt", "sign", "eth", this.id),
         headers: {
-          Authorization: `Bearer ${this.idToken}`
+          Authorization: `Bearer ${this.authToken}`
         },
         body: {
           hash: digest

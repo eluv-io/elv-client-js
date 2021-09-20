@@ -617,6 +617,35 @@ exports.ContentObjectOwner = async function({objectId}) {
 };
 
 /**
+ * Retrieve the tenant ID associated with the specified content object
+ *
+ * @methodGroup Content Objects
+ *
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise<string>} - Tenant ID of the object
+ */
+exports.ContentObjectTenantId = async function({objectId, versionHash}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  if(!this.objectTenantIds[objectId]) {
+    this.objectTenantIds[objectId] = await this.authClient.MakeElvMasterCall({
+      methodName: "elv_getTenantById",
+      params: [
+        this.contentSpaceId,
+        objectId
+      ]
+    });
+  }
+
+  return this.objectTenantIds[objectId];
+};
+
+/**
  * Retrieve the library ID for the specified content object
  *
  * @methodGroup Content Objects
@@ -1187,7 +1216,7 @@ exports.PlayoutPathResolution = async function({
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
- * @param {boolean=} signedLink - Specify if linkPath is pointing directly to the offerings endpoint
+ * @param {boolean=} directLink - Specify if linkPath is pointing directly to the offerings endpoint
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  *
@@ -1213,7 +1242,8 @@ exports.AvailableOfferings = async function({
       objectId,
       versionHash,
       metadataSubtree: linkPath,
-      resolveLinks: true
+      resolveLinks: true,
+      authorizationToken
     });
   }
 
@@ -1223,7 +1253,8 @@ exports.AvailableOfferings = async function({
     writeToken,
     linkPath,
     signedLink,
-    handler
+    handler,
+    authorizationToken
   });
 
   try {

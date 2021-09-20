@@ -76,8 +76,8 @@ class ElvClient {
         `Debug Logging Enabled:
         Content Space: ${this.contentSpaceId}
         Fabric URLs: [\n\t\t${this.fabricURIs.join(", \n\t\t")}\n\t]
-        Ethereum URLs: [\\n\\t\\t${this.ethereumURIs.join(", \n\t\t")}\\n\\t]
-        Auth Service URLs: [\\n\\t\\t${this.authServiceURIs.join(", \n\t\t")}\\n\\t]
+        Ethereum URLs: [\n\t\t${this.ethereumURIs.join(", \n\t\t")}\n\t]
+        Auth Service URLs: [\n\t\t${this.authServiceURIs.join(", \n\t\t")}\n\t]
         `
       );
     }
@@ -349,6 +349,7 @@ class ElvClient {
     this.contentTypes = {};
     this.encryptionConks = {};
     this.stateChannelAccess = {};
+    this.objectTenantIds = {};
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
     this.visibilityInfo = {};
@@ -587,12 +588,17 @@ class ElvClient {
    *
    * @methodGroup Signers
    * @namedParams
-   * @param {string} token - OAuth ID token
+   * @param {string=} idToken - OAuth ID token
+   * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
+   * @param {string=} tenantId - If specified, user will be associated with the tenant
    */
-  async SetRemoteSigner({token}) {
+  async SetRemoteSigner({idToken, authToken, tenantId, address}) {
     const signer = new RemoteSigner({
       rpcUris: this.authServiceURIs,
-      idToken: token,
+      idToken,
+      authToken,
+      tenantId,
+      address,
       provider: this.ethClient.provider
     });
 
@@ -859,6 +865,13 @@ class ElvClient {
     }
 
     this.staticToken = token;
+  }
+
+  /**
+   * Clear the set static token for the client
+   */
+  ClearStaticToken() {
+    this.staticToken = undefined;
   }
 
   /**

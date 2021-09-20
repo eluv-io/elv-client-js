@@ -1,6 +1,6 @@
 {
   "name": "@eluvio/elv-client-js",
-  "version": "3.1.60",
+  "version": "3.1.67",
   "description": "Javascript client for the Eluvio Content Fabric",
   "main": "src/ElvClient.js",
   "author": "Kevin Talmadge",
@@ -45,6 +45,7 @@
     "/contracts",
     "/src",
     "/testScripts",
+    "/typeSpecs",
     "/utilities",
     "TestConfiguration.json",
     "LICENSE",
@@ -64,6 +65,7 @@
     "buffer": "^5.2.1",
     "cbor": "^4.1.5",
     "columnify": "^1.5.4",
+    "country-codes-list": "^1.6.8",
     "crocks": "^0.12.4",
     "deep-equal": "^1.0.1",
     "ellipsize": "^0.1.0",
