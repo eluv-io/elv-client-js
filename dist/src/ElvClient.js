@@ -261,6 +261,7 @@ function () {
               this.contentTypes = {};
               this.encryptionConks = {};
               this.stateChannelAccess = {};
+              this.objectTenantIds = {};
               this.objectLibraryIds = {};
               this.objectImageUrls = {};
               this.visibilityInfo = {};
@@ -311,7 +312,7 @@ function () {
               this.Crypto = Crypto;
               this.Crypto.ElvCrypto();
 
-            case 16:
+            case 17:
             case "end":
               return _context2.stop();
           }
@@ -608,21 +609,23 @@ function () {
      * @namedParams
      * @param {string=} idToken - OAuth ID token
      * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
+     * @param {string=} tenantId - If specified, user will be associated with the tenant
      */
 
   }, {
     key: "SetRemoteSigner",
     value: function SetRemoteSigner(_ref9) {
-      var idToken, authToken, address, signer;
+      var idToken, authToken, tenantId, address, signer;
       return _regeneratorRuntime.async(function SetRemoteSigner$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              idToken = _ref9.idToken, authToken = _ref9.authToken, address = _ref9.address;
+              idToken = _ref9.idToken, authToken = _ref9.authToken, tenantId = _ref9.tenantId, address = _ref9.address;
               signer = new RemoteSigner({
                 rpcUris: this.authServiceURIs,
                 idToken: idToken,
                 authToken: authToken,
+                tenantId: tenantId,
                 address: address,
                 provider: this.ethClient.provider
               });

@@ -349,6 +349,7 @@ class ElvClient {
     this.contentTypes = {};
     this.encryptionConks = {};
     this.stateChannelAccess = {};
+    this.objectTenantIds = {};
     this.objectLibraryIds = {};
     this.objectImageUrls = {};
     this.visibilityInfo = {};
@@ -589,12 +590,14 @@ class ElvClient {
    * @namedParams
    * @param {string=} idToken - OAuth ID token
    * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
+   * @param {string=} tenantId - If specified, user will be associated with the tenant
    */
-  async SetRemoteSigner({idToken, authToken, address}) {
+  async SetRemoteSigner({idToken, authToken, tenantId, address}) {
     const signer = new RemoteSigner({
       rpcUris: this.authServiceURIs,
       idToken,
       authToken,
+      tenantId,
       address,
       provider: this.ethClient.provider
     });
