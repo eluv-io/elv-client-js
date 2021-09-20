@@ -14,6 +14,15 @@ const reportTypes = [
   "Views Over Program Duration"
 ];
 
+const liveTypes = [
+  { name: "Eluvio LIVE Drop Event Site", spec: require("../typeSpecs/DropEventSite") },
+  { name: "Eluvio LIVE Event Site", spec: require("../typeSpecs/EventSite") },
+  { name: "Eluvio LIVE Marketplace", spec: require("../typeSpecs/Marketplace") },
+  { name: "Eluvio LIVE Tenant", spec: require("../typeSpecs/EventTenant") },
+  { name: "NFT Collection", spec: require("../typeSpecs/NFTCollection") },
+  { name: "NFT Template", spec: require("../typeSpecs/NFTTemplate") }
+];
+
 const STANDARD_DRM_CERT={
   elv: {
     media: {
@@ -63,12 +72,17 @@ const SetLibraryPermissions = async (client, libraryId, tenantAdmins, contentAdm
 const SetObjectPermissions = async (client, objectId, tenantAdmins, contentAdmins, contentUsers) => {
   let promises = [
     // Tenant admins
+    client.AddContentObjectGroupPermission({objectId, groupAddress: tenantAdmins, permission: "see"}),
+    client.AddContentObjectGroupPermission({objectId, groupAddress: tenantAdmins, permission: "access"}),
     client.AddContentObjectGroupPermission({objectId, groupAddress: tenantAdmins, permission: "manage"}),
 
     // Content admins
+    client.AddContentObjectGroupPermission({objectId, groupAddress: contentAdmins, permission: "see"}),
+    client.AddContentObjectGroupPermission({objectId, groupAddress: contentAdmins, permission: "access"}),
     client.AddContentObjectGroupPermission({objectId, groupAddress: contentAdmins, permission: "manage"}),
 
     // Content users
+    client.AddContentObjectGroupPermission({objectId, groupAddress: contentUsers, permission: "see"}),
     client.AddContentObjectGroupPermission({objectId, groupAddress: contentUsers, permission: "access"})
   ];
 
@@ -241,7 +255,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
                 "playlists",
                 "gallery",
                 "live_stream"
-              ],
+              ]
             }
           }
         }
@@ -257,6 +271,23 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     console.log(`\t${tenantName} - Permissions: ${permissionsTypeId}`);
     console.log(`\t${tenantName} - Channel: ${channelTypeId}`);
     console.log(`\t${tenantName} - Live Stream: ${streamTypeId}`);
+
+    for(let i = 0; i < liveTypes.length; i++) {
+      const typeId = await client.CreateContentType({
+        name: `${tenantName} - ${liveTypes[i].name}`,
+        metadata: {
+          ...typeMetadata,
+          public: {
+            ...typeMetadata.public,
+            title_configuration: liveTypes[i].spec
+          }
+        }
+      });
+
+      await SetObjectPermissions(client, typeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
+
+      console.log(`\t${tenantName} - ${liveTypes[i].name}: ${typeId}`);
+    }
 
 
     /* Create libraries - Properties, Title Masters, Title Mezzanines and add each to the groups */

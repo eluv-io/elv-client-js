@@ -617,6 +617,35 @@ exports.ContentObjectOwner = async function({objectId}) {
 };
 
 /**
+ * Retrieve the tenant ID associated with the specified content object
+ *
+ * @methodGroup Content Objects
+ *
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise<string>} - Tenant ID of the object
+ */
+exports.ContentObjectTenantId = async function({objectId, versionHash}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  if(!this.objectTenantIds[objectId]) {
+    this.objectTenantIds[objectId] = await this.authClient.MakeElvMasterCall({
+      methodName: "elv_getTenantById",
+      params: [
+        this.contentSpaceId,
+        objectId
+      ]
+    });
+  }
+
+  return this.objectTenantIds[objectId];
+};
+
+/**
  * Retrieve the library ID for the specified content object
  *
  * @methodGroup Content Objects
