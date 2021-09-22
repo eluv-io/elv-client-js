@@ -244,6 +244,10 @@ class OfferingAddCaptionStream extends ScriptOffering {
         describe: "Path to VTT file containing captions",
         type: "string"
       })
+      .option("forced", {
+        describe: "Flag captions as forced subtitles",
+        type: "boolean"
+      })
       .option("label", {
         demandOption: true,
         describe: "Label to display for caption stream",
