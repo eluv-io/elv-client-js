@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const { ElvClient } = require("../src/ElvClient");
+const {ElvClient} = require("../src/ElvClient");
 
 const reportTypes = [
   "Platform Percentages",
@@ -217,7 +217,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
     const permissionsTypeId = await client.CreateContentType({
       name: `${tenantName} - Permissions`,
-      metadata: {...typeMetadata, public: { "eluv.manageApp": "avails-manager" }}
+      metadata: {...typeMetadata, public: {"eluv.manageApp": "avails-manager"}}
     });
 
     await SetObjectPermissions(client, permissionsTypeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
@@ -229,7 +229,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
         public: {
           ...typeMetadata.public,
           title_configuration: {
-            "controls":[
+            "controls": [
               "credits",
               "playlists",
               "gallery",
@@ -245,18 +245,17 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     const streamTypeId = await client.CreateContentType({
       name: `${tenantName} - Live Stream`,
       metadata: {
-        metadata: {
-          ...typeMetadata,
-          public: {
-            ...typeMetadata.public,
-            title_configuration: {
-              "controls":[
-                "credits",
-                "playlists",
-                "gallery",
-                "live_stream"
-              ]
-            }
+        bitcode_flags: "playout_live",
+        bitcode_format: "builtin",
+        public: {
+          ...typeMetadata.public,
+          title_configuration: {
+            "controls":[
+              "credits",
+              "playlists",
+              "gallery",
+              "live_stream"
+            ]
           }
         }
       }
@@ -400,7 +399,11 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
       await client.SetVisibility({id, visibility: 0});
 
-      await client.AddContentObjectGroupPermission({objectId: id, groupAddress: tenantAdminGroupAddress, permission: "manage"});
+      await client.AddContentObjectGroupPermission({
+        objectId: id,
+        groupAddress: tenantAdminGroupAddress,
+        permission: "manage"
+      });
     }
 
     console.log();
