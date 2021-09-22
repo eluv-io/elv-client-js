@@ -18,13 +18,13 @@ function zeroPadLeft(value, width) {
 
 function timeStampShift(timestamp, offset) {
   const match = RE_VTT_TIMESTAMP_PARTS.exec(timestamp);
-  const shiftedSeconds = parseInt(match[2] || 0,10) * 3600 + parseInt(match[3], 10) * 60 + parseFloat(match[4]) + offset;
+  const shiftedSeconds = parseInt(match[2] || 0, 10) * 3600 + parseInt(match[3], 10) * 60 + parseFloat(match[4]) + offset;
   if(shiftedSeconds < 0) {
     throw new Error("timeShift resulted in negative timestamp");
   }
 
   const hours = Math.floor(shiftedSeconds / 3600);
-  const minutes = Math.floor((shiftedSeconds % 3600)/ 60);
+  const minutes = Math.floor((shiftedSeconds % 3600) / 60);
   const seconds = Math.floor(shiftedSeconds % 60);
   const milliseconds = Math.floor((shiftedSeconds % 1) * 1000);
   return zeroPadLeft(hours, 2) + ":" + zeroPadLeft(minutes, 2) + ":" + zeroPadLeft(seconds, 2) + "." + zeroPadLeft(milliseconds, 3);
@@ -66,6 +66,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
     const filePath = this.args.file;
     const fileName = path.basename(filePath);
     const isDefault = this.args.isDefault;
+    const forced = this.args.forced;
     const label = this.args.label;
     const language = this.args.language;
     const timeShift = this.args.timeShift;
@@ -206,6 +207,8 @@ class OfferingAddCaptionStream extends ScriptOffering {
       },
       time_base: timeBase
     };
+
+    if(forced) mediaStructStream.forced = true;
 
     // construct metadata for caption stream playout
 
