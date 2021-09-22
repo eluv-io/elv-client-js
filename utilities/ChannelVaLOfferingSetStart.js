@@ -1,7 +1,8 @@
 // convert an offering to a just-started VoD-as-Live item
 
-const kindOf = require("kind-of");
+const chrono = require("chrono-node");
 const Fraction = require("fraction.js");
+const kindOf = require("kind-of");
 const R = require("ramda");
 
 const Utility = require("./lib/Utility");
@@ -13,16 +14,22 @@ const Client = require("./lib/concerns/Client");
 const ExistObj = require("./lib/concerns/ExistObj");
 const Metadata = require("./lib/concerns/Metadata");
 
-class ChannelStartVaLOffering extends Utility {
+class ChannelVaLOfferingSetStart extends Utility {
   blueprint() {
     return {
       concerns: [Client, ExistObj, Metadata],
       options: [
         NewOpt("delay",
           {
-            default: 0,
-            descTemplate: "Number of seconds to delay start. Use a negative number to jump to middle/end of playout",
+            conflicts: "time",
+            descTemplate: "Number of seconds to delay start (from now). Use a negative number to jump to middle/end of playout",
             type: "number"
+          }),
+        NewOpt("time",
+          {
+            conflicts: "delay",
+            descTemplate: "Start time, enclosed in quotes if it contains spaces - e.g. 3pm, 'tomorrow 10am', 2021-01-01T10:00:00Z - if not specified, channel starts immediately (unless --delay is supplied).",
+            type: "string"
           }),
         NewOpt("liveEndTol",
           {
@@ -51,41 +58,55 @@ class ChannelStartVaLOffering extends Utility {
 
     // operations that need to wait on network access
     // ----------------------------------------------------
-    const {delay, libraryId, objectId, offeringKey} = await this.concerns.ExistObj.argsProc();
+    const {delay, libraryId, objectId, offeringKey, time} = await this.concerns.ExistObj.argsProc();
+
+    const now = new Date;
+
+    let startTime;
+    logger.log("");
+    if(time) {
+      startTime = chrono.parseDate(time);
+      if(startTime === null) throw Error("Failed to parse --time " + time);
+
+      logger.log(`--time '${time}' parsed as:`);
+      logger.log("  " + startTime.toString());
+      if(startTime < now) throw Error("--time must be in the future");
+
+    } else {
+      startTime = new Date(now.setSeconds(now.getSeconds() + (delay || 0)));
+      logger.log("Channel start time will be set to:");
+      logger.log("  " + startTime.toString());
+    }
+    logger.log("  (UTC: " + startTime.toISOString() + ")");
+    logger.log("");
+
+    const startTimeISO = startTime.toISOString();
 
     const client = await this.concerns.Client.get();
 
     logger.log("Retrieving existing metadata from object...");
     const currentMetadata = await this.concerns.ExistObj.metadata();
 
-    if(!currentMetadata.channel) {
-      throw Error("/channel not found in object metadata");
-    }
+    if(!currentMetadata.channel) throw Error("/channel not found in object metadata");
 
-    if(!currentMetadata.channel.offerings) {
-      throw Error("/channel/offerings not found in object metadata");
-    }
+    if(!currentMetadata.channel.offerings) throw Error("/channel/offerings not found in object metadata");
 
-    if(!currentMetadata.channel.offerings[offeringKey]) {
-      throw Error(`/channel/offerings/${offeringKey} not found in object metadata`);
-    }
+    if(!currentMetadata.channel.offerings[offeringKey]) throw Error(`/channel/offerings/${offeringKey} not found in object metadata`);
 
-    if(!currentMetadata.channel.offerings[offeringKey].items) {
-      throw Error(`/channel/offerings/${offeringKey}/items not found in object metadata`);
-    }
-    if(kindOf(currentMetadata.channel.offerings[offeringKey].items) !== "array") {
-      throw Error(`/channel/offerings/${offeringKey}/items in object metadata is not an array`);
-    }
-    if(currentMetadata.channel.offerings[offeringKey].items.length === 0) {
-      throw Error(`/channel/offerings/${offeringKey}/items in object metadata is empty`);
-    }
+    if(!currentMetadata.channel.offerings[offeringKey].items) throw Error(`/channel/offerings/${offeringKey}/items not found in object metadata`);
+
+    if(kindOf(currentMetadata.channel.offerings[offeringKey].items) !== "array") throw Error(`/channel/offerings/${offeringKey}/items in object metadata is not an array`);
+
+    if(currentMetadata.channel.offerings[offeringKey].items.length === 0) throw Error(`/channel/offerings/${offeringKey}/items in object metadata is empty`);
 
     const totalDur = currentMetadata.channel.offerings[offeringKey].items.reduce(
       (total, value) => total + Fraction(value.duration_rat).valueOf(),
       0
     );
 
-    // get item list from channel offering, get an auth token for each to include in playout URLs
+    const endTimeISO = new Date(startTime.setSeconds(startTime.getSeconds() + totalDur)).toISOString();
+
+    // get an auth token for each item to include in playout URLs
     const mezAuthTokens = [];
     const items = currentMetadata.channel.offerings[offeringKey].items;
 
@@ -111,14 +132,8 @@ class ChannelStartVaLOffering extends Utility {
       );
     }
 
-
     const liveSegCount = this.args.liveWindowSize || currentMetadata.channel.offerings[offeringKey].live_seg_count || 60;
     const liveEndTol = this.args.liveEndTolerance || currentMetadata.channel.offerings[offeringKey].live_end_tol || 300;
-
-    const now = new Date;  // ).toISOString();
-    const startTime = new Date(now.setSeconds(now.getSeconds() + delay));
-    const startTimeISO = startTime.toISOString();
-    const endTimeISO = new Date(startTime.setSeconds(startTime.getSeconds() + totalDur)).toISOString();
 
     const metadataToMerge = {
       channel: {
@@ -156,9 +171,10 @@ class ChannelStartVaLOffering extends Utility {
     logger.log();
     logger.log(`Version hash: ${versionHash}`);
     logger.log();
-    logger.log("Channel options.json URL:");
+
+    logger.log("Sample command for obtaining channel information (NOT for public distribution!)");
     logger.log();
-    logger.log(url);
+    logger.log("curl '" + url + "' | jq");
 
     const offeringUrl = await client.FabricUrl({
       libraryId,
@@ -167,9 +183,9 @@ class ChannelStartVaLOffering extends Utility {
       rep: `channel/${offeringKey}/options.json`
     });
     logger.log();
-    logger.log(`Offering '${offeringKey}' options.json URL:`);
+    logger.log("Sample command for obtaining test playout URLs (NOT for public distribution!)");
     logger.log();
-    logger.log(offeringUrl);
+    logger.log("curl '" + offeringUrl + "' | jq");
 
     // NOTE: although following line calls ElvClient.AvailableOfferings(), it is not actually
     // retrieving available offerings, it is retrieving all available playback formats for channel offering
@@ -194,7 +210,7 @@ class ChannelStartVaLOffering extends Utility {
       playoutUrl.searchParams.set("sid", sid);
 
       logger.log();
-      logger.log(`Sample playout URL for format '${playoutFormatKey}':`);
+      logger.log(`Sample test playout URL for format '${playoutFormatKey}' (NOT for public distribution!):`);
       logger.log();
       logger.log(playoutUrl.toString());
     }
@@ -234,12 +250,12 @@ class ChannelStartVaLOffering extends Utility {
   }
 
   header() {
-    return `Start playout of simulated live channel object ${this.args.objectId}${this.args.delay ? ` with ${this.args.delay} second(s) delay` : ""}`;
+    return `Set playout start time for simulated live offering '${this.args.offeringKey}' in channel object ${this.args.objectId}`;
   }
 }
 
 if(require.main === module) {
-  Utility.cmdLineInvoke(ChannelStartVaLOffering);
+  Utility.cmdLineInvoke(ChannelVaLOfferingSetStart);
 } else {
-  module.exports = ChannelStartVaLOffering;
+  module.exports = ChannelVaLOfferingSetStart;
 }
