@@ -14,6 +14,27 @@ const reportTypes = [
   "Views Over Program Duration"
 ];
 
+const liveTypes = [
+  { name: "Eluvio LIVE Drop Event Site", spec: require("../typeSpecs/DropEventSite") },
+  { name: "Eluvio LIVE Event Site", spec: require("../typeSpecs/EventSite") },
+  { name: "Eluvio LIVE Marketplace", spec: require("../typeSpecs/Marketplace") },
+  { name: "Eluvio LIVE Tenant", spec: require("../typeSpecs/EventTenant") },
+  { name: "NFT Collection", spec: require("../typeSpecs/NFTCollection") },
+  { name: "NFT Template", spec: require("../typeSpecs/NFTTemplate") }
+];
+
+const STANDARD_DRM_CERT={
+  elv: {
+    media: {
+      drm: {
+        fps: {
+          cert: "MIIExzCCA6+gAwIBAgIIHyfkXhxLHC4wDQYJKoZIhvcNAQEFBQAwfzELMAkGA1UEBhMCVVMxEzARBgNVBAoMCkFwcGxlIEluYy4xJjAkBgNVBAsMHUFwcGxlIENlcnRpZmljYXRpb24gQXV0aG9yaXR5MTMwMQYDVQQDDCpBcHBsZSBLZXkgU2VydmljZXMgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMjAwOTEyMDMzMjI0WhcNMjIwOTEzMDMzMjI0WjBgMQswCQYDVQQGEwJVUzETMBEGA1UECgwKRWx1dmlvIEluYzETMBEGA1UECwwKMktIOEtDM01NWDEnMCUGA1UEAwweRmFpclBsYXkgU3RyZWFtaW5nOiBFbHV2aW8gSW5jMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDslbBURB6gj07g7VrS7Ojixe7FNZOupomcZt+mtMvyavjg7X7/T4RccmKUQxOoMLKCJcQ6WrdHhIpN8+bciq7lr0mNzaN467zREiUNYOpkVPi13sJLieY2m2MEPOQTbIl52Cu1YyH+4/g1dKPmeguSnzZRo36jsCGHlJBjHq0jkQIDAQABo4IB6DCCAeQwDAYDVR0TAQH/BAIwADAfBgNVHSMEGDAWgBRj5EdUy4VxWUYsg6zMRDFkZwMsvjCB4gYDVR0gBIHaMIHXMIHUBgkqhkiG92NkBQEwgcYwgcMGCCsGAQUFBwICMIG2DIGzUmVsaWFuY2Ugb24gdGhpcyBjZXJ0aWZpY2F0ZSBieSBhbnkgcGFydHkgYXNzdW1lcyBhY2NlcHRhbmNlIG9mIHRoZSB0aGVuIGFwcGxpY2FibGUgc3RhbmRhcmQgdGVybXMgYW5kIGNvbmRpdGlvbnMgb2YgdXNlLCBjZXJ0aWZpY2F0ZSBwb2xpY3kgYW5kIGNlcnRpZmljYXRpb24gcHJhY3RpY2Ugc3RhdGVtZW50cy4wNQYDVR0fBC4wLDAqoCigJoYkaHR0cDovL2NybC5hcHBsZS5jb20va2V5c2VydmljZXMuY3JsMB0GA1UdDgQWBBR4jerseBHEUDC7mU+NQuIzZqHRFDAOBgNVHQ8BAf8EBAMCBSAwOAYLKoZIhvdjZAYNAQMBAf8EJgFuNnNkbHQ2OXFuc3l6eXp5bWFzdmdudGthbWd2bGE1Y212YzdpMC4GCyqGSIb3Y2QGDQEEAQH/BBwBd252bHhlbGV1Y3Vpb2JyZW4yeHZlZmV6N2Y5MA0GCSqGSIb3DQEBBQUAA4IBAQBM17YYquw0soDPAadr1aIM6iC6BQ/kOGYu3y/6AlrwYgAQNFy8DjsQUoqlQWFuA0sigp57bTUymkXEBf9yhUmXXiPafGjbxzsPF5SPFLIciolWbxRCB153L1a/Vh2wg3rhf4IvAZuJpnml6SSg5SjD19bN+gD7zrtp3yWKBKuarLSjDvVIB1SoxEToBs3glAEqoBiA2eZjikBA0aBlbvjUF2gqOmZjZJ7dmG1Tos2Zd4SdGL6ltSpKUeSGSxyv41aqF83vNpymNJmey2t2kPPtC7mt0LM32Ift3AkAl8Za9JbV/pOnc95oAfPhVTOGOI+u2BuB2qaKWjqHwkfqCz4A"
+        }
+      }
+    }
+  }
+};
+
 const yargs = require("yargs");
 const argv = yargs
   .option("configUrl", {
@@ -51,12 +72,17 @@ const SetLibraryPermissions = async (client, libraryId, tenantAdmins, contentAdm
 const SetObjectPermissions = async (client, objectId, tenantAdmins, contentAdmins, contentUsers) => {
   let promises = [
     // Tenant admins
+    client.AddContentObjectGroupPermission({objectId, groupAddress: tenantAdmins, permission: "see"}),
+    client.AddContentObjectGroupPermission({objectId, groupAddress: tenantAdmins, permission: "access"}),
     client.AddContentObjectGroupPermission({objectId, groupAddress: tenantAdmins, permission: "manage"}),
 
     // Content admins
+    client.AddContentObjectGroupPermission({objectId, groupAddress: contentAdmins, permission: "see"}),
+    client.AddContentObjectGroupPermission({objectId, groupAddress: contentAdmins, permission: "access"}),
     client.AddContentObjectGroupPermission({objectId, groupAddress: contentAdmins, permission: "manage"}),
 
     // Content users
+    client.AddContentObjectGroupPermission({objectId, groupAddress: contentUsers, permission: "see"}),
     client.AddContentObjectGroupPermission({objectId, groupAddress: contentUsers, permission: "access"})
   ];
 
@@ -74,6 +100,15 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     const client = await ElvClient.FromConfigurationUrl({configUrl});
     const wallet = client.GenerateWallet();
     const fundedSigner = wallet.AddAccount({privateKey: process.env.PRIVATE_KEY});
+
+    const kmsWalletAddress = await client.userProfileClient.UserWalletAddress({
+      address: client.utils.HashToAddress(kmsId)
+    });
+
+    if(!kmsWalletAddress) {
+      console.error("Error: Specified KMS does not have a wallet address. Wrong KMS ID?\n");
+      return;
+    }
 
     const mnemonic = wallet.GenerateMnemonic();
     const tenantAdminSigner = wallet.AddAccountFromMnemonic({mnemonic});
@@ -93,6 +128,9 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
         }
       }
     });
+
+    console.log("\nFabric config URL:\n");
+    console.log(`\t${configUrl}`);
 
     console.log("\nAdmin account:\n");
     console.log(`\t${tenantSlug}-elv-admin`);
@@ -217,7 +255,7 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
                 "playlists",
                 "gallery",
                 "live_stream"
-              ],
+              ]
             }
           }
         }
@@ -231,8 +269,25 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
     console.log(`\t${tenantName} - Title Collection: ${titleCollectionTypeId}`);
     console.log(`\t${tenantName} - Title Master: ${masterTypeId}`);
     console.log(`\t${tenantName} - Permissions: ${permissionsTypeId}`);
-    console.log(`\t${tenantName} - Channel ${channelTypeId}`);
-    console.log(`\t${tenantName} - Live Stream ${streamTypeId}`);
+    console.log(`\t${tenantName} - Channel: ${channelTypeId}`);
+    console.log(`\t${tenantName} - Live Stream: ${streamTypeId}`);
+
+    for(let i = 0; i < liveTypes.length; i++) {
+      const typeId = await client.CreateContentType({
+        name: `${tenantName} - ${liveTypes[i].name}`,
+        metadata: {
+          ...typeMetadata,
+          public: {
+            ...typeMetadata.public,
+            title_configuration: liveTypes[i].spec
+          }
+        }
+      });
+
+      await SetObjectPermissions(client, typeId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);
+
+      console.log(`\t${tenantName} - ${liveTypes[i].name}: ${typeId}`);
+    }
 
 
     /* Create libraries - Properties, Title Masters, Title Mezzanines and add each to the groups */
@@ -253,7 +308,8 @@ const InitializeTenant = async ({configUrl, kmsId, tenantName}) => {
 
     const mezzanineLibraryId = await client.CreateContentLibrary({
       name: `${tenantName} - Title Mezzanines`,
-      kmsId
+      kmsId,
+      metadata: STANDARD_DRM_CERT
     });
 
     await SetLibraryPermissions(client, mezzanineLibraryId, tenantAdminGroupAddress, contentAdminGroupAddress, contentUserGroupAddress);

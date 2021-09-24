@@ -191,8 +191,9 @@ const New = (context) => {
   // print out json output object (if configured)
   const outputJSON = () => {
     if(json) {
+      const lines = JSON.stringify(output, null, 2).split("\n");
       // eslint-disable-next-line no-console
-      if(!silent) console.log(JSON.stringify(output, null, 2));
+      if(!silent) lines.forEach(x => console.log(x));
     }
   };
 

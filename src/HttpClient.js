@@ -44,7 +44,7 @@ class HttpClient {
     method,
     path,
     queryParams={},
-    body={},
+    body,
     bodyType="JSON",
     headers={},
     attempts=0,
@@ -74,11 +74,11 @@ class HttpClient {
 
     let fetchParameters = {
       method,
-      headers: this.RequestHeaders(bodyType, headers),
+      headers: this.RequestHeaders(bodyType, headers)
     };
 
     if(method === "POST" || method === "PUT") {
-      if(bodyType === "JSON") {
+      if(body && bodyType === "JSON") {
         fetchParameters.body = JSON.stringify(body);
       } else {
         fetchParameters.body = body;
@@ -123,7 +123,7 @@ class HttpClient {
       }
 
       // Parse JSON error if headers indicate JSON
-      const responseType = response.headers ? response.headers.get("content-type") : "";
+      const responseType = response.headers ? response.headers.get("content-type") || "" : "";
 
       let errorBody = "";
       if(response.text && response.json) {

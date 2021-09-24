@@ -13,7 +13,7 @@ const Client = require("./lib/concerns/Client");
 const ExistObj = require("./lib/concerns/ExistObj");
 const Metadata = require("./lib/concerns/Metadata");
 
-class ChannelStartLiveOffering extends Utility {
+class ChannelStartVaLOffering extends Utility {
   blueprint() {
     return {
       concerns: [Client, ExistObj, Metadata],
@@ -53,6 +53,8 @@ class ChannelStartLiveOffering extends Utility {
     // ----------------------------------------------------
     const {delay, libraryId, objectId, offeringKey} = await this.concerns.ExistObj.argsProc();
 
+    const client = await this.concerns.Client.get();
+
     logger.log("Retrieving existing metadata from object...");
     const currentMetadata = await this.concerns.ExistObj.metadata();
 
@@ -83,7 +85,34 @@ class ChannelStartLiveOffering extends Utility {
       0
     );
 
-    const liveSegCount = this.args.liveWindowSize || currentMetadata.channel.offerings[offeringKey].live_seg_count || 3;
+    // get item list from channel offering, get an auth token for each to include in playout URLs
+    const mezAuthTokens = [];
+    const items = currentMetadata.channel.offerings[offeringKey].items;
+
+    const RE_URI_HASH = /\/(hq__[a-zA-Z0-9]+)\//;
+    logger.log("Generating auth tokens...");
+    for(let i = 0; i < items.length; i++) {
+      const itemURI = items[i].source["/"];
+      const mezVersionHash = RE_URI_HASH.exec(itemURI)[1];
+      if(!mezVersionHash) throw Error(`hash not found in item URI: ${itemURI}`);
+
+      const mezObjectId = this.concerns.Version.objectId({versionHash: mezVersionHash});
+      const mezLibId = await this.concerns.FabricObject.libraryId({objectId: mezObjectId});
+
+      mezAuthTokens.push(
+        await client.authClient.AuthorizationToken(
+          {
+            libraryId: mezLibId,
+            objectId: mezObjectId,
+            versionHash: mezVersionHash,
+            update: false
+          }
+        )
+      );
+    }
+
+
+    const liveSegCount = this.args.liveWindowSize || currentMetadata.channel.offerings[offeringKey].live_seg_count || 60;
     const liveEndTol = this.args.liveEndTolerance || currentMetadata.channel.offerings[offeringKey].live_end_tol || 300;
 
     const now = new Date;  // ).toISOString();
@@ -99,7 +128,7 @@ class ChannelStartLiveOffering extends Utility {
             live_end_tol: liveEndTol,
             live_seg_count: liveSegCount,
             live_start_time: startTimeISO,
-            playout_type: "ch_live"
+            playout_type: "ch_val"
           }
         }
       }
@@ -114,7 +143,6 @@ class ChannelStartLiveOffering extends Utility {
       objectId
     });
 
-    const client = await this.concerns.Client.get();
     const url = await client.FabricUrl({
       libraryId,
       objectId,
@@ -154,14 +182,15 @@ class ChannelStartLiveOffering extends Utility {
     });
 
     let offUrlObj = new URL(offeringUrl);
-    const urlBase =  offUrlObj.origin + offUrlObj.pathname;
+    const urlBase = offUrlObj.origin + offUrlObj.pathname;
     const authToken = offUrlObj.searchParams.get("authorization");
     let sid = "";
     for(const [playoutFormatKey, playoutFormatInfo] of Object.entries(offeringOptions)) {
       const pfUrlObj = new URL(playoutFormatInfo.uri, urlBase);
       sid = pfUrlObj.searchParams.get("sid");
-      const playoutUrl =  new URL(playoutFormatInfo.uri, urlBase);
+      const playoutUrl = new URL(playoutFormatInfo.uri, urlBase);
       playoutUrl.searchParams.set("authorization", authToken);
+      mezAuthTokens.forEach(t => playoutUrl.searchParams.append("authorization", t));
       playoutUrl.searchParams.set("sid", sid);
 
       logger.log();
@@ -170,42 +199,47 @@ class ChannelStartLiveOffering extends Utility {
       logger.log(playoutUrl.toString());
     }
 
-    const viewsUrl = await client.FabricUrl({
-      libraryId,
-      objectId,
-      versionHash,
-      rep: `channel/${offeringKey}/views.json`
-    });
-    const viewsUrlObj = new URL(viewsUrl);
-    viewsUrlObj.searchParams.set("sid", sid);
-    logger.log();
-    logger.log(`Sample offering '${offeringKey}' current available views URL (sid must be same as in playout URL):`);
-    logger.log();
-    logger.log(viewsUrlObj.toString());
+    const multiviewPresent = currentMetadata.channel.offerings[offeringKey].multiview &&
+      !R.empty(currentMetadata.channel.offerings[offeringKey].multiview);
+    if(multiviewPresent) {
+      const viewsUrl = await client.FabricUrl({
+        libraryId,
+        objectId,
+        versionHash,
+        rep: `channel/${offeringKey}/views.json`
+      });
+      const viewsUrlObj = new URL(viewsUrl);
+      viewsUrlObj.searchParams.set("sid", sid);
+      logger.log();
+      logger.log(`Sample offering '${offeringKey}' current available views URL (sid must be same as in playout URL):`);
+      logger.log();
+      logger.log(viewsUrlObj.toString());
 
 
-    const selectViewUrl = await client.FabricUrl({
-      libraryId,
-      objectId,
-      versionHash,
-      rep: `channel/${offeringKey}/select_view`
-    });
-    const viewSelectUrlObj = new URL(selectViewUrl);
-    viewSelectUrlObj.searchParams.set("sid", sid);
+      const selectViewUrl = await client.FabricUrl({
+        libraryId,
+        objectId,
+        versionHash,
+        rep: `channel/${offeringKey}/select_view`
+      });
+      const viewSelectUrlObj = new URL(selectViewUrl);
+      viewSelectUrlObj.searchParams.set("sid", sid);
 
-    logger.log();
-    logger.log("Sample curl command to select view (sid must be same as in playout URL):");
-    logger.log();
-    logger.log(`curl -X POST '${viewSelectUrlObj.toString()}' -d '{"view":1}'`);
+      logger.log();
+      logger.log("Sample curl command to select view (sid must be same as in playout URL):");
+      logger.log();
+      logger.log(`curl -X POST '${viewSelectUrlObj.toString()}' -d '{"view":1}'`);
+    }
+
   }
 
   header() {
-    return `Start playout of 'live' channel object ${this.args.objectId}${this.args.delay ? ` with ${this.args.delay} second(s) delay` : ""}`;
+    return `Start playout of simulated live channel object ${this.args.objectId}${this.args.delay ? ` with ${this.args.delay} second(s) delay` : ""}`;
   }
 }
 
 if(require.main === module) {
-  Utility.cmdLineInvoke(ChannelStartLiveOffering);
+  Utility.cmdLineInvoke(ChannelStartVaLOffering);
 } else {
-  module.exports = ChannelStartLiveOffering;
+  module.exports = ChannelStartVaLOffering;
 }

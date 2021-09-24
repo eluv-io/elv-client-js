@@ -17,6 +17,8 @@ const {
   ValidateParameters,
 } = require("../Validation");
 
+const MergeWith = require("lodash/mergeWith");
+
 
 // Note: Keep these ordered by most-restrictive to least-restrictive
 exports.permissionLevels = {
@@ -615,6 +617,35 @@ exports.ContentObjectOwner = async function({objectId}) {
 };
 
 /**
+ * Retrieve the tenant ID associated with the specified content object
+ *
+ * @methodGroup Content Objects
+ *
+ * @namedParams
+ * @param {string=} objectId - ID of the object
+ * @param {string=} versionHash - Version hash of the object
+ *
+ * @returns {Promise<string>} - Tenant ID of the object
+ */
+exports.ContentObjectTenantId = async function({objectId, versionHash}) {
+  versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
+
+  if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
+
+  if(!this.objectTenantIds[objectId]) {
+    this.objectTenantIds[objectId] = await this.authClient.MakeElvMasterCall({
+      methodName: "elv_getTenantById",
+      params: [
+        this.contentSpaceId,
+        objectId
+      ]
+    });
+  }
+
+  return this.objectTenantIds[objectId];
+};
+
+/**
  * Retrieve the library ID for the specified content object
  *
  * @methodGroup Content Objects
@@ -946,39 +977,15 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
     metadata.info = {};
   }
 
+  let mergedMetadata = { ...metadata };
   if(localization) {
     localization.reverse().forEach(keys => {
-      const overrides = this.utils.SafeTraverse(metadata, ...keys);
-
-      if(!overrides) { return; }
-
-      Object.keys(overrides).forEach(overrideKey => {
-        if(overrideKey === "info") {
-          Object.keys(overrides.info).forEach(infoOverrideKey => {
-            const value = overrides.info[infoOverrideKey];
-            if(
-              (typeof value === "object" && Object.keys(value).length === 0) ||
-              (Array.isArray(value) && value.length === 0)
-            ) { return; }
-
-            metadata.info[infoOverrideKey] = value;
-          });
-        } else {
-          const value = overrides[overrideKey];
-          if(
-            (typeof value === "object" && Object.keys(value).length === 0) ||
-            (Array.isArray(value) && value.length === 0)
-          ) { return; }
-
-          metadata[overrideKey] = value;
-        }
-      });
-
-      //delete metadata[keys[0]];
+      const localizedMetadata = this.utils.SafeTraverse(metadata, ...keys) || {};
+      mergedMetadata = MergeWith({}, mergedMetadata, localizedMetadata, (a, b) => b === null || b === "" ? a : undefined);
     });
   }
 
-  return metadata;
+  return mergedMetadata;
 };
 
 /**
@@ -1209,7 +1216,7 @@ exports.PlayoutPathResolution = async function({
  * @param {string=} writeToken - Write token for the content
  * @param {string=} linkPath - If playing from a link, the path to the link
  * @param {boolean=} signedLink - Specify if linkPath is referring to a signed link
- * @param {boolean=} signedLink - Specify if linkPath is pointing directly to the offerings endpoint
+ * @param {boolean=} directLink - Specify if linkPath is pointing directly to the offerings endpoint
  * @param {string=} handler=playout - The handler to use for playout (not used with links)
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
  *
@@ -1235,7 +1242,8 @@ exports.AvailableOfferings = async function({
       objectId,
       versionHash,
       metadataSubtree: linkPath,
-      resolveLinks: true
+      resolveLinks: true,
+      authorizationToken
     });
   }
 
@@ -1245,7 +1253,8 @@ exports.AvailableOfferings = async function({
     writeToken,
     linkPath,
     signedLink,
-    handler
+    handler,
+    authorizationToken
   });
 
   try {
@@ -1482,6 +1491,19 @@ exports.PlayoutOptions = async function({
         }
       }
     };
+
+    // Add .cert_url if playoutMap[protocol].playoutMethods[].drms[].cert is present
+    // (for clients that need cert supplied as a URL reference rather than as a string literal)
+    for(const method in playoutMap[protocol].playoutMethods) {
+      if(playoutMap[protocol].playoutMethods[method].drms &&
+        playoutMap[protocol].playoutMethods[method].drms[drm] &&
+        playoutMap[protocol].playoutMethods[method].drms[drm].cert) {
+        // construct by replacing last part of playout URL path (e.g. "playlist.m3u8", "live.m3u8") with "drm.cert"
+        let certUrl = new URL(playoutMap[protocol].playoutMethods[method].playoutUrl);
+        certUrl.pathname = certUrl.pathname.split("/").slice(0,-1).concat(["drm.cert"]).join("/");
+        playoutMap[protocol].playoutMethods[method].drms[drm].cert_url = certUrl.toString();
+      }
+    }
 
     // Exclude any options that do not satisfy the specified protocols and/or DRMs
     const protocolMatch = protocols.includes(protocol);
@@ -2701,7 +2723,7 @@ exports.Collection = async function({collectionType}) {
 
   this.Log(`Retrieving ${collectionType} contract collection for user ${this.signer.address}`);
 
-  return await this.ethClient.MakeProviderCall({
+  return (await this.ethClient.MakeProviderCall({
     methodName: "send",
     args: [
       "elv_getWalletCollection",
@@ -2711,7 +2733,7 @@ exports.Collection = async function({collectionType}) {
         collectionType
       ]
     ]
-  });
+  })) || [];
 };
 
 
