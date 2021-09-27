@@ -109,6 +109,12 @@ const eventSiteSpec = {
           "hint": "Displayed on the main page and event page"
         },
         {
+          "name": "show_countdown",
+          "label": "Show countdown to next drop",
+          "type": "checkbox",
+          "default_value": false
+        },
+        {
           "name": "description",
           "type": "textarea"
         },
@@ -238,12 +244,24 @@ const eventSiteSpec = {
           "extensions": imageTypes
         },
         {
+          "name": "background_image",
+          "type": "file",
+          "extensions": imageTypes
+        },
+        {
+          "name": "background_image_mobile",
+          "label": "Background Image (Mobile)",
+          "type": "file",
+          "extensions": imageTypes
+        },
+        {
           "name": "header_text",
           "type": "text"
         },
         {
-          "name": "hide_countdown",
-          "type": "checkbox"
+          "name": "show_countdown",
+          "type": "checkbox",
+          "default_value": true
         },
         {
           "name": "message_1",
@@ -300,6 +318,11 @@ const eventSiteSpec = {
           "name": "store_filters",
           "type": "list",
           "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown"
+        },
+        {
+          "name": "voting_header",
+          "type": "text",
+          "hint": "Text to show during the voting stage above the list of NFTs"
         },
         {
           "name": "nfts",
@@ -557,6 +580,69 @@ const eventSiteSpec = {
             {
               "name": "modal_message",
               "label": "Modal Message (Minting Start)",
+              "type": "subsection",
+              "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "fields": [
+                {
+                  "name": "show",
+                  "type": "checkbox",
+                  "hint": "The message box will only be displayed if this is checked"
+                },
+                {
+                  "name": "image",
+                  "type": "file",
+                  "extensions": imageTypes
+                },
+                {
+                  "name": "message",
+                  "type": "rich_text"
+                }
+              ]
+            },
+          ]
+        },
+        {
+          "name": "event_state_event_end",
+          "label": "Event State: Event Ended",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "use_state",
+              "type": "checkbox",
+              "default_value": true
+            },
+            {
+              "name": "header",
+              "type": "text"
+            },
+            {
+              "name": "subheader",
+              "type": "text"
+            },
+            {
+              "name": "start_date",
+              "type": "datetime",
+              "no_localize": true
+            },
+            {
+              "name": "use_main_stream",
+              "type": "checkbox",
+              "default_value": false,
+              "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
+            },
+            {
+              "name": "stream",
+              "type": "fabric_link",
+              "video_preview": true
+            },
+            {
+              "name": "loop_stream",
+              "type": "checkbox",
+              "default_value": false
+            },
+            {
+              "name": "modal_message",
+              "label": "Modal Message (Event Ended)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
               "fields": [
