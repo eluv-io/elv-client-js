@@ -196,6 +196,105 @@ const MarketplaceSpec = {
           "value_key": "sku"
         }
       ]
+    },
+    {
+      "name": "login_customization",
+      "type": "subsection",
+      "fields": [
+        {
+          "name": "logo",
+          "type": "file",
+          "extensions": imageTypes
+        },
+        {
+          "name": "background",
+          "type": "file",
+          "extensions": imageTypes
+        },
+        {
+          "name": "background_mobile",
+          "label": "Background (Mobile)",
+          "type": "file",
+          "extensions": imageTypes
+        },
+        {
+          "name": "log_in_button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#0885fb"
+              }
+            },
+            {
+              "name": "border_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#0885fb"
+              }
+            }
+          ]
+        },
+        {
+          "name": "sign_up_button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF"
+              }
+            },
+            {
+              "name": "border_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            }
+          ]
+        },
+        {
+          "name": "disable_private_key",
+          "label": "Disable Private Key Login",
+          "type": "checkbox",
+          "default_value": false
+        }
+      ]
+    },
+    {
+      "label": "Terms and Conditions",
+      "name": "terms",
+      "type": "rich_text"
+    },
+    {
+      "label": "Terms and Conditions (HTML)",
+      "name": "terms_html",
+      "type": "file",
+      "extensions": ["html"]
     }
   ]
 };
