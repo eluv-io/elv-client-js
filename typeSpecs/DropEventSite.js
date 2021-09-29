@@ -288,6 +288,11 @@ const eventSiteSpec = {
           "no_localize": true
         },
         {
+          "name": "requires_login",
+          "type": "checkbox",
+          "default_value": true
+        },
+        {
           "name": "event_header",
           "type": "text",
           "hint": "Used when displayed in upcoming events"
@@ -320,7 +325,12 @@ const eventSiteSpec = {
           "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown"
         },
         {
-          "name": "voting_header",
+          "name": "drop_header",
+          "type": "text",
+          "hint": "Text to show during the voting stage above the list of NFTs"
+        },
+        {
+          "name": "drop_subheader",
           "type": "text",
           "hint": "Text to show during the voting stage above the list of NFTs"
         },
