@@ -199,8 +199,18 @@ const MarketplaceSpec = {
     },
     {
       "name": "login_customization",
+      "label": "Custom Branding",
       "type": "subsection",
       "fields": [
+        {
+          "name": "font",
+          "type": "select",
+          "options": [
+            "Helvetica Neue",
+            "Inter",
+            "Selawik"
+          ]
+        },
         {
           "name": "logo",
           "type": "file",
