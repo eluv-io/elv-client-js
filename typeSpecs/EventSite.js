@@ -427,6 +427,33 @@ const eventSiteSpec = {
       "type": "subsection"
     },
     {
+      "name": "footer_links",
+      "type": "list",
+      "hint": "Specify links to include in the footer of the event, such as privacy or terms policies. Each item can either be specified as a URL, rich text, or an HTML document. The two latter options will be shown in a modal when clicked.",
+      "fields": [
+        {
+          "name": "text",
+          "type": "text"
+        },
+        {
+          "name": "url",
+          "label": "URL Link",
+          "type": "text"
+        },
+        {
+          "label": "Content (Rich Text)",
+          "name": "content_rich_text",
+          "type": "rich_text"
+        },
+        {
+          "label": "Content (HTML)",
+          "name": "content_html",
+          "type": "file",
+          "extensions": ["html"]
+        }
+      ]
+    },
+    {
       "fields": [
         {
           "name": "name",
