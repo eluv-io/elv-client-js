@@ -90,6 +90,10 @@ const NFTTemplateSpec = {
           "type": "textarea"
         },
         {
+          "name": "rich_text",
+          "type": "rich_text"
+        },
+        {
           "name": "address",
           "label": "NFT Contract Address",
           "type": "text"

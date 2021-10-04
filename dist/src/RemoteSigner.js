@@ -33,7 +33,9 @@ function (_Ethers$Signer) {
         authToken = _ref.authToken,
         address = _ref.address,
         tenantId = _ref.tenantId,
-        provider = _ref.provider;
+        provider = _ref.provider,
+        _ref$extraData = _ref.extraData,
+        extraData = _ref$extraData === void 0 ? {} : _ref$extraData;
 
     _classCallCheck(this, RemoteSigner);
 
@@ -47,6 +49,7 @@ function (_Ethers$Signer) {
     _this.authToken = authToken;
     _this.address = address ? Utils.FormatAddress(address) : undefined;
     _this.id = _this.address ? "ikms".concat(Utils.AddressToHash(_this.address)) : undefined;
+    _this.extraLoginData = extraData || {};
     _this.provider = provider;
     return _this;
   }
@@ -70,8 +73,11 @@ function (_Ethers$Signer) {
                 path: UrlJoin("as", "wlt", "login", "jwt"),
                 method: "POST",
                 body: this.tenantId ? {
-                  tid: this.tenantId
-                } : {},
+                  tid: this.tenantId,
+                  ext: this.extraLoginData || {}
+                } : {
+                  ext: this.extraLoginData || {}
+                },
                 headers: {
                   Authorization: "Bearer ".concat(this.idToken)
                 }
