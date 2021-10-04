@@ -141,6 +141,11 @@ const eventSiteSpec = {
             {
               "name": "message",
               "type": "rich_text"
+            },
+            {
+              "name": "button_text",
+              "type": "text",
+              "hint": "Text for the button at the bottom of the modal. By default, it will be 'Create Wallet' if login is required for the next drop, otherwise it will be 'Join the Drop'"
             }
           ]
         }
@@ -704,6 +709,97 @@ const eventSiteSpec = {
                 }
               ]
             },
+          ]
+        }
+      ]
+    },
+    {
+      "name": "branding",
+      "label": "Custom Branding",
+      "type": "subsection",
+      "fields": [
+        {
+          "name": "get_started",
+          "label": "'Get Started' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Get Started"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        },
+        {
+          "name": "join_drop",
+          "label": "'Join the Drop' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Join the Drop"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        },
+        {
+          "name": "watch_promo",
+          "label": "'Watch Promo' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Watch Promo"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            }
           ]
         }
       ]

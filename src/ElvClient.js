@@ -591,15 +591,17 @@ class ElvClient {
    * @param {string=} idToken - OAuth ID token
    * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
    * @param {string=} tenantId - If specified, user will be associated with the tenant
+   * @param {Object=} extraData - Additional data to pass to the login API
    */
-  async SetRemoteSigner({idToken, authToken, tenantId, address}) {
+  async SetRemoteSigner({idToken, authToken, tenantId, address, extraData}) {
     const signer = new RemoteSigner({
       rpcUris: this.authServiceURIs,
       idToken,
       authToken,
       tenantId,
       address,
-      provider: this.ethClient.provider
+      provider: this.ethClient.provider,
+      extraData
     });
 
     await signer.Initialize();

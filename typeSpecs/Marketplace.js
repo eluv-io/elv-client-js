@@ -117,6 +117,11 @@ const MarketplaceSpec = {
           "type": "integer"
         },
         {
+          "name": "free",
+          "type": "checkbox",
+          "hint": "If checked, this NFT will be free to claim. WARNING: This option will override any price value set below"
+        },
+        {
           "name": "price",
           "type": "reference_subsection",
           "no_localize": true,
@@ -286,6 +291,12 @@ const MarketplaceSpec = {
               }
             }
           ]
+        },
+        {
+          "name": "disable_third_party",
+          "label": "Disable third party login providers",
+          "type": "checkbox",
+          "default_value": false
         },
         {
           "name": "disable_private_key",
