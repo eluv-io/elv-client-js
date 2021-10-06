@@ -38,7 +38,8 @@
     * [Set Mezzanine object visibility to 'Viewable' - via command line](#set-viz-mez-command-line)
     * [Grant Group Permissions on Mezzanine object - via browser](#grant-permissions-on-mezzanine-object-via-browser)
     * [Grant Group Permissions on Mezzanine object - via command line](#grant-permissions-on-mezzanine-object-via-command-line)
-  * [Adding another Offering to a Mezzanine object](#adding-another-offering-to-a-mezzanine-object)
+  * [Adding caption stream(s) to an Offering](#adding-captions-to-offering)
+  * [Duplicating an existing Offering](#duplicating-an-existing-offering)
     * [Viewing Offerings other than "default"](#viewing-offerings-other-than-default)
   * [Adding / removing playout options from an Offering](#adding--removing-playout-options-from-an-offering)
     * [Adding Clear (DRM-free) playout option](#adding-clear-drm-free-playout-option)
@@ -637,6 +638,7 @@ Depending on the format, bitrate and complexity of the original source material,
 
 Once both jobs show a "run_state" of "finished", you are ready for the next step, finalization.
 
+
 <a id="finalize-your-mezzanine-object"></a>
 ## Finalize your Mezzanine object&nbsp;[&#8673;](#contents)
 
@@ -682,8 +684,86 @@ The command to add permissions is then:
       --groupAddress YOUR_GROUP_ADDRESS \
       --permissions manage
 
-<a id="adding-another-offering-to-a-mezzanine-object"></a>
-## Adding another Offering to a Mezzanine object&nbsp;[&#8673;](#contents)
+<a id="adding-captions-to-offering"></a>
+## Adding caption stream(s) to an Offering&nbsp;[&#8673;](#contents)
+
+Caption streams are added using .vtt files.
+
+In order to add a caption stream, you will need to know the following:
+
+* The library ID for your Mezzanine object (starts with "ilib")
+* The ID of your Mezzanine object (starts with "iq__")
+* The Offering you wish to add captions to (usually "default")
+* The path to your .vtt file
+* Whether or not the captions are *forced* (most caption sets are not - Netflix has a good overview of the topic here:  [ 
+Understanding Forced Narrative Subtitles]([forced](https://partnerhelp.netflixstudios.com/hc/en-us/articles/217558918-Understanding-Forced-Narrative-Subtitles)))
+ * In general, a 'forced' subtitle stream will require that the mezzanine ALSO has an audio stream with the SAME language code - otherwise, the player will never use that subtitle stream.
+ * For example, if you are adding a forced caption set for English (lang code `en`) then the offering must also contain an audio stream with lang code `en`.
+ * Note that this causes a problem for Chinese, which has different language codes for spoken vs. written language - for 'forced' Chinese captions, use the audio language code (`yue` or `cmn`) rather than the text language code (`zh-hans` or `zh-hant`). If your offering contains both Mandarin (`cmn`) and Cantonese (`yue`) audio streams then you will need to add your Chinese forced caption file twice, once using `cmn` and once using `yue`.
+ * NON-forced Chinese captions should still use the appropriate text language codes (`zh-hans` or `zh-hant`).
+* The language code for your captions (see section [Language Codes and Labels](#language-codes-and-labels)). If the captions are 'forced' and in Chinese, see previous major bullet point above about what language code to use.
+* A label to show in the player UI for your captions
+ * If you wish to set a label in the same language as the subtitles, copy and paste from section [Language Codes and Labels](#language-codes-and-labels).
+ * If the captions are forced, they are not supposed to be shown as an option in player UIs, but it is still good to set a label like "English (forced)" so that if a player mistakenly lists it as an option it will be apparent what is happening.
+* Whether or not you would like to store the captions in encrypted format on server (default false)
+* Whether to use as the default caption stream
+* Whether to adjust all caption timestamps by a fixed number of seconds (positive or negative)
+
+Sample command with minimal options:
+
+        cd elv-client-js
+        
+        node testScripts/OfferingAddCaptionStream.js \
+          --libraryId YOUR_MEZ_LIB_ID \
+          --objectId YOUR_MEZ_OBJECT_ID \
+          --lang "YOUR_LANGUAGE_CODE" \
+          --label "YOUR_LABEL_FOR_PLAYER_UI" \
+          --file PATH_TO_YOUR_VTT_FILE
+
+Add the following optional parameters above the `--file` line if desired:
+
+ * add the caption stream to an Offering other than 'default': `--offeringKey THE_OFFERING_KEY \`
+ * make this the default caption stream: `--isDefault \`
+ * mark these captions as *forced*: `--forced \`
+ * store the captions in encrypted format on server: `--encrypt \`
+ * add a fixed number seconds to all timestamps: `--timeShift NUMBER_OF_SECONDS \`
+ * subtract a fixed number seconds from all timestamps: `--timeShift -NUMBER_OF_SECONDS \`
+ * specify the stream key used internally in metadata to refer to caption stream: `--streamKey DESIRED_STREAM_KEY \`
+
+<a id="grant-permissions-on-mezzanine-object-via-browser"></a>
+### Grant Group Permissions on Mezzanine object - via browser&nbsp;[&#8673;](#contents)
+
+(Identical process as for the Production Master object)
+
+From the object details page, click the blue **Groups** button at top - you should see a screen with the *Access Group* field already chosen for you, set to "*TENANT_NAME* Content Admins".
+
+Check the **Manage** box, then click **Submit**.
+
+<a id="grant-permissions-on-mezzanine-object-via-command-line"></a>
+### Grant Group Permissions on Mezzanine object - via command line&nbsp;[&#8673;](#contents)
+
+(Identical process as for the Production Master object)
+
+In order to grant group permissions via the command line, you will need to know the following:
+
+* The ID of your Mezzanine object (starts with "iq__")
+* The Address of your "*TENANT_NAME* Content Admins" group (starts with "0x")
+* What permission level you would like to grant (for your Content Admins group, choose **manage**)
+  * see
+  * access
+  * manage 
+
+You can find the Address of your group by clicking on the blue **Groups** button at top when you are browsing the details of any object. You can choose a group from the **Access Group** dropdown, then double-click the **Address** field to select it and copy to your clipboard.
+
+The command to add permissions is then:
+
+    node testScripts/AddGroupPermissions.js \
+      --objectId YOUR_OBJECT_ID \
+      --groupAddress YOUR_GROUP_ADDRESS \
+      --permissions manage
+
+<a id="duplicating-an-existing-offering"></a>
+## Duplicating an existing Offering&nbsp;[&#8673;](#contents)
 
 A **Mezzanine** object contains one or more **Offerings**. Each **Offering** specifies the following information:
 
@@ -932,178 +1012,227 @@ After running the above commands, you will have an additional `clear-playout` Of
 
 Below is a table of codes and labels for some of the most commonly encountered languages. To look up a language not on this list, visit the [IANA Language Subtag Registry](https://www.iana.org/assignments/language-subtag-registry/language-subtag-registry)
 
-<table>
-<thead>
-<tr>
-<th></th>
-<th>code</th>
-<th>label</th>
-<th>note</th>
-</tr>
-</thead>
+Note that some references may capitalize letters appearing after a dash, e.g. "pt-BR" instead of "pt-br". 
 
-<tbody>
-<tr>
-<td>Arabic</td>
-<td>ar</td>
-<td>&#1575;&#1614;&#1604;&#1618;&#1593;&#1614;&#1585;&#1614;&#1576;&#1616;&#1610;&#1614;&#1617;&#1577;&#1615;</td>
-<td></td>
-</tr>
-<tr>
-<td>Chinese (Cantonese)</td>
-<td>yue</td>
-<td>&#24291;&#26481;&#35441;</td>
-<td>for audio only</td>
-</tr>
-<tr>
-<td>Chinese (Mandarin)</td>
-<td>cmn</td>
-<td>&#26222;&#36890;&#35805;</td>
-<td>for audio only</td>
-</tr>
-<tr>
-<td>Chinese (Simplified)</td>
-<td>zh-hans</td>
-<td>&#31616;&#20307;&#20013;&#25991;</td>
-<td>for captions only</td>
-</tr>
-<tr>
-<td>Chinese (Traditional)</td>
-<td>zh-hant</td>
-<td>&#32321;&#39636;&#20013;&#25991;</td>
-<td>for captions only</td>
-</tr>
-<tr>
-<td>Danish</td>
-<td>da</td>
-<td>Dansk</td>
-<td></td>
-</tr>
-<tr>
-<td>Dutch</td>
-<td>nl</td>
-<td>Nederlands</td>
-<td></td>
-</tr>
-<tr>
-<td>English</td>
-<td>en</td>
-<td>English</td>
-<td></td>
-</tr>
-<tr>
-<td>Finnish</td>
-<td>fi</td>
-<td>Suomi</td>
-<td></td>
-</tr>
-<tr>
-<td>French</td>
-<td>fr</td>
-<td>Fran&ccedil;ais</td>
-<td></td>
-</tr>
-<tr>
-<td>German</td>
-<td>de</td>
-<td>Deutsch</td>
-<td></td>
-</tr>
-<tr>
-<td>Hebrew</td>
-<td>he</td>
-<td>&#1506;&#1460;&#1489;&#1456;&#1512;&#1460;&#1497;&#1514;</td>
-<td></td>
-</tr>
-<tr>
-<td>Hindi</td>
-<td>hi</td>
-<td>&#2361;&#2367;&#2344;&#2381;&#2342;&#2368;</td>
-<td></td>
-</tr>
-<tr>
-<td>Indonesian</td>
-<td>id</td>
-<td>Bahasa Indonesia</td>
-<td></td>
-</tr>
-<tr>
-<td>Italian</td>
-<td>it</td>
-<td>Italiano</td>
-<td></td>
-</tr>
-<tr>
-<td>Japanese</td>
-<td>ja</td>
-<td>&#26085;&#26412;&#35486;</td>
-<td></td>
-</tr>
-<tr>
-<td>Korean</td>
-<td>ko</td>
-<td>&#54620;&#44397;&#50612;</td>
-<td></td>
-</tr>
-<tr>
-<td>Norwegian</td>
-<td>no</td>
-<td>Norsk</td>
-<td></td>
-</tr>
-<tr>
-<td>Polish</td>
-<td>pl</td>
-<td>Polski</td>
-<td></td>
-</tr>
-<tr>
-<td>Portuguese</td>
-<td>pt</td>
-<td>Portugu&ecirc;s</td>
-<td></td>
-</tr>
-<tr>
-<td>Portuguese (Brazil)</td>
-<td>pt-br</td>
-<td>Portugu&ecirc;s (Brasil)</td>
-<td></td>
-</tr>
-<tr>
-<td>Russian</td>
-<td>ru</td>
-<td>&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</td>
-<td></td>
-</tr>
-<tr>
-<td>Spanish</td>
-<td>es</td>
-<td>Espa&ntilde;ol</td>
-<td></td>
-</tr>
-<tr>
-<td>Spanish (Latin America)</td>
-<td>es-419</td>
-<td>Espa&ntilde;ol (Latinoamericano)</td>
-<td></td>
-</tr>
-<tr>
-<td>Swedish</td>
-<td>sv</td>
-<td>Svenska</td>
-<td></td>
-</tr>
-<tr>
-<td>Thai</td>
-<td>th</td>
-<td>&#3616;&#3634;&#3625;&#3634;&#3652;&#3607;&#3618;</td>
-<td></td>
-</tr>
-<tr>
-<td>Turkish</td>
-<td>tr</td>
-<td>T&uuml;rk&ccedil;e</td>
-<td></td>
-</tr>
-</tbody>
+<table dir="ltr">
+    <thead>
+    <tr>
+        <th>language</th>
+        <th>code</th>
+        <th>label</th>
+        <th>note</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>Arabic</td>
+        <td>ar</td>
+        <td dir="rtl">اَلْعَرَبِيَّةُ</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Bangla / Bengali</td>
+        <td>bn</td>
+        <td>বাংলা</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Chinese (Cantonese)</td>
+        <td>yue</td>
+        <td>廣東話</td>
+        <td>(spoken) for audio streams only</td>
+    </tr>
+    <tr>
+        <td>Chinese (Mandarin)</td>
+        <td>cmn</td>
+        <td>普通话</td>
+        <td>(spoken) for audio streams only</td>
+    </tr>
+    <tr>
+        <td>Chinese (Simplified)</td>
+        <td>zh-hans</td>
+        <td>简体中文</td>
+        <td>(written) for text streams only</td>
+    </tr>
+    <tr>
+        <td>Chinese (Traditional)</td>
+        <td>zh-hant</td>
+        <td>繁體中文</td>
+        <td>(written) for text streams only</td>
+    </tr>
+    <tr>
+        <td>Danish</td>
+        <td>da</td>
+        <td>Dansk</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Dutch</td>
+        <td>nl</td>
+        <td>Nederlands</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Dutch (Netherlands)</td>
+        <td>nl-nl</td>
+        <td>Nederlands</td>
+        <td>specifically as spoken/written in the Netherlands</td>
+    </tr>
+    <tr>
+        <td>English</td>
+        <td>en</td>
+        <td>English</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>English</td>
+        <td>en-gb</td>
+        <td>English (United Kingdom)</td>
+        <td>specifically as spoken/written in the United Kingdom</td>
+    </tr>
+    <tr>
+        <td>English</td>
+        <td>en</td>
+        <td>English</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Finnish</td>
+        <td>fi</td>
+        <td>Suomi</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>French</td>
+        <td>fr</td>
+        <td>Français</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>French (Parisian)</td>
+        <td>fr-fr</td>
+        <td>Français</td>
+        <td>specifically as spoken/written in France</td>
+    </tr>
+    <tr>
+        <td>German</td>
+        <td>de</td>
+        <td>Deutsch</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>German (Germany)</td>
+        <td>de-de</td>
+        <td>Deutsch (Deutschland)</td>
+        <td>specifically as spoken/written in Germany</td>
+    </tr>
+    <tr>
+        <td>Hebrew</td>
+        <td>he</td>
+        <td dir="rtl">עִבְרִית</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Hindi</td>
+        <td>hi</td>
+        <td>हिन्दी</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Indonesian</td>
+        <td>id</td>
+        <td>Bahasa Indonesia</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Italian</td>
+        <td>it</td>
+        <td>Italiano</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Japanese</td>
+        <td>ja</td>
+        <td>日本語</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Korean</td>
+        <td>ko</td>
+        <td>한국어</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Marathi</td>
+        <td>mr</td>
+        <td>मराठी</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Norwegian</td>
+        <td>no</td>
+        <td>Norsk</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Polish</td>
+        <td>pl</td>
+        <td>Polski</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Portuguese</td>
+        <td>pt</td>
+        <td>Português</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Portuguese (Brazil)</td>
+        <td>pt-br</td>
+        <td>Português (Brasil)</td>
+        <td>specifically as spoken/written in Brazil</td>
+    </tr>
+    <tr>
+        <td>Russian</td>
+        <td>ru</td>
+        <td>Русский</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Spanish (Castilian)</td>
+        <td>es</td>
+        <td>Español</td>
+        <td>specifically as spoken/written in Spain</td>
+    </tr>
+    <tr>
+        <td>Spanish (Latin America)</td>
+        <td>es-419</td>
+        <td>Español (Latinoamericano)</td>
+        <td>specifically as spoken/written in Latin America</td>
+    </tr>
+    <tr>
+        <td>Swedish</td>
+        <td>sv</td>
+        <td>Svenska</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Telugu</td>
+        <td>te</td>
+        <td>తెలుగు</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Thai</td>
+        <td>th</td>
+        <td>ภาษาไทย</td>
+        <td></td>
+    </tr>
+    <tr>
+        <td>Turkish</td>
+        <td>tr</td>
+        <td>Türkçe</td>
+        <td></td>
+    </tr>
+    </tbody>
 </table>
