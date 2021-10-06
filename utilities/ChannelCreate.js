@@ -126,7 +126,7 @@ class ChannelCreate extends Utility {
     logger.log("Mezzanine item parameter checks passed.");
 
     // create new object
-    let metadata = {public: {name}};
+    let metadata = {public: {name, asset_metadata:{}}};
 
     logger.log("\nCreating new channel object...");
 
@@ -175,7 +175,7 @@ class ChannelCreate extends Utility {
     }
 
     metadata.channel = channelMeta;
-    metadata.public.offerings = {"/": "./rep/channel/options.json"};
+    metadata.public.asset_metadata.offerings = {"/": "./rep/channel/options.json"};
 
 
     // Write back metadata
