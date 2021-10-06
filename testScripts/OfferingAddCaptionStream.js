@@ -60,6 +60,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
   async body() {
     const client = await this.client();
 
+    const encrypt = this.args.encrypt;
     const libraryId = this.args.libraryId;
     const objectId = this.args.objectId;
     const offeringKey = this.args.offeringKey;
@@ -107,7 +108,7 @@ class OfferingAddCaptionStream extends ScriptOffering {
       objectId,
       writeToken,
       data: finalData,
-      encryption: "cgck"
+      encryption: encrypt ? "cgck" : "none"
     });
     const partHash = uploadPartResponse.part.hash;
     let finalizeResponse = await client.FinalizeContentObject({
@@ -238,6 +239,10 @@ class OfferingAddCaptionStream extends ScriptOffering {
 
   options() {
     return super.options()
+      .option("encrypt", {
+        describe: "Store caption file encrypted",
+        type: "boolean"
+      })
       .option("file", {
         alias: "f",
         demandOption: true,
