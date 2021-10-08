@@ -140,14 +140,24 @@ const NFTTemplateSpec = {
           "label": "Embed URL",
           "type": "self_embed_url",
           "version": true,
-          "auto_update": true
+          "auto_update": true,
+          // Player options
+          "loop": true,
+          "controls": false,
+          "muted": true,
+          "autoplay": true
         },
         {
           "name": "external_url",
           "label": "External URL",
           "type": "self_embed_url",
           "version": true,
-          "auto_update": true
+          "auto_update": true,
+          // Player options
+          "loop": true,
+          "controls": false,
+          "muted": true,
+          "autoplay": true
         },
         {
           "name": "background_color",
@@ -170,7 +180,12 @@ const NFTTemplateSpec = {
                   "name": "youtube_url",
                   "type": "self_embed_url",
                   "version": true,
-                  "auto_update": true
+                  "auto_update": true,
+                  // Player options
+                  "loop": true,
+                  "controls": false,
+                  "muted": true,
+                  "autoplay": true
                 }
               ]
             },
