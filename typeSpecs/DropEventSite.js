@@ -146,6 +146,37 @@ const eventSiteSpec = {
               "name": "button_text",
               "type": "text",
               "hint": "Text for the button at the bottom of the modal. By default, it will be 'Create Wallet' if login is required for the next drop, otherwise it will be 'Join the Drop'"
+            },
+            {
+              "name": "post_login",
+              "label": "Post Login Modal",
+              "type": "subsection",
+              "hint": "If specified, modal will be shown after a user goes through the login process from the 'Get Started' modal",
+              "fields": [
+                {
+                  "name": "show",
+                  "type": "checkbox",
+                },
+                {
+                  "name": "image",
+                  "type": "file",
+                  "extensions": imageTypes
+                },
+                {
+                  "name": "message",
+                  "type": "rich_text"
+                },
+                {
+                  "name": "show_marketplace",
+                  "type": "checkbox",
+                  "hint": "Show the marketplace after the post login modal"
+                },
+                {
+                  "name": "marketplace_filters",
+                  "type": "list",
+                  "hint": "Use this fields to filter the items shown"
+                }
+              ]
             }
           ]
         }
@@ -393,6 +424,25 @@ const eventSiteSpec = {
               "hint": "Find NFT SKUs in the associated Marketplace",
             }
           ]
+        },
+        {
+          "fields": [
+            {
+              "name": "title",
+              "type": "text"
+            },
+            {
+              "name": "description",
+              "type": "textarea"
+            },
+            {
+              "name": "location",
+              "type": "text"
+            }
+          ],
+          "label": "Calendar Event Info",
+          "name": "calendar",
+          "type": "subsection"
         },
         {
           "name": "event_state_preroll",
@@ -801,6 +851,22 @@ const eventSiteSpec = {
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "faq",
+      "label": "FAQ",
+      "hint": "Specify a custom FAQ. If blank, the default FAQ will be displayed",
+      "type": "list",
+      "fields": [
+        {
+          "name": "question",
+          "type": "text"
+        },
+        {
+          "name": "answer",
+          "type": "textarea"
         }
       ]
     },
