@@ -143,7 +143,7 @@ const NFTTemplateSpec = {
           "auto_update": true,
           // Player options
           "loop": true,
-          "controls": false,
+          "hide_controls": true,
           "muted": true,
           "autoplay": true
         },
@@ -155,7 +155,7 @@ const NFTTemplateSpec = {
           "auto_update": true,
           // Player options
           "loop": true,
-          "controls": false,
+          "hide_controls": true,
           "muted": true,
           "autoplay": true
         },
@@ -183,7 +183,7 @@ const NFTTemplateSpec = {
                   "auto_update": true,
                   // Player options
                   "loop": true,
-                  "controls": false,
+                  "hide_controls": true,
                   "muted": true,
                   "autoplay": true
                 }
