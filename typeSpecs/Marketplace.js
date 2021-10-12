@@ -159,6 +159,29 @@ const MarketplaceSpec = {
           "type": "text"
         },
         {
+          "name": "purchase_animation",
+          "type": "fabric_link",
+          "video_preview": true,
+          "hint": "If specified, this video will play on the status screen after a purchase is made until minting is complete"
+        },
+        {
+          "name": "tabs",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "store",
+              "type": "text",
+              "default_value": "Store"
+            },
+            {
+              "name": "collection",
+              "label": "My Items",
+              "type": "text",
+              "default_value": "My Items"
+            }
+          ]
+        },
+        {
           "name": "sections",
           "type": "list",
           "fields": [
@@ -194,11 +217,37 @@ const MarketplaceSpec = {
           "type": "text"
         },
         {
+          "extensions": imageTypes,
+          "name": "collection_icon",
+          "type": "file"
+        },
+        {
+          "name": "placeholder",
+          "type": "subsection",
+          "hint": "Used for explicitly unspecified item slots (<None>). Will not override item definitions.",
+          "fields": [
+            {
+              "name": "name",
+              "type": "text"
+            },
+            {
+              "name": "description",
+              "type": "text"
+            },
+            {
+              "extensions": imageTypes,
+              "name": "image",
+              "type": "file"
+            }
+          ]
+        },
+        {
           "name": "items",
           "type": "reference_multiselect",
           "reference": "/items",
           "label_key": "name",
-          "value_key": "sku"
+          "value_key": "sku",
+          "allow_null": true
         }
       ]
     },
@@ -231,6 +280,11 @@ const MarketplaceSpec = {
           "label": "Background (Mobile)",
           "type": "file",
           "extensions": imageTypes
+        },
+        {
+          "name": "large_logo_mode",
+          "type": "checkbox",
+          "hint": "If specified, the logo in the login box will be significantly larger, but *the background image will NOT be visible in the Live app*."
         },
         {
           "name": "log_in_button",
@@ -310,12 +364,6 @@ const MarketplaceSpec = {
       "label": "Terms and Conditions",
       "name": "terms",
       "type": "rich_text"
-    },
-    {
-      "label": "Terms and Conditions (HTML)",
-      "name": "terms_html",
-      "type": "file",
-      "extensions": ["html"]
     }
   ]
 };

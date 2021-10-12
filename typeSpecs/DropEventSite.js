@@ -94,6 +94,33 @@ const eventSiteSpec = {
           "hint": "Displayed when the event is featured on the main page"
         },
         {
+          "name": "feature_button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Join the Drop"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        },
+        {
           "name": "event_header",
           "type": "text",
           "hint": "Displayed on the main event page"
@@ -120,7 +147,12 @@ const eventSiteSpec = {
         },
         {
           "name": "copyright",
-          "type": "textarea"
+          "type": "rich_text"
+        },
+        {
+          "name": "show_cookie_banner",
+          "type": "checkbox",
+          "default_value": false
         },
         {
           "name": "modal_message_get_started",
@@ -167,6 +199,11 @@ const eventSiteSpec = {
                   "type": "rich_text"
                 },
                 {
+                  "name": "button_text",
+                  "type": "text",
+                  "hint": "Text for the button at the bottom of the modal. By default, it will be 'Go to the Marketplace' if 'Show Marketplace' is checked, otherwise it will be 'Close'"
+                },
+                {
                   "name": "show_marketplace",
                   "type": "checkbox",
                   "hint": "Show the marketplace after the post login modal"
@@ -175,6 +212,12 @@ const eventSiteSpec = {
                   "name": "marketplace_filters",
                   "type": "list",
                   "hint": "Use this fields to filter the items shown"
+                },
+                {
+                  "name": "hide_navigation",
+                  "label": "Hide Marketplace Navigation",
+                  "type": "checkbox",
+                  "hint": "If checked, the back button will not be shown in the marketplace."
                 }
               ]
             }
@@ -250,6 +293,12 @@ const eventSiteSpec = {
           "video_preview": true
         }
       ]
+    },
+    {
+      "name": "sponsor_tagline",
+      "type": "text",
+      "hint": "Customize what shows above the sponsor list",
+      "default_value": "Sponsored by"
     },
     {
       "fields": [
