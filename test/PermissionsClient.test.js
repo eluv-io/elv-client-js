@@ -23,7 +23,7 @@ const later = Date.now() + 365 * 24 * 60 * 60 * 1000;
 describe("Test Permissions Client", () => {
   beforeAll(async () => {
     try {
-      client = await CreateClient("ElvClient", "1");
+      client = await CreateClient("ElvClient", "2");
 
       permissionsClient = OutputLogger(PermissionsClient, new PermissionsClient(client));
 
