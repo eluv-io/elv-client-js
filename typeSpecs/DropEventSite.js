@@ -904,6 +904,12 @@ const eventSiteSpec = {
       ]
     },
     {
+      "name": "show_faq",
+      "label": "Show FAQ",
+      "type": "checkbox",
+      "default_value": true
+    },
+    {
       "name": "faq",
       "label": "FAQ",
       "hint": "Specify a custom FAQ. If blank, the default FAQ will be displayed",
@@ -920,43 +926,40 @@ const eventSiteSpec = {
       ]
     },
     {
-      "name": "analytics_ids",
-      "label": "Analytics IDs",
-      "type": "list",
-      "no_localize": true,
-      "hint": "Specify IDs for your own analytics",
+      "name": "social_media_links",
+      "type": "subsection",
       "fields": [
         {
-          "name": "label",
-          "type": "text",
-          "hint": "A label for this collection of analytics"
+          "name": "youtube",
+          "type": "text"
         },
         {
-          "name": "ids",
-          "label": "IDs",
-          "type": "list",
-          "fields": [
-            {
-              "name": "type",
-              "type": "select",
-              "options": [
-                "Google Analytics ID",
-                "Google Tag Manager ID",
-                "Google Conversion ID",
-                "Google Conversion Label",
-                "Facebook Pixel ID",
-                "App Nexus Segment ID",
-                "App Nexus Pixel ID",
-                "TradeDoubler Organization ID",
-                "TradeDoubler Event ID",
-              ]
-            },
-            {
-              "name": "id",
-              "label": "ID",
-              "type": "text"
-            }
-          ]
+          "name": "instagram",
+          "type": "text"
+        },
+        {
+          "name": "twitter",
+          "type": "text"
+        },
+        {
+          "name": "website",
+          "type": "text"
+        },
+        {
+          "name": "facebook",
+          "type": "text"
+        },
+        {
+          "name": "soundcloud",
+          "type": "text"
+        },
+        {
+          "name": "apple_music",
+          "type": "text"
+        },
+        {
+          "name": "spotify",
+          "type": "text"
         }
       ]
     },
@@ -1005,6 +1008,47 @@ const eventSiteSpec = {
       "type": "subsection",
       "hint": "This information will be used to populate data used by search engines for displaying this event",
       "no_localize": true
+    },
+    {
+      "name": "analytics_ids",
+      "label": "Analytics IDs",
+      "type": "list",
+      "no_localize": true,
+      "hint": "Specify IDs for your own analytics",
+      "fields": [
+        {
+          "name": "label",
+          "type": "text",
+          "hint": "A label for this collection of analytics"
+        },
+        {
+          "name": "ids",
+          "label": "IDs",
+          "type": "list",
+          "fields": [
+            {
+              "name": "type",
+              "type": "select",
+              "options": [
+                "Google Analytics ID",
+                "Google Tag Manager ID",
+                "Google Conversion ID",
+                "Google Conversion Label",
+                "Facebook Pixel ID",
+                "App Nexus Segment ID",
+                "App Nexus Pixel ID",
+                "TradeDoubler Organization ID",
+                "TradeDoubler Event ID",
+              ]
+            },
+            {
+              "name": "id",
+              "label": "ID",
+              "type": "text"
+            }
+          ]
+        }
+      ]
     }
   ]
 };

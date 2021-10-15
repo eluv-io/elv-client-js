@@ -242,6 +242,36 @@ const MarketplaceSpec = {
           ]
         },
         {
+          "name": "collection_info_modal",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "show",
+              "type": "checkbox",
+              "hint": "The modal will only be displayed if this is checked"
+            },
+            {
+              "name": "message",
+              "type": "rich_text"
+            },
+            {
+              "name": "image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "button_text",
+              "type": "text",
+              "hint": "Text for the button at the bottom of the modal. By default, it will be 'Create Wallet' if login is required for the next drop, otherwise it will be 'Join the Drop'"
+            }
+          ]
+        },
+        {
           "name": "items",
           "type": "reference_multiselect",
           "reference": "/items",
@@ -256,6 +286,11 @@ const MarketplaceSpec = {
       "label": "Custom Branding",
       "type": "subsection",
       "fields": [
+        {
+          "name": "require_email_verification",
+          "type": "checkbox",
+          "default_value": true
+        },
         {
           "name": "font",
           "type": "select",
