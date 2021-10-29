@@ -475,7 +475,7 @@ exports.LibraryContentTypes = async function({libraryId}) {
  * @param {number=} filterOptions.limit - Max number of objects to return
  * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
  * @param {(Array<string> | string)=} filterOptions.sort - Sort by the specified key(s)
- * * @param {boolean=} filterOptions.sortDesc=false - Sort in descending order
+ * @param {boolean=} filterOptions.sortDesc=false - Sort in descending order
  * @param {(Array<string> | string)=} filterOptions.select - Include only the specified metadata keys (all must start with /public)
  * @param {(Array<object> | object)=} filterOptions.filter - Filter objects by metadata
  * @param {string=} filterOptions.filter.key - Key to filter on (must start with /public)
