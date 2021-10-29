@@ -91,6 +91,7 @@
     "ramda": "^0.27.1",
     "shell-escape": "^0.2.0",
     "sjcl": "^1.0.8",
+    "stream-browserify": "^3.0.0",
     "typedarray": "0.0.6",
     "unorm": "^1.5.0",
     "urijs": "^1.19.7",

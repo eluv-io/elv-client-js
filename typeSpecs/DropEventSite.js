@@ -278,6 +278,44 @@ const eventSiteSpec = {
           "name": "tv_main_logo",
           "type": "file",
           "label": "Main Logo (TV)"
+        },
+        {
+          "name": "main_page_banner",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "show",
+              "type": "checkbox"
+            },
+            {
+              "extensions": imageTypes,
+              "name": "image",
+              "type": "file"
+            },
+            {
+              "extensions": imageTypes,
+              "name": "image_mobile",
+              "label": "Image (Mobile)",
+              "type": "file"
+            },
+            {
+              "name": "type",
+              "type": "select",
+              "options": [
+                "marketplace",
+                "link"
+              ],
+              "default_value": "marketplace"
+            },
+            {
+              "name": "marketplace_filters",
+              "type": "list"
+            },
+            {
+              "name": "link",
+              "type": "text"
+            }
+          ]
         }
       ],
       "name": "event_images",
@@ -395,7 +433,60 @@ const eventSiteSpec = {
       ]
     },
     {
+      "name": "marketplace_drops",
+      "type": "list",
+      "fields": [
+        {
+          "name": "uuid",
+          "label": "Drop ID",
+          "type": "uuid",
+          "no_localize": true
+        },
+        {
+          "name": "event_header",
+          "type": "text",
+          "hint": "Used when displayed in upcoming events"
+        },
+        {
+          "name": "event_image",
+          "type": "file",
+          "extensions": imageTypes,
+          "hint": "Used when displayed in upcoming events"
+        },
+        {
+          "name": "start_date",
+          "type": "datetime",
+          "no_localize": true
+        },
+        {
+          "name": "store_filters",
+          "type": "list",
+          "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown for users who voted"
+        },
+        {
+          "fields": [
+            {
+              "name": "title",
+              "type": "text"
+            },
+            {
+              "name": "description",
+              "type": "textarea"
+            },
+            {
+              "name": "location",
+              "type": "text"
+            }
+          ],
+          "label": "Calendar Event Info",
+          "name": "calendar",
+          "type": "subsection"
+        }
+      ]
+    },
+    {
       "name": "drops",
+      "label": "Drop Events",
       "type": "list",
       "fields": [
         {
@@ -437,9 +528,21 @@ const eventSiteSpec = {
           "default_value": true
         },
         {
+          "name": "minting_animation",
+          "type": "fabric_link",
+          "video_preview": true,
+          "hint": "If specified, this video will play on the status screen while waiting for NFTs to mint"
+        },
+        {
           "name": "store_filters",
           "type": "list",
           "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown"
+        },
+        {
+          "name": "store_filters_no_vote",
+          "label": "Store Filters (No Vote)",
+          "type": "list",
+          "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown for users who have not voted"
         },
         {
           "name": "drop_header",

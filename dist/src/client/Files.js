@@ -1819,7 +1819,7 @@ exports.DownloadEncrypted = function _callee18(_ref18) {
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the content object draft
- * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {string=} encryption=none - Desired encryption scheme. Options: 'none' (default), 'cgck'
  *
  * @returns {Promise<string>} - The part write token for the part draft
  */
@@ -1887,7 +1887,7 @@ exports.CreatePart = function _callee19(_ref19) {
  * @param {string} writeToken - Write token of the content object draft
  * @param {string} partWriteToken - Write token of the part
  * @param {(ArrayBuffer | Buffer)} chunk - Data to upload
- * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {string=} encryption=none - Desired encryption scheme. Options: 'none' (default), 'cgck'
  *
  * @returns {Promise<string>} - The part write token for the part draft
  */
@@ -1974,7 +1974,7 @@ exports.UploadPartChunk = function _callee20(_ref20) {
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the content object draft
  * @param {string} partWriteToken - Write token of the part
- * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {string=} encryption=none - Desired encryption scheme. Options: 'none' (default), 'cgck'
  *
  * @returns {Promise<object>} - The finalize response for the new part
  */
@@ -2051,7 +2051,7 @@ exports.FinalizePart = function _callee21(_ref21) {
  * @param {string} writeToken - Write token of the content object draft
  * @param {(File | ArrayBuffer | Buffer)} data - Data to upload
  * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
- * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {string=} encryption=none - Desired encryption scheme. Options: 'none' (default), 'cgck'
  * @param {function=} callback - If specified, will be periodically called with current upload status
  * - Signature: ({bytesFinished, bytesTotal}) => {}
  *
