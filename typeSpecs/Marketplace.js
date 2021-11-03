@@ -209,6 +209,10 @@ const MarketplaceSpec = {
       "type": "list",
       "fields": [
         {
+          "name": "name",
+          "type": "text"
+        },
+        {
           "name": "collection_header",
           "type": "text"
         },
