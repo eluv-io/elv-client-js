@@ -1,5 +1,7 @@
 const imageTypes = ["gif", "jpg", "jpeg", "png", "svg", "webp"];
 const languageOptions = require("./LanguageCodes");
+const countryOptions = Object.values(require("country-codes-list").customList("countryNameEn", "{countryCode}: {countryNameEn}")).sort();
+const currencyOptions = [...new Set(Object.values(require("country-codes-list").customList("countryNameEn", "{currencyCode}")))].filter(c => c).sort();
 
 const eventSiteSpec = {
   "profile": {
@@ -23,6 +25,11 @@ const eventSiteSpec = {
   associated_assets: [],
   info_fields: [
     {
+      "label": "Basic Info",
+      "name": "header_basic_info",
+      "type": "header"
+    },
+    {
       "name": "tenant_id",
       "label": "Tenant ID",
       "type": "Text"
@@ -41,10 +48,9 @@ const eventSiteSpec = {
       "no_localize": true
     },
     {
-      "name": "type",
-      "type": "text",
-      "default_value": "drop_event",
-      "readonly": true
+      "name": "allow_login",
+      "type": "checkbox",
+      "default_value": false
     },
     {
       "name": "state",
@@ -75,6 +81,15 @@ const eventSiteSpec = {
       "hint": "Additional languages to support",
       "options": Object.keys(languageOptions)
     },
+
+
+
+
+    {
+      "label": "Event Info",
+      "name": "header_event_info",
+      "type": "header"
+    },
     {
       "fields": [
         {
@@ -96,6 +111,7 @@ const eventSiteSpec = {
         {
           "name": "feature_button",
           "type": "subsection",
+          "hint": "This section configures the button linking to this event when shown on the main site as a featured event.",
           "fields": [
             {
               "name": "text",
@@ -333,6 +349,25 @@ const eventSiteSpec = {
       ]
     },
     {
+      "fields": [
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "name": "location",
+          "type": "text"
+        }
+      ],
+      "label": "Calendar Event",
+      "name": "calendar",
+      "type": "subsection"
+    },
+    {
       "name": "sponsor_tagline",
       "type": "text",
       "hint": "Customize what shows above the sponsor list",
@@ -362,6 +397,92 @@ const eventSiteSpec = {
         }
       ],
       "name": "sponsors",
+      "type": "list"
+    },
+    {
+      "name": "social_media_links",
+      "type": "subsection",
+      "fields": [
+        {
+          "name": "youtube",
+          "type": "text"
+        },
+        {
+          "name": "instagram",
+          "type": "text"
+        },
+        {
+          "name": "twitter",
+          "type": "text"
+        },
+        {
+          "name": "website",
+          "type": "text"
+        },
+        {
+          "name": "facebook",
+          "type": "text"
+        },
+        {
+          "name": "soundcloud",
+          "type": "text"
+        },
+        {
+          "name": "apple_music",
+          "type": "text"
+        },
+        {
+          "name": "spotify",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "fields": [
+            {
+              "hint": "A description displayed next to the 'Next' button when viewing the previous page.",
+              "name": "page_title",
+              "type": "text"
+            },
+            {
+              "extensions": imageTypes,
+              "name": "image",
+              "type": "file"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000",
+                "label": "Black"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF",
+                "label": "White"
+              }
+            },
+            {
+              "name": "text",
+              "type": "rich_text"
+            }
+          ],
+          "name": "pages",
+          "type": "list"
+        }
+      ],
+      "name": "event_descriptions",
       "type": "list"
     },
     {
@@ -406,6 +527,25 @@ const eventSiteSpec = {
       "type": "subsection"
     },
     {
+      "fields": [
+        {
+          "name": "subheader",
+          "type": "text"
+        },
+        {
+          "name": "header",
+          "type": "text"
+        },
+        {
+          "name": "stream",
+          "type": "fabric_link",
+          "video_preview": true
+        },
+      ],
+      "name": "stream_page",
+      "type": "subsection"
+    },
+    {
       "name": "footer_links",
       "type": "list",
       "hint": "Specify links to include in the footer of the event, such as privacy or terms policies. Each item can either be specified as a URL, rich text, or an HTML document. The two latter options will be shown in a modal when clicked.",
@@ -431,6 +571,431 @@ const eventSiteSpec = {
           "extensions": ["html"]
         }
       ]
+    },
+    {
+      "name": "branding",
+      "label": "Custom Branding",
+      "type": "subsection",
+      "fields": [
+        {
+          "name": "get_started",
+          "label": "'Get Started' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Get Started"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        },
+        {
+          "name": "join_drop",
+          "label": "'Join the Drop' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Join the Drop"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        },
+        {
+          "name": "buy_tickets",
+          "label": "'Buy Tickets' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Buy Tickets"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            }
+          ]
+        },
+        {
+          "name": "watch_promo",
+          "label": "'Watch Promo' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Watch Promo"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "show_faq",
+      "label": "Show FAQ",
+      "type": "checkbox",
+      "default_value": true
+    },
+    {
+      "name": "faq",
+      "label": "FAQ",
+      "hint": "Specify a custom FAQ. If blank, the default FAQ will be displayed",
+      "type": "list",
+      "fields": [
+        {
+          "name": "question",
+          "type": "text"
+        },
+        {
+          "name": "answer",
+          "type": "textarea"
+        }
+      ]
+    },
+
+
+
+
+    {
+      "label": "Tickets, Products and Coupons",
+      "name": "header_tickets_products_coupons",
+      "type": "header"
+    },
+    {
+      "name": "shipping_countries",
+      "type": "multiselect",
+      "no_localize": true,
+      "hint": "Countries to which merchandise shipment is available",
+      "default_value": ["US: United States of America"],
+      "options": countryOptions
+    },
+    {
+      "name": "payment_currencies",
+      "type": "multiselect",
+      "no_localize": true,
+      "hint": "List of accepted currencies for tickets and merchandise",
+      "default_value": ["USD"],
+      "options": currencyOptions
+    },
+    {
+      "name": "free",
+      "type": "checkbox",
+      "no_localize": true,
+      "hint": "If specified, the event is free for all users and tickets will not be necessary."
+    },
+    {
+      "fields": [
+        {
+          "name": "coupon_mode",
+          "type": "checkbox",
+          "no_localize": true,
+          "hint": "If specified, coupon redemption will be available"
+        },
+        {
+          "name": "redemption_message",
+          "type": "text",
+          "hint": "Text to be displayed on coupon redemption page"
+        },
+        {
+          "name": "event_page_message_1",
+          "type": "text",
+          "hint": "Text to be displayed on event page after redemption"
+        },
+        {
+          "name": "event_page_message_2",
+          "type": "text",
+          "hint": "Text to be displayed on event page after redemption"
+        }
+      ],
+      "name": "coupon_redemption",
+      "type": "subsection"
+    },
+    {
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "label": "Item ID",
+          "name": "uuid",
+          "no_localize": true,
+          "type": "uuid"
+        },
+        {
+          "name": "hidden",
+          "type": "checkbox",
+          "no_localize": true,
+          "hint": "If checked, this ticket class will not be displayed and won't be available for purchase."
+        },
+        {
+          "name": "release_date",
+          "type": "datetime",
+          "no_localize": true,
+          "hint": "If the tickets should not be available for purchase immediately, specify a release date"
+        },
+        {
+          "name": "requires_shipping",
+          "type": "checkbox",
+          "no_localize": true,
+          "hint": "If checked, shipping information and taxes will be collected for purchases of this ticket class."
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "extensions": imageTypes,
+          "name": "image",
+          "type": "file"
+        },
+        {
+          "fields": [
+            {
+              "name": "label",
+              "type": "text"
+            },
+            {
+              "label": "Item ID",
+              "name": "uuid",
+              "type": "uuid",
+              "no_localize": true,
+            },
+            {
+              "name": "hidden",
+              "type": "checkbox",
+              "no_localize": true,
+              "hint": "If checked, this ticket SKU will not be displayed and won't be available for purchase."
+            },
+            {
+              "label": "NTP ID",
+              "name": "otp_id",
+              "no_localize": true,
+              "type": "ntp_id"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "no_localize": true,
+            },
+            {
+              "label": "Start Time (Text)",
+              "hint": "This label will be displayed in emails where time zone localization is not possible.",
+              "name": "start_time_text",
+              "type": "text"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "no_localize": true,
+            },
+            {
+              "name": "price",
+              "type": "reference_subsection",
+              "no_localize": true,
+              "reference": "/payment_currencies",
+              "value_type": "number",
+              "hint": "Available price currencies are based on the 'Payment Currencies' field above",
+            },
+            {
+              "name": "external_url",
+              "hint": "External URL from which to purchase this ticket. If specified, the payment information below is not required."
+            }
+          ],
+          "label": "SKUs",
+          "name": "skus",
+          "type": "list"
+        }
+      ],
+      "name": "tickets",
+      "type": "list"
+    },
+    {
+      "fields": [
+        {
+          "name": "type",
+          "options": [
+            "merchandise",
+            "donation"
+          ],
+          "type": "select",
+          "no_localize": true,
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "label": "Item ID",
+          "name": "uuid",
+          "type": "uuid",
+          "no_localize": true,
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "fields": [
+            {
+              "extensions": imageTypes,
+              "name": "image",
+              "type": "file"
+            }
+          ],
+          "name": "images",
+          "type": "list"
+        },
+        {
+          "name": "price",
+          "type": "reference_subsection",
+          "no_localize": true,
+          "reference": "/payment_currencies",
+          "value_type": "number",
+          "hint": "Available price currencies are based on the 'Payment Currencies' field above",
+        },
+        {
+          "name": "featured",
+          "type": "checkbox",
+          "no_localize": true,
+          "hint": "A featured item will be shown at checkout."
+        },
+        {
+          "fields": [
+            {
+              "name": "name",
+            },
+            {
+              "name": "type",
+              "type": "select",
+              "options": [
+                "text",
+                "color",
+                "number"
+              ]
+            }
+          ],
+          "hint": "Specify the characteristics each variation of this product has, for example 'Size' and 'Color'",
+          "name": "option_fields",
+          "no_localize": true,
+          "type": "list"
+        },
+        {
+          "name": "product_options",
+          "type": "reference_list",
+          "no_localize": true,
+          "reference": "./option_fields",
+          "fields": [
+            {
+              "label": "SKU ID",
+              "name": "uuid",
+              "type": "uuid"
+            }
+          ]
+        }
+      ],
+      "name": "products",
+      "type": "list"
+    },
+    {
+      "fields": [
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "name": "release_date",
+          "type": "datetime",
+          "no_localize": true,
+        },
+        {
+          "extensions": imageTypes,
+          "name": "image",
+          "type": "file"
+        },
+        {
+          "name": "package",
+          "type": "fabric_link",
+          "no_localize": true,
+        }
+      ],
+      "name": "extras",
+      "type": "list"
+    },
+
+
+
+
+
+    {
+      "label": "Drops",
+      "name": "header_drops",
+      "type": "header"
     },
     {
       "name": "marketplace_drops",
@@ -915,156 +1480,15 @@ const eventSiteSpec = {
         }
       ]
     },
+
+
+
+
+
     {
-      "name": "branding",
-      "label": "Custom Branding",
-      "type": "subsection",
-      "fields": [
-        {
-          "name": "get_started",
-          "label": "'Get Started' Button",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "text",
-              "type": "text",
-              "default_value": "Get Started"
-            },
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#d7bb73"
-              }
-            }
-          ]
-        },
-        {
-          "name": "join_drop",
-          "label": "'Join the Drop' Button",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "text",
-              "type": "text",
-              "default_value": "Join the Drop"
-            },
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#d7bb73"
-              }
-            }
-          ]
-        },
-        {
-          "name": "watch_promo",
-          "label": "'Watch Promo' Button",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "text",
-              "type": "text",
-              "default_value": "Watch Promo"
-            },
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#FFFFFF"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "show_faq",
-      "label": "Show FAQ",
-      "type": "checkbox",
-      "default_value": true
-    },
-    {
-      "name": "faq",
-      "label": "FAQ",
-      "hint": "Specify a custom FAQ. If blank, the default FAQ will be displayed",
-      "type": "list",
-      "fields": [
-        {
-          "name": "question",
-          "type": "text"
-        },
-        {
-          "name": "answer",
-          "type": "textarea"
-        }
-      ]
-    },
-    {
-      "name": "social_media_links",
-      "type": "subsection",
-      "fields": [
-        {
-          "name": "youtube",
-          "type": "text"
-        },
-        {
-          "name": "instagram",
-          "type": "text"
-        },
-        {
-          "name": "twitter",
-          "type": "text"
-        },
-        {
-          "name": "website",
-          "type": "text"
-        },
-        {
-          "name": "facebook",
-          "type": "text"
-        },
-        {
-          "name": "soundcloud",
-          "type": "text"
-        },
-        {
-          "name": "apple_music",
-          "type": "text"
-        },
-        {
-          "name": "spotify",
-          "type": "text"
-        }
-      ]
+      "label": "Search and Analytics",
+      "name": "header_search_and_analytics",
+      "type": "header"
     },
     {
       "fields": [
