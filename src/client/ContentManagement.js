@@ -59,7 +59,7 @@ exports.SetVisibility = async function({id, visibility}) {
  * @param {string} objectId - The ID of the object
  * @param {string} permission - The key for the permission to set - See client.permissionLevels for available permissions
  */
-exports.SetPermission = async function({objectId, permission}) {
+exports.SetPermission = async function({objectId, permission, writeToken=undefined}) {
   ValidateObject(objectId);
   ValidatePresence("permission", permission);
 
@@ -118,14 +118,19 @@ exports.SetPermission = async function({objectId, permission}) {
       }
     });
   } else if(!kmsConk && settings.kmsConk) {
-    await this.EditAndFinalizeContentObject({
-      libraryId,
-      objectId,
-      commitMessage: "Add encryption conk",
-      callback: async ({writeToken}) => {
-        await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
-      }
-    });
+    if(writeToken) {
+      await this.EditContentObject({libraryId, objectId});
+      await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
+    } else {
+      await this.EditAndFinalizeContentObject({
+        libraryId,
+        objectId,
+        commitMessage: "Add encryption conk",
+        callback: async ({writeToken}) => {
+          await this.CreateEncryptionConk({libraryId, objectId, writeToken, createKMSConk: true});
+        }
+      });
+    }
   }
 };
 
@@ -616,13 +621,55 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
  *
  * @returns {Promise<Object>} - Response containing the object ID and write token of the draft
  */
-exports.CopyContentObject = async function({libraryId, originalVersionHash, options={}}) {
+exports.CopyContentObject = async function({libraryId, originalVersionHash, options={}, originalObject=null}) {
   ValidateLibrary(libraryId);
   ValidateVersion(originalVersionHash);
 
   options.copy_from = originalVersionHash;
 
-  return await this.CreateContentObject({libraryId, options});
+  if(!originalObject) {
+    return await this.CreateAndFinalizeContentObject({libraryId, options});
+  }
+
+  ValidateObject(originalObject.id);
+
+  const callback = async ({objectId, writeToken}) => {
+    const kmsCapKey = Object.keys(originalObject).find(key => key.startsWith("eluv.caps.ikms"));
+    const userCapKey = Object.keys(originalObject).find(key => key.startsWith("eluv.caps.iusr"));
+
+    if(userCapKey) {
+      const userConkKey = await this.Crypto.DecryptCap(originalObject[userCapKey], this.signer.signingKey.privateKey);
+      userConkKey.qid = objectId;
+
+      await this.DeleteMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: userCapKey
+      });
+
+      this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: userCapKey,
+        metadata: await this.Crypto.EncryptConk(userConkKey, this.signer.signingKey.publicKey)
+      });
+    }
+
+    if(kmsCapKey) {
+      await this.DeleteMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: kmsCapKey
+      });
+
+      await this.SetPermission({objectId, permission: originalObject.permission, writeToken});
+    }
+  };
+
+  return await this.CreateAndFinalizeContentObject({libraryId, options, callback});
 };
 
 /**
