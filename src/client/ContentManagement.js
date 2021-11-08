@@ -631,14 +631,9 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   const permission = await this.Permission({objectId: originalObjectId});
 
   // User CAP
-  const hasUserCap = Object.keys(metadata).some(key => key.startsWith("eluv.caps.iusr"));
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
 
-  if(hasUserCap) {
-    if(!metadata[userCapKey]) {
-      throw Error("Unable to find a user cap for the current user");
-    }
-
+  if(metadata[userCapKey]) {
     const isOwner = this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId: originalObjectId}));
 
     if(!isOwner) {
@@ -658,16 +653,18 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   }
 
   // KMS CAP
-  const kmsCapKey = Object.keys(metadata).find(key => key.startsWith("eluv.caps.ikms"));
+  await Promise.all(
+    Object.keys(metadata)
+      .filter(key => key.startsWith("eluv.caps.ikms"))
+      .map(async kmsCapKey => await this.DeleteMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: kmsCapKey
+      }))
+  );
 
-  if(kmsCapKey) {
-    await this.DeleteMetadata({
-      libraryId,
-      objectId,
-      writeToken,
-      metadataSubtree: kmsCapKey
-    });
-
+  if(permission !== "owner") {
     await this.SetPermission({objectId, permission, writeToken});
   }
 
