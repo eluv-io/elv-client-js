@@ -5,8 +5,8 @@ const currencyOptions = [...new Set(Object.values(require("country-codes-list").
 
 const eventSiteSpec = {
   "profile": {
-    name: "Eluvio LIVE Drop Event Site",
-    version: "0.1",
+    name: "Eluvio LIVE Event Site",
+    version: "0.2",
   },
   manageApp: "default",
   associate_permissions: true,
@@ -46,11 +46,6 @@ const eventSiteSpec = {
       "type": "fabric_link",
       "hash_only": true,
       "no_localize": true
-    },
-    {
-      "name": "allow_login",
-      "type": "checkbox",
-      "default_value": false
     },
     {
       "name": "state",
@@ -318,18 +313,28 @@ const eventSiteSpec = {
               "name": "type",
               "type": "select",
               "options": [
+                "drop",
                 "marketplace",
                 "link"
               ],
-              "default_value": "marketplace"
+              "default_value": "marketplace",
+              "hint": "Specify what happens when clicking on the banner. The banner can link to a URL or a drop, or it can open the marketplace view."
             },
             {
               "name": "marketplace_filters",
-              "type": "list"
+              "type": "list",
+              "hint": "If the banner links to the marketplace, you can specify filters to apply when the marketplace is opened via the banner."
             },
             {
               "name": "link",
-              "type": "text"
+              "type": "text",
+              "hint": "If the banner is a link, specify the URL to link to."
+            },
+            {
+              "label": "Drop UUID",
+              "name": "drop_uuid",
+              "type": "text",
+              "hint": "If the banner links to a drop, you can specify a specific drop to link to. If not specified, the banner will link to the next upcoming drop."
             }
           ]
         }
@@ -1066,6 +1071,11 @@ const eventSiteSpec = {
           "default_value": true
         },
         {
+          "name": "requires_ticket",
+          "type": "checkbox",
+          "default_value": false
+        },
+        {
           "name": "event_header",
           "type": "text",
           "hint": "Used when displayed in upcoming events"
@@ -1501,6 +1511,15 @@ const eventSiteSpec = {
           "type": "textarea"
         },
         {
+          "name": "location",
+          "type": "text"
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "options": ["Online Only", "Online and In-Person"]
+        },
+        {
           "name": "images",
           "type": "list",
           "fields": [{
@@ -1508,6 +1527,26 @@ const eventSiteSpec = {
             "type": "file",
             "extensions": imageTypes
           }]
+        },
+        {
+          "name": "performers",
+          "type": "list",
+          "fields": [
+            {
+              "name": "name",
+              "type": "text"
+            },
+            {
+              "name": "url",
+              "label": "URL",
+              "type": "text"
+            },
+            {
+              "name": "image",
+              "type": "file",
+              "extensions": imageTypes
+            }
+          ]
         },
         {
           "name": "organizers",
@@ -1526,6 +1565,25 @@ const eventSiteSpec = {
               "name": "image",
               "type": "file",
               "extensions": imageTypes
+            }
+          ]
+        },
+        {
+          "name": "showings",
+          "type": "list",
+          "fields": [
+            {
+              "name": "name",
+              "type": "text"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "hint": "Make sure this time exactly matches the corresponding ticket SKU start times"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime"
             }
           ]
         }
