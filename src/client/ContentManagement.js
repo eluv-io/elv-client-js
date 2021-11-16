@@ -21,7 +21,8 @@ const {
   ValidateVersion,
   ValidateWriteToken,
   ValidateParameters,
-  ValidatePresence
+  ValidatePresence,
+  ValidateAddress
 } = require("../Validation");
 
 exports.SetVisibility = async function({id, visibility}) {
@@ -669,6 +670,50 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
   }
 
   return await this.FinalizeContentObject({libraryId, objectId, writeToken});
+};
+
+/**
+ * Create an owner cap key using the specified public key and address
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} publicKey - Public key for the target cap
+ * @param {string} publicAddress - Public address for the target cap key
+ *
+ * @returns {Promise<Object>}
+ */
+exports.CreateOwnerCap = async function({objectId, libraryId, publicKey, publicAddress}) {
+  publicAddress = ValidateAddress(publicAddress);
+  const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const userCapValue = await this.ContentObjectMetadata({objectId, libraryId, metadataSubtree: userCapKey});
+
+  if(!userCapValue) {
+    throw Error("No user cap found for current user");
+  }
+
+  const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer.signingKey.privateKey);
+
+  const targetUserCapKey = `eluv.caps.iusr${this.utils.AddressToHash(publicAddress)}`;
+  const targetUserCapValue = await this.Crypto.EncryptConk(userConk, publicKey);
+
+  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+
+  this.ReplaceMetadata({
+    libraryId,
+    objectId,
+    writeToken,
+    metadataSubtree: targetUserCapKey,
+    metadata: targetUserCapValue
+  });
+
+  return await this.FinalizeContentObject({
+    libraryId,
+    objectId,
+    writeToken,
+    commitMessage: "Create owner cap"
+  });
 };
 
 /**

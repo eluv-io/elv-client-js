@@ -2408,7 +2408,10 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
 
   const owner = await this.authClient.Owner({id: objectId});
 
-  if(!this.utils.EqualAddress(owner, this.signer.address)) {
+  const ownerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: ownerCapKey});
+
+  if(!this.utils.EqualAddress(owner, this.signer.address) && !ownerCap) {
     if(download) {
       return await this.authClient.ReEncryptionConk({libraryId, objectId, versionHash});
     } else {
