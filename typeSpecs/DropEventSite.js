@@ -22,7 +22,22 @@ const eventSiteSpec = {
   localization: {
     localizations: Object.keys(languageOptions)
   },
-  associated_assets: [],
+  associated_assets: [
+    {
+      name: "promos",
+      label: "Promos (Apple TV)",
+      indexed: true,
+      slugged: true,
+      defaultable: true,
+      orderable: true
+    },
+    {
+      name: "channels",
+      label: "Channels (Apple TV)",
+      indexed: true,
+      defaultable: true
+    },
+  ],
   info_fields: [
     {
       "label": "Basic Info",
@@ -58,6 +73,11 @@ const eventSiteSpec = {
       ],
       "default_value": "Inaccessible",
       "hint": "Specify the current state of the event. Inaccessible and ended events will not be visible to users."
+    },
+    {
+      "label": "Accessible (Apple TV)",
+      "name": "accessible",
+      "type": "checkbox"
     },
     {
       "name": "theme",
@@ -1001,6 +1021,11 @@ const eventSiteSpec = {
       "label": "Drops",
       "name": "header_drops",
       "type": "header"
+    },
+    {
+      "name": "hide_upcoming_events",
+      "type": "checkbox",
+      "default_value": false
     },
     {
       "name": "marketplace_drops",
