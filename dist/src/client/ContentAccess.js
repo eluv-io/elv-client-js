@@ -944,9 +944,8 @@ exports.LibraryContentTypes = function _callee13(_ref8) {
  * @param {object=} filterOptions - Pagination, sorting and filtering options
  * @param {number=} filterOptions.start - Start index for pagination
  * @param {number=} filterOptions.limit - Max number of objects to return
- * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
  * @param {(Array<string> | string)=} filterOptions.sort - Sort by the specified key(s)
- * @param {boolean=} filterOptions.sortDesc=false - Sort in descending order
+ * @param {boolean=} filterOptions.sortDesc - Sort in descending order
  * @param {(Array<string> | string)=} filterOptions.select - Include only the specified metadata keys (all must start with /public)
  * @param {(Array<object> | object)=} filterOptions.filter - Filter objects by metadata
  * @param {string=} filterOptions.filter.key - Key to filter on (must start with /public)
@@ -4259,7 +4258,7 @@ exports.CreateEncryptionConk = function _callee46(_ref39) {
 
 
 exports.EncryptionConk = function _callee47(_ref40) {
-  var libraryId, objectId, versionHash, writeToken, _ref40$download, download, owner, capKey, existingUserCap;
+  var libraryId, objectId, versionHash, writeToken, _ref40$download, download, owner, ownerCapKey, ownerCap, capKey, existingUserCap;
 
   return _regeneratorRuntime.async(function _callee47$(_context47) {
     while (1) {
@@ -4287,46 +4286,56 @@ exports.EncryptionConk = function _callee47(_ref40) {
 
         case 6:
           owner = _context47.sent;
+          ownerCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
+          _context47.next = 10;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            metadataSubtree: ownerCapKey
+          }));
 
-          if (this.utils.EqualAddress(owner, this.signer.address)) {
-            _context47.next = 17;
+        case 10:
+          ownerCap = _context47.sent;
+
+          if (!(!this.utils.EqualAddress(owner, this.signer.address) && !ownerCap)) {
+            _context47.next = 21;
             break;
           }
 
           if (!download) {
-            _context47.next = 14;
+            _context47.next = 18;
             break;
           }
 
-          _context47.next = 11;
+          _context47.next = 15;
           return _regeneratorRuntime.awrap(this.authClient.ReEncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash
           }));
 
-        case 11:
+        case 15:
           return _context47.abrupt("return", _context47.sent);
 
-        case 14:
-          _context47.next = 16;
+        case 18:
+          _context47.next = 20;
           return _regeneratorRuntime.awrap(this.authClient.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash
           }));
 
-        case 16:
+        case 20:
           return _context47.abrupt("return", _context47.sent);
 
-        case 17:
+        case 21:
           if (this.encryptionConks[objectId]) {
-            _context47.next = 34;
+            _context47.next = 38;
             break;
           }
 
           capKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context47.next = 21;
+          _context47.next = 25;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -4336,29 +4345,29 @@ exports.EncryptionConk = function _callee47(_ref40) {
             metadataSubtree: capKey
           }));
 
-        case 21:
+        case 25:
           existingUserCap = _context47.sent;
 
           if (!existingUserCap) {
-            _context47.next = 28;
+            _context47.next = 32;
             break;
           }
 
-          _context47.next = 25;
+          _context47.next = 29;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(existingUserCap, this.signer.signingKey.privateKey));
 
-        case 25:
+        case 29:
           this.encryptionConks[objectId] = _context47.sent;
-          _context47.next = 34;
+          _context47.next = 38;
           break;
 
-        case 28:
+        case 32:
           if (!writeToken) {
-            _context47.next = 33;
+            _context47.next = 37;
             break;
           }
 
-          _context47.next = 31;
+          _context47.next = 35;
           return _regeneratorRuntime.awrap(this.CreateEncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
@@ -4367,17 +4376,17 @@ exports.EncryptionConk = function _callee47(_ref40) {
             createKMSConk: false
           }));
 
-        case 31:
-          _context47.next = 34;
+        case 35:
+          _context47.next = 38;
           break;
 
-        case 33:
+        case 37:
           throw "No encryption conk present for " + objectId;
 
-        case 34:
+        case 38:
           return _context47.abrupt("return", this.encryptionConks[objectId]);
 
-        case 35:
+        case 39:
         case "end":
           return _context47.stop();
       }

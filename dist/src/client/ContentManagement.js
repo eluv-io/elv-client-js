@@ -32,7 +32,8 @@ var _require = require("../Validation"),
     ValidateVersion = _require.ValidateVersion,
     ValidateWriteToken = _require.ValidateWriteToken,
     ValidateParameters = _require.ValidateParameters,
-    ValidatePresence = _require.ValidatePresence;
+    ValidatePresence = _require.ValidatePresence,
+    ValidateAddress = _require.ValidateAddress;
 
 exports.SetVisibility = function _callee(_ref) {
   var id, visibility, hasSetVisibility, event;
@@ -1215,6 +1216,104 @@ exports.CopyContentObject = function _callee12(_ref15) {
   }, null, this);
 };
 /**
+ * Create a non-owner cap key using the specified public key and address
+ *
+ * @methodGroup Access Requests
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} publicKey - Public key for the target cap
+ * @param {string} publicAddress - Public address for the target cap key
+ * @param {string} writeToken - Write token for the content object - If specified, info will be retrieved from the write draft instead of creating a new draft and finalizing
+ *
+ * @returns {Promise<Object>}
+ */
+
+
+exports.CreateNonOwnerCap = function _callee13(_ref17) {
+  var objectId, libraryId, publicKey, publicAddress, writeToken, userCapKey, userCapValue, userConk, targetUserCapKey, targetUserCapValue, finalize;
+  return _regeneratorRuntime.async(function _callee13$(_context14) {
+    while (1) {
+      switch (_context14.prev = _context14.next) {
+        case 0:
+          objectId = _ref17.objectId, libraryId = _ref17.libraryId, publicKey = _ref17.publicKey, publicAddress = _ref17.publicAddress, writeToken = _ref17.writeToken;
+          publicAddress = ValidateAddress(publicAddress);
+          userCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
+          _context14.next = 5;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            objectId: objectId,
+            libraryId: libraryId,
+            metadataSubtree: userCapKey
+          }));
+
+        case 5:
+          userCapValue = _context14.sent;
+
+          if (userCapValue) {
+            _context14.next = 8;
+            break;
+          }
+
+          throw Error("No user cap found for current user");
+
+        case 8:
+          _context14.next = 10;
+          return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(userCapValue, this.signer.signingKey.privateKey));
+
+        case 10:
+          userConk = _context14.sent;
+          targetUserCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(publicAddress));
+          _context14.next = 14;
+          return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(userConk, publicKey));
+
+        case 14:
+          targetUserCapValue = _context14.sent;
+          finalize = !writeToken;
+
+          if (writeToken) {
+            _context14.next = 20;
+            break;
+          }
+
+          _context14.next = 19;
+          return _regeneratorRuntime.awrap(this.EditContentObject({
+            libraryId: libraryId,
+            objectId: objectId
+          }).writeToken);
+
+        case 19:
+          writeToken = _context14.sent;
+
+        case 20:
+          this.ReplaceMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            writeToken: writeToken,
+            metadataSubtree: targetUserCapKey,
+            metadata: targetUserCapValue
+          });
+
+          if (!finalize) {
+            _context14.next = 24;
+            break;
+          }
+
+          _context14.next = 24;
+          return _regeneratorRuntime.awrap(this.FinalizeContentObject({
+            libraryId: libraryId,
+            objectId: objectId,
+            writeToken: writeToken,
+            commitMessage: "Create non-owner cap"
+          }));
+
+        case 24:
+        case "end":
+          return _context14.stop();
+      }
+    }
+  }, null, this);
+};
+/**
  * Create a new content object draft from an existing object.
  *
  * @methodGroup Content Objects
@@ -1229,14 +1328,14 @@ exports.CopyContentObject = function _callee12(_ref15) {
  */
 
 
-exports.EditContentObject = function _callee13(_ref17) {
-  var libraryId, objectId, _ref17$options, options, path, editResponse;
+exports.EditContentObject = function _callee14(_ref18) {
+  var libraryId, objectId, _ref18$options, options, path, editResponse;
 
-  return _regeneratorRuntime.async(function _callee13$(_context14) {
+  return _regeneratorRuntime.async(function _callee14$(_context15) {
     while (1) {
-      switch (_context14.prev = _context14.next) {
+      switch (_context15.prev = _context15.next) {
         case 0:
-          libraryId = _ref17.libraryId, objectId = _ref17.objectId, _ref17$options = _ref17.options, options = _ref17$options === void 0 ? {} : _ref17$options;
+          libraryId = _ref18.libraryId, objectId = _ref18.objectId, _ref18$options = _ref18.options, options = _ref18$options === void 0 ? {} : _ref18$options;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -1244,55 +1343,55 @@ exports.EditContentObject = function _callee13(_ref17) {
           this.Log("Opening content draft: ".concat(libraryId, " ").concat(objectId));
 
           if (!("type" in options && options.type)) {
-            _context14.next = 23;
+            _context15.next = 23;
             break;
           }
 
           if (!options.type.startsWith("hq__")) {
-            _context14.next = 10;
+            _context15.next = 10;
             break;
           }
 
-          _context14.next = 7;
+          _context15.next = 7;
           return _regeneratorRuntime.awrap(this.ContentType({
             versionHash: options.type
           }));
 
         case 7:
-          options.type = _context14.sent.hash;
-          _context14.next = 23;
+          options.type = _context15.sent.hash;
+          _context15.next = 23;
           break;
 
         case 10:
           if (!options.type.startsWith("iq__")) {
-            _context14.next = 16;
+            _context15.next = 16;
             break;
           }
 
-          _context14.next = 13;
+          _context15.next = 13;
           return _regeneratorRuntime.awrap(this.ContentType({
             typeId: options.type
           }));
 
         case 13:
-          options.type = _context14.sent.hash;
-          _context14.next = 23;
+          options.type = _context15.sent.hash;
+          _context15.next = 23;
           break;
 
         case 16:
           if (!options.type) {
-            _context14.next = 22;
+            _context15.next = 22;
             break;
           }
 
-          _context14.next = 19;
+          _context15.next = 19;
           return _regeneratorRuntime.awrap(this.ContentType({
             name: options.type
           }));
 
         case 19:
-          options.type = _context14.sent.hash;
-          _context14.next = 23;
+          options.type = _context15.sent.hash;
+          _context15.next = 23;
           break;
 
         case 22:
@@ -1300,10 +1399,10 @@ exports.EditContentObject = function _callee13(_ref17) {
 
         case 23:
           path = UrlJoin("qid", objectId);
-          _context14.t0 = _regeneratorRuntime;
-          _context14.t1 = this.utils;
-          _context14.t2 = this.HttpClient;
-          _context14.next = 29;
+          _context15.t0 = _regeneratorRuntime;
+          _context15.t1 = this.utils;
+          _context15.t2 = this.HttpClient;
+          _context15.next = 29;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
@@ -1311,31 +1410,31 @@ exports.EditContentObject = function _callee13(_ref17) {
           }));
 
         case 29:
-          _context14.t3 = _context14.sent;
-          _context14.t4 = path;
-          _context14.t5 = options;
-          _context14.t6 = {
-            headers: _context14.t3,
+          _context15.t3 = _context15.sent;
+          _context15.t4 = path;
+          _context15.t5 = options;
+          _context15.t6 = {
+            headers: _context15.t3,
             method: "POST",
-            path: _context14.t4,
-            body: _context14.t5
+            path: _context15.t4,
+            body: _context15.t5
           };
-          _context14.t7 = _context14.t2.Request.call(_context14.t2, _context14.t6);
-          _context14.t8 = _context14.t1.ResponseToJson.call(_context14.t1, _context14.t7);
-          _context14.next = 37;
-          return _context14.t0.awrap.call(_context14.t0, _context14.t8);
+          _context15.t7 = _context15.t2.Request.call(_context15.t2, _context15.t6);
+          _context15.t8 = _context15.t1.ResponseToJson.call(_context15.t1, _context15.t7);
+          _context15.next = 37;
+          return _context15.t0.awrap.call(_context15.t0, _context15.t8);
 
         case 37:
-          editResponse = _context14.sent;
+          editResponse = _context15.sent;
           // Record the node used in creating this write token
           this.HttpClient.RecordWriteToken(editResponse.write_token);
           editResponse.writeToken = editResponse.write_token;
           editResponse.objectId = editResponse.id;
-          return _context14.abrupt("return", editResponse);
+          return _context15.abrupt("return", editResponse);
 
         case 42:
         case "end":
-          return _context14.stop();
+          return _context15.stop();
       }
     }
   }, null, this);
@@ -1368,37 +1467,37 @@ exports.EditContentObject = function _callee13(_ref17) {
  */
 
 
-exports.CreateAndFinalizeContentObject = function _callee14(_ref18) {
-  var libraryId, callback, _ref18$options, options, _ref18$commitMessage, commitMessage, _ref18$publish, publish, _ref18$awaitCommitCon, awaitCommitConfirmation, args, id, writeToken;
+exports.CreateAndFinalizeContentObject = function _callee15(_ref19) {
+  var libraryId, callback, _ref19$options, options, _ref19$commitMessage, commitMessage, _ref19$publish, publish, _ref19$awaitCommitCon, awaitCommitConfirmation, args, id, writeToken;
 
-  return _regeneratorRuntime.async(function _callee14$(_context15) {
+  return _regeneratorRuntime.async(function _callee15$(_context16) {
     while (1) {
-      switch (_context15.prev = _context15.next) {
+      switch (_context16.prev = _context16.next) {
         case 0:
-          libraryId = _ref18.libraryId, callback = _ref18.callback, _ref18$options = _ref18.options, options = _ref18$options === void 0 ? {} : _ref18$options, _ref18$commitMessage = _ref18.commitMessage, commitMessage = _ref18$commitMessage === void 0 ? "" : _ref18$commitMessage, _ref18$publish = _ref18.publish, publish = _ref18$publish === void 0 ? true : _ref18$publish, _ref18$awaitCommitCon = _ref18.awaitCommitConfirmation, awaitCommitConfirmation = _ref18$awaitCommitCon === void 0 ? true : _ref18$awaitCommitCon;
-          _context15.next = 3;
+          libraryId = _ref19.libraryId, callback = _ref19.callback, _ref19$options = _ref19.options, options = _ref19$options === void 0 ? {} : _ref19$options, _ref19$commitMessage = _ref19.commitMessage, commitMessage = _ref19$commitMessage === void 0 ? "" : _ref19$commitMessage, _ref19$publish = _ref19.publish, publish = _ref19$publish === void 0 ? true : _ref19$publish, _ref19$awaitCommitCon = _ref19.awaitCommitConfirmation, awaitCommitConfirmation = _ref19$awaitCommitCon === void 0 ? true : _ref19$awaitCommitCon;
+          _context16.next = 3;
           return _regeneratorRuntime.awrap(this.CreateContentObject({
             libraryId: libraryId,
             options: options
           }));
 
         case 3:
-          args = _context15.sent;
+          args = _context16.sent;
           id = args.id, writeToken = args.writeToken;
 
           if (!callback) {
-            _context15.next = 8;
+            _context16.next = 8;
             break;
           }
 
-          _context15.next = 8;
+          _context16.next = 8;
           return _regeneratorRuntime.awrap(callback({
             objectId: id,
             writeToken: writeToken
           }));
 
         case 8:
-          _context15.next = 10;
+          _context16.next = 10;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
@@ -1409,11 +1508,11 @@ exports.CreateAndFinalizeContentObject = function _callee14(_ref18) {
           }));
 
         case 10:
-          return _context15.abrupt("return", _context15.sent);
+          return _context16.abrupt("return", _context16.sent);
 
         case 11:
         case "end":
-          return _context15.stop();
+          return _context16.stop();
       }
     }
   }, null, this);
@@ -1447,15 +1546,15 @@ exports.CreateAndFinalizeContentObject = function _callee14(_ref18) {
  */
 
 
-exports.EditAndFinalizeContentObject = function _callee15(_ref19) {
-  var libraryId, objectId, callback, _ref19$options, options, _ref19$commitMessage, commitMessage, _ref19$publish, publish, _ref19$awaitCommitCon, awaitCommitConfirmation, _ref20, writeToken;
+exports.EditAndFinalizeContentObject = function _callee16(_ref20) {
+  var libraryId, objectId, callback, _ref20$options, options, _ref20$commitMessage, commitMessage, _ref20$publish, publish, _ref20$awaitCommitCon, awaitCommitConfirmation, _ref21, writeToken;
 
-  return _regeneratorRuntime.async(function _callee15$(_context16) {
+  return _regeneratorRuntime.async(function _callee16$(_context17) {
     while (1) {
-      switch (_context16.prev = _context16.next) {
+      switch (_context17.prev = _context17.next) {
         case 0:
-          libraryId = _ref19.libraryId, objectId = _ref19.objectId, callback = _ref19.callback, _ref19$options = _ref19.options, options = _ref19$options === void 0 ? {} : _ref19$options, _ref19$commitMessage = _ref19.commitMessage, commitMessage = _ref19$commitMessage === void 0 ? "" : _ref19$commitMessage, _ref19$publish = _ref19.publish, publish = _ref19$publish === void 0 ? true : _ref19$publish, _ref19$awaitCommitCon = _ref19.awaitCommitConfirmation, awaitCommitConfirmation = _ref19$awaitCommitCon === void 0 ? true : _ref19$awaitCommitCon;
-          _context16.next = 3;
+          libraryId = _ref20.libraryId, objectId = _ref20.objectId, callback = _ref20.callback, _ref20$options = _ref20.options, options = _ref20$options === void 0 ? {} : _ref20$options, _ref20$commitMessage = _ref20.commitMessage, commitMessage = _ref20$commitMessage === void 0 ? "" : _ref20$commitMessage, _ref20$publish = _ref20.publish, publish = _ref20$publish === void 0 ? true : _ref20$publish, _ref20$awaitCommitCon = _ref20.awaitCommitConfirmation, awaitCommitConfirmation = _ref20$awaitCommitCon === void 0 ? true : _ref20$awaitCommitCon;
+          _context17.next = 3;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId,
@@ -1463,21 +1562,21 @@ exports.EditAndFinalizeContentObject = function _callee15(_ref19) {
           }));
 
         case 3:
-          _ref20 = _context16.sent;
-          writeToken = _ref20.writeToken;
+          _ref21 = _context17.sent;
+          writeToken = _ref21.writeToken;
 
           if (!callback) {
-            _context16.next = 8;
+            _context17.next = 8;
             break;
           }
 
-          _context16.next = 8;
+          _context17.next = 8;
           return _regeneratorRuntime.awrap(callback({
             writeToken: writeToken
           }));
 
         case 8:
-          _context16.next = 10;
+          _context17.next = 10;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
@@ -1488,116 +1587,116 @@ exports.EditAndFinalizeContentObject = function _callee15(_ref19) {
           }));
 
         case 10:
-          return _context16.abrupt("return", _context16.sent);
+          return _context17.abrupt("return", _context17.sent);
 
         case 11:
         case "end":
-          return _context16.stop();
+          return _context17.stop();
       }
     }
   }, null, this);
 };
 
-exports.AwaitPending = function _callee16(objectId) {
+exports.AwaitPending = function _callee17(objectId) {
   var _this3 = this;
 
   var PendingHash, pending, isWallet, timeout, i;
-  return _regeneratorRuntime.async(function _callee16$(_context18) {
+  return _regeneratorRuntime.async(function _callee17$(_context19) {
     while (1) {
-      switch (_context18.prev = _context18.next) {
+      switch (_context19.prev = _context19.next) {
         case 0:
           PendingHash = function PendingHash() {
-            return _regeneratorRuntime.async(function PendingHash$(_context17) {
+            return _regeneratorRuntime.async(function PendingHash$(_context18) {
               while (1) {
-                switch (_context17.prev = _context17.next) {
+                switch (_context18.prev = _context18.next) {
                   case 0:
-                    _context17.next = 2;
+                    _context18.next = 2;
                     return _regeneratorRuntime.awrap(_this3.CallContractMethod({
                       contractAddress: _this3.utils.HashToAddress(objectId),
                       methodName: "pendingHash"
                     }));
 
                   case 2:
-                    return _context17.abrupt("return", _context17.sent);
+                    return _context18.abrupt("return", _context18.sent);
 
                   case 3:
                   case "end":
-                    return _context17.stop();
+                    return _context18.stop();
                 }
               }
             });
           };
 
           this.Log("Checking for pending commit");
-          _context18.next = 4;
+          _context19.next = 4;
           return _regeneratorRuntime.awrap(PendingHash());
 
         case 4:
-          pending = _context18.sent;
+          pending = _context19.sent;
 
           if (pending) {
-            _context18.next = 7;
+            _context19.next = 7;
             break;
           }
 
-          return _context18.abrupt("return");
+          return _context19.abrupt("return");
 
         case 7:
-          _context18.next = 9;
+          _context19.next = 9;
           return _regeneratorRuntime.awrap(this.authClient.AccessType(objectId));
 
         case 9:
-          _context18.t0 = _context18.sent;
-          _context18.t1 = this.authClient.ACCESS_TYPES.WALLET;
-          isWallet = _context18.t0 === _context18.t1;
+          _context19.t0 = _context19.sent;
+          _context19.t1 = this.authClient.ACCESS_TYPES.WALLET;
+          isWallet = _context19.t0 === _context19.t1;
           timeout = isWallet ? 3 : 10;
           this.Log("Waiting for pending commit to clear for ".concat(objectId));
           i = 0;
 
         case 15:
           if (!(i < timeout)) {
-            _context18.next = 25;
+            _context19.next = 25;
             break;
           }
 
-          _context18.next = 18;
+          _context19.next = 18;
           return _regeneratorRuntime.awrap(new Promise(function (resolve) {
             return setTimeout(resolve, 1000);
           }));
 
         case 18:
-          _context18.next = 20;
+          _context19.next = 20;
           return _regeneratorRuntime.awrap(PendingHash());
 
         case 20:
-          if (_context18.sent) {
-            _context18.next = 22;
+          if (_context19.sent) {
+            _context19.next = 22;
             break;
           }
 
-          return _context18.abrupt("return");
+          return _context19.abrupt("return");
 
         case 22:
           i++;
-          _context18.next = 15;
+          _context19.next = 15;
           break;
 
         case 25:
           if (!isWallet) {
-            _context18.next = 31;
+            _context19.next = 31;
             break;
           }
 
           this.Log("Clearing stuck wallet commit", true); // Clear pending commit, it's probably stuck
 
-          _context18.next = 29;
+          _context19.next = 29;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(objectId),
             methodName: "clearPending"
           }));
 
         case 29:
-          _context18.next = 32;
+          _context19.next = 32;
           break;
 
         case 31:
@@ -1605,7 +1704,7 @@ exports.AwaitPending = function _callee16(objectId) {
 
         case 32:
         case "end":
-          return _context18.stop();
+          return _context19.stop();
       }
     }
   }, null, this);
@@ -1625,72 +1724,72 @@ exports.AwaitPending = function _callee16(objectId) {
  */
 
 
-exports.FinalizeContentObject = function _callee17(_ref21) {
-  var libraryId, objectId, writeToken, _ref21$commitMessage, commitMessage, _ref21$publish, publish, _ref21$awaitCommitCon, awaitCommitConfirmation, path, finalizeResponse;
+exports.FinalizeContentObject = function _callee18(_ref22) {
+  var libraryId, objectId, writeToken, _ref22$commitMessage, commitMessage, _ref22$publish, publish, _ref22$awaitCommitCon, awaitCommitConfirmation, path, finalizeResponse;
 
-  return _regeneratorRuntime.async(function _callee17$(_context19) {
+  return _regeneratorRuntime.async(function _callee18$(_context20) {
     while (1) {
-      switch (_context19.prev = _context19.next) {
+      switch (_context20.prev = _context20.next) {
         case 0:
-          libraryId = _ref21.libraryId, objectId = _ref21.objectId, writeToken = _ref21.writeToken, _ref21$commitMessage = _ref21.commitMessage, commitMessage = _ref21$commitMessage === void 0 ? "" : _ref21$commitMessage, _ref21$publish = _ref21.publish, publish = _ref21$publish === void 0 ? true : _ref21$publish, _ref21$awaitCommitCon = _ref21.awaitCommitConfirmation, awaitCommitConfirmation = _ref21$awaitCommitCon === void 0 ? true : _ref21$awaitCommitCon;
+          libraryId = _ref22.libraryId, objectId = _ref22.objectId, writeToken = _ref22.writeToken, _ref22$commitMessage = _ref22.commitMessage, commitMessage = _ref22$commitMessage === void 0 ? "" : _ref22$commitMessage, _ref22$publish = _ref22.publish, publish = _ref22$publish === void 0 ? true : _ref22$publish, _ref22$awaitCommitCon = _ref22.awaitCommitConfirmation, awaitCommitConfirmation = _ref22$awaitCommitCon === void 0 ? true : _ref22$awaitCommitCon;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
-          _context19.t0 = _regeneratorRuntime;
-          _context19.t1 = this;
-          _context19.t2 = libraryId;
-          _context19.t3 = objectId;
-          _context19.t4 = writeToken;
-          _context19.t5 = commitMessage;
-          _context19.next = 11;
+          _context20.t0 = _regeneratorRuntime;
+          _context20.t1 = this;
+          _context20.t2 = libraryId;
+          _context20.t3 = objectId;
+          _context20.t4 = writeToken;
+          _context20.t5 = commitMessage;
+          _context20.next = 11;
           return _regeneratorRuntime.awrap(this.userProfileClient.UserMetadata({
             metadataSubtree: "public/name"
           }));
 
         case 11:
-          _context19.t6 = _context19.sent;
+          _context20.t6 = _context20.sent;
 
-          if (_context19.t6) {
-            _context19.next = 14;
+          if (_context20.t6) {
+            _context20.next = 14;
             break;
           }
 
-          _context19.t6 = this.CurrentAccountAddress();
+          _context20.t6 = this.CurrentAccountAddress();
 
         case 14:
-          _context19.t7 = _context19.t6;
-          _context19.t8 = this.CurrentAccountAddress();
-          _context19.t9 = new Date().toISOString();
-          _context19.t10 = {
-            message: _context19.t5,
-            author: _context19.t7,
-            author_address: _context19.t8,
-            timestamp: _context19.t9
+          _context20.t7 = _context20.t6;
+          _context20.t8 = this.CurrentAccountAddress();
+          _context20.t9 = new Date().toISOString();
+          _context20.t10 = {
+            message: _context20.t5,
+            author: _context20.t7,
+            author_address: _context20.t8,
+            timestamp: _context20.t9
           };
-          _context19.t11 = {
-            libraryId: _context19.t2,
-            objectId: _context19.t3,
-            writeToken: _context19.t4,
+          _context20.t11 = {
+            libraryId: _context20.t2,
+            objectId: _context20.t3,
+            writeToken: _context20.t4,
             metadataSubtree: "commit",
-            metadata: _context19.t10
+            metadata: _context20.t10
           };
-          _context19.t12 = _context19.t1.ReplaceMetadata.call(_context19.t1, _context19.t11);
-          _context19.next = 22;
-          return _context19.t0.awrap.call(_context19.t0, _context19.t12);
+          _context20.t12 = _context20.t1.ReplaceMetadata.call(_context20.t1, _context20.t11);
+          _context20.next = 22;
+          return _context20.t0.awrap.call(_context20.t0, _context20.t12);
 
         case 22:
           this.Log("Finalizing content draft: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken));
-          _context19.next = 25;
+          _context20.next = 25;
           return _regeneratorRuntime.awrap(this.AwaitPending(objectId));
 
         case 25:
           path = UrlJoin("q", writeToken);
-          _context19.t13 = _regeneratorRuntime;
-          _context19.t14 = this.utils;
-          _context19.t15 = this.HttpClient;
-          _context19.next = 31;
+          _context20.t13 = _regeneratorRuntime;
+          _context20.t14 = this.utils;
+          _context20.t15 = this.HttpClient;
+          _context20.next = 31;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
@@ -1698,29 +1797,29 @@ exports.FinalizeContentObject = function _callee17(_ref21) {
           }));
 
         case 31:
-          _context19.t16 = _context19.sent;
-          _context19.t17 = path;
-          _context19.t18 = {
-            headers: _context19.t16,
+          _context20.t16 = _context20.sent;
+          _context20.t17 = path;
+          _context20.t18 = {
+            headers: _context20.t16,
             method: "POST",
-            path: _context19.t17,
+            path: _context20.t17,
             failover: false
           };
-          _context19.t19 = _context19.t15.Request.call(_context19.t15, _context19.t18);
-          _context19.t20 = _context19.t14.ResponseToJson.call(_context19.t14, _context19.t19);
-          _context19.next = 38;
-          return _context19.t13.awrap.call(_context19.t13, _context19.t20);
+          _context20.t19 = _context20.t15.Request.call(_context20.t15, _context20.t18);
+          _context20.t20 = _context20.t14.ResponseToJson.call(_context20.t14, _context20.t19);
+          _context20.next = 38;
+          return _context20.t13.awrap.call(_context20.t13, _context20.t20);
 
         case 38:
-          finalizeResponse = _context19.sent;
+          finalizeResponse = _context20.sent;
           this.Log("Finalized: ".concat(finalizeResponse.hash));
 
           if (!publish) {
-            _context19.next = 43;
+            _context20.next = 43;
             break;
           }
 
-          _context19.next = 43;
+          _context20.next = 43;
           return _regeneratorRuntime.awrap(this.PublishContentVersion({
             objectId: objectId,
             versionHash: finalizeResponse.hash,
@@ -1730,11 +1829,11 @@ exports.FinalizeContentObject = function _callee17(_ref21) {
         case 43:
           // Invalidate cached content type, if this is one.
           delete this.contentTypes[objectId];
-          return _context19.abrupt("return", finalizeResponse);
+          return _context20.abrupt("return", finalizeResponse);
 
         case 45:
         case "end":
-          return _context19.stop();
+          return _context20.stop();
       }
     }
   }, null, this);
@@ -1751,16 +1850,16 @@ exports.FinalizeContentObject = function _callee17(_ref21) {
  */
 
 
-exports.PublishContentVersion = function _callee19(_ref22) {
+exports.PublishContentVersion = function _callee20(_ref23) {
   var _this4 = this;
 
-  var objectId, versionHash, _ref22$awaitCommitCon, awaitCommitConfirmation, commit, abi, fromBlock, objectHash, pendingHash;
+  var objectId, versionHash, _ref23$awaitCommitCon, awaitCommitConfirmation, commit, abi, fromBlock, objectHash, pendingHash;
 
-  return _regeneratorRuntime.async(function _callee19$(_context21) {
+  return _regeneratorRuntime.async(function _callee20$(_context22) {
     while (1) {
-      switch (_context21.prev = _context21.next) {
+      switch (_context22.prev = _context22.next) {
         case 0:
-          objectId = _ref22.objectId, versionHash = _ref22.versionHash, _ref22$awaitCommitCon = _ref22.awaitCommitConfirmation, awaitCommitConfirmation = _ref22$awaitCommitCon === void 0 ? true : _ref22$awaitCommitCon;
+          objectId = _ref23.objectId, versionHash = _ref23.versionHash, _ref23$awaitCommitCon = _ref23.awaitCommitConfirmation, awaitCommitConfirmation = _ref23$awaitCommitCon === void 0 ? true : _ref23$awaitCommitCon;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
           this.Log("Publishing: ".concat(objectId || versionHash));
 
@@ -1768,7 +1867,7 @@ exports.PublishContentVersion = function _callee19(_ref22) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
-          _context21.next = 6;
+          _context22.next = 6;
           return _regeneratorRuntime.awrap(this.ethClient.CommitContent({
             contentObjectAddress: this.utils.HashToAddress(objectId),
             versionHash: versionHash,
@@ -1776,16 +1875,16 @@ exports.PublishContentVersion = function _callee19(_ref22) {
           }));
 
         case 6:
-          commit = _context21.sent;
-          _context21.next = 9;
+          commit = _context22.sent;
+          _context22.next = 9;
           return _regeneratorRuntime.awrap(this.ContractAbi({
             id: objectId
           }));
 
         case 9:
-          abi = _context21.sent;
+          abi = _context22.sent;
           fromBlock = commit.blockNumber + 1;
-          _context21.next = 13;
+          _context22.next = 13;
           return _regeneratorRuntime.awrap(this.ExtractValueFromEvent({
             abi: abi,
             event: commit,
@@ -1794,18 +1893,18 @@ exports.PublishContentVersion = function _callee19(_ref22) {
           }));
 
         case 13:
-          objectHash = _context21.sent;
-          _context21.next = 16;
+          objectHash = _context22.sent;
+          _context22.next = 16;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: this.utils.HashToAddress(objectId),
             methodName: "pendingHash"
           }));
 
         case 16:
-          pendingHash = _context21.sent;
+          pendingHash = _context22.sent;
 
           if (!(pendingHash && pendingHash !== objectHash)) {
-            _context21.next = 19;
+            _context22.next = 19;
             break;
           }
 
@@ -1813,16 +1912,16 @@ exports.PublishContentVersion = function _callee19(_ref22) {
 
         case 19:
           if (!awaitCommitConfirmation) {
-            _context21.next = 22;
+            _context22.next = 22;
             break;
           }
 
-          _context21.next = 22;
-          return _regeneratorRuntime.awrap(function _callee18() {
+          _context22.next = 22;
+          return _regeneratorRuntime.awrap(function _callee19() {
             var pollingInterval, events, confirmEvent;
-            return _regeneratorRuntime.async(function _callee18$(_context20) {
+            return _regeneratorRuntime.async(function _callee19$(_context21) {
               while (1) {
-                switch (_context20.prev = _context20.next) {
+                switch (_context21.prev = _context21.next) {
                   case 0:
                     _this4.Log("Awaiting commit confirmation for ".concat(objectHash));
 
@@ -1830,17 +1929,17 @@ exports.PublishContentVersion = function _callee19(_ref22) {
 
                   case 2:
                     if (!true) {
-                      _context20.next = 14;
+                      _context21.next = 14;
                       break;
                     }
 
-                    _context20.next = 5;
+                    _context21.next = 5;
                     return _regeneratorRuntime.awrap(new Promise(function (resolve) {
                       return setTimeout(resolve, pollingInterval);
                     }));
 
                   case 5:
-                    _context20.next = 7;
+                    _context21.next = 7;
                     return _regeneratorRuntime.awrap(_this4.ContractEvents({
                       contractAddress: _this4.utils.HashToAddress(objectId),
                       abi: abi,
@@ -1849,7 +1948,7 @@ exports.PublishContentVersion = function _callee19(_ref22) {
                     }));
 
                   case 7:
-                    events = _context20.sent;
+                    events = _context21.sent;
                     confirmEvent = events.find(function (blockEvents) {
                       return blockEvents.find(function (event) {
                         return objectHash === (event && event.values && event.values.objectHash);
@@ -1857,22 +1956,22 @@ exports.PublishContentVersion = function _callee19(_ref22) {
                     });
 
                     if (!confirmEvent) {
-                      _context20.next = 12;
+                      _context21.next = 12;
                       break;
                     }
 
                     // Found confirmation
                     _this4.Log("Commit confirmed: ".concat(objectHash));
 
-                    return _context20.abrupt("break", 14);
+                    return _context21.abrupt("break", 14);
 
                   case 12:
-                    _context20.next = 2;
+                    _context21.next = 2;
                     break;
 
                   case 14:
                   case "end":
-                    return _context20.stop();
+                    return _context21.stop();
                 }
               }
             });
@@ -1880,7 +1979,7 @@ exports.PublishContentVersion = function _callee19(_ref22) {
 
         case 22:
         case "end":
-          return _context21.stop();
+          return _context22.stop();
       }
     }
   }, null, this);
@@ -1894,18 +1993,18 @@ exports.PublishContentVersion = function _callee19(_ref22) {
  */
 
 
-exports.DeleteContentVersion = function _callee20(_ref23) {
+exports.DeleteContentVersion = function _callee21(_ref24) {
   var versionHash, _this$utils$DecodeVer, objectId;
 
-  return _regeneratorRuntime.async(function _callee20$(_context22) {
+  return _regeneratorRuntime.async(function _callee21$(_context23) {
     while (1) {
-      switch (_context22.prev = _context22.next) {
+      switch (_context23.prev = _context23.next) {
         case 0:
-          versionHash = _ref23.versionHash;
+          versionHash = _ref24.versionHash;
           ValidateVersion(versionHash);
           this.Log("Deleting content version: ".concat(versionHash));
           _this$utils$DecodeVer = this.utils.DecodeVersionHash(versionHash), objectId = _this$utils$DecodeVer.objectId;
-          _context22.next = 6;
+          _context23.next = 6;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(objectId),
             methodName: "deleteVersion",
@@ -1914,7 +2013,7 @@ exports.DeleteContentVersion = function _callee20(_ref23) {
 
         case 6:
         case "end":
-          return _context22.stop();
+          return _context23.stop();
       }
     }
   }, null, this);
@@ -1929,19 +2028,19 @@ exports.DeleteContentVersion = function _callee20(_ref23) {
  */
 
 
-exports.DeleteContentObject = function _callee21(_ref24) {
+exports.DeleteContentObject = function _callee22(_ref25) {
   var libraryId, objectId;
-  return _regeneratorRuntime.async(function _callee21$(_context23) {
+  return _regeneratorRuntime.async(function _callee22$(_context24) {
     while (1) {
-      switch (_context23.prev = _context23.next) {
+      switch (_context24.prev = _context24.next) {
         case 0:
-          libraryId = _ref24.libraryId, objectId = _ref24.objectId;
+          libraryId = _ref25.libraryId, objectId = _ref25.objectId;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
           });
           this.Log("Deleting content version: ".concat(libraryId, " ").concat(objectId));
-          _context23.next = 5;
+          _context24.next = 5;
           return _regeneratorRuntime.awrap(this.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(libraryId),
             methodName: "deleteContent",
@@ -1950,7 +2049,7 @@ exports.DeleteContentObject = function _callee21(_ref24) {
 
         case 5:
         case "end":
-          return _context23.stop();
+          return _context24.stop();
       }
     }
   }, null, this);
@@ -1970,67 +2069,7 @@ exports.DeleteContentObject = function _callee21(_ref24) {
  */
 
 
-exports.MergeMetadata = function _callee22(_ref25) {
-  var libraryId, objectId, writeToken, _ref25$metadataSubtre, metadataSubtree, _ref25$metadata, metadata, path;
-
-  return _regeneratorRuntime.async(function _callee22$(_context24) {
-    while (1) {
-      switch (_context24.prev = _context24.next) {
-        case 0:
-          libraryId = _ref25.libraryId, objectId = _ref25.objectId, writeToken = _ref25.writeToken, _ref25$metadataSubtre = _ref25.metadataSubtree, metadataSubtree = _ref25$metadataSubtre === void 0 ? "/" : _ref25$metadataSubtre, _ref25$metadata = _ref25.metadata, metadata = _ref25$metadata === void 0 ? {} : _ref25$metadata;
-          ValidateParameters({
-            libraryId: libraryId,
-            objectId: objectId
-          });
-          ValidateWriteToken(writeToken);
-          this.Log("Merging metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken, "\n      Subtree: ").concat(metadataSubtree));
-          this.Log(metadata);
-          path = UrlJoin("q", writeToken, "meta", metadataSubtree);
-          _context24.t0 = _regeneratorRuntime;
-          _context24.t1 = this.HttpClient;
-          _context24.next = 10;
-          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
-            libraryId: libraryId,
-            objectId: objectId,
-            update: true
-          }));
-
-        case 10:
-          _context24.t2 = _context24.sent;
-          _context24.t3 = path;
-          _context24.t4 = metadata;
-          _context24.t5 = {
-            headers: _context24.t2,
-            method: "POST",
-            path: _context24.t3,
-            body: _context24.t4,
-            failover: false
-          };
-          _context24.t6 = _context24.t1.Request.call(_context24.t1, _context24.t5);
-          _context24.next = 17;
-          return _context24.t0.awrap.call(_context24.t0, _context24.t6);
-
-        case 17:
-        case "end":
-          return _context24.stop();
-      }
-    }
-  }, null, this);
-};
-/**
- * Replace content object metadata with specified metadata
- *
- * @methodGroup Metadata
- * @namedParams
- * @param {string} libraryId - ID of the library
- * @param {string} objectId - ID of the object
- * @param {string} writeToken - Write token of the draft
- * @param {Object} metadata - New metadata to merge
- * @param {string=} metadataSubtree - Subtree of the object metadata to modify
- */
-
-
-exports.ReplaceMetadata = function _callee23(_ref26) {
+exports.MergeMetadata = function _callee23(_ref26) {
   var libraryId, objectId, writeToken, _ref26$metadataSubtre, metadataSubtree, _ref26$metadata, metadata, path;
 
   return _regeneratorRuntime.async(function _callee23$(_context25) {
@@ -2043,7 +2082,7 @@ exports.ReplaceMetadata = function _callee23(_ref26) {
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
-          this.Log("Replacing metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken, "\n      Subtree: ").concat(metadataSubtree));
+          this.Log("Merging metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken, "\n      Subtree: ").concat(metadataSubtree));
           this.Log(metadata);
           path = UrlJoin("q", writeToken, "meta", metadataSubtree);
           _context25.t0 = _regeneratorRuntime;
@@ -2061,7 +2100,7 @@ exports.ReplaceMetadata = function _callee23(_ref26) {
           _context25.t4 = metadata;
           _context25.t5 = {
             headers: _context25.t2,
-            method: "PUT",
+            method: "POST",
             path: _context25.t3,
             body: _context25.t4,
             failover: false
@@ -2073,6 +2112,66 @@ exports.ReplaceMetadata = function _callee23(_ref26) {
         case 17:
         case "end":
           return _context25.stop();
+      }
+    }
+  }, null, this);
+};
+/**
+ * Replace content object metadata with specified metadata
+ *
+ * @methodGroup Metadata
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {string} writeToken - Write token of the draft
+ * @param {Object} metadata - New metadata to merge
+ * @param {string=} metadataSubtree - Subtree of the object metadata to modify
+ */
+
+
+exports.ReplaceMetadata = function _callee24(_ref27) {
+  var libraryId, objectId, writeToken, _ref27$metadataSubtre, metadataSubtree, _ref27$metadata, metadata, path;
+
+  return _regeneratorRuntime.async(function _callee24$(_context26) {
+    while (1) {
+      switch (_context26.prev = _context26.next) {
+        case 0:
+          libraryId = _ref27.libraryId, objectId = _ref27.objectId, writeToken = _ref27.writeToken, _ref27$metadataSubtre = _ref27.metadataSubtree, metadataSubtree = _ref27$metadataSubtre === void 0 ? "/" : _ref27$metadataSubtre, _ref27$metadata = _ref27.metadata, metadata = _ref27$metadata === void 0 ? {} : _ref27$metadata;
+          ValidateParameters({
+            libraryId: libraryId,
+            objectId: objectId
+          });
+          ValidateWriteToken(writeToken);
+          this.Log("Replacing metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken, "\n      Subtree: ").concat(metadataSubtree));
+          this.Log(metadata);
+          path = UrlJoin("q", writeToken, "meta", metadataSubtree);
+          _context26.t0 = _regeneratorRuntime;
+          _context26.t1 = this.HttpClient;
+          _context26.next = 10;
+          return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
+            libraryId: libraryId,
+            objectId: objectId,
+            update: true
+          }));
+
+        case 10:
+          _context26.t2 = _context26.sent;
+          _context26.t3 = path;
+          _context26.t4 = metadata;
+          _context26.t5 = {
+            headers: _context26.t2,
+            method: "PUT",
+            path: _context26.t3,
+            body: _context26.t4,
+            failover: false
+          };
+          _context26.t6 = _context26.t1.Request.call(_context26.t1, _context26.t5);
+          _context26.next = 17;
+          return _context26.t0.awrap.call(_context26.t0, _context26.t6);
+
+        case 17:
+        case "end":
+          return _context26.stop();
       }
     }
   }, null, this);
@@ -2090,14 +2189,14 @@ exports.ReplaceMetadata = function _callee23(_ref26) {
  */
 
 
-exports.DeleteMetadata = function _callee24(_ref27) {
-  var libraryId, objectId, writeToken, _ref27$metadataSubtre, metadataSubtree, path;
+exports.DeleteMetadata = function _callee25(_ref28) {
+  var libraryId, objectId, writeToken, _ref28$metadataSubtre, metadataSubtree, path;
 
-  return _regeneratorRuntime.async(function _callee24$(_context26) {
+  return _regeneratorRuntime.async(function _callee25$(_context27) {
     while (1) {
-      switch (_context26.prev = _context26.next) {
+      switch (_context27.prev = _context27.next) {
         case 0:
-          libraryId = _ref27.libraryId, objectId = _ref27.objectId, writeToken = _ref27.writeToken, _ref27$metadataSubtre = _ref27.metadataSubtree, metadataSubtree = _ref27$metadataSubtre === void 0 ? "/" : _ref27$metadataSubtre;
+          libraryId = _ref28.libraryId, objectId = _ref28.objectId, writeToken = _ref28.writeToken, _ref28$metadataSubtre = _ref28.metadataSubtree, metadataSubtree = _ref28$metadataSubtre === void 0 ? "/" : _ref28$metadataSubtre;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
@@ -2106,9 +2205,9 @@ exports.DeleteMetadata = function _callee24(_ref27) {
           this.Log("Deleting metadata: ".concat(libraryId, " ").concat(objectId, " ").concat(writeToken, "\n      Subtree: ").concat(metadataSubtree));
           this.Log("Subtree: ".concat(metadataSubtree));
           path = UrlJoin("q", writeToken, "meta", metadataSubtree);
-          _context26.t0 = _regeneratorRuntime;
-          _context26.t1 = this.HttpClient;
-          _context26.next = 10;
+          _context27.t0 = _regeneratorRuntime;
+          _context27.t1 = this.HttpClient;
+          _context27.next = 10;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
@@ -2116,21 +2215,21 @@ exports.DeleteMetadata = function _callee24(_ref27) {
           }));
 
         case 10:
-          _context26.t2 = _context26.sent;
-          _context26.t3 = path;
-          _context26.t4 = {
-            headers: _context26.t2,
+          _context27.t2 = _context27.sent;
+          _context27.t3 = path;
+          _context27.t4 = {
+            headers: _context27.t2,
             method: "DELETE",
-            path: _context26.t3,
+            path: _context27.t3,
             failover: false
           };
-          _context26.t5 = _context26.t1.Request.call(_context26.t1, _context26.t4);
-          _context26.next = 16;
-          return _context26.t0.awrap.call(_context26.t0, _context26.t5);
+          _context27.t5 = _context27.t1.Request.call(_context27.t1, _context27.t4);
+          _context27.next = 16;
+          return _context27.t0.awrap.call(_context27.t0, _context27.t5);
 
         case 16:
         case "end":
-          return _context26.stop();
+          return _context27.stop();
       }
     }
   }, null, this);
@@ -2145,16 +2244,16 @@ exports.DeleteMetadata = function _callee24(_ref27) {
  */
 
 
-exports.SetAccessCharge = function _callee25(_ref28) {
+exports.SetAccessCharge = function _callee26(_ref29) {
   var objectId, accessCharge;
-  return _regeneratorRuntime.async(function _callee25$(_context27) {
+  return _regeneratorRuntime.async(function _callee26$(_context28) {
     while (1) {
-      switch (_context27.prev = _context27.next) {
+      switch (_context28.prev = _context28.next) {
         case 0:
-          objectId = _ref28.objectId, accessCharge = _ref28.accessCharge;
+          objectId = _ref29.objectId, accessCharge = _ref29.accessCharge;
           ValidateObject(objectId);
           this.Log("Setting access charge: ".concat(objectId, " ").concat(accessCharge));
-          _context27.next = 5;
+          _context28.next = 5;
           return _regeneratorRuntime.awrap(this.ethClient.CallContractMethodAndWait({
             contractAddress: this.utils.HashToAddress(objectId),
             methodName: "setAccessCharge",
@@ -2163,7 +2262,7 @@ exports.SetAccessCharge = function _callee25(_ref28) {
 
         case 5:
         case "end":
-          return _context27.stop();
+          return _context28.stop();
       }
     }
   }, null, this);
@@ -2183,16 +2282,16 @@ exports.SetAccessCharge = function _callee25(_ref28) {
  */
 
 
-exports.UpdateContentObjectGraph = function _callee27(_ref29) {
+exports.UpdateContentObjectGraph = function _callee28(_ref30) {
   var _this5 = this;
 
   var libraryId, objectId, versionHash, callback, total, completed, _loop, _ret;
 
-  return _regeneratorRuntime.async(function _callee27$(_context30) {
+  return _regeneratorRuntime.async(function _callee28$(_context31) {
     while (1) {
-      switch (_context30.prev = _context30.next) {
+      switch (_context31.prev = _context31.next) {
         case 0:
-          libraryId = _ref29.libraryId, objectId = _ref29.objectId, versionHash = _ref29.versionHash, callback = _ref29.callback;
+          libraryId = _ref30.libraryId, objectId = _ref30.objectId, versionHash = _ref30.versionHash, callback = _ref30.callback;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -2207,13 +2306,13 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
           completed = 0; // eslint-disable-next-line no-constant-condition
 
           _loop = function _loop() {
-            var graph, currentHash, links, details, name, currentLibraryId, currentObjectId, _ref30, write_token, _ref32, hash;
+            var graph, currentHash, links, details, name, currentLibraryId, currentObjectId, _ref31, write_token, _ref33, hash;
 
-            return _regeneratorRuntime.async(function _loop$(_context29) {
+            return _regeneratorRuntime.async(function _loop$(_context30) {
               while (1) {
-                switch (_context29.prev = _context29.next) {
+                switch (_context30.prev = _context30.next) {
                   case 0:
-                    _context29.next = 2;
+                    _context30.next = 2;
                     return _regeneratorRuntime.awrap(_this5.ContentObjectGraph({
                       libraryId: libraryId,
                       objectId: objectId,
@@ -2223,16 +2322,16 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
                     }));
 
                   case 2:
-                    graph = _context29.sent;
+                    graph = _context30.sent;
 
                     if (!(Object.keys(graph.auto_updates).length === 0)) {
-                      _context29.next = 6;
+                      _context30.next = 6;
                       break;
                     }
 
                     _this5.Log("No more updates required");
 
-                    return _context29.abrupt("return", {
+                    return _context30.abrupt("return", {
                       v: void 0
                     });
 
@@ -2245,13 +2344,13 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
                     links = graph.auto_updates.links[currentHash];
                     details = graph.details[currentHash].meta || {};
                     name = details["public"] && details["public"].asset_metadata && details["public"].asset_metadata.display_title || details["public"] && details["public"].name || details.name || versionHash || objectId;
-                    _context29.next = 13;
+                    _context30.next = 13;
                     return _regeneratorRuntime.awrap(_this5.ContentObjectLibraryId({
                       versionHash: currentHash
                     }));
 
                   case 13:
-                    currentLibraryId = _context29.sent;
+                    currentLibraryId = _context30.sent;
                     currentObjectId = _this5.utils.DecodeVersionHash(currentHash).objectId;
 
                     if (callback) {
@@ -2264,24 +2363,24 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
 
                     _this5.Log("Updating links for ".concat(name, " (").concat(currentObjectId, " / ").concat(currentHash, ")"));
 
-                    _context29.next = 19;
+                    _context30.next = 19;
                     return _regeneratorRuntime.awrap(_this5.EditContentObject({
                       libraryId: currentLibraryId,
                       objectId: currentObjectId
                     }));
 
                   case 19:
-                    _ref30 = _context29.sent;
-                    write_token = _ref30.write_token;
-                    _context29.next = 23;
-                    return _regeneratorRuntime.awrap(Promise.all(links.map(function _callee26(_ref31) {
+                    _ref31 = _context30.sent;
+                    write_token = _ref31.write_token;
+                    _context30.next = 23;
+                    return _regeneratorRuntime.awrap(Promise.all(links.map(function _callee27(_ref32) {
                       var path, updated;
-                      return _regeneratorRuntime.async(function _callee26$(_context28) {
+                      return _regeneratorRuntime.async(function _callee27$(_context29) {
                         while (1) {
-                          switch (_context28.prev = _context28.next) {
+                          switch (_context29.prev = _context29.next) {
                             case 0:
-                              path = _ref31.path, updated = _ref31.updated;
-                              _context28.next = 3;
+                              path = _ref32.path, updated = _ref32.updated;
+                              _context29.next = 3;
                               return _regeneratorRuntime.awrap(_this5.ReplaceMetadata({
                                 libraryId: currentLibraryId,
                                 objectId: currentObjectId,
@@ -2292,14 +2391,14 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
 
                             case 3:
                             case "end":
-                              return _context28.stop();
+                              return _context29.stop();
                           }
                         }
                       });
                     })));
 
                   case 23:
-                    _context29.next = 25;
+                    _context30.next = 25;
                     return _regeneratorRuntime.awrap(_this5.FinalizeContentObject({
                       libraryId: currentLibraryId,
                       objectId: currentObjectId,
@@ -2308,8 +2407,8 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
                     }));
 
                   case 25:
-                    _ref32 = _context29.sent;
-                    hash = _ref32.hash;
+                    _ref33 = _context30.sent;
+                    hash = _ref33.hash;
 
                     // If root object was specified by hash and updated, update hash
                     if (currentHash === versionHash) {
@@ -2320,7 +2419,7 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
 
                   case 29:
                   case "end":
-                    return _context29.stop();
+                    return _context30.stop();
                 }
               }
             });
@@ -2328,30 +2427,30 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
 
         case 6:
           if (!1) {
-            _context30.next = 14;
+            _context31.next = 14;
             break;
           }
 
-          _context30.next = 9;
+          _context31.next = 9;
           return _regeneratorRuntime.awrap(_loop());
 
         case 9:
-          _ret = _context30.sent;
+          _ret = _context31.sent;
 
           if (!(_typeof(_ret) === "object")) {
-            _context30.next = 12;
+            _context31.next = 12;
             break;
           }
 
-          return _context30.abrupt("return", _ret.v);
+          return _context31.abrupt("return", _ret.v);
 
         case 12:
-          _context30.next = 6;
+          _context31.next = 6;
           break;
 
         case 14:
         case "end":
-          return _context30.stop();
+          return _context31.stop();
       }
     }
   }, null, this);
@@ -2382,27 +2481,27 @@ exports.UpdateContentObjectGraph = function _callee27(_ref29) {
  */
 
 
-exports.CreateLinks = function _callee29(_ref33) {
+exports.CreateLinks = function _callee30(_ref34) {
   var _this6 = this;
 
-  var libraryId, objectId, writeToken, _ref33$links, links;
+  var libraryId, objectId, writeToken, _ref34$links, links;
 
-  return _regeneratorRuntime.async(function _callee29$(_context32) {
+  return _regeneratorRuntime.async(function _callee30$(_context33) {
     while (1) {
-      switch (_context32.prev = _context32.next) {
+      switch (_context33.prev = _context33.next) {
         case 0:
-          libraryId = _ref33.libraryId, objectId = _ref33.objectId, writeToken = _ref33.writeToken, _ref33$links = _ref33.links, links = _ref33$links === void 0 ? [] : _ref33$links;
+          libraryId = _ref34.libraryId, objectId = _ref34.objectId, writeToken = _ref34.writeToken, _ref34$links = _ref34.links, links = _ref34$links === void 0 ? [] : _ref34$links;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId
           });
           ValidateWriteToken(writeToken);
-          _context32.next = 5;
-          return _regeneratorRuntime.awrap(this.utils.LimitedMap(10, links, function _callee28(info) {
+          _context33.next = 5;
+          return _regeneratorRuntime.awrap(this.utils.LimitedMap(10, links, function _callee29(info) {
             var path, type, target, link;
-            return _regeneratorRuntime.async(function _callee28$(_context31) {
+            return _regeneratorRuntime.async(function _callee29$(_context32) {
               while (1) {
-                switch (_context31.prev = _context31.next) {
+                switch (_context32.prev = _context32.next) {
                   case 0:
                     path = info.path.replace(/^(\/|\.)+/, "");
                     type = (info.type || "file") === "file" ? "files" : info.type;
@@ -2431,7 +2530,7 @@ exports.CreateLinks = function _callee29(_ref33) {
                       };
                     }
 
-                    _context31.next = 9;
+                    _context32.next = 9;
                     return _regeneratorRuntime.awrap(_this6.ReplaceMetadata({
                       libraryId: libraryId,
                       objectId: objectId,
@@ -2442,7 +2541,7 @@ exports.CreateLinks = function _callee29(_ref33) {
 
                   case 9:
                   case "end":
-                    return _context31.stop();
+                    return _context32.stop();
                 }
               }
             });
@@ -2450,7 +2549,7 @@ exports.CreateLinks = function _callee29(_ref33) {
 
         case 5:
         case "end":
-          return _context32.stop();
+          return _context33.stop();
       }
     }
   }, null, this);
@@ -2471,14 +2570,14 @@ exports.CreateLinks = function _callee29(_ref33) {
  */
 
 
-exports.InitializeAuthPolicy = function _callee30(_ref34) {
-  var libraryId, objectId, writeToken, _ref34$target, target, body, version, description, id, authPolicy, string;
+exports.InitializeAuthPolicy = function _callee31(_ref35) {
+  var libraryId, objectId, writeToken, _ref35$target, target, body, version, description, id, authPolicy, string;
 
-  return _regeneratorRuntime.async(function _callee30$(_context33) {
+  return _regeneratorRuntime.async(function _callee31$(_context34) {
     while (1) {
-      switch (_context33.prev = _context33.next) {
+      switch (_context34.prev = _context34.next) {
         case 0:
-          libraryId = _ref34.libraryId, objectId = _ref34.objectId, writeToken = _ref34.writeToken, _ref34$target = _ref34.target, target = _ref34$target === void 0 ? "auth_policy_spec" : _ref34$target, body = _ref34.body, version = _ref34.version, description = _ref34.description, id = _ref34.id;
+          libraryId = _ref35.libraryId, objectId = _ref35.objectId, writeToken = _ref35.writeToken, _ref35$target = _ref35.target, target = _ref35$target === void 0 ? "auth_policy_spec" : _ref35$target, body = _ref35.body, version = _ref35.version, description = _ref35.description, id = _ref35.id;
           authPolicy = {
             type: "epl-ast",
             version: version,
@@ -2491,14 +2590,14 @@ exports.InitializeAuthPolicy = function _callee30(_ref34) {
             id: id || ""
           };
           string = "".concat(authPolicy.type, "|").concat(authPolicy.version, "|").concat(authPolicy.body, "|").concat(authPolicy.data["/"]);
-          _context33.t0 = this.utils;
-          _context33.next = 6;
+          _context34.t0 = this.utils;
+          _context34.next = 6;
           return _regeneratorRuntime.awrap(this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string))));
 
         case 6:
-          _context33.t1 = _context33.sent;
-          authPolicy.signature = _context33.t0.FormatSignature.call(_context33.t0, _context33.t1);
-          _context33.next = 10;
+          _context34.t1 = _context34.sent;
+          authPolicy.signature = _context34.t0.FormatSignature.call(_context34.t0, _context34.t1);
+          _context34.next = 10;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -2508,7 +2607,7 @@ exports.InitializeAuthPolicy = function _callee30(_ref34) {
           }));
 
         case 10:
-          _context33.next = 12;
+          _context34.next = 12;
           return _regeneratorRuntime.awrap(this.SetAuthPolicy({
             objectId: objectId,
             policyId: objectId
@@ -2516,7 +2615,7 @@ exports.InitializeAuthPolicy = function _callee30(_ref34) {
 
         case 12:
         case "end":
-          return _context33.stop();
+          return _context34.stop();
       }
     }
   }, null, this);
@@ -2531,14 +2630,14 @@ exports.InitializeAuthPolicy = function _callee30(_ref34) {
  */
 
 
-exports.SetAuthPolicy = function _callee31(_ref35) {
+exports.SetAuthPolicy = function _callee32(_ref36) {
   var objectId, policyId;
-  return _regeneratorRuntime.async(function _callee31$(_context34) {
+  return _regeneratorRuntime.async(function _callee32$(_context35) {
     while (1) {
-      switch (_context34.prev = _context34.next) {
+      switch (_context35.prev = _context35.next) {
         case 0:
-          objectId = _ref35.objectId, policyId = _ref35.policyId;
-          _context34.next = 3;
+          objectId = _ref36.objectId, policyId = _ref36.policyId;
+          _context35.next = 3;
           return _regeneratorRuntime.awrap(this.MergeContractMetadata({
             contractAddress: this.utils.HashToAddress(objectId),
             metadataKey: "_AUTH_CONTEXT",
@@ -2549,7 +2648,7 @@ exports.SetAuthPolicy = function _callee31(_ref35) {
 
         case 3:
         case "end":
-          return _context34.stop();
+          return _context35.stop();
       }
     }
   }, null, this);
