@@ -641,7 +641,10 @@ exports.DownloadFile = async function({
   headers.Accept = "*/*";
 
   // If not owner, indicate re-encryption
-  if(encrypted && !this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId}))) {
+  const ownerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: ownerCapKey});
+
+  if(encrypted && !this.utils.EqualAddress(this.signer.address, await this.ContentObjectOwner({objectId})) && !ownerCap) {
     headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
   }
 
