@@ -673,7 +673,7 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
 };
 
 /**
- * Create an owner cap key using the specified public key and address
+ * Create a non-owner cap key using the specified public key and address
  *
  * @methodGroup Access Requests
  * @namedParams
@@ -681,10 +681,11 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
  * @param {string} objectId - ID of the object
  * @param {string} publicKey - Public key for the target cap
  * @param {string} publicAddress - Public address for the target cap key
+ * @param {string} writeToken - Write token for the content object - If specified, info will be retrieved from the write draft instead of creating a new draft and finalizing
  *
  * @returns {Promise<Object>}
  */
-exports.CreateOwnerCap = async function({objectId, libraryId, publicKey, publicAddress}) {
+exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, publicAddress, writeToken}) {
   publicAddress = ValidateAddress(publicAddress);
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
   const userCapValue = await this.ContentObjectMetadata({objectId, libraryId, metadataSubtree: userCapKey});
@@ -698,7 +699,10 @@ exports.CreateOwnerCap = async function({objectId, libraryId, publicKey, publicA
   const targetUserCapKey = `eluv.caps.iusr${this.utils.AddressToHash(publicAddress)}`;
   const targetUserCapValue = await this.Crypto.EncryptConk(userConk, publicKey);
 
-  const {writeToken} = await this.EditContentObject({libraryId, objectId});
+  const finalize = !writeToken;
+  if(!writeToken) {
+    writeToken = await this.EditContentObject({libraryId, objectId}).writeToken;
+  }
 
   this.ReplaceMetadata({
     libraryId,
@@ -708,12 +712,14 @@ exports.CreateOwnerCap = async function({objectId, libraryId, publicKey, publicA
     metadata: targetUserCapValue
   });
 
-  return await this.FinalizeContentObject({
-    libraryId,
-    objectId,
-    writeToken,
-    commitMessage: "Create owner cap"
-  });
+  if(finalize) {
+    await this.FinalizeContentObject({
+      libraryId,
+      objectId,
+      writeToken,
+      commitMessage: "Create non-owner cap"
+    });
+  }
 };
 
 /**

@@ -329,7 +329,7 @@ class FrameClient {
       "CreateFileUploadJob",
       "CreateLinks",
       "CreateNTPInstance",
-      "CreateOwnerCap",
+      "CreateNonOwnerCap",
       "CreatePart",
       "CreateProductionMaster",
       "CreateSignedToken",
