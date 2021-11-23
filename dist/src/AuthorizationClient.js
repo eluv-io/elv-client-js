@@ -241,7 +241,7 @@ function () {
   }, {
     key: "GenerateAuthorizationToken",
     value: function GenerateAuthorizationToken(_ref3) {
-      var libraryId, objectId, versionHash, partHash, encryption, _ref3$update, update, _ref3$noAuth, noAuth, publicKey, owner, cap, token, _ref4, transactionHash, signature, multiSig;
+      var libraryId, objectId, versionHash, partHash, encryption, _ref3$update, update, _ref3$noAuth, noAuth, publicKey, owner, ownerCapKey, ownerCap, cap, token, _ref4, transactionHash, signature, multiSig;
 
       return _regeneratorRuntime.async(function GenerateAuthorizationToken$(_context3) {
         while (1) {
@@ -271,7 +271,7 @@ function () {
 
             case 9:
               if (!_context3.t0) {
-                _context3.next = 18;
+                _context3.next = 22;
                 break;
               }
 
@@ -282,34 +282,44 @@ function () {
 
             case 12:
               owner = _context3.sent;
+              ownerCapKey = "eluv.caps.iusr".concat(Utils.AddressToHash(this.client.signer.address));
+              _context3.next = 16;
+              return _regeneratorRuntime.awrap(client.ContentObjectMetadata({
+                libraryId: libraryId,
+                objectId: objectId,
+                metadataSubtree: ownerCapKey
+              }));
 
-              if (Utils.EqualAddress(owner, this.client.signer.address)) {
-                _context3.next = 18;
+            case 16:
+              ownerCap = _context3.sent;
+
+              if (!(!Utils.EqualAddress(owner, this.client.signer.address) && !ownerCap)) {
+                _context3.next = 22;
                 break;
               }
 
-              _context3.next = 16;
+              _context3.next = 20;
               return _regeneratorRuntime.awrap(this.ReEncryptionConk({
                 libraryId: libraryId,
                 objectId: objectId
               }));
 
-            case 16:
+            case 20:
               cap = _context3.sent;
               publicKey = cap.public_key;
 
-            case 18:
+            case 22:
               token = {
                 qspace_id: this.contentSpaceId,
                 addr: Utils.FormatAddress(this.client.signer && this.client.signer.address || "")
               };
 
               if (this.noAuth || noAuth) {
-                _context3.next = 25;
+                _context3.next = 29;
                 break;
               }
 
-              _context3.next = 22;
+              _context3.next = 26;
               return _regeneratorRuntime.awrap(this.MakeAccessRequest({
                 libraryId: libraryId,
                 objectId: objectId,
@@ -320,7 +330,7 @@ function () {
                 noAuth: this.noAuth || noAuth
               }));
 
-            case 22:
+            case 26:
               _ref4 = _context3.sent;
               transactionHash = _ref4.transactionHash;
 
@@ -328,7 +338,7 @@ function () {
                 token.tx_id = transactionHash;
               }
 
-            case 25:
+            case 29:
               if (libraryId) {
                 token.qlib_id = libraryId;
               }
@@ -342,15 +352,15 @@ function () {
               }
 
               token = Utils.B64(JSON.stringify(token));
-              _context3.next = 31;
+              _context3.next = 35;
               return _regeneratorRuntime.awrap(this.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(token))));
 
-            case 31:
+            case 35:
               signature = _context3.sent;
               multiSig = Utils.FormatSignature(signature);
               return _context3.abrupt("return", "".concat(token, ".").concat(Utils.B64(multiSig)));
 
-            case 34:
+            case 38:
             case "end":
               return _context3.stop();
           }
