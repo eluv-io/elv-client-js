@@ -285,6 +285,8 @@ class EthClient {
             const latestBlock = await this.MakeProviderCall({methodName: "getBlock", args: ["latest"]});
             overrides.gasLimit = latestBlock.gasLimit;
             overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
+          } else if(error.code === "NONCE_EXPIRED" && error.reason === "nonce has already been used") {
+            this.Log(`Retrying method call ${methodName}`);
           } else if(!(error.message || error).includes("invalid response")) {
             this.Log(typeof error === "object" ? JSON.stringify(error, null, 2) : error, true);
             throw error;
