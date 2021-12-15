@@ -15,6 +15,8 @@ function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { va
  *
  * @module ElvClient/ABRPublishing
  */
+var R = require("ramda");
+
 var UrlJoin = require("url-join");
 
 var HttpClient = require("../HttpClient");
@@ -344,7 +346,7 @@ exports.CreateProductionMaster = function _callee(_ref) {
 
 
 exports.CreateABRMezzanine = function _callee2(_ref4) {
-  var libraryId, objectId, type, name, description, metadata, masterVersionHash, abrProfile, _ref4$variant, variant, _ref4$offeringKey, offeringKey, existingMez, options, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _ref5, logs, errors, warnings, finalizeResponse;
+  var libraryId, objectId, type, name, description, metadata, masterVersionHash, abrProfile, _ref4$variant, variant, _ref4$offeringKey, offeringKey, existingMez, options, id, write_token, editResponse, createResponse, masterName, authorizationTokens, headers, body, storeClear, _ref5, logs, errors, warnings, existingMetadata, finalizeResponse;
 
   return _regeneratorRuntime.async(function _callee2$(_context2) {
     while (1) {
@@ -541,7 +543,6 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
               "/": "./rep/playout/".concat(offeringKey, "/options.json")
             })
           }, metadata["public"].asset_metadata);
-          metadata.elv_created_at = new Date().getTime();
 
           if (name || !existingMez) {
             metadata.name = name || "".concat(masterName, " Mezzanine");
@@ -551,18 +552,38 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
           if (description || !existingMez) {
             metadata.description = description || "";
             metadata["public"].description = description || "";
-          }
+          } // retrieve existing metadata to merge with updated metadata
 
-          _context2.next = 72;
-          return _regeneratorRuntime.awrap(this.MergeMetadata({
+
+          _context2.next = 71;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: id,
+            writeToken: write_token
+          }));
+
+        case 71:
+          existingMetadata = _context2.sent;
+          // newer metadata values replace existing metadata, unless both new and old values are objects,
+          // in which case their keys are merged recursively
+          metadata = R.mergeDeepRight(existingMetadata, metadata);
+
+          if (!existingMez) {
+            // set creation date
+            metadata.elv_created_at = new Date().getTime();
+          } // write metadata to mezzanine object
+
+
+          _context2.next = 76;
+          return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: id,
             writeToken: write_token,
             metadata: metadata
           }));
 
-        case 72:
-          _context2.next = 74;
+        case 76:
+          _context2.next = 78;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: id,
@@ -570,7 +591,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             commitMessage: "Create ABR mezzanine"
           }));
 
-        case 74:
+        case 78:
           finalizeResponse = _context2.sent;
           return _context2.abrupt("return", _objectSpread({
             logs: logs || [],
@@ -578,7 +599,7 @@ exports.CreateABRMezzanine = function _callee2(_ref4) {
             errors: errors || []
           }, finalizeResponse));
 
-        case 76:
+        case 80:
         case "end":
           return _context2.stop();
       }
