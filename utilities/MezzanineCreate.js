@@ -126,7 +126,7 @@ class MezzanineCreate extends Utility {
 
     if(!existingPublicMetadata.asset_metadata) existingPublicMetadata.asset_metadata = {};
 
-    const mergedExistingAndArgMetadata = R.mergeRight(
+    const mergedExistingAndArgMetadata = R.mergeDeepRight(
       {public: existingPublicMetadata},
       metadataFromArg
     );
