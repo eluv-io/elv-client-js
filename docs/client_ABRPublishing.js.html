@@ -71,6 +71,7 @@
  * @module ElvClient/ABRPublishing
  */
 
+const R = require("ramda");
 const UrlJoin = require("url-join");
 const HttpClient = require("../HttpClient");
 
@@ -420,8 +421,6 @@ exports.CreateABRMezzanine = async function({
     ...metadata.public.asset_metadata
   };
 
-  metadata.elv_created_at = new Date().getTime();
-
   if(name || !existingMez) {
     metadata.name = name || `${masterName} Mezzanine`;
     metadata.public.name = name || `${masterName} Mezzanine`;
@@ -432,7 +431,23 @@ exports.CreateABRMezzanine = async function({
     metadata.public.description = description || "";
   }
 
-  await this.MergeMetadata({
+  // retrieve existing metadata to merge with updated metadata
+  const existingMetadata = await this.ContentObjectMetadata({
+    libraryId,
+    objectId: id,
+    writeToken: write_token,
+  });
+  // newer metadata values replace existing metadata, unless both new and old values are objects,
+  // in which case their keys are merged recursively
+  metadata = R.mergeDeepRight(existingMetadata, metadata);
+
+  if(!existingMez) {
+    // set creation date
+    metadata.elv_created_at = new Date().getTime();
+  }
+
+  // write metadata to mezzanine object
+  await this.ReplaceMetadata({
     libraryId,
     objectId: id,
     writeToken: write_token,
