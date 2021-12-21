@@ -567,6 +567,17 @@ exports.CreateContentObject = async function({libraryId, objectId, options={}}) 
   }
 
   if(!objectId) {
+    const currentAccountAddress = await this.CurrentAccountAddress();
+    const canContribute = await this.CallContractMethod({
+      contractAddress: this.utils.HashToAddress(libraryId),
+      methodName: "canContribute",
+      methodArgs: [currentAccountAddress]
+    });
+
+    if(!canContribute) {
+      throw Error(`Current user does not have permission to create content in library ${libraryId}`);
+    }
+
     this.Log("Deploying contract...");
     const { contractAddress } = await this.authClient.CreateContentObject({libraryId, typeId});
 
