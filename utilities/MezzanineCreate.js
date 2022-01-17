@@ -166,7 +166,6 @@ class MezzanineCreate extends Utility {
     logger.errorsAndWarnings(createResponse);
 
     const objectId = createResponse.id;
-    await client.SetVisibility({id: objectId, visibility: 0});
 
     logger.log("Starting Mezzanine Job(s)");
 
