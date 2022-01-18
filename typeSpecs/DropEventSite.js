@@ -199,22 +199,26 @@ const eventSiteSpec = {
             {
               "name": "image",
               "type": "file",
-              "extensions": imageTypes
+              "extensions": imageTypes,
+              "depends_on": "./show"
             },
             {
               "name": "message",
-              "type": "rich_text"
+              "type": "rich_text",
+              "depends_on": "./show"
             },
             {
               "name": "button_text",
               "type": "text",
-              "hint": "Text for the button at the bottom of the modal. By default, it will be 'Create Wallet' if login is required for the next drop, otherwise it will be 'Join the Drop'"
+              "hint": "Text for the button at the bottom of the modal. By default, it will be 'Create Wallet' if login is required for the next drop, otherwise it will be 'Join the Drop'",
+              "depends_on": "./show"
             },
             {
               "name": "post_login",
               "label": "Post Login Modal",
               "type": "subsection",
               "hint": "If specified, modal will be shown after a user goes through the login process from the 'Get Started' modal",
+              "depends_on": "./show",
               "fields": [
                 {
                   "name": "show",
@@ -321,13 +325,15 @@ const eventSiteSpec = {
             {
               "extensions": imageTypes,
               "name": "image",
-              "type": "file"
+              "type": "file",
+              "depends_on": "./show"
             },
             {
               "extensions": imageTypes,
               "name": "image_mobile",
               "label": "Image (Mobile)",
-              "type": "file"
+              "type": "file",
+              "depends_on": "./show"
             },
             {
               "name": "type",
@@ -338,23 +344,27 @@ const eventSiteSpec = {
                 "link"
               ],
               "default_value": "marketplace",
-              "hint": "Specify what happens when clicking on the banner. The banner can link to a URL or a drop, or it can open the marketplace view."
+              "hint": "Specify what happens when clicking on the banner. The banner can link to a URL or a drop, or it can open the marketplace view.",
+              "depends_on": "./show"
             },
             {
               "name": "marketplace_filters",
               "type": "list",
-              "hint": "If the banner links to the marketplace, you can specify filters to apply when the marketplace is opened via the banner."
+              "hint": "If the banner links to the marketplace, you can specify filters to apply when the marketplace is opened via the banner.",
+              "depends_on": "./show"
             },
             {
               "name": "link",
               "type": "text",
-              "hint": "If the banner is a link, specify the URL to link to."
+              "hint": "If the banner is a link, specify the URL to link to.",
+              "depends_on": "./show"
             },
             {
               "label": "Drop UUID",
               "name": "drop_uuid",
               "type": "text",
-              "hint": "If the banner links to a drop, you can specify a specific drop to link to. If not specified, the banner will link to the next upcoming drop."
+              "hint": "If the banner links to a drop, you can specify a specific drop to link to. If not specified, the banner will link to the next upcoming drop.",
+              "depends_on": "./show"
             }
           ]
         }
@@ -727,6 +737,7 @@ const eventSiteSpec = {
       "label": "FAQ",
       "hint": "Specify a custom FAQ. If blank, the default FAQ will be displayed",
       "type": "list",
+      "depends_on": "./show_faq",
       "fields": [
         {
           "name": "question",
@@ -780,17 +791,20 @@ const eventSiteSpec = {
         {
           "name": "redemption_message",
           "type": "text",
-          "hint": "Text to be displayed on coupon redemption page"
+          "hint": "Text to be displayed on coupon redemption page",
+          "depends_on": "./coupon_mode"
         },
         {
           "name": "event_page_message_1",
           "type": "text",
-          "hint": "Text to be displayed on event page after redemption"
+          "hint": "Text to be displayed on event page after redemption",
+          "depends_on": "./coupon_mode"
         },
         {
           "name": "event_page_message_2",
           "type": "text",
-          "hint": "Text to be displayed on event page after redemption"
+          "hint": "Text to be displayed on event page after redemption",
+          "depends_on": "./coupon_mode"
         }
       ],
       "name": "coupon_redemption",
@@ -1054,6 +1068,7 @@ const eventSiteSpec = {
           "no_localize": true
         },
         {
+          "label": "marketplace_filters",
           "name": "store_filters",
           "type": "list",
           "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown for users who voted"
@@ -1076,6 +1091,54 @@ const eventSiteSpec = {
           "label": "Calendar Event Info",
           "name": "calendar",
           "type": "subsection"
+        },
+        {
+          "label": "Use Custom Landing Page",
+          "hint": "If checked, the landing page info below will be used for this drop event instead of the general landing page configuration.",
+          "name": "custom_landing_page",
+          "type": "checkbox"
+        },
+        {
+          "fields": [
+            {
+              "name": "header_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image_mobile",
+              "label": "Background Image (Mobile)",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "header_text",
+              "type": "text"
+            },
+            {
+              "name": "show_countdown",
+              "type": "checkbox",
+              "default_value": true
+            },
+            {
+              "name": "message_1",
+              "type": "textarea",
+              "hint": "Message above the countdown. Default: 'Your Code is Redeemed. Drop Begins In'"
+            },
+            {
+              "name": "message_2",
+              "type": "textarea",
+              "hint": "Message below the countdown. Default: 'Use the link in your code email to return here at the time of the drop.'"
+            }
+          ],
+          "name": "event_landing_page",
+          "type": "subsection",
+          "depends_on": "./custom_landing_page"
         }
       ]
     },
@@ -1197,6 +1260,54 @@ const eventSiteSpec = {
           "type": "subsection"
         },
         {
+          "label": "Use Custom Landing Page",
+          "hint": "If checked, the landing page info below will be used for this drop event instead of the general landing page configuration.",
+          "name": "custom_landing_page",
+          "type": "checkbox"
+        },
+        {
+          "fields": [
+            {
+              "name": "header_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image_mobile",
+              "label": "Background Image (Mobile)",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "header_text",
+              "type": "text"
+            },
+            {
+              "name": "show_countdown",
+              "type": "checkbox",
+              "default_value": true
+            },
+            {
+              "name": "message_1",
+              "type": "textarea",
+              "hint": "Message above the countdown. Default: 'Your Code is Redeemed. Drop Begins In'"
+            },
+            {
+              "name": "message_2",
+              "type": "textarea",
+              "hint": "Message below the countdown. Default: 'Use the link in your code email to return here at the time of the drop.'"
+            }
+          ],
+          "name": "event_landing_page",
+          "type": "subsection",
+          "depends_on": "./custom_landing_page"
+        },
+        {
           "name": "event_state_preroll",
           "label": "Event State: Preroll",
           "type": "subsection",
@@ -1208,39 +1319,46 @@ const eventSiteSpec = {
             },
             {
               "name": "header",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "subheader",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "show_countdown",
               "label": "Show Countdown to Next State",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "use_main_stream",
               "type": "checkbox",
               "default_value": false,
-              "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
+              "hint": "If checked, the stream for the main event will be used instead of one specified in this section",
+              "depends_on": "./use_state"
             },
             {
               "name": "stream",
               "type": "fabric_link",
-              "video_preview": true
+              "video_preview": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "loop_stream",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "modal_message",
               "label": "Modal Message (Pre Event)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "depends_on": "./use_state",
               "fields": [
                 {
                   "name": "show",
@@ -1326,48 +1444,56 @@ const eventSiteSpec = {
             {
               "name": "use_state",
               "type": "checkbox",
-              "default_value": true
+              "default_value": false
             },
             {
               "name": "header",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "subheader",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "start_date",
               "type": "datetime",
-              "no_localize": true
+              "no_localize": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "show_countdown",
               "label": "Show Countdown to Next State",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "use_main_stream",
               "type": "checkbox",
               "default_value": false,
+              "depends_on": "./use_state",
               "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
             },
             {
               "name": "stream",
               "type": "fabric_link",
-              "video_preview": true
+              "video_preview": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "loop_stream",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "modal_message",
               "label": "Modal Message (Voting Ended)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "depends_on": "./use_state",
               "fields": [
                 {
                   "name": "show",
@@ -1395,42 +1521,49 @@ const eventSiteSpec = {
             {
               "name": "use_state",
               "type": "checkbox",
-              "default_value": true
+              "default_value": false
             },
             {
               "name": "header",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "subheader",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "start_date",
               "type": "datetime",
-              "no_localize": true
+              "no_localize": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "use_main_stream",
               "type": "checkbox",
               "default_value": false,
-              "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
+              "hint": "If checked, the stream for the main event will be used instead of one specified in this section",
+              "depends_on": "./use_state"
             },
             {
               "name": "stream",
               "type": "fabric_link",
-              "video_preview": true
+              "video_preview": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "loop_stream",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "modal_message",
               "label": "Modal Message (Minting Start)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "depends_on": "./use_state",
               "fields": [
                 {
                   "name": "show",
@@ -1462,38 +1595,45 @@ const eventSiteSpec = {
             },
             {
               "name": "header",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "subheader",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "start_date",
               "type": "datetime",
-              "no_localize": true
+              "no_localize": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "use_main_stream",
               "type": "checkbox",
               "default_value": false,
-              "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
+              "hint": "If checked, the stream for the main event will be used instead of one specified in this section",
+              "depends_on": "./use_state"
             },
             {
               "name": "stream",
               "type": "fabric_link",
-              "video_preview": true
+              "video_preview": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "loop_stream",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "modal_message",
               "label": "Modal Message (Event Ended)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "depends_on": "./use_state",
               "fields": [
                 {
                   "name": "show",

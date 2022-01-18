@@ -130,6 +130,11 @@ const NFTTemplateSpec = {
           "default_value": true
         },
         {
+          "name": "has_audio",
+          "type": "checkbox",
+          "default_value": false
+        },
+        {
           "name": "token_uri",
           "label": "Token URI",
           "type": "self_metadata_url",
@@ -145,7 +150,8 @@ const NFTTemplateSpec = {
           "loop": true,
           "hide_controls": true,
           "muted": true,
-          "autoplay": true
+          "autoplay": true,
+          "check_has_audio_flag": true
         },
         {
           "name": "external_url",
@@ -157,7 +163,8 @@ const NFTTemplateSpec = {
           "loop": true,
           "hide_controls": true,
           "muted": true,
-          "autoplay": true
+          "autoplay": true,
+          "check_has_audio_flag": true
         },
         {
           "name": "background_color",
@@ -185,7 +192,8 @@ const NFTTemplateSpec = {
                   "loop": true,
                   "hide_controls": true,
                   "muted": true,
-                  "autoplay": true
+                  "autoplay": true,
+                  "check_has_audio_flag": true
                 }
               ]
             },
