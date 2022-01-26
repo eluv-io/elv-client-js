@@ -94,6 +94,20 @@ const NFTTemplateSpec = {
           "type": "rich_text"
         },
         {
+          "name": "media_type",
+          "type": "select",
+          "options": [
+            "Video",
+            "Image",
+            "Ebook"
+          ]
+        },
+        {
+          "name": "media",
+          "type": "file",
+          "hint": "Additional media for this NFT, for example the Ebook file."
+        },
+        {
           "name": "address",
           "label": "NFT Contract Address",
           "type": "text"
