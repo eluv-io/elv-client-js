@@ -57,10 +57,9 @@ const eventSiteSpec = {
       "no_localize": true
     },
     {
-      "name": "marketplace",
-      "type": "fabric_link",
-      "hash_only": true,
-      "no_localize": true
+      "name": "marketplace_slug",
+      "type": "text",
+      "hint": "The slug of the marketplace to associate with this event"
     },
     {
       "name": "state",
@@ -81,6 +80,7 @@ const eventSiteSpec = {
     },
     {
       "name": "theme",
+      "label": "Color Scheme",
       "type": "select",
       "options": [
         "light",
@@ -527,54 +527,6 @@ const eventSiteSpec = {
           ]
         }
       ]
-    },
-    {
-      "fields": [
-        {
-          "name": "name",
-          "type": "text"
-        },
-        {
-          "fields": [
-            {
-              "hint": "A description displayed next to the 'Next' button when viewing the previous page.",
-              "name": "page_title",
-              "type": "text"
-            },
-            {
-              "extensions": imageTypes,
-              "name": "image",
-              "type": "file"
-            },
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000",
-                "label": "Black"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#FFFFFF",
-                "label": "White"
-              }
-            },
-            {
-              "name": "text",
-              "type": "rich_text"
-            }
-          ],
-          "name": "pages",
-          "type": "list"
-        }
-      ],
-      "name": "event_descriptions",
-      "type": "list"
     },
     {
       "fields": [
@@ -1855,7 +1807,58 @@ const eventSiteSpec = {
           ]
         }
       ]
-    }
+    },
+
+
+
+    {
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "fields": [
+            {
+              "hint": "A description displayed next to the 'Next' button when viewing the previous page.",
+              "name": "page_title",
+              "type": "text"
+            },
+            {
+              "extensions": imageTypes,
+              "name": "image",
+              "type": "file"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000",
+                "label": "Black"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF",
+                "label": "White"
+              }
+            },
+            {
+              "name": "text",
+              "type": "rich_text"
+            }
+          ],
+          "name": "pages",
+          "type": "list"
+        }
+      ],
+      "name": "event_descriptions",
+      "type": "list"
+    },
   ]
 };
 

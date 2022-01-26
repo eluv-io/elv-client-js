@@ -18,49 +18,207 @@ const MarketplaceSpec = {
   "associated_assets": [],
   "info_fields": [
     {
+      "label": "Branding and Customization",
+      "name": "header_branding",
+      "type": "header"
+    },
+    {
       "name": "tenant_id",
       "label": "Tenant ID",
       "type": "Text"
     },
     {
-      "label": "Eluvio LIVE Tenant",
-      "name": "tenant",
-      "type": "fabric_link",
-      "hash_only": true,
-      "no_localize": true
-    },
-    {
-      "name": "name",
-      "type": "text",
-    },
-    {
-      "name": "description",
-      "type": "textarea",
-    },
-    {
+      "name": "branding",
+      "type": "subsection",
       "fields": [
         {
-          "extensions": imageTypes,
-          "name": "logo",
-          "type": "file"
+          "name": "discovery",
+          "type": "subsection",
+          "hint": "These attributes will be used to display your marketplace in the list of available marketplaces",
+          "fields": [
+            {
+              "name": "name",
+              "type": "text"
+            },
+            {
+              "name": "subheader",
+              "type": "text",
+              "default_value": "Marketplace"
+            },
+            {
+              "name": "description",
+              "type": "textarea"
+            },
+            {
+              "name": "logo",
+              "extensions": imageTypes,
+              "type": "file",
+              "hint": "This logo will be displayed in the list of available marketplaces"
+            },
+            {
+              "name": "tags",
+              "type": "list"
+            }
+          ]
         },
         {
-          "extensions": imageTypes,
-          "name": "image",
-          "type": "file"
+          "name": "marketplace",
+          "type": "subsection",
+          "hint": "These attributes will be used to customize the user experience when browsing your marketplace",
+          "fields": [
+            {
+              "name": "Color Scheme",
+              "type": "select",
+              "default_value": "Light",
+              "options": [
+                "Light",
+                "Dark",
+                "User Preference"
+              ]
+            },
+            {
+              "name": "font",
+              "type": "select",
+              "options": [
+                "Helvetica Neue",
+                "Inter",
+                "Selawik"
+              ]
+            },
+            {
+              "name": "top_banner_logo",
+              "extensions": imageTypes,
+              "type": "file",
+              "hint": "This logo will be displayed at the top of the page when browsing your marketplace"
+            },
+            {
+              "name": "description",
+              "type": "textarea",
+              "hint": "Displayed below the top banner logo"
+            }
+          ]
         }
-      ],
-      "name": "images",
-      "type": "subsection"
+      ]
     },
     {
-      "name": "events",
-      "type": "list",
-      "no_localize": true,
-      "fields": [{
-        "name": "event",
-        "type": "fabric_link"
-      }]
+      "name": "login_customization",
+      "label": "Login Customization",
+      "type": "subsection",
+      "fields": [
+        {
+          "label": "Login Page Logo",
+          "name": "logo",
+          "type": "file",
+          "extensions": imageTypes
+        },
+        {
+          "label": "Login Page Background",
+          "name": "background",
+          "type": "file",
+          "extensions": imageTypes
+        },
+        {
+          "name": "background_mobile",
+          "label": "Login Page Background (Mobile)",
+          "type": "file",
+          "extensions": imageTypes
+        },
+        {
+          "name": "large_logo_mode",
+          "type": "checkbox",
+          "hint": "If specified, the logo in the login box will be significantly larger, but *the background image will NOT be visible in the Live app*."
+        },
+        {
+          "name": "log_in_button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#0885fb"
+              }
+            },
+            {
+              "name": "border_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#0885fb"
+              }
+            }
+          ]
+        },
+        {
+          "name": "sign_up_button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF"
+              }
+            },
+            {
+              "name": "border_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            }
+          ]
+        },
+        {
+          "name": "require_email_verification",
+          "type": "checkbox",
+          "default_value": true
+        },
+        {
+          "name": "disable_third_party",
+          "label": "Disable third party login providers",
+          "type": "checkbox",
+          "default_value": false
+        },
+        {
+          "name": "disable_private_key",
+          "label": "Disable Private Key Login",
+          "type": "checkbox",
+          "default_value": false
+        }
+      ]
+    },
+    {
+      "label": "Terms and Conditions",
+      "name": "terms",
+      "type": "rich_text"
+    },
+
+
+
+    {
+      "label": "Item Definitions",
+      "name": "header_items",
+      "type": "header"
     },
     {
       "name": "payment_currencies",
@@ -146,6 +304,13 @@ const MarketplaceSpec = {
       "name": "items",
       "type": "list"
     },
+
+
+    {
+      "label": "Storefront Organization",
+      "name": "header_storefront",
+      "type": "header"
+    },
     {
       "name": "storefront",
       "type": "subsection",
@@ -203,6 +368,14 @@ const MarketplaceSpec = {
           ]
         },
       ]
+    },
+
+
+
+    {
+      "label": "Collections",
+      "name": "header_collections",
+      "type": "header"
     },
     {
       "name": "collections",
@@ -284,125 +457,6 @@ const MarketplaceSpec = {
           "allow_null": true
         }
       ]
-    },
-    {
-      "name": "login_customization",
-      "label": "Custom Branding",
-      "type": "subsection",
-      "fields": [
-        {
-          "name": "require_email_verification",
-          "type": "checkbox",
-          "default_value": true
-        },
-        {
-          "name": "font",
-          "type": "select",
-          "options": [
-            "Helvetica Neue",
-            "Inter",
-            "Selawik"
-          ]
-        },
-        {
-          "name": "logo",
-          "type": "file",
-          "extensions": imageTypes
-        },
-        {
-          "name": "background",
-          "type": "file",
-          "extensions": imageTypes
-        },
-        {
-          "name": "background_mobile",
-          "label": "Background (Mobile)",
-          "type": "file",
-          "extensions": imageTypes
-        },
-        {
-          "name": "large_logo_mode",
-          "type": "checkbox",
-          "hint": "If specified, the logo in the login box will be significantly larger, but *the background image will NOT be visible in the Live app*."
-        },
-        {
-          "name": "log_in_button",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#FFFFFF"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#0885fb"
-              }
-            },
-            {
-              "name": "border_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#0885fb"
-              }
-            }
-          ]
-        },
-        {
-          "name": "sign_up_button",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#FFFFFF"
-              }
-            },
-            {
-              "name": "border_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000"
-              }
-            }
-          ]
-        },
-        {
-          "name": "disable_third_party",
-          "label": "Disable third party login providers",
-          "type": "checkbox",
-          "default_value": false
-        },
-        {
-          "name": "disable_private_key",
-          "label": "Disable Private Key Login",
-          "type": "checkbox",
-          "default_value": false
-        }
-      ]
-    },
-    {
-      "label": "Terms and Conditions",
-      "name": "terms",
-      "type": "rich_text"
     }
   ]
 };
