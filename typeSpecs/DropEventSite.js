@@ -473,6 +473,62 @@ const eventSiteSpec = {
       ]
     },
     {
+      "name": "event_info_modals",
+      "type": "list",
+      "fields": [
+        {
+          "name": "button_text",
+          "type": "text"
+        },
+        {
+          "name": "pages",
+          "type": "list",
+          "fields": [
+            {
+              "name": "page_title",
+              "type": "text"
+            },
+            {
+              "name": "image",
+              "extensions": imageTypes,
+              "type": "file",
+              "unless": "./video",
+              "hint": "Select an image for this page. Each page may only have one image or one video"
+            },
+            {
+              "name": "video",
+              "type": "fabric_link",
+              "video_preview": true,
+              "unless": "./image",
+              "hint": "Select a video for this page. Each page may only have one image or one video"
+            },
+            {
+              "name": "text",
+              "type": "rich_text"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000",
+                "label": "Black"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF",
+                "label": "White"
+              }
+            },
+          ]
+        }
+      ]
+    },
+    {
       "fields": [
         {
           "name": "name",
