@@ -825,17 +825,22 @@ exports.MetadataAuth = async function({
   objectId,
   versionHash,
   path="/",
-  channelAuth=false
+  channelAuth=false,
+  noAuth=false
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  const visibility = await this.Visibility({id: objectId});
-  const accessType = await this.AccessType({id: objectId});
-  const isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
-
-  let noAuth = visibility >= 10 || (isPublic &amp;&amp; visibility >= 1);
+  noAuth = this.noAuth || noAuth;
+  let isPublic = noAuth;
+  let accessType;
+  if(!noAuth) {
+    const visibility = await this.Visibility({id: objectId});
+    accessType = await this.AccessType({id: objectId});
+    isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
+    noAuth = visibility >= 10 || (isPublic &amp;&amp; visibility >= 1);
+  }
 
   if(this.oauthToken) {
     // Check that KMS is set on this object
@@ -888,6 +893,7 @@ exports.MetadataAuth = async function({
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {Array&lt;string>=} remove - Exclude the specified items from the retrieved metadata
  * @param {string=} authorizationToken - Additional authorization token for this request
+ * @param {string=} noAuth=false - If specified, the normal authorization flow will be skipped. Useful if you know the metadata you're retrieving is publicly accessible
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -922,6 +928,7 @@ exports.ContentObjectMetadata = async function({
   select=[],
   remove=[],
   authorizationToken,
+  noAuth=false,
   resolveLinks=false,
   resolveIncludeSource=false,
   resolveIgnoreErrors=false,
@@ -942,7 +949,7 @@ exports.ContentObjectMetadata = async function({
   let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
 
   // Main authorization
-  let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
+  let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree, noAuth});
 
   // All authorization
   const authTokens = [authorizationToken, queryParams.authorization, defaultAuthToken].flat().filter(token => token);
@@ -2324,9 +2331,7 @@ exports.LinkUrl = async function({
   }
 
   let authorization = [ authorizationToken ];
-  if(!noAuth) {
-    authorization.push(await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}));
-  }
+  authorization.push(await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth, noAuth}));
 
   if(queryParams.authorization) {
     authorization.push(queryParams.authorization);

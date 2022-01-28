@@ -1443,13 +1443,13 @@ exports.ProduceMetadataLinks = function _callee22(_ref15) {
 };
 
 exports.MetadataAuth = function _callee23(_ref16) {
-  var libraryId, objectId, versionHash, _ref16$path, path, _ref16$channelAuth, channelAuth, visibility, accessType, isPublic, noAuth, kmsAddress;
+  var libraryId, objectId, versionHash, _ref16$path, path, _ref16$channelAuth, channelAuth, _ref16$noAuth, noAuth, isPublic, accessType, visibility, kmsAddress;
 
   return _regeneratorRuntime.async(function _callee23$(_context23) {
     while (1) {
       switch (_context23.prev = _context23.next) {
         case 0:
-          libraryId = _ref16.libraryId, objectId = _ref16.objectId, versionHash = _ref16.versionHash, _ref16$path = _ref16.path, path = _ref16$path === void 0 ? "/" : _ref16$path, _ref16$channelAuth = _ref16.channelAuth, channelAuth = _ref16$channelAuth === void 0 ? false : _ref16$channelAuth;
+          libraryId = _ref16.libraryId, objectId = _ref16.objectId, versionHash = _ref16.versionHash, _ref16$path = _ref16.path, path = _ref16$path === void 0 ? "/" : _ref16$path, _ref16$channelAuth = _ref16.channelAuth, channelAuth = _ref16$channelAuth === void 0 ? false : _ref16$channelAuth, _ref16$noAuth = _ref16.noAuth, noAuth = _ref16$noAuth === void 0 ? false : _ref16$noAuth;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1460,43 +1460,52 @@ exports.MetadataAuth = function _callee23(_ref16) {
             objectId = this.utils.DecodeVersionHash(versionHash).objectId;
           }
 
-          _context23.next = 5;
+          noAuth = this.noAuth || noAuth;
+          isPublic = noAuth;
+
+          if (noAuth) {
+            _context23.next = 14;
+            break;
+          }
+
+          _context23.next = 8;
           return _regeneratorRuntime.awrap(this.Visibility({
             id: objectId
           }));
 
-        case 5:
+        case 8:
           visibility = _context23.sent;
-          _context23.next = 8;
+          _context23.next = 11;
           return _regeneratorRuntime.awrap(this.AccessType({
             id: objectId
           }));
 
-        case 8:
+        case 11:
           accessType = _context23.sent;
           isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
           noAuth = visibility >= 10 || isPublic && visibility >= 1;
 
+        case 14:
           if (!this.oauthToken) {
-            _context23.next = 19;
+            _context23.next = 22;
             break;
           }
 
-          _context23.next = 14;
+          _context23.next = 17;
           return _regeneratorRuntime.awrap(this.authClient.KMSAddress({
             objectId: objectId,
             versionHash: versionHash
           }));
 
-        case 14:
+        case 17:
           kmsAddress = _context23.sent;
 
           if (!(kmsAddress && !this.utils.EqualAddress(kmsAddress, this.utils.nullAddress))) {
-            _context23.next = 19;
+            _context23.next = 22;
             break;
           }
 
-          _context23.next = 18;
+          _context23.next = 21;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -1505,35 +1514,35 @@ exports.MetadataAuth = function _callee23(_ref16) {
             oauthToken: this.oauthToken
           }));
 
-        case 18:
+        case 21:
           return _context23.abrupt("return", _context23.sent);
 
-        case 19:
+        case 22:
           if (!(!this.inaccessibleLibraries[libraryId] && isPublic && accessType === this.authClient.ACCESS_TYPES.OBJECT && !channelAuth)) {
-            _context23.next = 47;
+            _context23.next = 50;
             break;
           }
 
-          _context23.prev = 20;
+          _context23.prev = 23;
           _context23.t0 = _regeneratorRuntime;
           _context23.t1 = this.authClient;
           _context23.t2 = libraryId;
 
           if (_context23.t2) {
-            _context23.next = 28;
+            _context23.next = 31;
             break;
           }
 
-          _context23.next = 27;
+          _context23.next = 30;
           return _regeneratorRuntime.awrap(this.ContentObjectLibraryId({
             objectId: objectId,
             versionHash: versionHash
           }));
 
-        case 27:
+        case 30:
           _context23.t2 = _context23.sent;
 
-        case 28:
+        case 31:
           _context23.t3 = _context23.t2;
           _context23.t4 = noAuth;
           _context23.t5 = {
@@ -1541,23 +1550,23 @@ exports.MetadataAuth = function _callee23(_ref16) {
             noAuth: _context23.t4
           };
           _context23.t6 = _context23.t1.AuthorizationToken.call(_context23.t1, _context23.t5);
-          _context23.next = 34;
+          _context23.next = 37;
           return _context23.t0.awrap.call(_context23.t0, _context23.t6);
 
-        case 34:
+        case 37:
           return _context23.abrupt("return", _context23.sent);
 
-        case 37:
-          _context23.prev = 37;
-          _context23.t7 = _context23["catch"](20);
+        case 40:
+          _context23.prev = 40;
+          _context23.t7 = _context23["catch"](23);
 
           if (!(_context23.t7.message && _context23.t7.message.toLowerCase().startsWith("access denied"))) {
-            _context23.next = 44;
+            _context23.next = 47;
             break;
           }
 
           this.inaccessibleLibraries[libraryId] = true;
-          _context23.next = 43;
+          _context23.next = 46;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -1566,18 +1575,18 @@ exports.MetadataAuth = function _callee23(_ref16) {
             channelAuth: channelAuth
           }));
 
-        case 43:
+        case 46:
           return _context23.abrupt("return", _context23.sent);
-
-        case 44:
-          throw _context23.t7;
-
-        case 45:
-          _context23.next = 50;
-          break;
 
         case 47:
-          _context23.next = 49;
+          throw _context23.t7;
+
+        case 48:
+          _context23.next = 53;
+          break;
+
+        case 50:
+          _context23.next = 52;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationToken({
             libraryId: libraryId,
             objectId: objectId,
@@ -1586,15 +1595,15 @@ exports.MetadataAuth = function _callee23(_ref16) {
             channelAuth: channelAuth
           }));
 
-        case 49:
+        case 52:
           return _context23.abrupt("return", _context23.sent);
 
-        case 50:
+        case 53:
         case "end":
           return _context23.stop();
       }
     }
-  }, null, this, [[20, 37]]);
+  }, null, this, [[23, 40]]);
 };
 /**
  * Get the metadata of a content object
@@ -1611,6 +1620,7 @@ exports.MetadataAuth = function _callee23(_ref16) {
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
  * @param {string=} authorizationToken - Additional authorization token for this request
+ * @param {string=} noAuth=false - If specified, the normal authorization flow will be skipped. Useful if you know the metadata you're retrieving is publicly accessible
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -1638,13 +1648,13 @@ exports.MetadataAuth = function _callee23(_ref16) {
 
 
 exports.ContentObjectMetadata = function _callee24(_ref17) {
-  var libraryId, objectId, versionHash, writeToken, _ref17$metadataSubtre, metadataSubtree, _ref17$queryParams, queryParams, _ref17$select, select, _ref17$remove, remove, authorizationToken, _ref17$resolveLinks, resolveLinks, _ref17$resolveInclude, resolveIncludeSource, _ref17$resolveIgnoreE, resolveIgnoreErrors, _ref17$linkDepthLimit, linkDepthLimit, _ref17$produceLinkUrl, produceLinkUrls, path, defaultAuthToken, authTokens, metadata;
+  var libraryId, objectId, versionHash, writeToken, _ref17$metadataSubtre, metadataSubtree, _ref17$queryParams, queryParams, _ref17$select, select, _ref17$remove, remove, authorizationToken, _ref17$noAuth, noAuth, _ref17$resolveLinks, resolveLinks, _ref17$resolveInclude, resolveIncludeSource, _ref17$resolveIgnoreE, resolveIgnoreErrors, _ref17$linkDepthLimit, linkDepthLimit, _ref17$produceLinkUrl, produceLinkUrls, path, defaultAuthToken, authTokens, metadata;
 
   return _regeneratorRuntime.async(function _callee24$(_context24) {
     while (1) {
       switch (_context24.prev = _context24.next) {
         case 0:
-          libraryId = _ref17.libraryId, objectId = _ref17.objectId, versionHash = _ref17.versionHash, writeToken = _ref17.writeToken, _ref17$metadataSubtre = _ref17.metadataSubtree, metadataSubtree = _ref17$metadataSubtre === void 0 ? "/" : _ref17$metadataSubtre, _ref17$queryParams = _ref17.queryParams, queryParams = _ref17$queryParams === void 0 ? {} : _ref17$queryParams, _ref17$select = _ref17.select, select = _ref17$select === void 0 ? [] : _ref17$select, _ref17$remove = _ref17.remove, remove = _ref17$remove === void 0 ? [] : _ref17$remove, authorizationToken = _ref17.authorizationToken, _ref17$resolveLinks = _ref17.resolveLinks, resolveLinks = _ref17$resolveLinks === void 0 ? false : _ref17$resolveLinks, _ref17$resolveInclude = _ref17.resolveIncludeSource, resolveIncludeSource = _ref17$resolveInclude === void 0 ? false : _ref17$resolveInclude, _ref17$resolveIgnoreE = _ref17.resolveIgnoreErrors, resolveIgnoreErrors = _ref17$resolveIgnoreE === void 0 ? false : _ref17$resolveIgnoreE, _ref17$linkDepthLimit = _ref17.linkDepthLimit, linkDepthLimit = _ref17$linkDepthLimit === void 0 ? 1 : _ref17$linkDepthLimit, _ref17$produceLinkUrl = _ref17.produceLinkUrls, produceLinkUrls = _ref17$produceLinkUrl === void 0 ? false : _ref17$produceLinkUrl;
+          libraryId = _ref17.libraryId, objectId = _ref17.objectId, versionHash = _ref17.versionHash, writeToken = _ref17.writeToken, _ref17$metadataSubtre = _ref17.metadataSubtree, metadataSubtree = _ref17$metadataSubtre === void 0 ? "/" : _ref17$metadataSubtre, _ref17$queryParams = _ref17.queryParams, queryParams = _ref17$queryParams === void 0 ? {} : _ref17$queryParams, _ref17$select = _ref17.select, select = _ref17$select === void 0 ? [] : _ref17$select, _ref17$remove = _ref17.remove, remove = _ref17$remove === void 0 ? [] : _ref17$remove, authorizationToken = _ref17.authorizationToken, _ref17$noAuth = _ref17.noAuth, noAuth = _ref17$noAuth === void 0 ? false : _ref17$noAuth, _ref17$resolveLinks = _ref17.resolveLinks, resolveLinks = _ref17$resolveLinks === void 0 ? false : _ref17$resolveLinks, _ref17$resolveInclude = _ref17.resolveIncludeSource, resolveIncludeSource = _ref17$resolveInclude === void 0 ? false : _ref17$resolveInclude, _ref17$resolveIgnoreE = _ref17.resolveIgnoreErrors, resolveIgnoreErrors = _ref17$resolveIgnoreE === void 0 ? false : _ref17$resolveIgnoreE, _ref17$linkDepthLimit = _ref17.linkDepthLimit, linkDepthLimit = _ref17$linkDepthLimit === void 0 ? 1 : _ref17$linkDepthLimit, _ref17$produceLinkUrl = _ref17.produceLinkUrls, produceLinkUrls = _ref17$produceLinkUrl === void 0 ? false : _ref17$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1664,7 +1674,8 @@ exports.ContentObjectMetadata = function _callee24(_ref17) {
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
-            path: metadataSubtree
+            path: metadataSubtree,
+            noAuth: noAuth
           }));
 
         case 8:
@@ -3961,28 +3972,22 @@ exports.LinkUrl = function _callee44(_ref37) {
           }
 
           authorization = [authorizationToken];
-
-          if (noAuth) {
-            _context44.next = 14;
-            break;
-          }
-
           _context44.t0 = authorization;
-          _context44.next = 12;
+          _context44.next = 11;
           return _regeneratorRuntime.awrap(this.MetadataAuth({
             libraryId: libraryId,
             objectId: objectId,
             versionHash: versionHash,
             path: linkPath,
-            channelAuth: channelAuth
+            channelAuth: channelAuth,
+            noAuth: noAuth
           }));
 
-        case 12:
+        case 11:
           _context44.t1 = _context44.sent;
 
           _context44.t0.push.call(_context44.t0, _context44.t1);
 
-        case 14:
           if (queryParams.authorization) {
             authorization.push(queryParams.authorization);
           }
@@ -4003,7 +4008,7 @@ exports.LinkUrl = function _callee44(_ref37) {
             queryParams: queryParams
           }));
 
-        case 18:
+        case 17:
         case "end":
           return _context44.stop();
       }

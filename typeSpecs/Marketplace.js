@@ -4,7 +4,7 @@ const currencyOptions = [...new Set(Object.values(require("country-codes-list").
 const MarketplaceSpec = {
   "profile": {
     "name": "Eluvio LIVE Marketplace",
-    "version": "0.1",
+    "version": "0.3",
   },
   "manageApp": "default",
   "hide_image_tab": true,
@@ -50,14 +50,27 @@ const MarketplaceSpec = {
               "type": "textarea"
             },
             {
-              "name": "logo",
+              "name": "round_logo",
               "extensions": imageTypes,
               "type": "file",
               "hint": "This logo will be displayed in the list of available marketplaces"
             },
             {
+              "name": "card_banner",
+              "extensions": imageTypes,
+              "type": "file",
+              "hint": "This logo will be displayed in the list of available marketplaces. It should be roughly 2:1 aspect ratio."
+            },
+            {
               "name": "tags",
-              "type": "list"
+              "type": "multiselect",
+              "hint": "These tags will be used to help users discover your marketplace based on their interests.",
+              "options": [
+                "Film",
+                "Music",
+                "Software",
+                "TV"
+              ]
             }
           ]
         },
@@ -67,7 +80,23 @@ const MarketplaceSpec = {
           "hint": "These attributes will be used to customize the user experience when browsing your marketplace",
           "fields": [
             {
-              "name": "Color Scheme",
+              "name": "name",
+              "label": "Marketplace Name",
+              "type": "text"
+            },
+            {
+              "name": "top_banner_logo",
+              "extensions": imageTypes,
+              "type": "file",
+              "hint": "This logo will be displayed at the top of the page when browsing your marketplace"
+            },
+            {
+              "name": "description",
+              "type": "textarea",
+              "hint": "Displayed below the top banner logo"
+            },
+            {
+              "name": "color_scheme",
               "type": "select",
               "default_value": "Light",
               "options": [
@@ -84,17 +113,6 @@ const MarketplaceSpec = {
                 "Inter",
                 "Selawik"
               ]
-            },
-            {
-              "name": "top_banner_logo",
-              "extensions": imageTypes,
-              "type": "file",
-              "hint": "This logo will be displayed at the top of the page when browsing your marketplace"
-            },
-            {
-              "name": "description",
-              "type": "textarea",
-              "hint": "Displayed below the top banner logo"
             }
           ]
         }
@@ -211,6 +229,12 @@ const MarketplaceSpec = {
       "label": "Terms and Conditions",
       "name": "terms",
       "type": "rich_text"
+    },
+    {
+      "label": "Terms and Conditions (HTML)",
+      "name": "terms_html",
+      "type": "file",
+      "extensions": [".html"]
     },
 
 
