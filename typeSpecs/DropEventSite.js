@@ -6,7 +6,7 @@ const currencyOptions = [...new Set(Object.values(require("country-codes-list").
 const eventSiteSpec = {
   "profile": {
     name: "Eluvio LIVE Event Site",
-    version: "0.2",
+    version: "0.3",
   },
   manageApp: "default",
   associate_permissions: true,
@@ -50,16 +50,25 @@ const eventSiteSpec = {
       "type": "Text"
     },
     {
-      "label": "Eluvio LIVE Tenant",
-      "name": "tenant",
-      "type": "fabric_link",
-      "hash_only": true,
-      "no_localize": true
+      "name": "tenant_slug",
+      "type": "text",
+      "required": true,
     },
     {
-      "name": "marketplace_slug",
-      "type": "text",
-      "hint": "The slug of the marketplace to associate with this event"
+      "name": "marketplace_info",
+      "type": "subsection",
+      "fields": [
+        {
+          "name": "tenant_slug",
+          "type": "text",
+          "hint": "The slug of the tenant in which the marketplace is defined"
+        },
+        {
+          "name": "marketplace_slug",
+          "type": "text",
+          "hint": "The slug of the marketplace"
+        }
+      ]
     },
     {
       "name": "state",

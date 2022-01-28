@@ -78,6 +78,8 @@ function () {
     this.client = client;
     this.debug = debug;
     this.userWalletAddresses = {};
+    this.walletAddress = undefined;
+    this.walletAddressRetrieved = false;
   }
 
   _createClass(UserProfileClient, [{
@@ -242,7 +244,7 @@ function () {
             case 0:
               autoCreate = _args2.length > 0 && _args2[0] !== undefined ? _args2[0] : true;
 
-              if (!this.walletAddress) {
+              if (!(this.walletAddress || this.walletAddressRetrieved)) {
                 _context2.next = 3;
                 break;
               }
@@ -250,14 +252,18 @@ function () {
               return _context2.abrupt("return", this.walletAddress);
 
             case 3:
-              _context2.next = 5;
-              return _regeneratorRuntime.awrap(this.client.CallContractMethod({
-                contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-                methodName: "userWallets",
-                methodArgs: [this.client.signer.address]
-              }));
+              if (!this.walletAddressPromise) {
+                this.walletAddressPromise = this.client.CallContractMethod({
+                  contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+                  methodName: "userWallets",
+                  methodArgs: [this.client.signer.address]
+                });
+              }
 
-            case 5:
+              _context2.next = 6;
+              return _regeneratorRuntime.awrap(this.walletAddressPromise);
+
+            case 6:
               walletAddress = _context2.sent;
 
               if (!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
@@ -265,17 +271,18 @@ function () {
               }
 
               if (!(!this.walletAddress && autoCreate)) {
-                _context2.next = 10;
+                _context2.next = 11;
                 break;
               }
 
-              _context2.next = 10;
+              _context2.next = 11;
               return _regeneratorRuntime.awrap(this.CreateWallet());
 
-            case 10:
+            case 11:
+              this.walletAddressRetrieved = true;
               return _context2.abrupt("return", this.walletAddress);
 
-            case 11:
+            case 13:
             case "end":
               return _context2.stop();
           }

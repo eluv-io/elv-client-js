@@ -880,7 +880,7 @@ exports.RemoveLibraryContentType = function _callee9(_ref12) {
 
 
 exports.CreateContentObject = function _callee10(_ref13) {
-  var libraryId, objectId, _ref13$options, options, typeId, type, _ref14, contractAddress, path, createResponse;
+  var libraryId, objectId, _ref13$options, options, typeId, type, currentAccountAddress, canContribute, _ref14, contractAddress, path, createResponse;
 
   return _regeneratorRuntime.async(function _callee10$(_context11) {
     while (1) {
@@ -957,65 +957,88 @@ exports.CreateContentObject = function _callee10(_ref13) {
 
         case 26:
           if (objectId) {
-            _context11.next = 36;
+            _context11.next = 44;
             break;
           }
 
+          _context11.next = 29;
+          return _regeneratorRuntime.awrap(this.CurrentAccountAddress());
+
+        case 29:
+          currentAccountAddress = _context11.sent;
+          _context11.next = 32;
+          return _regeneratorRuntime.awrap(this.CallContractMethod({
+            contractAddress: this.utils.HashToAddress(libraryId),
+            methodName: "canContribute",
+            methodArgs: [currentAccountAddress]
+          }));
+
+        case 32:
+          canContribute = _context11.sent;
+
+          if (canContribute) {
+            _context11.next = 35;
+            break;
+          }
+
+          throw Error("Current user does not have permission to create content in library ".concat(libraryId));
+
+        case 35:
           this.Log("Deploying contract...");
-          _context11.next = 30;
+          _context11.next = 38;
           return _regeneratorRuntime.awrap(this.authClient.CreateContentObject({
             libraryId: libraryId,
             typeId: typeId
           }));
 
-        case 30:
+        case 38:
           _ref14 = _context11.sent;
           contractAddress = _ref14.contractAddress;
           objectId = this.utils.AddressToObjectId(contractAddress);
           this.Log("Contract deployed: ".concat(contractAddress, " ").concat(objectId));
-          _context11.next = 43;
+          _context11.next = 51;
           break;
 
-        case 36:
+        case 44:
           _context11.t0 = this;
           _context11.t1 = "Contract already deployed for contract type: ";
-          _context11.next = 40;
+          _context11.next = 48;
           return _regeneratorRuntime.awrap(this.AccessType({
             id: objectId
           }));
 
-        case 40:
+        case 48:
           _context11.t2 = _context11.sent;
           _context11.t3 = _context11.t1.concat.call(_context11.t1, _context11.t2);
 
           _context11.t0.Log.call(_context11.t0, _context11.t3);
 
-        case 43:
+        case 51:
           if (!options.visibility) {
-            _context11.next = 47;
+            _context11.next = 55;
             break;
           }
 
           this.Log("Setting visibility to ".concat(options.visibility));
-          _context11.next = 47;
+          _context11.next = 55;
           return _regeneratorRuntime.awrap(this.SetVisibility({
             id: objectId,
             visibility: options.visibility
           }));
 
-        case 47:
+        case 55:
           path = UrlJoin("qid", objectId);
           _context11.t4 = _regeneratorRuntime;
           _context11.t5 = this.utils;
           _context11.t6 = this.HttpClient;
-          _context11.next = 53;
+          _context11.next = 61;
           return _regeneratorRuntime.awrap(this.authClient.AuthorizationHeader({
             libraryId: libraryId,
             objectId: objectId,
             update: true
           }));
 
-        case 53:
+        case 61:
           _context11.t7 = _context11.sent;
           _context11.t8 = path;
           _context11.t9 = options;
@@ -1027,10 +1050,10 @@ exports.CreateContentObject = function _callee10(_ref13) {
           };
           _context11.t11 = _context11.t6.Request.call(_context11.t6, _context11.t10);
           _context11.t12 = _context11.t5.ResponseToJson.call(_context11.t5, _context11.t11);
-          _context11.next = 61;
+          _context11.next = 69;
           return _context11.t4.awrap.call(_context11.t4, _context11.t12);
 
-        case 61:
+        case 69:
           createResponse = _context11.sent;
           // Record the node used in creating this write token
           this.HttpClient.RecordWriteToken(createResponse.write_token);
@@ -1038,7 +1061,7 @@ exports.CreateContentObject = function _callee10(_ref13) {
           createResponse.objectId = createResponse.id;
           return _context11.abrupt("return", createResponse);
 
-        case 66:
+        case 74:
         case "end":
           return _context11.stop();
       }

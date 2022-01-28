@@ -148,7 +148,8 @@ class ElvClient {
     trustAuthorityId,
     staticToken,
     noCache=false,
-    noAuth=false
+    noAuth=false,
+    assumeV3=false
   }) {
     this.utils = Utils;
 
@@ -171,6 +172,7 @@ class ElvClient {
 
     this.noCache = noCache;
     this.noAuth = noAuth;
+    this.assumeV3 = assumeV3;
 
     this.debug = false;
 
@@ -270,7 +272,8 @@ class ElvClient {
     staticToken,
     ethereumContractTimeout=10,
     noCache=false,
-    noAuth=false
+    noAuth=false,
+    assumeV3
   }) {
     const configUrl = networks[networkName];
 
@@ -283,7 +286,8 @@ class ElvClient {
       staticToken,
       ethereumContractTimeout,
       noCache,
-      noAuth
+      noAuth,
+      assumeV3
     });
   }
 
@@ -309,7 +313,8 @@ class ElvClient {
     staticToken,
     ethereumContractTimeout=10,
     noCache=false,
-    noAuth=false
+    noAuth=false,
+    assumeV3=false
   }) {
     const {
       contentSpaceId,
@@ -336,7 +341,8 @@ class ElvClient {
       trustAuthorityId,
       staticToken,
       noCache,
-      noAuth
+      noAuth,
+      assumeV3
     });
 
     client.configUrl = configUrl;

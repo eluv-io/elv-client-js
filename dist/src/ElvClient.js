@@ -205,7 +205,9 @@ function () {
         _ref$noCache = _ref.noCache,
         noCache = _ref$noCache === void 0 ? false : _ref$noCache,
         _ref$noAuth = _ref.noAuth,
-        noAuth = _ref$noAuth === void 0 ? false : _ref$noAuth;
+        noAuth = _ref$noAuth === void 0 ? false : _ref$noAuth,
+        _ref$assumeV = _ref.assumeV3,
+        assumeV3 = _ref$assumeV === void 0 ? false : _ref$assumeV;
 
     _classCallCheck(this, ElvClient);
 
@@ -224,6 +226,7 @@ function () {
     this.trustAuthorityId = trustAuthorityId;
     this.noCache = noCache;
     this.noAuth = noAuth;
+    this.assumeV3 = assumeV3;
     this.debug = false;
     this.InitializeClients({
       staticToken: staticToken
@@ -1500,13 +1503,13 @@ function () {
   }, {
     key: "FromNetworkName",
     value: function FromNetworkName(_ref22) {
-      var networkName, region, trustAuthorityId, staticToken, _ref22$ethereumContra, ethereumContractTimeout, _ref22$noCache, noCache, _ref22$noAuth, noAuth, configUrl;
+      var networkName, region, trustAuthorityId, staticToken, _ref22$ethereumContra, ethereumContractTimeout, _ref22$noCache, noCache, _ref22$noAuth, noAuth, assumeV3, configUrl;
 
       return _regeneratorRuntime.async(function FromNetworkName$(_context19) {
         while (1) {
           switch (_context19.prev = _context19.next) {
             case 0:
-              networkName = _ref22.networkName, region = _ref22.region, trustAuthorityId = _ref22.trustAuthorityId, staticToken = _ref22.staticToken, _ref22$ethereumContra = _ref22.ethereumContractTimeout, ethereumContractTimeout = _ref22$ethereumContra === void 0 ? 10 : _ref22$ethereumContra, _ref22$noCache = _ref22.noCache, noCache = _ref22$noCache === void 0 ? false : _ref22$noCache, _ref22$noAuth = _ref22.noAuth, noAuth = _ref22$noAuth === void 0 ? false : _ref22$noAuth;
+              networkName = _ref22.networkName, region = _ref22.region, trustAuthorityId = _ref22.trustAuthorityId, staticToken = _ref22.staticToken, _ref22$ethereumContra = _ref22.ethereumContractTimeout, ethereumContractTimeout = _ref22$ethereumContra === void 0 ? 10 : _ref22$ethereumContra, _ref22$noCache = _ref22.noCache, noCache = _ref22$noCache === void 0 ? false : _ref22$noCache, _ref22$noAuth = _ref22.noAuth, noAuth = _ref22$noAuth === void 0 ? false : _ref22$noAuth, assumeV3 = _ref22.assumeV3;
               configUrl = networks[networkName];
 
               if (configUrl) {
@@ -1525,7 +1528,8 @@ function () {
                 staticToken: staticToken,
                 ethereumContractTimeout: ethereumContractTimeout,
                 noCache: noCache,
-                noAuth: noAuth
+                noAuth: noAuth,
+                assumeV3: assumeV3
               }));
 
             case 6:
@@ -1557,13 +1561,13 @@ function () {
   }, {
     key: "FromConfigurationUrl",
     value: function FromConfigurationUrl(_ref23) {
-      var configUrl, region, trustAuthorityId, staticToken, _ref23$ethereumContra, ethereumContractTimeout, _ref23$noCache, noCache, _ref23$noAuth, noAuth, _ref24, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
+      var configUrl, region, trustAuthorityId, staticToken, _ref23$ethereumContra, ethereumContractTimeout, _ref23$noCache, noCache, _ref23$noAuth, noAuth, _ref23$assumeV, assumeV3, _ref24, contentSpaceId, networkId, networkName, fabricURIs, ethereumURIs, authServiceURIs, fabricVersion, client;
 
       return _regeneratorRuntime.async(function FromConfigurationUrl$(_context20) {
         while (1) {
           switch (_context20.prev = _context20.next) {
             case 0:
-              configUrl = _ref23.configUrl, region = _ref23.region, trustAuthorityId = _ref23.trustAuthorityId, staticToken = _ref23.staticToken, _ref23$ethereumContra = _ref23.ethereumContractTimeout, ethereumContractTimeout = _ref23$ethereumContra === void 0 ? 10 : _ref23$ethereumContra, _ref23$noCache = _ref23.noCache, noCache = _ref23$noCache === void 0 ? false : _ref23$noCache, _ref23$noAuth = _ref23.noAuth, noAuth = _ref23$noAuth === void 0 ? false : _ref23$noAuth;
+              configUrl = _ref23.configUrl, region = _ref23.region, trustAuthorityId = _ref23.trustAuthorityId, staticToken = _ref23.staticToken, _ref23$ethereumContra = _ref23.ethereumContractTimeout, ethereumContractTimeout = _ref23$ethereumContra === void 0 ? 10 : _ref23$ethereumContra, _ref23$noCache = _ref23.noCache, noCache = _ref23$noCache === void 0 ? false : _ref23$noCache, _ref23$noAuth = _ref23.noAuth, noAuth = _ref23$noAuth === void 0 ? false : _ref23$noAuth, _ref23$assumeV = _ref23.assumeV3, assumeV3 = _ref23$assumeV === void 0 ? false : _ref23$assumeV;
               _context20.next = 3;
               return _regeneratorRuntime.awrap(ElvClient.Configuration({
                 configUrl: configUrl,
@@ -1591,7 +1595,8 @@ function () {
                 trustAuthorityId: trustAuthorityId,
                 staticToken: staticToken,
                 noCache: noCache,
-                noAuth: noAuth
+                noAuth: noAuth,
+                assumeV3: assumeV3
               });
               client.configUrl = configUrl;
               return _context20.abrupt("return", client);
