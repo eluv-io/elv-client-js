@@ -84,6 +84,16 @@ class AuthorizationClient {
     this.providers = {};
   }
 
+  CreateStaticToken({libraryId}) {
+    let token = { qspace_id: this.client.contentSpaceId };
+
+    if(libraryId) {
+      token.qlib_id = libraryId;
+    }
+
+    return Utils.B64(JSON.stringify(token));
+  }
+
   // Return authorization token in appropriate headers
   async AuthorizationHeader(params) {
     const authorizationToken = await this.AuthorizationToken(params);
@@ -150,6 +160,10 @@ class AuthorizationClient {
           oauthToken
         });
       } else {
+        if(noAuth) {
+          return this.CreateStaticToken({libraryId});
+        }
+
         authorizationToken = await this.GenerateAuthorizationToken({
           libraryId,
           objectId,
@@ -613,6 +627,10 @@ class AuthorizationClient {
   }
 
   async IsV3({id}) {
+    if(this.client.assumeV3) {
+      return true;
+    }
+
     const contractName = await this.client.ethClient.ContractName(Utils.HashToAddress(id), true);
 
     if(!this.accessVersions[contractName]) {
