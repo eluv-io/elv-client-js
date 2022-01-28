@@ -56,6 +56,8 @@ await client.userProfileClient.UserMetadata()
     this.client = client;
     this.debug = debug;
     this.userWalletAddresses = {};
+    this.walletAddress = undefined;
+    this.walletAddressRetrieved = false;
   }
 
   async CreateWallet() {
@@ -130,13 +132,17 @@ await client.userProfileClient.UserMetadata()
    * @return {Promise<string>} - The contract address of the current user's wallet contract
    */
   async WalletAddress(autoCreate=true) {
-    if(this.walletAddress) { return this.walletAddress; }
+    if(this.walletAddress || this.walletAddressRetrieved) { return this.walletAddress; }
 
-    const walletAddress = await this.client.CallContractMethod({
-      contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
-      methodName: "userWallets",
-      methodArgs: [this.client.signer.address]
-    });
+    if(!this.walletAddressPromise) {
+      this.walletAddressPromise = this.client.CallContractMethod({
+        contractAddress: Utils.HashToAddress(this.client.contentSpaceId),
+        methodName: "userWallets",
+        methodArgs: [this.client.signer.address]
+      });
+    }
+
+    const walletAddress = await this.walletAddressPromise;
 
     if(!Utils.EqualAddress(walletAddress, Utils.nullAddress)) {
       this.walletAddress = walletAddress;
@@ -145,6 +151,8 @@ await client.userProfileClient.UserMetadata()
     if(!this.walletAddress && autoCreate) {
       await this.CreateWallet();
     }
+
+    this.walletAddressRetrieved = true;
 
     return this.walletAddress;
   }

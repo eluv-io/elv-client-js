@@ -3,7 +3,7 @@ const imageTypes = ["gif", "jpg", "jpeg", "png", "svg", "webp"];
 const NFTTemplateSpec = {
   "profile": {
     "name": "NFT Template",
-    "version": "0.1",
+    "version": "0.3",
   },
   "playable": true,
   "display_app": "default",
