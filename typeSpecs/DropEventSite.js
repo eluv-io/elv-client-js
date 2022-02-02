@@ -291,6 +291,12 @@ const eventSiteSpec = {
           "video_preview": true
         },
         {
+          "name": "hero_video_mobile",
+          "label": "Hero Video (Mobile)",
+          "type": "fabric_link",
+          "video_preview": true
+        },
+        {
           "extensions": imageTypes,
           "label": "Header Image (Dark)",
           "name": "header_dark",
@@ -314,63 +320,53 @@ const eventSiteSpec = {
           "type": "file",
           "label": "Main Logo (TV)"
         },
-        {
-          "name": "main_page_banner",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "show",
-              "type": "checkbox"
-            },
-            {
-              "extensions": imageTypes,
-              "name": "image",
-              "type": "file",
-              "depends_on": "./show"
-            },
-            {
-              "extensions": imageTypes,
-              "name": "image_mobile",
-              "label": "Image (Mobile)",
-              "type": "file",
-              "depends_on": "./show"
-            },
-            {
-              "name": "type",
-              "type": "select",
-              "options": [
-                "drop",
-                "marketplace",
-                "link"
-              ],
-              "default_value": "marketplace",
-              "hint": "Specify what happens when clicking on the banner. The banner can link to a URL or a drop, or it can open the marketplace view.",
-              "depends_on": "./show"
-            },
-            {
-              "name": "marketplace_filters",
-              "type": "list",
-              "hint": "If the banner links to the marketplace, you can specify filters to apply when the marketplace is opened via the banner.",
-              "depends_on": "./show"
-            },
-            {
-              "name": "link",
-              "type": "text",
-              "hint": "If the banner is a link, specify the URL to link to.",
-              "depends_on": "./show"
-            },
-            {
-              "label": "Drop UUID",
-              "name": "drop_uuid",
-              "type": "text",
-              "hint": "If the banner links to a drop, you can specify a specific drop to link to. If not specified, the banner will link to the next upcoming drop.",
-              "depends_on": "./show"
-            }
-          ]
-        }
       ],
       "name": "event_images",
       "type": "subsection"
+    },
+    {
+      "name": "main_page_banners",
+      "type": "list",
+      "fields": [
+        {
+          "extensions": imageTypes,
+          "name": "image",
+          "type": "file",
+        },
+        {
+          "extensions": imageTypes,
+          "name": "image_mobile",
+          "label": "Image (Mobile)",
+          "type": "file",
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "options": [
+            "drop",
+            "marketplace",
+            "link"
+          ],
+          "default_value": "marketplace",
+          "hint": "Specify what happens when clicking on the banner. The banner can link to a URL or a drop, or it can open the marketplace view.",
+        },
+        {
+          "name": "marketplace_filters",
+          "type": "list",
+          "hint": "If the banner links to the marketplace, you can specify filters to apply when the marketplace is opened via the banner.",
+        },
+        {
+          "name": "link",
+          "type": "text",
+          "hint": "If the banner is a link, specify the URL to link to.",
+        },
+        {
+          "label": "Drop UUID",
+          "name": "drop_uuid",
+          "type": "text",
+          "hint": "If the banner links to a drop, you can specify a specific drop to link to. If not specified, the banner will link to the next upcoming drop.",
+        }
+      ]
     },
     {
       "name": "promo_videos",
