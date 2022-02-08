@@ -5,6 +5,10 @@ const BigNumber = require("bignumber.js").default;
 const VarInt = require("varint");
 const URI = require("urijs");
 
+const {
+  keccak256
+} = require("ethers").utils;
+
 /**
  * @namespace
  * @description This is a utility namespace mostly containing functions for managing
@@ -149,11 +153,12 @@ const Utils = {
    * Convert contract address to multiformat hash
    *
    * @param {string} address - Address of contract
+   * @param {boolean} key - Whether or not the first param is a public key. Defaults to address type
    *
    * @returns {string} - Hash of contract address
    */
-  AddressToHash: (address) => {
-    address = address.replace("0x", "");
+  AddressToHash: (address, key=false) => {
+    address = address.replace(key ? "0x04" : "0x", "");
     return bs58.encode(Buffer.from(address, "hex"));
   },
 
@@ -194,12 +199,13 @@ const Utils = {
    * Convert any content fabric ID to the corresponding contract address
    *
    * @param {string} hash - Hash to convert to address
+   * @param {boolean} key - Whether or not the first param is a key. Defaults to address type
    *
    * @returns {string} - Contract address of item
    */
-  HashToAddress: (hash) => {
-    hash = hash.substr(4);
-    return Utils.FormatAddress("0x" + bs58.decode(hash).toString("hex"));
+  HashToAddress: (hash, key=false) => {
+    hash = key ? hash : hash.substr(4);
+    return Utils.FormatAddress((key ? "0x04" : "0x") + bs58.decode(hash).toString("hex"));
   },
 
   /**
@@ -503,6 +509,21 @@ const Utils = {
       default:
         return JSON.parse(JSON.stringify(value));
     }
+  },
+
+  /**
+   * Converts the given string to a public address
+   *
+   * @param key - Public key to convert to a public address
+   *
+   * @returns {string} - the public address
+   */
+  PublicKeyToAddress: (key) => {
+    const keyData = new Uint8Array(Buffer.from(key.replace("0x04", ""), "hex"));
+    const keccakHash = keccak256(keyData);
+    const address = "0x" + keccakHash.slice(26);
+
+    return Utils.FormatAddress(address);
   },
 
   PLATFORM_NODE: "node",
