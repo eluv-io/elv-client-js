@@ -690,12 +690,11 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} publicKey - Public key for the target cap
- * @param {string} publicAddress - Public address for the target cap key
  * @param {string} writeToken - Write token for the content object - If specified, info will be retrieved from the write draft instead of creating a new draft and finalizing
  *
  * @returns {Promise<Object>}
  */
-exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, publicAddress, writeToken}) {
+exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, writeToken}) {
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
   const userCapValue = await this.ContentObjectMetadata({objectId, libraryId, metadataSubtree: userCapKey});
 
@@ -704,6 +703,8 @@ exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, publ
   }
 
   const userConk = await this.Crypto.DecryptCap(userCapValue, this.signer.signingKey.privateKey);
+
+  const publicAddress = this.utils.PublicKeyToAddress(publicKey);
 
   const targetUserCapKey = `eluv.caps.iusr${this.utils.AddressToHash(publicAddress)}`;
   const targetUserCapValue = await this.Crypto.EncryptConk(userConk, publicKey);
