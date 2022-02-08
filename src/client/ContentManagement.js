@@ -22,7 +22,6 @@ const {
   ValidateWriteToken,
   ValidateParameters,
   ValidatePresence,
-  ValidateAddress
 } = require("../Validation");
 
 exports.SetVisibility = async function({id, visibility}) {
@@ -697,7 +696,6 @@ exports.CopyContentObject = async function({libraryId, originalVersionHash, opti
  * @returns {Promise<Object>}
  */
 exports.CreateNonOwnerCap = async function({objectId, libraryId, publicKey, publicAddress, writeToken}) {
-  publicAddress = ValidateAddress(publicAddress);
   const userCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
   const userCapValue = await this.ContentObjectMetadata({objectId, libraryId, metadataSubtree: userCapKey});
 
