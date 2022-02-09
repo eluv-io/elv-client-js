@@ -32,88 +32,58 @@ const MarketplaceSpec = {
       "type": "subsection",
       "fields": [
         {
-          "name": "discovery",
-          "type": "subsection",
-          "hint": "These attributes will be used to display your marketplace in the list of available marketplaces",
-          "fields": [
-            {
-              "name": "name",
-              "type": "text"
-            },
-            {
-              "name": "subheader",
-              "type": "text",
-              "default_value": "Marketplace"
-            },
-            {
-              "name": "description",
-              "type": "textarea"
-            },
-            {
-              "name": "round_logo",
-              "extensions": imageTypes,
-              "type": "file",
-              "hint": "This logo will be displayed in the list of available marketplaces"
-            },
-            {
-              "name": "card_banner",
-              "extensions": imageTypes,
-              "type": "file",
-              "hint": "This logo will be displayed in the list of available marketplaces. It should be roughly 2:1 aspect ratio."
-            },
-            {
-              "name": "tags",
-              "type": "multiselect",
-              "hint": "These tags will be used to help users discover your marketplace based on their interests.",
-              "options": [
-                "Film",
-                "Music",
-                "Software",
-                "TV"
-              ]
-            }
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "subheader",
+          "type": "text",
+          "default_value": "Marketplace"
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "name": "round_logo",
+          "extensions": imageTypes,
+          "type": "file",
+          "hint": "This logo will be displayed in the list of available marketplaces"
+        },
+        {
+          "name": "card_banner",
+          "extensions": imageTypes,
+          "type": "file",
+          "hint": "This banner will be displayed in the list of available marketplaces. It should be roughly 16:10 aspect ratio."
+        },
+        {
+          "name": "tags",
+          "type": "multiselect",
+          "hint": "These tags will be used to help users discover your marketplace based on their interests.",
+          "options": [
+            "Film",
+            "Music",
+            "Software",
+            "TV"
           ]
         },
         {
-          "name": "marketplace",
-          "type": "subsection",
-          "hint": "These attributes will be used to customize the user experience when browsing your marketplace",
-          "fields": [
-            {
-              "name": "name",
-              "label": "Marketplace Name",
-              "type": "text"
-            },
-            {
-              "name": "top_banner_logo",
-              "extensions": imageTypes,
-              "type": "file",
-              "hint": "This logo will be displayed at the top of the page when browsing your marketplace"
-            },
-            {
-              "name": "description",
-              "type": "textarea",
-              "hint": "Displayed below the top banner logo"
-            },
-            {
-              "name": "color_scheme",
-              "type": "select",
-              "default_value": "Light",
-              "options": [
-                "Light",
-                "Dark",
-                "User Preference"
-              ]
-            },
-            {
-              "name": "font",
-              "type": "select",
-              "options": [
-                "Helvetica Neue",
-                "Inter",
-                "Selawik"
-              ]
-            }
+          "name": "color_scheme",
+          "type": "select",
+          "default_value": "Light",
+          "options": [
+            "Light",
+            "Dark",
+            "User Preference"
+          ]
+        },
+        {
+          "name": "font",
+          "type": "select",
+          "options": [
+            "Helvetica Neue",
+            "Inter",
+            "Selawik"
           ]
         }
       ]
@@ -207,6 +177,38 @@ const MarketplaceSpec = {
           ]
         },
         {
+          "name": "require_consent",
+          "type": "checkbox",
+          "default_value": false
+        },
+        {
+          "name": "consent_form_text",
+          "type": "rich_text"
+        },
+        {
+          "name": "privacy_policy",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "link",
+              "type": "text",
+              "hint": "Specify a URL to your privacy policy"
+            },
+            {
+              "name": "rich_text",
+              "type": "rich_text",
+              "hint": "Input your privacy policy in the text editor"
+            },
+            {
+              "name": "html",
+              "label": "HTML",
+              "type": "file",
+              "hint": "Input your privacy policy as an HTML file",
+              "extensions": ["html"]
+            }
+          ]
+        },
+        {
           "name": "require_email_verification",
           "type": "checkbox",
           "default_value": true
@@ -234,7 +236,7 @@ const MarketplaceSpec = {
       "label": "Terms and Conditions (HTML)",
       "name": "terms_html",
       "type": "file",
-      "extensions": [".html"]
+      "extensions": ["html"]
     },
 
 
