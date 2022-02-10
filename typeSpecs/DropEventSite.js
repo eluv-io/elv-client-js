@@ -51,8 +51,7 @@ const eventSiteSpec = {
     },
     {
       "name": "tenant_slug",
-      "type": "text",
-      "required": true,
+      "type": "text"
     },
     {
       "name": "marketplace_info",
