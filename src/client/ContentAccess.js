@@ -703,7 +703,8 @@ exports.ProduceMetadataLinks = async function({
   versionHash,
   path="/",
   metadata,
-  authorizationToken
+  authorizationToken,
+  noAuth
 }) {
   // Primitive
   if(!metadata || typeof metadata !== "object") { return metadata; }
@@ -719,7 +720,8 @@ exports.ProduceMetadataLinks = async function({
         versionHash,
         path: UrlJoin(path, i.toString()),
         metadata: entry,
-        authorizationToken
+        authorizationToken,
+        noAuth
       })
     );
   }
@@ -747,7 +749,8 @@ exports.ProduceMetadataLinks = async function({
         versionHash,
         path: UrlJoin(path, key),
         metadata: metadata[key],
-        authorizationToken
+        authorizationToken,
+        noAuth
       });
     }
   );
@@ -924,7 +927,8 @@ exports.ContentObjectMetadata = async function({
     versionHash,
     path: metadataSubtree,
     metadata,
-    authorizationToken
+    authorizationToken,
+    noAuth
   });
 };
 
@@ -951,7 +955,7 @@ exports.ContentObjectMetadata = async function({
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
  */
-exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization, produceLinkUrls=false}) {
+exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization, noAuth, produceLinkUrls=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   if(!objectId) {
@@ -967,7 +971,8 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
       resolveLinks: true,
       linkDepthLimit: 2,
       resolveIgnoreErrors: true,
-      produceLinkUrls
+      produceLinkUrls,
+      noAuth
     })) || {};
   } else if(produceLinkUrls) {
     metadata = await this.ProduceMetadataLinks({
@@ -975,7 +980,8 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
       objectId,
       versionHash,
       path: UrlJoin("public", "asset_metadata"),
-      metadata
+      metadata,
+      noAuth
     });
   }
 
