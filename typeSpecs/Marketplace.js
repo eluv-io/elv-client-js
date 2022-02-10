@@ -290,6 +290,12 @@ const MarketplaceSpec = {
           "default_value": true
         },
         {
+          "label": "Release date",
+          "name": "available_at",
+          "type": "datetime",
+          "hint": "(Optional) - If specified, this item will not be available for purchase until the specified time"
+        },
+        {
           "name": "requires_permissions",
           "type": "checkbox",
           "default_value": false,
