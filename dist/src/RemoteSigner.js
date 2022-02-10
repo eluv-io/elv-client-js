@@ -31,7 +31,6 @@ function (_Ethers$Signer) {
     var rpcUris = _ref.rpcUris,
         idToken = _ref.idToken,
         authToken = _ref.authToken,
-        address = _ref.address,
         tenantId = _ref.tenantId,
         provider = _ref.provider,
         _ref$extraData = _ref.extraData,
@@ -47,8 +46,6 @@ function (_Ethers$Signer) {
     _this.idToken = idToken;
     _this.tenantId = tenantId;
     _this.authToken = authToken;
-    _this.address = address ? Utils.FormatAddress(address) : undefined;
-    _this.id = _this.address ? "ikms".concat(Utils.AddressToHash(_this.address)) : undefined;
     _this.extraLoginData = extraData || {};
     _this.provider = provider;
     return _this;
@@ -57,7 +54,7 @@ function (_Ethers$Signer) {
   _createClass(RemoteSigner, [{
     key: "Initialize",
     value: function Initialize() {
-      var _ref2, addr, eth, token;
+      var _ref2, addr, eth, token, keys;
 
       return _regeneratorRuntime.async(function Initialize$(_context) {
         while (1) {
@@ -93,9 +90,29 @@ function (_Ethers$Signer) {
               this.id = eth;
 
             case 10:
+              if (this.address) {
+                _context.next = 15;
+                break;
+              }
+
+              _context.next = 13;
+              return _regeneratorRuntime.awrap(Utils.ResponseToJson(this.HttpClient.Request({
+                method: "GET",
+                path: UrlJoin("as", "wlt", "keys"),
+                headers: {
+                  Authorization: "Bearer ".concat(this.authToken)
+                }
+              })));
+
+            case 13:
+              keys = _context.sent;
+              this.address = Utils.HashToAddress(keys.eth[0]);
+
+            case 15:
+              this.id = this.address ? "ikms".concat(Utils.AddressToHash(this.address)) : undefined;
               this.signer = this.provider.getSigner(this.address);
 
-            case 11:
+            case 17:
             case "end":
               return _context.stop();
           }
