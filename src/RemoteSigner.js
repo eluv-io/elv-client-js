@@ -8,7 +8,6 @@ class RemoteSigner extends Ethers.Signer {
     rpcUris,
     idToken,
     authToken,
-    address,
     tenantId,
     provider,
     extraData={}
@@ -22,8 +21,6 @@ class RemoteSigner extends Ethers.Signer {
     this.tenantId = tenantId;
 
     this.authToken = authToken;
-    this.address = address ? Utils.FormatAddress(address) : undefined;
-    this.id = this.address ? `ikms${Utils.AddressToHash(this.address)}` : undefined;
     this.extraLoginData = extraData || {};
 
     this.provider = provider;
@@ -47,6 +44,21 @@ class RemoteSigner extends Ethers.Signer {
       this.id = eth;
     }
 
+    if(!this.address) {
+      const keys = await Utils.ResponseToJson(
+        this.HttpClient.Request({
+          method: "GET",
+          path: UrlJoin("as", "wlt", "keys"),
+          headers: {
+            Authorization: `Bearer ${this.authToken}`
+          }
+        })
+      );
+
+      this.address = Utils.HashToAddress(keys.eth[0]);
+    }
+
+    this.id = this.address ? `ikms${Utils.AddressToHash(this.address)}` : undefined;
     this.signer = this.provider.getSigner(this.address);
   }
 
