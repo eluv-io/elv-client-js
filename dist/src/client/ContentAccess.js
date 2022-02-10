@@ -1326,13 +1326,13 @@ exports.ContentObjectLibraryId = function _callee19(_ref14) {
 exports.ProduceMetadataLinks = function _callee22(_ref15) {
   var _this7 = this;
 
-  var libraryId, objectId, versionHash, _ref15$path, path, metadata, authorizationToken, result;
+  var libraryId, objectId, versionHash, _ref15$path, path, metadata, authorizationToken, noAuth, result;
 
   return _regeneratorRuntime.async(function _callee22$(_context22) {
     while (1) {
       switch (_context22.prev = _context22.next) {
         case 0:
-          libraryId = _ref15.libraryId, objectId = _ref15.objectId, versionHash = _ref15.versionHash, _ref15$path = _ref15.path, path = _ref15$path === void 0 ? "/" : _ref15$path, metadata = _ref15.metadata, authorizationToken = _ref15.authorizationToken;
+          libraryId = _ref15.libraryId, objectId = _ref15.objectId, versionHash = _ref15.versionHash, _ref15$path = _ref15.path, path = _ref15$path === void 0 ? "/" : _ref15$path, metadata = _ref15.metadata, authorizationToken = _ref15.authorizationToken, noAuth = _ref15.noAuth;
 
           if (!(!metadata || _typeof(metadata) !== "object")) {
             _context22.next = 3;
@@ -1360,7 +1360,8 @@ exports.ProduceMetadataLinks = function _callee22(_ref15) {
                       versionHash: versionHash,
                       path: UrlJoin(path, i.toString()),
                       metadata: entry,
-                      authorizationToken: authorizationToken
+                      authorizationToken: authorizationToken,
+                      noAuth: noAuth
                     }));
 
                   case 2:
@@ -1417,7 +1418,8 @@ exports.ProduceMetadataLinks = function _callee22(_ref15) {
                       versionHash: versionHash,
                       path: UrlJoin(path, key),
                       metadata: metadata[key],
-                      authorizationToken: authorizationToken
+                      authorizationToken: authorizationToken,
+                      noAuth: noAuth
                     }));
 
                   case 2:
@@ -1740,7 +1742,8 @@ exports.ContentObjectMetadata = function _callee24(_ref17) {
             versionHash: versionHash,
             path: metadataSubtree,
             metadata: metadata,
-            authorizationToken: authorizationToken
+            authorizationToken: authorizationToken,
+            noAuth: noAuth
           }));
 
         case 26:
@@ -1780,13 +1783,13 @@ exports.ContentObjectMetadata = function _callee24(_ref17) {
 exports.AssetMetadata = function _callee25(_ref18) {
   var _this8 = this;
 
-  var libraryId, objectId, versionHash, metadata, localization, _ref18$produceLinkUrl, produceLinkUrls, mergedMetadata;
+  var libraryId, objectId, versionHash, metadata, localization, noAuth, _ref18$produceLinkUrl, produceLinkUrls, mergedMetadata;
 
   return _regeneratorRuntime.async(function _callee25$(_context25) {
     while (1) {
       switch (_context25.prev = _context25.next) {
         case 0:
-          libraryId = _ref18.libraryId, objectId = _ref18.objectId, versionHash = _ref18.versionHash, metadata = _ref18.metadata, localization = _ref18.localization, _ref18$produceLinkUrl = _ref18.produceLinkUrls, produceLinkUrls = _ref18$produceLinkUrl === void 0 ? false : _ref18$produceLinkUrl;
+          libraryId = _ref18.libraryId, objectId = _ref18.objectId, versionHash = _ref18.versionHash, metadata = _ref18.metadata, localization = _ref18.localization, noAuth = _ref18.noAuth, _ref18$produceLinkUrl = _ref18.produceLinkUrls, produceLinkUrls = _ref18$produceLinkUrl === void 0 ? false : _ref18$produceLinkUrl;
           ValidateParameters({
             libraryId: libraryId,
             objectId: objectId,
@@ -1811,7 +1814,8 @@ exports.AssetMetadata = function _callee25(_ref18) {
             resolveLinks: true,
             linkDepthLimit: 2,
             resolveIgnoreErrors: true,
-            produceLinkUrls: produceLinkUrls
+            produceLinkUrls: produceLinkUrls,
+            noAuth: noAuth
           }));
 
         case 6:
@@ -1841,7 +1845,8 @@ exports.AssetMetadata = function _callee25(_ref18) {
             objectId: objectId,
             versionHash: versionHash,
             path: UrlJoin("public", "asset_metadata"),
-            metadata: metadata
+            metadata: metadata,
+            noAuth: noAuth
           }));
 
         case 15:
