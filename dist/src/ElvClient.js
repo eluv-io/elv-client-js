@@ -619,18 +619,17 @@ function () {
   }, {
     key: "SetRemoteSigner",
     value: function SetRemoteSigner(_ref9) {
-      var idToken, authToken, tenantId, address, extraData, signer;
+      var idToken, authToken, tenantId, extraData, signer;
       return _regeneratorRuntime.async(function SetRemoteSigner$(_context6) {
         while (1) {
           switch (_context6.prev = _context6.next) {
             case 0:
-              idToken = _ref9.idToken, authToken = _ref9.authToken, tenantId = _ref9.tenantId, address = _ref9.address, extraData = _ref9.extraData;
+              idToken = _ref9.idToken, authToken = _ref9.authToken, tenantId = _ref9.tenantId, extraData = _ref9.extraData;
               signer = new RemoteSigner({
                 rpcUris: this.authServiceURIs,
                 idToken: idToken,
                 authToken: authToken,
                 tenantId: tenantId,
-                address: address,
                 provider: this.ethClient.provider,
                 extraData: extraData
               });
