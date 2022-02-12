@@ -16,7 +16,6 @@ const reportTypes = [
 
 const liveTypes = [
   { name: "Eluvio LIVE Drop Event Site", spec: require("../typeSpecs/DropEventSite") },
-  { name: "Eluvio LIVE Event Site", spec: require("../typeSpecs/EventSite") },
   { name: "Eluvio LIVE Marketplace", spec: require("../typeSpecs/Marketplace") },
   { name: "Eluvio LIVE Tenant", spec: require("../typeSpecs/EventTenant") },
   { name: "NFT Collection", spec: require("../typeSpecs/NFTCollection") },
