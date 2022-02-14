@@ -480,7 +480,7 @@ function () {
 
             case 22:
               if (success) {
-                _context6.next = 45;
+                _context6.next = 49;
                 break;
               }
 
@@ -491,7 +491,7 @@ function () {
             case 26:
               result = _context6.sent;
               success = true;
-              _context6.next = 43;
+              _context6.next = 47;
               break;
 
             case 30:
@@ -513,41 +513,51 @@ function () {
               latestBlock = _context6.sent;
               overrides.gasLimit = latestBlock.gasLimit;
               overrides.gasPrice = overrides.gasPrice ? overrides.gasPrice * 1.50 : 8000000000;
-              _context6.next = 43;
+              _context6.next = 47;
               break;
 
             case 40:
+              if (!(_context6.t0.code === "NONCE_EXPIRED" && _context6.t0.reason === "nonce has already been used")) {
+                _context6.next = 44;
+                break;
+              }
+
+              this.Log("Retrying method call ".concat(methodName));
+              _context6.next = 47;
+              break;
+
+            case 44:
               if ((_context6.t0.message || _context6.t0).includes("invalid response")) {
-                _context6.next = 43;
+                _context6.next = 47;
                 break;
               }
 
               this.Log(_typeof(_context6.t0) === "object" ? JSON.stringify(_context6.t0, null, 2) : _context6.t0, true);
               throw _context6.t0;
 
-            case 43:
+            case 47:
               _context6.next = 22;
               break;
 
-            case 45:
+            case 49:
               return _context6.abrupt("return", result);
 
-            case 46:
-              _context6.prev = 46;
+            case 50:
+              _context6.prev = 50;
 
               // Unlock if performing a transaction
               if (!methodAbi || !methodAbi.constant) {
                 this.locked = false;
               }
 
-              return _context6.finish(46);
+              return _context6.finish(50);
 
-            case 49:
+            case 53:
             case "end":
               return _context6.stop();
           }
         }
-      }, null, this, [[20,, 46, 49], [23, 30]]);
+      }, null, this, [[20,, 50, 53], [23, 30]]);
     }
   }, {
     key: "CallContractMethodAndWait",
