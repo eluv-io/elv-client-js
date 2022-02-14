@@ -473,9 +473,8 @@ exports.LibraryContentTypes = async function({libraryId}) {
  * @param {object=} filterOptions - Pagination, sorting and filtering options
  * @param {number=} filterOptions.start - Start index for pagination
  * @param {number=} filterOptions.limit - Max number of objects to return
- * @param {string=} filterOptions.cacheId - Cache ID corresponding a previous query
  * @param {(Array<string> | string)=} filterOptions.sort - Sort by the specified key(s)
- * * @param {boolean=} filterOptions.sortDesc=false - Sort in descending order
+ * @param {boolean=} filterOptions.sortDesc - Sort in descending order
  * @param {(Array<string> | string)=} filterOptions.select - Include only the specified metadata keys (all must start with /public)
  * @param {(Array<object> | object)=} filterOptions.filter - Filter objects by metadata
  * @param {string=} filterOptions.filter.key - Key to filter on (must start with /public)
@@ -704,7 +703,8 @@ exports.ProduceMetadataLinks = async function({
   versionHash,
   path="/",
   metadata,
-  authorizationToken
+  authorizationToken,
+  noAuth
 }) {
   // Primitive
   if(!metadata || typeof metadata !== "object") { return metadata; }
@@ -720,7 +720,8 @@ exports.ProduceMetadataLinks = async function({
         versionHash,
         path: UrlJoin(path, i.toString()),
         metadata: entry,
-        authorizationToken
+        authorizationToken,
+        noAuth
       })
     );
   }
@@ -748,7 +749,8 @@ exports.ProduceMetadataLinks = async function({
         versionHash,
         path: UrlJoin(path, key),
         metadata: metadata[key],
-        authorizationToken
+        authorizationToken,
+        noAuth
       });
     }
   );
@@ -761,17 +763,22 @@ exports.MetadataAuth = async function({
   objectId,
   versionHash,
   path="/",
-  channelAuth=false
+  channelAuth=false,
+  noAuth=false
 }) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   if(versionHash) { objectId = this.utils.DecodeVersionHash(versionHash).objectId; }
 
-  const visibility = await this.Visibility({id: objectId});
-  const accessType = await this.AccessType({id: objectId});
-  const isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
-
-  let noAuth = visibility >= 10 || (isPublic && visibility >= 1);
+  noAuth = this.noAuth || noAuth;
+  let isPublic = noAuth;
+  let accessType;
+  if(!noAuth) {
+    const visibility = await this.Visibility({id: objectId});
+    accessType = await this.AccessType({id: objectId});
+    isPublic = (path || "").replace(/^\/+/, "").startsWith("public");
+    noAuth = visibility >= 10 || (isPublic && visibility >= 1);
+  }
 
   if(this.oauthToken) {
     // Check that KMS is set on this object
@@ -824,6 +831,7 @@ exports.MetadataAuth = async function({
  * - Note: Selection is relative to "metadataSubtree". For example, metadataSubtree="public" and select=["name", "description"] would select "public/name" and "public/description"
  * @param {Array<string>=} remove - Exclude the specified items from the retrieved metadata
  * @param {string=} authorizationToken - Additional authorization token for this request
+ * @param {string=} noAuth=false - If specified, the normal authorization flow will be skipped. Useful if you know the metadata you're retrieving is publicly accessible
  * @param {boolean=} resolveLinks=false - If specified, links in the metadata will be resolved
  * @param {boolean=} resolveIncludeSource=false - If specified, resolved links will include the hash of the link at the root of the metadata
 
@@ -858,6 +866,7 @@ exports.ContentObjectMetadata = async function({
   select=[],
   remove=[],
   authorizationToken,
+  noAuth=false,
   resolveLinks=false,
   resolveIncludeSource=false,
   resolveIgnoreErrors=false,
@@ -878,7 +887,7 @@ exports.ContentObjectMetadata = async function({
   let path = UrlJoin("q", writeToken || versionHash || objectId, "meta", metadataSubtree);
 
   // Main authorization
-  let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree});
+  let defaultAuthToken = await this.MetadataAuth({libraryId, objectId, versionHash, path: metadataSubtree, noAuth});
 
   // All authorization
   const authTokens = [authorizationToken, queryParams.authorization, defaultAuthToken].flat().filter(token => token);
@@ -918,7 +927,8 @@ exports.ContentObjectMetadata = async function({
     versionHash,
     path: metadataSubtree,
     metadata,
-    authorizationToken
+    authorizationToken,
+    noAuth
   });
 };
 
@@ -945,7 +955,7 @@ exports.ContentObjectMetadata = async function({
  * @param {boolean=} produceLinkUrls=false - If specified, file and rep links will automatically be populated with a
  * full URL
  */
-exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization, produceLinkUrls=false}) {
+exports.AssetMetadata = async function({libraryId, objectId, versionHash, metadata, localization, noAuth, produceLinkUrls=false}) {
   ValidateParameters({libraryId, objectId, versionHash});
 
   if(!objectId) {
@@ -961,7 +971,8 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
       resolveLinks: true,
       linkDepthLimit: 2,
       resolveIgnoreErrors: true,
-      produceLinkUrls
+      produceLinkUrls,
+      noAuth
     })) || {};
   } else if(produceLinkUrls) {
     metadata = await this.ProduceMetadataLinks({
@@ -969,7 +980,8 @@ exports.AssetMetadata = async function({libraryId, objectId, versionHash, metada
       objectId,
       versionHash,
       path: UrlJoin("public", "asset_metadata"),
-      metadata
+      metadata,
+      noAuth
     });
   }
 
@@ -2260,9 +2272,7 @@ exports.LinkUrl = async function({
   }
 
   let authorization = [ authorizationToken ];
-  if(!noAuth) {
-    authorization.push(await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth}));
-  }
+  authorization.push(await this.MetadataAuth({libraryId, objectId, versionHash, path: linkPath, channelAuth, noAuth}));
 
   if(queryParams.authorization) {
     authorization.push(queryParams.authorization);
@@ -2408,7 +2418,10 @@ exports.EncryptionConk = async function({libraryId, objectId, versionHash, write
 
   const owner = await this.authClient.Owner({id: objectId});
 
-  if(!this.utils.EqualAddress(owner, this.signer.address)) {
+  const ownerCapKey = `eluv.caps.iusr${this.utils.AddressToHash(this.signer.address)}`;
+  const ownerCap = await this.ContentObjectMetadata({libraryId, objectId, metadataSubtree: ownerCapKey});
+
+  if(!this.utils.EqualAddress(owner, this.signer.address) && !ownerCap) {
     if(download) {
       return await this.authClient.ReEncryptionConk({libraryId, objectId, versionHash});
     } else {

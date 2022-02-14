@@ -270,7 +270,6 @@ const Create = async ({
     Report(createResponse);
 
     const objectId = createResponse.id;
-    await client.SetVisibility({id: objectId, visibility: 0});
 
     console.log("Starting Mezzanine Job(s)");
 
