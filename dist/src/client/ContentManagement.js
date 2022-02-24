@@ -32,8 +32,7 @@ var _require = require("../Validation"),
     ValidateVersion = _require.ValidateVersion,
     ValidateWriteToken = _require.ValidateWriteToken,
     ValidateParameters = _require.ValidateParameters,
-    ValidatePresence = _require.ValidatePresence,
-    ValidateAddress = _require.ValidateAddress;
+    ValidatePresence = _require.ValidatePresence;
 
 exports.SetVisibility = function _callee(_ref) {
   var id, visibility, hasSetVisibility, event;
@@ -1246,7 +1245,6 @@ exports.CopyContentObject = function _callee12(_ref15) {
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} publicKey - Public key for the target cap
- * @param {string} publicAddress - Public address for the target cap key
  * @param {string} writeToken - Write token for the content object - If specified, info will be retrieved from the write draft instead of creating a new draft and finalizing
  *
  * @returns {Promise<Object>}
@@ -1254,37 +1252,37 @@ exports.CopyContentObject = function _callee12(_ref15) {
 
 
 exports.CreateNonOwnerCap = function _callee13(_ref17) {
-  var objectId, libraryId, publicKey, publicAddress, writeToken, userCapKey, userCapValue, userConk, targetUserCapKey, targetUserCapValue, finalize;
+  var objectId, libraryId, publicKey, writeToken, userCapKey, userCapValue, userConk, publicAddress, targetUserCapKey, targetUserCapValue, finalize;
   return _regeneratorRuntime.async(function _callee13$(_context14) {
     while (1) {
       switch (_context14.prev = _context14.next) {
         case 0:
-          objectId = _ref17.objectId, libraryId = _ref17.libraryId, publicKey = _ref17.publicKey, publicAddress = _ref17.publicAddress, writeToken = _ref17.writeToken;
-          publicAddress = ValidateAddress(publicAddress);
+          objectId = _ref17.objectId, libraryId = _ref17.libraryId, publicKey = _ref17.publicKey, writeToken = _ref17.writeToken;
           userCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context14.next = 5;
+          _context14.next = 4;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             objectId: objectId,
             libraryId: libraryId,
             metadataSubtree: userCapKey
           }));
 
-        case 5:
+        case 4:
           userCapValue = _context14.sent;
 
           if (userCapValue) {
-            _context14.next = 8;
+            _context14.next = 7;
             break;
           }
 
           throw Error("No user cap found for current user");
 
-        case 8:
-          _context14.next = 10;
+        case 7:
+          _context14.next = 9;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(userCapValue, this.signer.signingKey.privateKey));
 
-        case 10:
+        case 9:
           userConk = _context14.sent;
+          publicAddress = this.utils.PublicKeyToAddress(publicKey);
           targetUserCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(publicAddress));
           _context14.next = 14;
           return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(userConk, publicKey));

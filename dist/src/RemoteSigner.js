@@ -54,7 +54,7 @@ function (_Ethers$Signer) {
   _createClass(RemoteSigner, [{
     key: "Initialize",
     value: function Initialize() {
-      var _ref2, addr, eth, token, keys;
+      var _ref2, addr, eth, token, keys, address;
 
       return _regeneratorRuntime.async(function Initialize$(_context) {
         while (1) {
@@ -91,7 +91,7 @@ function (_Ethers$Signer) {
 
             case 10:
               if (this.address) {
-                _context.next = 15;
+                _context.next = 16;
                 break;
               }
 
@@ -106,13 +106,19 @@ function (_Ethers$Signer) {
 
             case 13:
               keys = _context.sent;
-              this.address = Utils.HashToAddress(keys.eth[0]);
+              address = keys.eth[0];
 
-            case 15:
+              if (address && address.startsWith("0x")) {
+                this.address = address;
+              } else {
+                this.address = Utils.HashToAddress(keys.eth[0]);
+              }
+
+            case 16:
               this.id = this.address ? "ikms".concat(Utils.AddressToHash(this.address)) : undefined;
               this.signer = this.provider.getSigner(this.address);
 
-            case 17:
+            case 18:
             case "end":
               return _context.stop();
           }
