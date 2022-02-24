@@ -21,6 +21,8 @@ var BigNumber = require("bignumber.js")["default"];
 var VarInt = require("varint");
 
 var URI = require("urijs");
+
+var keccak256 = require("ethers").utils.keccak256;
 /**
  * @namespace
  * @description This is a utility namespace mostly containing functions for managing
@@ -163,11 +165,13 @@ var Utils = {
    * Convert contract address to multiformat hash
    *
    * @param {string} address - Address of contract
+   * @param {boolean} key - Whether or not the first param is a public key. Defaults to address type
    *
    * @returns {string} - Hash of contract address
    */
   AddressToHash: function AddressToHash(address) {
-    address = address.replace("0x", "");
+    var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    address = address.replace(key ? "0x04" : "0x", "");
     return bs58.encode(Buffer.from(address, "hex"));
   },
 
@@ -208,12 +212,14 @@ var Utils = {
    * Convert any content fabric ID to the corresponding contract address
    *
    * @param {string} hash - Hash to convert to address
+   * @param {boolean} key - Whether or not the first param is a key. Defaults to address type
    *
    * @returns {string} - Contract address of item
    */
   HashToAddress: function HashToAddress(hash) {
-    hash = hash.substr(4);
-    return Utils.FormatAddress("0x" + bs58.decode(hash).toString("hex"));
+    var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    hash = key ? hash : hash.substr(4);
+    return Utils.FormatAddress((key ? "0x04" : "0x") + bs58.decode(hash).toString("hex"));
   },
 
   /**
@@ -666,6 +672,20 @@ var Utils = {
       default:
         return JSON.parse(JSON.stringify(value));
     }
+  },
+
+  /**
+   * Converts the given string to a public address
+   *
+   * @param key - Public key to convert to a public address
+   *
+   * @returns {string} - the public address
+   */
+  PublicKeyToAddress: function PublicKeyToAddress(key) {
+    var keyData = new Uint8Array(Buffer.from(key.replace("0x04", ""), "hex"));
+    var keccakHash = keccak256(keyData);
+    var address = "0x" + keccakHash.slice(26);
+    return Utils.FormatAddress(address);
   },
   PLATFORM_NODE: "node",
   PLATFORM_WEB: "web",
