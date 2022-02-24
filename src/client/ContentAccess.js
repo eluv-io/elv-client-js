@@ -1340,7 +1340,8 @@ exports.PlayoutOptions = async function({
   drms=[],
   context,
   hlsjsProfile=true,
-  authorizationToken
+  authorizationToken,
+  options
 }) {
   if(offeringURI) {
     const uriInfo = offeringURI.match(/(hq__[^/]+)\/rep\/([^/]+)\/([^/]+)\/options.json/);
@@ -1375,7 +1376,8 @@ exports.PlayoutOptions = async function({
         objectId,
         versionHash,
         metadataSubtree: offeringPath,
-        authorizationToken
+        authorizationToken,
+        queryParams: options
       });
 
       if(link) { linkPath = offeringPath; }
@@ -1421,7 +1423,8 @@ exports.PlayoutOptions = async function({
 
   let queryParams = {
     authorization,
-    resolve: !!linkPath
+    resolve: !!linkPath,
+    ...options
   };
 
   const playoutOptions = Object.values(
@@ -1603,7 +1606,8 @@ exports.BitmovinPlayoutOptions = async function({
   offering="default",
   playoutType,
   context,
-  authorizationToken
+  authorizationToken,
+  options
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
@@ -1624,7 +1628,8 @@ exports.BitmovinPlayoutOptions = async function({
     playoutType,
     hlsjsProfile: false,
     context,
-    authorizationToken
+    authorizationToken,
+    options
   });
 
   delete playoutOptions.playoutMethods;
