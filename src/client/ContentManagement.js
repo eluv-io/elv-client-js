@@ -242,6 +242,7 @@ exports.CreateContentType = async function({name, metadata={}, bitcode}) {
  * @param {Object=} metadata - Metadata of library object
  * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
  * the default KMS will be used.
+ * @param {string=} tenantId - ID of the tenant to use for this library
  *
  * @returns {Promise<string>} - Library ID of created library
  */
@@ -252,6 +253,7 @@ exports.CreateContentLibrary = async function({
   imageName,
   metadata={},
   kmsId,
+  tenantId
 }) {
   if(!kmsId) {
     kmsId = `ikms${this.utils.AddressToHash(await this.DefaultKMSAddress())}`;
@@ -264,7 +266,10 @@ exports.CreateContentLibrary = async function({
 
 
   // Set tenant ID on the library if the user is associated with a tenant
-  const tenantId = await this.userProfileClient.TenantId();
+  if(!tenantId) {
+    tenantId = await this.userProfileClient.TenantId();
+  }
+
   if(tenantId) {
     await this.CallContractMethod({
       contractAddress,
