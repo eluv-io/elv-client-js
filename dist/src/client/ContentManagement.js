@@ -32,8 +32,7 @@ var _require = require("../Validation"),
     ValidateVersion = _require.ValidateVersion,
     ValidateWriteToken = _require.ValidateWriteToken,
     ValidateParameters = _require.ValidateParameters,
-    ValidatePresence = _require.ValidatePresence,
-    ValidateAddress = _require.ValidateAddress;
+    ValidatePresence = _require.ValidatePresence;
 
 exports.SetVisibility = function _callee(_ref) {
   var id, visibility, hasSetVisibility, event;
@@ -448,19 +447,20 @@ exports.CreateContentType = function _callee3(_ref4) {
  * @param {Object=} metadata - Metadata of library object
  * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
  * the default KMS will be used.
+ * @param {string=} tenantId - ID of the tenant to use for this library
  *
  * @returns {Promise<string>} - Library ID of created library
  */
 
 
 exports.CreateContentLibrary = function _callee4(_ref6) {
-  var name, description, image, imageName, _ref6$metadata, metadata, kmsId, _ref7, contractAddress, tenantId, libraryId, objectId, editResponse;
+  var name, description, image, imageName, _ref6$metadata, metadata, kmsId, tenantId, _ref7, contractAddress, libraryId, objectId, editResponse;
 
   return _regeneratorRuntime.async(function _callee4$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
-          name = _ref6.name, description = _ref6.description, image = _ref6.image, imageName = _ref6.imageName, _ref6$metadata = _ref6.metadata, metadata = _ref6$metadata === void 0 ? {} : _ref6$metadata, kmsId = _ref6.kmsId;
+          name = _ref6.name, description = _ref6.description, image = _ref6.image, imageName = _ref6.imageName, _ref6$metadata = _ref6.metadata, metadata = _ref6$metadata === void 0 ? {} : _ref6$metadata, kmsId = _ref6.kmsId, tenantId = _ref6.tenantId;
 
           if (kmsId) {
             _context5.next = 9;
@@ -488,25 +488,32 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
         case 13:
           _ref7 = _context5.sent;
           contractAddress = _ref7.contractAddress;
-          _context5.next = 17;
-          return _regeneratorRuntime.awrap(this.userProfileClient.TenantId());
 
-        case 17:
-          tenantId = _context5.sent;
-
-          if (!tenantId) {
-            _context5.next = 21;
+          if (tenantId) {
+            _context5.next = 19;
             break;
           }
 
-          _context5.next = 21;
+          _context5.next = 18;
+          return _regeneratorRuntime.awrap(this.userProfileClient.TenantId());
+
+        case 18:
+          tenantId = _context5.sent;
+
+        case 19:
+          if (!tenantId) {
+            _context5.next = 22;
+            break;
+          }
+
+          _context5.next = 22;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: contractAddress,
             methodName: "putMeta",
             methodArgs: ["_tenantId", tenantId]
           }));
 
-        case 21:
+        case 22:
           metadata = _objectSpread({}, metadata, {
             name: name,
             description: description,
@@ -520,15 +527,15 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
           this.Log("Contract address: ".concat(contractAddress)); // Set library content object type and metadata on automatically created library object
 
           objectId = libraryId.replace("ilib", "iq__");
-          _context5.next = 28;
+          _context5.next = 29;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
 
-        case 28:
+        case 29:
           editResponse = _context5.sent;
-          _context5.next = 31;
+          _context5.next = 32;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -536,8 +543,8 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
             writeToken: editResponse.write_token
           }));
 
-        case 31:
-          _context5.next = 33;
+        case 32:
+          _context5.next = 34;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
@@ -545,24 +552,24 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
             commitMessage: "Create library"
           }));
 
-        case 33:
+        case 34:
           if (!image) {
-            _context5.next = 36;
+            _context5.next = 37;
             break;
           }
 
-          _context5.next = 36;
+          _context5.next = 37;
           return _regeneratorRuntime.awrap(this.SetContentLibraryImage({
             libraryId: libraryId,
             image: image,
             imageName: imageName
           }));
 
-        case 36:
+        case 37:
           this.Log("Library ".concat(libraryId, " created"));
           return _context5.abrupt("return", libraryId);
 
-        case 38:
+        case 39:
         case "end":
           return _context5.stop();
       }
@@ -1246,7 +1253,6 @@ exports.CopyContentObject = function _callee12(_ref15) {
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} publicKey - Public key for the target cap
- * @param {string} publicAddress - Public address for the target cap key
  * @param {string} writeToken - Write token for the content object - If specified, info will be retrieved from the write draft instead of creating a new draft and finalizing
  *
  * @returns {Promise<Object>}
@@ -1254,37 +1260,37 @@ exports.CopyContentObject = function _callee12(_ref15) {
 
 
 exports.CreateNonOwnerCap = function _callee13(_ref17) {
-  var objectId, libraryId, publicKey, publicAddress, writeToken, userCapKey, userCapValue, userConk, targetUserCapKey, targetUserCapValue, finalize;
+  var objectId, libraryId, publicKey, writeToken, userCapKey, userCapValue, userConk, publicAddress, targetUserCapKey, targetUserCapValue, finalize;
   return _regeneratorRuntime.async(function _callee13$(_context14) {
     while (1) {
       switch (_context14.prev = _context14.next) {
         case 0:
-          objectId = _ref17.objectId, libraryId = _ref17.libraryId, publicKey = _ref17.publicKey, publicAddress = _ref17.publicAddress, writeToken = _ref17.writeToken;
-          publicAddress = ValidateAddress(publicAddress);
+          objectId = _ref17.objectId, libraryId = _ref17.libraryId, publicKey = _ref17.publicKey, writeToken = _ref17.writeToken;
           userCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
-          _context14.next = 5;
+          _context14.next = 4;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             objectId: objectId,
             libraryId: libraryId,
             metadataSubtree: userCapKey
           }));
 
-        case 5:
+        case 4:
           userCapValue = _context14.sent;
 
           if (userCapValue) {
-            _context14.next = 8;
+            _context14.next = 7;
             break;
           }
 
           throw Error("No user cap found for current user");
 
-        case 8:
-          _context14.next = 10;
+        case 7:
+          _context14.next = 9;
           return _regeneratorRuntime.awrap(this.Crypto.DecryptCap(userCapValue, this.signer.signingKey.privateKey));
 
-        case 10:
+        case 9:
           userConk = _context14.sent;
+          publicAddress = this.utils.PublicKeyToAddress(publicKey);
           targetUserCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(publicAddress));
           _context14.next = 14;
           return _regeneratorRuntime.awrap(this.Crypto.EncryptConk(userConk, publicKey));

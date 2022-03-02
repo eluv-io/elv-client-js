@@ -55,7 +55,13 @@ class RemoteSigner extends Ethers.Signer {
         })
       );
 
-      this.address = Utils.HashToAddress(keys.eth[0]);
+      const address = keys.eth[0];
+
+      if(address && address.startsWith("0x")) {
+        this.address = address;
+      } else {
+        this.address = Utils.HashToAddress(keys.eth[0]);
+      }
     }
 
     this.id = this.address ? `ikms${Utils.AddressToHash(this.address)}` : undefined;
