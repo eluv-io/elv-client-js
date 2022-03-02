@@ -1325,6 +1325,7 @@ exports.AvailableOfferings = async function({
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
+ * @param {Object=} options - Additional query parameters to pass when requesting available playout options, such as clipping parameters.
  */
 exports.PlayoutOptions = async function({
   offeringURI,
@@ -1340,7 +1341,8 @@ exports.PlayoutOptions = async function({
   drms=[],
   context,
   hlsjsProfile=true,
-  authorizationToken
+  authorizationToken,
+  options={}
 }) {
   if(offeringURI) {
     const uriInfo = offeringURI.match(/(hq__[^/]+)\/rep\/([^/]+)\/([^/]+)\/options.json/);
@@ -1421,7 +1423,8 @@ exports.PlayoutOptions = async function({
 
   let queryParams = {
     authorization,
-    resolve: !!linkPath
+    resolve: !!linkPath,
+    ...options
   };
 
   const playoutOptions = Object.values(
@@ -1590,6 +1593,7 @@ exports.PlayoutOptions = async function({
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
+ * @param {Object=} options - Additional query parameters to pass when requesting available playout options, such as clipping parameters.
  */
 exports.BitmovinPlayoutOptions = async function({
   objectId,
@@ -1603,7 +1607,8 @@ exports.BitmovinPlayoutOptions = async function({
   offering="default",
   playoutType,
   context,
-  authorizationToken
+  authorizationToken,
+  options={}
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
@@ -1624,7 +1629,8 @@ exports.BitmovinPlayoutOptions = async function({
     playoutType,
     hlsjsProfile: false,
     context,
-    authorizationToken
+    authorizationToken,
+    options
   });
 
   delete playoutOptions.playoutMethods;
