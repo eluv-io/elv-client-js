@@ -447,19 +447,20 @@ exports.CreateContentType = function _callee3(_ref4) {
  * @param {Object=} metadata - Metadata of library object
  * @param {string=} kmsId - ID of the KMS to use for content in this library. If not specified,
  * the default KMS will be used.
+ * @param {string=} tenantId - ID of the tenant to use for this library
  *
  * @returns {Promise<string>} - Library ID of created library
  */
 
 
 exports.CreateContentLibrary = function _callee4(_ref6) {
-  var name, description, image, imageName, _ref6$metadata, metadata, kmsId, _ref7, contractAddress, tenantId, libraryId, objectId, editResponse;
+  var name, description, image, imageName, _ref6$metadata, metadata, kmsId, tenantId, _ref7, contractAddress, libraryId, objectId, editResponse;
 
   return _regeneratorRuntime.async(function _callee4$(_context5) {
     while (1) {
       switch (_context5.prev = _context5.next) {
         case 0:
-          name = _ref6.name, description = _ref6.description, image = _ref6.image, imageName = _ref6.imageName, _ref6$metadata = _ref6.metadata, metadata = _ref6$metadata === void 0 ? {} : _ref6$metadata, kmsId = _ref6.kmsId;
+          name = _ref6.name, description = _ref6.description, image = _ref6.image, imageName = _ref6.imageName, _ref6$metadata = _ref6.metadata, metadata = _ref6$metadata === void 0 ? {} : _ref6$metadata, kmsId = _ref6.kmsId, tenantId = _ref6.tenantId;
 
           if (kmsId) {
             _context5.next = 9;
@@ -487,25 +488,32 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
         case 13:
           _ref7 = _context5.sent;
           contractAddress = _ref7.contractAddress;
-          _context5.next = 17;
-          return _regeneratorRuntime.awrap(this.userProfileClient.TenantId());
 
-        case 17:
-          tenantId = _context5.sent;
-
-          if (!tenantId) {
-            _context5.next = 21;
+          if (tenantId) {
+            _context5.next = 19;
             break;
           }
 
-          _context5.next = 21;
+          _context5.next = 18;
+          return _regeneratorRuntime.awrap(this.userProfileClient.TenantId());
+
+        case 18:
+          tenantId = _context5.sent;
+
+        case 19:
+          if (!tenantId) {
+            _context5.next = 22;
+            break;
+          }
+
+          _context5.next = 22;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: contractAddress,
             methodName: "putMeta",
             methodArgs: ["_tenantId", tenantId]
           }));
 
-        case 21:
+        case 22:
           metadata = _objectSpread({}, metadata, {
             name: name,
             description: description,
@@ -519,15 +527,15 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
           this.Log("Contract address: ".concat(contractAddress)); // Set library content object type and metadata on automatically created library object
 
           objectId = libraryId.replace("ilib", "iq__");
-          _context5.next = 28;
+          _context5.next = 29;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
 
-        case 28:
+        case 29:
           editResponse = _context5.sent;
-          _context5.next = 31;
+          _context5.next = 32;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -535,8 +543,8 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
             writeToken: editResponse.write_token
           }));
 
-        case 31:
-          _context5.next = 33;
+        case 32:
+          _context5.next = 34;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
@@ -544,24 +552,24 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
             commitMessage: "Create library"
           }));
 
-        case 33:
+        case 34:
           if (!image) {
-            _context5.next = 36;
+            _context5.next = 37;
             break;
           }
 
-          _context5.next = 36;
+          _context5.next = 37;
           return _regeneratorRuntime.awrap(this.SetContentLibraryImage({
             libraryId: libraryId,
             image: image,
             imageName: imageName
           }));
 
-        case 36:
+        case 37:
           this.Log("Library ".concat(libraryId, " created"));
           return _context5.abrupt("return", libraryId);
 
-        case 38:
+        case 39:
         case "end":
           return _context5.stop();
       }

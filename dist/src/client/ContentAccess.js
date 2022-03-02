@@ -2389,19 +2389,20 @@ exports.AvailableOfferings = function _callee30(_ref22) {
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
+ * @param {Object=} options - Additional query parameters to pass when requesting available playout options, such as clipping parameters.
  */
 
 
 exports.PlayoutOptions = function _callee33(_ref24) {
   var _this9 = this;
 
-  var offeringURI, objectId, versionHash, writeToken, linkPath, _ref24$signedLink, signedLink, _ref24$protocols, protocols, _ref24$handler, handler, _ref24$offering, offering, playoutType, _ref24$drms, drms, context, _ref24$hlsjsProfile, hlsjsProfile, authorizationToken, uriInfo, libraryId, offeringPath, link, _ref25, path, linkTarget, audienceData, authorization, queryParams, playoutOptions, playoutMap, sessionId, multiview, i, option, protocol, drm, playoutPath, licenseServers, cert, method, certUrl, protocolMatch, drmMatch;
+  var offeringURI, objectId, versionHash, writeToken, linkPath, _ref24$signedLink, signedLink, _ref24$protocols, protocols, _ref24$handler, handler, _ref24$offering, offering, playoutType, _ref24$drms, drms, context, _ref24$hlsjsProfile, hlsjsProfile, authorizationToken, _ref24$options, options, uriInfo, libraryId, offeringPath, link, _ref25, path, linkTarget, audienceData, authorization, queryParams, playoutOptions, playoutMap, sessionId, multiview, i, option, protocol, drm, playoutPath, licenseServers, cert, method, certUrl, protocolMatch, drmMatch;
 
   return _regeneratorRuntime.async(function _callee33$(_context33) {
     while (1) {
       switch (_context33.prev = _context33.next) {
         case 0:
-          offeringURI = _ref24.offeringURI, objectId = _ref24.objectId, versionHash = _ref24.versionHash, writeToken = _ref24.writeToken, linkPath = _ref24.linkPath, _ref24$signedLink = _ref24.signedLink, signedLink = _ref24$signedLink === void 0 ? false : _ref24$signedLink, _ref24$protocols = _ref24.protocols, protocols = _ref24$protocols === void 0 ? ["dash", "hls"] : _ref24$protocols, _ref24$handler = _ref24.handler, handler = _ref24$handler === void 0 ? "playout" : _ref24$handler, _ref24$offering = _ref24.offering, offering = _ref24$offering === void 0 ? "default" : _ref24$offering, playoutType = _ref24.playoutType, _ref24$drms = _ref24.drms, drms = _ref24$drms === void 0 ? [] : _ref24$drms, context = _ref24.context, _ref24$hlsjsProfile = _ref24.hlsjsProfile, hlsjsProfile = _ref24$hlsjsProfile === void 0 ? true : _ref24$hlsjsProfile, authorizationToken = _ref24.authorizationToken;
+          offeringURI = _ref24.offeringURI, objectId = _ref24.objectId, versionHash = _ref24.versionHash, writeToken = _ref24.writeToken, linkPath = _ref24.linkPath, _ref24$signedLink = _ref24.signedLink, signedLink = _ref24$signedLink === void 0 ? false : _ref24$signedLink, _ref24$protocols = _ref24.protocols, protocols = _ref24$protocols === void 0 ? ["dash", "hls"] : _ref24$protocols, _ref24$handler = _ref24.handler, handler = _ref24$handler === void 0 ? "playout" : _ref24$handler, _ref24$offering = _ref24.offering, offering = _ref24$offering === void 0 ? "default" : _ref24$offering, playoutType = _ref24.playoutType, _ref24$drms = _ref24.drms, drms = _ref24$drms === void 0 ? [] : _ref24$drms, context = _ref24.context, _ref24$hlsjsProfile = _ref24.hlsjsProfile, hlsjsProfile = _ref24$hlsjsProfile === void 0 ? true : _ref24$hlsjsProfile, authorizationToken = _ref24.authorizationToken, _ref24$options = _ref24.options, options = _ref24$options === void 0 ? {} : _ref24$options;
 
           if (!offeringURI) {
             _context33.next = 8;
@@ -2558,10 +2559,10 @@ exports.PlayoutOptions = function _callee33(_ref24) {
           };
 
           authorization = [_context33.t9, _context33.t10].flat().filter(_context33.t11);
-          queryParams = {
+          queryParams = _objectSpread({
             authorization: authorization,
             resolve: !!linkPath
-          };
+          }, options);
           _context33.t12 = Object;
           _context33.next = 61;
           return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.HttpClient.Request({
@@ -2825,17 +2826,18 @@ exports.PlayoutOptions = function _callee33(_ref24) {
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
+ * @param {Object=} options - Additional query parameters to pass when requesting available playout options, such as clipping parameters.
  */
 
 
 exports.BitmovinPlayoutOptions = function _callee34(_ref27) {
-  var objectId, versionHash, writeToken, linkPath, _ref27$signedLink, signedLink, _ref27$protocols, protocols, _ref27$drms, drms, _ref27$handler, handler, _ref27$offering, offering, playoutType, context, authorizationToken, playoutOptions, _ref28, linkTarget, authorization, config;
+  var objectId, versionHash, writeToken, linkPath, _ref27$signedLink, signedLink, _ref27$protocols, protocols, _ref27$drms, drms, _ref27$handler, handler, _ref27$offering, offering, playoutType, context, authorizationToken, _ref27$options, options, playoutOptions, _ref28, linkTarget, authorization, config;
 
   return _regeneratorRuntime.async(function _callee34$(_context34) {
     while (1) {
       switch (_context34.prev = _context34.next) {
         case 0:
-          objectId = _ref27.objectId, versionHash = _ref27.versionHash, writeToken = _ref27.writeToken, linkPath = _ref27.linkPath, _ref27$signedLink = _ref27.signedLink, signedLink = _ref27$signedLink === void 0 ? false : _ref27$signedLink, _ref27$protocols = _ref27.protocols, protocols = _ref27$protocols === void 0 ? ["dash", "hls"] : _ref27$protocols, _ref27$drms = _ref27.drms, drms = _ref27$drms === void 0 ? [] : _ref27$drms, _ref27$handler = _ref27.handler, handler = _ref27$handler === void 0 ? "playout" : _ref27$handler, _ref27$offering = _ref27.offering, offering = _ref27$offering === void 0 ? "default" : _ref27$offering, playoutType = _ref27.playoutType, context = _ref27.context, authorizationToken = _ref27.authorizationToken;
+          objectId = _ref27.objectId, versionHash = _ref27.versionHash, writeToken = _ref27.writeToken, linkPath = _ref27.linkPath, _ref27$signedLink = _ref27.signedLink, signedLink = _ref27$signedLink === void 0 ? false : _ref27$signedLink, _ref27$protocols = _ref27.protocols, protocols = _ref27$protocols === void 0 ? ["dash", "hls"] : _ref27$protocols, _ref27$drms = _ref27.drms, drms = _ref27$drms === void 0 ? [] : _ref27$drms, _ref27$handler = _ref27.handler, handler = _ref27$handler === void 0 ? "playout" : _ref27$handler, _ref27$offering = _ref27.offering, offering = _ref27$offering === void 0 ? "default" : _ref27$offering, playoutType = _ref27.playoutType, context = _ref27.context, authorizationToken = _ref27.authorizationToken, _ref27$options = _ref27.options, options = _ref27$options === void 0 ? {} : _ref27$options;
           versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
           if (!objectId) {
@@ -2856,7 +2858,8 @@ exports.BitmovinPlayoutOptions = function _callee34(_ref27) {
             playoutType: playoutType,
             hlsjsProfile: false,
             context: context,
-            authorizationToken: authorizationToken
+            authorizationToken: authorizationToken,
+            options: options
           }));
 
         case 5:
