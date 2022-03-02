@@ -1325,6 +1325,7 @@ exports.AvailableOfferings = async function({
  * @param {Object=} context - Additional audience data to include in the authorization request.
  * - Note: Context must be a map of string->string
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
+ * @param {Object=} options - Additional query parameters to pass when requesting available playout options, such as clipping parameters.
  */
 exports.PlayoutOptions = async function({
   offeringURI,
@@ -1341,7 +1342,7 @@ exports.PlayoutOptions = async function({
   context,
   hlsjsProfile=true,
   authorizationToken,
-  options
+  options={}
 }) {
   if(offeringURI) {
     const uriInfo = offeringURI.match(/(hq__[^/]+)\/rep\/([^/]+)\/([^/]+)\/options.json/);
@@ -1376,8 +1377,7 @@ exports.PlayoutOptions = async function({
         objectId,
         versionHash,
         metadataSubtree: offeringPath,
-        authorizationToken,
-        queryParams: options
+        authorizationToken
       });
 
       if(link) { linkPath = offeringPath; }
@@ -1593,6 +1593,7 @@ exports.PlayoutOptions = async function({
  * @param {Object=} context - Additional audience data to include in the authorization request
  * - Note: Context must be a map of string->string
  * @param {Object=} authorizationToken - Additional authorization token for authorizing this request
+ * @param {Object=} options - Additional query parameters to pass when requesting available playout options, such as clipping parameters.
  */
 exports.BitmovinPlayoutOptions = async function({
   objectId,
@@ -1607,7 +1608,7 @@ exports.BitmovinPlayoutOptions = async function({
   playoutType,
   context,
   authorizationToken,
-  options
+  options={}
 }) {
   versionHash ? ValidateVersion(versionHash) : ValidateObject(objectId);
 
