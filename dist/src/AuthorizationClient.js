@@ -218,7 +218,7 @@ function () {
               break;
 
             case 23:
-              if (!noAuth) {
+              if (!(noAuth && this.client.signer && this.client.signer.remoteSigner && this.client.signer.unsignedPublicAuth)) {
                 _context2.next = 25;
                 break;
               }
