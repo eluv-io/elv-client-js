@@ -160,7 +160,7 @@ class AuthorizationClient {
           oauthToken
         });
       } else {
-        if(noAuth) {
+        if(noAuth && this.client.signer && this.client.signer.remoteSigner && this.client.signer.unsignedPublicAuth) {
           return this.CreateStaticToken({libraryId});
         }
 
