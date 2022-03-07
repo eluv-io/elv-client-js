@@ -6,7 +6,8 @@ const VarInt = require("varint");
 const URI = require("urijs");
 
 const {
-  keccak256
+  keccak256,
+  getAddress
 } = require("ethers").utils;
 
 /**
@@ -243,6 +244,34 @@ const Utils = {
     }
 
     return (Utils.HashToAddress(firstHash) === Utils.HashToAddress(secondHash));
+  },
+
+  /**
+   * Determine whether the address is valid
+   *
+   * @param {string} address - Address to validate
+   *
+   * @returns {boolean} - Whether or not the address is valid
+   */
+  ValidAddress: (address) => {
+    try {
+      getAddress(address);
+      return true;
+    } catch(error) {
+      this.Log(error);
+      return false;
+    }
+  },
+
+  /**
+   * Determine whether the hash is valid
+   *
+   * @param {string} hash - Hash to validate
+   *
+   * @returns {boolean} - Whether or not the hash is valid
+   */
+  ValidHash: (hash) => {
+    return Utils.ValidAddress(Utils.HashToAddress(hash));
   },
 
   /**
