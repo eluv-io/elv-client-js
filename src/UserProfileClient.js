@@ -438,14 +438,19 @@ await client.userProfileClient.UserMetadata()
    * Note: This method is not accessible to applications. Eluvio core will drop the request.
    *
    * @namedParams
-   * @param level
+   * @param {string} id - The tenant ID in hash format
+   * @param {string} address - The group address to use in the hash if id is not provided
    */
   async SetTenantId({id, address}) {
-    if(id && !id.startsWith("iten")) {
+    if(id && (!id.startsWith("iten") || !Utils.ValidHash(id))) {
       throw Error(`Invalid tenant ID: ${id}`);
     }
 
     if(address) {
+      if(!Utils.ValidAddress(address)) {
+        throw Error(`Invalid address: ${address}`);
+      }
+
       id = `iten${Utils.AddressToHash(address)}`;
     }
 
