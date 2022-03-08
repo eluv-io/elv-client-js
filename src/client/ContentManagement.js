@@ -271,6 +271,10 @@ exports.CreateContentLibrary = async function({
   }
 
   if(tenantId) {
+    if(!this.utils.ValidHash(tenantId)) {
+      throw Error(`Invalid tenant ID: ${tenantId}`);
+    }
+
     await this.CallContractMethod({
       contractAddress,
       methodName: "putMeta",
