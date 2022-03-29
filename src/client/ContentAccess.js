@@ -234,11 +234,14 @@ exports.ContentType = async function({name, typeId, versionHash, publicOnly=fals
   if(name) {
     this.Log("Looking up type by name in content space metadata...");
     // Look up named type in content space metadata
-    typeId = await this.ContentObjectMetadata({
-      libraryId: this.contentSpaceLibraryId,
-      objectId: this.contentSpaceObjectId,
-      metadataSubtree: UrlJoin("public", "contentTypes", name)
-    });
+    try {
+      typeId = await this.ContentObjectMetadata({
+        libraryId: this.contentSpaceLibraryId,
+        objectId: this.contentSpaceObjectId,
+        metadataSubtree: UrlJoin("public", "contentTypes", name)
+      });
+    // eslint-disable-next-line no-empty
+    } catch(error) {}
   }
 
   if(!typeId) {
@@ -310,11 +313,15 @@ exports.ContentTypes = async function() {
   this.Log(typeAddresses);
 
   // Content space types
-  const contentSpaceTypes = await this.ContentObjectMetadata({
-    libraryId: this.contentSpaceLibraryId,
-    objectId: this.contentSpaceObjectId,
-    metadataSubtree: "public/contentTypes"
-  }) || {};
+  let contentSpaceTypes = {};
+  try {
+    contentSpaceTypes = await this.ContentObjectMetadata({
+      libraryId: this.contentSpaceLibraryId,
+      objectId: this.contentSpaceObjectId,
+      metadataSubtree: "public/contentTypes"
+    }) || {};
+  // eslint-disable-next-line no-empty
+  } catch(error) {}
 
   const contentSpaceTypeAddresses = Object.values(contentSpaceTypes)
     .map(typeId => this.utils.HashToAddress(typeId));
