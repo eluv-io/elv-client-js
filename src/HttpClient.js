@@ -77,10 +77,10 @@ class HttpClient {
       headers: this.RequestHeaders(bodyType, headers)
     };
 
-    if(method === "POST" || method === "PUT") {
+    if(method === "POST" || method === "PUT" || method === "DELETE") {
       if(body && bodyType === "JSON") {
         fetchParameters.body = JSON.stringify(body);
-      } else {
+      } else if(body) {
         fetchParameters.body = body;
       }
     }
