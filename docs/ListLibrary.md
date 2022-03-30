@@ -11,7 +11,6 @@ let signer = wallet.AddAccount({
   privateKey: process.env.PRIVATE_KEY
 });
 client.SetSigner({signer});
-})
 ```
 
 ### List Library Objects
