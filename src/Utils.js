@@ -151,6 +151,51 @@ const Utils = {
   },
 
   /**
+   * Decode the specified write token into its component parts
+   * Format:
+   * - 1 + 1 + 20 bytes - content ID (size, type, value)
+   * - 1 + 1 + 20 bytes - node ID (size, type, value)
+   * - 1 + 16 bytes - token unique, random ID (size, value)
+   *
+   * @param writeToken
+   *
+   * @returns {Object} - Components of the write token.
+   */
+  DecodeWriteToken: (writeToken) => {
+    if(!(writeToken.startsWith("tqw__"))) {
+      throw new Error(`Invalid write token: "${writeToken}"`);
+    }
+
+    // Strip 5 character type
+    writeTokenType = writeToken.slice(0, 5);
+    writeToken = writeToken.slice(5);
+
+    // Decode base58 payload
+    let bytes = Utils.FromB58(writeToken);
+
+    // Parse QID
+    const qidBytes = bytes.slice(2, 22); // 1 byte size + 1 byte type
+    const qid = "iq__" + Utils.B58(qidBytes);
+    bytes = bytes.slice(22);
+
+    // Parse node ID
+    const nidBytes = bytes.slice(2, 22); // 1 byte size + 1 byte type
+    const nid = "inod" + Utils.B58(nidBytes);
+    bytes = bytes.slice(22);
+
+    // Parse token ID
+    const tokIdBytes = bytes.slice(1, 18); // 1 byte size
+    const tokId = "0x" + tokIdBytes.toString("hex");
+
+    return {
+      writeTokenType,
+      tokId,
+      qid,
+      nid
+    };
+  },
+
+  /**
    * Convert contract address to multiformat hash
    *
    * @param {string} address - Address of contract
