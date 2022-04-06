@@ -153,45 +153,116 @@ const Utils = {
   /**
    * Decode the specified write token into its component parts
    * Format:
-   * - 1 + 1 + 20 bytes - content ID (size, type, value)
-   * - 1 + 1 + 20 bytes - node ID (size, type, value)
-   * - 1 + 16 bytes - token unique, random ID (size, value)
+   * - content write token, LRO:
+   *   - prefix: "tq__", "tqw__", "tlro"
+   *   - format:
+   *     prefix + base58(uvarint(len(QID) | QID |
+   *                     uvarint(len(NID) | NID |
+   *                     uvarint(len(RAND_BYTES) | RAND_BYTES)
+   * - content part write token:
+   *   - prefix: "tqp_"
+   *   - format:
+   *     prefix + base58(scheme | flags | uvarint(len(RAND_BYTES) | RAND_BYTES)
+   * - content write token v1, content part write token v1:
+   *   - prefix: "tqw_", "tqpw"
+   *   - format:
+   *     prefix + base58(RAND_BYTES)
    *
    * @param writeToken
    *
    * @returns {Object} - Components of the write token.
    */
   DecodeWriteToken: (writeToken) => {
-    if(!(writeToken.startsWith("tqw__"))) {
-      throw new Error(`Invalid write token: "${writeToken}"`);
+    if(writeToken.length<4){
+      throw new Error(`Invalid write token: ["${writeToken}"] (unknown prefix)`);
     }
 
-    // Strip 5 character type
-    writeTokenType = writeToken.slice(0, 5);
-    writeToken = writeToken.slice(5);
+    let writeTokenType;
 
-    // Decode base58 payload
+    if(writeToken.startsWith("tqw__")) {
+      writeTokenType = "tq__";
+      writeToken = writeToken.slice(5);
+    } else {
+      writeTokenType = writeToken.slice(0, 4);
+      writeToken = writeToken.slice(4);
+    }
+    if(writeToken.length===0){
+      throw new Error(`Invalid write token: ["${writeToken}"] (too short)`);
+    }
+
+    switch(writeTokenType) {
+      case "tqw_":
+      case "tq__":
+      case "tqpw":
+      case "tqp_":
+      case "tlro":
+        break;
+      default:
+        throw new Error(`Invalid write token: ["${writeToken}"] (unknown prefix)`);
+    }
+
+    // decode base58 payload
     let bytes = Utils.FromB58(writeToken);
 
-    // Parse QID
-    const qidBytes = bytes.slice(2, 22); // 1 byte size + 1 byte type
-    const qid = "iq__" + Utils.B58(qidBytes);
-    bytes = bytes.slice(22);
+    function decodeBytes(isID, prefix) {
+      let bsize = VarInt.decode(bytes,0);
+      let offset = VarInt.decode.bytes;
+      let theBytes;
+      let ret;
 
-    // Parse node ID
-    const nidBytes = bytes.slice(2, 22); // 1 byte size + 1 byte type
-    const nid = "inod" + Utils.B58(nidBytes);
-    bytes = bytes.slice(22);
+      if(isID) {
+        theBytes = bytes.slice(offset+1, bsize+1); // 1 byte size + 1 byte type
+        if(theBytes.length===0){
+          ret = "";
+        } else {
+          ret = prefix + Utils.B58(theBytes);
+        }
+      } else {
+        theBytes = bytes.slice(offset, bsize+1);
+        ret = "0x" + theBytes.toString("hex");
+      }
+      bytes = bytes.slice(bsize+1);
+      return ret;
+    }
 
-    // Parse token ID
-    const tokIdBytes = bytes.slice(1, 18); // 1 byte size
-    const tokId = "0x" + tokIdBytes.toString("hex");
+    let tokId;
+    let qid;
+    let nid;
+    let scheme;
+    let flags;
+
+    switch(writeTokenType) {
+      case "tqw_": // content write token v1
+      case "tqpw": // content part write token v1
+        tokId = "0x" + bytes.toString("hex");
+        break;
+      case "tlro": // LRO,
+      case "tq__": // content write token
+        qid = decodeBytes(true, "iq__");
+        nid = decodeBytes(true, "inod");
+        tokId = decodeBytes(false, "");
+        break;
+      case "tqp_": // content part write token
+        if(bytes.length<3) {
+          throw new Error(`Invalid write token: ["${writeToken}"] (token truncated)`);
+        }
+        scheme=bytes[0];
+        flags=bytes[1];
+        bytes = bytes.slice(2);
+        tokId = decodeBytes(false, "");
+        break;
+      default:
+        // already raised
+        throw new Error(`Invalid write token: ["${writeToken}"] (unknown prefix)`);
+    }
 
     return {
       writeTokenType,
       tokId,
       qid,
-      nid
+      nid,
+      scheme,
+      flags
     };
   },
 
