@@ -502,18 +502,26 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
 
         case 19:
           if (!tenantId) {
+            _context5.next = 24;
+            break;
+          }
+
+          if (this.utils.ValidHash(tenantId)) {
             _context5.next = 22;
             break;
           }
 
-          _context5.next = 22;
+          throw Error("Invalid tenant ID: ".concat(tenantId));
+
+        case 22:
+          _context5.next = 24;
           return _regeneratorRuntime.awrap(this.CallContractMethod({
             contractAddress: contractAddress,
             methodName: "putMeta",
             methodArgs: ["_tenantId", tenantId]
           }));
 
-        case 22:
+        case 24:
           metadata = _objectSpread({}, metadata, {
             name: name,
             description: description,
@@ -527,15 +535,15 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
           this.Log("Contract address: ".concat(contractAddress)); // Set library content object type and metadata on automatically created library object
 
           objectId = libraryId.replace("ilib", "iq__");
-          _context5.next = 29;
+          _context5.next = 31;
           return _regeneratorRuntime.awrap(this.EditContentObject({
             libraryId: libraryId,
             objectId: objectId
           }));
 
-        case 29:
+        case 31:
           editResponse = _context5.sent;
-          _context5.next = 32;
+          _context5.next = 34;
           return _regeneratorRuntime.awrap(this.ReplaceMetadata({
             libraryId: libraryId,
             objectId: objectId,
@@ -543,8 +551,8 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
             writeToken: editResponse.write_token
           }));
 
-        case 32:
-          _context5.next = 34;
+        case 34:
+          _context5.next = 36;
           return _regeneratorRuntime.awrap(this.FinalizeContentObject({
             libraryId: libraryId,
             objectId: objectId,
@@ -552,24 +560,24 @@ exports.CreateContentLibrary = function _callee4(_ref6) {
             commitMessage: "Create library"
           }));
 
-        case 34:
+        case 36:
           if (!image) {
-            _context5.next = 37;
+            _context5.next = 39;
             break;
           }
 
-          _context5.next = 37;
+          _context5.next = 39;
           return _regeneratorRuntime.awrap(this.SetContentLibraryImage({
             libraryId: libraryId,
             image: image,
             imageName: imageName
           }));
 
-        case 37:
+        case 39:
           this.Log("Library ".concat(libraryId, " created"));
           return _context5.abrupt("return", libraryId);
 
-        case 39:
+        case 41:
         case "end":
           return _context5.stop();
       }

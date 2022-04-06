@@ -465,37 +465,44 @@ exports.ContentType = function _callee6(_ref5) {
           }
 
           if (!name) {
-            _context6.next = 8;
+            _context6.next = 13;
             break;
           }
 
           this.Log("Looking up type by name in content space metadata..."); // Look up named type in content space metadata
 
-          _context6.next = 7;
+          _context6.prev = 5;
+          _context6.next = 8;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: this.contentSpaceObjectId,
             metadataSubtree: UrlJoin("public", "contentTypes", name)
           }));
 
-        case 7:
-          typeId = _context6.sent;
-
         case 8:
+          typeId = _context6.sent;
+          _context6.next = 13;
+          break;
+
+        case 11:
+          _context6.prev = 11;
+          _context6.t0 = _context6["catch"](5);
+
+        case 13:
           if (typeId) {
-            _context6.next = 18;
+            _context6.next = 23;
             break;
           }
 
           this.Log("Looking up type by name in available types...");
-          _context6.next = 12;
+          _context6.next = 17;
           return _regeneratorRuntime.awrap(this.ContentTypes());
 
-        case 12:
+        case 17:
           types = _context6.sent;
 
           if (!name) {
-            _context6.next = 17;
+            _context6.next = 22;
             break;
           }
 
@@ -503,35 +510,35 @@ exports.ContentType = function _callee6(_ref5) {
             return (type.name || "").toLowerCase() === name.toLowerCase();
           }));
 
-        case 17:
+        case 22:
           return _context6.abrupt("return", Object.values(types).find(function (type) {
             return type.hash === versionHash;
           }));
 
-        case 18:
+        case 23:
           if (versionHash) {
-            _context6.next = 22;
+            _context6.next = 27;
             break;
           }
 
-          _context6.next = 21;
+          _context6.next = 26;
           return _regeneratorRuntime.awrap(this.LatestVersionHash({
             objectId: typeId
           }));
 
-        case 21:
+        case 26:
           versionHash = _context6.sent;
 
-        case 22:
-          _context6.prev = 22;
+        case 27:
+          _context6.prev = 27;
           this.Log("Looking up type by ID...");
 
           if (!publicOnly) {
-            _context6.next = 34;
+            _context6.next = 39;
             break;
           }
 
-          _context6.next = 27;
+          _context6.next = 32;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: typeId,
@@ -539,46 +546,46 @@ exports.ContentType = function _callee6(_ref5) {
             metadataSubtree: "public"
           }));
 
-        case 27:
-          _context6.t0 = _context6.sent;
+        case 32:
+          _context6.t1 = _context6.sent;
 
-          if (_context6.t0) {
-            _context6.next = 30;
+          if (_context6.t1) {
+            _context6.next = 35;
             break;
           }
 
-          _context6.t0 = {};
+          _context6.t1 = {};
 
-        case 30:
-          _context6.t1 = _context6.t0;
+        case 35:
+          _context6.t2 = _context6.t1;
           metadata = {
-            "public": _context6.t1
+            "public": _context6.t2
           };
-          _context6.next = 40;
+          _context6.next = 45;
           break;
 
-        case 34:
-          _context6.next = 36;
+        case 39:
+          _context6.next = 41;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: typeId,
             versionHash: versionHash
           }));
 
-        case 36:
-          _context6.t2 = _context6.sent;
+        case 41:
+          _context6.t3 = _context6.sent;
 
-          if (_context6.t2) {
-            _context6.next = 39;
+          if (_context6.t3) {
+            _context6.next = 44;
             break;
           }
 
-          _context6.t2 = {};
+          _context6.t3 = {};
 
-        case 39:
-          metadata = _context6.t2;
+        case 44:
+          metadata = _context6.t3;
 
-        case 40:
+        case 45:
           return _context6.abrupt("return", {
             id: typeId,
             hash: versionHash,
@@ -586,19 +593,19 @@ exports.ContentType = function _callee6(_ref5) {
             meta: metadata
           });
 
-        case 43:
-          _context6.prev = 43;
-          _context6.t3 = _context6["catch"](22);
+        case 48:
+          _context6.prev = 48;
+          _context6.t4 = _context6["catch"](27);
           this.Log("Error looking up content type:");
-          this.Log(_context6.t3);
+          this.Log(_context6.t4);
           throw new Error("Content Type ".concat(name || typeId, " is invalid"));
 
-        case 48:
+        case 53:
         case "end":
           return _context6.stop();
       }
     }
-  }, null, this, [[22, 43]]);
+  }, null, this, [[5, 11], [27, 48]]);
 };
 /**
  * List all content types accessible to this user.
@@ -631,25 +638,35 @@ exports.ContentTypes = function _callee8() {
           this.Log("Personally available types:");
           this.Log(typeAddresses); // Content space types
 
-          _context8.next = 9;
+          contentSpaceTypes = {};
+          _context8.prev = 8;
+          _context8.next = 11;
           return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
             libraryId: this.contentSpaceLibraryId,
             objectId: this.contentSpaceObjectId,
             metadataSubtree: "public/contentTypes"
           }));
 
-        case 9:
+        case 11:
           _context8.t0 = _context8.sent;
 
           if (_context8.t0) {
-            _context8.next = 12;
+            _context8.next = 14;
             break;
           }
 
           _context8.t0 = {};
 
-        case 12:
+        case 14:
           contentSpaceTypes = _context8.t0;
+          _context8.next = 19;
+          break;
+
+        case 17:
+          _context8.prev = 17;
+          _context8.t1 = _context8["catch"](8);
+
+        case 19:
           contentSpaceTypeAddresses = Object.values(contentSpaceTypes).map(function (typeId) {
             return _this3.utils.HashToAddress(typeId);
           });
@@ -662,7 +679,7 @@ exports.ContentTypes = function _callee8() {
           }).filter(function (v, i, a) {
             return a.indexOf(v) === i;
           });
-          _context8.next = 19;
+          _context8.next = 25;
           return _regeneratorRuntime.awrap(Promise.all(typeAddresses.map(function _callee7(typeAddress) {
             var typeId;
             return _regeneratorRuntime.async(function _callee7$(_context7) {
@@ -702,15 +719,15 @@ exports.ContentTypes = function _callee8() {
             }, null, null, [[2, 8]]);
           })));
 
-        case 19:
+        case 25:
           return _context8.abrupt("return", this.contentTypes);
 
-        case 20:
+        case 26:
         case "end":
           return _context8.stop();
       }
     }
-  }, null, this);
+  }, null, this, [[8, 17]]);
 };
 /* Content Libraries */
 

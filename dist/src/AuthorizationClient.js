@@ -192,7 +192,7 @@ function () {
                 this.noCache = true;
               }
 
-              if (this.client.signer && this.client.signer.remoteSigner) {
+              if (channelAuth && this.client.signer && this.client.signer.remoteSigner) {
                 // Channel auth not supported for remote signer, use a self-signed no-auth token instead
                 noAuth = true;
                 channelAuth = false;
@@ -338,7 +338,7 @@ function () {
                 addr: Utils.FormatAddress(this.client.signer && this.client.signer.address || "")
               };
 
-              if (this.noAuth || noAuth) {
+              if (!(!(this.noAuth || noAuth) && !this.client.signer.remoteSigner)) {
                 _context3.next = 29;
                 break;
               }
