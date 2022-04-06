@@ -211,7 +211,7 @@ const Utils = {
       let ret;
 
       if(isID) {
-        theBytes = bytes.slice(offset+1, bsize+1); // 1 byte size + 1 byte type
+        theBytes = bytes.slice(offset+1, bsize+1); // skip 1st byte (code id)
         if(theBytes.length===0){
           ret = "";
         } else {
