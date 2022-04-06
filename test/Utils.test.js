@@ -104,58 +104,58 @@ describe("Test Utils", () => {
   test("Decode Content Write Token Backward Compat", () => {
     let writeToken = "tqw__HSa9UBm1dHmrLsz5GUu3D9NVscUshTBjW3TP2BckZzGzNHPtMEnWbpCDsiqB971qdYpy1oSemHMqTR1YsMs";
     let token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tq__");
-    expect(token.nid).toEqual("inod2vU5Lc28S9pcx96m2gbP4YMYeGRs");
-    expect(token.qid).toEqual("iq__4ZKDfwY1EtDbJvsJTDZLrTDb6H6b");
-    expect(token.tokId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
+    expect(token.tokenType).toEqual("tq__");
+    expect(token.nodeId).toEqual("inod2vU5Lc28S9pcx96m2gbP4YMYeGRs");
+    expect(token.objectId).toEqual("iq__4ZKDfwY1EtDbJvsJTDZLrTDb6H6b");
+    expect(token.tokenId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
 
     writeToken = "tqw__8UmhDD9cZah58THfAYPf3Shj9hVzfwT51Cf4ZHKpayajzZRyMwCPiSpfS5yqRZfjkDjrtXuRmDa";
     token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tq__");
-    expect(token.nid).toEqual("inod3Sa5p3czRyYi8GnVGnh8gBDLaqJr");
-    expect(token.qid).toEqual("iq__99d4kp14eSDEP7HWfjU4W6qmqDw");
-    expect(token.tokId).toEqual("0x00010203040506070809");
+    expect(token.tokenType).toEqual("tq__");
+    expect(token.nodeId).toEqual("inod3Sa5p3czRyYi8GnVGnh8gBDLaqJr");
+    expect(token.objectId).toEqual("iq__99d4kp14eSDEP7HWfjU4W6qmqDw");
+    expect(token.tokenId).toEqual("0x00010203040506070809");
 
     // token with arbitrary size of fields
     writeToken = "tqw__RRceZrF4GMkYHyXy9pD7wqvSLYxXbHxfNRPoQ8M1HuLsgRytg3GvimtfzdniU";
     token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tq__");
-    expect(token.nid).toEqual("inodBCzMsgCFoE629MAQih53ZP");
-    expect(token.qid).toEqual("iq__XkHB7orSPYxxZYH8YQwA6F");
-    expect(token.tokId).toEqual("0x66d17d8bd7e23869");
+    expect(token.tokenType).toEqual("tq__");
+    expect(token.nodeId).toEqual("inodBCzMsgCFoE629MAQih53ZP");
+    expect(token.objectId).toEqual("iq__XkHB7orSPYxxZYH8YQwA6F");
+    expect(token.tokenId).toEqual("0x66d17d8bd7e23869");
   });
 
   test("Decode Content Write Token", () => {
     let writeToken = "tq__HSa9UBm1dHmrLsz5GUu3D9NVscUshTBjW3TP2BckZzGzNHPtMEnWbpCDsiqB971qdYpy1oSemHMqTR1YsMs";
     let token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tq__");
-    expect(token.nid).toEqual("inod2vU5Lc28S9pcx96m2gbP4YMYeGRs");
-    expect(token.qid).toEqual("iq__4ZKDfwY1EtDbJvsJTDZLrTDb6H6b");
-    expect(token.tokId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
+    expect(token.tokenType).toEqual("tq__");
+    expect(token.nodeId).toEqual("inod2vU5Lc28S9pcx96m2gbP4YMYeGRs");
+    expect(token.objectId).toEqual("iq__4ZKDfwY1EtDbJvsJTDZLrTDb6H6b");
+    expect(token.tokenId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
 
     writeToken = "tq__8UmhDD9cZah58THfAYPf3Shj9hVzfwT51Cf4ZHKpayajzZRyMwCPiSpfS5yqRZfjkDjrtXuRmDa";
     token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tq__");
-    expect(token.nid).toEqual("inod3Sa5p3czRyYi8GnVGnh8gBDLaqJr");
-    expect(token.qid).toEqual("iq__99d4kp14eSDEP7HWfjU4W6qmqDw");
-    expect(token.tokId).toEqual("0x00010203040506070809");
+    expect(token.tokenType).toEqual("tq__");
+    expect(token.nodeId).toEqual("inod3Sa5p3czRyYi8GnVGnh8gBDLaqJr");
+    expect(token.objectId).toEqual("iq__99d4kp14eSDEP7HWfjU4W6qmqDw");
+    expect(token.tokenId).toEqual("0x00010203040506070809");
 
     // token with arbitrary size of fields
     writeToken = "tq__RRceZrF4GMkYHyXy9pD7wqvSLYxXbHxfNRPoQ8M1HuLsgRytg3GvimtfzdniU";
     token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tq__");
-    expect(token.nid).toEqual("inodBCzMsgCFoE629MAQih53ZP");
-    expect(token.qid).toEqual("iq__XkHB7orSPYxxZYH8YQwA6F");
-    expect(token.tokId).toEqual("0x66d17d8bd7e23869");
+    expect(token.tokenType).toEqual("tq__");
+    expect(token.nodeId).toEqual("inodBCzMsgCFoE629MAQih53ZP");
+    expect(token.objectId).toEqual("iq__XkHB7orSPYxxZYH8YQwA6F");
+    expect(token.tokenId).toEqual("0x66d17d8bd7e23869");
 
     // token with (very) large qid.
     // Note that in practice the fabric refuses to decode IDs larger than 50 bytes
     writeToken = "tq__2BjnUpjP1jUSA13ksbYDCrQQLKSbPLxPPh2Z4D8MGmLiE739t1ZZv4MrjVUdmdph841XPGSDG142VJEv1uqQ64LCR3nHay76qPZbFoX6iWGNEMKmvk2AMTCYtpk7e2etNyfgnjSZAeRqJLwHuarVQ3MuugTNmFD9EkqDPnysGm85on3jKaBnG1WbASDLgFxnWkTawmHixMhRB4tAdHvZF9tt96kXHomLhnYsi7fvgQqrVKAXM3DBRb3ZT4iqvk7uuZPA94FQ39zvFMo5TebVcz8SZs6xUsobR13wXS9bKx9w6nsRLjuQP6mhCeU";
     token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tq__");
-    expect(token.nid).toEqual("inodGqK7hQHZq8sZxSMVyBMkhj");
-    expect(token.qid).toEqual("iq__2Q9JkLJ7gdj2VxYQk2mC4nwx79Fpi6B9v7fNwZoPFZ3Fbg1aw8fBtbDjMq81uDdyZZxjnhQ5MsYfvBS24pWzgBVb3415zC61PjQs44EsBYkjfLriGPsW1giUFp6Yib5KfKntVo81JxMqr2YS9ytfivXi6fpodwBXi3TPAdpzE3YeFFxcerzsFZx7XDQp5WBm8yy6BuB96JPwF4Uf388igR3RwNMAjMTjQCUQHiGG3jjui38Qd5PzUX89N8c5gNy6D4BoaAqp85p9Jf33L9");
-    expect(token.tokId).toEqual("0xf26e79e93e403929");
+    expect(token.tokenType).toEqual("tq__");
+    expect(token.nodeId).toEqual("inodGqK7hQHZq8sZxSMVyBMkhj");
+    expect(token.objectId).toEqual("iq__2Q9JkLJ7gdj2VxYQk2mC4nwx79Fpi6B9v7fNwZoPFZ3Fbg1aw8fBtbDjMq81uDdyZZxjnhQ5MsYfvBS24pWzgBVb3415zC61PjQs44EsBYkjfLriGPsW1giUFp6Yib5KfKntVo81JxMqr2YS9ytfivXi6fpodwBXi3TPAdpzE3YeFFxcerzsFZx7XDQp5WBm8yy6BuB96JPwF4Uf388igR3RwNMAjMTjQCUQHiGG3jjui38Qd5PzUX89N8c5gNy6D4BoaAqp85p9Jf33L9");
+    expect(token.tokenId).toEqual("0xf26e79e93e403929");
 
   });
 
@@ -163,36 +163,36 @@ describe("Test Utils", () => {
     // content
     let writeToken = "tqw_VCaS4Fu2YTMQqye1YKZq2Z";
     let token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tqw_");
-    expect(token.nid).toBeUndefined();
-    expect(token.qid).toBeUndefined();
-    expect(token.tokId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
+    expect(token.tokenType).toEqual("tqw_");
+    expect(token.nodeId).toBeUndefined();
+    expect(token.objectId).toBeUndefined();
+    expect(token.tokenId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
 
     // part
     writeToken = "tqpwVCaS4Fu2YTMQqye1YKZq2Z";
     token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tqpw");
-    expect(token.nid).toBeUndefined();
-    expect(token.qid).toBeUndefined();
-    expect(token.tokId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
+    expect(token.tokenType).toEqual("tqpw");
+    expect(token.nodeId).toBeUndefined();
+    expect(token.objectId).toBeUndefined();
+    expect(token.tokenId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
   });
 
   test("Decode LRO Write Token", () => {
     let writeToken = "tlro1Ejg3egYpJjnaq25zLSMu36Wwy9x5xRo8VGYoEtRrmgFF5zGjR3ejK";
     let token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tlro");
-    expect(token.nid).toEqual("inod2vU5Lc28S9pcx96m2gbP4YMYeGRs");
-    expect(token.qid).toEqual("");
-    expect(token.tokId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
+    expect(token.tokenType).toEqual("tlro");
+    expect(token.nodeId).toEqual("inod2vU5Lc28S9pcx96m2gbP4YMYeGRs");
+    expect(token.objectId).toEqual("");
+    expect(token.tokenId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
   });
 
   test("Decode Content Part Write Token", () => {
     let writeToken = "tqp_NHGRyE3AwejspuyQzBctV3btM";
     let token = Utils.DecodeWriteToken(writeToken);
-    expect(token.writeTokenType).toEqual("tqp_");
-    expect(token.nid).toBeUndefined();
-    expect(token.qid).toBeUndefined();
-    expect(token.tokId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
+    expect(token.tokenType).toEqual("tqp_");
+    expect(token.nodeId).toBeUndefined();
+    expect(token.objectId).toBeUndefined();
+    expect(token.tokenId).toEqual("0xe45daaca900e5987d9de4ad769713e1a");
     expect(token.scheme).toEqual(2);
     expect(token.flags).toEqual(1);
   });
