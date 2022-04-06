@@ -907,7 +907,8 @@ function () {
      * Note: This method is not accessible to applications. Eluvio core will drop the request.
      *
      * @namedParams
-     * @param level
+     * @param {string} id - The tenant ID in hash format
+     * @param {string} address - The group address to use in the hash if id is not provided
      */
 
   }, {
@@ -920,7 +921,7 @@ function () {
             case 0:
               id = _ref15.id, address = _ref15.address;
 
-              if (!(id && !id.startsWith("iten"))) {
+              if (!(id && (!id.startsWith("iten") || !Utils.ValidHash(id)))) {
                 _context13.next = 3;
                 break;
               }
@@ -928,51 +929,63 @@ function () {
               throw Error("Invalid tenant ID: ".concat(id));
 
             case 3:
-              if (address) {
-                id = "iten".concat(Utils.AddressToHash(address));
+              if (!address) {
+                _context13.next = 7;
+                break;
               }
 
-              _context13.prev = 4;
-              _context13.next = 7;
+              if (Utils.ValidAddress(address)) {
+                _context13.next = 6;
+                break;
+              }
+
+              throw Error("Invalid address: ".concat(address));
+
+            case 6:
+              id = "iten".concat(Utils.AddressToHash(address));
+
+            case 7:
+              _context13.prev = 7;
+              _context13.next = 10;
               return _regeneratorRuntime.awrap(this.client.AccessType({
                 id: id
               }));
 
-            case 7:
+            case 10:
               version = _context13.sent;
 
               if (!(version !== this.client.authClient.ACCESS_TYPES.GROUP)) {
-                _context13.next = 10;
+                _context13.next = 13;
                 break;
               }
 
               throw Error("Invalid tenant ID: " + id);
 
-            case 10:
-              _context13.next = 15;
+            case 13:
+              _context13.next = 18;
               break;
 
-            case 12:
-              _context13.prev = 12;
-              _context13.t0 = _context13["catch"](4);
+            case 15:
+              _context13.prev = 15;
+              _context13.t0 = _context13["catch"](7);
               throw Error("Invalid tenant ID: " + id);
 
-            case 15:
-              _context13.next = 17;
+            case 18:
+              _context13.next = 20;
               return _regeneratorRuntime.awrap(this.ReplaceUserMetadata({
                 metadataSubtree: "tenantId",
                 metadata: id
               }));
 
-            case 17:
+            case 20:
               this.tenantId = id;
 
-            case 18:
+            case 21:
             case "end":
               return _context13.stop();
           }
         }
-      }, null, this, [[4, 12]]);
+      }, null, this, [[7, 15]]);
     }
     /**
      * Get the URL of the current user's profile image
