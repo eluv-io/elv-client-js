@@ -147,6 +147,16 @@ describe("Test Utils", () => {
     expect(token.nid).toEqual("inodBCzMsgCFoE629MAQih53ZP");
     expect(token.qid).toEqual("iq__XkHB7orSPYxxZYH8YQwA6F");
     expect(token.tokId).toEqual("0x66d17d8bd7e23869");
+
+    // token with (very) large qid.
+    // Note that in practice the fabric refuses to decode IDs larger than 50 bytes
+    writeToken = "tq__2BjnUpjP1jUSA13ksbYDCrQQLKSbPLxPPh2Z4D8MGmLiE739t1ZZv4MrjVUdmdph841XPGSDG142VJEv1uqQ64LCR3nHay76qPZbFoX6iWGNEMKmvk2AMTCYtpk7e2etNyfgnjSZAeRqJLwHuarVQ3MuugTNmFD9EkqDPnysGm85on3jKaBnG1WbASDLgFxnWkTawmHixMhRB4tAdHvZF9tt96kXHomLhnYsi7fvgQqrVKAXM3DBRb3ZT4iqvk7uuZPA94FQ39zvFMo5TebVcz8SZs6xUsobR13wXS9bKx9w6nsRLjuQP6mhCeU";
+    token = Utils.DecodeWriteToken(writeToken);
+    expect(token.writeTokenType).toEqual("tq__");
+    expect(token.nid).toEqual("inodGqK7hQHZq8sZxSMVyBMkhj");
+    expect(token.qid).toEqual("iq__2Q9JkLJ7gdj2VxYQk2mC4nwx79Fpi6B9v7fNwZoPFZ3Fbg1aw8fBtbDjMq81uDdyZZxjnhQ5MsYfvBS24pWzgBVb3415zC61PjQs44EsBYkjfLriGPsW1giUFp6Yib5KfKntVo81JxMqr2YS9ytfivXi6fpodwBXi3TPAdpzE3YeFFxcerzsFZx7XDQp5WBm8yy6BuB96JPwF4Uf388igR3RwNMAjMTjQCUQHiGG3jjui38Qd5PzUX89N8c5gNy6D4BoaAqp85p9Jf33L9");
+    expect(token.tokId).toEqual("0xf26e79e93e403929");
+
   });
 
   test("Decode Write Token V1", () => {

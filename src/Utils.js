@@ -205,23 +205,23 @@ const Utils = {
     let bytes = Utils.FromB58(writeToken);
 
     function decodeBytes(isID, prefix) {
-      let bsize = VarInt.decode(bytes,0);
-      let offset = VarInt.decode.bytes;
+      let bsize = VarInt.decode(bytes,0); // decode: count of bytes to read
+      let offset = VarInt.decode.bytes;   // offset in buffer to start read after decode
       let theBytes;
       let ret;
 
       if(isID) {
-        theBytes = bytes.slice(offset+1, bsize+1); // skip 1st byte (code id)
+        theBytes = bytes.slice(offset+1, bsize+offset); // skip 1st byte (code id) at offset 0
         if(theBytes.length===0){
           ret = "";
         } else {
           ret = prefix + Utils.B58(theBytes);
         }
       } else {
-        theBytes = bytes.slice(offset, bsize+1);
+        theBytes = bytes.slice(offset, bsize+offset);
         ret = "0x" + theBytes.toString("hex");
       }
-      bytes = bytes.slice(bsize+1);
+      bytes = bytes.slice(bsize+offset);
       return ret;
     }
 
