@@ -144,7 +144,7 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
-      if(this.client.signer && this.client.signer.remoteSigner) {
+      if(channelAuth && this.client.signer && this.client.signer.remoteSigner) {
         // Channel auth not supported for remote signer, use a self-signed no-auth token instead
         noAuth = true;
         channelAuth = false;
@@ -160,7 +160,7 @@ class AuthorizationClient {
           oauthToken
         });
       } else {
-        if(noAuth) {
+        if(noAuth && this.client.signer && this.client.signer.remoteSigner && this.client.signer.unsignedPublicAuth) {
           return this.CreateStaticToken({libraryId});
         }
 
@@ -204,7 +204,7 @@ class AuthorizationClient {
       addr: Utils.FormatAddress(((this.client.signer && this.client.signer.address) || ""))
     };
 
-    if(!(this.noAuth || noAuth)) {
+    if(!(this.noAuth || noAuth) && !this.client.signer.remoteSigner) {
       const { transactionHash } =  await this.MakeAccessRequest({
         libraryId,
         objectId,
