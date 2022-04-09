@@ -18,77 +18,35 @@ const {
  * @methodGroup Minting
  * @namedParams
  * @param {string} tenantId - The ID of the tenant
- * @param {string=} email - The email of the NFT recipient
  * @param {string=} address - The address of the NFT recipient
- * @param {string} collectionId - The ID of the NFT collection containing the NFT
- * @param {Array<Object>} items - List of items
- * @param {string} items.sku - SKU of the NFT
- * @param {number=} items.quantity=1 - Number to mint
- * @param {(string | Array<string>)=} items.tokenId - Custom token IDs for these items (must be unique).
- * @param {Object=} items.extraData={} - Additional data to put in the transaction
- * @param {Object=} extraData={} - Additional data to put in the transaction
+ * @param {string} marketplaceId - The ID of the marketplace containing the NFT
+ * @param {string} sku - SKU of the NFT in the marketplace
+ * @param {number=} quantity=1 - Number to mint
  *
  * @return Promise<Object> - An object containing the address for whom the NFT was minted and the transactionId of the minting request.
  */
-exports.MintNFT = async function({tenantId, email, address, collectionId, items, extraData={}}) {
+exports.MintNFT = async function({tenantId, address, marketplaceId, sku, quantity}) {
   ValidatePresence("tenantId", tenantId);
-  ValidatePresence("email or address", email || address);
-  ValidatePresence("collectionId", collectionId);
-  ValidatePresence("items", items);
+  ValidatePresence("address", address);
+  ValidatePresence("marketplaceId", marketplaceId);
 
-  ValidateObject(collectionId);
-
-  // If address not specified, make call to initialize address for email
-  let accountInitializationBody = { ts: Date.now() };
-  if(email) {
-    accountInitializationBody.email = email;
-  } else {
-    accountInitializationBody.addr = address;
-  }
-
-  const accountInitializationSignature = await this.Sign(
-    JSON.stringify(accountInitializationBody)
-  );
-
-  const {addr} = await this.utils.ResponseToJson(
-    await this.authClient.MakeAuthServiceRequest({
-      method: "POST",
-      path: `/as/tnt/prov/eth/${tenantId}`,
-      body: accountInitializationBody,
-      headers: {
-        "Authorization": `Bearer ${accountInitializationSignature}`
-      }
-    })
-  );
-
-  address = this.utils.FormatAddress(addr);
-
-  let requestBody = {
-    "tickets": null,
-    "products": items.map(item => ({
-      sku: item.sku,
-      quant: item.quantity || 1,
-      extra: item.tokenId ?
-        { ...(item.extraData || {}), token_id: item.tokenId } :
-        { ...(item.extraData || {}) }
-    })),
-    "ident": email || address,
-    "cust_name": email || address,
-    "extra": {
-      ...extraData
-    }
-  };
-
-
+  ValidateObject(marketplaceId);
   ValidateAddress(address);
 
-  if(email) {
-    requestBody.email = email;
-  } else {
-    requestBody.addr = address;
-  }
-
-  requestBody.extra.elv_addr = address;
+  let requestBody = {
+    tickets: null,
+    products: [
+      {
+        sku: sku,
+        quant: quantity || 1
+      }
+    ],
+    ident: address,
+    cust_name: address,
+    extra: {
+      elv_addr: address
+    }
+  };
 
   const transactionId = this.utils.B58(UUID.parse(UUID.v4()));
   requestBody.ts = Date.now();
@@ -100,7 +58,7 @@ exports.MintNFT = async function({tenantId, email, address, collectionId, items,
 
   await this.authClient.MakeAuthServiceRequest({
     method: "POST",
-    path: `/as/otp/webhook/base/${tenantId}/${collectionId}`,
+    path: UrlJoin("/as/tnt/trans/base", tenantId, marketplaceId),
     body: requestBody,
     headers: {
       "Authorization": `Bearer ${mintSignature}`
