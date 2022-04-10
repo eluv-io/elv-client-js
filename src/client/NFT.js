@@ -29,7 +29,7 @@ const {
  *
  * @return Promise<Object> - An object containing the address for whom the NFT was minted and the transactionId of the minting request.
  */
-exports.MintNFT = async function({tenantId, address, marketplaceId, items, extraData}) {
+exports.MintNFT = async function({tenantId, address, marketplaceId, items, extraData={}}) {
   ValidatePresence("tenantId", tenantId);
   ValidatePresence("address", address);
   ValidatePresence("marketplaceId", marketplaceId);
