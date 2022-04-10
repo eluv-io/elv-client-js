@@ -20,12 +20,16 @@ const {
  * @param {string} tenantId - The ID of the tenant
  * @param {string=} address - The address of the NFT recipient
  * @param {string} marketplaceId - The ID of the marketplace containing the NFT
- * @param {string} sku - SKU of the NFT in the marketplace
- * @param {number=} quantity=1 - Number to mint
+ * @param {Array<Object>} items - List of items
+ * @param {string} items.sku - SKU of the NFT
+ * @param {number=} items.quantity=1 - Number to mint
+ * @param {(string | Array<string>)=} items.tokenId - Custom token IDs for these items (must be unique).
+ * @param {Object=} items.extraData={} - Additional data to put in the transaction
+ * @param {Object=} extraData={} - Additional data to put in the transaction
  *
  * @return Promise<Object> - An object containing the address for whom the NFT was minted and the transactionId of the minting request.
  */
-exports.MintNFT = async function({tenantId, address, marketplaceId, sku, quantity}) {
+exports.MintNFT = async function({tenantId, address, marketplaceId, items, extraData}) {
   ValidatePresence("tenantId", tenantId);
   ValidatePresence("address", address);
   ValidatePresence("marketplaceId", marketplaceId);
@@ -35,15 +39,17 @@ exports.MintNFT = async function({tenantId, address, marketplaceId, sku, quantit
 
   let requestBody = {
     tickets: null,
-    products: [
-      {
-        sku: sku,
-        quant: quantity || 1
-      }
-    ],
+    products: items.map(item => ({
+      sku: item.sku,
+      quant: item.quantity || 1,
+      extra: item.tokenId ?
+        { ...(item.extraData || {}), token_id: item.tokenId } :
+        { ...(item.extraData || {}) }
+    })),
     ident: address,
     cust_name: address,
     extra: {
+      ...extraData,
       elv_addr: address
     }
   };
