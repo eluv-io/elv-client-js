@@ -33,6 +33,7 @@ exports.MintNFT = async function({tenantId, address, marketplaceId, items, extra
   ValidatePresence("tenantId", tenantId);
   ValidatePresence("address", address);
   ValidatePresence("marketplaceId", marketplaceId);
+  ValidatePresence("items", items);
 
   ValidateObject(marketplaceId);
   ValidateAddress(address);
