@@ -3,7 +3,7 @@ const imageTypes = ["gif", "jpg", "jpeg", "png", "svg", "webp"];
 const eventTenantSpec = {
   "profile": {
     name: "Eluvio LIVE Tenant",
-    version: "0.1",
+    version: "0.3",
   },
   "hide_image_tab": true,
   manageApp: "default",

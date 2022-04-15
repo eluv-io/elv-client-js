@@ -84,6 +84,16 @@ class AuthorizationClient {
     this.providers = {};
   }
 
+  CreateStaticToken({libraryId}) {
+    let token = { qspace_id: this.client.contentSpaceId };
+
+    if(libraryId) {
+      token.qlib_id = libraryId;
+    }
+
+    return Utils.B64(JSON.stringify(token));
+  }
+
   // Return authorization token in appropriate headers
   async AuthorizationHeader(params) {
     const authorizationToken = await this.AuthorizationToken(params);
@@ -134,7 +144,7 @@ class AuthorizationClient {
         this.noCache = true;
       }
 
-      if(this.client.signer && this.client.signer.remoteSigner) {
+      if(channelAuth && this.client.signer && this.client.signer.remoteSigner) {
         // Channel auth not supported for remote signer, use a self-signed no-auth token instead
         noAuth = true;
         channelAuth = false;
@@ -150,6 +160,10 @@ class AuthorizationClient {
           oauthToken
         });
       } else {
+        if(noAuth && this.client.signer && this.client.signer.remoteSigner && this.client.signer.unsignedPublicAuth) {
+          return this.CreateStaticToken({libraryId});
+        }
+
         authorizationToken = await this.GenerateAuthorizationToken({
           libraryId,
           objectId,
@@ -176,7 +190,10 @@ class AuthorizationClient {
     let publicKey;
     if(encryption && encryption !== "none" && objectId && await this.AccessType(objectId) === ACCESS_TYPES.OBJECT) {
       const owner = await this.Owner({id: objectId});
-      if(!Utils.EqualAddress(owner, this.client.signer.address)) {
+      const ownerCapKey = `eluv.caps.iusr${Utils.AddressToHash(this.client.signer.address)}`;
+      const ownerCap = await this.client.ContentObjectMetadata({libraryId, objectId, metadataSubtree: ownerCapKey});
+
+      if(!Utils.EqualAddress(owner, this.client.signer.address) && !ownerCap) {
         const cap = await this.ReEncryptionConk({libraryId, objectId});
         publicKey = cap.public_key;
       }
@@ -187,7 +204,7 @@ class AuthorizationClient {
       addr: Utils.FormatAddress(((this.client.signer && this.client.signer.address) || ""))
     };
 
-    if(!(this.noAuth || noAuth)) {
+    if(!(this.noAuth || noAuth) && !this.client.signer.remoteSigner) {
       const { transactionHash } =  await this.MakeAccessRequest({
         libraryId,
         objectId,
@@ -610,6 +627,10 @@ class AuthorizationClient {
   }
 
   async IsV3({id}) {
+    if(this.client.assumeV3) {
+      return true;
+    }
+
     const contractName = await this.client.ethClient.ContractName(Utils.HashToAddress(id), true);
 
     if(!this.accessVersions[contractName]) {

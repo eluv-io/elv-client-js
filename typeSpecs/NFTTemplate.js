@@ -3,7 +3,7 @@ const imageTypes = ["gif", "jpg", "jpeg", "png", "svg", "webp"];
 const NFTTemplateSpec = {
   "profile": {
     "name": "NFT Template",
-    "version": "0.1",
+    "version": "0.3",
   },
   "playable": true,
   "display_app": "default",
@@ -94,6 +94,20 @@ const NFTTemplateSpec = {
           "type": "rich_text"
         },
         {
+          "name": "media_type",
+          "type": "select",
+          "options": [
+            "Video",
+            "Image",
+            "Ebook"
+          ]
+        },
+        {
+          "name": "media",
+          "type": "file",
+          "hint": "Additional media for this NFT, for example the Ebook file."
+        },
+        {
           "name": "address",
           "label": "NFT Contract Address",
           "type": "text"
@@ -130,6 +144,11 @@ const NFTTemplateSpec = {
           "default_value": true
         },
         {
+          "name": "has_audio",
+          "type": "checkbox",
+          "default_value": false
+        },
+        {
           "name": "token_uri",
           "label": "Token URI",
           "type": "self_metadata_url",
@@ -145,7 +164,8 @@ const NFTTemplateSpec = {
           "loop": true,
           "hide_controls": true,
           "muted": true,
-          "autoplay": true
+          "autoplay": true,
+          "check_has_audio_flag": true
         },
         {
           "name": "external_url",
@@ -157,7 +177,8 @@ const NFTTemplateSpec = {
           "loop": true,
           "hide_controls": true,
           "muted": true,
-          "autoplay": true
+          "autoplay": true,
+          "check_has_audio_flag": true
         },
         {
           "name": "background_color",
@@ -185,7 +206,8 @@ const NFTTemplateSpec = {
                   "loop": true,
                   "hide_controls": true,
                   "muted": true,
-                  "autoplay": true
+                  "autoplay": true,
+                  "check_has_audio_flag": true
                 }
               ]
             },

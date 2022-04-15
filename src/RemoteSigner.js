@@ -8,25 +8,26 @@ class RemoteSigner extends Ethers.Signer {
     rpcUris,
     idToken,
     authToken,
-    address,
     tenantId,
     provider,
-    extraData={}
+    extraData={},
+    unsignedPublicAuth=false
   }) {
     super();
 
     this.remoteSigner = true;
+    this.unsignedPublicAuth = unsignedPublicAuth;
 
     this.HttpClient = new HttpClient({uris: rpcUris});
     this.idToken = idToken;
     this.tenantId = tenantId;
 
     this.authToken = authToken;
-    this.address = address ? Utils.FormatAddress(address) : undefined;
-    this.id = this.address ? `ikms${Utils.AddressToHash(this.address)}` : undefined;
     this.extraLoginData = extraData || {};
 
     this.provider = provider;
+
+    this.signatureCache = {};
   }
 
   async Initialize() {
@@ -47,6 +48,27 @@ class RemoteSigner extends Ethers.Signer {
       this.id = eth;
     }
 
+    if(!this.address) {
+      const keys = await Utils.ResponseToJson(
+        this.HttpClient.Request({
+          method: "GET",
+          path: UrlJoin("as", "wlt", "keys"),
+          headers: {
+            Authorization: `Bearer ${this.authToken}`
+          }
+        })
+      );
+
+      const address = keys.eth[0];
+
+      if(address && address.startsWith("0x")) {
+        this.address = address;
+      } else {
+        this.address = Utils.HashToAddress(keys.eth[0]);
+      }
+    }
+
+    this.id = this.address ? `ikms${Utils.AddressToHash(this.address)}` : undefined;
     this.signer = this.provider.getSigner(this.address);
   }
 
@@ -62,23 +84,29 @@ class RemoteSigner extends Ethers.Signer {
    * @returns - the signed message as a hex string
    */
   async signDigest(digest) {
-    let signature = await Utils.ResponseToJson(
-      this.HttpClient.Request({
-        method: "POST",
-        path: UrlJoin("as", "wlt", "sign", "eth", this.id),
-        headers: {
-          Authorization: `Bearer ${this.authToken}`
-        },
-        body: {
-          hash: digest
-        }
-      })
-    );
+    if(!this.signatureCache[digest]) {
+      this.signatureCache[digest] = new Promise(async resolve => {
+        let signature = await Utils.ResponseToJson(
+          this.HttpClient.Request({
+            method: "POST",
+            path: UrlJoin("as", "wlt", "sign", "eth", this.id),
+            headers: {
+              Authorization: `Bearer ${this.authToken}`
+            },
+            body: {
+              hash: digest
+            }
+          })
+        );
 
-    signature.v = parseInt(signature.v, 16);
-    signature.recoveryParam = signature.v - 27;
+        signature.v = parseInt(signature.v, 16);
+        signature.recoveryParam = signature.v - 27;
 
-    return signature;
+        resolve(signature);
+      });
+    }
+
+    return await this.signatureCache[digest];
   }
 
   async signMessage(message) {

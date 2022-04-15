@@ -148,7 +148,8 @@ class ElvClient {
     trustAuthorityId,
     staticToken,
     noCache=false,
-    noAuth=false
+    noAuth=false,
+    assumeV3=false
   }) {
     this.utils = Utils;
 
@@ -171,6 +172,7 @@ class ElvClient {
 
     this.noCache = noCache;
     this.noAuth = noAuth;
+    this.assumeV3 = assumeV3;
 
     this.debug = false;
 
@@ -270,7 +272,8 @@ class ElvClient {
     staticToken,
     ethereumContractTimeout=10,
     noCache=false,
-    noAuth=false
+    noAuth=false,
+    assumeV3
   }) {
     const configUrl = networks[networkName];
 
@@ -283,7 +286,8 @@ class ElvClient {
       staticToken,
       ethereumContractTimeout,
       noCache,
-      noAuth
+      noAuth,
+      assumeV3
     });
   }
 
@@ -309,7 +313,8 @@ class ElvClient {
     staticToken,
     ethereumContractTimeout=10,
     noCache=false,
-    noAuth=false
+    noAuth=false,
+    assumeV3=false
   }) {
     const {
       contentSpaceId,
@@ -336,7 +341,8 @@ class ElvClient {
       trustAuthorityId,
       staticToken,
       noCache,
-      noAuth
+      noAuth,
+      assumeV3
     });
 
     client.configUrl = configUrl;
@@ -592,16 +598,17 @@ class ElvClient {
    * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
    * @param {string=} tenantId - If specified, user will be associated with the tenant
    * @param {Object=} extraData - Additional data to pass to the login API
+   * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
    */
-  async SetRemoteSigner({idToken, authToken, tenantId, address, extraData}) {
+  async SetRemoteSigner({idToken, authToken, tenantId, extraData, unsignedPublicAuth}) {
     const signer = new RemoteSigner({
       rpcUris: this.authServiceURIs,
       idToken,
       authToken,
       tenantId,
-      address,
       provider: this.ethClient.provider,
-      extraData
+      extraData,
+      unsignedPublicAuth
     });
 
     await signer.Initialize();

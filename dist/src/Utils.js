@@ -6,6 +6,8 @@ var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
 var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 
+var _this = this;
+
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
@@ -21,6 +23,10 @@ var BigNumber = require("bignumber.js")["default"];
 var VarInt = require("varint");
 
 var URI = require("urijs");
+
+var _require$utils = require("ethers").utils,
+    keccak256 = _require$utils.keccak256,
+    getAddress = _require$utils.getAddress;
 /**
  * @namespace
  * @description This is a utility namespace mostly containing functions for managing
@@ -160,14 +166,153 @@ var Utils = {
   },
 
   /**
+   * Decode the specified write token into its component parts
+   * Format:
+   * - content write token, LRO:
+   *   - prefix: "tq__", "tqw__", "tlro"
+   *   - format:
+   *     prefix + base58(uvarint(len(QID) | QID |
+   *                     uvarint(len(NID) | NID |
+   *                     uvarint(len(RAND_BYTES) | RAND_BYTES)
+   * - content part write token:
+   *   - prefix: "tqp_"
+   *   - format:
+   *     prefix + base58(scheme | flags | uvarint(len(RAND_BYTES) | RAND_BYTES)
+   * - content write token v1, content part write token v1:
+   *   - prefix: "tqw_", "tqpw"
+   *   - format:
+   *     prefix + base58(RAND_BYTES)
+   *
+   * @param writeToken
+   *
+   * @returns {Object} - Components of the write token.
+   */
+  DecodeWriteToken: function DecodeWriteToken(writeToken) {
+    if (writeToken.length < 4) {
+      throw new Error("Invalid write token: [\"".concat(writeToken, "\"] (unknown prefix)"));
+    }
+
+    var tokenType;
+
+    if (writeToken.startsWith("tqw__")) {
+      tokenType = "tq__";
+      writeToken = writeToken.slice(5);
+    } else {
+      tokenType = writeToken.slice(0, 4);
+      writeToken = writeToken.slice(4);
+    }
+
+    if (writeToken.length === 0) {
+      throw new Error("Invalid write token: [\"".concat(writeToken, "\"] (too short)"));
+    }
+
+    switch (tokenType) {
+      case "tqw_":
+      case "tq__":
+      case "tqpw":
+      case "tqp_":
+      case "tlro":
+        break;
+
+      default:
+        throw new Error("Invalid write token: [\"".concat(writeToken, "\"] (unknown prefix)"));
+    } // decode base58 payload
+
+
+    var bytes = Utils.FromB58(writeToken);
+
+    function decodeBytes(isID, prefix) {
+      var bsize = VarInt.decode(bytes, 0); // decode: count of bytes to read
+
+      var offset = VarInt.decode.bytes; // offset in buffer to start read after decode
+
+      var theBytes;
+      var ret;
+
+      if (isID) {
+        theBytes = bytes.slice(offset + 1, bsize + offset); // skip 1st byte (code id) at offset 0
+
+        if (theBytes.length === 0) {
+          ret = "";
+        } else {
+          ret = prefix + Utils.B58(theBytes);
+        }
+      } else {
+        theBytes = bytes.slice(offset, bsize + offset);
+        ret = "0x" + theBytes.toString("hex");
+      }
+
+      bytes = bytes.slice(bsize + offset);
+      return ret;
+    }
+
+    var tokenId;
+    var qid;
+    var nid;
+    var scheme;
+    var flags;
+
+    switch (tokenType) {
+      case "tqw_": // content write token v1
+
+      case "tqpw":
+        // content part write token v1
+        tokenId = "0x" + bytes.toString("hex");
+        break;
+
+      case "tlro": // LRO,
+
+      case "tq__":
+        // content write token
+        qid = decodeBytes(true, "iq__");
+        nid = decodeBytes(true, "inod");
+        tokenId = decodeBytes(false, "");
+        break;
+
+      case "tqp_":
+        // content part write token
+        if (bytes.length < 3) {
+          throw new Error("Invalid write token: [\"".concat(writeToken, "\"] (token truncated)"));
+        }
+
+        scheme = bytes[0];
+        flags = bytes[1];
+        bytes = bytes.slice(2);
+        tokenId = decodeBytes(false, "");
+        break;
+
+      default:
+        // already raised
+        throw new Error("Invalid write token: [\"".concat(writeToken, "\"] (unknown prefix)"));
+    }
+
+    return {
+      tokenType: tokenType,
+      // type of token
+      tokenId: tokenId,
+      // random bytes generated by the fabric node
+      objectId: qid,
+      // content id for content write token (tq__) or LRO (tlro)
+      nodeId: nid,
+      // node id where the content write token is valid (tq__)
+      scheme: scheme,
+      // encryption scheme for part write token - (tqp_)
+      flags: flags // flags for part write token (tqp_)
+
+    };
+  },
+
+  /**
    * Convert contract address to multiformat hash
    *
    * @param {string} address - Address of contract
+   * @param {boolean} key - Whether or not the first param is a public key. Defaults to address type
    *
    * @returns {string} - Hash of contract address
    */
   AddressToHash: function AddressToHash(address) {
-    address = address.replace("0x", "");
+    var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    address = address.replace(key ? "0x04" : "0x", "");
     return bs58.encode(Buffer.from(address, "hex"));
   },
 
@@ -208,12 +353,14 @@ var Utils = {
    * Convert any content fabric ID to the corresponding contract address
    *
    * @param {string} hash - Hash to convert to address
+   * @param {boolean} key - Whether or not the first param is a key. Defaults to address type
    *
    * @returns {string} - Contract address of item
    */
   HashToAddress: function HashToAddress(hash) {
-    hash = hash.substr(4);
-    return Utils.FormatAddress("0x" + bs58.decode(hash).toString("hex"));
+    var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    hash = key ? hash : hash.substr(4);
+    return Utils.FormatAddress((key ? "0x04" : "0x") + bs58.decode(hash).toString("hex"));
   },
 
   /**
@@ -251,6 +398,35 @@ var Utils = {
     }
 
     return Utils.HashToAddress(firstHash) === Utils.HashToAddress(secondHash);
+  },
+
+  /**
+   * Determine whether the address is valid
+   *
+   * @param {string} address - Address to validate
+   *
+   * @returns {boolean} - Whether or not the address is valid
+   */
+  ValidAddress: function ValidAddress(address) {
+    try {
+      getAddress(address);
+      return true;
+    } catch (error) {
+      _this.Log(error);
+
+      return false;
+    }
+  },
+
+  /**
+   * Determine whether the hash is valid
+   *
+   * @param {string} hash - Hash to validate
+   *
+   * @returns {boolean} - Whether or not the hash is valid
+   */
+  ValidHash: function ValidHash(hash) {
+    return Utils.ValidAddress(Utils.HashToAddress(hash));
   },
 
   /**
@@ -666,6 +842,20 @@ var Utils = {
       default:
         return JSON.parse(JSON.stringify(value));
     }
+  },
+
+  /**
+   * Converts the given string to a public address
+   *
+   * @param key - Public key to convert to a public address
+   *
+   * @returns {string} - the public address
+   */
+  PublicKeyToAddress: function PublicKeyToAddress(key) {
+    var keyData = new Uint8Array(Buffer.from(key.replace("0x04", ""), "hex"));
+    var keccakHash = keccak256(keyData);
+    var address = "0x" + keccakHash.slice(26);
+    return Utils.FormatAddress(address);
   },
   PLATFORM_NODE: "node",
   PLATFORM_WEB: "web",

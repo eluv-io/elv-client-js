@@ -1,10 +1,12 @@
 const imageTypes = ["gif", "jpg", "jpeg", "png", "svg", "webp"];
 const languageOptions = require("./LanguageCodes");
+const countryOptions = Object.values(require("country-codes-list").customList("countryNameEn", "{countryCode}: {countryNameEn}")).sort();
+const currencyOptions = [...new Set(Object.values(require("country-codes-list").customList("countryNameEn", "{currencyCode}")))].filter(c => c).sort();
 
 const eventSiteSpec = {
   "profile": {
-    name: "Eluvio LIVE Drop Event Site",
-    version: "0.1",
+    name: "Eluvio LIVE Event Site",
+    version: "0.3",
   },
   manageApp: "default",
   associate_permissions: true,
@@ -20,31 +22,52 @@ const eventSiteSpec = {
   localization: {
     localizations: Object.keys(languageOptions)
   },
-  associated_assets: [],
+  associated_assets: [
+    {
+      name: "promos",
+      label: "Promos (Apple TV)",
+      indexed: true,
+      slugged: true,
+      defaultable: true,
+      orderable: true
+    },
+    {
+      name: "channels",
+      label: "Channels (Apple TV)",
+      indexed: true,
+      defaultable: true
+    },
+  ],
   info_fields: [
+    {
+      "label": "Basic Info",
+      "name": "header_basic_info",
+      "type": "header"
+    },
     {
       "name": "tenant_id",
       "label": "Tenant ID",
       "type": "Text"
     },
     {
-      "label": "Eluvio LIVE Tenant",
-      "name": "tenant",
-      "type": "fabric_link",
-      "hash_only": true,
-      "no_localize": true
+      "name": "tenant_slug",
+      "type": "text"
     },
     {
-      "name": "marketplace",
-      "type": "fabric_link",
-      "hash_only": true,
-      "no_localize": true
-    },
-    {
-      "name": "type",
-      "type": "text",
-      "default_value": "drop_event",
-      "readonly": true
+      "name": "marketplace_info",
+      "type": "subsection",
+      "fields": [
+        {
+          "name": "tenant_slug",
+          "type": "text",
+          "hint": "The slug of the tenant in which the marketplace is defined"
+        },
+        {
+          "name": "marketplace_slug",
+          "type": "text",
+          "hint": "The slug of the marketplace"
+        }
+      ]
     },
     {
       "name": "state",
@@ -59,7 +82,13 @@ const eventSiteSpec = {
       "hint": "Specify the current state of the event. Inaccessible and ended events will not be visible to users."
     },
     {
+      "label": "Accessible (Apple TV)",
+      "name": "accessible",
+      "type": "checkbox"
+    },
+    {
       "name": "theme",
+      "label": "Color Scheme",
       "type": "select",
       "options": [
         "light",
@@ -74,6 +103,15 @@ const eventSiteSpec = {
       "no_localize": true,
       "hint": "Additional languages to support",
       "options": Object.keys(languageOptions)
+    },
+
+
+
+
+    {
+      "label": "Event Info",
+      "name": "header_event_info",
+      "type": "header"
     },
     {
       "fields": [
@@ -96,6 +134,7 @@ const eventSiteSpec = {
         {
           "name": "feature_button",
           "type": "subsection",
+          "hint": "This section configures the button linking to this event when shown on the main site as a featured event.",
           "fields": [
             {
               "name": "text",
@@ -168,22 +207,26 @@ const eventSiteSpec = {
             {
               "name": "image",
               "type": "file",
-              "extensions": imageTypes
+              "extensions": imageTypes,
+              "depends_on": "./show"
             },
             {
               "name": "message",
-              "type": "rich_text"
+              "type": "rich_text",
+              "depends_on": "./show"
             },
             {
               "name": "button_text",
               "type": "text",
-              "hint": "Text for the button at the bottom of the modal. By default, it will be 'Create Wallet' if login is required for the next drop, otherwise it will be 'Join the Drop'"
+              "hint": "Text for the button at the bottom of the modal. By default, it will be 'Create Wallet' if login is required for the next drop, otherwise it will be 'Join the Drop'",
+              "depends_on": "./show"
             },
             {
               "name": "post_login",
               "label": "Post Login Modal",
               "type": "subsection",
               "hint": "If specified, modal will be shown after a user goes through the login process from the 'Get Started' modal",
+              "depends_on": "./show",
               "fields": [
                 {
                   "name": "show",
@@ -256,6 +299,12 @@ const eventSiteSpec = {
           "video_preview": true
         },
         {
+          "name": "hero_video_mobile",
+          "label": "Hero Video (Mobile)",
+          "type": "fabric_link",
+          "video_preview": true
+        },
+        {
           "extensions": imageTypes,
           "label": "Header Image (Dark)",
           "name": "header_dark",
@@ -278,10 +327,54 @@ const eventSiteSpec = {
           "name": "tv_main_logo",
           "type": "file",
           "label": "Main Logo (TV)"
-        }
+        },
       ],
       "name": "event_images",
       "type": "subsection"
+    },
+    {
+      "name": "main_page_banners",
+      "type": "list",
+      "fields": [
+        {
+          "extensions": imageTypes,
+          "name": "image",
+          "type": "file",
+        },
+        {
+          "extensions": imageTypes,
+          "name": "image_mobile",
+          "label": "Image (Mobile)",
+          "type": "file",
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "options": [
+            "drop",
+            "marketplace",
+            "link"
+          ],
+          "default_value": "marketplace",
+          "hint": "Specify what happens when clicking on the banner. The banner can link to a URL or a drop, or it can open the marketplace view.",
+        },
+        {
+          "name": "marketplace_filters",
+          "type": "list",
+          "hint": "If the banner links to the marketplace, you can specify filters to apply when the marketplace is opened via the banner.",
+        },
+        {
+          "name": "link",
+          "type": "text",
+          "hint": "If the banner is a link, specify the URL to link to.",
+        },
+        {
+          "label": "Drop UUID",
+          "name": "drop_uuid",
+          "type": "text",
+          "hint": "If the banner links to a drop, you can specify a specific drop to link to. If not specified, the banner will link to the next upcoming drop.",
+        }
+      ]
     },
     {
       "name": "promo_videos",
@@ -293,6 +386,25 @@ const eventSiteSpec = {
           "video_preview": true
         }
       ]
+    },
+    {
+      "fields": [
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "name": "location",
+          "type": "text"
+        }
+      ],
+      "label": "Calendar Event",
+      "name": "calendar",
+      "type": "subsection"
     },
     {
       "name": "sponsor_tagline",
@@ -325,6 +437,100 @@ const eventSiteSpec = {
       ],
       "name": "sponsors",
       "type": "list"
+    },
+    {
+      "name": "social_media_links",
+      "type": "subsection",
+      "fields": [
+        {
+          "name": "youtube",
+          "type": "text"
+        },
+        {
+          "name": "instagram",
+          "type": "text"
+        },
+        {
+          "name": "twitter",
+          "type": "text"
+        },
+        {
+          "name": "website",
+          "type": "text"
+        },
+        {
+          "name": "facebook",
+          "type": "text"
+        },
+        {
+          "name": "soundcloud",
+          "type": "text"
+        },
+        {
+          "name": "apple_music",
+          "type": "text"
+        },
+        {
+          "name": "spotify",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "event_info_modals",
+      "type": "list",
+      "fields": [
+        {
+          "name": "button_text",
+          "type": "text"
+        },
+        {
+          "name": "pages",
+          "type": "list",
+          "fields": [
+            {
+              "name": "page_title",
+              "type": "text"
+            },
+            {
+              "name": "image",
+              "extensions": imageTypes,
+              "type": "file",
+              "unless": "./video",
+              "hint": "Select an image for this page. Each page may only have one image or one video"
+            },
+            {
+              "name": "video",
+              "type": "fabric_link",
+              "video_preview": true,
+              "unless": "./image",
+              "hint": "Select a video for this page. Each page may only have one image or one video"
+            },
+            {
+              "name": "text",
+              "type": "rich_text"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000",
+                "label": "Black"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF",
+                "label": "White"
+              }
+            },
+          ]
+        }
+      ]
     },
     {
       "fields": [
@@ -368,6 +574,25 @@ const eventSiteSpec = {
       "type": "subsection"
     },
     {
+      "fields": [
+        {
+          "name": "subheader",
+          "type": "text"
+        },
+        {
+          "name": "header",
+          "type": "text"
+        },
+        {
+          "name": "stream",
+          "type": "fabric_link",
+          "video_preview": true
+        },
+      ],
+      "name": "stream_page",
+      "type": "subsection"
+    },
+    {
       "name": "footer_links",
       "type": "list",
       "hint": "Specify links to include in the footer of the event, such as privacy or terms policies. Each item can either be specified as a URL, rich text, or an HTML document. The two latter options will be shown in a modal when clicked.",
@@ -395,7 +620,543 @@ const eventSiteSpec = {
       ]
     },
     {
+      "name": "branding",
+      "label": "Custom Branding",
+      "type": "subsection",
+      "fields": [
+        {
+          "name": "get_started",
+          "label": "'Get Started' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Get Started"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        },
+        {
+          "name": "join_drop",
+          "label": "'Join the Drop' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Join the Drop"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        },
+        {
+          "name": "buy_tickets",
+          "label": "'Buy Tickets' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Buy Tickets"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            }
+          ]
+        },
+        {
+          "name": "watch_promo",
+          "label": "'Watch Promo' Button",
+          "type": "subsection",
+          "fields": [
+            {
+              "name": "text",
+              "type": "text",
+              "default_value": "Watch Promo"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#d7bb73"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "show_faq",
+      "label": "Show FAQ",
+      "type": "checkbox",
+      "default_value": true
+    },
+    {
+      "name": "faq",
+      "label": "FAQ",
+      "hint": "Specify a custom FAQ. If blank, the default FAQ will be displayed",
+      "type": "list",
+      "depends_on": "./show_faq",
+      "fields": [
+        {
+          "name": "question",
+          "type": "text"
+        },
+        {
+          "name": "answer",
+          "type": "textarea"
+        }
+      ]
+    },
+
+
+
+
+    {
+      "label": "Tickets, Products and Coupons",
+      "name": "header_tickets_products_coupons",
+      "type": "header"
+    },
+    {
+      "name": "shipping_countries",
+      "type": "multiselect",
+      "no_localize": true,
+      "hint": "Countries to which merchandise shipment is available",
+      "default_value": ["US: United States of America"],
+      "options": countryOptions
+    },
+    {
+      "name": "payment_currencies",
+      "type": "multiselect",
+      "no_localize": true,
+      "hint": "List of accepted currencies for tickets and merchandise",
+      "default_value": ["USD"],
+      "options": currencyOptions
+    },
+    {
+      "name": "free",
+      "type": "checkbox",
+      "no_localize": true,
+      "hint": "If specified, the event is free for all users and tickets will not be necessary."
+    },
+    {
+      "fields": [
+        {
+          "name": "coupon_mode",
+          "type": "checkbox",
+          "no_localize": true,
+          "hint": "If specified, coupon redemption will be available"
+        },
+        {
+          "name": "redemption_message",
+          "type": "text",
+          "hint": "Text to be displayed on coupon redemption page",
+          "depends_on": "./coupon_mode"
+        },
+        {
+          "name": "event_page_message_1",
+          "type": "text",
+          "hint": "Text to be displayed on event page after redemption",
+          "depends_on": "./coupon_mode"
+        },
+        {
+          "name": "event_page_message_2",
+          "type": "text",
+          "hint": "Text to be displayed on event page after redemption",
+          "depends_on": "./coupon_mode"
+        }
+      ],
+      "name": "coupon_redemption",
+      "type": "subsection"
+    },
+    {
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "label": "Item ID",
+          "name": "uuid",
+          "no_localize": true,
+          "type": "uuid"
+        },
+        {
+          "name": "hidden",
+          "type": "checkbox",
+          "no_localize": true,
+          "hint": "If checked, this ticket class will not be displayed and won't be available for purchase."
+        },
+        {
+          "name": "release_date",
+          "type": "datetime",
+          "no_localize": true,
+          "hint": "If the tickets should not be available for purchase immediately, specify a release date"
+        },
+        {
+          "name": "requires_shipping",
+          "type": "checkbox",
+          "no_localize": true,
+          "hint": "If checked, shipping information and taxes will be collected for purchases of this ticket class."
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "extensions": imageTypes,
+          "name": "image",
+          "type": "file"
+        },
+        {
+          "fields": [
+            {
+              "name": "label",
+              "type": "text"
+            },
+            {
+              "label": "Item ID",
+              "name": "uuid",
+              "type": "uuid",
+              "no_localize": true,
+            },
+            {
+              "name": "hidden",
+              "type": "checkbox",
+              "no_localize": true,
+              "hint": "If checked, this ticket SKU will not be displayed and won't be available for purchase."
+            },
+            {
+              "label": "NTP ID",
+              "name": "otp_id",
+              "no_localize": true,
+              "type": "ntp_id"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "no_localize": true,
+            },
+            {
+              "label": "Start Time (Text)",
+              "hint": "This label will be displayed in emails where time zone localization is not possible.",
+              "name": "start_time_text",
+              "type": "text"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime",
+              "no_localize": true,
+            },
+            {
+              "name": "price",
+              "type": "reference_subsection",
+              "no_localize": true,
+              "reference": "/payment_currencies",
+              "value_type": "number",
+              "hint": "Available price currencies are based on the 'Payment Currencies' field above",
+            },
+            {
+              "name": "external_url",
+              "hint": "External URL from which to purchase this ticket. If specified, the payment information below is not required."
+            }
+          ],
+          "label": "SKUs",
+          "name": "skus",
+          "type": "list"
+        }
+      ],
+      "name": "tickets",
+      "type": "list"
+    },
+    {
+      "fields": [
+        {
+          "name": "type",
+          "options": [
+            "merchandise",
+            "donation"
+          ],
+          "type": "select",
+          "no_localize": true,
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "label": "Item ID",
+          "name": "uuid",
+          "type": "uuid",
+          "no_localize": true,
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "fields": [
+            {
+              "extensions": imageTypes,
+              "name": "image",
+              "type": "file"
+            }
+          ],
+          "name": "images",
+          "type": "list"
+        },
+        {
+          "name": "price",
+          "type": "reference_subsection",
+          "no_localize": true,
+          "reference": "/payment_currencies",
+          "value_type": "number",
+          "hint": "Available price currencies are based on the 'Payment Currencies' field above",
+        },
+        {
+          "name": "featured",
+          "type": "checkbox",
+          "no_localize": true,
+          "hint": "A featured item will be shown at checkout."
+        },
+        {
+          "fields": [
+            {
+              "name": "name",
+            },
+            {
+              "name": "type",
+              "type": "select",
+              "options": [
+                "text",
+                "color",
+                "number"
+              ]
+            }
+          ],
+          "hint": "Specify the characteristics each variation of this product has, for example 'Size' and 'Color'",
+          "name": "option_fields",
+          "no_localize": true,
+          "type": "list"
+        },
+        {
+          "name": "product_options",
+          "type": "reference_list",
+          "no_localize": true,
+          "reference": "./option_fields",
+          "fields": [
+            {
+              "label": "SKU ID",
+              "name": "uuid",
+              "type": "uuid"
+            }
+          ]
+        }
+      ],
+      "name": "products",
+      "type": "list"
+    },
+    {
+      "fields": [
+        {
+          "name": "title",
+          "type": "text"
+        },
+        {
+          "name": "description",
+          "type": "textarea"
+        },
+        {
+          "name": "release_date",
+          "type": "datetime",
+          "no_localize": true,
+        },
+        {
+          "extensions": imageTypes,
+          "name": "image",
+          "type": "file"
+        },
+        {
+          "name": "package",
+          "type": "fabric_link",
+          "no_localize": true,
+        }
+      ],
+      "name": "extras",
+      "type": "list"
+    },
+
+
+
+
+
+    {
+      "label": "Drops",
+      "name": "header_drops",
+      "type": "header"
+    },
+    {
+      "name": "hide_upcoming_events",
+      "type": "checkbox",
+      "default_value": false
+    },
+    {
+      "name": "marketplace_drops",
+      "type": "list",
+      "fields": [
+        {
+          "name": "uuid",
+          "label": "Drop ID",
+          "type": "uuid",
+          "no_localize": true
+        },
+        {
+          "name": "event_header",
+          "type": "text",
+          "hint": "Used when displayed in upcoming events"
+        },
+        {
+          "name": "event_image",
+          "type": "file",
+          "extensions": imageTypes,
+          "hint": "Used when displayed in upcoming events"
+        },
+        {
+          "name": "start_date",
+          "type": "datetime",
+          "no_localize": true
+        },
+        {
+          "label": "marketplace_filters",
+          "name": "store_filters",
+          "type": "list",
+          "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown for users who voted"
+        },
+        {
+          "fields": [
+            {
+              "name": "title",
+              "type": "text"
+            },
+            {
+              "name": "description",
+              "type": "textarea"
+            },
+            {
+              "name": "location",
+              "type": "text"
+            }
+          ],
+          "label": "Calendar Event Info",
+          "name": "calendar",
+          "type": "subsection"
+        },
+        {
+          "label": "Use Custom Landing Page",
+          "hint": "If checked, the landing page info below will be used for this drop event instead of the general landing page configuration.",
+          "name": "custom_landing_page",
+          "type": "checkbox"
+        },
+        {
+          "fields": [
+            {
+              "name": "header_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image_mobile",
+              "label": "Background Image (Mobile)",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "header_text",
+              "type": "text"
+            },
+            {
+              "name": "show_countdown",
+              "type": "checkbox",
+              "default_value": true
+            },
+            {
+              "name": "message_1",
+              "type": "textarea",
+              "hint": "Message above the countdown. Default: 'Your Code is Redeemed. Drop Begins In'"
+            },
+            {
+              "name": "message_2",
+              "type": "textarea",
+              "hint": "Message below the countdown. Default: 'Use the link in your code email to return here at the time of the drop.'"
+            }
+          ],
+          "name": "event_landing_page",
+          "type": "subsection",
+          "depends_on": "./custom_landing_page"
+        }
+      ]
+    },
+    {
       "name": "drops",
+      "label": "Drop Events",
       "type": "list",
       "fields": [
         {
@@ -408,6 +1169,11 @@ const eventSiteSpec = {
           "name": "requires_login",
           "type": "checkbox",
           "default_value": true
+        },
+        {
+          "name": "requires_ticket",
+          "type": "checkbox",
+          "default_value": false
         },
         {
           "name": "event_header",
@@ -437,9 +1203,21 @@ const eventSiteSpec = {
           "default_value": true
         },
         {
+          "name": "minting_animation",
+          "type": "fabric_link",
+          "video_preview": true,
+          "hint": "If specified, this video will play on the status screen while waiting for NFTs to mint"
+        },
+        {
           "name": "store_filters",
           "type": "list",
           "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown"
+        },
+        {
+          "name": "store_filters_no_vote",
+          "label": "Store Filters (No Vote)",
+          "type": "list",
+          "hint": "After the drop, the wallet panel will be redirected to the store. Use these fields to filter the items shown for users who have not voted"
         },
         {
           "name": "drop_header",
@@ -494,6 +1272,54 @@ const eventSiteSpec = {
           "type": "subsection"
         },
         {
+          "label": "Use Custom Landing Page",
+          "hint": "If checked, the landing page info below will be used for this drop event instead of the general landing page configuration.",
+          "name": "custom_landing_page",
+          "type": "checkbox"
+        },
+        {
+          "fields": [
+            {
+              "name": "header_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "background_image_mobile",
+              "label": "Background Image (Mobile)",
+              "type": "file",
+              "extensions": imageTypes
+            },
+            {
+              "name": "header_text",
+              "type": "text"
+            },
+            {
+              "name": "show_countdown",
+              "type": "checkbox",
+              "default_value": true
+            },
+            {
+              "name": "message_1",
+              "type": "textarea",
+              "hint": "Message above the countdown. Default: 'Your Code is Redeemed. Drop Begins In'"
+            },
+            {
+              "name": "message_2",
+              "type": "textarea",
+              "hint": "Message below the countdown. Default: 'Use the link in your code email to return here at the time of the drop.'"
+            }
+          ],
+          "name": "event_landing_page",
+          "type": "subsection",
+          "depends_on": "./custom_landing_page"
+        },
+        {
           "name": "event_state_preroll",
           "label": "Event State: Preroll",
           "type": "subsection",
@@ -505,39 +1331,46 @@ const eventSiteSpec = {
             },
             {
               "name": "header",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "subheader",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "show_countdown",
               "label": "Show Countdown to Next State",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "use_main_stream",
               "type": "checkbox",
               "default_value": false,
-              "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
+              "hint": "If checked, the stream for the main event will be used instead of one specified in this section",
+              "depends_on": "./use_state"
             },
             {
               "name": "stream",
               "type": "fabric_link",
-              "video_preview": true
+              "video_preview": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "loop_stream",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "modal_message",
               "label": "Modal Message (Pre Event)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "depends_on": "./use_state",
               "fields": [
                 {
                   "name": "show",
@@ -623,48 +1456,56 @@ const eventSiteSpec = {
             {
               "name": "use_state",
               "type": "checkbox",
-              "default_value": true
+              "default_value": false
             },
             {
               "name": "header",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "subheader",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "start_date",
               "type": "datetime",
-              "no_localize": true
+              "no_localize": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "show_countdown",
               "label": "Show Countdown to Next State",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "use_main_stream",
               "type": "checkbox",
               "default_value": false,
+              "depends_on": "./use_state",
               "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
             },
             {
               "name": "stream",
               "type": "fabric_link",
-              "video_preview": true
+              "video_preview": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "loop_stream",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "modal_message",
               "label": "Modal Message (Voting Ended)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "depends_on": "./use_state",
               "fields": [
                 {
                   "name": "show",
@@ -692,42 +1533,49 @@ const eventSiteSpec = {
             {
               "name": "use_state",
               "type": "checkbox",
-              "default_value": true
+              "default_value": false
             },
             {
               "name": "header",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "subheader",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "start_date",
               "type": "datetime",
-              "no_localize": true
+              "no_localize": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "use_main_stream",
               "type": "checkbox",
               "default_value": false,
-              "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
+              "hint": "If checked, the stream for the main event will be used instead of one specified in this section",
+              "depends_on": "./use_state"
             },
             {
               "name": "stream",
               "type": "fabric_link",
-              "video_preview": true
+              "video_preview": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "loop_stream",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "modal_message",
               "label": "Modal Message (Minting Start)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "depends_on": "./use_state",
               "fields": [
                 {
                   "name": "show",
@@ -759,38 +1607,45 @@ const eventSiteSpec = {
             },
             {
               "name": "header",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "subheader",
-              "type": "text"
+              "type": "text",
+              "depends_on": "./use_state"
             },
             {
               "name": "start_date",
               "type": "datetime",
-              "no_localize": true
+              "no_localize": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "use_main_stream",
               "type": "checkbox",
               "default_value": false,
-              "hint": "If checked, the stream for the main event will be used instead of one specified in this section"
+              "hint": "If checked, the stream for the main event will be used instead of one specified in this section",
+              "depends_on": "./use_state"
             },
             {
               "name": "stream",
               "type": "fabric_link",
-              "video_preview": true
+              "video_preview": true,
+              "depends_on": "./use_state"
             },
             {
               "name": "loop_stream",
               "type": "checkbox",
-              "default_value": false
+              "default_value": false,
+              "depends_on": "./use_state"
             },
             {
               "name": "modal_message",
               "label": "Modal Message (Event Ended)",
               "type": "subsection",
               "hint": "If specified, this message will be displayed in a popup modal at the start of this part of the event. You can use this to communicate information to users.",
+              "depends_on": "./use_state",
               "fields": [
                 {
                   "name": "show",
@@ -812,156 +1667,15 @@ const eventSiteSpec = {
         }
       ]
     },
+
+
+
+
+
     {
-      "name": "branding",
-      "label": "Custom Branding",
-      "type": "subsection",
-      "fields": [
-        {
-          "name": "get_started",
-          "label": "'Get Started' Button",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "text",
-              "type": "text",
-              "default_value": "Get Started"
-            },
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#d7bb73"
-              }
-            }
-          ]
-        },
-        {
-          "name": "join_drop",
-          "label": "'Join the Drop' Button",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "text",
-              "type": "text",
-              "default_value": "Join the Drop"
-            },
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#d7bb73"
-              }
-            }
-          ]
-        },
-        {
-          "name": "watch_promo",
-          "label": "'Watch Promo' Button",
-          "type": "subsection",
-          "fields": [
-            {
-              "name": "text",
-              "type": "text",
-              "default_value": "Watch Promo"
-            },
-            {
-              "name": "text_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#FFFFFF"
-              }
-            },
-            {
-              "name": "background_color",
-              "type": "color",
-              "no_label": true,
-              "default_value": {
-                "color": "#000000"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "show_faq",
-      "label": "Show FAQ",
-      "type": "checkbox",
-      "default_value": true
-    },
-    {
-      "name": "faq",
-      "label": "FAQ",
-      "hint": "Specify a custom FAQ. If blank, the default FAQ will be displayed",
-      "type": "list",
-      "fields": [
-        {
-          "name": "question",
-          "type": "text"
-        },
-        {
-          "name": "answer",
-          "type": "textarea"
-        }
-      ]
-    },
-    {
-      "name": "social_media_links",
-      "type": "subsection",
-      "fields": [
-        {
-          "name": "youtube",
-          "type": "text"
-        },
-        {
-          "name": "instagram",
-          "type": "text"
-        },
-        {
-          "name": "twitter",
-          "type": "text"
-        },
-        {
-          "name": "website",
-          "type": "text"
-        },
-        {
-          "name": "facebook",
-          "type": "text"
-        },
-        {
-          "name": "soundcloud",
-          "type": "text"
-        },
-        {
-          "name": "apple_music",
-          "type": "text"
-        },
-        {
-          "name": "spotify",
-          "type": "text"
-        }
-      ]
+      "label": "Search and Analytics",
+      "name": "header_search_and_analytics",
+      "type": "header"
     },
     {
       "fields": [
@@ -974,6 +1688,15 @@ const eventSiteSpec = {
           "type": "textarea"
         },
         {
+          "name": "location",
+          "type": "text"
+        },
+        {
+          "name": "type",
+          "type": "select",
+          "options": ["Online Only", "Online and In-Person"]
+        },
+        {
           "name": "images",
           "type": "list",
           "fields": [{
@@ -981,6 +1704,26 @@ const eventSiteSpec = {
             "type": "file",
             "extensions": imageTypes
           }]
+        },
+        {
+          "name": "performers",
+          "type": "list",
+          "fields": [
+            {
+              "name": "name",
+              "type": "text"
+            },
+            {
+              "name": "url",
+              "label": "URL",
+              "type": "text"
+            },
+            {
+              "name": "image",
+              "type": "file",
+              "extensions": imageTypes
+            }
+          ]
         },
         {
           "name": "organizers",
@@ -999,6 +1742,25 @@ const eventSiteSpec = {
               "name": "image",
               "type": "file",
               "extensions": imageTypes
+            }
+          ]
+        },
+        {
+          "name": "showings",
+          "type": "list",
+          "fields": [
+            {
+              "name": "name",
+              "type": "text"
+            },
+            {
+              "name": "start_time",
+              "type": "datetime",
+              "hint": "Make sure this time exactly matches the corresponding ticket SKU start times"
+            },
+            {
+              "name": "end_time",
+              "type": "datetime"
             }
           ]
         }
@@ -1049,7 +1811,58 @@ const eventSiteSpec = {
           ]
         }
       ]
-    }
+    },
+
+
+
+    {
+      "fields": [
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "fields": [
+            {
+              "hint": "A description displayed next to the 'Next' button when viewing the previous page.",
+              "name": "page_title",
+              "type": "text"
+            },
+            {
+              "extensions": imageTypes,
+              "name": "image",
+              "type": "file"
+            },
+            {
+              "name": "text_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#000000",
+                "label": "Black"
+              }
+            },
+            {
+              "name": "background_color",
+              "type": "color",
+              "no_label": true,
+              "default_value": {
+                "color": "#FFFFFF",
+                "label": "White"
+              }
+            },
+            {
+              "name": "text",
+              "type": "rich_text"
+            }
+          ],
+          "name": "pages",
+          "type": "list"
+        }
+      ],
+      "name": "event_descriptions",
+      "type": "list"
+    },
   ]
 };
 

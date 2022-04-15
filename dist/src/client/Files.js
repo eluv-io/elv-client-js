@@ -1094,6 +1094,8 @@ exports.DownloadFile = function _callee12(_ref13) {
       encryption,
       path,
       headers,
+      ownerCapKey,
+      ownerCap,
       bytesTotal,
       _args14 = arguments;
 
@@ -1139,33 +1141,53 @@ exports.DownloadFile = function _callee12(_ref13) {
           headers = _context14.sent;
           headers.Accept = "*/*"; // If not owner, indicate re-encryption
 
-          _context14.t0 = encrypted;
+          ownerCapKey = "eluv.caps.iusr".concat(this.utils.AddressToHash(this.signer.address));
+          _context14.next = 17;
+          return _regeneratorRuntime.awrap(this.ContentObjectMetadata({
+            libraryId: libraryId,
+            objectId: objectId,
+            metadataSubtree: ownerCapKey
+          }));
 
-          if (!_context14.t0) {
-            _context14.next = 22;
+        case 17:
+          ownerCap = _context14.sent;
+          _context14.t1 = encrypted;
+
+          if (!_context14.t1) {
+            _context14.next = 26;
             break;
           }
 
-          _context14.t1 = this.utils;
-          _context14.t2 = this.signer.address;
-          _context14.next = 20;
+          _context14.t2 = this.utils;
+          _context14.t3 = this.signer.address;
+          _context14.next = 24;
           return _regeneratorRuntime.awrap(this.ContentObjectOwner({
             objectId: objectId
           }));
 
-        case 20:
-          _context14.t3 = _context14.sent;
-          _context14.t0 = !_context14.t1.EqualAddress.call(_context14.t1, _context14.t2, _context14.t3);
+        case 24:
+          _context14.t4 = _context14.sent;
+          _context14.t1 = !_context14.t2.EqualAddress.call(_context14.t2, _context14.t3, _context14.t4);
 
-        case 22:
+        case 26:
+          _context14.t0 = _context14.t1;
+
           if (!_context14.t0) {
-            _context14.next = 24;
+            _context14.next = 29;
+            break;
+          }
+
+          _context14.t0 = !ownerCap;
+
+        case 29:
+          if (!_context14.t0) {
+            _context14.next = 31;
             break;
           }
 
           headers["X-Content-Fabric-Decryption-Mode"] = "reencrypt";
 
-        case 24:
+        case 31:
           // If using server side decryption, specify in header
           if (encrypted && !clientSideDecryption) {
             headers["X-Content-Fabric-Decryption-Mode"] = "decrypt"; // rep/files_download endpoint doesn't currently support Range header
@@ -1176,13 +1198,13 @@ exports.DownloadFile = function _callee12(_ref13) {
           bytesTotal = fileInfo["."].size;
 
           if (!(encrypted && clientSideDecryption)) {
-            _context14.next = 46;
+            _context14.next = 53;
             break;
           }
 
-          _context14.t4 = _regeneratorRuntime;
-          _context14.t5 = this;
-          _context14.next = 31;
+          _context14.t5 = _regeneratorRuntime;
+          _context14.t6 = this;
+          _context14.next = 38;
           return _regeneratorRuntime.awrap(this.EncryptionConk({
             libraryId: libraryId,
             objectId: objectId,
@@ -1190,39 +1212,39 @@ exports.DownloadFile = function _callee12(_ref13) {
             download: true
           }));
 
-        case 31:
-          _context14.t6 = _context14.sent;
-          _context14.t7 = path;
-          _context14.t8 = bytesTotal;
-          _context14.t9 = headers;
-          _context14.t10 = callback;
-          _context14.t11 = format;
-          _context14.t12 = clientSideDecryption;
-          _context14.t13 = chunked;
-          _context14.t14 = {
-            conk: _context14.t6,
-            downloadPath: _context14.t7,
-            bytesTotal: _context14.t8,
-            headers: _context14.t9,
-            callback: _context14.t10,
-            format: _context14.t11,
-            clientSideDecryption: _context14.t12,
-            chunked: _context14.t13
+        case 38:
+          _context14.t7 = _context14.sent;
+          _context14.t8 = path;
+          _context14.t9 = bytesTotal;
+          _context14.t10 = headers;
+          _context14.t11 = callback;
+          _context14.t12 = format;
+          _context14.t13 = clientSideDecryption;
+          _context14.t14 = chunked;
+          _context14.t15 = {
+            conk: _context14.t7,
+            downloadPath: _context14.t8,
+            bytesTotal: _context14.t9,
+            headers: _context14.t10,
+            callback: _context14.t11,
+            format: _context14.t12,
+            clientSideDecryption: _context14.t13,
+            chunked: _context14.t14
           };
-          _context14.t15 = _context14.t5.DownloadEncrypted.call(_context14.t5, _context14.t14);
-          _context14.next = 43;
-          return _context14.t4.awrap.call(_context14.t4, _context14.t15);
+          _context14.t16 = _context14.t6.DownloadEncrypted.call(_context14.t6, _context14.t15);
+          _context14.next = 50;
+          return _context14.t5.awrap.call(_context14.t5, _context14.t16);
 
-        case 43:
+        case 50:
           return _context14.abrupt("return", _context14.sent);
 
-        case 46:
+        case 53:
           if (!chunkSize) {
             chunkSize = 10000000;
           }
 
-          _context14.prev = 47;
-          _context14.next = 50;
+          _context14.prev = 54;
+          _context14.next = 57;
           return _regeneratorRuntime.awrap(this.Download({
             downloadPath: path,
             bytesTotal: bytesTotal,
@@ -1233,15 +1255,15 @@ exports.DownloadFile = function _callee12(_ref13) {
             chunkSize: chunkSize
           }));
 
-        case 50:
+        case 57:
           return _context14.abrupt("return", _context14.sent);
 
-        case 53:
-          _context14.prev = 53;
-          _context14.t16 = _context14["catch"](47);
+        case 60:
+          _context14.prev = 60;
+          _context14.t17 = _context14["catch"](54);
 
           if (!(encrypted && !clientSideDecryption)) {
-            _context14.next = 57;
+            _context14.next = 64;
             break;
           }
 
@@ -1249,15 +1271,15 @@ exports.DownloadFile = function _callee12(_ref13) {
             clientSideDecryption: true
           })));
 
-        case 57:
-          throw _context14.t16;
+        case 64:
+          throw _context14.t17;
 
-        case 58:
+        case 65:
         case "end":
           return _context14.stop();
       }
     }
-  }, null, this, [[47, 53]]);
+  }, null, this, [[54, 60]]);
 };
 /* Parts */
 
@@ -1819,7 +1841,7 @@ exports.DownloadEncrypted = function _callee18(_ref18) {
  * @param {string} libraryId - ID of the library
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the content object draft
- * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {string=} encryption=none - Desired encryption scheme. Options: 'none' (default), 'cgck'
  *
  * @returns {Promise<string>} - The part write token for the part draft
  */
@@ -1887,7 +1909,7 @@ exports.CreatePart = function _callee19(_ref19) {
  * @param {string} writeToken - Write token of the content object draft
  * @param {string} partWriteToken - Write token of the part
  * @param {(ArrayBuffer | Buffer)} chunk - Data to upload
- * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {string=} encryption=none - Desired encryption scheme. Options: 'none' (default), 'cgck'
  *
  * @returns {Promise<string>} - The part write token for the part draft
  */
@@ -1974,7 +1996,7 @@ exports.UploadPartChunk = function _callee20(_ref20) {
  * @param {string} objectId - ID of the object
  * @param {string} writeToken - Write token of the content object draft
  * @param {string} partWriteToken - Write token of the part
- * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {string=} encryption=none - Desired encryption scheme. Options: 'none' (default), 'cgck'
  *
  * @returns {Promise<object>} - The finalize response for the new part
  */
@@ -2051,7 +2073,7 @@ exports.FinalizePart = function _callee21(_ref21) {
  * @param {string} writeToken - Write token of the content object draft
  * @param {(File | ArrayBuffer | Buffer)} data - Data to upload
  * @param {number=} chunkSize=1000000 (1MB) - Chunk size, in bytes
- * @param {string=} encryption=none - Desired encryption scheme. Options: 'none (default)', 'cgck'
+ * @param {string=} encryption=none - Desired encryption scheme. Options: 'none' (default), 'cgck'
  * @param {function=} callback - If specified, will be periodically called with current upload status
  * - Signature: ({bytesFinished, bytesTotal}) => {}
  *

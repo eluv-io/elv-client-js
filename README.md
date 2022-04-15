@@ -62,7 +62,7 @@ For the demo net:
 
 ```javascript
 const client = await ElvClient.FromConfigurationUrl({
-  configUrl: "https://demov3.net955310.contentfabric.io/config"
+  configUrl: "https://demov3.net955210.contentfabric.io/config"
 });
 ```
 
@@ -73,6 +73,7 @@ const client = await ElvClient.FromConfigurationUrl({
 ### Wallets and Signers
 
 Built on blockchain technology, interaction with the Fabric requires the use of an ethereum private key - representing a user account - in order to verify and authenticate requests, perform encryption, transfer funds, interact with smart contracts, and generally serve as an identity for the user. 
+
 
 To perform the necessary blockchain interactions, the client requires a *signer* containing the user's private key. This is an instance of an [ethers.js](https://github.com/ethers-io/ethers.js/) wallet. ElvClient has a utility class ```ElvWallet``` to make handling this easier. (Note: the new elv-media-wallet takes advantage of new Fabric APIs that manage the signer on behalf of the user. For more info, please contact support@eluv.io)
 
