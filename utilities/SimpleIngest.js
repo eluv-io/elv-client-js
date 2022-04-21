@@ -91,6 +91,15 @@ class SimpleIngest extends Utility {
 
     if(!R.isNil(createMasterResponse.errors) && !R.isEmpty(createMasterResponse.errors)) throw Error(`Error(s) encountered while inspecting uploaded files: ${createMasterResponse.errors.join("\n")}`);
 
+    await seconds(2);
+
+    await this.concerns.Finalize.waitForPublish({
+      latestHash: hash,
+      libraryId,
+      objectId: id
+    });
+
+
     // get production master metadata
     const masterMetadata = (await client.ContentObjectMetadata({
       libraryId,
@@ -134,6 +143,13 @@ class SimpleIngest extends Utility {
     logger.errorsAndWarnings(createMezResponse);
     const createMezErrors = createMezResponse.errors;
     if(!R.isNil(createMezErrors) && !R.isEmpty(createMezErrors)) throw Error(`Error(s) encountered while setting up media file conversion: ${createMezErrors.join("\n")}`);
+
+    await this.concerns.Finalize.waitForPublish({
+      latestHash: createMezResponse.hash,
+      libraryId,
+      objectId: id
+    });
+
 
     logger.log("Starting conversion to streaming format...");
 
