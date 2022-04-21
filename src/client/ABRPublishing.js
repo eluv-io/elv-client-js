@@ -478,7 +478,7 @@ exports.StartABRMezzanineJobs = async function({
     metadata: lroInfo
   });
 
-  await this.FinalizeContentObject({
+  const finalizeResponse = await this.FinalizeContentObject({
     libraryId,
     objectId,
     writeToken: statusDraft.write_token,
@@ -500,6 +500,7 @@ exports.StartABRMezzanineJobs = async function({
   });
 
   return {
+    hash: finalizeResponse.hash,
     lro_draft: lroInfo,
     writeToken: processingDraft.write_token,
     data,
