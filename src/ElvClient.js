@@ -694,6 +694,56 @@ class ElvClient {
     return this.utils.FormatAddress(this.signer.address);
   }
 
+  /*
+    TOKEN                  211b  PREFIX + BODY | aplsjcJf1HYcDDUuCdXcSZtU86nYK162YmYJeuqwMczEBJVkD5D5EvsBvVwYDRsf4hzDvBWMoe9piBpqx...
+    PREFIX                   6b  aplsjc | apl=plain s=ES256K jc=json-compressed
+    BODY                   205b  base58(SIGNATURE + PAYLOAD)
+    SIGNATURE + PAYLOAD    151b  151b * 138 / 100 + 1 = 209b (>= 205b)
+    SIGNATURE               66b  ES256K_Di9Lu83mz4wMoehCEeQhKpJJ7ApmDZLumAa2Cge48F6EHYnbn8msATGGpjucScwimei1TWGd7aeyQY45AdXd5tT1Z
+    PAYLOAD                 85b  json-compressed
+    json                    79b  {"adr":"VVf4DQU357tDnZGYQeDrntRJ5rs=","spc":"ispc3ANoVSzNA3P6t7abLR69ho5YPPZU"}
+   */
+
+  /**
+   * Create a signed authorization token that can be used to authorize against the fabric
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {number} duration=86400000 - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000 = 3600000). Default is 24 hours.
+   * @param {Object=} spec - Additional attributes for this token
+   * @param {string=} address - Address of the signing account - if not specified, the current signer address will be used.
+   * @param {function=} Sign - If specified, this function will be used to produce the signature instead of the client's current signer
+   */
+  async CreateFabricToken({
+    duration=24,
+    spec={},
+    address,
+    Sign
+  }={}) {
+    let token = {
+      ...spec,
+      adr: Buffer.from((address || this.CurrentAccountAddress()).replace(/^0x/, ""), "hex").toString("base64"),
+      spc: await this.ContentSpaceId(),
+      iat: Date.now(),
+      exp: Date.now() + duration,
+    };
+
+    if(!Sign) {
+      Sign = async message => this.authClient.Sign(Ethers.utils.keccak256(message));
+    }
+
+    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+    const signature = await Sign(compressedToken);
+
+    return `aplsjc${this.utils.B58(
+      Buffer.concat([
+        Buffer.from(signature.replace(/^0x/, ""), "hex"),
+        Buffer.from(compressedToken)
+      ])
+    )}`;
+  }
+
+
   /**
    * Issue a self-signed authorization token
    *
@@ -705,7 +755,7 @@ class ElvClient {
    * @param {string=} policyId - The object ID of the policy for this token
    * @param {string=} subject - The subject of the token
    * @param {string} grantType=read - Permissions to grant for this token. Options: "access", "read", "create", "update", "read-crypt"
-   * @param {number} duration - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000)
+   * @param {number} duration - Time until the token expires, in milliseconds (1 hour = 60 * 60 * 1000 = 3600000)
    * @param {boolean} allowDecryption=false - If specified, the re-encryption key will be included in the token,
    * enabling the user of this token to download encrypted content from the specified object
    * @param {Object=} context - Additional JSON context
