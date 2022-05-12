@@ -713,29 +713,40 @@ class ElvClient {
    * @param {Object=} spec - Additional attributes for this token
    * @param {string=} address - Address of the signing account - if not specified, the current signer address will be used.
    * @param {function=} Sign - If specified, this function will be used to produce the signature instead of the client's current signer
+   * @param {boolean=} addEthereumPrefix=true - If specified, the 'Ethereum Signed Message' prefixed hash format will be performed. Disable this if the provided Sign method already does this (e.g. Metamask)
    */
   async CreateFabricToken({
-    duration=24,
+    duration=24 * 60 * 60 * 1000,
     spec={},
     address,
-    Sign
+    Sign,
+    addEthereumPrefix=true,
   }={}) {
+    address = address || this.CurrentAccountAddress();
+
     let token = {
       ...spec,
-      adr: Buffer.from((address || this.CurrentAccountAddress()).replace(/^0x/, ""), "hex").toString("base64"),
+      sub:`iusr${Utils.AddressToHash(address)}`,
+      adr: Buffer.from(address.replace(/^0x/, ""), "hex").toString("base64"),
       spc: await this.ContentSpaceId(),
       iat: Date.now(),
       exp: Date.now() + duration,
     };
 
     if(!Sign) {
-      Sign = async message => this.authClient.Sign(Ethers.utils.keccak256(message));
+      Sign = async message => this.authClient.Sign(message);
     }
 
-    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
-    const signature = await Sign(compressedToken);
+    let message = `Eluvio Content Fabric Access Token 1.0\n${JSON.stringify(token)}`;
 
-    return `aplsjc${this.utils.B58(
+    if(addEthereumPrefix) {
+      message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
+    }
+
+    const signature = await Sign(message);
+
+    const compressedToken = Pako.deflateRaw(Buffer.from(JSON.stringify(token), "utf-8"));
+    return `acspjc${this.utils.B58(
       Buffer.concat([
         Buffer.from(signature.replace(/^0x/, ""), "hex"),
         Buffer.from(compressedToken)

@@ -5,9 +5,7 @@ var _createClass = require("@babel/runtime/helpers/createClass");
 // Incremental numerical IDs
 var __id = 0;
 
-var Id =
-/*#__PURE__*/
-function () {
+var Id = /*#__PURE__*/function () {
   "use strict";
 
   function Id() {
