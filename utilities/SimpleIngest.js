@@ -53,6 +53,8 @@ class SimpleIngest extends Utility {
     const libABRProfile = R.path(["metadata", "abr", "default_profile"], libInfo);
     if(R.isNil(libABRProfile)) throw Error("Library does not specify ABR profile for simple ingests");
 
+    const libMezManageGroups = R.path(["metadata", "abr", "mez_manage_groups"], libInfo);
+
     const {drm, libraryId, title} = this.args;
     const encrypt = true;
 
@@ -91,6 +93,7 @@ class SimpleIngest extends Utility {
 
     if(!R.isNil(createMasterResponse.errors) && !R.isEmpty(createMasterResponse.errors)) throw Error(`Error(s) encountered while inspecting uploaded files: ${createMasterResponse.errors.join("\n")}`);
 
+    // TODO: replace with a 'waitForNewObject' call (Finalize.waitForPublish throws exception for brand new object not yet visible)
     await seconds(2);
 
     await this.concerns.Finalize.waitForPublish({
@@ -217,6 +220,19 @@ class SimpleIngest extends Utility {
     logger.errorsAndWarnings(finalizeAbrResponse);
     const finalizeErrors = finalizeAbrResponse.errors;
     if(!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors)) throw Error(`Error(s) encountered while finalizing object: ${finalizeErrors.join("\n")}`);
+
+    if(libMezManageGroups && libMezManageGroups.length > 0){
+      for(const groupAddress of libMezManageGroups){
+        logger.log("Setting access permissions for managers");
+        await client.AddContentObjectGroupPermission({
+          objectId: id,
+          groupAddress,
+          permission: "manage"
+        });
+
+      }
+    }
+
 
     logger.logList(
       "",
