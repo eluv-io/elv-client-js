@@ -1,9 +1,14 @@
 {
   "abr": {
+    "comments": [
+      "For movies/TV - snapAR is set to true, this profile will attempt to conform aspect ratio to nearby standard",
+      "also specifies 'store encrypted', offers both clear and drm playout formats"
+    ],
     "mez_content_type": "YOUR_TITLE_(MEZ)_CONTENT_TYPE_ID",
     "mez_manage_groups": [
       "ADDRESS_FOR_YOUR_CONTENT_ADMINS_GROUP"
     ],
+    "mez_permission_level": "ONE_OF_THE_FOLLOWING: owner, editable, viewable, listable, public",
     "default_profile": {
       "drm_optional": true,
       "store_clear": false,

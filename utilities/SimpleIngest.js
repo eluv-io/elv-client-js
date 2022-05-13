@@ -55,6 +55,8 @@ class SimpleIngest extends Utility {
 
     const libMezManageGroups = R.path(["metadata", "abr", "mez_manage_groups"], libInfo);
 
+    const libMezPermission = R.path(["metadata", "abr", "mez_permission_level"], libInfo);
+
     const {drm, libraryId, title} = this.args;
     const encrypt = true;
 
@@ -233,6 +235,29 @@ class SimpleIngest extends Utility {
       }
     }
 
+    if(libMezPermission) {
+      if(!["owner", "editable", "viewable", "listable", "public"].includes(libMezPermission)) {
+        logger.warn(`Bad value for mez_permission_level: '${libMezPermission}', skipping permission setting`);
+      } else {
+        logger.log(`Setting object permission to '${libMezPermission}'`);
+        const prevHash = await client.LatestVersionHash({objectId: id});
+
+        await client.SetPermission({
+          objectId: id,
+          permission: libMezPermission
+        });
+
+        const newHash = await client.LatestVersionHash({objectId: id});
+
+        if(prevHash === newHash) {
+          logger.log("Version hash unchanged: " + newHash );
+        } else {
+          logger.log("Previous version hash: " + prevHash );
+          logger.log("New version hash: " + newHash );
+        }
+        logger.data("version_hash", newHash);
+      }
+    }
 
     logger.logList(
       "",
