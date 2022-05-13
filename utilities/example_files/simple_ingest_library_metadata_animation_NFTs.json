@@ -6,7 +6,7 @@
       "and object permission 'listable'.",
       "does not include DRM cert @ /elv/media/drm/fps/cert"
     ],
-    "mez_content_type": "YOUR_TITLE_(MEZ)_CONTENT_TYPE_ID",
+    "mez_content_type": "YOUR_TITLE_(NFT)_CONTENT_TYPE_ID",
     "mez_manage_groups": [
       "ADDRESS_FOR_YOUR_CONTENT_ADMINS_GROUP"
     ],
