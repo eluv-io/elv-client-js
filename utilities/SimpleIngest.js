@@ -15,6 +15,7 @@ const { seconds } = require("./lib/helpers");
 var UrlJoin = require("url-join");
 const path = require("path");
 const fs = require("fs");
+const mime = require("mime-types");
 
 class SimpleIngest extends Utility {
   blueprint() {
@@ -269,7 +270,7 @@ class SimpleIngest extends Utility {
       objectId: id,
       offeringKey: "default",
     });
-    const latestHash = finalizeAbrResponse.hash;
+    let latestHash = finalizeAbrResponse.hash;
 
     logger.errorsAndWarnings(finalizeAbrResponse);
     const finalizeErrors = finalizeAbrResponse.errors;
@@ -319,6 +320,7 @@ class SimpleIngest extends Utility {
           logger.log("New version hash: " + newHash);
         }
         logger.data("version_hash", newHash);
+        latestHash = newHash;
       }
     }
 
@@ -330,24 +332,91 @@ class SimpleIngest extends Utility {
       ""
     );
 
-    logger.data("version_hash", latestHash);
-
     await this.concerns.Finalize.waitForPublish({
       latestHash,
       libraryId,
       objectId: id,
     });
 
+    let filepath = path.parse(fileInfo[0].fullPath);
+    let imageLinkPath = "public/asset_metadata/images/img/default";
+    const imageExtensions = ["gif", "jpg", "jpeg", "png", "svg", "webp"];
+
+    for (const ext of imageExtensions) {
+      //Upload Image and set links if exists
+      let imageFile = path.join(filepath.dir, filepath.name) + "." + ext;
+      if (fs.existsSync(imageFile)) {
+        logger.log("Found image file: ", imageFile);
+        const fileDescriptor = fs.openSync(imageFile, "r");
+        const size = fs.fstatSync(fileDescriptor).size;
+        const mimeType = mime.lookup(imageFile) || `image/${ext}`;
+
+        let imageInfo = [
+          {
+            path: path.basename(imageFile),
+            type: "file",
+            mime_type: mimeType,
+            size: size,
+            data: fileDescriptor,
+          },
+        ];
+
+        await client.EditAndFinalizeContentObject({
+          libraryId,
+          objectId: id,
+          commitMessage: "Add Image file.",
+          callback: async ({ writeToken }) => {
+            try {
+              await client.UploadFiles({
+                libraryId,
+                objectId: id,
+                writeToken,
+                fileInfo: imageInfo,
+                callback: (progress) => {
+                  const fileProgress = progress[path.basename(imageFile)];
+                  let percentage = Math.round(
+                    (fileProgress.uploaded / fileProgress.total) * 100
+                  );
+
+                  logger.log(
+                    `Uploading ${path.basename(imageFile)}: ${percentage}%`
+                  );
+                },
+                encryption: "none",
+              });
+
+              await client.CreateLinks({
+                libraryId,
+                objectId: id,
+                writeToken,
+                links: [
+                  {
+                    target: `${path.basename(imageFile)}`,
+                    path: imageLinkPath,
+                    type: "file",
+                  },
+                ],
+              });
+
+              logger.log("Image uploaded and link created.");
+            } catch (err) {
+              logger.warn("Could not upload image file", err);
+            }
+          },
+        });
+
+        latestHash = await client.LatestVersionHash({ objectId: id });
+        break;
+      }
+    }
+
+    logger.data("Version Hash: ", latestHash);
     let imageUrl = await client.FabricUrl({
       versionHash: latestHash,
       noAuth: true,
     });
-    imageUrl = UrlJoin(
-      lroNode,
-      "q",
-      latestHash,
-      "meta/public/asset_metadata/images/img/default"
-    );
+
+    imageUrl = UrlJoin(lroNode, "q", latestHash, "meta", imageLinkPath);
 
     let embedUrl = CreateEmbedUrl({
       versionHash: latestHash,
@@ -356,7 +425,6 @@ class SimpleIngest extends Utility {
 
     logger.logList(`embed_url: ${embedUrl}`, `image: ${imageUrl}`);
 
-    let filepath = path.parse(fileInfo[0].fullPath);
     let jsonFile = path.join(filepath.dir, filepath.name) + ".json";
     logger.log("Looking for Json file: ", jsonFile);
 
