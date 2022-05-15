@@ -31,7 +31,21 @@ class NFTIngest extends Utility {
         NewOpt("description", {
           demand: false,
           descTemplate: "Description for the new media object",
-          default: "",
+          type: "string",
+        }),
+        NewOpt("nft_name", {
+          demand: false,
+          descTemplate: "The name attribute added to the .json file if exists.",
+          type: "string",
+        }),
+        NewOpt("nft_display_name", {
+          demand: false,
+          descTemplate: "The display_name attribute added to the .json file if exists. Default is the nft_name.",
+          type: "string",
+        }),
+        NewOpt("nft_description", {
+          demand: false,
+          descTemplate: "The description attribute added to the .json file if exists.",
           type: "string",
         }),
         NewOpt("drm", {
@@ -60,7 +74,7 @@ class NFTIngest extends Utility {
     const client = await this.concerns.Client.get();
     const configUrl = client.NetworkInfo().configUrl;
     logger.log("Network Info: ", client.NetworkInfo());
-
+    logger.log("Args: ", this.args);
     // get metadata from Library
     const libInfo = await this.concerns.ArgLibraryId.libInfo();
 
@@ -85,8 +99,14 @@ class NFTIngest extends Utility {
       libInfo
     );
 
-    const { drm, libraryId, title, description, encrypt } =
+    const {drm, libraryId, title, description, encrypt, nft_name, nft_description} =
       this.args;
+    
+    var {nft_display_name} = this.args;
+    
+    if(!nft_display_name) {
+      nft_display_name = nft_name;
+    }
 
     logger.log("Uploading files...");
 
@@ -449,9 +469,15 @@ class NFTIngest extends Utility {
       try {
         jsonFileContents = JSON.parse(fs.readFileSync(jsonFile));
         logger.log("JSON File found: ", jsonFileContents);
-        jsonFileContents.name = title;
-        jsonFileContents.display_name = title;
-        jsonFileContents.description = description;
+        if(nft_name) {
+          jsonFileContents.name = nft_name;
+        }
+        if(nft_display_name) {
+          jsonFileContents.display_name = nft_display_name;
+        }
+        if(nft_description) {
+          jsonFileContents.description = nft_description;
+        }
         jsonFileContents.image = imageUrl;
         jsonFileContents.embed_url = embedUrl;
 
