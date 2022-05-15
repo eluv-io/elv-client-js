@@ -416,11 +416,19 @@ class SimpleIngest extends Utility {
       noAuth: true,
     });
 
-    imageUrl = UrlJoin(lroNode, "q", latestHash, "meta", imageLinkPath);
+    imageUrl = UrlJoin(
+      lroNode,
+      "s",
+      GetNetForPublic({ configUrl }),
+      "q",
+      latestHash,
+      "meta",
+      imageLinkPath
+    );
 
     let embedUrl = CreateEmbedUrl({
       versionHash: latestHash,
-      network: GetNet({ configUrl }),
+      network: GetNetForEmbed({ configUrl }),
     });
 
     logger.logList(`embed_url: ${embedUrl}`, `image: ${imageUrl}`);
@@ -459,9 +467,19 @@ const CreateEmbedUrl = ({ versionHash, network }) => {
   return `https://embed.v3.contentfabric.io/?p=&net=${network}&vid=${versionHash}&m=&ap=&lp=`;
 };
 
-const GetNet = ({ configUrl }) => {
+const GetNetForEmbed = ({ configUrl }) => {
   if (configUrl.includes("demo")) {
     return "demo";
+  } else if (configUrl.includes("test")) {
+    return "test";
+  } else {
+    return "main";
+  }
+};
+
+const GetNetForPublic = ({ configUrl }) => {
+  if (configUrl.includes("demo")) {
+    return "demov3";
   } else if (configUrl.includes("test")) {
     return "test";
   } else {
