@@ -317,6 +317,8 @@ class SimpleIngest extends Utility {
         jsonFileContents.name = title;
         jsonFileContents.display_name = title;
         jsonFileContents.description = description;
+        jsonFileContents.image = imageUrl;
+        jsonFileContents.embed_url = embedUrl;
 
         let jsonString = JSON.stringify(jsonFileContents, "", 2);
         fs.writeFileSync(jsonFile, jsonString);
