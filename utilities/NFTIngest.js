@@ -63,14 +63,14 @@ class NFTIngest extends Utility {
     const libInfo = await this.concerns.ArgLibraryId.libInfo();
 
     const type = R.path(["metadata", "abr", "mez_content_type"], libInfo);
-    if (R.isNil(type))
+    if(R.isNil(type))
       throw Error("Library does not specify content type for simple ingests");
 
     const libABRProfile = R.path(
       ["metadata", "abr", "default_profile"],
       libInfo
     );
-    if (R.isNil(libABRProfile))
+    if(R.isNil(libABRProfile))
       throw Error("Library does not specify ABR profile for simple ingests");
 
     const libMezManageGroups = R.path(
@@ -119,7 +119,7 @@ class NFTIngest extends Utility {
 
     logger.data("version_hash", hash);
 
-    if (
+    if(
       !R.isNil(createMasterResponse.errors) &&
       !R.isEmpty(createMasterResponse.errors)
     )
@@ -149,7 +149,7 @@ class NFTIngest extends Utility {
     const variant = R.path(["variants", "default"], masterMetadata);
 
     // add info on source files and variant to data if --json selected
-    if (this.args.json) {
+    if(this.args.json) {
       logger.data("media_files", sources);
       logger.data("variant_default", variant);
     }
@@ -160,7 +160,7 @@ class NFTIngest extends Utility {
       variant,
       libABRProfile
     );
-    if (!genProfileRetVal.ok)
+    if(!genProfileRetVal.ok)
       throw Error(
         `Error(s) encountered while generating ABR profile: ${genProfileRetVal.errors.join(
           "\n"
@@ -171,13 +171,13 @@ class NFTIngest extends Utility {
     const filterProfileRetVal = drm
       ? ABR.ProfileExcludeClear(genProfileRetVal.result)
       : ABR.ProfileExcludeDRM(genProfileRetVal.result);
-    if (!filterProfileRetVal.ok)
+    if(!filterProfileRetVal.ok)
       throw Error(
         `Error(s) encountered while setting playout formats: ${filterProfileRetVal.errors.join(
           "\n"
         )}`
       );
-
+    
     // set up mezzanine offering
     logger.log("Setting up media file conversion...");
     const createMezResponse = await client.CreateABRMezzanine({
@@ -193,7 +193,7 @@ class NFTIngest extends Utility {
 
     logger.errorsAndWarnings(createMezResponse);
     const createMezErrors = createMezResponse.errors;
-    if (!R.isNil(createMezErrors) && !R.isEmpty(createMezErrors))
+    if(!R.isNil(createMezErrors) && !R.isEmpty(createMezErrors))
       throw Error(
         `Error(s) encountered while setting up media file conversion: ${createMezErrors.join(
           "\n"
@@ -216,7 +216,7 @@ class NFTIngest extends Utility {
 
     logger.errorsAndWarnings(startJobsResponse);
     const startJobsErrors = createMezResponse.errors;
-    if (!R.isNil(startJobsErrors) && !R.isEmpty(startJobsErrors))
+    if(!R.isNil(startJobsErrors) && !R.isEmpty(startJobsErrors))
       throw Error(
         `Error(s) encountered while starting file conversion: ${startJobsErrors.join(
           "\n"
@@ -259,14 +259,14 @@ class NFTIngest extends Utility {
     const lro = this.concerns.LRO;
     let done = false;
     let lastStatus;
-    while (!done) {
+    while(!done) {
       const statusMap = await lro.status({ libraryId, objectId: id }); // TODO: check how offering key is used, if at all
       const statusSummary = lro.statusSummary(statusMap);
       lastStatus = statusSummary.run_state;
-      if (lastStatus !== LRO.STATE_RUNNING) done = true;
+      if(lastStatus !== LRO.STATE_RUNNING) done = true;
       logger.log(`run_state: ${lastStatus}`);
       const eta = statusSummary.estimated_time_left_h_m_s;
-      if (eta) logger.log(`estimated time left: ${eta}`);
+      if(eta) logger.log(`estimated time left: ${eta}`);
       await seconds(15);
     }
 
@@ -279,7 +279,7 @@ class NFTIngest extends Utility {
 
     logger.errorsAndWarnings(finalizeAbrResponse);
     const finalizeErrors = finalizeAbrResponse.errors;
-    if (!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors)) {
+    if(!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors)) {
       throw Error(
         `Error(s) encountered while finalizing object: ${finalizeErrors.join(
           "\n"
@@ -287,8 +287,8 @@ class NFTIngest extends Utility {
       );
     }
 
-    if (libMezManageGroups && libMezManageGroups.length > 0) {
-      for (const groupAddress of libMezManageGroups) {
+    if(libMezManageGroups && libMezManageGroups.length > 0) {
+      for(const groupAddress of libMezManageGroups) {
         logger.log("Setting access permissions for managers");
         await client.AddContentObjectGroupPermission({
           objectId: id,
@@ -298,8 +298,8 @@ class NFTIngest extends Utility {
       }
     }
 
-    if (libMezPermission) {
-      if (
+    if(libMezPermission) {
+      if(
         !["owner", "editable", "viewable", "listable", "public"].includes(
           libMezPermission
         )
@@ -318,7 +318,7 @@ class NFTIngest extends Utility {
 
         const newHash = await client.LatestVersionHash({ objectId: id });
 
-        if (prevHash === newHash) {
+        if(prevHash === newHash) {
           logger.log("Version hash unchanged: " + newHash);
         } else {
           logger.log("Previous version hash: " + prevHash);
@@ -347,10 +347,10 @@ class NFTIngest extends Utility {
     let imageLinkPath = "public/asset_metadata/images/img/default";
     const imageExtensions = ["gif", "jpg", "jpeg", "png", "svg", "webp"];
 
-    for (const ext of imageExtensions) {
+    for(const ext of imageExtensions) {
       //Upload Image and set links if exists
       let imageFile = path.join(filepath.dir, filepath.name) + "." + ext;
-      if (fs.existsSync(imageFile)) {
+      if(fs.existsSync(imageFile)) {
         logger.log("Found image file: ", imageFile);
         const fileDescriptor = fs.openSync(imageFile, "r");
         const size = fs.fstatSync(fileDescriptor).size;
@@ -404,7 +404,7 @@ class NFTIngest extends Utility {
               });
 
               logger.log("Image uploaded and link created.");
-            } catch (err) {
+            } catch(err) {
               logger.warn("Could not upload image file", err);
             }
           },
@@ -443,7 +443,7 @@ class NFTIngest extends Utility {
 
     let jsonFileContents = null;
 
-    if (fs.existsSync(jsonFile)) {
+    if(fs.existsSync(jsonFile)) {
       try {
         jsonFileContents = JSON.parse(fs.readFileSync(jsonFile));
         logger.log("JSON File found: ", jsonFileContents);
@@ -457,7 +457,7 @@ class NFTIngest extends Utility {
         fs.writeFileSync(jsonFile, jsonString);
         logger.log("Json file updated: ", jsonString);
         //file written successfully
-      } catch (err) {
+      } catch(err) {
         logger.warn("Could not read or write to json file", err);
       }
     }
@@ -473,9 +473,9 @@ const CreateEmbedUrl = ({ versionHash, network }) => {
 };
 
 const GetNetForEmbed = ({ configUrl }) => {
-  if (configUrl.includes("demo")) {
+  if(configUrl.includes("demo")) {
     return "demo";
-  } else if (configUrl.includes("test")) {
+  } else if(configUrl.includes("test")) {
     return "test";
   } else {
     return "main";
@@ -483,16 +483,16 @@ const GetNetForEmbed = ({ configUrl }) => {
 };
 
 const GetNetForPublic = ({ configUrl }) => {
-  if (configUrl.includes("demo")) {
+  if(configUrl.includes("demo")) {
     return "demov3";
-  } else if (configUrl.includes("test")) {
+  } else if(configUrl.includes("test")) {
     return "test";
   } else {
     return "main";
   }
 };
 
-if (require.main === module) {
+if(require.main === module) {
   Utility.cmdLineInvoke(NFTIngest);
 } else {
   module.exports = NFTIngest;
