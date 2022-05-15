@@ -58,6 +58,8 @@ class NFTIngest extends Utility {
     // delay getting elvClient until this point so script exits faster
     // if there is a validation error above
     const client = await this.concerns.Client.get();
+    const configUrl = client.NetworkInfo().configUrl;
+    logger.log("Network Info: ", client.NetworkInfo());
 
     // get metadata from Library
     const libInfo = await this.concerns.ArgLibraryId.libInfo();
@@ -83,7 +85,7 @@ class NFTIngest extends Utility {
       libInfo
     );
 
-    const { drm, libraryId, title, configUrl, description, encrypt } =
+    const { drm, libraryId, title, description, encrypt } =
       this.args;
 
     logger.log("Uploading files...");
