@@ -63,4 +63,4 @@ const New = context => {
   return {add, callback, closeFileHandles, fileInfo};
 };
 
-module.exports = { blueprint, New };
+module.exports = {blueprint, New};
