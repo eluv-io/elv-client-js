@@ -12,8 +12,12 @@ const LocalFile = require("./lib/concerns/LocalFile");
 const LRO = require("./lib/concerns/LRO");
 const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
 const { seconds } = require("./lib/helpers");
+var UrlJoin = require("url-join");
+const path = require("path");
+const fs = require("fs");
+const mime = require("mime-types");
 
-class SimpleIngest extends Utility {
+class NFTIngest extends Utility {
   blueprint() {
     return {
       concerns: [Client, Finalize, LocalFile, ArgLibraryId, LRO],
@@ -24,9 +28,20 @@ class SimpleIngest extends Utility {
           descTemplate: "Title for new media object",
           type: "string",
         }),
+        NewOpt("description", {
+          demand: false,
+          descTemplate: "Description for the new media object",
+          default: "",
+          type: "string",
+        }),
         NewOpt("drm", {
           default: false,
           descTemplate: "Use DRM for playback",
+          type: "boolean",
+        }),
+        NewOpt("encrypt", {
+          default: false,
+          descTemplate: "Encrypt Content",
           type: "boolean",
         }),
         ModOpt("files", { forX: "for new media object" }),
@@ -68,8 +83,8 @@ class SimpleIngest extends Utility {
       libInfo
     );
 
-    const { drm, libraryId, title } = this.args;
-    const encrypt = true;
+    const { drm, libraryId, title, configUrl, description, encrypt } =
+      this.args;
 
     logger.log("Uploading files...");
 
@@ -77,7 +92,7 @@ class SimpleIngest extends Utility {
       libraryId,
       type,
       name: title,
-      description: `Media object created via simple ingest: ${title}`,
+      description,
       fileInfo,
       encrypt,
       copy: true,
@@ -114,7 +129,6 @@ class SimpleIngest extends Utility {
         )}`
       );
 
-    // TODO: replace with a 'waitForNewObject' call (Finalize.waitForPublish throws exception for brand new object not yet visible)
     await seconds(2);
 
     await this.concerns.Finalize.waitForPublish({
@@ -261,16 +275,17 @@ class SimpleIngest extends Utility {
       objectId: id,
       offeringKey: "default",
     });
-    const latestHash = finalizeAbrResponse.hash;
+    let latestHash = finalizeAbrResponse.hash;
 
     logger.errorsAndWarnings(finalizeAbrResponse);
     const finalizeErrors = finalizeAbrResponse.errors;
-    if (!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors))
+    if (!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors)) {
       throw Error(
         `Error(s) encountered while finalizing object: ${finalizeErrors.join(
           "\n"
         )}`
       );
+    }
 
     if (libMezManageGroups && libMezManageGroups.length > 0) {
       for (const groupAddress of libMezManageGroups) {
@@ -310,6 +325,7 @@ class SimpleIngest extends Utility {
           logger.log("New version hash: " + newHash);
         }
         logger.data("version_hash", newHash);
+        latestHash = newHash;
       }
     }
 
@@ -320,21 +336,164 @@ class SimpleIngest extends Utility {
       `  Version Hash: ${latestHash}`,
       ""
     );
-    logger.data("version_hash", latestHash);
+
     await this.concerns.Finalize.waitForPublish({
       latestHash,
       libraryId,
       objectId: id,
     });
+
+    let filepath = path.parse(fileInfo[0].fullPath);
+    let imageLinkPath = "public/asset_metadata/images/img/default";
+    const imageExtensions = ["gif", "jpg", "jpeg", "png", "svg", "webp"];
+
+    for (const ext of imageExtensions) {
+      //Upload Image and set links if exists
+      let imageFile = path.join(filepath.dir, filepath.name) + "." + ext;
+      if (fs.existsSync(imageFile)) {
+        logger.log("Found image file: ", imageFile);
+        const fileDescriptor = fs.openSync(imageFile, "r");
+        const size = fs.fstatSync(fileDescriptor).size;
+        const mimeType = mime.lookup(imageFile) || `image/${ext}`;
+
+        let imageInfo = [
+          {
+            path: path.basename(imageFile),
+            type: "file",
+            mime_type: mimeType,
+            size: size,
+            data: fileDescriptor,
+          },
+        ];
+
+        await client.EditAndFinalizeContentObject({
+          libraryId,
+          objectId: id,
+          commitMessage: "Add Image file.",
+          callback: async ({ writeToken }) => {
+            try {
+              await client.UploadFiles({
+                libraryId,
+                objectId: id,
+                writeToken,
+                fileInfo: imageInfo,
+                callback: (progress) => {
+                  const fileProgress = progress[path.basename(imageFile)];
+                  let percentage = Math.round(
+                    (fileProgress.uploaded / fileProgress.total) * 100
+                  );
+
+                  logger.log(
+                    `Uploading ${path.basename(imageFile)}: ${percentage}%`
+                  );
+                },
+                encryption: encrypt ? "cgck" : "none",
+              });
+
+              await client.CreateLinks({
+                libraryId,
+                objectId: id,
+                writeToken,
+                links: [
+                  {
+                    target: `${path.basename(imageFile)}`,
+                    path: imageLinkPath,
+                    type: "file",
+                  },
+                ],
+              });
+
+              logger.log("Image uploaded and link created.");
+            } catch (err) {
+              logger.warn("Could not upload image file", err);
+            }
+          },
+        });
+
+        latestHash = await client.LatestVersionHash({ objectId: id });
+        break;
+      }
+    }
+
+    logger.data("Version Hash: ", latestHash);
+    let imageUrl = await client.FabricUrl({
+      versionHash: latestHash,
+      noAuth: true,
+    });
+
+    imageUrl = UrlJoin(
+      lroNode,
+      "s",
+      GetNetForPublic({ configUrl }),
+      "q",
+      latestHash,
+      "meta",
+      imageLinkPath
+    );
+
+    let embedUrl = CreateEmbedUrl({
+      versionHash: latestHash,
+      network: GetNetForEmbed({ configUrl }),
+    });
+
+    logger.logList(`embed_url: ${embedUrl}`, `image: ${imageUrl}`);
+
+    let jsonFile = path.join(filepath.dir, filepath.name) + ".json";
+    logger.log("Looking for Json file: ", jsonFile);
+
+    let jsonFileContents = null;
+
+    if (fs.existsSync(jsonFile)) {
+      try {
+        jsonFileContents = JSON.parse(fs.readFileSync(jsonFile));
+        logger.log("JSON File found: ", jsonFileContents);
+        jsonFileContents.name = title;
+        jsonFileContents.display_name = title;
+        jsonFileContents.description = description;
+        jsonFileContents.image = imageUrl;
+        jsonFileContents.embed_url = embedUrl;
+
+        let jsonString = JSON.stringify(jsonFileContents, "", 2);
+        fs.writeFileSync(jsonFile, jsonString);
+        logger.log("Json file updated: ", jsonString);
+        //file written successfully
+      } catch (err) {
+        logger.warn("Could not read or write to json file", err);
+      }
+    }
   }
 
   header() {
-    return "Create playable media object via simple ingest";
+    return "Ingest media for Generative Video NFTs";
   }
 }
 
+const CreateEmbedUrl = ({ versionHash, network }) => {
+  return `https://embed.v3.contentfabric.io/?p=&net=${network}&vid=${versionHash}&m=&ap=&lp=`;
+};
+
+const GetNetForEmbed = ({ configUrl }) => {
+  if (configUrl.includes("demo")) {
+    return "demo";
+  } else if (configUrl.includes("test")) {
+    return "test";
+  } else {
+    return "main";
+  }
+};
+
+const GetNetForPublic = ({ configUrl }) => {
+  if (configUrl.includes("demo")) {
+    return "demov3";
+  } else if (configUrl.includes("test")) {
+    return "test";
+  } else {
+    return "main";
+  }
+};
+
 if (require.main === module) {
-  Utility.cmdLineInvoke(SimpleIngest);
+  Utility.cmdLineInvoke(NFTIngest);
 } else {
-  module.exports = SimpleIngest;
+  module.exports = NFTIngest;
 }
