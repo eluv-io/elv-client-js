@@ -471,7 +471,7 @@ class NFTIngest extends Utility {
 }
 
 const CreateEmbedUrl = ({ versionHash, network }) => {
-  return `https://embed.v3.contentfabric.io/?p=&net=${network}&vid=${versionHash}&m=&ap=&lp=`;
+  return `https://embed.v3.contentfabric.io/?p=&net=${network}&vid=${versionHash}&m=&ap=&lp=&nwm`;
 };
 
 const GetNetForEmbed = ({ configUrl }) => {
