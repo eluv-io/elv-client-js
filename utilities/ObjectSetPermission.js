@@ -9,7 +9,7 @@ const Logger = require("./lib/concerns/Logger");
 
 const permissionTypes = ["owner", "editable", "viewable", "listable", "public"];
 
-class ObjectAddGroupPerms extends Utility {
+class ObjectSetPermission extends Utility {
   blueprint() {
     return {
       concerns: [Logger, ArgObjectId, Client],
@@ -55,7 +55,7 @@ class ObjectAddGroupPerms extends Utility {
 }
 
 if(require.main === module) {
-  Utility.cmdLineInvoke(ObjectAddGroupPerms);
+  Utility.cmdLineInvoke(ObjectSetPermission);
 } else {
-  module.exports = ObjectAddGroupPerms;
+  module.exports = ObjectSetPermission;
 }

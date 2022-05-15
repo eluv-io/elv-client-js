@@ -11,7 +11,6 @@ const Finalize = require("./lib/concerns/Finalize");
 const LocalFile = require("./lib/concerns/LocalFile");
 const LRO = require("./lib/concerns/LRO");
 const ArgLibraryId = require("./lib/concerns/ArgLibraryId");
-const { readFile } = require("./lib/helpers");
 const { seconds } = require("./lib/helpers");
 var UrlJoin = require("url-join");
 const path = require("path");
@@ -68,7 +67,17 @@ class SimpleIngest extends Utility {
     if (R.isNil(libABRProfile))
       throw Error("Library does not specify ABR profile for simple ingests");
 
-    const { drm, libraryId, title, description, configUrl } = this.args;
+    const libMezManageGroups = R.path(
+      ["metadata", "abr", "mez_manage_groups"],
+      libInfo
+    );
+
+    const libMezPermission = R.path(
+      ["metadata", "abr", "mez_permission_level"],
+      libInfo
+    );
+
+    const { drm, libraryId, title, configUrl, description } = this.args;
     const encrypt = true;
 
     logger.log("Uploading files...");
@@ -264,12 +273,54 @@ class SimpleIngest extends Utility {
 
     logger.errorsAndWarnings(finalizeAbrResponse);
     const finalizeErrors = finalizeAbrResponse.errors;
-    if (!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors))
+    if (!R.isNil(finalizeErrors) && !R.isEmpty(finalizeErrors)) {
       throw Error(
         `Error(s) encountered while finalizing object: ${finalizeErrors.join(
           "\n"
         )}`
       );
+    }
+
+    if (libMezManageGroups && libMezManageGroups.length > 0) {
+      for (const groupAddress of libMezManageGroups) {
+        logger.log("Setting access permissions for managers");
+        await client.AddContentObjectGroupPermission({
+          objectId: id,
+          groupAddress,
+          permission: "manage",
+        });
+      }
+    }
+
+    if (libMezPermission) {
+      if (
+        !["owner", "editable", "viewable", "listable", "public"].includes(
+          libMezPermission
+        )
+      ) {
+        logger.warn(
+          `Bad value for mez_permission_level: '${libMezPermission}', skipping permission setting`
+        );
+      } else {
+        logger.log(`Setting object permission to '${libMezPermission}'`);
+        const prevHash = await client.LatestVersionHash({ objectId: id });
+
+        await client.SetPermission({
+          objectId: id,
+          permission: libMezPermission,
+        });
+
+        const newHash = await client.LatestVersionHash({ objectId: id });
+
+        if (prevHash === newHash) {
+          logger.log("Version hash unchanged: " + newHash);
+        } else {
+          logger.log("Previous version hash: " + prevHash);
+          logger.log("New version hash: " + newHash);
+        }
+        logger.data("version_hash", newHash);
+      }
+    }
 
     logger.logList(
       "",
@@ -280,6 +331,7 @@ class SimpleIngest extends Utility {
     );
 
     logger.data("version_hash", latestHash);
+
     await this.concerns.Finalize.waitForPublish({
       latestHash,
       libraryId,
