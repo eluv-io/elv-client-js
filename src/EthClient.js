@@ -109,8 +109,13 @@ class EthClient {
     }
 
     if(!contract) {
-      contract = new Ethers.Contract(contractAddress, abi, this.Provider());
+      const provider = this.Provider();
+      contract = new Ethers.Contract(contractAddress, abi, provider);
       contract = contract.connect(this.client.signer);
+      /**
+       * Re assigning provider if provider is replaced by signers' provider 
+       */
+      contract = contract.connect(provider);
 
       if(cacheContract) {
         this.cachedContracts[contractAddress] = contract;
