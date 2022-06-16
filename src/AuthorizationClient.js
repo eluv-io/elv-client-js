@@ -800,10 +800,22 @@ class AuthorizationClient {
   }
 
   async Sign(message) {
+    const signer=this.client.signer;
+    let signDigest;
+    if(signer.signDigest){
+      signDigest=signer.signDigest;
+    } else if(signer.signingKey && signer.signingKey.signDigest){
+      signDigest=signer.signingKey.signDigest;
+    } else if(signer.provider && signer.provider.provider && signer.provider.provider.request){
+      signDigest=(_message)=>{
+        return signer.provider.provider.request({
+          method: "eth_sign",
+          params: [signer.address, _message],
+        });
+      };
+    }
     return await Ethers.utils.joinSignature(
-      this.client.signer.signDigest ?
-        await this.client.signer.signDigest(message) :
-        await this.client.signer.signingKey.signDigest(message)
+      await signDigest(message) 
     );
   }
 
