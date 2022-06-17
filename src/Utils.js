@@ -442,6 +442,21 @@ const Utils = {
     return Buffer.from(str, "base64").toString("utf-8");
   },
 
+  FromB64URL: str => {
+    str = str.replace(/-/g, "+").replace(/_/g, "/");
+
+    const pad = str.length % 4;
+    if(pad) {
+      if(pad === 1) {
+        throw new Error("InvalidLengthError: Input base64url string is the wrong length to determine padding");
+      }
+
+      str += new Array(5-pad).join("=");
+    }
+
+    return Utils.FromB64(str);
+  },
+
   B58: arr => {
     return bs58.encode(Buffer.from(arr));
   },
