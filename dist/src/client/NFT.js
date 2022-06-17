@@ -2,9 +2,11 @@ var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+var _asyncToGenerator = require("@babel/runtime/helpers/asyncToGenerator");
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
 /**
  * Methods for creating and managing NFTs
@@ -25,9 +27,8 @@ var _require = require("../Validation"),
  * @methodGroup Minting
  * @namedParams
  * @param {string} tenantId - The ID of the tenant
- * @param {string=} email - The email of the NFT recipient
  * @param {string=} address - The address of the NFT recipient
- * @param {string} collectionId - The ID of the NFT collection containing the NFT
+ * @param {string} marketplaceId - The ID of the marketplace containing the NFT
  * @param {Array<Object>} items - List of items
  * @param {string} items.sku - SKU of the NFT
  * @param {number=} items.quantity=1 - Number to mint
@@ -39,112 +40,74 @@ var _require = require("../Validation"),
  */
 
 
-exports.MintNFT = function _callee(_ref) {
-  var tenantId, email, address, collectionId, items, _ref$extraData, extraData, accountInitializationBody, accountInitializationSignature, _ref2, addr, requestBody, transactionId, mintSignature;
+exports.MintNFT = /*#__PURE__*/function () {
+  var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(_ref) {
+    var tenantId, address, marketplaceId, items, _ref$extraData, extraData, requestBody, transactionId, mintSignature;
 
-  return _regeneratorRuntime.async(function _callee$(_context) {
-    while (1) {
-      switch (_context.prev = _context.next) {
-        case 0:
-          tenantId = _ref.tenantId, email = _ref.email, address = _ref.address, collectionId = _ref.collectionId, items = _ref.items, _ref$extraData = _ref.extraData, extraData = _ref$extraData === void 0 ? {} : _ref$extraData;
-          ValidatePresence("tenantId", tenantId);
-          ValidatePresence("email or address", email || address);
-          ValidatePresence("collectionId", collectionId);
-          ValidatePresence("items", items);
-          ValidateObject(collectionId); // If address not specified, make call to initialize address for email
+    return _regeneratorRuntime.wrap(function _callee$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            tenantId = _ref.tenantId, address = _ref.address, marketplaceId = _ref.marketplaceId, items = _ref.items, _ref$extraData = _ref.extraData, extraData = _ref$extraData === void 0 ? {} : _ref$extraData;
+            ValidatePresence("tenantId", tenantId);
+            ValidatePresence("address", address);
+            ValidatePresence("marketplaceId", marketplaceId);
+            ValidatePresence("items", items);
+            ValidateObject(marketplaceId);
+            ValidateAddress(address);
+            requestBody = {
+              tickets: null,
+              products: items.map(function (item) {
+                return {
+                  sku: item.sku,
+                  quant: item.quantity || 1,
+                  extra: item.tokenId ? _objectSpread(_objectSpread({}, item.extraData || {}), {}, {
+                    token_id: item.tokenId
+                  }) : _objectSpread({}, item.extraData || {})
+                };
+              }),
+              ident: address,
+              cust_name: address,
+              extra: _objectSpread(_objectSpread({}, extraData), {}, {
+                elv_addr: address
+              })
+            };
+            transactionId = this.utils.B58(UUID.parse(UUID.v4()));
+            requestBody.ts = Date.now();
+            requestBody.trans_id = transactionId;
+            _context.next = 13;
+            return this.Sign(JSON.stringify(requestBody));
 
-          accountInitializationBody = {
-            ts: Date.now()
-          };
+          case 13:
+            mintSignature = _context.sent;
+            _context.next = 16;
+            return this.authClient.MakeAuthServiceRequest({
+              method: "POST",
+              path: UrlJoin("/as/tnt/trans/base", tenantId, marketplaceId),
+              body: requestBody,
+              headers: {
+                "Authorization": "Bearer ".concat(mintSignature)
+              }
+            });
 
-          if (email) {
-            accountInitializationBody.email = email;
-          } else {
-            accountInitializationBody.addr = address;
-          }
+          case 16:
+            return _context.abrupt("return", {
+              address: address,
+              transactionId: transactionId
+            });
 
-          _context.next = 10;
-          return _regeneratorRuntime.awrap(this.Sign(JSON.stringify(accountInitializationBody)));
-
-        case 10:
-          accountInitializationSignature = _context.sent;
-          _context.t0 = _regeneratorRuntime;
-          _context.t1 = this.utils;
-          _context.next = 15;
-          return _regeneratorRuntime.awrap(this.authClient.MakeAuthServiceRequest({
-            method: "POST",
-            path: "/as/tnt/prov/eth/".concat(tenantId),
-            body: accountInitializationBody,
-            headers: {
-              "Authorization": "Bearer ".concat(accountInitializationSignature)
-            }
-          }));
-
-        case 15:
-          _context.t2 = _context.sent;
-          _context.t3 = _context.t1.ResponseToJson.call(_context.t1, _context.t2);
-          _context.next = 19;
-          return _context.t0.awrap.call(_context.t0, _context.t3);
-
-        case 19:
-          _ref2 = _context.sent;
-          addr = _ref2.addr;
-          address = this.utils.FormatAddress(addr);
-          requestBody = {
-            "tickets": null,
-            "products": items.map(function (item) {
-              return {
-                sku: item.sku,
-                quant: item.quantity || 1,
-                extra: item.tokenId ? _objectSpread({}, item.extraData || {}, {
-                  token_id: item.tokenId
-                }) : _objectSpread({}, item.extraData || {})
-              };
-            }),
-            "ident": email || address,
-            "cust_name": email || address,
-            "extra": _objectSpread({}, extraData)
-          };
-          ValidateAddress(address);
-
-          if (email) {
-            requestBody.email = email;
-          } else {
-            requestBody.addr = address;
-          }
-
-          requestBody.extra.elv_addr = address;
-          transactionId = this.utils.B58(UUID.parse(UUID.v4()));
-          requestBody.ts = Date.now();
-          requestBody.trans_id = transactionId;
-          _context.next = 31;
-          return _regeneratorRuntime.awrap(this.Sign(JSON.stringify(requestBody)));
-
-        case 31:
-          mintSignature = _context.sent;
-          _context.next = 34;
-          return _regeneratorRuntime.awrap(this.authClient.MakeAuthServiceRequest({
-            method: "POST",
-            path: "/as/otp/webhook/base/".concat(tenantId, "/").concat(collectionId),
-            body: requestBody,
-            headers: {
-              "Authorization": "Bearer ".concat(mintSignature)
-            }
-          }));
-
-        case 34:
-          return _context.abrupt("return", {
-            address: address,
-            transactionId: transactionId
-          });
-
-        case 35:
-        case "end":
-          return _context.stop();
+          case 17:
+          case "end":
+            return _context.stop();
+        }
       }
-    }
-  }, null, this);
-};
+    }, _callee, this);
+  }));
+
+  return function (_x) {
+    return _ref2.apply(this, arguments);
+  };
+}();
 /**
  * Retrieve information about transactions for the specified collection
  *
@@ -163,53 +126,59 @@ exports.MintNFT = function _callee(_ref) {
  */
 
 
-exports.CollectionTransactions = function _callee2(_ref3) {
-  var tenantId, collectionId, _ref3$filterOptions, filterOptions, ts, queryParams, allowedOptions, path, signature;
+exports.CollectionTransactions = /*#__PURE__*/function () {
+  var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(_ref3) {
+    var tenantId, collectionId, _ref3$filterOptions, filterOptions, ts, queryParams, allowedOptions, path, signature;
 
-  return _regeneratorRuntime.async(function _callee2$(_context2) {
-    while (1) {
-      switch (_context2.prev = _context2.next) {
-        case 0:
-          tenantId = _ref3.tenantId, collectionId = _ref3.collectionId, _ref3$filterOptions = _ref3.filterOptions, filterOptions = _ref3$filterOptions === void 0 ? {} : _ref3$filterOptions;
-          ts = Date.now();
-          queryParams = {
-            ts: ts
-          };
-          allowedOptions = {
-            "email": "email",
-            "fromOrdinal": "from_ord",
-            "max": "max",
-            "status": "status",
-            "transactionId": "trans_id"
-          };
-          Object.keys(allowedOptions).forEach(function (option) {
-            if (filterOptions[option]) {
-              queryParams[allowedOptions[option]] = filterOptions[option];
-            }
-          });
-          path = this.AuthHttpClient.BaseURI().path(UrlJoin("/tnt", "trans", tenantId, collectionId)).query(queryParams).hash("").resource();
-          _context2.next = 8;
-          return _regeneratorRuntime.awrap(this.Sign(path));
+    return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+      while (1) {
+        switch (_context2.prev = _context2.next) {
+          case 0:
+            tenantId = _ref3.tenantId, collectionId = _ref3.collectionId, _ref3$filterOptions = _ref3.filterOptions, filterOptions = _ref3$filterOptions === void 0 ? {} : _ref3$filterOptions;
+            ts = Date.now();
+            queryParams = {
+              ts: ts
+            };
+            allowedOptions = {
+              "email": "email",
+              "fromOrdinal": "from_ord",
+              "max": "max",
+              "status": "status",
+              "transactionId": "trans_id"
+            };
+            Object.keys(allowedOptions).forEach(function (option) {
+              if (filterOptions[option]) {
+                queryParams[allowedOptions[option]] = filterOptions[option];
+              }
+            });
+            path = this.AuthHttpClient.BaseURI().path(UrlJoin("/tnt", "trans", tenantId, collectionId)).query(queryParams).hash("").resource();
+            _context2.next = 8;
+            return this.Sign(path);
 
-        case 8:
-          signature = _context2.sent;
-          _context2.next = 11;
-          return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.authClient.MakeAuthServiceRequest({
-            method: "GET",
-            path: UrlJoin("as", "tnt", "trans", tenantId, collectionId),
-            queryParams: queryParams,
-            headers: {
-              "Authorization": "Bearer ".concat(signature)
-            }
-          })));
+          case 8:
+            signature = _context2.sent;
+            _context2.next = 11;
+            return this.utils.ResponseToJson(this.authClient.MakeAuthServiceRequest({
+              method: "GET",
+              path: UrlJoin("as", "tnt", "trans", tenantId, collectionId),
+              queryParams: queryParams,
+              headers: {
+                "Authorization": "Bearer ".concat(signature)
+              }
+            }));
 
-        case 11:
-          return _context2.abrupt("return", _context2.sent);
+          case 11:
+            return _context2.abrupt("return", _context2.sent);
 
-        case 12:
-        case "end":
-          return _context2.stop();
+          case 12:
+          case "end":
+            return _context2.stop();
+        }
       }
-    }
-  }, null, this);
-};
+    }, _callee2, this);
+  }));
+
+  return function (_x2) {
+    return _ref4.apply(this, arguments);
+  };
+}();

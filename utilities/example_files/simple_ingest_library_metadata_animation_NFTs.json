@@ -1,0 +1,133 @@
+{
+  "abr": {
+    "comments": [
+      "For animation NFTs that are not movie/TV clips - snapAR is set to false",
+      "also specifies 'store clear', only offers clear playout formats (no drm)",
+      "and object permission 'listable'.",
+      "does not include DRM cert @ /elv/media/drm/fps/cert"
+    ],
+    "mez_content_type": "YOUR_TITLE_(NFT)_CONTENT_TYPE_ID",
+    "mez_manage_groups": [
+      "ADDRESS_FOR_YOUR_CONTENT_ADMINS_GROUP"
+    ],
+    "mez_permission_level": "listable",
+    "default_profile": {
+      "drm_optional": true,
+      "store_clear": true,
+      "video_parametric_ladder": {
+        "baseAspectRatio": "16/9",
+        "baseFrameRate": "30",
+        "rungSpecs": [
+          {
+            "dim": 2160,
+            "bitrate": 14000000
+          },
+          {
+            "dim": 1440,
+            "bitrate": 11500000
+          },
+          {
+            "dim": 1080,
+            "bitrate": 9500000
+          },
+          {
+            "dim": 720,
+            "bitrate": 4500000
+          },
+          {
+            "dim": 480,
+            "bitrate": 1750000
+          },
+          {
+            "dim": 360,
+            "bitrate": 810000
+          },
+          {
+            "dim": 240,
+            "bitrate": 500000
+          }
+        ],
+        "options": {
+          "upscale": false,
+          "snapAR": false,
+          "maxARSnap": 0.06,
+          "minDimStepdown": 0.12,
+          "frameRateScaleFactor": 0.5
+        },
+        "limits": {
+          "aspectRatioMax": "3",
+          "aspectRatioMin": "1/3",
+          "avgBitrateMax": 100000000,
+          "avgBitrateMin": 100000,
+          "fileSizeMax": 100000000,
+          "fileSizeMin": 10000,
+          "durationMax": 14400,
+          "durationMin": 1,
+          "finalBitrateMax": 30000000,
+          "frameRateMax": "60",
+          "frameRateMin": "15",
+          "heightMax": 5000,
+          "heightMin": 100,
+          "sampleAspectRatioMax": "3/2",
+          "sampleAspectRatioMin": "2/3",
+          "widthMax": 5000,
+          "widthMin": 100
+        }
+      },
+      "ladder_specs": {
+        "{\"media_type\":\"audio\",\"channels\":1}": {
+          "rung_specs": [
+            {
+              "bit_rate": 128000,
+              "media_type": "audio",
+              "pregenerate": true
+            }
+          ]
+        },
+        "{\"media_type\":\"audio\",\"channels\":2}": {
+          "rung_specs": [
+            {
+              "bit_rate": 192000,
+              "media_type": "audio",
+              "pregenerate": true
+            }
+          ]
+        },
+        "{\"media_type\":\"audio\",\"channels\":6}": {
+          "rung_specs": [
+            {
+              "bit_rate": 384000,
+              "media_type": "audio",
+              "pregenerate": true
+            }
+          ]
+        }
+      },
+      "playout_formats": {
+        "dash-clear": {
+          "drm": null,
+          "protocol": {
+            "min_buffer_length": 2,
+            "type": "ProtoDash"
+          }
+        },
+        "hls-clear": {
+          "drm": null,
+          "protocol": {
+            "type": "ProtoHls"
+          }
+        }
+      },
+      "segment_specs": {
+        "audio": {
+          "segs_per_chunk": 15,
+          "target_dur": 2
+        },
+        "video": {
+          "segs_per_chunk": 15,
+          "target_dur": 2
+        }
+      }
+    }
+  }
+}
