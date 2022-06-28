@@ -1,7 +1,9 @@
+const Utils = require("../Utils");
+
 /**
  * Format NFT or listing result into consistent format
  */
-const FormatNFT = (entry) => {
+exports.FormatNFTDetails = function(entry) {
   const isListing = !!entry.id;
 
   const metadata = (isListing ? entry.nft : entry.meta) || {};
@@ -38,16 +40,13 @@ const FormatNFT = (entry) => {
     };
   }
 
-  const nft = {
+  return {
     metadata,
     details
   };
+};
 
-
-  if(!nft) {
-    return;
-  }
-
+exports.FormatNFTMetadata = function(nft) {
   nft.formatted = true;
 
   // Surface relevant details to top level
@@ -123,12 +122,27 @@ const FormatNFT = (entry) => {
 
         nft.metadata.pack_options[`${key}_embed_url`] = embedUrl.toString();
       }
-      // eslint-disable-next-line no-empty
-    } catch(error) {
-    }
+    // eslint-disable-next-line no-empty
+    } catch(error) {}
   });
 
   return nft;
 };
 
-exports.FormatNFT = FormatNFT;
+
+exports.LinkTargetHash = function(link) {
+  if(!link) { return; }
+
+  if(link["."] && link["."].source) {
+    return link["."].source;
+  }
+
+  if(link["/"] && link["/"].startsWith("/qfab/")) {
+    return link["/"].split("/").find(segment => segment.startsWith("hq__"));
+  }
+
+  if(link["."] && link["."].container) {
+    return link["."].container;
+  }
+};
+
