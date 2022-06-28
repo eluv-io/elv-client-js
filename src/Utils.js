@@ -18,14 +18,14 @@ const {
  *
  * Utils can be imported separately from the client:
  *
- * const Utils = require("@eluvio/elv-client-js/src/Utils)
+ * `const Utils = require("@eluvio/elv-client-js/src/Utils)`
  *
  * or
  *
- * import Utils from "@eluvio/elv-client-js/src/Utils"
+ * `import Utils from "@eluvio/elv-client-js/src/Utils"`
  *
  *
- * It can be accessed from ElvClient and FrameClient as client.utils
+ * It can be accessed from ElvClient and FrameClient as `client.utils`
  */
 const Utils = {
   name: "Utils",
@@ -463,6 +463,10 @@ const Utils = {
 
   FromB58: str => {
     return bs58.decode(str);
+  },
+
+  FromB58ToStr: str => {
+    return new TextDecoder().decode(Utils.FromB58(str));
   },
 
   /**
