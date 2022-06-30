@@ -4,6 +4,7 @@ const bs58 = require("bs58");
 const BigNumber = require("bignumber.js").default;
 const VarInt = require("varint");
 const URI = require("urijs");
+const Pako = require("pako");
 
 const {
   keccak256,
@@ -147,6 +148,27 @@ const Utils = {
       size,
       objectId,
       partHash
+    };
+  },
+
+
+  /**
+   * Decode the specified signed token into its component parts
+   *
+   * @param {string} token - The token to decode
+   *
+   * @return {Object} - Components of the signed token
+   */
+  DecodeSignedToken: (token) => {
+    const decodedToken = Utils.FromB58(token.slice(6));
+    const signature = `0x${decodedToken.slice(0, 65).toString("hex")}`;
+
+    let payload = JSON.parse(Buffer.from(Pako.inflateRaw(decodedToken.slice(65))).toString("utf-8"));
+    payload.adr = Utils.FormatAddress(`0x${Buffer.from(payload.adr, "base64").toString("hex")}`);
+
+    return {
+      payload,
+      signature
     };
   },
 
