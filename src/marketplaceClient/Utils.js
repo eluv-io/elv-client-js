@@ -1,9 +1,32 @@
 const Utils = require("../Utils");
 
+const RarityToPercentage = (rarity) => {
+  if(!rarity) {
+    return "";
+  }
+
+  rarity = rarity.toString();
+
+  if(!rarity.includes("/")) {
+    return rarity;
+  }
+
+  const [ numerator, denominator ] = rarity.split("/");
+  let percentage = 100 * parseInt(numerator) / parseInt(denominator);
+
+  if(percentage < 1) {
+    percentage = percentage.toFixed(2);
+  } else {
+    percentage = percentage.toFixed(1).toString().replace(".0", "");
+  }
+
+  return percentage;
+};
+
 /**
  * Format NFT or listing result into consistent format
  */
-exports.FormatNFTDetails = function(entry) {
+const FormatNFTDetails = function(entry) {
   const isListing = !!entry.id;
 
   const metadata = (isListing ? entry.nft : entry.meta) || {};
@@ -46,7 +69,10 @@ exports.FormatNFTDetails = function(entry) {
   };
 };
 
-exports.FormatNFTMetadata = function(nft) {
+exports.FormatNFTDetails = FormatNFTDetails;
+
+
+const FormatNFTMetadata = function(nft) {
   nft.formatted = true;
 
   // Surface relevant details to top level
@@ -127,6 +153,12 @@ exports.FormatNFTMetadata = function(nft) {
   });
 
   return nft;
+};
+
+exports.FormatNFTMetadata = FormatNFTMetadata;
+
+exports.FormatNFT = function (item) {
+  return FormatNFTMetadata(FormatNFTDetails(item));
 };
 
 
