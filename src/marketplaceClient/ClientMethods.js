@@ -1,6 +1,6 @@
 const Utils = require("../Utils");
 const UrlJoin = require("url-join");
-const {FormatNFTDetails, FormatNFTMetadata} = require("./Utils");
+const {FormatNFTDetails, FormatNFTMetadata, FormatNFT} = require("./Utils");
 
 /* TENANT */
 
@@ -44,14 +44,13 @@ exports.TenantConfiguration = async function({tenantId, contractAddress}) {
  *
  * @methodGroup Marketplaces
  * @namedParams
- * @param {string=} tenantSlug - Tenant slug of the marketplace
- * @param {string=} marketplaceSlug - Slug of the marketplace
- * @param {string=} marketplaceId - Object ID of the marketplace
- * @param {string=} marketplaceHash - Version hash of the marketplace
+ * @param {Object} marketplaceParams - Parameters of the marketplace
  *
  * @returns {Promise<Object>} - Stock info for items in the marketplace
  */
-exports.MarketplaceStock = async function ({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, tenantId}) {
+exports.MarketplaceStock = async function ({marketplaceParams, tenantId}) {
+  let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
+
   if(!tenantId) {
     const marketplaceInfo = this.MarketplaceInfo({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash});
     tenantId = marketplaceInfo.tenantId;
@@ -86,14 +85,13 @@ exports.MarketplaceStock = async function ({tenantSlug, marketplaceSlug, marketp
  *
  * @methodGroup Marketplaces
  * @namedParams
- * @param {string=} tenantSlug - Tenant slug of the marketplace
- * @param {string=} marketplaceSlug - Slug of the marketplace
- * @param {string=} marketplaceId - Object ID of the marketplace
- * @param {string=} marketplaceHash - Version hash of the marketplace
+ * @param {Object} marketplaceParams - Parameters of the marketplace
  *
  * @returns {Promise<Object>} - Info about the marketplace
  */
-exports.MarketplaceInfo = function ({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash}) {
+exports.MarketplaceInfo = function ({marketplaceParams}) {
+  let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
+
   let marketplaceInfo;
   if(tenantSlug && marketplaceSlug) {
     marketplaceInfo = (this.availableMarketplaces[tenantSlug] || {})[marketplaceSlug];
@@ -113,17 +111,14 @@ exports.MarketplaceInfo = function ({tenantSlug, marketplaceSlug, marketplaceId,
  *
  * @methodGroup Marketplaces
  * @namedParams
- * @param {string=} tenantSlug - Tenant slug of the marketplace
- * @param {string=} marketplaceSlug - Slug of the marketplace
- * @param {string=} marketplaceId - Object ID of the marketplace
- * @param {string=} marketplaceHash - Version hash of the marketplace
+ * @param {Object} marketplaceParams - Parameters of the marketplace
  *
  * @returns {Promise<string>} - The CSS of the marketplace
  */
-exports.MarketplaceCSS = async function ({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash}) {
-  const marketplaceInfo = this.MarketplaceInfo({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash});
+exports.MarketplaceCSS = async function ({marketplaceParams}) {
+  const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
-  marketplaceHash = marketplaceInfo.marketplaceHash;
+  const marketplaceHash = marketplaceInfo.marketplaceHash;
 
   if(!this.cachedCSS[marketplaceHash]) {
     this.cachedCSS[marketplaceHash] = await this.client.ContentObjectMetadata({
@@ -164,16 +159,12 @@ exports.AvailableMarketplaces = async function ({organizeById, forceReload=false
  *
  * @methodGroup Marketplaces
  * @namedParams
- * @param {string=} tenantSlug - Tenant slug of the marketplace
- * @param {string=} marketplaceSlug - Slug of the marketplace
- * @param {string=} marketplaceId - Object ID of the marketplace
- * @param {string=} marketplaceHash - Version hash of the marketplace
- * @param {boolean=} forceReload=false - If specified, a new request will be made to check the currently available marketplaces instead of returning cached info
+ * @param {Object} marketplaceParams - Parameters of the marketplace
  *
  * @returns {Promise<Object>} - The full information for the marketplace
  */
-exports.Marketplace = async function ({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash}) {
-  return this.LoadMarketplace({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash});
+exports.Marketplace = async function ({marketplaceParams}) {
+  return this.LoadMarketplace(marketplaceParams);
 };
 
 
@@ -265,4 +256,579 @@ exports.NFT = async function({tokenId, contractAddress}) {
   return FormatNFTMetadata(nft);
 };
 
+/** LISTINGS */
 
+/**
+ * Retrieve the status of the specified listing
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {string=} listingId - The ID of the listing
+ *
+ * @returns {Promise<Object>} - The status of the listing
+ */
+exports.ListingStatus = async function({listingId}) {
+  try {
+    return await Utils.ResponseToJson(
+      await this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "mkt", "status", listingId),
+        method: "GET"
+      })
+    );
+  } catch(error) {
+    if(error.status === 404) { return; }
+
+    throw error;
+  }
+};
+
+/**
+ * Retrieve a specific listing
+ *
+ * NOTE: When a listing is sold or deleted, it will no longer be queryable with this API. Use <a href="#ListingStatus">ListingStatus</a> instead.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {string=} listingId - The ID of the listing
+ *
+ * @returns {Promise<Object>} - The listing
+ */
+exports.Listing = async function({listingId}) {
+  return FormatNFT(
+    await Utils.ResponseToJson(
+      await this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "mkt", "l", listingId),
+        method: "GET",
+      })
+    )
+  );
+};
+
+/**
+ * Retrieve items owned by the current user matching the specified parameters.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ * @param {string=} sortBy="created" - Sort order. Options: `default`, `meta/display_name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {string=} filter - Filter results by item name.
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ *
+ * @returns {Promise<Object>} - Results of the query and pagination info
+ */
+exports.UserItems = async function() {
+  return this.FilteredQuery({mode: "owned", ...(arguments[0] || {})});
+};
+
+/**
+ * Return all listings for the current user. Not paginated.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `info/token_id`, `info/ordinal`, `price`, `nft/display_name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ *
+ * @returns {Promise<Array<Object>>} - List of current user's listings
+ */
+exports.UserListings = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+  return (
+    await this.FilteredQuery({
+      mode: "listings",
+      start: 0,
+      limit: 10000,
+      sortBy,
+      sortDesc,
+      sellerAddress: this.UserAddress(),
+      marketplaceParams,
+      contractAddress,
+      tokenId
+    })
+  ).results;
+};
+
+/**
+ * Return all sales for the current user. Not paginated.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {integer=} lastNDays - Filter by results listed in the past N days
+ *
+ * @returns {Promise<Array<Object>>} - List of current user's sales
+ */
+exports.UserSales = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+  return (
+    await this.FilteredQuery({
+      mode: "sales",
+      start: 0,
+      limit: 10000,
+      sortBy,
+      sortDesc,
+      sellerAddress: this.UserAddress(),
+      marketplaceParams,
+      contractAddress,
+      tokenId
+    })
+  ).results;
+};
+
+/**
+ * Retrieve listings matching the specified parameters.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `info/token_id`, `info/ordinal`, `price`, `nft/display_name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {string=} filter - Filter results by item name.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the item name.
+ * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
+ *  @param {string=} editionFilter - Filter results by item edition.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the edition name.
+ * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
+ *  @param {Array<Object>} attributeFilters - Filter results by item attributes. Each entry should include name and value (e.g. `[{name: "attribute-name", value: "attribute-value"}]`)
+ *  <br /><br />
+ *  NOTE: These filters must be an <b>exact match</b> on the attribute name and value.
+ * You can retrieve all available item attributes from the <a href="#.ListingAttributes">ListingAttributes method</a>.
+ * @param {string=} sellerAddress - Filter by a specific seller
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} lastNDays - Filter by results listed in the past N days
+ *
+ * @returns {Promise<Object>} - Results of the query and pagination info
+ */
+exports.Listings = async function() {
+  return this.FilteredQuery({mode: "listings", ...(arguments[0] || {})});
+};
+
+/**
+ * Retrieve stats for listings matching the specified parameters.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `info/token_id`, `info/ordinal`, `price`, `nft/display_name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {string=} filter - Filter results by item name.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the item name.
+ * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
+ *  @param {string=} editionFilter - Filter results by item edition.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the edition name.
+ * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
+ *  @param {Array<Object>} attributeFilters - Filter results by item attributes. Each entry should include name and value (e.g. `[{name: "attribute-name", value: "attribute-value"}]`)
+ *  <br /><br />
+ *  NOTE: These filters must be an <b>exact match</b> on the attribute name and value.
+ * You can retrieve all available item attributes from the <a href="#.ListingAttributes">ListingAttributes method</a>.
+ * @param {string=} sellerAddress - Filter by a specific seller
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} lastNDays - Filter by results listed in the past N days
+ *
+ * @returns {Promise<Object>} - Statistics about listings. All prices in USD.
+ */
+exports.ListingStats = async function() {
+  return this.FilteredQuery({mode: "listing-stats", ...(arguments[0] || {})});
+};
+
+/**
+ * Retrieve sales matching the specified parameters.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {string=} filter - Filter results by item name.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the item name.
+ * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
+ *  @param {string=} editionFilter - Filter results by item edition.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the edition name.
+ * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
+ *  @param {Array<Object>} attributeFilters - Filter results by item attributes. Each entry should include name and value (e.g. `[{name: "attribute-name", value: "attribute-value"}]`)
+ *  <br /><br />
+ *  NOTE: These filters must be an <b>exact match</b> on the attribute name and value.
+ * You can retrieve all available item attributes from the <a href="#.ListingAttributes">ListingAttributes method</a>.
+ * @param {string=} sellerAddress - Filter by a specific seller
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} lastNDays - Filter by results listed in the past N days
+ *
+ * @returns {Promise<Object>} - Results of the query and pagination info
+ */
+exports.Sales = async function() {
+  return this.FilteredQuery({mode: "sales", ...(arguments[0] || {})});
+};
+
+/**
+ * Retrieve stats for listings matching the specified parameters.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ * @param {string=} sortBy="created" -
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {string=} filter - Filter results by item name.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the item name.
+ * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
+ *  @param {string=} editionFilter - Filter results by item edition.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the edition name.
+ * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
+ *  @param {Array<Object>} attributeFilters - Filter results by item attributes. Each entry should include name and value (e.g. `[{name: "attribute-name", value: "attribute-value"}]`)
+ *  <br /><br />
+ *  NOTE: These filters must be an <b>exact match</b> on the attribute name and value.
+ * You can retrieve all available item attributes from the <a href="#.ListingAttributes">ListingAttributes method</a>.
+ * @param {string=} sellerAddress - Filter by a specific seller
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} lastNDays - Filter by results listed in the past N days
+ *
+ * @returns {Promise<Object>} - Statistics about sales. All prices in USD.
+ */
+exports.SalesStats = async function() {
+  return this.FilteredQuery({mode: "sales-stats", ...(arguments[0] || {})});
+};
+
+
+/**
+ * Create or update a listing for the specified item
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {string} contractAddress - The NFT contract address of the item
+ * @param {string} tokenId - The token ID of the item
+ * @param {number} price - The price of the listing, in USD
+ * @param {string=} listingId - (When editing a listing) The ID of the existing listing
+ *
+ * @returns {Promise<string>} - The listing ID of the created listing
+ */
+exports.CreateListing = async function({contractAddress, tokenId, price, listingId}) {
+  if(contractId) { contractAddress = Utils.HashToAddress(contractId); }
+  contractAddress = Utils.FormatAddress(contractAddress);
+
+  if(listingId) {
+    // Update
+    return await Utils.ResponseToFormat(
+      "text",
+      await this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt"),
+        method: "PUT",
+        body: {
+          id: listingId,
+          price: parseFloat(price)
+        },
+        headers: {
+          Authorization: `Bearer ${this.rootStore.authToken}`
+        }
+      })
+    );
+  } else {
+    // Create
+    return await Utils.ResponseToJson(
+      await this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt"),
+        method: "POST",
+        body: {
+          contract: contractAddress,
+          token: tokenId,
+          price: parseFloat(price)
+        },
+        headers: {
+          Authorization: `Bearer ${this.rootStore.authToken}`
+        }
+      })
+    );
+  }
+};
+
+/**
+ * Remove the specified listing
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {string} listingId - The ID of the listing to remove
+ */
+exports.RemoveListing = async function({listingId}) {
+  await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", listingId),
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${this.rootStore.authToken}`
+    }
+  });
+};
+
+/**
+ * Retrieve all valid names for filtering listings. Full item names are required for filtering listing results by name.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of a marketplace to filter results by
+ *
+ * @returns {Promise<Array<String>>} - A list of item names
+ */
+exports.ListingNames = async function({marketplaceParams}) {
+  let tenantId;
+  if(marketplaceParams) {
+    tenantId = (await this.MarketplaceInfo({marketplaceParams})).tenantId;
+  }
+
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "mkt", "names"),
+      method: "GET",
+      queryParams: tenantId ? { filter: `tenant:eq:${tenantId}` } : {}
+    })
+  );
+};
+
+
+/**
+ * Retrieve all valid edition names of the specified item. Full item edition names are required for filtering listing results by edition.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {string} displayName - Display name of the item from which to request edition names
+ *
+ * @returns {Promise<Array<String>>} - A list of item editions
+ */
+exports.ListingEditionNames = async function({displayName}) {
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "mkt", "editions"),
+      queryParams: {
+        filter: `nft/display_name:eq:${displayName}`
+      },
+      method: "GET"
+    })
+  );
+};
+
+/**
+ * Retrieve names of all valid attributes for listed tiems. Full attribute names and values are required for filtering listing results by attributes.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {Object=} marketplaceParams - Parameters of a marketplace to filter results by
+ * @param {string=} displayName - Display name of the item from which to request attributes
+ *
+ * @returns {Promise<Array<String>>} - A list of valid attributes
+ */
+exports.ListingAttributes = async function({marketplaceParams, displayName}={}) {
+  let filters = [];
+
+  if(marketplaceParams) {
+    filters.push(`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`);
+  }
+
+  if(displayName) {
+    filters.push(`nft/display_name:eq:${displayName}`);
+  }
+
+  const attributes = await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "mkt", "attributes"),
+      method: "GET",
+      queryParams: {
+        filter: filters
+      }
+    })
+  );
+
+  return attributes
+    .map(({trait_type, values}) => ({ name: trait_type, values }))
+    .filter(({name}) =>
+      !["Content Fabric Hash", "Total Minted Supply", "Creator"].includes(name)
+    );
+};
+
+/* MINTING STATUS */
+
+exports.ListingPurchaseStatus = async function({listingId, confirmationId}) {
+  try {
+    const listingStatus = await this.ListingStatus({listingId});
+
+    if(!listingStatus) {
+      throw Error("Unable to find info for listing " + listingId);
+    }
+
+    const statuses = await this.MintingStatus({tenantId: listingStatus.tenant});
+
+    return statuses
+      .find(status =>
+        status.op === "nft-transfer" &&
+        status.extra && status.extra[0] === confirmationId
+      ) || { status: "none" };
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+exports.PurchaseStatus = async function({marketplaceParams, confirmationId}) {
+  try {
+    const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenant_id});
+
+    return statuses.find(status => status.op === "nft-buy" && status.confirmationId === confirmationId) || { status: "none" };
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+exports.ClaimStatus = async function({marketplaceParams, sku}) {
+  try {
+    const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+    const statuses = await this.MintingStatus({tenantId: marketplaceInfo.tenantId});
+
+    return statuses.find(status => status.op === "nft-claim" && status.marketplaceId === marketplaceInfo.marketplaceId && status.confirmationId === sku) || { status: "none" };
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+exports.PackOpenStatus = async function({contractAddress, tokenId}) {
+  try {
+    const tenantConfig = await this.TenantConfiguration({contractAddress});
+
+    const statuses = await this.MintingStatus({tenantId: tenantConfig.tenant});
+
+    return statuses.find(status => status.op === "nft-open" && Utils.EqualAddress(contractAddress, status.address) && status.tokenId === tokenId) || { status: "none" };
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+exports.CollectionRedemptionStatus = async function({marketplaceParams, confirmationId}) {
+  try {
+    const statuses = await this.MintingStatus({marketplaceParams});
+
+    return statuses.find(status => status.op === "nft-redeem" && status.confirmationId === confirmationId) || { status: "none" };
+  } catch(error) {
+    this.Log(error, true);
+    return { status: "unknown" };
+  }
+};
+
+/* EVENTS */
+
+
+exports.LoadDrop = async function({tenantSlug, eventSlug, dropId}) {
+  if(!this.drops){
+    this.drops = {};
+  }
+
+  if(!this.drops[tenantSlug]) {
+    this.drops[tenantSlug] = {};
+  }
+
+  if(!this.drops[tenantSlug][eventSlug]) {
+    this.drops[tenantSlug][eventSlug] = {};
+  }
+
+  if(!this.drops[tenantSlug][eventSlug][dropId]) {
+    const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
+    const event = (await this.client.ContentObjectMetadata({
+      versionHash: mainSiteHash,
+      metadataSubtree: UrlJoin("public", "asset_metadata", "tenants", tenantSlug, "sites", eventSlug, "info"),
+      resolveLinks: true,
+      linkDepthLimit: 2,
+      resolveIncludeSource: true,
+      produceLinkUrls: true,
+      select: [".", "drops"],
+      noAuth: true
+    })) || [];
+
+    const eventId = Utils.DecodeVersionHash(event["."].source).objectId;
+
+    event.drops.forEach(drop => {
+      drop = {
+        ...drop,
+        eventId
+      };
+
+      this.drops[tenantSlug][eventSlug][drop.uuid] = drop;
+      this.drops[drop.uuid] = drop;
+    });
+  }
+
+  return this.drops[dropId];
+};
+
+exports.SubmitDropVote = async function({marketplaceParams, eventId, dropId, sku}) {
+  const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+  await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "act", marketplaceInfo.tenant_id),
+    method: "POST",
+    body: {
+      op: "vote-drop",
+      evt: eventId,
+      id: dropId,
+      itm: sku
+    },
+    headers: {
+      Authorization: `Bearer ${this.__authorization.fabricToken}`
+    }
+  });
+};
+
+exports.DropStatus = async function({marketplace, eventId, dropId}) {
+  try {
+    const response = await Utils.ResponseToJson(
+      this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "act", marketplace.tenant_id, eventId, dropId),
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.__authorization.fabricToken}`
+        }
+      })
+    );
+
+    return response.sort((a, b) => a.ts > b.ts ? 1 : -1)[0] || { status: "none" };
+  } catch(error) {
+    this.Log(error, true);
+    return "";
+  }
+};

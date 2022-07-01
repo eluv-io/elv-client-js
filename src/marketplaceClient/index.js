@@ -1,7 +1,8 @@
 const {ElvClient} = require("../ElvClient");
 const Configuration = require("./Configuration");
-const {LinkTargetHash} = require("./Utils");
+const {LinkTargetHash, FormatNFT} = require("./Utils");
 const UrlJoin = require("url-join");
+const Utils = require("../Utils");
 
 /**
  * @namespace
@@ -62,19 +63,17 @@ class ElvMarketplaceClient {
    * @namedParams
    * @param {string} network=main - Name of the Fabric network to use (`main`, `demo`)
    * @param {string} mode=production - Environment to use (`production`, `staging`)
-   * @param {string=} tenantSlug - Slug of a tenant
-   * @param {string=} marketplaceSlug - Slug of a marketplace
+   * @param {Object=} marketplaceParams - Marketplace parameters
    *
    * @returns {Promise<ElvMarketplaceClient>}
    */
   static async Initialize({
     network="main",
     mode="production",
-    tenantSlug,
-    marketplaceSlug,
-    marketplaceId,
-    marketplaceHash
+    marketplaceParams
   }) {
+    let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
+
     if(!Configuration[network]) {
       throw Error(`ElvMarketplaceClient: Invalid network ${network}`);
     } else if(!Configuration[network][mode]) {
@@ -189,11 +188,11 @@ class ElvMarketplaceClient {
     return LinkTargetHash(marketplaceLink);
   }
 
-  async LoadMarketplace({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash}) {
-    const marketplaceInfo = this.MarketplaceInfo({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash});
+  async LoadMarketplace(marketplaceParams) {
+    const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
-    marketplaceId = marketplaceInfo.marketplaceId;
-    marketplaceHash = await this.LatestMarketplaceHash({tenantSlug: marketplaceInfo.tenantSlug, marketplaceSlug: marketplaceInfo.marketplaceSlug});
+    const marketplaceId = marketplaceInfo.marketplaceId;
+    const marketplaceHash = await this.LatestMarketplaceHash({tenantSlug: marketplaceInfo.tenantSlug, marketplaceSlug: marketplaceInfo.marketplaceSlug});
 
     if(this.cachedMarketplaces[marketplaceId] && this.cachedMarketplaces[marketplaceId].versionHash !== marketplaceHash) {
       delete this.cachedMarketplaces[marketplaceId];
@@ -213,16 +212,20 @@ class ElvMarketplaceClient {
 
       marketplace.items = await Promise.all(
         marketplace.items.map(async (item, index) => {
-          if(this.loggedIn && item.requires_permissions) {
-            try {
-              await this.client.ContentObjectMetadata({
-                versionHash: LinkTargetHash(item.nft_template),
-                metadataSubtree: "permissioned"
-              });
-
-              item.authorized = true;
-            } catch(error) {
+          if(item.requires_permissions) {
+            if(!this.loggedIn) {
               item.authorized = false;
+            } else {
+              try {
+                await this.client.ContentObjectMetadata({
+                  versionHash: LinkTargetHash(item.nft_template),
+                  metadataSubtree: "permissioned"
+                });
+
+                item.authorized = true;
+              } catch(error) {
+                item.authorized = false;
+              }
             }
           }
 
@@ -300,7 +303,7 @@ class ElvMarketplaceClient {
   UserAddress() {
     if(!this.loggedIn) { return; }
 
-    return this.client.utils.FormatAddress(this.__authorization.address);
+    return this.client.utils.DecodeSignedToken(this.__authorization.fabricToken).payload.adr;
   }
 
   /**
@@ -382,6 +385,278 @@ class ElvMarketplaceClient {
     return balances;
   }
 
+  async FilteredQuery({
+    mode="listings",
+    sortBy="created",
+    sortDesc=false,
+    filter,
+    editionFilter,
+    attributeFilters,
+    contractAddress,
+    tokenId,
+    currency,
+    marketplaceParams,
+    tenantId,
+    collectionIndex=-1,
+    sellerAddress,
+    lastNDays=-1,
+    start=0,
+    limit=50
+  }={}) {
+    collectionIndex = parseInt(collectionIndex);
+
+    let params = {
+      sort_by: sortBy,
+      sort_descending: sortDesc,
+      start,
+      limit
+    };
+
+    let marketplaceInfo, marketplace;
+    if(marketplaceParams) {
+      marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+
+      if(collectionIndex >= 0) {
+        marketplace = await this.Marketplace({marketplaceParams});
+      }
+    }
+
+    try {
+      let filters = [];
+
+      if(sellerAddress) {
+        filters.push(`seller:eq:${this.client.utils.FormatAddress(sellerAddress)}`);
+      }
+
+      if(marketplace && collectionIndex >= 0) {
+        const collection = marketplace.collections[collectionIndex];
+
+        collection.items.forEach(sku => {
+          if(!sku) { return; }
+
+          const item = marketplace.items.find(item => item.sku === sku);
+
+          if(!item) { return; }
+
+          const address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
+
+          if(address) {
+            filters.push(
+              `${mode === "owned" ? "contract_addr": "contract"}:eq:${Utils.FormatAddress(address)}`
+            );
+          }
+        });
+
+        // No valid items, so there must not be anything relevant in the collection
+        if(filters.length === 0) {
+          if(mode.includes("stats")) {
+            return {};
+          } else {
+            return {
+              paging: {
+                start: params.start,
+                limit: params.limit,
+                total: 0,
+                more: false
+              },
+              results: []
+            };
+          }
+        }
+      } else if(mode !== "owned" && marketplaceInfo || tenantId) {
+        filters.push(`tenant:eq:${marketplaceInfo ? marketplaceInfo.tenantId : tenantId}`);
+      }
+
+      if(contractAddress) {
+        if(mode === "owned") {
+          filters.push(`contract_addr:eq:${Utils.FormatAddress(contractAddress)}`);
+        } else {
+          filters.push(`contract:eq:${Utils.FormatAddress(contractAddress)}`);
+        }
+
+        if(tokenId) {
+          filters.push(`token:eq:${tokenId}`);
+        }
+      } else if(filter) {
+        if(mode.includes("listing")) {
+          filters.push(`nft/display_name:eq:${filter}`);
+        } else if(mode === "owned") {
+          filters.push(`meta:@>:{"display_name":"${filter}"}`);
+          params.exact = false;
+        } else {
+          filters.push(`name:eq:${filter}`);
+        }
+      }
+
+      if(editionFilter) {
+        if(mode.includes("listing")) {
+          filters.push(`nft/edition_name:eq:${editionFilter}`);
+        } else if(mode === "owned") {
+          filters.push(`meta:@>:{"edition_name":"${editionFilter}"}`);
+          params.exact = false;
+        } else {
+          filters.push(`edition:eq:${editionFilter}`);
+        }
+      }
+
+      if(attributeFilters) {
+        attributeFilters.map(({name, value}) => {
+          if(!name || !value) { return; }
+
+          filters.push(`nft/attributes/${name}:eq:${value}`);
+        });
+      }
+
+      if(currency) {
+        filters.push("link_type:eq:sol");
+      }
+
+      if(lastNDays && lastNDays > 0) {
+        filters.push(`created:gt:${((Date.now() / 1000) - ( lastNDays * 24 * 60 * 60 )).toFixed(0)}`);
+      }
+
+      let path;
+      switch(mode) {
+        case "owned":
+          path = UrlJoin("as", "wlt", "nfts");
+
+          if(marketplaceInfo) {
+            path = UrlJoin("as", "wlt", "nfts", marketplaceInfo.tenantId);
+          }
+
+          break;
+
+        case "listings":
+          path = UrlJoin("as", "mkt", "f");
+          break;
+
+        case "sales":
+          path = UrlJoin("as", "mkt", "hst", "f");
+          filters.push("action:eq:SOLD");
+          break;
+
+        case "listing-stats":
+          path = UrlJoin("as", "mkt", "stats", "listed");
+          break;
+
+        case "sales-stats":
+          path = UrlJoin("as", "mkt", "stats", "sold");
+          break;
+      }
+
+      if(filters.length > 0) {
+        params.filter = filters;
+      }
+
+      if(mode.includes("stats")) {
+        return await Utils.ResponseToJson(
+          this.client.authClient.MakeAuthServiceRequest({
+            path,
+            method: "GET",
+            queryParams: params
+          })
+        );
+      }
+
+      const { contents, paging } = await Utils.ResponseToJson(
+        await this.client.authClient.MakeAuthServiceRequest({
+          path,
+          method: "GET",
+          queryParams: params,
+          headers: mode === "owned" ?
+            { Authorization: `Bearer ${this.__authorization.fabricToken}` } :
+            {}
+        })
+      ) || [];
+
+      return {
+        paging: {
+          start: params.start,
+          limit: params.limit,
+          total: paging.total,
+          more: paging.total > start + limit
+        },
+        results: (contents || []).map(item => ["owned", "listings"].includes(mode) ? FormatNFT(item) : item)
+      };
+    } catch(error) {
+      if(error.status && error.status.toString() === "404") {
+        return {
+          paging: {
+            start: params.start,
+            limit: params.limit,
+            total: 0,
+            more: false
+          },
+          results: []
+        };
+      }
+
+      throw error;
+    }
+  }
+
+  async MintingStatus({marketplaceParams, tenantId}) {
+    if(!tenantId) {
+      const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams: marketplaceParams || this.selectedMarketplaceInfo});
+      tenantId = marketplaceInfo.tenantId;
+    }
+
+    try {
+      const response = await Utils.ResponseToJson(
+        this.client.authClient.MakeAuthServiceRequest({
+          path: UrlJoin("as", "wlt", "status", "act", tenantId),
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${this.__authorization.fabricToken}`
+          }
+        })
+      );
+
+      return response
+        .map(status => {
+          let [op, address, id] = status.op.split(":");
+          address = address.startsWith("0x") ? Utils.FormatAddress(address) : address;
+
+          let confirmationId, tokenId;
+          if(op === "nft-buy") {
+            confirmationId = id;
+          } else if(op === "nft-claim") {
+            confirmationId = id;
+            status.marketplaceId = address;
+
+            if(status.extra && status.extra["0"]) {
+              address = status.extra.token_addr;
+              tokenId = status.extra.token_id_str;
+            }
+          } else if(op === "nft-redeem") {
+            confirmationId = status.op.split(":").slice(-1)[0];
+          } else {
+            tokenId = id;
+          }
+
+          if(op === "nft-transfer") {
+            confirmationId = status.extra && status.extra.trans_id;
+          }
+
+          return {
+            ...status,
+            timestamp: new Date(status.ts),
+            state: status.state && typeof status.state === "object" ? Object.values(status.state) : status.state,
+            extra: status.extra && typeof status.extra === "object" ? Object.values(status.extra) : status.extra,
+            confirmationId,
+            op,
+            address,
+            tokenId
+          };
+        })
+        .sort((a, b) => a.ts < b.ts ? 1 : -1);
+    } catch(error) {
+      this.Log("Failed to retrieve minting status", true);
+      this.Log(error);
+
+      return [];
+    }
+  }
 
   /**
    * Authenticate with an ElvMarketplaceClient authorization token
