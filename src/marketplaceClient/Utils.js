@@ -207,7 +207,7 @@ const Popup = ({url, title, w, h}) => {
 exports.ActionPopup = async ({mode="tab", url, onMessage, onCancel}) => {
   await new Promise(resolve => {
     const newWindow = mode === "popup" ?
-      Popup({url, title: "Eluvio Media Wallet", w: 400, h: 700}) :
+      Popup({url, title: "Eluvio Media Wallet", w: 500, h: 850}) :
       window.open(url);
 
     const closeCheck = setInterval(async () => {
