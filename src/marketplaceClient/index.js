@@ -6,22 +6,9 @@ const Utils = require("../Utils");
 
 /**
  * @namespace
- * @description This is a utility namespace mostly containing functions for managing
- * multiformat type conversions.
- *
- * Utils can be imported separately from the client:
- *
- * const Utils = require("@eluvio/elv-client-js/src/Utils)
- *
- * or
- *
- * import Utils from "@eluvio/elv-client-js/src/Utils"
- *
- *
- * It can be accessed from ElvClient and FrameClient as client.utils
  */
 class ElvMarketplaceClient {
-  constructor({client, network, mode, marketplaceInfo}) {
+  constructor({client, network, mode, marketplaceInfo, storeAuthToken}) {
     this.client = client;
     this.loggedIn = false;
 
@@ -31,6 +18,7 @@ class ElvMarketplaceClient {
     this.mainSiteId = Configuration[network][mode].siteId;
     this.appUrl = Configuration[network][mode].appUrl;
     this.publicStaticToken = client.staticToken;
+    this.storeAuthToken = storeAuthToken;
 
     this.selectedMarketplaceInfo = marketplaceInfo;
 
@@ -65,13 +53,15 @@ class ElvMarketplaceClient {
    * @param {string} network=main - Name of the Fabric network to use (`main`, `demo`)
    * @param {string} mode=production - Environment to use (`production`, `staging`)
    * @param {Object=} marketplaceParams - Marketplace parameters
+   * @param {boolean=} storeAuthToken=true - If specified, auth tokens will be stored in localstorage (if available)
    *
    * @returns {Promise<ElvMarketplaceClient>}
    */
   static async Initialize({
     network="main",
     mode="production",
-    marketplaceParams
+    marketplaceParams,
+    storeAuthToken=true
   }) {
     let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
 
@@ -92,7 +82,8 @@ class ElvMarketplaceClient {
         marketplaceSlug,
         marketplaceId: marketplaceHash ? client.utils.DecodeVersionHash(marketplaceHash).objectId : marketplaceId,
         marketplaceHash
-      }
+      },
+      storeAuthToken
     });
 
     if(window && window.location && window.location.href) {
@@ -103,6 +94,15 @@ class ElvMarketplaceClient {
         url.searchParams.delete("elvToken");
 
         window.history.replaceState("", "", url);
+      } else if(storeAuthToken && typeof localStorage !== "undefined") {
+        try {
+          // Load saved auth token
+          let savedToken = localStorage.getItem("__elv-token");
+          if(savedToken) {
+            await marketplaceClient.Authenticate({token: savedToken});
+          }
+          // eslint-disable-next-line no-empty
+        } catch(error) {}
       }
     }
 
@@ -317,6 +317,14 @@ class ElvMarketplaceClient {
     this.loggedIn = false;
 
     this.cachedMarketplaces = {};
+
+    // Delete saved auth token
+    if(typeof localStorage !== "undefined") {
+      try {
+        localStorage.removeItem("__elv-token");
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
+    }
   }
 
   /**
@@ -477,7 +485,16 @@ class ElvMarketplaceClient {
 
     this.cachedMarketplaces = {};
 
-    return this.utils.B58(JSON.stringify(this.__authorization));
+    const token = this.utils.B58(JSON.stringify(this.__authorization));
+
+    if(this.storeAuthToken && typeof localStorage !== "undefined") {
+      try {
+        localStorage.setItem("__elv-token", token);
+      // eslint-disable-next-line no-empty
+      } catch(error) {}
+    }
+
+    return token;
   }
 
   async SignMetamask({message, address}) {
