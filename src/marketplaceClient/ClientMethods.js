@@ -49,10 +49,8 @@ exports.TenantConfiguration = async function({tenantId, contractAddress}) {
  * @returns {Promise<Object>} - Stock info for items in the marketplace
  */
 exports.MarketplaceStock = async function ({marketplaceParams, tenantId}) {
-  let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
-
   if(!tenantId) {
-    const marketplaceInfo = this.MarketplaceInfo({tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash});
+    const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
     tenantId = marketplaceInfo.tenantId;
   }
 
@@ -62,7 +60,7 @@ exports.MarketplaceStock = async function ({marketplaceParams, tenantId}) {
         path: UrlJoin("as", "wlt", "nft", "info", tenantId),
         method: "GET",
         headers: {
-          Authorization: `Bearer ${this.__authorization.fabricToken}`
+          Authorization: `Bearer ${this.AuthToken()}`
         }
       })
     );
@@ -538,7 +536,6 @@ exports.SalesStats = async function() {
  * @returns {Promise<string>} - The listing ID of the created listing
  */
 exports.CreateListing = async function({contractAddress, tokenId, price, listingId}) {
-  if(contractId) { contractAddress = Utils.HashToAddress(contractId); }
   contractAddress = Utils.FormatAddress(contractAddress);
 
   if(listingId) {
@@ -553,7 +550,7 @@ exports.CreateListing = async function({contractAddress, tokenId, price, listing
           price: parseFloat(price)
         },
         headers: {
-          Authorization: `Bearer ${this.rootStore.authToken}`
+          Authorization: `Bearer ${this.AuthToken()}`
         }
       })
     );
@@ -569,7 +566,7 @@ exports.CreateListing = async function({contractAddress, tokenId, price, listing
           price: parseFloat(price)
         },
         headers: {
-          Authorization: `Bearer ${this.rootStore.authToken}`
+          Authorization: `Bearer ${this.AuthToken()}`
         }
       })
     );
@@ -588,7 +585,7 @@ exports.RemoveListing = async function({listingId}) {
     path: UrlJoin("as", "wlt", "mkt", listingId),
     method: "DELETE",
     headers: {
-      Authorization: `Bearer ${this.rootStore.authToken}`
+      Authorization: `Bearer ${this.AuthToken()}`
     }
   });
 };
@@ -809,7 +806,7 @@ exports.SubmitDropVote = async function({marketplaceParams, eventId, dropId, sku
       itm: sku
     },
     headers: {
-      Authorization: `Bearer ${this.__authorization.fabricToken}`
+      Authorization: `Bearer ${this.AuthToken()}`
     }
   });
 };
@@ -821,7 +818,7 @@ exports.DropStatus = async function({marketplace, eventId, dropId}) {
         path: UrlJoin("as", "wlt", "act", marketplace.tenant_id, eventId, dropId),
         method: "GET",
         headers: {
-          Authorization: `Bearer ${this.__authorization.fabricToken}`
+          Authorization: `Bearer ${this.AuthToken()}`
         }
       })
     );

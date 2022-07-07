@@ -178,3 +178,59 @@ exports.LinkTargetHash = function(link) {
   }
 };
 
+// https://stackoverflow.com/questions/4068373/center-a-popup-window-on-screen
+const Popup = ({url, title, w, h}) => {
+  // Fixes dual-screen position
+  const dualScreenLeft = window.screenLeft || window.screenX;
+  const dualScreenTop = window.screenTop || window.screenY;
+
+  const width = window.innerWidth || document.documentElement.clientWidth || screen.width;
+  const height = window.innerHeight || document.documentElement.clientHeight || screen.height;
+
+  const systemZoom = width / window.screen.availWidth;
+  const left = (width - w) / 2 / systemZoom + dualScreenLeft;
+  const top = (height - h) / 2 / systemZoom + dualScreenTop;
+  const newWindow = window.open(url, title,
+    `
+      width=${w / systemZoom},
+      height=${h / systemZoom},
+      top=${top},
+      left=${left}
+    `
+  );
+
+  if(window.focus) newWindow.focus();
+
+  return newWindow;
+};
+
+exports.ActionPopup = async ({mode="tab", url, onMessage, onCancel}) => {
+  await new Promise(resolve => {
+    const newWindow = mode === "popup" ?
+      Popup({url, title: "Eluvio Media Wallet", w: 400, h: 700}) :
+      window.open(url);
+
+    const closeCheck = setInterval(async () => {
+      if(newWindow.closed) {
+        clearInterval(closeCheck);
+
+        if(onCancel) {
+          await onCancel();
+        }
+
+        resolve();
+      }
+    }, 500);
+
+    window.addEventListener("message", async event => {
+      await onMessage(
+        event,
+        () => {
+          clearInterval(closeCheck);
+          newWindow.close();
+          resolve();
+        }
+      );
+    });
+  });
+};
