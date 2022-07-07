@@ -1,6 +1,6 @@
 const {ElvClient} = require("../ElvClient");
 const Configuration = require("./Configuration");
-const {LinkTargetHash, FormatNFT} = require("./Utils");
+const {LinkTargetHash, FormatNFT, ActionPopup} = require("./Utils");
 const UrlJoin = require("url-join");
 const Utils = require("../Utils");
 
@@ -29,6 +29,7 @@ class ElvMarketplaceClient {
     this.mode = mode;
     this.purchaseMode = Configuration[network][mode].purchaseMode;
     this.mainSiteId = Configuration[network][mode].siteId;
+    this.appUrl = Configuration[network][mode].appUrl;
     this.publicStaticToken = client.staticToken;
 
     this.selectedMarketplaceInfo = marketplaceInfo;
@@ -94,10 +95,409 @@ class ElvMarketplaceClient {
       }
     });
 
+    if(window && window.location && window.location.href) {
+      let url = new URL(window.location.href);
+      if(url.searchParams.get("elvToken")) {
+        await marketplaceClient.Authenticate({token: url.searchParams.get("elvToken")});
+
+        url.searchParams.delete("elvToken");
+
+        window.history.replaceState("", "", url);
+      }
+    }
+
     await marketplaceClient.LoadAvailableMarketplaces();
 
     return marketplaceClient;
   }
+
+  /**
+   * Retrieve information about the user, including the address, wallet type, and (for custodial users) email address.
+   *
+   * @methodGroup User
+   *
+   * @returns {Object} - User info
+   */
+  User() {
+    if(!this.loggedIn) { return; }
+
+    return {
+      address: this.UserAddress() ,
+      email: this.__authorization.email,
+      walletType: this.__authorization.walletType,
+      walletName: this.__authorization.walletName
+    };
+  }
+
+  /**
+   * Retrieve the address of the current user.
+   *
+   * @methodGroup User
+   *
+   * @returns {string} - The address of the current user
+   */
+  UserAddress() {
+    if(!this.loggedIn) { return; }
+
+    return this.client.utils.DecodeSignedToken(this.AuthToken()).payload.adr;
+  }
+
+  /**
+   * <b><i>Requires login</i></b>
+   *
+   * Retrieve the fund balances for the current user
+   *
+   * @methodGroup User
+   * @returns {Promise<{Object}>} - Returns balances for the user. All values are in USD.
+   *  <ul>
+   *  <li>- totalWalletBalance - Total balance of the users sales and wallet balance purchases</li>
+   *  <li>- availableWalletBalance - Balance available for purchasing items</li>
+   *  <li>- pendingWalletBalance - Balance unavailable for purchasing items</li>
+   *  <li>- withdrawableWalletBalance - Amount that is available for withdrawal</li>
+   *  <li>- usedBalance - <i>(Only included if user has set up Solana link with the Phantom wallet)</i> Available USDC balance of the user's Solana wallet</li>
+   *  </ul>
+   */
+  async UserWalletBalance(checkOnboard=false) {
+    if(!this.loggedIn) { return; }
+
+    // eslint-disable-next-line no-unused-vars
+    const { balance, usage_hold, payout_hold, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
+      await this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "mkt", "bal"),
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      })
+    );
+
+    const userStripeId = stripe_id;
+    const userStripeEnabled = stripe_payouts_enabled;
+    const totalWalletBalance = parseFloat(balance || 0);
+    const availableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(usage_hold || 0));
+    const pendingWalletBalance = Math.max(0, this.totalWalletBalance - this.availableWalletBalance);
+    const withdrawableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(payout_hold || 0));
+
+    if(checkOnboard && stripe_id && !stripe_payouts_enabled) {
+      // Refresh stripe enabled flag
+      const rootUrl = new URL(UrlJoin(window.location.origin, window.location.pathname)).toString();
+      await this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "onb", "stripe"),
+        method: "POST",
+        body: {
+          country: "US",
+          mode: this.mode,
+          refresh_url: rootUrl.toString(),
+          return_url: rootUrl.toString()
+        },
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      });
+
+      return await this.UserWalletBalance(false);
+    }
+
+    let balances = {
+      totalWalletBalance,
+      availableWalletBalance,
+      pendingWalletBalance,
+      withdrawableWalletBalance,
+    };
+
+    if(userStripeEnabled) {
+      balances.userStripeId = userStripeId;
+      balances.userStripeEnabled = userStripeEnabled;
+    }
+
+    // TODO: integrate
+    /*
+    if(cryptoStore.usdcConnected) {
+      balances.usdcBalance = cryptoStore.phantomUSDCBalance;
+    }
+
+     */
+
+    return balances;
+  }
+
+  /* Login and authorization */
+
+  /**
+   * Direct the user to the Eluvio Media Wallet login page.
+   *
+   * <b>NOTE:</b> If using the redirect flow, the domain in the `callbackUrl` MUST be allowed in the metadata of the specified marketplace.
+   *
+   * @methodGroup Login
+   * @namedParams
+   * @param {string=} method=redirect - How to present the login page.
+   * - `redirect` - Redirect to the wallet login page. Upon login, the page will be redirected back to the specified `redirectUrl` with the authorization token.
+   * - `tab` - Open the wallet login page in a new tab. Upon login, authorization information will be sent back to the client via message and the tab will be closed.
+   * - `popup` - Open the wallet login page in a popup window. Upon login, authorization information will be sent back to the client via message and the popup will be closed.
+   * @param {string=} provider - If logging in via a specific method, specify the provider and mode. Options: `oauth`, `metamask`
+   * @param {string=} mode - If logging in via a specific method, specify the mode. Options `login` (Log In), `create` (Sign Up)
+   * @param {string=} callbackUrl - If using the redirect flow, the URL to redirect back to after login.
+   * @param {Object=} marketplaceParams - Parameters of a marketplace to associate the login with. If not specified, the marketplace parameters used upon client initialization will be used. A marketplace is required when using the redirect flow.
+   * @param {boolean=} clearLogin=false - If specified, the user will be prompted to log in anew even if they are already logged in on the Eluvio Media Wallet app
+   */
+  async LogIn({
+    method="redirect",
+    provider,
+    mode="login",
+    callbackUrl,
+    marketplaceParams,
+    clearLogin=false,
+    callback
+  }) {
+    let loginUrl = new URL(this.appUrl);
+    loginUrl.hash = "/login";
+
+    loginUrl.searchParams.set("origin", window.location.origin);
+    loginUrl.searchParams.set("action", "login");
+
+    if(provider) {
+      loginUrl.searchParams.set("provider", provider);
+    }
+
+    if(mode) {
+      loginUrl.searchParams.set("mode", mode);
+    }
+
+    if(marketplaceParams) {
+      loginUrl.searchParams.set("mid", (await this.MarketplaceInfo({marketplaceParams})).marketplaceHash);
+    } else if((this.selectedMarketplaceInfo || {}).marketplaceHash) {
+      loginUrl.searchParams.set("mid", this.selectedMarketplaceInfo.marketplaceHash);
+    }
+
+    if(clearLogin) {
+      loginUrl.searchParams.set("clear", "");
+    }
+
+    if(method === "redirect") {
+      loginUrl.searchParams.set("response", "redirect");
+      loginUrl.searchParams.set("source", "origin");
+      loginUrl.searchParams.set("redirect", callbackUrl);
+
+      window.location = loginUrl;
+    } else {
+      loginUrl.searchParams.set("response", "message");
+      loginUrl.searchParams.set("source", "parent");
+
+      await new Promise(async (resolve, reject) => {
+        await ActionPopup({
+          mode: method,
+          url: loginUrl.toString(),
+          onCancel: () => reject("User cancelled login"),
+          onMessage: async (event, Close) => {
+            if(!event || !event.data || event.data.type !== "LoginResponse") {
+              return;
+            }
+
+            try {
+              if(callback) {
+                await callback(event.data.params);
+              } else {
+                await this.Authenticate({token: event.data.params.clientSigningToken || event.data.params.clientAuthToken});
+              }
+
+              resolve();
+            } catch(error) {
+              reject(error);
+            } finally {
+              Close();
+            }
+          }
+        });
+      });
+    }
+  }
+
+  async LogOut() {
+    this.__authorization = {};
+    this.loggedIn = false;
+
+    this.cachedMarketplaces = {};
+  }
+
+  /**
+   * Authenticate with an ElvMarketplaceClient authorization token
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string} token - A previously generated ElvMarketplaceClient authorization token;
+   */
+  async Authenticate({token}) {
+    let decodedToken;
+    try {
+      decodedToken = JSON.parse(this.utils.FromB58ToStr(token)) || {};
+    } catch(error) {
+      throw new Error("Invalid authorization token " + token);
+    }
+
+    if(!decodedToken.expiresAt || Date.now() > decodedToken.expiresAt) {
+      throw Error("ElvMarketplaceClient: Provided authorization token has expired");
+    }
+
+    this.client.SetStaticToken({token: decodedToken.fabricToken});
+
+    if(decodedToken.clusterToken) {
+      this.client.SetRemoteSigner({authToken: decodedToken.clusterToken});
+    }
+
+    return this.SetAuthorization(decodedToken);
+  }
+
+  /**
+   * Authenticate with an OAuth ID token
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string} idToken - An OAuth ID token
+   * @param {string=} tenantId - ID of tenant with which to associate the user. If marketplace info was set upon initialization, this will be determined automatically.
+   * @param {string=} email - Email address of the user. If not specified, this method will attempt to extract the email from the ID token.
+   * @param {boolean=} shareEmail=false - Whether or not the user consents to sharing their email
+   * @param {number=} tokenDuration=24 - Number of hours the generated authorization token will last before expiring
+   *
+   * @returns {Promise<Object>} - Returns an authorization tokens that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
+   * Save this token to avoid having to reauthenticate with OAuth. This token expires after 24 hours.
+   *
+   * The result includes two tokens:
+   * - token - Standard client auth token used to access content and perform actions on behalf of the user.
+   * - signingToken - Identical to `authToken`, but also includes the ability to perform arbitrary signatures with the custodial wallet. This token should be protected and should not be
+   * shared with third parties.
+   */
+  async AuthenticateOAuth({idToken, tenantId, email, shareEmail=false, tokenDuration=24}) {
+    if(!tenantId && this.selectedMarketplaceInfo) {
+      // Load tenant ID automatically from selected marketplace
+      await this.AvailableMarketplaces();
+      tenantId = this.selectedMarketplaceInfo.tenantId;
+    }
+
+    await this.client.SetRemoteSigner({idToken, tenantId, extraData: { share_email: shareEmail }, unsignedPublicAuth: true});
+
+    const expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
+    const fabricToken = await this.client.CreateFabricToken({duration: tokenDuration * 60 * 60 * 1000});
+    const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
+
+    if(!email) {
+      try {
+        const decodedToken = JSON.parse(this.utils.FromB64URL(idToken.split(".")[1]));
+        email = decodedToken.email;
+      } catch(error) {
+        throw Error("Failed to decode ID token");
+      }
+    }
+
+    this.client.SetStaticToken({token: fabricToken});
+
+    return {
+      authToken: this.SetAuthorization({
+        fabricToken,
+        tenantId,
+        address,
+        email,
+        expiresAt,
+        walletType: "Custodial",
+        walletName: "Eluvio"
+      }),
+      signingToken: this.SetAuthorization({
+        clusterToken: this.client.signer.authToken,
+        fabricToken,
+        tenantId,
+        address,
+        email,
+        expiresAt,
+        walletType: "Custodial",
+        walletName: "Eluvio"
+      })
+    };
+  }
+
+  /**
+   * Authenticate with an external Ethereum compatible wallet, like Metamask.
+   *
+   * @methodGroup Authorization
+   * @namedParams
+   * @param {string} address - The address of the wallet
+   * @param {number=} tokenDuration=24 - Number of hours the generated authorization token will last before expiring
+   * @param {string=} walletName=Metamask - Name of the external wallet
+   * @param {function=} Sign - The method used for signing by the wallet. If not specified, will attempt to sign with Metamask.
+   *
+   * @returns {Promise<string>} - Returns an authorization token that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
+   * Save this token to avoid having to reauthenticate. This token expires after 24 hours.
+   */
+  async AuthenticateExternalWallet({address, tokenDuration=24, walletName="Metamask", Sign}) {
+    if(!address) {
+      address = window.ethereum.selectedAddress;
+    }
+
+    address = this.utils.FormatAddress(address);
+
+    if(!Sign) {
+      Sign = async message => this.SignMetamask({message, address});
+    }
+
+    const expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
+    const fabricToken = await this.client.CreateFabricToken({
+      address,
+      duration: tokenDuration * 60 * 60 * 1000,
+      Sign,
+      addEthereumPrefix: false
+    });
+
+    return this.SetAuthorization({fabricToken, address, expiresAt, walletType: "External", walletName});
+  }
+
+  AuthToken() {
+    if(!this.loggedIn) {
+      return this.publicStaticToken;
+    }
+
+    return this.__authorization.fabricToken;
+  }
+
+  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, walletType, walletName}) {
+    address = this.client.utils.FormatAddress(address);
+
+    this.__authorization = {
+      fabricToken,
+      tenantId,
+      address,
+      email,
+      expiresAt,
+      walletType,
+      walletName
+    };
+
+    if(clusterToken) {
+      this.__authorization.clusterToken = clusterToken;
+    }
+
+    this.loggedIn = true;
+
+    this.cachedMarketplaces = {};
+
+    return this.utils.B58(JSON.stringify(this.__authorization));
+  }
+
+  async SignMetamask({message, address}) {
+    if(!window.ethereum) {
+      throw Error("ElvMarketplaceClient: Unable to initialize - Metamask not available");
+    }
+
+    await window.ethereum.request({method: "eth_requestAccounts"});
+    const from = address || window.ethereum.selectedAddress;
+    return await window.ethereum.request({
+      method: "personal_sign",
+      params: [message, from, ""],
+    });
+  }
+
+
+
+  // Internal loading methods
+
+
 
   // If marketplace slug is specified, load only that marketplace. Otherwise load all
   async LoadAvailableMarketplaces(forceReload=false) {
@@ -273,116 +673,6 @@ class ElvMarketplaceClient {
     }
 
     return this.cachedMarketplaces[marketplaceId];
-  }
-
-  /**
-   * Retrieve information about the user, including the address, wallet type, and (for custodial users) email address.
-   *
-   * @methodGroup User
-   *
-   * @returns {Object} - User info
-   */
-  User() {
-    if(!this.loggedIn) { return; }
-
-    return {
-      address: this.UserAddress() ,
-      email: this.__authorization.email,
-      walletType: this.__authorization.walletType,
-      walletName: this.__authorization.walletName
-    };
-  }
-
-  /**
-   * Retrieve the address of the current user.
-   *
-   * @methodGroup User
-   *
-   * @returns {string} - The address of the current user
-   */
-  UserAddress() {
-    if(!this.loggedIn) { return; }
-
-    return this.client.utils.DecodeSignedToken(this.__authorization.fabricToken).payload.adr;
-  }
-
-  /**
-   * <b><i>Requires login</i></b>
-   *
-   * Retrieve the fund balances for the current user
-   *
-   * @methodGroup User
-   * @returns {Promise<{Object}>} - Returns balances for the user. All values are in USD.
-   *  <ul>
-   *  <li>- totalWalletBalance - Total balance of the users sales and wallet balance purchases</li>
-   *  <li>- availableWalletBalance - Balance available for purchasing items</li>
-   *  <li>- pendingWalletBalance - Balance unavailable for purchasing items</li>
-   *  <li>- withdrawableWalletBalance - Amount that is available for withdrawal</li>
-   *  <li>- usedBalance - <i>(Only included if user has set up Solana link with the Phantom wallet)</i> Available USDC balance of the user's Solana wallet</li>
-   *  </ul>
-   */
-  async UserWalletBalance(checkOnboard=false) {
-    if(!this.loggedIn) { return; }
-
-    // eslint-disable-next-line no-unused-vars
-    const { balance, usage_hold, payout_hold, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
-      await this.client.authClient.MakeAuthServiceRequest({
-        path: UrlJoin("as", "wlt", "mkt", "bal"),
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${this.__authorization.fabricToken}`
-        }
-      })
-    );
-
-    const userStripeId = stripe_id;
-    const userStripeEnabled = stripe_payouts_enabled;
-    const totalWalletBalance = parseFloat(balance || 0);
-    const availableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(usage_hold || 0));
-    const pendingWalletBalance = Math.max(0, this.totalWalletBalance - this.availableWalletBalance);
-    const withdrawableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(payout_hold || 0));
-
-    if(checkOnboard && stripe_id && !stripe_payouts_enabled) {
-      // Refresh stripe enabled flag
-      const rootUrl = new URL(UrlJoin(window.location.origin, window.location.pathname)).toString();
-      await this.client.authClient.MakeAuthServiceRequest({
-        path: UrlJoin("as", "wlt", "onb", "stripe"),
-        method: "POST",
-        body: {
-          country: "US",
-          mode: this.mode,
-          refresh_url: rootUrl.toString(),
-          return_url: rootUrl.toString()
-        },
-        headers: {
-          Authorization: `Bearer ${this.__authorization.fabricToken}`
-        }
-      });
-
-      return await this.UserWalletBalance(false);
-    }
-
-    let balances = {
-      totalWalletBalance,
-      availableWalletBalance,
-      pendingWalletBalance,
-      withdrawableWalletBalance,
-    };
-
-    if(userStripeEnabled) {
-      balances.userStripeId = userStripeId;
-      balances.userStripeEnabled = userStripeEnabled;
-    }
-
-    // TODO: integrate
-    /*
-    if(cryptoStore.usdcConnected) {
-      balances.usdcBalance = cryptoStore.phantomUSDCBalance;
-    }
-
-     */
-
-    return balances;
   }
 
   async FilteredQuery({
@@ -564,7 +854,7 @@ class ElvMarketplaceClient {
           method: "GET",
           queryParams: params,
           headers: mode === "owned" ?
-            { Authorization: `Bearer ${this.__authorization.fabricToken}` } :
+            { Authorization: `Bearer ${this.AuthToken()}` } :
             {}
         })
       ) || [];
@@ -607,7 +897,7 @@ class ElvMarketplaceClient {
           path: UrlJoin("as", "wlt", "status", "act", tenantId),
           method: "GET",
           headers: {
-            Authorization: `Bearer ${this.__authorization.fabricToken}`
+            Authorization: `Bearer ${this.AuthToken()}`
           }
         })
       );
@@ -656,146 +946,6 @@ class ElvMarketplaceClient {
 
       return [];
     }
-  }
-
-  /**
-   * Authenticate with an ElvMarketplaceClient authorization token
-   *
-   * @methodGroup Authorization
-   * @namedParams
-   * @param {string} token - A previously generated ElvMarketplaceClient authorization token;
-   */
-  async Authenticate({token}) {
-    let decodedToken;
-    try {
-      decodedToken = JSON.parse(this.utils.FromB58ToStr(token)) || {};
-    } catch(error) {
-      throw new Error("Invalid authorization token " + token);
-    }
-
-    if(!decodedToken.expiresAt || Date.now() > decodedToken.expiresAt) {
-      throw Error("ElvMarketplaceClient: Provided authorization token has expired");
-    }
-
-    this.client.SetStaticToken({token: decodedToken.fabricToken});
-
-    return this.SetAuthorization(decodedToken);
-  }
-
-  /**
-   * Authenticate with an OAuth ID token
-   *
-   * @methodGroup Authorization
-   * @namedParams
-   * @param {string} idToken - An OAuth ID token
-   * @param {string=} tenantId - ID of tenant with which to associate the user. If marketplace info was set upon initialization, this will be determined automatically.
-   * @param {string=} email - Email address of the user. If not specified, this method will attempt to extract the email from the ID token.
-   * @param {boolean=} shareEmail=false - Whether or not the user consents to sharing their email
-   * @param {number=} tokenDuration=24 - Number of hours the generated authorization token will last before expiring
-   *
-   * @returns {Promise<string>} - Returns an authorization token that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
-   * Save this token to avoid having to reauthenticate with OAuth. This token expires after 24 hours.
-   */
-  async AuthenticateOAuth({idToken, tenantId, email, shareEmail=false, tokenDuration=24}) {
-    if(!tenantId && this.selectedMarketplaceInfo) {
-      // Load tenant ID automatically from selected marketplace
-      await this.AvailableMarketplaces();
-      tenantId = this.selectedMarketplaceInfo.tenantId;
-    }
-
-    await this.client.SetRemoteSigner({idToken, tenantId, extraData: { share_email: shareEmail }, unsignedPublicAuth: true});
-
-    const expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
-    const fabricToken = await this.client.CreateFabricToken({duration: tokenDuration * 60 * 60 * 1000});
-    const address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
-
-    if(!email) {
-      try {
-        const decodedToken = JSON.parse(this.utils.FromB64URL(idToken.split(".")[1]));
-        email = decodedToken.email;
-      } catch(error) {
-        throw Error("Failed to decode ID token");
-      }
-    }
-
-    this.client.SetStaticToken({token: fabricToken});
-
-    return this.SetAuthorization({fabricToken, tenantId, address, email, expiresAt, walletType: "Custodial", walletName: "Eluvio"});
-  }
-
-  /**
-   * Authenticate with an external Ethereum compatible wallet, like Metamask.
-   *
-   * @methodGroup Authorization
-   * @namedParams
-   * @param {string} address - The address of the wallet
-   * @param {number=} tokenDuration=24 - Number of hours the generated authorization token will last before expiring
-   * @param {string=} walletName=Metamask - Name of the external wallet
-   * @param {function=} Sign - The method used for signing by the wallet. If not specified, will attempt to sign with Metamask.
-   *
-   * @returns {Promise<string>} - Returns an authorization token that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
-   * Save this token to avoid having to reauthenticate. This token expires after 24 hours.
-   */
-  async AuthenticateExternalWallet({address, tokenDuration=24, walletName="Metamask", Sign}) {
-    if(!address) {
-      address = window.ethereum.selectedAddress;
-    }
-
-    address = this.utils.FormatAddress(address);
-
-    if(!Sign) {
-      Sign = async message => this.SignMetamask({message, address});
-    }
-
-    const expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
-    const fabricToken = await this.client.CreateFabricToken({
-      address,
-      duration: tokenDuration * 60 * 60 * 1000,
-      Sign,
-      addEthereumPrefix: false
-    });
-
-    return this.SetAuthorization({fabricToken, address, expiresAt, walletType: "External", walletName});
-  }
-
-  async LogOut() {
-    this.__authorization = {};
-    this.loggedIn = false;
-
-    this.cachedMarketplaces = {};
-  }
-
-  SetAuthorization({fabricToken, tenantId, address, email, expiresAt, walletType, walletName}) {
-    address = this.client.utils.FormatAddress(address);
-
-    this.__authorization = {
-      fabricToken,
-      tenantId,
-      address,
-      email,
-      expiresAt,
-      walletType,
-      walletName
-    };
-
-    this.loggedIn = true;
-
-    this.cachedMarketplaces = {};
-
-    return this.utils.B58(JSON.stringify(this.__authorization));
-  }
-
-  async SignMetamask({message, address}) {
-    if(!window.ethereum) {
-      throw Error("ElvMarketplaceClient: Unable to initialize - Metamask not available");
-    }
-
-    await window.ethereum.request({method: "eth_requestAccounts"});
-    const from = address || window.ethereum.selectedAddress;
-    return await window.ethereum.request({
-      method: "personal_sign",
-      params: [message, from, ""],
-    });
   }
 }
 
