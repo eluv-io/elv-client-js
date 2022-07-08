@@ -9,7 +9,9 @@
   "scripts": {
     "bump-version": "npm --git-tag-version --no-commit-hooks version patch",
     "build": "npm run build-docs && npm run build-dist && npm run build-frame-client && npm run build-permissions-client && npm run build-prod",
-    "build-docs": "node build/BuildDocs.js && ./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme README.md",
+    "build-docs": "node build/BuildDocs.js && npm run build-client-docs && npm run build-marketplace-client-docs",
+    "build-client-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc.json --readme README.md",
+    "build-marketplace-client-docs": "./node_modules/.bin/jsdoc --configure ./.jsdoc-mc.json --readme README-MC.md",
     "build-dist": "node ./node_modules/@babel/cli/bin/babel.js --source-type=unambiguous --presets=@babel/preset-env --plugins @babel/plugin-transform-runtime src --out-dir dist/src",
     "build-contracts": "node build/BuildContracts.js",
     "build-frame-client": "webpack -p --progress --entry ./dist/src/FrameClient.js --output-filename ElvFrameClient-min.js --devtool none --optimize-minimize && mv test/bundle-analysis/index.html test/bundle-analysis/frame-client.html",

@@ -4,8 +4,12 @@ const {LinkTargetHash, FormatNFT, ActionPopup} = require("./Utils");
 const UrlJoin = require("url-join");
 const Utils = require("../Utils");
 
+
 /**
- * @namespace
+ * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
+ *
+ *
+ * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
 class ElvMarketplaceClient {
   constructor({client, network, mode, marketplaceInfo, storeAuthToken}) {
@@ -111,122 +115,12 @@ class ElvMarketplaceClient {
     return marketplaceClient;
   }
 
-  /**
-   * Retrieve information about the user, including the address, wallet type, and (for custodial users) email address.
-   *
-   * @methodGroup User
-   *
-   * @returns {Object} - User info
-   */
-  User() {
-    if(!this.loggedIn) { return; }
-
-    return {
-      address: this.UserAddress() ,
-      email: this.__authorization.email,
-      walletType: this.__authorization.walletType,
-      walletName: this.__authorization.walletName
-    };
-  }
-
-  /**
-   * Retrieve the address of the current user.
-   *
-   * @methodGroup User
-   *
-   * @returns {string} - The address of the current user
-   */
-  UserAddress() {
-    if(!this.loggedIn) { return; }
-
-    return this.client.utils.DecodeSignedToken(this.AuthToken()).payload.adr;
-  }
-
-  /**
-   * <b><i>Requires login</i></b>
-   *
-   * Retrieve the fund balances for the current user
-   *
-   * @methodGroup User
-   * @returns {Promise<{Object}>} - Returns balances for the user. All values are in USD.
-   *  <ul>
-   *  <li>- totalWalletBalance - Total balance of the users sales and wallet balance purchases</li>
-   *  <li>- availableWalletBalance - Balance available for purchasing items</li>
-   *  <li>- pendingWalletBalance - Balance unavailable for purchasing items</li>
-   *  <li>- withdrawableWalletBalance - Amount that is available for withdrawal</li>
-   *  <li>- usedBalance - <i>(Only included if user has set up Solana link with the Phantom wallet)</i> Available USDC balance of the user's Solana wallet</li>
-   *  </ul>
-   */
-  async UserWalletBalance(checkOnboard=false) {
-    if(!this.loggedIn) { return; }
-
-    // eslint-disable-next-line no-unused-vars
-    const { balance, usage_hold, payout_hold, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
-      await this.client.authClient.MakeAuthServiceRequest({
-        path: UrlJoin("as", "wlt", "mkt", "bal"),
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${this.AuthToken()}`
-        }
-      })
-    );
-
-    const userStripeId = stripe_id;
-    const userStripeEnabled = stripe_payouts_enabled;
-    const totalWalletBalance = parseFloat(balance || 0);
-    const availableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(usage_hold || 0));
-    const pendingWalletBalance = Math.max(0, this.totalWalletBalance - this.availableWalletBalance);
-    const withdrawableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(payout_hold || 0));
-
-    if(checkOnboard && stripe_id && !stripe_payouts_enabled) {
-      // Refresh stripe enabled flag
-      const rootUrl = new URL(UrlJoin(window.location.origin, window.location.pathname)).toString();
-      await this.client.authClient.MakeAuthServiceRequest({
-        path: UrlJoin("as", "wlt", "onb", "stripe"),
-        method: "POST",
-        body: {
-          country: "US",
-          mode: this.mode,
-          refresh_url: rootUrl.toString(),
-          return_url: rootUrl.toString()
-        },
-        headers: {
-          Authorization: `Bearer ${this.AuthToken()}`
-        }
-      });
-
-      return await this.UserWalletBalance(false);
-    }
-
-    let balances = {
-      totalWalletBalance,
-      availableWalletBalance,
-      pendingWalletBalance,
-      withdrawableWalletBalance,
-    };
-
-    if(userStripeEnabled) {
-      balances.userStripeId = userStripeId;
-      balances.userStripeEnabled = userStripeEnabled;
-    }
-
-    // TODO: integrate
-    /*
-    if(cryptoStore.usdcConnected) {
-      balances.usdcBalance = cryptoStore.phantomUSDCBalance;
-    }
-
-     */
-
-    return balances;
-  }
-
   /* Login and authorization */
 
   /**
    * Direct the user to the Eluvio Media Wallet login page.
    *
-   * <b>NOTE:</b> If using the redirect flow, the domain in the `callbackUrl` MUST be allowed in the metadata of the specified marketplace.
+   * <b>NOTE:</b> The domain of the opening window (tab/popup flow) or domain of the `callbackUrl` (redirect flow) MUST be allowed in the metadata of the specified marketplace.
    *
    * @methodGroup Login
    * @namedParams
@@ -312,7 +206,12 @@ class ElvMarketplaceClient {
     }
   }
 
-  async LogOut() {
+  /**
+   * Remove authorization for the current user.
+   *
+   * @methodGroup Login
+   */
+  LogOut() {
     this.__authorization = {};
     this.loggedIn = false;
 
