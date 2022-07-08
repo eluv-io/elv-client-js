@@ -1,0 +1,28 @@
+{
+  "tags": {
+    "allowUnknownTags": true,
+    "dictionaries": ["jsdoc"]
+  },
+  "source": {
+    "include": ["src/marketplaceClient"],
+    "includePattern": ".js$",
+    "excludePattern": "(node_modules/|docs)"
+  },
+  "plugins": [
+    "plugins/markdown",
+    "./vendor/elv-jsdoc-template/jsdoc-namedparams-plugin.js"
+  ],
+  "templates": {
+    "referenceTitle": "Eluvio Marketplace Client",
+    "disableSort": false,
+    "collapse": true
+  },
+  "opts": {
+    "destination": "./docs/marketplace-client",
+    "encoding": "utf8",
+    "pedantic": true,
+    "private": true,
+    "recurse": true,
+    "template": "vendor/elv-jsdoc-template"
+  }
+}

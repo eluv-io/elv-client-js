@@ -23,9 +23,7 @@ const RarityToPercentage = (rarity) => {
   return percentage;
 };
 
-/**
- * Format NFT or listing result into consistent format
- */
+// Format NFT or listing result into consistent format
 const FormatNFTDetails = function(entry) {
   const isListing = !!entry.id;
 

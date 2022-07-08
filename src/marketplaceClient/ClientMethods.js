@@ -2,6 +2,268 @@ const Utils = require("../Utils");
 const UrlJoin = require("url-join");
 const {FormatNFTDetails, FormatNFTMetadata, FormatNFT} = require("./Utils");
 
+/**
+ * Methods
+ *
+ * @module ClientMethods
+ */
+
+/* USER INFO */
+
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Retrieve information about the user, including the address, wallet type, and (for custodial users) email address.
+ *
+ * @methodGroup User
+ *
+ * @returns {Object} - User info
+ */
+exports.UserInfo = function() {
+  if(!this.loggedIn) { return; }
+
+  return {
+    address: this.UserAddress() ,
+    email: this.__authorization.email,
+    walletType: this.__authorization.walletType,
+    walletName: this.__authorization.walletName
+  };
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Retrieve the address of the current user.
+ *
+ * @methodGroup User
+ *
+ * @returns {string} - The address of the current user
+ */
+exports.UserAddress = function() {
+  if(!this.loggedIn) { return; }
+
+  return this.client.utils.DecodeSignedToken(this.AuthToken()).payload.adr;
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Retrieve the fund balances for the current user
+ *
+ * @methodGroup User
+ * @returns {Promise<{Object}>} - Returns balances for the user. All values are in USD.
+ *  <ul>
+ *  <li>- totalWalletBalance - Total balance of the users sales and wallet balance purchases</li>
+ *  <li>- availableWalletBalance - Balance available for purchasing items</li>
+ *  <li>- pendingWalletBalance - Balance unavailable for purchasing items</li>
+ *  <li>- withdrawableWalletBalance - Amount that is available for withdrawal</li>
+ *  <li>- usedBalance - <i>(Only included if user has set up Solana link with the Phantom wallet)</i> Available USDC balance of the user's Solana wallet</li>
+ *  </ul>
+ */
+exports.UserWalletBalance = async function(checkOnboard=false) {
+  if(!this.loggedIn) { return; }
+
+  // eslint-disable-next-line no-unused-vars
+  const { balance, usage_hold, payout_hold, stripe_id, stripe_payouts_enabled } = await this.client.utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "mkt", "bal"),
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    })
+  );
+
+  const userStripeId = stripe_id;
+  const userStripeEnabled = stripe_payouts_enabled;
+  const totalWalletBalance = parseFloat(balance || 0);
+  const availableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(usage_hold || 0));
+  const pendingWalletBalance = Math.max(0, this.totalWalletBalance - this.availableWalletBalance);
+  const withdrawableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(payout_hold || 0));
+
+  if(checkOnboard && stripe_id && !stripe_payouts_enabled) {
+    // Refresh stripe enabled flag
+    const rootUrl = new URL(UrlJoin(window.location.origin, window.location.pathname)).toString();
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "onb", "stripe"),
+      method: "POST",
+      body: {
+        country: "US",
+        mode: this.mode,
+        refresh_url: rootUrl.toString(),
+        return_url: rootUrl.toString()
+      },
+      headers: {
+        Authorization: `Bearer ${this.AuthToken()}`
+      }
+    });
+
+    return await this.UserWalletBalance(false);
+  }
+
+  let balances = {
+    totalWalletBalance,
+    availableWalletBalance,
+    pendingWalletBalance,
+    withdrawableWalletBalance,
+  };
+
+  if(userStripeEnabled) {
+    balances.userStripeId = userStripeId;
+    balances.userStripeEnabled = userStripeEnabled;
+  }
+
+  // TODO: integrate
+  /*
+  if(cryptoStore.usdcConnected) {
+    balances.usdcBalance = cryptoStore.phantomUSDCBalance;
+  }
+
+   */
+
+  return balances;
+};
+
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Returns basic contract info about the items the current user owns, organized by contract address + token ID
+ *
+ * This method is significantly faster than <a href="#.UserItems">UserItems</a>, but does not include any NFT metadata.
+ *
+ * @methodGroup User
+ *
+ * @returns {Promise<Object>} - Basic info about all owned items.
+ */
+exports.UserItemInfo = async function () {
+  if(!this.loggedIn) { return {}; }
+
+  const accountId = `iusr${Utils.AddressToHash(this.UserAddress())}`;
+  this.profileData = await this.client.ethClient.MakeProviderCall({
+    methodName: "send",
+    args: [
+      "elv_getAccountProfile",
+      [this.client.contentSpaceId, accountId]
+    ]
+  });
+
+  if(!this.profileData || !this.profileData.NFTs) { return {}; }
+
+  let nftInfo = {};
+  Object.keys(this.profileData.NFTs).map(tenantId =>
+    this.profileData.NFTs[tenantId].forEach(details => {
+      const versionHash = (details.TokenUri || "").split("/").find(s => (s || "").startsWith("hq__"));
+
+      if(!versionHash) {
+        return;
+      }
+
+      if(details.TokenHold) {
+        details.TokenHoldDate = new Date(parseInt(details.TokenHold) * 1000);
+      }
+
+      const contractAddress = Utils.FormatAddress(details.ContractAddr);
+      const key = `${contractAddress}-${details.TokenIdStr}`;
+      nftInfo[key] = {
+        ...details,
+        ContractAddr: Utils.FormatAddress(details.ContractAddr),
+        ContractId: `ictr${Utils.AddressToHash(details.ContractAddr)}`,
+        VersionHash: versionHash
+      };
+    })
+  );
+
+  this.nftInfo = nftInfo;
+
+  return this.nftInfo;
+};
+
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Retrieve items owned by the current user matching the specified parameters.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ * @param {string=} sortBy="created" - Sort order. Options: `default`, `meta/display_name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {string=} filter - Filter results by item name.
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ *
+ * @returns {Promise<Object>} - Results of the query and pagination info
+ */
+exports.UserItems = async function() {
+  return this.FilteredQuery({mode: "owned", ...(arguments[0] || {})});
+};
+
+/**
+ * Return all listings for the current user. Not paginated.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `info/token_id`, `info/ordinal`, `price`, `nft/display_name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ *
+ * @returns {Promise<Array<Object>>} - List of current user's listings
+ */
+exports.UserListings = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+  return (
+    await this.FilteredQuery({
+      mode: "listings",
+      start: 0,
+      limit: 10000,
+      sortBy,
+      sortDesc,
+      sellerAddress: this.UserAddress(),
+      marketplaceParams,
+      contractAddress,
+      tokenId
+    })
+  ).results;
+};
+
+/**
+ * Return all sales for the current user. Not paginated.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {integer=} lastNDays - Filter by results listed in the past N days
+ *
+ * @returns {Promise<Array<Object>>} - List of current user's sales
+ */
+exports.UserSales = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+  return (
+    await this.FilteredQuery({
+      mode: "sales",
+      start: 0,
+      limit: 10000,
+      sortBy,
+      sortDesc,
+      sellerAddress: this.UserAddress(),
+      marketplaceParams,
+      contractAddress,
+      tokenId
+    })
+  ).results;
+};
+
+
 /* TENANT */
 
 /**
@@ -79,7 +341,7 @@ exports.MarketplaceStock = async function ({marketplaceParams, tenantId}) {
  *
  * Includes the slugs, ID and hash of the marketplace, as well as branding information.
  *
- * To retrieve full metadata for the marketplace, use the <a href="#Marketplace">Marketplace</a> method.
+ * To retrieve full metadata for the marketplace, use the <a href="#.Marketplace">Marketplace</a> method.
  *
  * @methodGroup Marketplaces
  * @namedParams
@@ -169,58 +431,6 @@ exports.Marketplace = async function ({marketplaceParams}) {
 /* NFTS */
 
 /**
- * Returns basic contract info about the items the current user owns, organized by contract address + token ID
- *
- * This method is significantly faster than <a href="#OwnedItems">OwnedItems</a>, but does not include any NFT metadata.
- *
- * @methodGroup Owned Items
- *
- * @returns {Promise<Object>} - Basic info about all owned items.
- */
-exports.OwnedItemInfo = async function () {
-  if(!this.loggedIn) { return {}; }
-
-  const accountId = `iusr${Utils.AddressToHash(this.UserAddress())}`;
-  this.profileData = await this.client.ethClient.MakeProviderCall({
-    methodName: "send",
-    args: [
-      "elv_getAccountProfile",
-      [this.client.contentSpaceId, accountId]
-    ]
-  });
-
-  if(!this.profileData || !this.profileData.NFTs) { return {}; }
-
-  let nftInfo = {};
-  Object.keys(this.profileData.NFTs).map(tenantId =>
-    this.profileData.NFTs[tenantId].forEach(details => {
-      const versionHash = (details.TokenUri || "").split("/").find(s => (s || "").startsWith("hq__"));
-
-      if(!versionHash) {
-        return;
-      }
-
-      if(details.TokenHold) {
-        details.TokenHoldDate = new Date(parseInt(details.TokenHold) * 1000);
-      }
-
-      const contractAddress = Utils.FormatAddress(details.ContractAddr);
-      const key = `${contractAddress}-${details.TokenIdStr}`;
-      nftInfo[key] = {
-        ...details,
-        ContractAddr: Utils.FormatAddress(details.ContractAddr),
-        ContractId: `ictr${Utils.AddressToHash(details.ContractAddr)}`,
-        VersionHash: versionHash
-      };
-    })
-  );
-
-  this.nftInfo = nftInfo;
-
-  return this.nftInfo;
-};
-
-/**
  * Load full info for the specified NFT
  *
  * @methodGroup Items
@@ -283,7 +493,7 @@ exports.ListingStatus = async function({listingId}) {
 /**
  * Retrieve a specific listing
  *
- * NOTE: When a listing is sold or deleted, it will no longer be queryable with this API. Use <a href="#ListingStatus">ListingStatus</a> instead.
+ * NOTE: When a listing is sold or deleted, it will no longer be queryable with this API. Use <a href="#.ListingStatus">ListingStatus</a> instead.
  *
  * @methodGroup Listings
  * @namedParams
@@ -302,85 +512,6 @@ exports.Listing = async function({listingId}) {
   );
 };
 
-/**
- * Retrieve items owned by the current user matching the specified parameters.
- *
- * @methodGroup User
- * @namedParams
- * @param {integer=} start=0 - PAGINATION: Index from which the results should start
- * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
- * @param {string=} sortBy="created" - Sort order. Options: `default`, `meta/display_name`
- * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
- * @param {string=} filter - Filter results by item name.
- * @param {string=} contractAddress - Filter results by the address of the NFT contract
- * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
- * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
- *
- * @returns {Promise<Object>} - Results of the query and pagination info
- */
-exports.UserItems = async function() {
-  return this.FilteredQuery({mode: "owned", ...(arguments[0] || {})});
-};
-
-/**
- * Return all listings for the current user. Not paginated.
- *
- * @methodGroup User
- * @namedParams
- * @param {string=} sortBy="created" - Sort order. Options: `created`, `info/token_id`, `info/ordinal`, `price`, `nft/display_name`
- * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
- * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {string=} contractAddress - Filter results by the address of the NFT contract
- * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
- *
- * @returns {Promise<Array<Object>>} - List of current user's listings
- */
-exports.UserListings = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
-  return (
-    await this.FilteredQuery({
-      mode: "listings",
-      start: 0,
-      limit: 10000,
-      sortBy,
-      sortDesc,
-      sellerAddress: this.UserAddress(),
-      marketplaceParams,
-      contractAddress,
-      tokenId
-    })
-  ).results;
-};
-
-/**
- * Return all sales for the current user. Not paginated.
- *
- * @methodGroup User
- * @namedParams
- * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
- * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
- * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {string=} contractAddress - Filter results by the address of the NFT contract
- * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
- * @param {integer=} lastNDays - Filter by results listed in the past N days
- *
- * @returns {Promise<Array<Object>>} - List of current user's sales
- */
-exports.UserSales = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
-  return (
-    await this.FilteredQuery({
-      mode: "sales",
-      start: 0,
-      limit: 10000,
-      sortBy,
-      sortDesc,
-      sellerAddress: this.UserAddress(),
-      marketplaceParams,
-      contractAddress,
-      tokenId
-    })
-  ).results;
-};
 
 /**
  * Retrieve listings matching the specified parameters.
@@ -524,6 +655,8 @@ exports.SalesStats = async function() {
 
 
 /**
+ * <b><i>Requires login</i></b>
+ *
  * Create or update a listing for the specified item
  *
  * @methodGroup Listings
@@ -574,6 +707,8 @@ exports.CreateListing = async function({contractAddress, tokenId, price, listing
 };
 
 /**
+ * <b><i>Requires login</i></b>
+ *
  * Remove the specified listing
  *
  * @methodGroup Listings
@@ -680,6 +815,16 @@ exports.ListingAttributes = async function({marketplaceParams, displayName}={}) 
 
 /* MINTING STATUS */
 
+/**
+ * Return status of the specified listing purchase
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {string} listingId - The ID of the listing
+ * @param {string} confirmationId - The confirmation ID of the purchase
+ *
+ * @returns {Promise<Object>} - The status of the purchase
+ */
 exports.ListingPurchaseStatus = async function({listingId, confirmationId}) {
   try {
     const listingStatus = await this.ListingStatus({listingId});
@@ -701,6 +846,16 @@ exports.ListingPurchaseStatus = async function({listingId, confirmationId}) {
   }
 };
 
+/**
+ * Return status of the specified marketplace purchase
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string} confirmationId - The confirmation ID of the purchase
+ *
+ * @returns {Promise<Object>} - The minting status of the purchaseed item(s)
+ */
 exports.PurchaseStatus = async function({marketplaceParams, confirmationId}) {
   try {
     const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
@@ -713,6 +868,16 @@ exports.PurchaseStatus = async function({marketplaceParams, confirmationId}) {
   }
 };
 
+/**
+ * Return status of the specified item claim
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string} sku - The SKU of the item claimed
+ *
+ * @returns {Promise<Object>} - The minting status of the claim
+ */
 exports.ClaimStatus = async function({marketplaceParams, sku}) {
   try {
     const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
@@ -725,6 +890,16 @@ exports.ClaimStatus = async function({marketplaceParams, sku}) {
   }
 };
 
+/**
+ * Return status of the specified pack opening
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {string} contractAddress - The NFT contract address of the opened pack
+ * @param {string} tokenId - The token ID of the opened pack
+ *
+ * @returns {Promise<Object>} - The status of the pack opening
+ */
 exports.PackOpenStatus = async function({contractAddress, tokenId}) {
   try {
     const tenantConfig = await this.TenantConfiguration({contractAddress});
@@ -738,6 +913,16 @@ exports.PackOpenStatus = async function({contractAddress, tokenId}) {
   }
 };
 
+/**
+ * Return status of the specified collection redemption
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string} confirmationId - The confirmation ID of the redemption
+ *
+ * @returns {Promise<Object>} - The status of the collection redemption
+ */
 exports.CollectionRedemptionStatus = async function({marketplaceParams, confirmationId}) {
   try {
     const statuses = await this.MintingStatus({marketplaceParams});
