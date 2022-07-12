@@ -360,7 +360,7 @@ exports.MarketplaceInfo = function ({marketplaceParams}) {
   }
 
   if(!marketplaceInfo) {
-    throw Error(`Eluvio Marketplace Client: Unable to find marketplace with parameters ${JSON.stringify(arguments)}`);
+    throw Error(`Eluvio Wallet Client: Unable to find marketplace with parameters ${JSON.stringify(arguments)}`);
   }
 
   return marketplaceInfo;

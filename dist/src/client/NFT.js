@@ -2,11 +2,9 @@ var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
 var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
-var _asyncToGenerator = require("@babel/runtime/helpers/asyncToGenerator");
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
 
 /**
  * Methods for creating and managing NFTs
@@ -40,74 +38,68 @@ var _require = require("../Validation"),
  */
 
 
-exports.MintNFT = /*#__PURE__*/function () {
-  var _ref2 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee(_ref) {
-    var tenantId, address, marketplaceId, items, _ref$extraData, extraData, requestBody, transactionId, mintSignature;
+exports.MintNFT = function _callee(_ref) {
+  var tenantId, address, marketplaceId, items, _ref$extraData, extraData, requestBody, transactionId, mintSignature;
 
-    return _regeneratorRuntime.wrap(function _callee$(_context) {
-      while (1) {
-        switch (_context.prev = _context.next) {
-          case 0:
-            tenantId = _ref.tenantId, address = _ref.address, marketplaceId = _ref.marketplaceId, items = _ref.items, _ref$extraData = _ref.extraData, extraData = _ref$extraData === void 0 ? {} : _ref$extraData;
-            ValidatePresence("tenantId", tenantId);
-            ValidatePresence("address", address);
-            ValidatePresence("marketplaceId", marketplaceId);
-            ValidatePresence("items", items);
-            ValidateObject(marketplaceId);
-            ValidateAddress(address);
-            requestBody = {
-              tickets: null,
-              products: items.map(function (item) {
-                return {
-                  sku: item.sku,
-                  quant: item.quantity || 1,
-                  extra: item.tokenId ? _objectSpread(_objectSpread({}, item.extraData || {}), {}, {
-                    token_id: item.tokenId
-                  }) : _objectSpread({}, item.extraData || {})
-                };
-              }),
-              ident: address,
-              cust_name: address,
-              extra: _objectSpread(_objectSpread({}, extraData), {}, {
-                elv_addr: address
-              })
-            };
-            transactionId = this.utils.B58(UUID.parse(UUID.v4()));
-            requestBody.ts = Date.now();
-            requestBody.trans_id = transactionId;
-            _context.next = 13;
-            return this.Sign(JSON.stringify(requestBody));
+  return _regeneratorRuntime.async(function _callee$(_context) {
+    while (1) {
+      switch (_context.prev = _context.next) {
+        case 0:
+          tenantId = _ref.tenantId, address = _ref.address, marketplaceId = _ref.marketplaceId, items = _ref.items, _ref$extraData = _ref.extraData, extraData = _ref$extraData === void 0 ? {} : _ref$extraData;
+          ValidatePresence("tenantId", tenantId);
+          ValidatePresence("address", address);
+          ValidatePresence("marketplaceId", marketplaceId);
+          ValidatePresence("items", items);
+          ValidateObject(marketplaceId);
+          ValidateAddress(address);
+          requestBody = {
+            tickets: null,
+            products: items.map(function (item) {
+              return {
+                sku: item.sku,
+                quant: item.quantity || 1,
+                extra: item.tokenId ? _objectSpread({}, item.extraData || {}, {
+                  token_id: item.tokenId
+                }) : _objectSpread({}, item.extraData || {})
+              };
+            }),
+            ident: address,
+            cust_name: address,
+            extra: _objectSpread({}, extraData, {
+              elv_addr: address
+            })
+          };
+          transactionId = this.utils.B58(UUID.parse(UUID.v4()));
+          requestBody.ts = Date.now();
+          requestBody.trans_id = transactionId;
+          _context.next = 13;
+          return _regeneratorRuntime.awrap(this.Sign(JSON.stringify(requestBody)));
 
-          case 13:
-            mintSignature = _context.sent;
-            _context.next = 16;
-            return this.authClient.MakeAuthServiceRequest({
-              method: "POST",
-              path: UrlJoin("/as/tnt/trans/base", tenantId, marketplaceId),
-              body: requestBody,
-              headers: {
-                "Authorization": "Bearer ".concat(mintSignature)
-              }
-            });
+        case 13:
+          mintSignature = _context.sent;
+          _context.next = 16;
+          return _regeneratorRuntime.awrap(this.authClient.MakeAuthServiceRequest({
+            method: "POST",
+            path: UrlJoin("/as/tnt/trans/base", tenantId, marketplaceId),
+            body: requestBody,
+            headers: {
+              "Authorization": "Bearer ".concat(mintSignature)
+            }
+          }));
 
-          case 16:
-            return _context.abrupt("return", {
-              address: address,
-              transactionId: transactionId
-            });
+        case 16:
+          return _context.abrupt("return", {
+            address: address,
+            transactionId: transactionId
+          });
 
-          case 17:
-          case "end":
-            return _context.stop();
-        }
+        case 17:
+        case "end":
+          return _context.stop();
       }
-    }, _callee, this);
-  }));
-
-  return function (_x) {
-    return _ref2.apply(this, arguments);
-  };
-}();
+    }
+  }, null, this);
+};
 /**
  * Retrieve information about transactions for the specified collection
  *
@@ -126,59 +118,53 @@ exports.MintNFT = /*#__PURE__*/function () {
  */
 
 
-exports.CollectionTransactions = /*#__PURE__*/function () {
-  var _ref4 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(_ref3) {
-    var tenantId, collectionId, _ref3$filterOptions, filterOptions, ts, queryParams, allowedOptions, path, signature;
+exports.CollectionTransactions = function _callee2(_ref2) {
+  var tenantId, collectionId, _ref2$filterOptions, filterOptions, ts, queryParams, allowedOptions, path, signature;
 
-    return _regeneratorRuntime.wrap(function _callee2$(_context2) {
-      while (1) {
-        switch (_context2.prev = _context2.next) {
-          case 0:
-            tenantId = _ref3.tenantId, collectionId = _ref3.collectionId, _ref3$filterOptions = _ref3.filterOptions, filterOptions = _ref3$filterOptions === void 0 ? {} : _ref3$filterOptions;
-            ts = Date.now();
-            queryParams = {
-              ts: ts
-            };
-            allowedOptions = {
-              "email": "email",
-              "fromOrdinal": "from_ord",
-              "max": "max",
-              "status": "status",
-              "transactionId": "trans_id"
-            };
-            Object.keys(allowedOptions).forEach(function (option) {
-              if (filterOptions[option]) {
-                queryParams[allowedOptions[option]] = filterOptions[option];
-              }
-            });
-            path = this.AuthHttpClient.BaseURI().path(UrlJoin("/tnt", "trans", tenantId, collectionId)).query(queryParams).hash("").resource();
-            _context2.next = 8;
-            return this.Sign(path);
+  return _regeneratorRuntime.async(function _callee2$(_context2) {
+    while (1) {
+      switch (_context2.prev = _context2.next) {
+        case 0:
+          tenantId = _ref2.tenantId, collectionId = _ref2.collectionId, _ref2$filterOptions = _ref2.filterOptions, filterOptions = _ref2$filterOptions === void 0 ? {} : _ref2$filterOptions;
+          ts = Date.now();
+          queryParams = {
+            ts: ts
+          };
+          allowedOptions = {
+            "email": "email",
+            "fromOrdinal": "from_ord",
+            "max": "max",
+            "status": "status",
+            "transactionId": "trans_id"
+          };
+          Object.keys(allowedOptions).forEach(function (option) {
+            if (filterOptions[option]) {
+              queryParams[allowedOptions[option]] = filterOptions[option];
+            }
+          });
+          path = this.AuthHttpClient.BaseURI().path(UrlJoin("/tnt", "trans", tenantId, collectionId)).query(queryParams).hash("").resource();
+          _context2.next = 8;
+          return _regeneratorRuntime.awrap(this.Sign(path));
 
-          case 8:
-            signature = _context2.sent;
-            _context2.next = 11;
-            return this.utils.ResponseToJson(this.authClient.MakeAuthServiceRequest({
-              method: "GET",
-              path: UrlJoin("as", "tnt", "trans", tenantId, collectionId),
-              queryParams: queryParams,
-              headers: {
-                "Authorization": "Bearer ".concat(signature)
-              }
-            }));
+        case 8:
+          signature = _context2.sent;
+          _context2.next = 11;
+          return _regeneratorRuntime.awrap(this.utils.ResponseToJson(this.authClient.MakeAuthServiceRequest({
+            method: "GET",
+            path: UrlJoin("as", "tnt", "trans", tenantId, collectionId),
+            queryParams: queryParams,
+            headers: {
+              "Authorization": "Bearer ".concat(signature)
+            }
+          })));
 
-          case 11:
-            return _context2.abrupt("return", _context2.sent);
+        case 11:
+          return _context2.abrupt("return", _context2.sent);
 
-          case 12:
-          case "end":
-            return _context2.stop();
-        }
+        case 12:
+        case "end":
+          return _context2.stop();
       }
-    }, _callee2, this);
-  }));
-
-  return function (_x2) {
-    return _ref4.apply(this, arguments);
-  };
-}();
+    }
+  }, null, this);
+};
