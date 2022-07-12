@@ -4,7 +4,7 @@
     "dictionaries": ["jsdoc"]
   },
   "source": {
-    "include": ["src/marketplaceClient"],
+    "include": ["src/walletClient"],
     "includePattern": ".js$",
     "excludePattern": "(node_modules/|docs)"
   },
@@ -13,12 +13,12 @@
     "./vendor/elv-jsdoc-template/jsdoc-namedparams-plugin.js"
   ],
   "templates": {
-    "referenceTitle": "Eluvio Marketplace Client",
+    "referenceTitle": "Eluvio Wallet Client",
     "disableSort": false,
     "collapse": true
   },
   "opts": {
-    "destination": "./docs/marketplace-client",
+    "destination": "./docs/wallet-client",
     "encoding": "utf8",
     "pedantic": true,
     "private": true,

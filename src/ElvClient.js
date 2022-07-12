@@ -38,10 +38,10 @@ if(Utils.Platform() === Utils.PLATFORM_NODE) {
 
 /**
  * See the Modules section on the sidebar for details about methods related to interacting with the Fabric.
- * 
+ *
  * <br/>
  *
- * For information about the Marketplace client, go <a href="marketplace-client/index.html">here</a>.
+ * For information about the Eluvio Wallet Client, go <a href="wallet-client/index.html">here</a>.
  */
 class ElvClient {
   Log(message, error = false) {

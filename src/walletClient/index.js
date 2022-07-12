@@ -40,15 +40,15 @@ class ElvWalletClient {
   Log(message, error=false) {
     if(error) {
       // eslint-disable-next-line no-console
-      console.error("Eluvio Marketplace Client:", message);
+      console.error("Eluvio Wallet Client:", message);
     } else {
       // eslint-disable-next-line no-console
-      console.log("Eluvio Marketplace Client:", message);
+      console.log("Eluvio Wallet Client:", message);
     }
   }
 
   /**
-   * Initialize the marketplace client.
+   * Initialize the wallet client.
    *
    * Specify tenantSlug and marketplaceSlug to automatically associate this tenant with a particular marketplace.
    *
@@ -120,19 +120,20 @@ class ElvWalletClient {
   /**
    * Direct the user to the Eluvio Media Wallet login page.
    *
-   * <b>NOTE:</b> The domain of the opening window (tab/popup flow) or domain of the `callbackUrl` (redirect flow) MUST be allowed in the metadata of the specified marketplace.
+   * <b>NOTE:</b> The domain of the opening window (popup flow) or domain of the `callbackUrl` (redirect flow) MUST be allowed in the metadata of the specified marketplace.
    *
    * @methodGroup Login
    * @namedParams
    * @param {string=} method=redirect - How to present the login page.
    * - `redirect` - Redirect to the wallet login page. Upon login, the page will be redirected back to the specified `redirectUrl` with the authorization token.
-   * - `tab` - Open the wallet login page in a new tab. Upon login, authorization information will be sent back to the client via message and the tab will be closed.
-   * - `popup` - Open the wallet login page in a popup window. Upon login, authorization information will be sent back to the client via message and the popup will be closed.
+   * - `popup` - Open the wallet login page in a new tab. Upon login, authorization information will be sent back to the client via message and the tab will be closed.
    * @param {string=} provider - If logging in via a specific method, specify the provider and mode. Options: `oauth`, `metamask`
    * @param {string=} mode - If logging in via a specific method, specify the mode. Options `login` (Log In), `create` (Sign Up)
    * @param {string=} callbackUrl - If using the redirect flow, the URL to redirect back to after login.
    * @param {Object=} marketplaceParams - Parameters of a marketplace to associate the login with. If not specified, the marketplace parameters used upon client initialization will be used. A marketplace is required when using the redirect flow.
    * @param {boolean=} clearLogin=false - If specified, the user will be prompted to log in anew even if they are already logged in on the Eluvio Media Wallet app
+   *
+   * @throws - If using the popup flow and the user closes the popup, this method will throw an error.
    */
   async LogIn({
     method="redirect",
@@ -179,7 +180,7 @@ class ElvWalletClient {
 
       await new Promise(async (resolve, reject) => {
         await ActionPopup({
-          mode: method,
+          mode: "tab",
           url: loginUrl.toString(),
           onCancel: () => reject("User cancelled login"),
           onMessage: async (event, Close) => {
@@ -360,10 +361,10 @@ class ElvWalletClient {
    *
    * Retrieve the current client auth token
    *
-   * @returns {<string>} - The client auth token
+   * @returns {string} - The client auth token
    */
   ClientAuthToken() {
-    if(!this.loggedIn) { return; }
+    if(!this.loggedIn) { return ""; }
 
     return this.utils.B58(JSON.stringify(this.__authorization));
   }
@@ -492,11 +493,11 @@ class ElvWalletClient {
               }
             }
           } catch(error) {
-            this.Log(`Eluvio Marketplace Client: Unable to load info for marketplace ${tenantSlug}/${marketplaceSlug}`, true);
+            this.Log(`Eluvio Wallet Client: Unable to load info for marketplace ${tenantSlug}/${marketplaceSlug}`, true);
           }
         });
       } catch(error) {
-        this.Log(`Eluvio Marketplace Client: Failed to load tenant info ${tenantSlug}`, true);
+        this.Log(`Eluvio Wallet Client: Failed to load tenant info ${tenantSlug}`, true);
         this.Log(error, true);
       }
     });
