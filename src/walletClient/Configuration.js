@@ -25,7 +25,7 @@ let WalletConfiguration = {
     "oc-marketplace",
     "maskverse-marketplace",
     "emp-marketplace",
-    "marketplace-elevenation",
+    "microsoft",
     "indieflix-marketplace",
     "angels-airwaves-marketplace"
   ]
