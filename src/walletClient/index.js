@@ -11,7 +11,7 @@ const Utils = require("../Utils");
  *
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
-class ElvMarketplaceClient {
+class ElvWalletClient {
   constructor({client, network, mode, marketplaceInfo, storeAuthToken}) {
     this.client = client;
     this.loggedIn = false;
@@ -59,7 +59,7 @@ class ElvMarketplaceClient {
    * @param {Object=} marketplaceParams - Marketplace parameters
    * @param {boolean=} storeAuthToken=true - If specified, auth tokens will be stored in localstorage (if available)
    *
-   * @returns {Promise<ElvMarketplaceClient>}
+   * @returns {Promise<ElvWalletClient>}
    */
   static async Initialize({
     network="main",
@@ -70,14 +70,14 @@ class ElvMarketplaceClient {
     let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
 
     if(!Configuration[network]) {
-      throw Error(`ElvMarketplaceClient: Invalid network ${network}`);
+      throw Error(`ElvWalletClient: Invalid network ${network}`);
     } else if(!Configuration[network][mode]) {
-      throw Error(`ElvMarketplaceClient: Invalid mode ${mode}`);
+      throw Error(`ElvWalletClient: Invalid mode ${mode}`);
     }
 
     const client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
 
-    const marketplaceClient = new ElvMarketplaceClient({
+    const walletClient = new ElvWalletClient({
       client,
       network,
       mode,
@@ -93,7 +93,7 @@ class ElvMarketplaceClient {
     if(window && window.location && window.location.href) {
       let url = new URL(window.location.href);
       if(url.searchParams.get("elvToken")) {
-        await marketplaceClient.Authenticate({token: url.searchParams.get("elvToken")});
+        await walletClient.Authenticate({token: url.searchParams.get("elvToken")});
 
         url.searchParams.delete("elvToken");
 
@@ -101,18 +101,18 @@ class ElvMarketplaceClient {
       } else if(storeAuthToken && typeof localStorage !== "undefined") {
         try {
           // Load saved auth token
-          let savedToken = localStorage.getItem("__elv-token");
+          let savedToken = localStorage.getItem(`__elv-token-${network}`);
           if(savedToken) {
-            await marketplaceClient.Authenticate({token: savedToken});
+            await walletClient.Authenticate({token: savedToken});
           }
           // eslint-disable-next-line no-empty
         } catch(error) {}
       }
     }
 
-    await marketplaceClient.LoadAvailableMarketplaces();
+    await walletClient.LoadAvailableMarketplaces();
 
-    return marketplaceClient;
+    return walletClient;
   }
 
   /* Login and authorization */
@@ -220,18 +220,18 @@ class ElvMarketplaceClient {
     // Delete saved auth token
     if(typeof localStorage !== "undefined") {
       try {
-        localStorage.removeItem("__elv-token");
+        localStorage.removeItem(`__elv-token-${this.network}`);
       // eslint-disable-next-line no-empty
       } catch(error) {}
     }
   }
 
   /**
-   * Authenticate with an ElvMarketplaceClient authorization token
+   * Authenticate with an ElvWalletClient authorization token
    *
    * @methodGroup Authorization
    * @namedParams
-   * @param {string} token - A previously generated ElvMarketplaceClient authorization token;
+   * @param {string} token - A previously generated ElvWalletClient authorization token;
    */
   async Authenticate({token}) {
     let decodedToken;
@@ -242,7 +242,7 @@ class ElvMarketplaceClient {
     }
 
     if(!decodedToken.expiresAt || Date.now() > decodedToken.expiresAt) {
-      throw Error("ElvMarketplaceClient: Provided authorization token has expired");
+      throw Error("ElvWalletClient: Provided authorization token has expired");
     }
 
     this.client.SetStaticToken({token: decodedToken.fabricToken});
@@ -355,6 +355,19 @@ class ElvMarketplaceClient {
     return this.SetAuthorization({fabricToken, address, expiresAt, walletType: "External", walletName});
   }
 
+  /**
+   * <b><i>Requires login</i></b>
+   *
+   * Retrieve the current client auth token
+   *
+   * @returns {<string>} - The client auth token
+   */
+  ClientAuthToken() {
+    if(!this.loggedIn) { return; }
+
+    return this.utils.B58(JSON.stringify(this.__authorization));
+  }
+
   AuthToken() {
     if(!this.loggedIn) {
       return this.publicStaticToken;
@@ -384,11 +397,11 @@ class ElvMarketplaceClient {
 
     this.cachedMarketplaces = {};
 
-    const token = this.utils.B58(JSON.stringify(this.__authorization));
+    const token = this.ClientAuthToken();
 
     if(this.storeAuthToken && typeof localStorage !== "undefined") {
       try {
-        localStorage.setItem("__elv-token", token);
+        localStorage.setItem(`__elv-token-${this.network}`, token);
       // eslint-disable-next-line no-empty
       } catch(error) {}
     }
@@ -398,7 +411,7 @@ class ElvMarketplaceClient {
 
   async SignMetamask({message, address}) {
     if(!window.ethereum) {
-      throw Error("ElvMarketplaceClient: Unable to initialize - Metamask not available");
+      throw Error("ElvWalletClient: Unable to initialize - Metamask not available");
     }
 
     await window.ethereum.request({method: "eth_requestAccounts"});
@@ -865,6 +878,6 @@ class ElvMarketplaceClient {
   }
 }
 
-Object.assign(ElvMarketplaceClient.prototype, require("./ClientMethods"));
+Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
 
-exports.ElvMarketplaceClient = ElvMarketplaceClient;
+exports.ElvWalletClient = ElvWalletClient;

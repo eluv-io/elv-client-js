@@ -1,4 +1,4 @@
-const { ElvMarketplaceClient } = require("../src/marketplaceClient/ElvMarketplaceClient");
+const { ElvMarketplaceClient } = require("../src/walletClient/ElvMarketplaceClient");
 const ClientConfiguration = require("../TestConfiguration.json");
 
 const Test = async () => {
