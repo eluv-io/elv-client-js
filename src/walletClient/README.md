@@ -57,7 +57,9 @@ walletClient.LogIn({
 });
 ```
 
-Upon login, the browser will return to the callbackUrl with the authorization token as a url parameter (`elvToken`). Initializing the client will automatically pull the token out of the URL parameters and log in. If you don't want to initialize the client in the callback URL, you can save this token and later set it in the client using the `Authenticate` method.
+Upon login, the browser will return to the callbackUrl with the authorization token as a url parameter (`elvToken`). **Initializing the client will automatically pull the token out of the URL parameters and log in.** 
+
+If you don't want to initialize the client in the callback URL, you can save this token and later set it in the client using the `Authenticate` method.
 
 ```javascript
 const searchParams = new URLSearchParams(window.location.search);
@@ -113,9 +115,9 @@ frameClient.AddEventListener(frameClient.EVENTS.LOG_OUT, () => { ... });
 ```
 
 
-### Custom Login UI / Using Both Wallet Client and Frame Client
+### Custom Login UI For Embedded Wallet App / Using Both Wallet Client and Frame Client
 
-If you want to implement a custom login screen or if you want to use both the wallet and frame clients in the same application, some care must be taken to ensure the login flow is handled correctly and the wallet client and frame have parity in their authorization states.
+If you want to implement a custom login screen for the embedded wallet application, or if you want to use both the wallet and frame clients in the same application, some care must be taken to ensure the login flow is handled correctly and the wallet client and frame have parity in their authorization states.
 
 First, **login should be handled by the Wallet Client only**. The wallet client does not have to deal with the limitations of iframes, and the wallet client is allowed access to the user's authorization token, which can be passed to the frame client to authorize the embedded application. 
 
