@@ -218,7 +218,7 @@ exports.ActionPopup = async ({mode="tab", url, onMessage, onCancel}) => {
 
         resolve();
       }
-    }, 500);
+    }, 1000);
 
     window.addEventListener("message", async event => {
       await onMessage(
