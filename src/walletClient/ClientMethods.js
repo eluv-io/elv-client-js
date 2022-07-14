@@ -78,9 +78,9 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
   const userStripeId = stripe_id;
   const userStripeEnabled = stripe_payouts_enabled;
   const totalWalletBalance = parseFloat(balance || 0);
-  const availableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(usage_hold || 0));
-  const pendingWalletBalance = Math.max(0, this.totalWalletBalance - this.availableWalletBalance);
-  const withdrawableWalletBalance = Math.max(0, this.totalWalletBalance - parseFloat(payout_hold || 0));
+  const availableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(usage_hold || 0));
+  const pendingWalletBalance = Math.max(0, totalWalletBalance - availableWalletBalance);
+  const withdrawableWalletBalance = Math.max(0, totalWalletBalance - parseFloat(payout_hold || 0));
 
   if(checkOnboard && stripe_id && !stripe_payouts_enabled) {
     // Refresh stripe enabled flag
