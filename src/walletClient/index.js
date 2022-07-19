@@ -246,11 +246,11 @@ class ElvWalletClient {
       throw Error("ElvWalletClient: Provided authorization token has expired");
     }
 
-    this.client.SetStaticToken({token: decodedToken.fabricToken});
-
     if(decodedToken.clusterToken) {
-      this.client.SetRemoteSigner({authToken: decodedToken.clusterToken});
+      await this.client.SetRemoteSigner({authToken: decodedToken.clusterToken});
     }
+
+    this.client.SetStaticToken({token: decodedToken.fabricToken});
 
     return this.SetAuthorization(decodedToken);
   }

@@ -349,19 +349,23 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 throw Error("ElvWalletClient: Provided authorization token has expired");
 
               case 10:
+                if (!decodedToken.clusterToken) {
+                  _context4.next = 13;
+                  break;
+                }
+
+                _context4.next = 13;
+                return this.client.SetRemoteSigner({
+                  authToken: decodedToken.clusterToken
+                });
+
+              case 13:
                 this.client.SetStaticToken({
                   token: decodedToken.fabricToken
                 });
-
-                if (decodedToken.clusterToken) {
-                  this.client.SetRemoteSigner({
-                    authToken: decodedToken.clusterToken
-                  });
-                }
-
                 return _context4.abrupt("return", this.SetAuthorization(decodedToken));
 
-              case 13:
+              case 15:
               case "end":
                 return _context4.stop();
             }
