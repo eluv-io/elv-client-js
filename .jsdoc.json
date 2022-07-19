@@ -5,6 +5,7 @@
   },
   "source": {
     "include": ["src"],
+    "exclude": ["src/marketplaceClient"],
     "includePattern": ".js$",
     "excludePattern": "(node_modules/|docs)"
   },
