@@ -2332,6 +2332,10 @@ exports.LinkData = async function({libraryId, objectId, versionHash, writeToken,
 /* Encryption */
 
 exports.CreateEncryptionConk = async function({libraryId, objectId, versionHash, writeToken, createKMSConk=true}) {
+  if(this.signer.remoteSigner) {
+    return;
+  }
+
   ValidateParameters({libraryId, objectId, versionHash});
   ValidateWriteToken(writeToken);
 

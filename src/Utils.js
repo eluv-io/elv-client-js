@@ -4,6 +4,7 @@ const bs58 = require("bs58");
 const BigNumber = require("bignumber.js").default;
 const VarInt = require("varint");
 const URI = require("urijs");
+const Pako = require("pako");
 
 const {
   keccak256,
@@ -17,14 +18,14 @@ const {
  *
  * Utils can be imported separately from the client:
  *
- * const Utils = require("@eluvio/elv-client-js/src/Utils)
+ * `const Utils = require("@eluvio/elv-client-js/src/Utils)`
  *
  * or
  *
- * import Utils from "@eluvio/elv-client-js/src/Utils"
+ * `import Utils from "@eluvio/elv-client-js/src/Utils"`
  *
  *
- * It can be accessed from ElvClient and FrameClient as client.utils
+ * It can be accessed from ElvClient and FrameClient as `client.utils`
  */
 const Utils = {
   name: "Utils",
@@ -147,6 +148,27 @@ const Utils = {
       size,
       objectId,
       partHash
+    };
+  },
+
+
+  /**
+   * Decode the specified signed token into its component parts
+   *
+   * @param {string} token - The token to decode
+   *
+   * @return {Object} - Components of the signed token
+   */
+  DecodeSignedToken: (token) => {
+    const decodedToken = Utils.FromB58(token.slice(6));
+    const signature = `0x${decodedToken.slice(0, 65).toString("hex")}`;
+
+    let payload = JSON.parse(Buffer.from(Pako.inflateRaw(decodedToken.slice(65))).toString("utf-8"));
+    payload.adr = Utils.FormatAddress(`0x${Buffer.from(payload.adr, "base64").toString("hex")}`);
+
+    return {
+      payload,
+      signature
     };
   },
 
@@ -377,7 +399,6 @@ const Utils = {
       getAddress(address);
       return true;
     } catch(error) {
-      this.Log(error);
       return false;
     }
   },
@@ -420,12 +441,31 @@ const Utils = {
     return Buffer.from(str, "base64").toString("utf-8");
   },
 
+  FromB64URL: str => {
+    str = str.replace(/-/g, "+").replace(/_/g, "/");
+
+    const pad = str.length % 4;
+    if(pad) {
+      if(pad === 1) {
+        throw new Error("InvalidLengthError: Input base64url string is the wrong length to determine padding");
+      }
+
+      str += new Array(5-pad).join("=");
+    }
+
+    return Utils.FromB64(str);
+  },
+
   B58: arr => {
     return bs58.encode(Buffer.from(arr));
   },
 
   FromB58: str => {
     return bs58.decode(str);
+  },
+
+  FromB58ToStr: str => {
+    return new TextDecoder().decode(Utils.FromB58(str));
   },
 
   /**
