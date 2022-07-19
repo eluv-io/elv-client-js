@@ -399,7 +399,6 @@ const Utils = {
       getAddress(address);
       return true;
     } catch(error) {
-      this.Log(error);
       return false;
     }
   },

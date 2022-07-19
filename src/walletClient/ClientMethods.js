@@ -280,7 +280,7 @@ exports.UserSales = async function({sortBy="created", sortDesc=false, contractAd
  */
 exports.TenantConfiguration = async function({tenantId, contractAddress}) {
   try {
-    return await this.utils.ResponseToJson(
+    return await Utils.ResponseToJson(
       this.client.authClient.MakeAuthServiceRequest({
         path: contractAddress ?
           UrlJoin("as", "config", "nft", contractAddress) :
@@ -356,7 +356,8 @@ exports.MarketplaceInfo = function ({marketplaceParams}) {
   if(tenantSlug && marketplaceSlug) {
     marketplaceInfo = (this.availableMarketplaces[tenantSlug] || {})[marketplaceSlug];
   } else {
-    marketplaceInfo = this.availableMarketplacesById[marketplaceId || this.client.utils.DecodeVersionHash(marketplaceHash).objectId];
+    marketplaceId = marketplaceHash ? this.client.utils.DecodeVersionHash(marketplaceHash).objectId : marketplaceId;
+    marketplaceInfo = this.availableMarketplacesById[marketplaceId];
   }
 
   if(!marketplaceInfo) {
@@ -463,6 +464,37 @@ exports.NFT = async function({tokenId, contractAddress}) {
 
   return FormatNFTMetadata(nft);
 };
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Transfer the specified NFT owned by the current user to the specified address
+ *
+ * @methodGroup NFT
+ * @namedParams
+ * @param {string} contractAddress - The contract address of the NFT
+ * @param {string} tokenId - The token ID of the NFT
+ * @param {string} targetAddress - The address to which to transfer the NFT
+ */
+exports.TransferNFT = async function({contractAddress, tokenId, targetAddress}) {
+  if(!targetAddress || !Utils.ValidAddress(targetAddress)) {
+    throw Error("Eluvio Wallet Client: Invalid or missing target address in UserTransferNFT");
+  }
+
+  return await this.client.authClient.MakeAuthServiceRequest({
+    path: UrlJoin("as", "wlt", "mkt", "xfer"),
+    method: "POST",
+    body: {
+      contract: Utils.FormatAddress(contractAddress),
+      token: tokenId,
+      to_addr: Utils.FormatAddress(targetAddress)
+    },
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
 
 /** LISTINGS */
 
