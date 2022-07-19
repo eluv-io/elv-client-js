@@ -64,6 +64,9 @@ if (Utils.Platform() === Utils.PLATFORM_NODE) {
 /**
  * See the Modules section on the sidebar for details about methods related to interacting with the Fabric.
  *
+ * <br/>
+ *
+ * For information about the Eluvio Wallet Client, go <a href="wallet-client/index.html">here</a>.
  */
 
 
@@ -73,7 +76,7 @@ var ElvClient = /*#__PURE__*/function () {
   /**
    * Create a new ElvClient
    *
-   * NOTE: It is highly recommended to use ElvClient.FromConfiguration to
+   * NOTE: It is highly recommended to use the <a href="#.FromConfigurationUrl">FromConfigurationUrl</a> or <a href="#.FromNetworkName">FromNetworkName</a> method
    * automatically import the client settings from the fabric
    *
    * @constructor
