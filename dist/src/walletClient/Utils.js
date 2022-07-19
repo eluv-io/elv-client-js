@@ -1,12 +1,14 @@
 var _regeneratorRuntime = require("@babel/runtime/regenerator");
 
+var _asyncToGenerator = require("@babel/runtime/helpers/asyncToGenerator");
+
 var _defineProperty = require("@babel/runtime/helpers/defineProperty");
 
 var _slicedToArray = require("@babel/runtime/helpers/slicedToArray");
 
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
 var Utils = require("../Utils");
 
@@ -66,7 +68,7 @@ var FormatNFTDetails = function FormatNFTDetails(entry) {
   };
 
   if (isListing) {
-    details = _objectSpread({}, details, {
+    details = _objectSpread(_objectSpread({}, details), {}, {
       // Listing specific fields
       ListingId: entry.id,
       CreatedAt: entry.created * 1000,
@@ -103,7 +105,7 @@ var FormatNFTMetadata = function FormatNFTMetadata(nft) {
   nft.metadata.attributes = (nft.metadata.attributes || []).filter(function (attribute) {
     return attribute && !FILTERED_ATTRIBUTES.includes(attribute.trait_type);
   }).map(function (trait) {
-    return _objectSpread({}, trait, {
+    return _objectSpread(_objectSpread({}, trait), {}, {
       name: trait.trait_type,
       rarity_percent: RarityToPercentage(trait.rarity)
     });
@@ -116,7 +118,7 @@ var FormatNFTMetadata = function FormatNFTMetadata(nft) {
         var mediaType = (media.media_type || "").toLowerCase();
 
         if (mediaType === "image") {
-          return _objectSpread({}, media, {
+          return _objectSpread(_objectSpread({}, media), {}, {
             embed_url: media.media_file.url
           });
         }
@@ -136,7 +138,7 @@ var FormatNFTMetadata = function FormatNFTMetadata(nft) {
           embedUrl.searchParams.set("murl", btoa(media.media_file.url));
         }
 
-        return _objectSpread({}, media, {
+        return _objectSpread(_objectSpread({}, media), {}, {
           embed_url: embedUrl.toString()
         });
       } catch (error) {
@@ -214,77 +216,89 @@ var Popup = function Popup(_ref) {
   return newWindow;
 };
 
-exports.ActionPopup = function _callee3(_ref2) {
-  var _ref2$mode, mode, url, onMessage, onCancel;
+exports.ActionPopup = /*#__PURE__*/function () {
+  var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee3(_ref2) {
+    var _ref2$mode, mode, url, onMessage, onCancel;
 
-  return _regeneratorRuntime.async(function _callee3$(_context3) {
-    while (1) {
-      switch (_context3.prev = _context3.next) {
-        case 0:
-          _ref2$mode = _ref2.mode, mode = _ref2$mode === void 0 ? "tab" : _ref2$mode, url = _ref2.url, onMessage = _ref2.onMessage, onCancel = _ref2.onCancel;
-          _context3.next = 3;
-          return _regeneratorRuntime.awrap(new Promise(function (resolve) {
-            var newWindow = mode === "popup" ? Popup({
-              url: url,
-              title: "Eluvio Media Wallet",
-              w: 500,
-              h: 850
-            }) : window.open(url);
-            var closeCheck = setInterval(function _callee() {
-              return _regeneratorRuntime.async(function _callee$(_context) {
-                while (1) {
-                  switch (_context.prev = _context.next) {
-                    case 0:
-                      if (!newWindow.closed) {
-                        _context.next = 6;
-                        break;
-                      }
+    return _regeneratorRuntime.wrap(function _callee3$(_context3) {
+      while (1) {
+        switch (_context3.prev = _context3.next) {
+          case 0:
+            _ref2$mode = _ref2.mode, mode = _ref2$mode === void 0 ? "tab" : _ref2$mode, url = _ref2.url, onMessage = _ref2.onMessage, onCancel = _ref2.onCancel;
+            _context3.next = 3;
+            return new Promise(function (resolve) {
+              var newWindow = mode === "popup" ? Popup({
+                url: url,
+                title: "Eluvio Media Wallet",
+                w: 500,
+                h: 850
+              }) : window.open(url);
+              var closeCheck = setInterval( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee() {
+                return _regeneratorRuntime.wrap(function _callee$(_context) {
+                  while (1) {
+                    switch (_context.prev = _context.next) {
+                      case 0:
+                        if (!newWindow.closed) {
+                          _context.next = 6;
+                          break;
+                        }
 
-                      clearInterval(closeCheck);
-
-                      if (!onCancel) {
-                        _context.next = 5;
-                        break;
-                      }
-
-                      _context.next = 5;
-                      return _regeneratorRuntime.awrap(onCancel());
-
-                    case 5:
-                      resolve();
-
-                    case 6:
-                    case "end":
-                      return _context.stop();
-                  }
-                }
-              });
-            }, 500);
-            window.addEventListener("message", function _callee2(event) {
-              return _regeneratorRuntime.async(function _callee2$(_context2) {
-                while (1) {
-                  switch (_context2.prev = _context2.next) {
-                    case 0:
-                      _context2.next = 2;
-                      return _regeneratorRuntime.awrap(onMessage(event, function () {
                         clearInterval(closeCheck);
-                        newWindow.close();
+
+                        if (!onCancel) {
+                          _context.next = 5;
+                          break;
+                        }
+
+                        _context.next = 5;
+                        return onCancel();
+
+                      case 5:
                         resolve();
-                      }));
 
-                    case 2:
-                    case "end":
-                      return _context2.stop();
+                      case 6:
+                      case "end":
+                        return _context.stop();
+                    }
                   }
-                }
-              });
-            });
-          }));
+                }, _callee);
+              })), 1000);
+              window.addEventListener("message", /*#__PURE__*/function () {
+                var _ref5 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(event) {
+                  return _regeneratorRuntime.wrap(function _callee2$(_context2) {
+                    while (1) {
+                      switch (_context2.prev = _context2.next) {
+                        case 0:
+                          _context2.next = 2;
+                          return onMessage(event, function () {
+                            clearInterval(closeCheck);
+                            newWindow.close();
+                            resolve();
+                          });
 
-        case 3:
-        case "end":
-          return _context3.stop();
+                        case 2:
+                        case "end":
+                          return _context2.stop();
+                      }
+                    }
+                  }, _callee2);
+                }));
+
+                return function (_x2) {
+                  return _ref5.apply(this, arguments);
+                };
+              }());
+            });
+
+          case 3:
+          case "end":
+            return _context3.stop();
+        }
       }
-    }
-  });
-};
+    }, _callee3);
+  }));
+
+  return function (_x) {
+    return _ref3.apply(this, arguments);
+  };
+}();
