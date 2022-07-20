@@ -210,16 +210,12 @@ class ElvWalletClient {
    * @methodGroup Signatures
    * @namedParams
    * @param {string} message - The message to sign
-   * @param {Object=} marketplaceParams - If a signature popup is to be displayed, specify a marketplace to load the expected styling.
    *
    * @throws - If the user rejects the signature or closes the popup, an error will be thrown.
    *
    * @returns {Promise&lt;string>} - The signature of the message
    */
-  async PersonalSign({
-    message,
-    marketplaceParams
-  }) {
+  async PersonalSign({message}) {
     // Able to sign locally with either cluster token or metamask
     if(this.CanSign()) {
       if(this.__authorization.clusterToken) {
@@ -244,13 +240,7 @@ class ElvWalletClient {
 
     let url = new URL(this.appUrl);
     url.hash = UrlJoin("/action", "sign", Utils.B58(JSON.stringify(parameters)));
-
     url.searchParams.set("origin", window.location.origin);
-
-    if(marketplaceParams) {
-      const { marketplaceHash } = this.MarketplaceInfo({marketplaceParams});
-      url.searchParams.set("mid", marketplaceHash);
-    }
 
     return await new Promise(async (resolve, reject) => {
       await ActionPopup({

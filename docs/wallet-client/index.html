@@ -55,6 +55,9 @@
 <p>This is a standalone client for using Eluvio Media Wallet functionality</p>
 <p>For information about the embedded wallet app frame client, see <a href="https://eluv-io.github.io/elv-media-wallet/ElvWalletFrameClient.html">here</a></p>
 <h2>Initializing the Client</h2>
+<p>Import the client using the following path:</p>
+<pre class="prettyprint source lang-javascript"><code>import {ElvWalletClient} from &quot;@eluvio/elv-client-js/src/walletClient/index&quot;;
+</code></pre>
 <p>Initializing the client is as simple as calling the static Initialize method with the network (main or demo) and the mode (production or staging) the client should operate upon, as well as (optionally) the marketplace to associate the client with.</p>
 <pre class="prettyprint source lang-javascript"><code>await ElvWalletClient.Initialize({
   network: &quot;main | demo&quot;,
