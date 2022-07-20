@@ -24,6 +24,7 @@ exports.UserInfo = function() {
   if(!this.loggedIn) { return; }
 
   return {
+    name: this.__authorization.email || this.UserAddress(),
     address: this.UserAddress() ,
     email: this.__authorization.email,
     walletType: this.__authorization.walletType,
@@ -127,20 +128,18 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
 
 
 /**
- * <b><i>Requires login</i></b>
- *
- * Returns basic contract info about the items the current user owns, organized by contract address + token ID
+ * Returns basic contract info about the items the specified/current user owns, organized by contract address + token ID
  *
  * This method is significantly faster than <a href="#.UserItems">UserItems</a>, but does not include any NFT metadata.
  *
  * @methodGroup User
+ * @namedParams
+ * @param {string=} userAddress - Address of the user to query for. If unspecified, will use the currently logged in user.
  *
  * @returns {Promise<Object>} - Basic info about all owned items.
  */
-exports.UserItemInfo = async function () {
-  if(!this.loggedIn) { return {}; }
-
-  const accountId = `iusr${Utils.AddressToHash(this.UserAddress())}`;
+exports.UserItemInfo = async function ({userAddress}={}) {
+  const accountId = `iusr${Utils.AddressToHash(userAddress || this.UserAddress())}`;
   this.profileData = await this.client.ethClient.MakeProviderCall({
     methodName: "send",
     args: [
