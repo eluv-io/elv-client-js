@@ -134,6 +134,8 @@ class ElvWalletClient {
   }
 
   /**
+   * <b><i>Requires login</i></b>
+   *
    * Request the current user sign the specified message.
    *
    * If this client is not able to perform the signature (Eluvio custodial OAuth users), a popup will be opened and the user will be prompted to sign.
@@ -149,6 +151,8 @@ class ElvWalletClient {
    * @returns {Promise<string>} - The signature of the message
    */
   async PersonalSign({message}) {
+    if(!this.loggedIn) { throw Error("ElvWalletClient: Unable to perform signature - Not logged in"); }
+
     // Able to sign locally with either cluster token or metamask
     if(this.CanSign()) {
       if(this.__authorization.clusterToken) {
