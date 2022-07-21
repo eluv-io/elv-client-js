@@ -774,68 +774,34 @@ exports.Marketplace = /*#__PURE__*/function () {
 /* NFTS */
 
 /**
- * Load full info for the specified NFT
+ * Return info about the specified NFT contract, including the cap, current total supply, and total minted and burned.
  *
- * @methodGroup Items
+ * @methodGroup NFTs
  * @namedParams
  * @param {string} contractAddress - The contract address of the NFT
- * @param {string} tokenId - The token ID of the NFT
+ *
+ * @returns {Promise<Object>} - Information about the specified contract
  */
 
 
-exports.NFT = /*#__PURE__*/function () {
+exports.NFTContractStats = /*#__PURE__*/function () {
   var _ref24 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12(_ref23) {
-    var tokenId, contractAddress, nft;
+    var contractAddress;
     return _regeneratorRuntime.wrap(function _callee12$(_context12) {
       while (1) {
         switch (_context12.prev = _context12.next) {
           case 0:
-            tokenId = _ref23.tokenId, contractAddress = _ref23.contractAddress;
-            _context12.t0 = FormatNFTDetails;
-            _context12.next = 4;
+            contractAddress = _ref23.contractAddress;
+            _context12.next = 3;
             return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
-              path: UrlJoin("as", "nft", "info", contractAddress, tokenId),
+              path: UrlJoin("as", "nft", "info", contractAddress),
               method: "GET"
             }));
 
+          case 3:
+            return _context12.abrupt("return", _context12.sent);
+
           case 4:
-            _context12.t1 = _context12.sent;
-            nft = (0, _context12.t0)(_context12.t1);
-            _context12.t2 = _objectSpread;
-            _context12.t3 = _objectSpread;
-            _context12.t4 = {};
-            _context12.next = 11;
-            return this.client.ContentObjectMetadata({
-              versionHash: nft.details.VersionHash,
-              metadataSubtree: "public/asset_metadata/nft",
-              produceLinkUrls: true
-            });
-
-          case 11:
-            _context12.t5 = _context12.sent;
-
-            if (_context12.t5) {
-              _context12.next = 14;
-              break;
-            }
-
-            _context12.t5 = {};
-
-          case 14:
-            _context12.t6 = _context12.t5;
-            _context12.t7 = (0, _context12.t3)(_context12.t4, _context12.t6);
-            _context12.t8 = nft.metadata || {};
-            nft.metadata = (0, _context12.t2)(_context12.t7, _context12.t8);
-            _context12.next = 20;
-            return this.TenantConfiguration({
-              contractAddress: contractAddress
-            });
-
-          case 20:
-            nft.config = _context12.sent;
-            return _context12.abrupt("return", FormatNFTMetadata(nft));
-
-          case 22:
           case "end":
             return _context12.stop();
         }
@@ -848,11 +814,85 @@ exports.NFT = /*#__PURE__*/function () {
   };
 }();
 /**
+ * Load full info for the specified NFT
+ *
+ * @methodGroup NFTs
+ * @namedParams
+ * @param {string} contractAddress - The contract address of the NFT
+ * @param {string} tokenId - The token ID of the NFT
+ */
+
+
+exports.NFT = /*#__PURE__*/function () {
+  var _ref26 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref25) {
+    var tokenId, contractAddress, nft;
+    return _regeneratorRuntime.wrap(function _callee13$(_context13) {
+      while (1) {
+        switch (_context13.prev = _context13.next) {
+          case 0:
+            tokenId = _ref25.tokenId, contractAddress = _ref25.contractAddress;
+            _context13.t0 = FormatNFTDetails;
+            _context13.next = 4;
+            return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
+              path: UrlJoin("as", "nft", "info", contractAddress, tokenId),
+              method: "GET"
+            }));
+
+          case 4:
+            _context13.t1 = _context13.sent;
+            nft = (0, _context13.t0)(_context13.t1);
+            _context13.t2 = _objectSpread;
+            _context13.t3 = _objectSpread;
+            _context13.t4 = {};
+            _context13.next = 11;
+            return this.client.ContentObjectMetadata({
+              versionHash: nft.details.VersionHash,
+              metadataSubtree: "public/asset_metadata/nft",
+              produceLinkUrls: true
+            });
+
+          case 11:
+            _context13.t5 = _context13.sent;
+
+            if (_context13.t5) {
+              _context13.next = 14;
+              break;
+            }
+
+            _context13.t5 = {};
+
+          case 14:
+            _context13.t6 = _context13.t5;
+            _context13.t7 = (0, _context13.t3)(_context13.t4, _context13.t6);
+            _context13.t8 = nft.metadata || {};
+            nft.metadata = (0, _context13.t2)(_context13.t7, _context13.t8);
+            _context13.next = 20;
+            return this.TenantConfiguration({
+              contractAddress: contractAddress
+            });
+
+          case 20:
+            nft.config = _context13.sent;
+            return _context13.abrupt("return", FormatNFTMetadata(nft));
+
+          case 22:
+          case "end":
+            return _context13.stop();
+        }
+      }
+    }, _callee13, this);
+  }));
+
+  return function (_x6) {
+    return _ref26.apply(this, arguments);
+  };
+}();
+/**
  * <b><i>Requires login</i></b>
  *
  * Transfer the specified NFT owned by the current user to the specified address
  *
- * @methodGroup NFT
+ * @methodGroup NFTs
  * @namedParams
  * @param {string} contractAddress - The contract address of the NFT
  * @param {string} tokenId - The token ID of the NFT
@@ -861,23 +901,23 @@ exports.NFT = /*#__PURE__*/function () {
 
 
 exports.TransferNFT = /*#__PURE__*/function () {
-  var _ref26 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref25) {
+  var _ref28 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(_ref27) {
     var contractAddress, tokenId, targetAddress;
-    return _regeneratorRuntime.wrap(function _callee13$(_context13) {
+    return _regeneratorRuntime.wrap(function _callee14$(_context14) {
       while (1) {
-        switch (_context13.prev = _context13.next) {
+        switch (_context14.prev = _context14.next) {
           case 0:
-            contractAddress = _ref25.contractAddress, tokenId = _ref25.tokenId, targetAddress = _ref25.targetAddress;
+            contractAddress = _ref27.contractAddress, tokenId = _ref27.tokenId, targetAddress = _ref27.targetAddress;
 
             if (!(!targetAddress || !Utils.ValidAddress(targetAddress))) {
-              _context13.next = 3;
+              _context14.next = 3;
               break;
             }
 
             throw Error("Eluvio Wallet Client: Invalid or missing target address in UserTransferNFT");
 
           case 3:
-            _context13.next = 5;
+            _context14.next = 5;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "wlt", "mkt", "xfer"),
               method: "POST",
@@ -892,18 +932,18 @@ exports.TransferNFT = /*#__PURE__*/function () {
             });
 
           case 5:
-            return _context13.abrupt("return", _context13.sent);
+            return _context14.abrupt("return", _context14.sent);
 
           case 6:
           case "end":
-            return _context13.stop();
+            return _context14.stop();
         }
       }
-    }, _callee13, this);
+    }, _callee14, this);
   }));
 
-  return function (_x6) {
-    return _ref26.apply(this, arguments);
+  return function (_x7) {
+    return _ref28.apply(this, arguments);
   };
 }();
 /** LISTINGS */
@@ -920,53 +960,53 @@ exports.TransferNFT = /*#__PURE__*/function () {
 
 
 exports.ListingStatus = /*#__PURE__*/function () {
-  var _ref28 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee14(_ref27) {
+  var _ref30 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref29) {
     var listingId;
-    return _regeneratorRuntime.wrap(function _callee14$(_context14) {
+    return _regeneratorRuntime.wrap(function _callee15$(_context15) {
       while (1) {
-        switch (_context14.prev = _context14.next) {
+        switch (_context15.prev = _context15.next) {
           case 0:
-            listingId = _ref27.listingId;
-            _context14.prev = 1;
-            _context14.t0 = Utils;
-            _context14.next = 5;
+            listingId = _ref29.listingId;
+            _context15.prev = 1;
+            _context15.t0 = Utils;
+            _context15.next = 5;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "mkt", "status", listingId),
               method: "GET"
             });
 
           case 5:
-            _context14.t1 = _context14.sent;
-            _context14.next = 8;
-            return _context14.t0.ResponseToJson.call(_context14.t0, _context14.t1);
+            _context15.t1 = _context15.sent;
+            _context15.next = 8;
+            return _context15.t0.ResponseToJson.call(_context15.t0, _context15.t1);
 
           case 8:
-            return _context14.abrupt("return", _context14.sent);
+            return _context15.abrupt("return", _context15.sent);
 
           case 11:
-            _context14.prev = 11;
-            _context14.t2 = _context14["catch"](1);
+            _context15.prev = 11;
+            _context15.t2 = _context15["catch"](1);
 
-            if (!(_context14.t2.status === 404)) {
-              _context14.next = 15;
+            if (!(_context15.t2.status === 404)) {
+              _context15.next = 15;
               break;
             }
 
-            return _context14.abrupt("return");
+            return _context15.abrupt("return");
 
           case 15:
-            throw _context14.t2;
+            throw _context15.t2;
 
           case 16:
           case "end":
-            return _context14.stop();
+            return _context15.stop();
         }
       }
-    }, _callee14, this, [[1, 11]]);
+    }, _callee15, this, [[1, 11]]);
   }));
 
-  return function (_x7) {
-    return _ref28.apply(this, arguments);
+  return function (_x8) {
+    return _ref30.apply(this, arguments);
   };
 }();
 /**
@@ -983,40 +1023,40 @@ exports.ListingStatus = /*#__PURE__*/function () {
 
 
 exports.Listing = /*#__PURE__*/function () {
-  var _ref30 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(_ref29) {
+  var _ref32 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16(_ref31) {
     var listingId;
-    return _regeneratorRuntime.wrap(function _callee15$(_context15) {
+    return _regeneratorRuntime.wrap(function _callee16$(_context16) {
       while (1) {
-        switch (_context15.prev = _context15.next) {
+        switch (_context16.prev = _context16.next) {
           case 0:
-            listingId = _ref29.listingId;
-            _context15.t0 = FormatNFT;
-            _context15.t1 = Utils;
-            _context15.next = 5;
+            listingId = _ref31.listingId;
+            _context16.t0 = FormatNFT;
+            _context16.t1 = Utils;
+            _context16.next = 5;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "mkt", "l", listingId),
               method: "GET"
             });
 
           case 5:
-            _context15.t2 = _context15.sent;
-            _context15.next = 8;
-            return _context15.t1.ResponseToJson.call(_context15.t1, _context15.t2);
+            _context16.t2 = _context16.sent;
+            _context16.next = 8;
+            return _context16.t1.ResponseToJson.call(_context16.t1, _context16.t2);
 
           case 8:
-            _context15.t3 = _context15.sent;
-            return _context15.abrupt("return", (0, _context15.t0)(_context15.t3));
+            _context16.t3 = _context16.sent;
+            return _context16.abrupt("return", (0, _context16.t0)(_context16.t3));
 
           case 10:
           case "end":
-            return _context15.stop();
+            return _context16.stop();
         }
       }
-    }, _callee15, this);
+    }, _callee16, this);
   }));
 
-  return function (_x8) {
-    return _ref30.apply(this, arguments);
+  return function (_x9) {
+    return _ref32.apply(this, arguments);
   };
 }();
 /**
@@ -1052,22 +1092,22 @@ exports.Listing = /*#__PURE__*/function () {
  */
 
 
-exports.Listings = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16() {
-  var _args16 = arguments;
-  return _regeneratorRuntime.wrap(function _callee16$(_context16) {
+exports.Listings = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17() {
+  var _args17 = arguments;
+  return _regeneratorRuntime.wrap(function _callee17$(_context17) {
     while (1) {
-      switch (_context16.prev = _context16.next) {
+      switch (_context17.prev = _context17.next) {
         case 0:
-          return _context16.abrupt("return", this.FilteredQuery(_objectSpread({
+          return _context17.abrupt("return", this.FilteredQuery(_objectSpread({
             mode: "listings"
-          }, _args16[0] || {})));
+          }, _args17[0] || {})));
 
         case 1:
         case "end":
-          return _context16.stop();
+          return _context17.stop();
       }
     }
-  }, _callee16, this);
+  }, _callee17, this);
 }));
 /**
  * Retrieve stats for listings matching the specified parameters.
@@ -1101,22 +1141,22 @@ exports.Listings = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRunt
  * @returns {Promise<Object>} - Statistics about listings. All prices in USD.
  */
 
-exports.ListingStats = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee17() {
-  var _args17 = arguments;
-  return _regeneratorRuntime.wrap(function _callee17$(_context17) {
+exports.ListingStats = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18() {
+  var _args18 = arguments;
+  return _regeneratorRuntime.wrap(function _callee18$(_context18) {
     while (1) {
-      switch (_context17.prev = _context17.next) {
+      switch (_context18.prev = _context18.next) {
         case 0:
-          return _context17.abrupt("return", this.FilteredQuery(_objectSpread({
+          return _context18.abrupt("return", this.FilteredQuery(_objectSpread({
             mode: "listing-stats"
-          }, _args17[0] || {})));
+          }, _args18[0] || {})));
 
         case 1:
         case "end":
-          return _context17.stop();
+          return _context18.stop();
       }
     }
-  }, _callee17, this);
+  }, _callee18, this);
 }));
 /**
  * Retrieve sales matching the specified parameters.
@@ -1150,22 +1190,22 @@ exports.ListingStats = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regenerator
  * @returns {Promise<Object>} - Results of the query and pagination info
  */
 
-exports.Sales = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18() {
-  var _args18 = arguments;
-  return _regeneratorRuntime.wrap(function _callee18$(_context18) {
+exports.Sales = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19() {
+  var _args19 = arguments;
+  return _regeneratorRuntime.wrap(function _callee19$(_context19) {
     while (1) {
-      switch (_context18.prev = _context18.next) {
+      switch (_context19.prev = _context19.next) {
         case 0:
-          return _context18.abrupt("return", this.FilteredQuery(_objectSpread({
+          return _context19.abrupt("return", this.FilteredQuery(_objectSpread({
             mode: "sales"
-          }, _args18[0] || {})));
+          }, _args19[0] || {})));
 
         case 1:
         case "end":
-          return _context18.stop();
+          return _context19.stop();
       }
     }
-  }, _callee18, this);
+  }, _callee19, this);
 }));
 /**
  * Retrieve sales and transfers matching the specified parameters.
@@ -1199,22 +1239,22 @@ exports.Sales = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime
  * @returns {Promise<Object>} - Results of the query and pagination info
  */
 
-exports.Transfers = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee19() {
-  var _args19 = arguments;
-  return _regeneratorRuntime.wrap(function _callee19$(_context19) {
+exports.Transfers = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20() {
+  var _args20 = arguments;
+  return _regeneratorRuntime.wrap(function _callee20$(_context20) {
     while (1) {
-      switch (_context19.prev = _context19.next) {
+      switch (_context20.prev = _context20.next) {
         case 0:
-          return _context19.abrupt("return", this.FilteredQuery(_objectSpread({
+          return _context20.abrupt("return", this.FilteredQuery(_objectSpread({
             mode: "transfers"
-          }, _args19[0] || {})));
+          }, _args20[0] || {})));
 
         case 1:
         case "end":
-          return _context19.stop();
+          return _context20.stop();
       }
     }
-  }, _callee19, this);
+  }, _callee20, this);
 }));
 /**
  * Retrieve stats for listings matching the specified parameters.
@@ -1248,22 +1288,22 @@ exports.Transfers = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRun
  * @returns {Promise<Object>} - Statistics about sales. All prices in USD.
  */
 
-exports.SalesStats = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee20() {
-  var _args20 = arguments;
-  return _regeneratorRuntime.wrap(function _callee20$(_context20) {
+exports.SalesStats = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21() {
+  var _args21 = arguments;
+  return _regeneratorRuntime.wrap(function _callee21$(_context21) {
     while (1) {
-      switch (_context20.prev = _context20.next) {
+      switch (_context21.prev = _context21.next) {
         case 0:
-          return _context20.abrupt("return", this.FilteredQuery(_objectSpread({
+          return _context21.abrupt("return", this.FilteredQuery(_objectSpread({
             mode: "sales-stats"
-          }, _args20[0] || {})));
+          }, _args21[0] || {})));
 
         case 1:
         case "end":
-          return _context20.stop();
+          return _context21.stop();
       }
     }
-  }, _callee20, this);
+  }, _callee21, this);
 }));
 /**
  * <b><i>Requires login</i></b>
@@ -1281,22 +1321,22 @@ exports.SalesStats = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRu
  */
 
 exports.CreateListing = /*#__PURE__*/function () {
-  var _ref37 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee21(_ref36) {
+  var _ref39 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(_ref38) {
     var contractAddress, tokenId, price, listingId;
-    return _regeneratorRuntime.wrap(function _callee21$(_context21) {
+    return _regeneratorRuntime.wrap(function _callee22$(_context22) {
       while (1) {
-        switch (_context21.prev = _context21.next) {
+        switch (_context22.prev = _context22.next) {
           case 0:
-            contractAddress = _ref36.contractAddress, tokenId = _ref36.tokenId, price = _ref36.price, listingId = _ref36.listingId;
+            contractAddress = _ref38.contractAddress, tokenId = _ref38.tokenId, price = _ref38.price, listingId = _ref38.listingId;
             contractAddress = Utils.FormatAddress(contractAddress);
 
             if (!listingId) {
-              _context21.next = 12;
+              _context22.next = 12;
               break;
             }
 
-            _context21.t0 = Utils;
-            _context21.next = 6;
+            _context22.t0 = Utils;
+            _context22.next = 6;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "wlt", "mkt"),
               method: "PUT",
@@ -1310,16 +1350,16 @@ exports.CreateListing = /*#__PURE__*/function () {
             });
 
           case 6:
-            _context21.t1 = _context21.sent;
-            _context21.next = 9;
-            return _context21.t0.ResponseToFormat.call(_context21.t0, "text", _context21.t1);
+            _context22.t1 = _context22.sent;
+            _context22.next = 9;
+            return _context22.t0.ResponseToFormat.call(_context22.t0, "text", _context22.t1);
 
           case 9:
-            return _context21.abrupt("return", _context21.sent);
+            return _context22.abrupt("return", _context22.sent);
 
           case 12:
-            _context21.t2 = Utils;
-            _context21.next = 15;
+            _context22.t2 = Utils;
+            _context22.next = 15;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "wlt", "mkt"),
               method: "POST",
@@ -1334,23 +1374,23 @@ exports.CreateListing = /*#__PURE__*/function () {
             });
 
           case 15:
-            _context21.t3 = _context21.sent;
-            _context21.next = 18;
-            return _context21.t2.ResponseToJson.call(_context21.t2, _context21.t3);
+            _context22.t3 = _context22.sent;
+            _context22.next = 18;
+            return _context22.t2.ResponseToJson.call(_context22.t2, _context22.t3);
 
           case 18:
-            return _context21.abrupt("return", _context21.sent);
+            return _context22.abrupt("return", _context22.sent);
 
           case 19:
           case "end":
-            return _context21.stop();
+            return _context22.stop();
         }
       }
-    }, _callee21, this);
+    }, _callee22, this);
   }));
 
-  return function (_x9) {
-    return _ref37.apply(this, arguments);
+  return function (_x10) {
+    return _ref39.apply(this, arguments);
   };
 }();
 /**
@@ -1365,14 +1405,14 @@ exports.CreateListing = /*#__PURE__*/function () {
 
 
 exports.RemoveListing = /*#__PURE__*/function () {
-  var _ref39 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee22(_ref38) {
+  var _ref41 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23(_ref40) {
     var listingId;
-    return _regeneratorRuntime.wrap(function _callee22$(_context22) {
+    return _regeneratorRuntime.wrap(function _callee23$(_context23) {
       while (1) {
-        switch (_context22.prev = _context22.next) {
+        switch (_context23.prev = _context23.next) {
           case 0:
-            listingId = _ref38.listingId;
-            _context22.next = 3;
+            listingId = _ref40.listingId;
+            _context23.next = 3;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "wlt", "mkt", listingId),
               method: "DELETE",
@@ -1383,14 +1423,14 @@ exports.RemoveListing = /*#__PURE__*/function () {
 
           case 3:
           case "end":
-            return _context22.stop();
+            return _context23.stop();
         }
       }
-    }, _callee22, this);
+    }, _callee23, this);
   }));
 
-  return function (_x10) {
-    return _ref39.apply(this, arguments);
+  return function (_x11) {
+    return _ref41.apply(this, arguments);
   };
 }();
 /**
@@ -1407,30 +1447,30 @@ exports.RemoveListing = /*#__PURE__*/function () {
 
 
 exports.ListingNames = /*#__PURE__*/function () {
-  var _ref41 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee23(_ref40) {
+  var _ref43 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee24(_ref42) {
     var marketplaceParams, tenantId;
-    return _regeneratorRuntime.wrap(function _callee23$(_context23) {
+    return _regeneratorRuntime.wrap(function _callee24$(_context24) {
       while (1) {
-        switch (_context23.prev = _context23.next) {
+        switch (_context24.prev = _context24.next) {
           case 0:
-            marketplaceParams = _ref40.marketplaceParams;
+            marketplaceParams = _ref42.marketplaceParams;
 
             if (!marketplaceParams) {
-              _context23.next = 5;
+              _context24.next = 5;
               break;
             }
 
-            _context23.next = 4;
+            _context24.next = 4;
             return this.MarketplaceInfo({
               marketplaceParams: marketplaceParams
             });
 
           case 4:
-            tenantId = _context23.sent.tenantId;
+            tenantId = _context24.sent.tenantId;
 
           case 5:
-            _context23.t0 = Utils;
-            _context23.next = 8;
+            _context24.t0 = Utils;
+            _context24.next = 8;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "mkt", "names"),
               method: "GET",
@@ -1440,23 +1480,23 @@ exports.ListingNames = /*#__PURE__*/function () {
             });
 
           case 8:
-            _context23.t1 = _context23.sent;
-            _context23.next = 11;
-            return _context23.t0.ResponseToJson.call(_context23.t0, _context23.t1);
+            _context24.t1 = _context24.sent;
+            _context24.next = 11;
+            return _context24.t0.ResponseToJson.call(_context24.t0, _context24.t1);
 
           case 11:
-            return _context23.abrupt("return", _context23.sent);
+            return _context24.abrupt("return", _context24.sent);
 
           case 12:
           case "end":
-            return _context23.stop();
+            return _context24.stop();
         }
       }
-    }, _callee23, this);
+    }, _callee24, this);
   }));
 
-  return function (_x11) {
-    return _ref41.apply(this, arguments);
+  return function (_x12) {
+    return _ref43.apply(this, arguments);
   };
 }();
 /**
@@ -1471,15 +1511,15 @@ exports.ListingNames = /*#__PURE__*/function () {
 
 
 exports.ListingEditionNames = /*#__PURE__*/function () {
-  var _ref43 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee24(_ref42) {
+  var _ref45 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee25(_ref44) {
     var displayName;
-    return _regeneratorRuntime.wrap(function _callee24$(_context24) {
+    return _regeneratorRuntime.wrap(function _callee25$(_context25) {
       while (1) {
-        switch (_context24.prev = _context24.next) {
+        switch (_context25.prev = _context25.next) {
           case 0:
-            displayName = _ref42.displayName;
-            _context24.t0 = Utils;
-            _context24.next = 4;
+            displayName = _ref44.displayName;
+            _context25.t0 = Utils;
+            _context25.next = 4;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "mkt", "editions"),
               queryParams: {
@@ -1489,23 +1529,23 @@ exports.ListingEditionNames = /*#__PURE__*/function () {
             });
 
           case 4:
-            _context24.t1 = _context24.sent;
-            _context24.next = 7;
-            return _context24.t0.ResponseToJson.call(_context24.t0, _context24.t1);
+            _context25.t1 = _context25.sent;
+            _context25.next = 7;
+            return _context25.t0.ResponseToJson.call(_context25.t0, _context25.t1);
 
           case 7:
-            return _context24.abrupt("return", _context24.sent);
+            return _context25.abrupt("return", _context25.sent);
 
           case 8:
           case "end":
-            return _context24.stop();
+            return _context25.stop();
         }
       }
-    }, _callee24, this);
+    }, _callee25, this);
   }));
 
-  return function (_x12) {
-    return _ref43.apply(this, arguments);
+  return function (_x13) {
+    return _ref45.apply(this, arguments);
   };
 }();
 /**
@@ -1522,46 +1562,46 @@ exports.ListingEditionNames = /*#__PURE__*/function () {
  */
 
 
-exports.ListingAttributes = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee25() {
-  var _ref45,
+exports.ListingAttributes = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee26() {
+  var _ref47,
       marketplaceParams,
       displayName,
       filters,
       attributes,
-      _args25 = arguments;
+      _args26 = arguments;
 
-  return _regeneratorRuntime.wrap(function _callee25$(_context25) {
+  return _regeneratorRuntime.wrap(function _callee26$(_context26) {
     while (1) {
-      switch (_context25.prev = _context25.next) {
+      switch (_context26.prev = _context26.next) {
         case 0:
-          _ref45 = _args25.length > 0 && _args25[0] !== undefined ? _args25[0] : {}, marketplaceParams = _ref45.marketplaceParams, displayName = _ref45.displayName;
+          _ref47 = _args26.length > 0 && _args26[0] !== undefined ? _args26[0] : {}, marketplaceParams = _ref47.marketplaceParams, displayName = _ref47.displayName;
           filters = [];
 
           if (!marketplaceParams) {
-            _context25.next = 10;
+            _context26.next = 10;
             break;
           }
 
-          _context25.t0 = filters;
-          _context25.t1 = "tenant:eq:";
-          _context25.next = 7;
+          _context26.t0 = filters;
+          _context26.t1 = "tenant:eq:";
+          _context26.next = 7;
           return this.MarketplaceInfo({
             marketplaceParams: marketplaceParams
           });
 
         case 7:
-          _context25.t2 = _context25.sent.tenantId;
-          _context25.t3 = _context25.t1.concat.call(_context25.t1, _context25.t2);
+          _context26.t2 = _context26.sent.tenantId;
+          _context26.t3 = _context26.t1.concat.call(_context26.t1, _context26.t2);
 
-          _context25.t0.push.call(_context25.t0, _context25.t3);
+          _context26.t0.push.call(_context26.t0, _context26.t3);
 
         case 10:
           if (displayName) {
             filters.push("nft/display_name:eq:".concat(displayName));
           }
 
-          _context25.t4 = Utils;
-          _context25.next = 14;
+          _context26.t4 = Utils;
+          _context26.next = 14;
           return this.client.authClient.MakeAuthServiceRequest({
             path: UrlJoin("as", "mkt", "attributes"),
             method: "GET",
@@ -1571,30 +1611,30 @@ exports.ListingAttributes = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regene
           });
 
         case 14:
-          _context25.t5 = _context25.sent;
-          _context25.next = 17;
-          return _context25.t4.ResponseToJson.call(_context25.t4, _context25.t5);
+          _context26.t5 = _context26.sent;
+          _context26.next = 17;
+          return _context26.t4.ResponseToJson.call(_context26.t4, _context26.t5);
 
         case 17:
-          attributes = _context25.sent;
-          return _context25.abrupt("return", attributes.map(function (_ref46) {
-            var trait_type = _ref46.trait_type,
-                values = _ref46.values;
+          attributes = _context26.sent;
+          return _context26.abrupt("return", attributes.map(function (_ref48) {
+            var trait_type = _ref48.trait_type,
+                values = _ref48.values;
             return {
               name: trait_type,
               values: values
             };
-          }).filter(function (_ref47) {
-            var name = _ref47.name;
+          }).filter(function (_ref49) {
+            var name = _ref49.name;
             return !["Content Fabric Hash", "Total Minted Supply", "Creator"].includes(name);
           }));
 
         case 19:
         case "end":
-          return _context25.stop();
+          return _context26.stop();
       }
     }
-  }, _callee25, this);
+  }, _callee26, this);
 }));
 /* MINTING STATUS */
 
@@ -1610,61 +1650,61 @@ exports.ListingAttributes = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regene
  */
 
 exports.ListingPurchaseStatus = /*#__PURE__*/function () {
-  var _ref49 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee26(_ref48) {
+  var _ref51 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee27(_ref50) {
     var listingId, confirmationId, listingStatus, statuses;
-    return _regeneratorRuntime.wrap(function _callee26$(_context26) {
+    return _regeneratorRuntime.wrap(function _callee27$(_context27) {
       while (1) {
-        switch (_context26.prev = _context26.next) {
+        switch (_context27.prev = _context27.next) {
           case 0:
-            listingId = _ref48.listingId, confirmationId = _ref48.confirmationId;
-            _context26.prev = 1;
-            _context26.next = 4;
+            listingId = _ref50.listingId, confirmationId = _ref50.confirmationId;
+            _context27.prev = 1;
+            _context27.next = 4;
             return this.ListingStatus({
               listingId: listingId
             });
 
           case 4:
-            listingStatus = _context26.sent;
+            listingStatus = _context27.sent;
 
             if (listingStatus) {
-              _context26.next = 7;
+              _context27.next = 7;
               break;
             }
 
             throw Error("Unable to find info for listing " + listingId);
 
           case 7:
-            _context26.next = 9;
+            _context27.next = 9;
             return this.MintingStatus({
               tenantId: listingStatus.tenant
             });
 
           case 9:
-            statuses = _context26.sent;
-            return _context26.abrupt("return", statuses.find(function (status) {
+            statuses = _context27.sent;
+            return _context27.abrupt("return", statuses.find(function (status) {
               return status.op === "nft-transfer" && status.extra && status.extra[0] === confirmationId;
             }) || {
               status: "none"
             });
 
           case 13:
-            _context26.prev = 13;
-            _context26.t0 = _context26["catch"](1);
-            this.Log(_context26.t0, true);
-            return _context26.abrupt("return", {
+            _context27.prev = 13;
+            _context27.t0 = _context27["catch"](1);
+            this.Log(_context27.t0, true);
+            return _context27.abrupt("return", {
               status: "unknown"
             });
 
           case 17:
           case "end":
-            return _context26.stop();
+            return _context27.stop();
         }
       }
-    }, _callee26, this, [[1, 13]]);
+    }, _callee27, this, [[1, 13]]);
   }));
 
-  return function (_x13) {
-    return _ref49.apply(this, arguments);
+  return function (_x14) {
+    return _ref51.apply(this, arguments);
   };
 }();
 /**
@@ -1680,74 +1720,13 @@ exports.ListingPurchaseStatus = /*#__PURE__*/function () {
 
 
 exports.PurchaseStatus = /*#__PURE__*/function () {
-  var _ref51 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee27(_ref50) {
-    var marketplaceParams, confirmationId, marketplaceInfo, statuses;
-    return _regeneratorRuntime.wrap(function _callee27$(_context27) {
-      while (1) {
-        switch (_context27.prev = _context27.next) {
-          case 0:
-            marketplaceParams = _ref50.marketplaceParams, confirmationId = _ref50.confirmationId;
-            _context27.prev = 1;
-            _context27.next = 4;
-            return this.MarketplaceInfo({
-              marketplaceParams: marketplaceParams
-            });
-
-          case 4:
-            marketplaceInfo = _context27.sent;
-            _context27.next = 7;
-            return this.MintingStatus({
-              tenantId: marketplaceInfo.tenant_id
-            });
-
-          case 7:
-            statuses = _context27.sent;
-            return _context27.abrupt("return", statuses.find(function (status) {
-              return status.op === "nft-buy" && status.confirmationId === confirmationId;
-            }) || {
-              status: "none"
-            });
-
-          case 11:
-            _context27.prev = 11;
-            _context27.t0 = _context27["catch"](1);
-            this.Log(_context27.t0, true);
-            return _context27.abrupt("return", {
-              status: "unknown"
-            });
-
-          case 15:
-          case "end":
-            return _context27.stop();
-        }
-      }
-    }, _callee27, this, [[1, 11]]);
-  }));
-
-  return function (_x14) {
-    return _ref51.apply(this, arguments);
-  };
-}();
-/**
- * Return status of the specified item claim
- *
- * @methodGroup Status
- * @namedParams
- * @param {Object} marketplaceParams - Parameters of the marketplace
- * @param {string} sku - The SKU of the item claimed
- *
- * @returns {Promise<Object>} - The minting status of the claim
- */
-
-
-exports.ClaimStatus = /*#__PURE__*/function () {
   var _ref53 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee28(_ref52) {
-    var marketplaceParams, sku, marketplaceInfo, statuses;
+    var marketplaceParams, confirmationId, marketplaceInfo, statuses;
     return _regeneratorRuntime.wrap(function _callee28$(_context28) {
       while (1) {
         switch (_context28.prev = _context28.next) {
           case 0:
-            marketplaceParams = _ref52.marketplaceParams, sku = _ref52.sku;
+            marketplaceParams = _ref52.marketplaceParams, confirmationId = _ref52.confirmationId;
             _context28.prev = 1;
             _context28.next = 4;
             return this.MarketplaceInfo({
@@ -1758,13 +1737,13 @@ exports.ClaimStatus = /*#__PURE__*/function () {
             marketplaceInfo = _context28.sent;
             _context28.next = 7;
             return this.MintingStatus({
-              tenantId: marketplaceInfo.tenantId
+              tenantId: marketplaceInfo.tenant_id
             });
 
           case 7:
             statuses = _context28.sent;
             return _context28.abrupt("return", statuses.find(function (status) {
-              return status.op === "nft-claim" && status.marketplaceId === marketplaceInfo.marketplaceId && status.confirmationId === sku;
+              return status.op === "nft-buy" && status.confirmationId === confirmationId;
             }) || {
               status: "none"
             });
@@ -1790,42 +1769,42 @@ exports.ClaimStatus = /*#__PURE__*/function () {
   };
 }();
 /**
- * Return status of the specified pack opening
+ * Return status of the specified item claim
  *
  * @methodGroup Status
  * @namedParams
- * @param {string} contractAddress - The NFT contract address of the opened pack
- * @param {string} tokenId - The token ID of the opened pack
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string} sku - The SKU of the item claimed
  *
- * @returns {Promise<Object>} - The status of the pack opening
+ * @returns {Promise<Object>} - The minting status of the claim
  */
 
 
-exports.PackOpenStatus = /*#__PURE__*/function () {
+exports.ClaimStatus = /*#__PURE__*/function () {
   var _ref55 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee29(_ref54) {
-    var contractAddress, tokenId, tenantConfig, statuses;
+    var marketplaceParams, sku, marketplaceInfo, statuses;
     return _regeneratorRuntime.wrap(function _callee29$(_context29) {
       while (1) {
         switch (_context29.prev = _context29.next) {
           case 0:
-            contractAddress = _ref54.contractAddress, tokenId = _ref54.tokenId;
+            marketplaceParams = _ref54.marketplaceParams, sku = _ref54.sku;
             _context29.prev = 1;
             _context29.next = 4;
-            return this.TenantConfiguration({
-              contractAddress: contractAddress
+            return this.MarketplaceInfo({
+              marketplaceParams: marketplaceParams
             });
 
           case 4:
-            tenantConfig = _context29.sent;
+            marketplaceInfo = _context29.sent;
             _context29.next = 7;
             return this.MintingStatus({
-              tenantId: tenantConfig.tenant
+              tenantId: marketplaceInfo.tenantId
             });
 
           case 7:
             statuses = _context29.sent;
             return _context29.abrupt("return", statuses.find(function (status) {
-              return status.op === "nft-open" && Utils.EqualAddress(contractAddress, status.address) && status.tokenId === tokenId;
+              return status.op === "nft-claim" && status.marketplaceId === marketplaceInfo.marketplaceId && status.confirmationId === sku;
             }) || {
               status: "none"
             });
@@ -1851,6 +1830,67 @@ exports.PackOpenStatus = /*#__PURE__*/function () {
   };
 }();
 /**
+ * Return status of the specified pack opening
+ *
+ * @methodGroup Status
+ * @namedParams
+ * @param {string} contractAddress - The NFT contract address of the opened pack
+ * @param {string} tokenId - The token ID of the opened pack
+ *
+ * @returns {Promise<Object>} - The status of the pack opening
+ */
+
+
+exports.PackOpenStatus = /*#__PURE__*/function () {
+  var _ref57 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee30(_ref56) {
+    var contractAddress, tokenId, tenantConfig, statuses;
+    return _regeneratorRuntime.wrap(function _callee30$(_context30) {
+      while (1) {
+        switch (_context30.prev = _context30.next) {
+          case 0:
+            contractAddress = _ref56.contractAddress, tokenId = _ref56.tokenId;
+            _context30.prev = 1;
+            _context30.next = 4;
+            return this.TenantConfiguration({
+              contractAddress: contractAddress
+            });
+
+          case 4:
+            tenantConfig = _context30.sent;
+            _context30.next = 7;
+            return this.MintingStatus({
+              tenantId: tenantConfig.tenant
+            });
+
+          case 7:
+            statuses = _context30.sent;
+            return _context30.abrupt("return", statuses.find(function (status) {
+              return status.op === "nft-open" && Utils.EqualAddress(contractAddress, status.address) && status.tokenId === tokenId;
+            }) || {
+              status: "none"
+            });
+
+          case 11:
+            _context30.prev = 11;
+            _context30.t0 = _context30["catch"](1);
+            this.Log(_context30.t0, true);
+            return _context30.abrupt("return", {
+              status: "unknown"
+            });
+
+          case 15:
+          case "end":
+            return _context30.stop();
+        }
+      }
+    }, _callee30, this, [[1, 11]]);
+  }));
+
+  return function (_x17) {
+    return _ref57.apply(this, arguments);
+  };
+}();
+/**
  * Return status of the specified collection redemption
  *
  * @methodGroup Status
@@ -1863,60 +1903,60 @@ exports.PackOpenStatus = /*#__PURE__*/function () {
 
 
 exports.CollectionRedemptionStatus = /*#__PURE__*/function () {
-  var _ref57 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee30(_ref56) {
+  var _ref59 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee31(_ref58) {
     var marketplaceParams, confirmationId, statuses;
-    return _regeneratorRuntime.wrap(function _callee30$(_context30) {
+    return _regeneratorRuntime.wrap(function _callee31$(_context31) {
       while (1) {
-        switch (_context30.prev = _context30.next) {
+        switch (_context31.prev = _context31.next) {
           case 0:
-            marketplaceParams = _ref56.marketplaceParams, confirmationId = _ref56.confirmationId;
-            _context30.prev = 1;
-            _context30.next = 4;
+            marketplaceParams = _ref58.marketplaceParams, confirmationId = _ref58.confirmationId;
+            _context31.prev = 1;
+            _context31.next = 4;
             return this.MintingStatus({
               marketplaceParams: marketplaceParams
             });
 
           case 4:
-            statuses = _context30.sent;
-            return _context30.abrupt("return", statuses.find(function (status) {
+            statuses = _context31.sent;
+            return _context31.abrupt("return", statuses.find(function (status) {
               return status.op === "nft-redeem" && status.confirmationId === confirmationId;
             }) || {
               status: "none"
             });
 
           case 8:
-            _context30.prev = 8;
-            _context30.t0 = _context30["catch"](1);
-            this.Log(_context30.t0, true);
-            return _context30.abrupt("return", {
+            _context31.prev = 8;
+            _context31.t0 = _context31["catch"](1);
+            this.Log(_context31.t0, true);
+            return _context31.abrupt("return", {
               status: "unknown"
             });
 
           case 12:
           case "end":
-            return _context30.stop();
+            return _context31.stop();
         }
       }
-    }, _callee30, this, [[1, 8]]);
+    }, _callee31, this, [[1, 8]]);
   }));
 
-  return function (_x17) {
-    return _ref57.apply(this, arguments);
+  return function (_x18) {
+    return _ref59.apply(this, arguments);
   };
 }();
 /* EVENTS */
 
 
 exports.LoadDrop = /*#__PURE__*/function () {
-  var _ref59 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee31(_ref58) {
+  var _ref61 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee32(_ref60) {
     var _this2 = this;
 
     var tenantSlug, eventSlug, dropId, mainSiteHash, event, eventId;
-    return _regeneratorRuntime.wrap(function _callee31$(_context31) {
+    return _regeneratorRuntime.wrap(function _callee32$(_context32) {
       while (1) {
-        switch (_context31.prev = _context31.next) {
+        switch (_context32.prev = _context32.next) {
           case 0:
-            tenantSlug = _ref58.tenantSlug, eventSlug = _ref58.eventSlug, dropId = _ref58.dropId;
+            tenantSlug = _ref60.tenantSlug, eventSlug = _ref60.eventSlug, dropId = _ref60.dropId;
 
             if (!this.drops) {
               this.drops = {};
@@ -1931,18 +1971,18 @@ exports.LoadDrop = /*#__PURE__*/function () {
             }
 
             if (this.drops[tenantSlug][eventSlug][dropId]) {
-              _context31.next = 16;
+              _context32.next = 16;
               break;
             }
 
-            _context31.next = 7;
+            _context32.next = 7;
             return this.client.LatestVersionHash({
               objectId: this.mainSiteId
             });
 
           case 7:
-            mainSiteHash = _context31.sent;
-            _context31.next = 10;
+            mainSiteHash = _context32.sent;
+            _context32.next = 10;
             return this.client.ContentObjectMetadata({
               versionHash: mainSiteHash,
               metadataSubtree: UrlJoin("public", "asset_metadata", "tenants", tenantSlug, "sites", eventSlug, "info"),
@@ -1955,17 +1995,17 @@ exports.LoadDrop = /*#__PURE__*/function () {
             });
 
           case 10:
-            _context31.t0 = _context31.sent;
+            _context32.t0 = _context32.sent;
 
-            if (_context31.t0) {
-              _context31.next = 13;
+            if (_context32.t0) {
+              _context32.next = 13;
               break;
             }
 
-            _context31.t0 = [];
+            _context32.t0 = [];
 
           case 13:
-            event = _context31.t0;
+            event = _context32.t0;
             eventId = Utils.DecodeVersionHash(event["."].source).objectId;
             event.drops.forEach(function (drop) {
               drop = _objectSpread(_objectSpread({}, drop), {}, {
@@ -1976,37 +2016,37 @@ exports.LoadDrop = /*#__PURE__*/function () {
             });
 
           case 16:
-            return _context31.abrupt("return", this.drops[dropId]);
+            return _context32.abrupt("return", this.drops[dropId]);
 
           case 17:
           case "end":
-            return _context31.stop();
+            return _context32.stop();
         }
       }
-    }, _callee31, this);
+    }, _callee32, this);
   }));
 
-  return function (_x18) {
-    return _ref59.apply(this, arguments);
+  return function (_x19) {
+    return _ref61.apply(this, arguments);
   };
 }();
 
 exports.SubmitDropVote = /*#__PURE__*/function () {
-  var _ref61 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee32(_ref60) {
+  var _ref63 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee33(_ref62) {
     var marketplaceParams, eventId, dropId, sku, marketplaceInfo;
-    return _regeneratorRuntime.wrap(function _callee32$(_context32) {
+    return _regeneratorRuntime.wrap(function _callee33$(_context33) {
       while (1) {
-        switch (_context32.prev = _context32.next) {
+        switch (_context33.prev = _context33.next) {
           case 0:
-            marketplaceParams = _ref60.marketplaceParams, eventId = _ref60.eventId, dropId = _ref60.dropId, sku = _ref60.sku;
-            _context32.next = 3;
+            marketplaceParams = _ref62.marketplaceParams, eventId = _ref62.eventId, dropId = _ref62.dropId, sku = _ref62.sku;
+            _context33.next = 3;
             return this.MarketplaceInfo({
               marketplaceParams: marketplaceParams
             });
 
           case 3:
-            marketplaceInfo = _context32.sent;
-            _context32.next = 6;
+            marketplaceInfo = _context33.sent;
+            _context33.next = 6;
             return this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "wlt", "act", marketplaceInfo.tenant_id),
               method: "POST",
@@ -2023,27 +2063,27 @@ exports.SubmitDropVote = /*#__PURE__*/function () {
 
           case 6:
           case "end":
-            return _context32.stop();
+            return _context33.stop();
         }
       }
-    }, _callee32, this);
+    }, _callee33, this);
   }));
 
-  return function (_x19) {
-    return _ref61.apply(this, arguments);
+  return function (_x20) {
+    return _ref63.apply(this, arguments);
   };
 }();
 
 exports.DropStatus = /*#__PURE__*/function () {
-  var _ref63 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee33(_ref62) {
+  var _ref65 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee34(_ref64) {
     var marketplace, eventId, dropId, response;
-    return _regeneratorRuntime.wrap(function _callee33$(_context33) {
+    return _regeneratorRuntime.wrap(function _callee34$(_context34) {
       while (1) {
-        switch (_context33.prev = _context33.next) {
+        switch (_context34.prev = _context34.next) {
           case 0:
-            marketplace = _ref62.marketplace, eventId = _ref62.eventId, dropId = _ref62.dropId;
-            _context33.prev = 1;
-            _context33.next = 4;
+            marketplace = _ref64.marketplace, eventId = _ref64.eventId, dropId = _ref64.dropId;
+            _context34.prev = 1;
+            _context34.next = 4;
             return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
               path: UrlJoin("as", "wlt", "act", marketplace.tenant_id, eventId, dropId),
               method: "GET",
@@ -2053,28 +2093,28 @@ exports.DropStatus = /*#__PURE__*/function () {
             }));
 
           case 4:
-            response = _context33.sent;
-            return _context33.abrupt("return", response.sort(function (a, b) {
+            response = _context34.sent;
+            return _context34.abrupt("return", response.sort(function (a, b) {
               return a.ts > b.ts ? 1 : -1;
             })[0] || {
               status: "none"
             });
 
           case 8:
-            _context33.prev = 8;
-            _context33.t0 = _context33["catch"](1);
-            this.Log(_context33.t0, true);
-            return _context33.abrupt("return", "");
+            _context34.prev = 8;
+            _context34.t0 = _context34["catch"](1);
+            this.Log(_context34.t0, true);
+            return _context34.abrupt("return", "");
 
           case 12:
           case "end":
-            return _context33.stop();
+            return _context34.stop();
         }
       }
-    }, _callee33, this, [[1, 8]]);
+    }, _callee34, this, [[1, 8]]);
   }));
 
-  return function (_x20) {
-    return _ref63.apply(this, arguments);
+  return function (_x21) {
+    return _ref65.apply(this, arguments);
   };
 }();

@@ -460,9 +460,27 @@ exports.Marketplace = async function ({marketplaceParams}) {
 /* NFTS */
 
 /**
+ * Return info about the specified NFT contract, including the cap, current total supply, and total minted and burned.
+ *
+ * @methodGroup NFTs
+ * @namedParams
+ * @param {string} contractAddress - The contract address of the NFT
+ *
+ * @returns {Promise<Object>} - Information about the specified contract
+ */
+exports.NFTContractStats = async function({contractAddress}) {
+  return await Utils.ResponseToJson(
+    this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "nft", "info", contractAddress),
+      method: "GET"
+    })
+  );
+};
+
+/**
  * Load full info for the specified NFT
  *
- * @methodGroup Items
+ * @methodGroup NFTs
  * @namedParams
  * @param {string} contractAddress - The contract address of the NFT
  * @param {string} tokenId - The token ID of the NFT
@@ -498,7 +516,7 @@ exports.NFT = async function({tokenId, contractAddress}) {
  *
  * Transfer the specified NFT owned by the current user to the specified address
  *
- * @methodGroup NFT
+ * @methodGroup NFTs
  * @namedParams
  * @param {string} contractAddress - The contract address of the NFT
  * @param {string} tokenId - The token ID of the NFT
