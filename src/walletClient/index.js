@@ -839,6 +839,10 @@ class ElvWalletClient {
           path = UrlJoin("as", "mkt", "f");
           break;
 
+        case "transfers":
+          path = UrlJoin("as", "mkt", "hst", "f");
+          break;
+
         case "sales":
           path = UrlJoin("as", "mkt", "hst", "f");
           filters.push("action:eq:SOLD");

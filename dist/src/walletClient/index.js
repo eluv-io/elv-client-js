@@ -119,6 +119,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
       return !!this.__authorization.clusterToken || !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId);
     }
     /**
+     * <b><i>Requires login</i></b>
+     *
      * Request the current user sign the specified message.
      *
      * If this client is not able to perform the signature (Eluvio custodial OAuth users), a popup will be opened and the user will be prompted to sign.
@@ -145,28 +147,36 @@ var ElvWalletClient = /*#__PURE__*/function () {
               case 0:
                 message = _ref2.message;
 
+                if (this.loggedIn) {
+                  _context3.next = 3;
+                  break;
+                }
+
+                throw Error("ElvWalletClient: Unable to perform signature - Not logged in");
+
+              case 3:
                 if (!this.CanSign()) {
-                  _context3.next = 15;
+                  _context3.next = 17;
                   break;
                 }
 
                 if (!this.__authorization.clusterToken) {
-                  _context3.next = 10;
+                  _context3.next = 12;
                   break;
                 }
 
                 // Custodial wallet sign
                 message = _typeof(message) === "object" ? JSON.stringify(message) : message;
                 message = Ethers.utils.keccak256(Buffer.from("\x19Ethereum Signed Message:\n".concat(message.length).concat(message), "utf-8"));
-                _context3.next = 7;
+                _context3.next = 9;
                 return this.client.authClient.Sign(message);
 
-              case 7:
+              case 9:
                 return _context3.abrupt("return", _context3.sent);
 
-              case 10:
+              case 12:
                 if (!(this.UserInfo().walletName.toLowerCase() === "metamask")) {
-                  _context3.next = 14;
+                  _context3.next = 16;
                   break;
                 }
 
@@ -175,10 +185,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   address: this.UserAddress()
                 }));
 
-              case 14:
+              case 16:
                 throw Error("ElvWalletClient: Unable to sign");
 
-              case 15:
+              case 17:
                 parameters = {
                   action: "personal-sign",
                   message: message,
@@ -187,7 +197,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 url = new URL(this.appUrl);
                 url.hash = UrlJoin("/action", "sign", Utils.B58(JSON.stringify(parameters)));
                 url.searchParams.set("origin", window.location.origin);
-                _context3.next = 21;
+                _context3.next = 23;
                 return new Promise( /*#__PURE__*/function () {
                   var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(resolve, reject) {
                     return _regeneratorRuntime.wrap(function _callee2$(_context2) {
@@ -252,10 +262,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   };
                 }());
 
-              case 21:
+              case 23:
                 return _context3.abrupt("return", _context3.sent);
 
-              case 22:
+              case 24:
               case "end":
                 return _context3.stop();
             }
@@ -1395,7 +1405,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 _context16.t0 = mode;
-                _context16.next = _context16.t0 === "owned" ? 34 : _context16.t0 === "listings" ? 37 : _context16.t0 === "sales" ? 39 : _context16.t0 === "listing-stats" ? 42 : _context16.t0 === "sales-stats" ? 44 : 46;
+                _context16.next = _context16.t0 === "owned" ? 34 : _context16.t0 === "listings" ? 37 : _context16.t0 === "transfers" ? 39 : _context16.t0 === "sales" ? 41 : _context16.t0 === "listing-stats" ? 44 : _context16.t0 === "sales-stats" ? 46 : 48;
                 break;
 
               case 34:
@@ -1405,48 +1415,52 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   path = UrlJoin("as", "wlt", "nfts", marketplaceInfo.tenantId);
                 }
 
-                return _context16.abrupt("break", 46);
+                return _context16.abrupt("break", 48);
 
               case 37:
                 path = UrlJoin("as", "mkt", "f");
-                return _context16.abrupt("break", 46);
+                return _context16.abrupt("break", 48);
 
               case 39:
                 path = UrlJoin("as", "mkt", "hst", "f");
-                filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 46);
+                return _context16.abrupt("break", 48);
 
-              case 42:
-                path = UrlJoin("as", "mkt", "stats", "listed");
-                return _context16.abrupt("break", 46);
+              case 41:
+                path = UrlJoin("as", "mkt", "hst", "f");
+                filters.push("action:eq:SOLD");
+                return _context16.abrupt("break", 48);
 
               case 44:
-                path = UrlJoin("as", "mkt", "stats", "sold");
-                return _context16.abrupt("break", 46);
+                path = UrlJoin("as", "mkt", "stats", "listed");
+                return _context16.abrupt("break", 48);
 
               case 46:
+                path = UrlJoin("as", "mkt", "stats", "sold");
+                return _context16.abrupt("break", 48);
+
+              case 48:
                 if (filters.length > 0) {
                   params.filter = filters;
                 }
 
                 if (!mode.includes("stats")) {
-                  _context16.next = 51;
+                  _context16.next = 53;
                   break;
                 }
 
-                _context16.next = 50;
+                _context16.next = 52;
                 return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
                   queryParams: params
                 }));
 
-              case 50:
+              case 52:
                 return _context16.abrupt("return", _context16.sent);
 
-              case 51:
+              case 53:
                 _context16.t2 = Utils;
-                _context16.next = 54;
+                _context16.next = 56;
                 return this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
@@ -1456,22 +1470,22 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   } : {}
                 });
 
-              case 54:
+              case 56:
                 _context16.t3 = _context16.sent;
-                _context16.next = 57;
+                _context16.next = 59;
                 return _context16.t2.ResponseToJson.call(_context16.t2, _context16.t3);
 
-              case 57:
+              case 59:
                 _context16.t1 = _context16.sent;
 
                 if (_context16.t1) {
-                  _context16.next = 60;
+                  _context16.next = 62;
                   break;
                 }
 
                 _context16.t1 = [];
 
-              case 60:
+              case 62:
                 _ref16 = _context16.t1;
                 contents = _ref16.contents;
                 paging = _ref16.paging;
@@ -1487,12 +1501,12 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   })
                 });
 
-              case 66:
-                _context16.prev = 66;
+              case 68:
+                _context16.prev = 68;
                 _context16.t4 = _context16["catch"](11);
 
                 if (!(_context16.t4.status && _context16.t4.status.toString() === "404")) {
-                  _context16.next = 70;
+                  _context16.next = 72;
                   break;
                 }
 
@@ -1506,15 +1520,15 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   results: []
                 });
 
-              case 70:
+              case 72:
                 throw _context16.t4;
 
-              case 71:
+              case 73:
               case "end":
                 return _context16.stop();
             }
           }
-        }, _callee16, this, [[11, 66]]);
+        }, _callee16, this, [[11, 68]]);
       }));
 
       function FilteredQuery() {
