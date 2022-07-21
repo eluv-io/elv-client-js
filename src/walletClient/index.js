@@ -3,6 +3,7 @@ const Configuration = require("./Configuration");
 const {LinkTargetHash, FormatNFT, ActionPopup} = require("./Utils");
 const UrlJoin = require("url-join");
 const Utils = require("../Utils");
+const Ethers = require("ethers");
 
 
 /**
@@ -116,6 +117,89 @@ class ElvWalletClient {
   }
 
   /* Login and authorization */
+
+  /**
+   * Check if this client can sign without opening a popup.
+   *
+   * Generally, Eluvio custodial wallet users will require a popup prompt, while Metamask and custom OAuth users will not.
+   *
+   * @methodGroup Signatures
+   * @returns {boolean} - Whether or not this client can sign a message without a popup.
+   */
+  CanSign() {
+    if(!this.loggedIn) { return false; }
+
+    return !!this.__authorization.clusterToken ||
+      !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId);
+  }
+
+  /**
+   * <b><i>Requires login</i></b>
+   *
+   * Request the current user sign the specified message.
+   *
+   * If this client is not able to perform the signature (Eluvio custodial OAuth users), a popup will be opened and the user will be prompted to sign.
+   *
+   * To check if the signature can be done without a popup, use the <a href="#CanSign">CanSign</a> method.
+   *
+   * @methodGroup Signatures
+   * @namedParams
+   * @param {string} message - The message to sign
+   *
+   * @throws - If the user rejects the signature or closes the popup, an error will be thrown.
+   *
+   * @returns {Promise<string>} - The signature of the message
+   */
+  async PersonalSign({message}) {
+    if(!this.loggedIn) { throw Error("ElvWalletClient: Unable to perform signature - Not logged in"); }
+
+    // Able to sign locally with either cluster token or metamask
+    if(this.CanSign()) {
+      if(this.__authorization.clusterToken) {
+        // Custodial wallet sign
+
+        message = typeof message === "object" ? JSON.stringify(message) : message;
+        message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
+
+        return await this.client.authClient.Sign(message);
+      } else if(this.UserInfo().walletName.toLowerCase() === "metamask") {
+        return this.SignMetamask({message, address: this.UserAddress()});
+      } else {
+        throw Error("ElvWalletClient: Unable to sign");
+      }
+    }
+
+    const parameters = {
+      action: "personal-sign",
+      message,
+      logIn: true
+    };
+
+    let url = new URL(this.appUrl);
+    url.hash = UrlJoin("/action", "sign", Utils.B58(JSON.stringify(parameters)));
+    url.searchParams.set("origin", window.location.origin);
+
+    return await new Promise(async (resolve, reject) => {
+      await ActionPopup({
+        mode: "tab",
+        url: url.toString(),
+        onCancel: () => reject("User cancelled sign"),
+        onMessage: async (event, Close) => {
+          if(!event || !event.data || event.data.type !== "FlowResponse") {
+            return;
+          }
+
+          try {
+            resolve(event.data.response);
+          } catch(error) {
+            reject(error);
+          } finally {
+            Close();
+          }
+        }
+      });
+    });
+  }
 
   /**
    * Direct the user to the Eluvio Media Wallet login page.
@@ -415,11 +499,16 @@ class ElvWalletClient {
       throw Error("ElvWalletClient: Unable to initialize - Metamask not available");
     }
 
-    await window.ethereum.request({method: "eth_requestAccounts"});
-    const from = address || window.ethereum.selectedAddress;
+    address = address || this.UserAddress();
+
+    const accounts = await window.ethereum.request({method: "eth_requestAccounts"});
+    if(address && !Utils.EqualAddress(accounts[0], address)) {
+      throw Error(`ElvWalletClient: Incorrect MetaMask account selected. Expected ${address}, got ${accounts[0]}`);
+    }
+
     return await window.ethereum.request({
       method: "personal_sign",
-      params: [message, from, ""],
+      params: [message, address, ""],
     });
   }
 
@@ -748,6 +837,10 @@ class ElvWalletClient {
 
         case "listings":
           path = UrlJoin("as", "mkt", "f");
+          break;
+
+        case "transfers":
+          path = UrlJoin("as", "mkt", "hst", "f");
           break;
 
         case "sales":

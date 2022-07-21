@@ -6,6 +6,12 @@ For information about the embedded wallet app frame client, see [here](https://e
 
 ## Initializing the Client
 
+Import the client using the following path:
+
+```javascript
+import {ElvWalletClient} from "@eluvio/elv-client-js/src/walletClient/index";
+```
+
 Initializing the client is as simple as calling the static Initialize method with the network (main or demo) and the mode (production or staging) the client should operate upon, as well as (optionally) the marketplace to associate the client with.
 
 ```javascript
