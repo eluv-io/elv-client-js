@@ -24,6 +24,7 @@ exports.UserInfo = function() {
   if(!this.loggedIn) { return; }
 
   return {
+    name: this.__authorization.email || this.UserAddress(),
     address: this.UserAddress() ,
     email: this.__authorization.email,
     walletType: this.__authorization.walletType,
@@ -127,20 +128,18 @@ exports.UserWalletBalance = async function(checkOnboard=false) {
 
 
 /**
- * <b><i>Requires login</i></b>
- *
- * Returns basic contract info about the items the current user owns, organized by contract address + token ID
+ * Returns basic contract info about the items the specified/current user owns, organized by contract address + token ID
  *
  * This method is significantly faster than <a href="#.UserItems">UserItems</a>, but does not include any NFT metadata.
  *
  * @methodGroup User
+ * @namedParams
+ * @param {string=} userAddress - Address of the user to query for. If unspecified, will use the currently logged in user.
  *
  * @returns {Promise<Object>} - Basic info about all owned items.
  */
-exports.UserItemInfo = async function () {
-  if(!this.loggedIn) { return {}; }
-
-  const accountId = `iusr${Utils.AddressToHash(this.UserAddress())}`;
+exports.UserItemInfo = async function ({userAddress}={}) {
+  const accountId = `iusr${Utils.AddressToHash(userAddress || this.UserAddress())}`;
   this.profileData = await this.client.ethClient.MakeProviderCall({
     methodName: "send",
     args: [
@@ -263,6 +262,35 @@ exports.UserSales = async function({sortBy="created", sortDesc=false, contractAd
   ).results;
 };
 
+/**
+ * Return all transfers and sales for the current user. Not paginated.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {integer=} lastNDays - Filter by results listed in the past N days
+ *
+ * @returns {Promise<Array<Object>>} - List of current user's sales
+ */
+exports.UserTransfers = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+  return (
+    await this.FilteredQuery({
+      mode: "transfers",
+      start: 0,
+      limit: 10000,
+      sortBy,
+      sortDesc,
+      sellerAddress: this.UserAddress(),
+      marketplaceParams,
+      contractAddress,
+      tokenId
+    })
+  ).results;
+};
 
 /* TENANT */
 
@@ -648,6 +676,41 @@ exports.ListingStats = async function() {
  */
 exports.Sales = async function() {
   return this.FilteredQuery({mode: "sales", ...(arguments[0] || {})});
+};
+
+/**
+ * Retrieve sales and transfers matching the specified parameters.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
+ * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
+ * @param {string=} filter - Filter results by item name.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the item name.
+ * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
+ *  @param {string=} editionFilter - Filter results by item edition.
+ *  <br /><br />
+ *  NOTE: This string must be an <b>exact match</b> on the edition name.
+ * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
+ *  @param {Array<Object>} attributeFilters - Filter results by item attributes. Each entry should include name and value (e.g. `[{name: "attribute-name", value: "attribute-value"}]`)
+ *  <br /><br />
+ *  NOTE: These filters must be an <b>exact match</b> on the attribute name and value.
+ * You can retrieve all available item attributes from the <a href="#.ListingAttributes">ListingAttributes method</a>.
+ * @param {string=} sellerAddress - Filter by a specific seller
+ * @param {string=} contractAddress - Filter results by the address of the NFT contract
+ * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
+ * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {integer=} lastNDays - Filter by results listed in the past N days
+ *
+ * @returns {Promise<Object>} - Results of the query and pagination info
+ */
+exports.Transfers = async function() {
+  return this.FilteredQuery({mode: "transfers", ...(arguments[0] || {})});
 };
 
 /**

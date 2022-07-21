@@ -609,7 +609,7 @@ class ElvClient {
       idToken,
       authToken,
       tenantId,
-      provider: this.ethClient.provider,
+      provider: await this.ethClient.Provider(),
       extraData,
       unsignedPublicAuth
     });
