@@ -1,0 +1,36 @@
+{
+  "chainId": "devnet",
+  "chainName": "Solana Devnet",
+  "rpcUrls": [
+    {
+      "providerName": "All That Node",
+      "url": "https://solana-devnet-rpc.allthatnode.com/"
+    },
+    {
+      "providerName": "Foundation",
+      "url": "https://api.devnet.solana.com"
+    }
+  ],
+  "nativeCurrencies": [
+    {
+      "name": "Solana",
+      "symbol": "SOL",
+      "decimals": 18
+    }
+  ],
+  "feeCurrencies": [
+    {
+      "name": "Solana",
+      "symbol": "SOL",
+      "decimals": 18
+    }
+  ],
+  "blockExplorerUrls": [
+    {
+      "name": "Solana Devnet Explorer",
+      "url": "https://explorer.solana.com/?cluster=devnet"
+    }
+  ],
+  "iconUrls": [],
+  "slip44": "501"
+}

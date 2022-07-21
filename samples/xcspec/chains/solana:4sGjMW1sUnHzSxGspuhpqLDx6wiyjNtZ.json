@@ -1,0 +1,40 @@
+{
+  "chainId": "mainnet",
+  "chainName": "Solana Mainnet",
+  "rpcUrls": [
+    {
+      "providerName": "All That Node",
+      "url": "https://solana-mainnet-rpc.allthatnode.com/"
+    },
+    {
+      "providerName": "Foundation",
+      "url": "https://api.mainnet-beta.solana.com"
+    },
+    {
+      "providerName": "Serum",
+      "url": "https://solana-api.projectserum.com"
+    }
+  ],
+  "nativeCurrencies": [
+    {
+      "name": "Solana",
+      "symbol": "SOL",
+      "decimals": 9
+    }
+  ],
+  "feeCurrencies": [
+    {
+      "name": "Solana",
+      "symbol": "SOL",
+      "decimals": 9
+    }
+  ],
+  "blockExplorerUrls": [
+    {
+      "name": "Solana Explorer",
+      "url": "https://explorer.solana.com/"
+    }
+  ],
+  "iconUrls": [],
+  "slip44": "501"
+}
