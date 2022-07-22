@@ -34,7 +34,7 @@ var RemoteSigner = /*#__PURE__*/function (_Ethers$Signer) {
   function RemoteSigner(_ref) {
     var _this;
 
-    var rpcUris = _ref.rpcUris,
+    var signerURIs = _ref.signerURIs,
         idToken = _ref.idToken,
         authToken = _ref.authToken,
         tenantId = _ref.tenantId,
@@ -50,7 +50,7 @@ var RemoteSigner = /*#__PURE__*/function (_Ethers$Signer) {
     _this.remoteSigner = true;
     _this.unsignedPublicAuth = unsignedPublicAuth;
     _this.HttpClient = new HttpClient({
-      uris: rpcUris
+      uris: signerURIs
     });
     _this.idToken = idToken;
     _this.tenantId = tenantId;
