@@ -138,7 +138,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line15">line 15</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line16">line 16</a>
         </li>
       </ul>
     </dd>
@@ -452,7 +452,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line65">line 65</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line66">line 66</a>
         </li>
       </ul>
     </dd>
@@ -598,7 +598,7 @@
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line321">line 321</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line324">line 324</a>
         </li>
       </ul>
     </dd>
@@ -901,7 +901,7 @@ Save this token to avoid having to reauthenticate. This token expires after 24 h
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line421">line 421</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line428">line 428</a>
         </li>
       </ul>
     </dd>
@@ -924,7 +924,7 @@ Save this token to avoid having to reauthenticate. This token expires after 24 h
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-link"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
     </a>
     <h4 class="name" id="AuthenticateOAuth">
-      <span class="type-signature">async </span>AuthenticateOAuth<span class="signature">({<div class="block-param">idToken,</div><div class="block-param">tenantId<span class="signature-attributes">optional</span>,</div><div class="block-param">email<span class="signature-attributes">optional</span>,</div><div class="block-param">shareEmail<span class="signature-attributes">optional</span>,</div><div class="block-param">tokenDuration<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
+      <span class="type-signature">async </span>AuthenticateOAuth<span class="signature">({<div class="block-param">idToken,</div><div class="block-param">tenantId<span class="signature-attributes">optional</span>,</div><div class="block-param">email<span class="signature-attributes">optional</span>,</div><div class="block-param">signerURIs<span class="signature-attributes">optional</span>,</div><div class="block-param">shareEmail<span class="signature-attributes">optional</span></div>})</span><span class="type-signature"> &rarr;  Promise.&lt;Object></span>
     </h4>
   </span>
 
@@ -1115,6 +1115,49 @@ shared with third parties.</li>
     
       <tr>
         
+          <td class="name"><code>signerURIs</code></td>
+        
+
+        <td class="type">
+          
+            
+    <span class="param-type">
+      Array.&lt;string>
+    </span>
+
+    
+
+
+          
+        </td>
+
+        
+          <td class="attributes">
+            
+              &lt;optional><br>
+            
+
+            
+
+            
+          </td>
+        
+
+        
+          <td class="default">
+            
+          </td>
+        
+
+        <td class="description last">
+          <p>(Only if using custom OAuth) - URIs corresponding to the key server(s) to use</p>
+          
+        </td>
+      </tr>
+
+    
+      <tr>
+        
           <td class="name"><code>shareEmail</code></td>
         
 
@@ -1153,51 +1196,6 @@ shared with third parties.</li>
 
         <td class="description last">
           <p>Whether or not the user consents to sharing their email</p>
-          
-        </td>
-      </tr>
-
-    
-      <tr>
-        
-          <td class="name"><code>tokenDuration</code></td>
-        
-
-        <td class="type">
-          
-            
-    <span class="param-type">
-      number
-    </span>
-
-    
-
-
-          
-        </td>
-
-        
-          <td class="attributes">
-            
-              &lt;optional><br>
-            
-
-            
-
-            
-          </td>
-        
-
-        
-          <td class="default">
-            
-              24
-            
-          </td>
-        
-
-        <td class="description last">
-          <p>Number of hours the generated authorization token will last before expiring</p>
           
         </td>
       </tr>
@@ -1253,7 +1251,7 @@ shared with third parties.</li>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line361">line 361</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line364">line 364</a>
         </li>
       </ul>
     </dd>
@@ -1352,7 +1350,7 @@ shared with third parties.</li>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line129">line 129</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line130">line 130</a>
         </li>
       </ul>
     </dd>
@@ -1451,7 +1449,7 @@ shared with third parties.</li>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line450">line 450</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line457">line 457</a>
         </li>
       </ul>
     </dd>
@@ -1853,7 +1851,7 @@ shared with third parties.</li>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line222">line 222</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line225">line 225</a>
         </li>
       </ul>
     </dd>
@@ -1944,7 +1942,7 @@ shared with third parties.</li>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line299">line 299</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line302">line 302</a>
         </li>
       </ul>
     </dd>
@@ -2114,7 +2112,7 @@ shared with third parties.</li>
     <dd class="tag-source">
       <ul class="dummy">
         <li>
-          <a href="index.js.html">index.js</a>, <a href="index.js.html#line153">line 153</a>
+          <a href="index.js.html">index.js</a>, <a href="index.js.html#line154">line 154</a>
         </li>
       </ul>
     </dd>

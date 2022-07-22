@@ -5,6 +5,7 @@ const UrlJoin = require("url-join");
 const Utils = require("../Utils");
 const Ethers = require("ethers");
 
+const inBrowser = typeof window !== "undefined";
 
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
@@ -91,7 +92,7 @@ class ElvWalletClient {
       storeAuthToken
     });
 
-    if(window && window.location && window.location.href) {
+    if(inBrowser && window.location && window.location.href) {
       let url = new URL(window.location.href);
       if(url.searchParams.get("elvToken")) {
         await walletClient.Authenticate({token: url.searchParams.get("elvToken")});
@@ -130,7 +131,7 @@ class ElvWalletClient {
     if(!this.loggedIn) { return false; }
 
     return !!this.__authorization.clusterToken ||
-      !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId);
+      (inBrowser && !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId));
   }
 
   /**
@@ -167,6 +168,8 @@ class ElvWalletClient {
       } else {
         throw Error("ElvWalletClient: Unable to sign");
       }
+    } else if(!inBrowser) {
+      throw Error("ElvWalletClient: Unable to sign");
     }
 
     const parameters = {
@@ -331,7 +334,7 @@ class ElvWalletClient {
     }
 
     if(decodedToken.clusterToken) {
-      await this.client.SetRemoteSigner({authToken: decodedToken.clusterToken});
+      await this.client.SetRemoteSigner({authToken: decodedToken.clusterToken, signerURIs: decodedToken.signerURIs});
     }
 
     this.client.SetStaticToken({token: decodedToken.fabricToken});
@@ -347,8 +350,8 @@ class ElvWalletClient {
    * @param {string} idToken - An OAuth ID token
    * @param {string=} tenantId - ID of tenant with which to associate the user. If marketplace info was set upon initialization, this will be determined automatically.
    * @param {string=} email - Email address of the user. If not specified, this method will attempt to extract the email from the ID token.
+   * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} shareEmail=false - Whether or not the user consents to sharing their email
-   * @param {number=} tokenDuration=24 - Number of hours the generated authorization token will last before expiring
    *
    * @returns {Promise<Object>} - Returns an authorization tokens that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
    * Save this token to avoid having to reauthenticate with OAuth. This token expires after 24 hours.
@@ -358,14 +361,16 @@ class ElvWalletClient {
    * - signingToken - Identical to `authToken`, but also includes the ability to perform arbitrary signatures with the custodial wallet. This token should be protected and should not be
    * shared with third parties.
    */
-  async AuthenticateOAuth({idToken, tenantId, email, shareEmail=false, tokenDuration=24}) {
+  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false}) {
+    let tokenDuration = 24;
+
     if(!tenantId && this.selectedMarketplaceInfo) {
       // Load tenant ID automatically from selected marketplace
       await this.AvailableMarketplaces();
       tenantId = this.selectedMarketplaceInfo.tenantId;
     }
 
-    await this.client.SetRemoteSigner({idToken, tenantId, extraData: { share_email: shareEmail }, unsignedPublicAuth: true});
+    await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { share_email: shareEmail }, unsignedPublicAuth: true});
 
     const expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
     const fabricToken = await this.client.CreateFabricToken({duration: tokenDuration * 60 * 60 * 1000});
@@ -389,6 +394,7 @@ class ElvWalletClient {
         address,
         email,
         expiresAt,
+        signerURIs,
         walletType: "Custodial",
         walletName: "Eluvio"
       }),
@@ -399,6 +405,7 @@ class ElvWalletClient {
         address,
         email,
         expiresAt,
+        signerURIs,
         walletType: "Custodial",
         walletName: "Eluvio"
       })
@@ -461,7 +468,7 @@ class ElvWalletClient {
     return this.__authorization.fabricToken;
   }
 
-  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, walletType, walletName}) {
+  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName}) {
     address = this.client.utils.FormatAddress(address);
 
     this.__authorization = {
@@ -476,6 +483,10 @@ class ElvWalletClient {
 
     if(clusterToken) {
       this.__authorization.clusterToken = clusterToken;
+
+      if(signerURIs) {
+        this.__authorization.signerURIs = signerURIs;
+      }
     }
 
     this.loggedIn = true;
@@ -495,7 +506,7 @@ class ElvWalletClient {
   }
 
   async SignMetamask({message, address}) {
-    if(!window.ethereum) {
+    if(!inBrowser || !window.ethereum) {
       throw Error("ElvWalletClient: Unable to initialize - Metamask not available");
     }
 

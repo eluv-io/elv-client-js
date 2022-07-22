@@ -652,6 +652,7 @@ var ElvClient = /*#__PURE__*/function () {
      * @param {string=} authToken - Eluvio authorization token previously issued from OAuth ID token
      * @param {string=} tenantId - If specified, user will be associated with the tenant
      * @param {Object=} extraData - Additional data to pass to the login API
+     * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
      * @param {boolean=} unsignedPublicAuth=false - If specified, the client will use an unsigned static token for calls that don't require authorization (reduces remote signature calls)
      */
 
@@ -659,14 +660,14 @@ var ElvClient = /*#__PURE__*/function () {
     key: "SetRemoteSigner",
     value: function () {
       var _SetRemoteSigner = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee6(_ref8) {
-        var idToken, authToken, tenantId, extraData, unsignedPublicAuth, signer;
+        var idToken, authToken, tenantId, extraData, signerURIs, unsignedPublicAuth, signer;
         return _regeneratorRuntime.wrap(function _callee6$(_context6) {
           while (1) {
             switch (_context6.prev = _context6.next) {
               case 0:
-                idToken = _ref8.idToken, authToken = _ref8.authToken, tenantId = _ref8.tenantId, extraData = _ref8.extraData, unsignedPublicAuth = _ref8.unsignedPublicAuth;
+                idToken = _ref8.idToken, authToken = _ref8.authToken, tenantId = _ref8.tenantId, extraData = _ref8.extraData, signerURIs = _ref8.signerURIs, unsignedPublicAuth = _ref8.unsignedPublicAuth;
                 _context6.t0 = RemoteSigner;
-                _context6.t1 = this.authServiceURIs;
+                _context6.t1 = signerURIs || this.authServiceURIs;
                 _context6.t2 = idToken;
                 _context6.t3 = authToken;
                 _context6.t4 = tenantId;
@@ -678,7 +679,7 @@ var ElvClient = /*#__PURE__*/function () {
                 _context6.t6 = extraData;
                 _context6.t7 = unsignedPublicAuth;
                 _context6.t8 = {
-                  rpcUris: _context6.t1,
+                  signerURIs: _context6.t1,
                   idToken: _context6.t2,
                   authToken: _context6.t3,
                   tenantId: _context6.t4,

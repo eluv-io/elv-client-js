@@ -31,13 +31,14 @@ var UrlJoin = require("url-join");
 var Utils = require("../Utils");
 
 var Ethers = require("ethers");
+
+var inBrowser = typeof window !== "undefined";
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
  *
  *
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
-
 
 var ElvWalletClient = /*#__PURE__*/function () {
   "use strict";
@@ -116,7 +117,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
         return false;
       }
 
-      return !!this.__authorization.clusterToken || !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId);
+      return !!this.__authorization.clusterToken || inBrowser && !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId);
     }
     /**
      * <b><i>Requires login</i></b>
@@ -156,7 +157,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
               case 3:
                 if (!this.CanSign()) {
-                  _context3.next = 17;
+                  _context3.next = 19;
                   break;
                 }
 
@@ -189,6 +190,18 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 throw Error("ElvWalletClient: Unable to sign");
 
               case 17:
+                _context3.next = 21;
+                break;
+
+              case 19:
+                if (inBrowser) {
+                  _context3.next = 21;
+                  break;
+                }
+
+                throw Error("ElvWalletClient: Unable to sign");
+
+              case 21:
                 parameters = {
                   action: "personal-sign",
                   message: message,
@@ -197,7 +210,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 url = new URL(this.appUrl);
                 url.hash = UrlJoin("/action", "sign", Utils.B58(JSON.stringify(parameters)));
                 url.searchParams.set("origin", window.location.origin);
-                _context3.next = 23;
+                _context3.next = 27;
                 return new Promise( /*#__PURE__*/function () {
                   var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(resolve, reject) {
                     return _regeneratorRuntime.wrap(function _callee2$(_context2) {
@@ -262,10 +275,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   };
                 }());
 
-              case 23:
+              case 27:
                 return _context3.abrupt("return", _context3.sent);
 
-              case 24:
+              case 28:
               case "end":
                 return _context3.stop();
             }
@@ -537,7 +550,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
                 _context7.next = 13;
                 return this.client.SetRemoteSigner({
-                  authToken: decodedToken.clusterToken
+                  authToken: decodedToken.clusterToken,
+                  signerURIs: decodedToken.signerURIs
                 });
 
               case 13:
@@ -568,8 +582,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
      * @param {string} idToken - An OAuth ID token
      * @param {string=} tenantId - ID of tenant with which to associate the user. If marketplace info was set upon initialization, this will be determined automatically.
      * @param {string=} email - Email address of the user. If not specified, this method will attempt to extract the email from the ID token.
+     * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
      * @param {boolean=} shareEmail=false - Whether or not the user consents to sharing their email
-     * @param {number=} tokenDuration=24 - Number of hours the generated authorization token will last before expiring
      *
      * @returns {Promise<Object>} - Returns an authorization tokens that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
      * Save this token to avoid having to reauthenticate with OAuth. This token expires after 24 hours.
@@ -584,64 +598,66 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "AuthenticateOAuth",
     value: function () {
       var _AuthenticateOAuth = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee8(_ref7) {
-        var idToken, tenantId, email, _ref7$shareEmail, shareEmail, _ref7$tokenDuration, tokenDuration, expiresAt, fabricToken, address, decodedToken;
+        var idToken, tenantId, email, signerURIs, _ref7$shareEmail, shareEmail, tokenDuration, expiresAt, fabricToken, address, decodedToken;
 
         return _regeneratorRuntime.wrap(function _callee8$(_context8) {
           while (1) {
             switch (_context8.prev = _context8.next) {
               case 0:
-                idToken = _ref7.idToken, tenantId = _ref7.tenantId, email = _ref7.email, _ref7$shareEmail = _ref7.shareEmail, shareEmail = _ref7$shareEmail === void 0 ? false : _ref7$shareEmail, _ref7$tokenDuration = _ref7.tokenDuration, tokenDuration = _ref7$tokenDuration === void 0 ? 24 : _ref7$tokenDuration;
+                idToken = _ref7.idToken, tenantId = _ref7.tenantId, email = _ref7.email, signerURIs = _ref7.signerURIs, _ref7$shareEmail = _ref7.shareEmail, shareEmail = _ref7$shareEmail === void 0 ? false : _ref7$shareEmail;
+                tokenDuration = 24;
 
                 if (!(!tenantId && this.selectedMarketplaceInfo)) {
-                  _context8.next = 5;
+                  _context8.next = 6;
                   break;
                 }
 
-                _context8.next = 4;
+                _context8.next = 5;
                 return this.AvailableMarketplaces();
 
-              case 4:
+              case 5:
                 tenantId = this.selectedMarketplaceInfo.tenantId;
 
-              case 5:
-                _context8.next = 7;
+              case 6:
+                _context8.next = 8;
                 return this.client.SetRemoteSigner({
                   idToken: idToken,
                   tenantId: tenantId,
+                  signerURIs: signerURIs,
                   extraData: {
                     share_email: shareEmail
                   },
                   unsignedPublicAuth: true
                 });
 
-              case 7:
+              case 8:
                 expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
-                _context8.next = 10;
+                _context8.next = 11;
                 return this.client.CreateFabricToken({
                   duration: tokenDuration * 60 * 60 * 1000
                 });
 
-              case 10:
+              case 11:
                 fabricToken = _context8.sent;
                 address = this.client.utils.FormatAddress(this.client.CurrentAccountAddress());
 
                 if (email) {
-                  _context8.next = 21;
+                  _context8.next = 22;
                   break;
                 }
 
-                _context8.prev = 13;
+                _context8.prev = 14;
                 decodedToken = JSON.parse(this.utils.FromB64URL(idToken.split(".")[1]));
                 email = decodedToken.email;
-                _context8.next = 21;
+                _context8.next = 22;
                 break;
 
-              case 18:
-                _context8.prev = 18;
-                _context8.t0 = _context8["catch"](13);
+              case 19:
+                _context8.prev = 19;
+                _context8.t0 = _context8["catch"](14);
                 throw Error("Failed to decode ID token");
 
-              case 21:
+              case 22:
                 this.client.SetStaticToken({
                   token: fabricToken
                 });
@@ -652,6 +668,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     address: address,
                     email: email,
                     expiresAt: expiresAt,
+                    signerURIs: signerURIs,
                     walletType: "Custodial",
                     walletName: "Eluvio"
                   }),
@@ -662,17 +679,18 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     address: address,
                     email: email,
                     expiresAt: expiresAt,
+                    signerURIs: signerURIs,
                     walletType: "Custodial",
                     walletName: "Eluvio"
                   })
                 });
 
-              case 23:
+              case 24:
               case "end":
                 return _context8.stop();
             }
           }
-        }, _callee8, this, [[13, 18]]);
+        }, _callee8, this, [[14, 19]]);
       }));
 
       function AuthenticateOAuth(_x12) {
@@ -809,6 +827,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
           address = _ref10.address,
           email = _ref10.email,
           expiresAt = _ref10.expiresAt,
+          signerURIs = _ref10.signerURIs,
           walletType = _ref10.walletType,
           walletName = _ref10.walletName;
       address = this.client.utils.FormatAddress(address);
@@ -824,6 +843,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
       if (clusterToken) {
         this.__authorization.clusterToken = clusterToken;
+
+        if (signerURIs) {
+          this.__authorization.signerURIs = signerURIs;
+        }
       }
 
       this.loggedIn = true;
@@ -849,7 +872,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
               case 0:
                 message = _ref11.message, address = _ref11.address;
 
-                if (window.ethereum) {
+                if (!(!inBrowser || !window.ethereum)) {
                   _context11.next = 3;
                   break;
                 }
@@ -1405,7 +1428,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 _context16.t0 = mode;
-                _context16.next = _context16.t0 === "owned" ? 34 : _context16.t0 === "listings" ? 37 : _context16.t0 === "transfers" ? 39 : _context16.t0 === "sales" ? 41 : _context16.t0 === "listing-stats" ? 44 : _context16.t0 === "sales-stats" ? 46 : 48;
+                _context16.next = _context16.t0 === "owned" ? 34 : _context16.t0 === "listings" ? 37 : _context16.t0 === "transfers" ? 39 : _context16.t0 === "sales" ? 43 : _context16.t0 === "listing-stats" ? 46 : _context16.t0 === "sales-stats" ? 48 : 50;
                 break;
 
               case 34:
@@ -1415,52 +1438,54 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   path = UrlJoin("as", "wlt", "nfts", marketplaceInfo.tenantId);
                 }
 
-                return _context16.abrupt("break", 48);
+                return _context16.abrupt("break", 50);
 
               case 37:
                 path = UrlJoin("as", "mkt", "f");
-                return _context16.abrupt("break", 48);
+                return _context16.abrupt("break", 50);
 
               case 39:
                 path = UrlJoin("as", "mkt", "hst", "f");
-                return _context16.abrupt("break", 48);
+                filters.push("action:eq:TRANSFERRED");
+                filters.push("action:eq:SOLD");
+                return _context16.abrupt("break", 50);
 
-              case 41:
+              case 43:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 48);
-
-              case 44:
-                path = UrlJoin("as", "mkt", "stats", "listed");
-                return _context16.abrupt("break", 48);
+                return _context16.abrupt("break", 50);
 
               case 46:
-                path = UrlJoin("as", "mkt", "stats", "sold");
-                return _context16.abrupt("break", 48);
+                path = UrlJoin("as", "mkt", "stats", "listed");
+                return _context16.abrupt("break", 50);
 
               case 48:
+                path = UrlJoin("as", "mkt", "stats", "sold");
+                return _context16.abrupt("break", 50);
+
+              case 50:
                 if (filters.length > 0) {
                   params.filter = filters;
                 }
 
                 if (!mode.includes("stats")) {
-                  _context16.next = 53;
+                  _context16.next = 55;
                   break;
                 }
 
-                _context16.next = 52;
+                _context16.next = 54;
                 return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
                   queryParams: params
                 }));
 
-              case 52:
+              case 54:
                 return _context16.abrupt("return", _context16.sent);
 
-              case 53:
+              case 55:
                 _context16.t2 = Utils;
-                _context16.next = 56;
+                _context16.next = 58;
                 return this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
@@ -1470,22 +1495,22 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   } : {}
                 });
 
-              case 56:
+              case 58:
                 _context16.t3 = _context16.sent;
-                _context16.next = 59;
+                _context16.next = 61;
                 return _context16.t2.ResponseToJson.call(_context16.t2, _context16.t3);
 
-              case 59:
+              case 61:
                 _context16.t1 = _context16.sent;
 
                 if (_context16.t1) {
-                  _context16.next = 62;
+                  _context16.next = 64;
                   break;
                 }
 
                 _context16.t1 = [];
 
-              case 62:
+              case 64:
                 _ref16 = _context16.t1;
                 contents = _ref16.contents;
                 paging = _ref16.paging;
@@ -1501,12 +1526,12 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   })
                 });
 
-              case 68:
-                _context16.prev = 68;
+              case 70:
+                _context16.prev = 70;
                 _context16.t4 = _context16["catch"](11);
 
                 if (!(_context16.t4.status && _context16.t4.status.toString() === "404")) {
-                  _context16.next = 72;
+                  _context16.next = 74;
                   break;
                 }
 
@@ -1520,15 +1545,15 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   results: []
                 });
 
-              case 72:
+              case 74:
                 throw _context16.t4;
 
-              case 73:
+              case 75:
               case "end":
                 return _context16.stop();
             }
           }
-        }, _callee16, this, [[11, 68]]);
+        }, _callee16, this, [[11, 70]]);
       }));
 
       function FilteredQuery() {
@@ -1689,7 +1714,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   storeAuthToken: storeAuthToken
                 });
 
-                if (!(window && window.location && window.location.href)) {
+                if (!(inBrowser && window.location && window.location.href)) {
                   _context18.next = 31;
                   break;
                 }
