@@ -665,24 +665,37 @@ var ElvClient = /*#__PURE__*/function () {
             switch (_context6.prev = _context6.next) {
               case 0:
                 idToken = _ref8.idToken, authToken = _ref8.authToken, tenantId = _ref8.tenantId, extraData = _ref8.extraData, unsignedPublicAuth = _ref8.unsignedPublicAuth;
-                signer = new RemoteSigner({
-                  rpcUris: this.authServiceURIs,
-                  idToken: idToken,
-                  authToken: authToken,
-                  tenantId: tenantId,
-                  provider: this.ethClient.provider,
-                  extraData: extraData,
-                  unsignedPublicAuth: unsignedPublicAuth
-                });
-                _context6.next = 4;
+                _context6.t0 = RemoteSigner;
+                _context6.t1 = this.authServiceURIs;
+                _context6.t2 = idToken;
+                _context6.t3 = authToken;
+                _context6.t4 = tenantId;
+                _context6.next = 8;
+                return this.ethClient.Provider();
+
+              case 8:
+                _context6.t5 = _context6.sent;
+                _context6.t6 = extraData;
+                _context6.t7 = unsignedPublicAuth;
+                _context6.t8 = {
+                  rpcUris: _context6.t1,
+                  idToken: _context6.t2,
+                  authToken: _context6.t3,
+                  tenantId: _context6.t4,
+                  provider: _context6.t5,
+                  extraData: _context6.t6,
+                  unsignedPublicAuth: _context6.t7
+                };
+                signer = new _context6.t0(_context6.t8);
+                _context6.next = 15;
                 return signer.Initialize();
 
-              case 4:
+              case 15:
                 this.SetSigner({
                   signer: signer
                 });
 
-              case 5:
+              case 16:
               case "end":
                 return _context6.stop();
             }

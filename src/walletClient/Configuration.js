@@ -12,7 +12,7 @@ let WalletConfiguration = {
     staging: {
       siteId: "iq__inauxD1KLyKWPHargCWjdCh2ayr",
       purchaseMode: "production",
-      appUrl: "https://core.test.contentfabric.io/wallet"
+      appUrl: "https://wallet.preview.contentfabric.io",
     },
     production: {
       siteId: "iq__suqRJUt2vmXsyiWS5ZaSGwtFU9R",
