@@ -195,7 +195,7 @@ exports.UserItemInfo = async function ({userAddress}={}) {
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
  * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
  */
@@ -604,7 +604,7 @@ exports.Listing = async function({listingId}) {
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the item name.
  * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
- *  @param {string=} editionFilter - Filter results by item edition.
+ *  @param {Array<string>=} editionFilters - Filter results by item edition.
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the edition name.
  * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
@@ -612,12 +612,13 @@ exports.Listing = async function({listingId}) {
  *  <br /><br />
  *  NOTE: These filters must be an <b>exact match</b> on the attribute name and value.
  * You can retrieve all available item attributes from the <a href="#.ListingAttributes">ListingAttributes method</a>.
+ * @param {Object=} priceRange - Filter min and/or max price (e.g. `{min: 1}` `{max: 2}` `{min: 1.50, max: 10.50})
  * @param {string=} sellerAddress - Filter by a specific seller
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
@@ -639,7 +640,7 @@ exports.Listings = async function() {
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the item name.
  * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
- *  @param {string=} editionFilter - Filter results by item edition.
+ *  @param {Array<string>} editionFilters - Filter results by item edition.
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the edition name.
  * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
@@ -647,12 +648,13 @@ exports.Listings = async function() {
  *  <br /><br />
  *  NOTE: These filters must be an <b>exact match</b> on the attribute name and value.
  * You can retrieve all available item attributes from the <a href="#.ListingAttributes">ListingAttributes method</a>.
+ * @param {Object=} priceRange - Filter min and/or max price (e.g. `{min: 1}` `{max: 2}` `{min: 1.50, max: 10.50})
  * @param {string=} sellerAddress - Filter by a specific seller
  * @param {string=} contractAddress - Filter results by the address of the NFT contract
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Statistics about listings. All prices in USD.
@@ -674,7 +676,7 @@ exports.ListingStats = async function() {
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the item name.
  * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
- *  @param {string=} editionFilter - Filter results by item edition.
+ *  @param {Array<string>} editionFilters - Filter results by item edition.
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the edition name.
  * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
@@ -687,7 +689,7 @@ exports.ListingStats = async function() {
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
@@ -709,7 +711,7 @@ exports.Sales = async function() {
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the item name.
  * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
- *  @param {string=} editionFilter - Filter results by item edition.
+ *  @param {Array<string>} editionFilters - Filter results by item edition.
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the edition name.
  * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
@@ -722,7 +724,7 @@ exports.Sales = async function() {
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
@@ -744,7 +746,7 @@ exports.Transfers = async function() {
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the item name.
  * You can retrieve all available item names from the <a href="#.ListingNames">ListingNames method</a>.
- *  @param {string=} editionFilter - Filter results by item edition.
+ *  @param {Array<string>} editionFilters - Filter results by item edition.
  *  <br /><br />
  *  NOTE: This string must be an <b>exact match</b> on the edition name.
  * You can retrieve all available item edition names from the <a href="#.ListingEditionNames">ListingEditionNames method</a>.
@@ -757,7 +759,7 @@ exports.Transfers = async function() {
  * @param {string=} tokenId - Filter by token ID (if filtering by contract address)
  * @param {string=} currency - Filter results by purchase currency. Available options: `usdc`
  * @param {Object=} marketplaceParams - Filter results by marketplace
- * @param {integer=} collectionIndex - If filtering by marketplace, filter by collection. The index refers to the index in the array `marketplace.collections`
+ * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
  * @param {integer=} lastNDays - Filter by results listed in the past N days
  *
  * @returns {Promise<Object>} - Statistics about sales. All prices in USD.

@@ -5,7 +5,7 @@ const UrlJoin = require("url-join");
 
 class RemoteSigner extends Ethers.Signer {
   constructor({
-    rpcUris,
+    signerURIs,
     idToken,
     authToken,
     tenantId,
@@ -18,7 +18,7 @@ class RemoteSigner extends Ethers.Signer {
     this.remoteSigner = true;
     this.unsignedPublicAuth = unsignedPublicAuth;
 
-    this.HttpClient = new HttpClient({uris: rpcUris});
+    this.HttpClient = new HttpClient({uris: signerURIs});
     this.idToken = idToken;
     this.tenantId = tenantId;
 

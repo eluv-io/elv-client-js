@@ -5,6 +5,7 @@ const UrlJoin = require("url-join");
 const Utils = require("../Utils");
 const Ethers = require("ethers");
 
+const inBrowser = typeof window !== "undefined";
 
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
@@ -91,7 +92,7 @@ class ElvWalletClient {
       storeAuthToken
     });
 
-    if(window && window.location && window.location.href) {
+    if(inBrowser && window.location && window.location.href) {
       let url = new URL(window.location.href);
       if(url.searchParams.get("elvToken")) {
         await walletClient.Authenticate({token: url.searchParams.get("elvToken")});
@@ -129,8 +130,7 @@ class ElvWalletClient {
   CanSign() {
     if(!this.loggedIn) { return false; }
 
-    return !!this.__authorization.clusterToken ||
-      !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId);
+    return !!this.__authorization.clusterToken || (inBrowser && !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId));
   }
 
   /**
@@ -167,6 +167,8 @@ class ElvWalletClient {
       } else {
         throw Error("ElvWalletClient: Unable to sign");
       }
+    } else if(!inBrowser) {
+      throw Error("ElvWalletClient: Unable to sign");
     }
 
     const parameters = {
@@ -331,7 +333,7 @@ class ElvWalletClient {
     }
 
     if(decodedToken.clusterToken) {
-      await this.client.SetRemoteSigner({authToken: decodedToken.clusterToken});
+      await this.client.SetRemoteSigner({authToken: decodedToken.clusterToken, signerURIs: decodedToken.signerURIs});
     }
 
     this.client.SetStaticToken({token: decodedToken.fabricToken});
@@ -347,8 +349,8 @@ class ElvWalletClient {
    * @param {string} idToken - An OAuth ID token
    * @param {string=} tenantId - ID of tenant with which to associate the user. If marketplace info was set upon initialization, this will be determined automatically.
    * @param {string=} email - Email address of the user. If not specified, this method will attempt to extract the email from the ID token.
+   * @param {Array<string>=} signerURIs - (Only if using custom OAuth) - URIs corresponding to the key server(s) to use
    * @param {boolean=} shareEmail=false - Whether or not the user consents to sharing their email
-   * @param {number=} tokenDuration=24 - Number of hours the generated authorization token will last before expiring
    *
    * @returns {Promise<Object>} - Returns an authorization tokens that can be used to initialize the client using <a href="#Authenticate">Authenticate</a>.
    * Save this token to avoid having to reauthenticate with OAuth. This token expires after 24 hours.
@@ -358,14 +360,16 @@ class ElvWalletClient {
    * - signingToken - Identical to `authToken`, but also includes the ability to perform arbitrary signatures with the custodial wallet. This token should be protected and should not be
    * shared with third parties.
    */
-  async AuthenticateOAuth({idToken, tenantId, email, shareEmail=false, tokenDuration=24}) {
+  async AuthenticateOAuth({idToken, tenantId, email, signerURIs, shareEmail=false}) {
+    let tokenDuration = 24;
+
     if(!tenantId && this.selectedMarketplaceInfo) {
       // Load tenant ID automatically from selected marketplace
       await this.AvailableMarketplaces();
       tenantId = this.selectedMarketplaceInfo.tenantId;
     }
 
-    await this.client.SetRemoteSigner({idToken, tenantId, extraData: { share_email: shareEmail }, unsignedPublicAuth: true});
+    await this.client.SetRemoteSigner({idToken, tenantId, signerURIs, extraData: { share_email: shareEmail }, unsignedPublicAuth: true});
 
     const expiresAt = Date.now() + tokenDuration * 60 * 60 * 1000;
     const fabricToken = await this.client.CreateFabricToken({duration: tokenDuration * 60 * 60 * 1000});
@@ -389,6 +393,7 @@ class ElvWalletClient {
         address,
         email,
         expiresAt,
+        signerURIs,
         walletType: "Custodial",
         walletName: "Eluvio"
       }),
@@ -399,6 +404,7 @@ class ElvWalletClient {
         address,
         email,
         expiresAt,
+        signerURIs,
         walletType: "Custodial",
         walletName: "Eluvio"
       })
@@ -461,7 +467,7 @@ class ElvWalletClient {
     return this.__authorization.fabricToken;
   }
 
-  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, walletType, walletName}) {
+  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName}) {
     address = this.client.utils.FormatAddress(address);
 
     this.__authorization = {
@@ -476,6 +482,10 @@ class ElvWalletClient {
 
     if(clusterToken) {
       this.__authorization.clusterToken = clusterToken;
+
+      if(signerURIs) {
+        this.__authorization.signerURIs = signerURIs;
+      }
     }
 
     this.loggedIn = true;
@@ -495,7 +505,7 @@ class ElvWalletClient {
   }
 
   async SignMetamask({message, address}) {
-    if(!window.ethereum) {
+    if(!inBrowser || !window.ethereum) {
       throw Error("ElvWalletClient: Unable to initialize - Metamask not available");
     }
 
@@ -699,20 +709,23 @@ class ElvWalletClient {
     sortBy="created",
     sortDesc=false,
     filter,
-    editionFilter,
+    editionFilters,
     attributeFilters,
     contractAddress,
     tokenId,
     currency,
     marketplaceParams,
     tenantId,
-    collectionIndex=-1,
+    collectionIndexes,
+    priceRange,
+    tokenIdRange,
+    capLimit,
     sellerAddress,
     lastNDays=-1,
     start=0,
     limit=50
   }={}) {
-    collectionIndex = parseInt(collectionIndex);
+    collectionIndexes = (collectionIndexes || []).map(i => parseInt(i));
 
     let params = {
       sort_by: sortBy,
@@ -725,7 +738,7 @@ class ElvWalletClient {
     if(marketplaceParams) {
       marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
 
-      if(collectionIndex >= 0) {
+      if(collectionIndexes.length > 0) {
         marketplace = await this.Marketplace({marketplaceParams});
       }
     }
@@ -737,41 +750,30 @@ class ElvWalletClient {
         filters.push(`seller:eq:${this.client.utils.FormatAddress(sellerAddress)}`);
       }
 
-      if(marketplace && collectionIndex >= 0) {
-        const collection = marketplace.collections[collectionIndex];
+      if(marketplace && collectionIndexes.length >= 0) {
+        collectionIndexes.forEach(collectionIndex => {
+          const collection = marketplace.collections[collectionIndex];
 
-        collection.items.forEach(sku => {
-          if(!sku) { return; }
+          collection.items.forEach(sku => {
+            if(!sku) {
+              return;
+            }
 
-          const item = marketplace.items.find(item => item.sku === sku);
+            const item = marketplace.items.find(item => item.sku === sku);
 
-          if(!item) { return; }
+            if(!item) {
+              return;
+            }
 
-          const address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
+            const address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
 
-          if(address) {
-            filters.push(
-              `${mode === "owned" ? "contract_addr": "contract"}:eq:${Utils.FormatAddress(address)}`
-            );
-          }
+            if(address) {
+              filters.push(
+                `${mode === "owned" ? "contract_addr" : "contract"}:eq:${Utils.FormatAddress(address)}`
+              );
+            }
+          });
         });
-
-        // No valid items, so there must not be anything relevant in the collection
-        if(filters.length === 0) {
-          if(mode.includes("stats")) {
-            return {};
-          } else {
-            return {
-              paging: {
-                start: params.start,
-                limit: params.limit,
-                total: 0,
-                more: false
-              },
-              results: []
-            };
-          }
-        }
       } else if(mode !== "owned" && marketplaceInfo || tenantId) {
         filters.push(`tenant:eq:${marketplaceInfo ? marketplaceInfo.tenantId : tenantId}`);
       }
@@ -797,15 +799,17 @@ class ElvWalletClient {
         }
       }
 
-      if(editionFilter) {
-        if(mode.includes("listing")) {
-          filters.push(`nft/edition_name:eq:${editionFilter}`);
-        } else if(mode === "owned") {
-          filters.push(`meta:@>:{"edition_name":"${editionFilter}"}`);
-          params.exact = false;
-        } else {
-          filters.push(`edition:eq:${editionFilter}`);
-        }
+      if(editionFilters) {
+        editionFilters.forEach(editionFilter => {
+          if(mode.includes("listing")) {
+            filters.push(`nft/edition_name:eq:${editionFilter}`);
+          } else if(mode === "owned") {
+            filters.push(`meta:@>:{"edition_name":"${editionFilter}"}`);
+            params.exact = false;
+          } else {
+            filters.push(`edition:eq:${editionFilter}`);
+          }
+        });
       }
 
       if(attributeFilters) {
@@ -823,6 +827,31 @@ class ElvWalletClient {
       if(lastNDays && lastNDays > 0) {
         filters.push(`created:gt:${((Date.now() / 1000) - ( lastNDays * 24 * 60 * 60 )).toFixed(0)}`);
       }
+
+      if(priceRange) {
+        if(priceRange.min) {
+          filters.push(`price:gt:${parseFloat(priceRange.min) - 0.01}`);
+        }
+
+        if(priceRange.max) {
+          filters.push(`price:lt:${parseFloat(priceRange.max) + 0.01}`);
+        }
+      }
+
+      if(tokenIdRange) {
+        if(tokenIdRange.min) {
+          filters.push(`info/ordinal:gt:${parseInt(tokenIdRange.min) - 1}`);
+        }
+
+        if(tokenIdRange.max) {
+          filters.push(`info/ordinal:lt:${parseInt(tokenIdRange.max) + 1}`);
+        }
+      }
+
+      if(capLimit) {
+        filters.push(`info/cap:lt:${parseInt(capLimit) + 1}`);
+      }
+
 
       let path;
       switch(mode) {
