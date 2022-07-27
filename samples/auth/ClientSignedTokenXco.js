@@ -31,7 +31,8 @@ const Setup = async () => {
   client.ToggleLogging(false);
 
   // Overwrite auth service endpoints (until the cross-chain feture is fully deployed)
-  client.authServiceURIs = ["http://127.0.0.1:6546"];
+  //client.authServiceURIs = ["http://127.0.0.1:6546"];  // Dev instance
+  client.authServiceURIs = ["https://host-216-66-89-94.contentfabric.io/as"]
   client.AuthHttpClient.uris = client.authServiceURIs;
 
   return client;
@@ -42,7 +43,7 @@ const Setup = async () => {
  */
 const XcoMessage = async ({msg}) => {
 
-  // Create a client-signed-token in order to access the ross-chain oracle API
+  // Create a client-signed-token in order to access the cross-chain oracle API
   const token = await client.CreateFabricToken({
 	  duration: 60 * 60 * 1000, // millisec
   });
@@ -52,7 +53,7 @@ const XcoMessage = async ({msg}) => {
     "json",
     client.authClient.MakeAuthServiceRequest({
       method: "POST",
-      path: "/xco/view",  // On main/dev net /as/xco/view
+      path: "/as/xco/view",  // On main/dev net /as/xco/view
       body: msg,
       headers: {
         Authorization: `Bearer ${token}`,
