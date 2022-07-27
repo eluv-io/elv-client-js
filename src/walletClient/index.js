@@ -710,20 +710,23 @@ class ElvWalletClient {
     sortBy="created",
     sortDesc=false,
     filter,
-    editionFilter,
+    editionFilters,
     attributeFilters,
     contractAddress,
     tokenId,
     currency,
     marketplaceParams,
     tenantId,
-    collectionIndex=-1,
+    collectionIndexes,
+    priceRange,
+    tokenIdRange,
+    capLimit,
     sellerAddress,
     lastNDays=-1,
     start=0,
     limit=50
   }={}) {
-    collectionIndex = parseInt(collectionIndex);
+    collectionIndexes = (collectionIndexes || []).map(i => parseInt(i));
 
     let params = {
       sort_by: sortBy,
@@ -736,7 +739,7 @@ class ElvWalletClient {
     if(marketplaceParams) {
       marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
 
-      if(collectionIndex >= 0) {
+      if(collectionIndexes.length > 0) {
         marketplace = await this.Marketplace({marketplaceParams});
       }
     }
@@ -748,41 +751,30 @@ class ElvWalletClient {
         filters.push(`seller:eq:${this.client.utils.FormatAddress(sellerAddress)}`);
       }
 
-      if(marketplace && collectionIndex >= 0) {
-        const collection = marketplace.collections[collectionIndex];
+      if(marketplace && collectionIndexes.length >= 0) {
+        collectionIndexes.forEach(collectionIndex => {
+          const collection = marketplace.collections[collectionIndex];
 
-        collection.items.forEach(sku => {
-          if(!sku) { return; }
+          collection.items.forEach(sku => {
+            if(!sku) {
+              return;
+            }
 
-          const item = marketplace.items.find(item => item.sku === sku);
+            const item = marketplace.items.find(item => item.sku === sku);
 
-          if(!item) { return; }
+            if(!item) {
+              return;
+            }
 
-          const address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
+            const address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
 
-          if(address) {
-            filters.push(
-              `${mode === "owned" ? "contract_addr": "contract"}:eq:${Utils.FormatAddress(address)}`
-            );
-          }
+            if(address) {
+              filters.push(
+                `${mode === "owned" ? "contract_addr" : "contract"}:eq:${Utils.FormatAddress(address)}`
+              );
+            }
+          });
         });
-
-        // No valid items, so there must not be anything relevant in the collection
-        if(filters.length === 0) {
-          if(mode.includes("stats")) {
-            return {};
-          } else {
-            return {
-              paging: {
-                start: params.start,
-                limit: params.limit,
-                total: 0,
-                more: false
-              },
-              results: []
-            };
-          }
-        }
       } else if(mode !== "owned" && marketplaceInfo || tenantId) {
         filters.push(`tenant:eq:${marketplaceInfo ? marketplaceInfo.tenantId : tenantId}`);
       }
@@ -808,15 +800,17 @@ class ElvWalletClient {
         }
       }
 
-      if(editionFilter) {
-        if(mode.includes("listing")) {
-          filters.push(`nft/edition_name:eq:${editionFilter}`);
-        } else if(mode === "owned") {
-          filters.push(`meta:@>:{"edition_name":"${editionFilter}"}`);
-          params.exact = false;
-        } else {
-          filters.push(`edition:eq:${editionFilter}`);
-        }
+      if(editionFilters) {
+        editionFilters.forEach(editionFilter => {
+          if(mode.includes("listing")) {
+            filters.push(`nft/edition_name:eq:${editionFilter}`);
+          } else if(mode === "owned") {
+            filters.push(`meta:@>:{"edition_name":"${editionFilter}"}`);
+            params.exact = false;
+          } else {
+            filters.push(`edition:eq:${editionFilter}`);
+          }
+        });
       }
 
       if(attributeFilters) {
@@ -834,6 +828,31 @@ class ElvWalletClient {
       if(lastNDays && lastNDays > 0) {
         filters.push(`created:gt:${((Date.now() / 1000) - ( lastNDays * 24 * 60 * 60 )).toFixed(0)}`);
       }
+
+      if(priceRange) {
+        if(priceRange.min) {
+          filters.push(`price:gt:${parseFloat(priceRange.min) - 0.01}`);
+        }
+
+        if(priceRange.max) {
+          filters.push(`price:lt:${parseFloat(priceRange.max) + 0.01}`);
+        }
+      }
+
+      if(tokenIdRange) {
+        if(tokenIdRange.min) {
+          filters.push(`info/ordinal:gt:${parseInt(tokenIdRange.min) - 1}`);
+        }
+
+        if(tokenIdRange.max) {
+          filters.push(`info/ordinal:lt:${parseInt(tokenIdRange.max) + 1}`);
+        }
+      }
+
+      if(capLimit) {
+        filters.push(`info/cap:lt:${parseInt(capLimit) + 1}`);
+      }
+
 
       let path;
       switch(mode) {
