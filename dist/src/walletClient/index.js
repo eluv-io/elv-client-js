@@ -1241,15 +1241,17 @@ var ElvWalletClient = /*#__PURE__*/function () {
             _ref14$sortDesc,
             sortDesc,
             filter,
-            editionFilter,
+            editionFilters,
             attributeFilters,
             contractAddress,
             tokenId,
             currency,
             marketplaceParams,
             tenantId,
-            _ref14$collectionInde,
-            collectionIndex,
+            collectionIndexes,
+            priceRange,
+            tokenIdRange,
+            capLimit,
             sellerAddress,
             _ref14$lastNDays,
             lastNDays,
@@ -1261,7 +1263,6 @@ var ElvWalletClient = /*#__PURE__*/function () {
             marketplaceInfo,
             marketplace,
             filters,
-            collection,
             path,
             _ref16,
             contents,
@@ -1272,8 +1273,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
           while (1) {
             switch (_context16.prev = _context16.next) {
               case 0:
-                _ref14 = _args16.length > 0 && _args16[0] !== undefined ? _args16[0] : {}, _ref14$mode = _ref14.mode, mode = _ref14$mode === void 0 ? "listings" : _ref14$mode, _ref14$sortBy = _ref14.sortBy, sortBy = _ref14$sortBy === void 0 ? "created" : _ref14$sortBy, _ref14$sortDesc = _ref14.sortDesc, sortDesc = _ref14$sortDesc === void 0 ? false : _ref14$sortDesc, filter = _ref14.filter, editionFilter = _ref14.editionFilter, attributeFilters = _ref14.attributeFilters, contractAddress = _ref14.contractAddress, tokenId = _ref14.tokenId, currency = _ref14.currency, marketplaceParams = _ref14.marketplaceParams, tenantId = _ref14.tenantId, _ref14$collectionInde = _ref14.collectionIndex, collectionIndex = _ref14$collectionInde === void 0 ? -1 : _ref14$collectionInde, sellerAddress = _ref14.sellerAddress, _ref14$lastNDays = _ref14.lastNDays, lastNDays = _ref14$lastNDays === void 0 ? -1 : _ref14$lastNDays, _ref14$start = _ref14.start, start = _ref14$start === void 0 ? 0 : _ref14$start, _ref14$limit = _ref14.limit, limit = _ref14$limit === void 0 ? 50 : _ref14$limit;
-                collectionIndex = parseInt(collectionIndex);
+                _ref14 = _args16.length > 0 && _args16[0] !== undefined ? _args16[0] : {}, _ref14$mode = _ref14.mode, mode = _ref14$mode === void 0 ? "listings" : _ref14$mode, _ref14$sortBy = _ref14.sortBy, sortBy = _ref14$sortBy === void 0 ? "created" : _ref14$sortBy, _ref14$sortDesc = _ref14.sortDesc, sortDesc = _ref14$sortDesc === void 0 ? false : _ref14$sortDesc, filter = _ref14.filter, editionFilters = _ref14.editionFilters, attributeFilters = _ref14.attributeFilters, contractAddress = _ref14.contractAddress, tokenId = _ref14.tokenId, currency = _ref14.currency, marketplaceParams = _ref14.marketplaceParams, tenantId = _ref14.tenantId, collectionIndexes = _ref14.collectionIndexes, priceRange = _ref14.priceRange, tokenIdRange = _ref14.tokenIdRange, capLimit = _ref14.capLimit, sellerAddress = _ref14.sellerAddress, _ref14$lastNDays = _ref14.lastNDays, lastNDays = _ref14$lastNDays === void 0 ? -1 : _ref14$lastNDays, _ref14$start = _ref14.start, start = _ref14$start === void 0 ? 0 : _ref14$start, _ref14$limit = _ref14.limit, limit = _ref14$limit === void 0 ? 50 : _ref14$limit;
+                collectionIndexes = (collectionIndexes || []).map(function (i) {
+                  return parseInt(i);
+                });
                 params = {
                   sort_by: sortBy,
                   sort_descending: sortDesc,
@@ -1294,7 +1297,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
               case 6:
                 marketplaceInfo = _context16.sent;
 
-                if (!(collectionIndex >= 0)) {
+                if (!(collectionIndexes.length > 0)) {
                   _context16.next = 11;
                   break;
                 }
@@ -1315,65 +1318,33 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   filters.push("seller:eq:".concat(this.client.utils.FormatAddress(sellerAddress)));
                 }
 
-                if (!(marketplace && collectionIndex >= 0)) {
-                  _context16.next = 25;
-                  break;
-                }
+                if (marketplace && collectionIndexes.length >= 0) {
+                  collectionIndexes.forEach(function (collectionIndex) {
+                    var collection = marketplace.collections[collectionIndex];
+                    collection.items.forEach(function (sku) {
+                      if (!sku) {
+                        return;
+                      }
 
-                collection = marketplace.collections[collectionIndex];
-                collection.items.forEach(function (sku) {
-                  if (!sku) {
-                    return;
-                  }
+                      var item = marketplace.items.find(function (item) {
+                        return item.sku === sku;
+                      });
 
-                  var item = marketplace.items.find(function (item) {
-                    return item.sku === sku;
+                      if (!item) {
+                        return;
+                      }
+
+                      var address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
+
+                      if (address) {
+                        filters.push("".concat(mode === "owned" ? "contract_addr" : "contract", ":eq:").concat(Utils.FormatAddress(address)));
+                      }
+                    });
                   });
-
-                  if (!item) {
-                    return;
-                  }
-
-                  var address = Utils.SafeTraverse(item, "nft_template", "nft", "address");
-
-                  if (address) {
-                    filters.push("".concat(mode === "owned" ? "contract_addr" : "contract", ":eq:").concat(Utils.FormatAddress(address)));
-                  }
-                }); // No valid items, so there must not be anything relevant in the collection
-
-                if (!(filters.length === 0)) {
-                  _context16.next = 23;
-                  break;
-                }
-
-                if (!mode.includes("stats")) {
-                  _context16.next = 22;
-                  break;
-                }
-
-                return _context16.abrupt("return", {});
-
-              case 22:
-                return _context16.abrupt("return", {
-                  paging: {
-                    start: params.start,
-                    limit: params.limit,
-                    total: 0,
-                    more: false
-                  },
-                  results: []
-                });
-
-              case 23:
-                _context16.next = 26;
-                break;
-
-              case 25:
-                if (mode !== "owned" && marketplaceInfo || tenantId) {
+                } else if (mode !== "owned" && marketplaceInfo || tenantId) {
                   filters.push("tenant:eq:".concat(marketplaceInfo ? marketplaceInfo.tenantId : tenantId));
                 }
 
-              case 26:
                 if (contractAddress) {
                   if (mode === "owned") {
                     filters.push("contract_addr:eq:".concat(Utils.FormatAddress(contractAddress)));
@@ -1395,15 +1366,17 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   }
                 }
 
-                if (editionFilter) {
-                  if (mode.includes("listing")) {
-                    filters.push("nft/edition_name:eq:".concat(editionFilter));
-                  } else if (mode === "owned") {
-                    filters.push("meta:@>:{\"edition_name\":\"".concat(editionFilter, "\"}"));
-                    params.exact = false;
-                  } else {
-                    filters.push("edition:eq:".concat(editionFilter));
-                  }
+                if (editionFilters) {
+                  editionFilters.forEach(function (editionFilter) {
+                    if (mode.includes("listing")) {
+                      filters.push("nft/edition_name:eq:".concat(editionFilter));
+                    } else if (mode === "owned") {
+                      filters.push("meta:@>:{\"edition_name\":\"".concat(editionFilter, "\"}"));
+                      params.exact = false;
+                    } else {
+                      filters.push("edition:eq:".concat(editionFilter));
+                    }
+                  });
                 }
 
                 if (attributeFilters) {
@@ -1427,65 +1400,89 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   filters.push("created:gt:".concat((Date.now() / 1000 - lastNDays * 24 * 60 * 60).toFixed(0)));
                 }
 
+                if (priceRange) {
+                  if (priceRange.min) {
+                    filters.push("price:gt:".concat(parseFloat(priceRange.min) - 0.01));
+                  }
+
+                  if (priceRange.max) {
+                    filters.push("price:lt:".concat(parseFloat(priceRange.max) + 0.01));
+                  }
+                }
+
+                if (tokenIdRange) {
+                  if (tokenIdRange.min) {
+                    filters.push("info/ordinal:gt:".concat(parseInt(tokenIdRange.min) - 1));
+                  }
+
+                  if (tokenIdRange.max) {
+                    filters.push("info/ordinal:lt:".concat(parseInt(tokenIdRange.max) + 1));
+                  }
+                }
+
+                if (capLimit) {
+                  filters.push("info/cap:lt:".concat(parseInt(capLimit) + 1));
+                }
+
                 _context16.t0 = mode;
-                _context16.next = _context16.t0 === "owned" ? 34 : _context16.t0 === "listings" ? 37 : _context16.t0 === "transfers" ? 39 : _context16.t0 === "sales" ? 43 : _context16.t0 === "listing-stats" ? 46 : _context16.t0 === "sales-stats" ? 48 : 50;
+                _context16.next = _context16.t0 === "owned" ? 26 : _context16.t0 === "listings" ? 29 : _context16.t0 === "transfers" ? 31 : _context16.t0 === "sales" ? 35 : _context16.t0 === "listing-stats" ? 38 : _context16.t0 === "sales-stats" ? 40 : 42;
                 break;
 
-              case 34:
+              case 26:
                 path = UrlJoin("as", "wlt", "nfts");
 
                 if (marketplaceInfo) {
                   path = UrlJoin("as", "wlt", "nfts", marketplaceInfo.tenantId);
                 }
 
-                return _context16.abrupt("break", 50);
+                return _context16.abrupt("break", 42);
 
-              case 37:
+              case 29:
                 path = UrlJoin("as", "mkt", "f");
-                return _context16.abrupt("break", 50);
+                return _context16.abrupt("break", 42);
 
-              case 39:
+              case 31:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:TRANSFERRED");
                 filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 50);
+                return _context16.abrupt("break", 42);
 
-              case 43:
+              case 35:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 50);
+                return _context16.abrupt("break", 42);
 
-              case 46:
+              case 38:
                 path = UrlJoin("as", "mkt", "stats", "listed");
-                return _context16.abrupt("break", 50);
+                return _context16.abrupt("break", 42);
 
-              case 48:
+              case 40:
                 path = UrlJoin("as", "mkt", "stats", "sold");
-                return _context16.abrupt("break", 50);
+                return _context16.abrupt("break", 42);
 
-              case 50:
+              case 42:
                 if (filters.length > 0) {
                   params.filter = filters;
                 }
 
                 if (!mode.includes("stats")) {
-                  _context16.next = 55;
+                  _context16.next = 47;
                   break;
                 }
 
-                _context16.next = 54;
+                _context16.next = 46;
                 return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
                   queryParams: params
                 }));
 
-              case 54:
+              case 46:
                 return _context16.abrupt("return", _context16.sent);
 
-              case 55:
+              case 47:
                 _context16.t2 = Utils;
-                _context16.next = 58;
+                _context16.next = 50;
                 return this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
@@ -1495,22 +1492,22 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   } : {}
                 });
 
-              case 58:
+              case 50:
                 _context16.t3 = _context16.sent;
-                _context16.next = 61;
+                _context16.next = 53;
                 return _context16.t2.ResponseToJson.call(_context16.t2, _context16.t3);
 
-              case 61:
+              case 53:
                 _context16.t1 = _context16.sent;
 
                 if (_context16.t1) {
-                  _context16.next = 64;
+                  _context16.next = 56;
                   break;
                 }
 
                 _context16.t1 = [];
 
-              case 64:
+              case 56:
                 _ref16 = _context16.t1;
                 contents = _ref16.contents;
                 paging = _ref16.paging;
@@ -1526,12 +1523,12 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   })
                 });
 
-              case 70:
-                _context16.prev = 70;
+              case 62:
+                _context16.prev = 62;
                 _context16.t4 = _context16["catch"](11);
 
                 if (!(_context16.t4.status && _context16.t4.status.toString() === "404")) {
-                  _context16.next = 74;
+                  _context16.next = 66;
                   break;
                 }
 
@@ -1545,15 +1542,15 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   results: []
                 });
 
-              case 74:
+              case 66:
                 throw _context16.t4;
 
-              case 75:
+              case 67:
               case "end":
                 return _context16.stop();
             }
           }
-        }, _callee16, this, [[11, 70]]);
+        }, _callee16, this, [[11, 62]]);
       }));
 
       function FilteredQuery() {
