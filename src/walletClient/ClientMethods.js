@@ -317,8 +317,7 @@ exports.TenantConfiguration = async function({tenantId, contractAddress}) {
       })
     );
   } catch(error) {
-    this.Log("Failed to load tenant configuration", true);
-    this.Log(error, true);
+    this.Log("Failed to load tenant configuration", true, error);
 
     return {};
   }
