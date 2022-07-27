@@ -853,26 +853,26 @@ class ElvWalletClient {
 
       if(priceRange) {
         if(priceRange.min) {
-          filters.push(`price:gt:${parseFloat(priceRange.min) - 0.01}`);
+          filters.push(`price:gte:${parseFloat(priceRange.min)}`);
         }
 
         if(priceRange.max) {
-          filters.push(`price:lt:${parseFloat(priceRange.max) + 0.01}`);
+          filters.push(`price:lte:${parseFloat(priceRange.max)}`);
         }
       }
 
       if(tokenIdRange) {
         if(tokenIdRange.min) {
-          filters.push(`info/ordinal:gt:${parseInt(tokenIdRange.min) - 1}`);
+          filters.push(`info/token_id:gte:${parseInt(tokenIdRange.min)}`);
         }
 
         if(tokenIdRange.max) {
-          filters.push(`info/ordinal:lt:${parseInt(tokenIdRange.max) + 1}`);
+          filters.push(`info/token_id:lte:${parseInt(tokenIdRange.max)}`);
         }
       }
 
       if(capLimit) {
-        filters.push(`info/cap:lt:${parseInt(capLimit) + 1}`);
+        filters.push(`info/cap:lte:${parseInt(capLimit)}`);
       }
 
 
