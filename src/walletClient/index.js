@@ -130,8 +130,7 @@ class ElvWalletClient {
   CanSign() {
     if(!this.loggedIn) { return false; }
 
-    return !!this.__authorization.clusterToken ||
-      (inBrowser && !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId));
+    return !!this.__authorization.clusterToken || (inBrowser && !!(this.UserInfo().walletName.toLowerCase() === "metamask" && window.ethereum && window.ethereum.isMetaMask && window.ethereum.chainId));
   }
 
   /**
