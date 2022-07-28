@@ -1434,26 +1434,26 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
                 if (priceRange) {
                   if (priceRange.min) {
-                    filters.push("price:gte:".concat(parseFloat(priceRange.min)));
+                    filters.push("price:ge:".concat(parseFloat(priceRange.min)));
                   }
 
                   if (priceRange.max) {
-                    filters.push("price:lte:".concat(parseFloat(priceRange.max)));
+                    filters.push("price:le:".concat(parseFloat(priceRange.max)));
                   }
                 }
 
                 if (tokenIdRange) {
                   if (tokenIdRange.min) {
-                    filters.push("info/token_id:gte:".concat(parseInt(tokenIdRange.min)));
+                    filters.push("info/token_id:ge:".concat(parseInt(tokenIdRange.min)));
                   }
 
                   if (tokenIdRange.max) {
-                    filters.push("info/token_id:lte:".concat(parseInt(tokenIdRange.max)));
+                    filters.push("info/token_id:le:".concat(parseInt(tokenIdRange.max)));
                   }
                 }
 
                 if (capLimit) {
-                  filters.push("info/cap:lte:".concat(parseInt(capLimit)));
+                  filters.push("info/cap:le:".concat(parseInt(capLimit)));
                 }
 
                 _context16.t0 = mode;
