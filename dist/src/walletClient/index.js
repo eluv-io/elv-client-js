@@ -33,6 +33,7 @@ var Utils = require("../Utils");
 var Ethers = require("ethers");
 
 var inBrowser = typeof window !== "undefined";
+var embedded = inBrowser && window.top !== window.self;
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
  *
@@ -75,6 +76,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "Log",
     value: function Log(message) {
       var error = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+      var errorObject = arguments.length > 2 ? arguments[2] : undefined;
 
       if (error) {
         // eslint-disable-next-line no-console
@@ -82,6 +84,11 @@ var ElvWalletClient = /*#__PURE__*/function () {
       } else {
         // eslint-disable-next-line no-console
         console.log("Eluvio Wallet Client:", message);
+      }
+
+      if (errorObject) {
+        // eslint-disable-next-line no-console
+        console.error(errorObject);
       }
     }
     /**
@@ -210,7 +217,16 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 url = new URL(this.appUrl);
                 url.hash = UrlJoin("/action", "sign", Utils.B58(JSON.stringify(parameters)));
                 url.searchParams.set("origin", window.location.origin);
-                _context3.next = 27;
+
+                if (!(!embedded && window.location.origin === url.origin)) {
+                  _context3.next = 27;
+                  break;
+                }
+
+                throw Error("ElvWalletClient: Unable to sign");
+
+              case 27:
+                _context3.next = 29;
                 return new Promise( /*#__PURE__*/function () {
                   var _ref3 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee2(resolve, reject) {
                     return _regeneratorRuntime.wrap(function _callee2$(_context2) {
@@ -275,10 +291,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   };
                 }());
 
-              case 27:
+              case 29:
                 return _context3.abrupt("return", _context3.sent);
 
-              case 28:
+              case 30:
               case "end":
                 return _context3.stop();
             }
@@ -558,7 +574,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 this.client.SetStaticToken({
                   token: decodedToken.fabricToken
                 });
-                return _context7.abrupt("return", this.SetAuthorization(decodedToken));
+                return _context7.abrupt("return", this.SetAuthorization(_objectSpread({}, decodedToken)));
 
               case 15:
               case "end":
@@ -670,7 +686,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     expiresAt: expiresAt,
                     signerURIs: signerURIs,
                     walletType: "Custodial",
-                    walletName: "Eluvio"
+                    walletName: "Eluvio",
+                    register: true
                   }),
                   signingToken: this.SetAuthorization({
                     clusterToken: this.client.signer.authToken,
@@ -775,7 +792,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   address: address,
                   expiresAt: expiresAt,
                   walletType: "External",
-                  walletName: walletName
+                  walletName: walletName,
+                  register: true
                 }));
 
               case 9:
@@ -821,6 +839,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
   }, {
     key: "SetAuthorization",
     value: function SetAuthorization(_ref10) {
+      var _this3 = this;
+
       var clusterToken = _ref10.clusterToken,
           fabricToken = _ref10.fabricToken,
           tenantId = _ref10.tenantId,
@@ -829,7 +849,9 @@ var ElvWalletClient = /*#__PURE__*/function () {
           expiresAt = _ref10.expiresAt,
           signerURIs = _ref10.signerURIs,
           walletType = _ref10.walletType,
-          walletName = _ref10.walletName;
+          walletName = _ref10.walletName,
+          _ref10$register = _ref10.register,
+          register = _ref10$register === void 0 ? false : _ref10$register;
       address = this.client.utils.FormatAddress(address);
       this.__authorization = {
         fabricToken: fabricToken,
@@ -857,6 +879,18 @@ var ElvWalletClient = /*#__PURE__*/function () {
         try {
           localStorage.setItem("__elv-token-".concat(this.network), token); // eslint-disable-next-line no-empty
         } catch (error) {}
+      }
+
+      if (register) {
+        this.client.authClient.MakeAuthServiceRequest({
+          path: "/as/wlt/register",
+          method: "POST",
+          headers: {
+            Authorization: "Bearer ".concat(this.AuthToken())
+          }
+        })["catch"](function (error) {
+          _this3.Log("Failed to register account: ", true, error);
+        });
       }
 
       return token;
@@ -926,7 +960,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "LoadAvailableMarketplaces",
     value: function () {
       var _LoadAvailableMarketplaces = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee12() {
-        var _this3 = this;
+        var _this4 = this;
 
         var forceReload,
             mainSiteHash,
@@ -983,7 +1017,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                       try {
                         var versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
 
-                        var objectId = _this3.utils.DecodeVersionHash(versionHash).objectId;
+                        var objectId = _this4.utils.DecodeVersionHash(versionHash).objectId;
 
                         availableMarketplaces[tenantSlug][marketplaceSlug] = _objectSpread(_objectSpread({}, metadata[tenantSlug].marketplaces[marketplaceSlug].info || {}), {}, {
                           tenantName: metadata[tenantSlug].marketplaces[marketplaceSlug].info.tenant_name,
@@ -997,21 +1031,19 @@ var ElvWalletClient = /*#__PURE__*/function () {
                           })
                         });
                         availableMarketplacesById[objectId] = availableMarketplaces[tenantSlug][marketplaceSlug];
-                        _this3.marketplaceHashes[objectId] = versionHash; // Fill out selected marketplace info
+                        _this4.marketplaceHashes[objectId] = versionHash; // Fill out selected marketplace info
 
-                        if (_this3.selectedMarketplaceInfo) {
-                          if (_this3.selectedMarketplaceInfo.tenantSlug === tenantSlug && _this3.selectedMarketplaceInfo.marketplaceSlug === marketplaceSlug || _this3.selectedMarketplaceInfo.marketplaceId === objectId) {
-                            _this3.selectedMarketplaceInfo = availableMarketplaces[tenantSlug][marketplaceSlug];
+                        if (_this4.selectedMarketplaceInfo) {
+                          if (_this4.selectedMarketplaceInfo.tenantSlug === tenantSlug && _this4.selectedMarketplaceInfo.marketplaceSlug === marketplaceSlug || _this4.selectedMarketplaceInfo.marketplaceId === objectId) {
+                            _this4.selectedMarketplaceInfo = availableMarketplaces[tenantSlug][marketplaceSlug];
                           }
                         }
                       } catch (error) {
-                        _this3.Log("Eluvio Wallet Client: Unable to load info for marketplace ".concat(tenantSlug, "/").concat(marketplaceSlug), true);
+                        _this4.Log("Eluvio Wallet Client: Unable to load info for marketplace ".concat(tenantSlug, "/").concat(marketplaceSlug), true);
                       }
                     });
                   } catch (error) {
-                    _this3.Log("Eluvio Wallet Client: Failed to load tenant info ".concat(tenantSlug), true);
-
-                    _this3.Log(error, true);
+                    _this4.Log("Eluvio Wallet Client: Failed to load tenant info ".concat(tenantSlug), true, error);
                   }
                 });
                 this.availableMarketplaces = availableMarketplaces;
@@ -1078,7 +1110,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "LoadMarketplace",
     value: function () {
       var _LoadMarketplace = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee15(marketplaceParams) {
-        var _this4 = this;
+        var _this5 = this;
 
         var marketplaceInfo, marketplaceId, marketplaceHash, marketplace;
         return _regeneratorRuntime.wrap(function _callee15$(_context15) {
@@ -1133,7 +1165,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                               break;
                             }
 
-                            if (_this4.loggedIn) {
+                            if (_this5.loggedIn) {
                               _context14.next = 5;
                               break;
                             }
@@ -1145,7 +1177,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                           case 5:
                             _context14.prev = 5;
                             _context14.next = 8;
-                            return _this4.client.ContentObjectMetadata({
+                            return _this5.client.ContentObjectMetadata({
                               versionHash: LinkTargetHash(item.nft_template),
                               metadataSubtree: "permissioned"
                             });
@@ -1195,8 +1227,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
                       var embedUrl = new URL("https://embed.v3.contentfabric.io");
                       var targetHash = LinkTargetHash(marketplace.storefront[key]);
                       embedUrl.searchParams.set("p", "");
-                      embedUrl.searchParams.set("net", _this4.network === "main" ? "main" : "demo");
-                      embedUrl.searchParams.set("ath", (_this4.__authorization || {}).authToken || _this4.publicStaticToken);
+                      embedUrl.searchParams.set("net", _this5.network === "main" ? "main" : "demo");
+                      embedUrl.searchParams.set("ath", (_this5.__authorization || {}).authToken || _this5.publicStaticToken);
                       embedUrl.searchParams.set("vid", targetHash);
                       embedUrl.searchParams.set("ap", "");
 
@@ -1402,26 +1434,26 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
                 if (priceRange) {
                   if (priceRange.min) {
-                    filters.push("price:gt:".concat(parseFloat(priceRange.min) - 0.01));
+                    filters.push("price:ge:".concat(parseFloat(priceRange.min)));
                   }
 
                   if (priceRange.max) {
-                    filters.push("price:lt:".concat(parseFloat(priceRange.max) + 0.01));
+                    filters.push("price:le:".concat(parseFloat(priceRange.max)));
                   }
                 }
 
                 if (tokenIdRange) {
                   if (tokenIdRange.min) {
-                    filters.push("info/ordinal:gt:".concat(parseInt(tokenIdRange.min) - 1));
+                    filters.push("info/token_id:ge:".concat(parseInt(tokenIdRange.min)));
                   }
 
                   if (tokenIdRange.max) {
-                    filters.push("info/ordinal:lt:".concat(parseInt(tokenIdRange.max) + 1));
+                    filters.push("info/token_id:le:".concat(parseInt(tokenIdRange.max)));
                   }
                 }
 
                 if (capLimit) {
-                  filters.push("info/cap:lt:".concat(parseInt(capLimit) + 1));
+                  filters.push("info/cap:le:".concat(parseInt(capLimit)));
                 }
 
                 _context16.t0 = mode;
@@ -1643,11 +1675,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
               case 13:
                 _context17.prev = 13;
                 _context17.t0 = _context17["catch"](6);
-                this.Log("Failed to retrieve minting status", true);
-                this.Log(_context17.t0);
+                this.Log("Failed to retrieve minting status", true, _context17.t0);
                 return _context17.abrupt("return", []);
 
-              case 18:
+              case 17:
               case "end":
                 return _context17.stop();
             }

@@ -6,6 +6,7 @@ const Utils = require("../Utils");
 const Ethers = require("ethers");
 
 const inBrowser = typeof window !== "undefined";
+const embedded = inBrowser && window.top !== window.self;
 
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
@@ -39,13 +40,18 @@ class ElvWalletClient {
     this.utils = client.utils;
   }
 
-  Log(message, error=false) {
+  Log(message, error=false, errorObject) {
     if(error) {
       // eslint-disable-next-line no-console
       console.error("Eluvio Wallet Client:", message);
     } else {
       // eslint-disable-next-line no-console
       console.log("Eluvio Wallet Client:", message);
+    }
+
+    if(errorObject) {
+      // eslint-disable-next-line no-console
+      console.error(errorObject);
     }
   }
 
@@ -180,6 +186,11 @@ class ElvWalletClient {
     let url = new URL(this.appUrl);
     url.hash = UrlJoin("/action", "sign", Utils.B58(JSON.stringify(parameters)));
     url.searchParams.set("origin", window.location.origin);
+
+    if(!embedded && window.location.origin === url.origin) {
+      // Already in wallet app, but still can't sign
+      throw Error("ElvWalletClient: Unable to sign");
+    }
 
     return await new Promise(async (resolve, reject) => {
       await ActionPopup({
@@ -338,7 +349,7 @@ class ElvWalletClient {
 
     this.client.SetStaticToken({token: decodedToken.fabricToken});
 
-    return this.SetAuthorization(decodedToken);
+    return this.SetAuthorization({...decodedToken});
   }
 
   /**
@@ -395,7 +406,8 @@ class ElvWalletClient {
         expiresAt,
         signerURIs,
         walletType: "Custodial",
-        walletName: "Eluvio"
+        walletName: "Eluvio",
+        register: true
       }),
       signingToken: this.SetAuthorization({
         clusterToken: this.client.signer.authToken,
@@ -443,7 +455,7 @@ class ElvWalletClient {
       addEthereumPrefix: false
     });
 
-    return this.SetAuthorization({fabricToken, address, expiresAt, walletType: "External", walletName});
+    return this.SetAuthorization({fabricToken, address, expiresAt, walletType: "External", walletName, register: true});
   }
 
   /**
@@ -467,7 +479,7 @@ class ElvWalletClient {
     return this.__authorization.fabricToken;
   }
 
-  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName}) {
+  SetAuthorization({clusterToken, fabricToken, tenantId, address, email, expiresAt, signerURIs, walletType, walletName, register=false}) {
     address = this.client.utils.FormatAddress(address);
 
     this.__authorization = {
@@ -501,6 +513,19 @@ class ElvWalletClient {
       } catch(error) {}
     }
 
+    if(register) {
+      this.client.authClient.MakeAuthServiceRequest({
+        path: "/as/wlt/register",
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.AuthToken()}`
+        }
+      })
+        .catch(error => {
+          this.Log("Failed to register account: ", true, error);
+        });
+    }
+
     return token;
   }
 
@@ -521,7 +546,6 @@ class ElvWalletClient {
       params: [message, address, ""],
     });
   }
-
 
 
   // Internal loading methods
@@ -596,8 +620,7 @@ class ElvWalletClient {
           }
         });
       } catch(error) {
-        this.Log(`Eluvio Wallet Client: Failed to load tenant info ${tenantSlug}`, true);
-        this.Log(error, true);
+        this.Log(`Eluvio Wallet Client: Failed to load tenant info ${tenantSlug}`, true, error);
       }
     });
 
@@ -830,26 +853,26 @@ class ElvWalletClient {
 
       if(priceRange) {
         if(priceRange.min) {
-          filters.push(`price:gt:${parseFloat(priceRange.min) - 0.01}`);
+          filters.push(`price:ge:${parseFloat(priceRange.min)}`);
         }
 
         if(priceRange.max) {
-          filters.push(`price:lt:${parseFloat(priceRange.max) + 0.01}`);
+          filters.push(`price:le:${parseFloat(priceRange.max)}`);
         }
       }
 
       if(tokenIdRange) {
         if(tokenIdRange.min) {
-          filters.push(`info/ordinal:gt:${parseInt(tokenIdRange.min) - 1}`);
+          filters.push(`info/token_id:ge:${parseInt(tokenIdRange.min)}`);
         }
 
         if(tokenIdRange.max) {
-          filters.push(`info/ordinal:lt:${parseInt(tokenIdRange.max) + 1}`);
+          filters.push(`info/token_id:le:${parseInt(tokenIdRange.max)}`);
         }
       }
 
       if(capLimit) {
-        filters.push(`info/cap:lt:${parseInt(capLimit) + 1}`);
+        filters.push(`info/cap:le:${parseInt(capLimit)}`);
       }
 
 
@@ -995,8 +1018,7 @@ class ElvWalletClient {
         })
         .sort((a, b) => a.ts < b.ts ? 1 : -1);
     } catch(error) {
-      this.Log("Failed to retrieve minting status", true);
-      this.Log(error);
+      this.Log("Failed to retrieve minting status", true, error);
 
       return [];
     }
