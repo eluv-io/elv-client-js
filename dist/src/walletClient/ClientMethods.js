@@ -514,11 +514,10 @@ exports.TenantConfiguration = /*#__PURE__*/function () {
           case 7:
             _context7.prev = 7;
             _context7.t0 = _context7["catch"](1);
-            this.Log("Failed to load tenant configuration", true);
-            this.Log(_context7.t0, true);
+            this.Log("Failed to load tenant configuration", true, _context7.t0);
             return _context7.abrupt("return", {});
 
-          case 12:
+          case 11:
           case "end":
             return _context7.stop();
         }
