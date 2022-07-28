@@ -927,6 +927,35 @@ exports.ListingAttributes = async function({marketplaceParams, displayName}={}) 
     );
 };
 
+/* PURCHASE / CLAIM */
+
+/**
+ * Claim the specified item from the specified marketplace
+ *
+ * Use the <a href="#.ClaimStatus">ClaimStatus</a> method to check minting status after claiming
+ *
+ * @methodGroup Purchase
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of the marketplace
+ * @param {string} sku - The SKU of the item to claime
+ */
+exports.ClaimItem = async function({marketplaceParams, sku}) {
+  const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+
+  await this.client.authClient.MakeAuthServiceRequest({
+    method: "POST",
+    path: UrlJoin("as", "wlt", "act", marketplaceInfo.tenant_id),
+    body: {
+      op: "nft-claim",
+      sid: marketplaceInfo.marketplaceId,
+      sku
+    },
+    headers: {
+      Authorization: `Bearer ${this.AuthToken()}`
+    }
+  });
+};
+
 /* MINTING STATUS */
 
 /**
