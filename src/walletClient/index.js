@@ -900,6 +900,7 @@ class ElvWalletClient {
         case "sales":
           path = UrlJoin("as", "mkt", "hst", "f");
           filters.push("action:eq:SOLD");
+          filters.push("seller:co:0x");
           break;
 
         case "listing-stats":
@@ -908,6 +909,7 @@ class ElvWalletClient {
 
         case "sales-stats":
           path = UrlJoin("as", "mkt", "stats", "sold");
+          filters.push("seller:co:0x");
           break;
       }
 
