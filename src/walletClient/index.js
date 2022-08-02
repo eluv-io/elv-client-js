@@ -682,6 +682,7 @@ class ElvWalletClient {
           }
 
           item.nftTemplateMetadata = ((item.nft_template || {}).nft || {});
+          item.nftTemplateHash = ((item.nft_template || {})["."] || {}).source;
           item.itemIndex = index;
 
           return item;
