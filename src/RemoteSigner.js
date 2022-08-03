@@ -113,6 +113,41 @@ class RemoteSigner extends Ethers.Signer {
     return await this.signatureCache[digest];
   }
 
+  /**
+   * Sign a message via EIP-191 personal_sign
+   * @param {String} message - base64 message string
+   * @returns - the signed message as a hex string
+   */
+  async personalSignDigest(message) {
+    if(!this.signatureCache[message]) {
+      this.signatureCache[message] = new Promise(async (resolve, reject) => {
+        try {
+          let signature = await Utils.ResponseToJson(
+            this.HttpClient.Request({
+              method: "POST",
+              path: UrlJoin("as", "wlt", "sign", "personal", this.id),
+              headers: {
+                Authorization: `Bearer ${this.authToken}`
+              },
+              body: {
+                message: message
+              }
+            })
+          );
+
+          signature.v = parseInt(signature.v, 16);
+          signature.recoveryParam = signature.v - 27;
+
+          resolve(signature);
+        } catch(error) {
+          reject(error);
+        }
+      });
+    }
+
+    return await this.signatureCache[message];
+  }
+
   async signMessage(message) {
     return Promise.resolve(Ethers.utils.joinSignature(`0x${await this.signDigest(Ethers.utils.hashMessage(message))}`));
   }

@@ -807,6 +807,14 @@ class AuthorizationClient {
     );
   }
 
+  async PersonalSign(message) {
+    return await Ethers.utils.joinSignature(
+      this.client.signer.signDigest ?
+        await this.client.signer.personalSignDigest(message) :
+        await this.client.signer.signingKey.personalSignDigest(message)
+    );
+  }
+
   async KMSAddress({objectId, versionHash}) {
     if(versionHash) {
       objectId = Utils.DecodeVersionHash(versionHash).objectId;
