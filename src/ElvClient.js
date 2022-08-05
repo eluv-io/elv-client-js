@@ -968,7 +968,7 @@ class ElvClient {
    * Create a signature for the specified string
    *
    * @param {string} string - The string to sign
-   * @param (boolean) usePersonal - use EIP-191 personal_sign for signing
+   * @param {boolean} usePersonal - use EIP-191 personal_sign for signing
    * @return {Promise<string>} - The signed string
    */
   async Sign(string, usePersonal=false) {

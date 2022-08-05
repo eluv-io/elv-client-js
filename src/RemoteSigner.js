@@ -81,7 +81,7 @@ class RemoteSigner extends Ethers.Signer {
   /**
    * Sign a hashed piece of data
    * @param {String} digest - Hex string of hashed data
-   * @param (Boolean) usePersonal - use EIP-191 personal_sign
+   * @param {Boolean} usePersonal - use EIP-191 personal_sign
    * @returns - the signed message as a hex string
    */
   async signDigest(digest, usePersonal=false) {
