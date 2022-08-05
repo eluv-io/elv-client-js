@@ -803,7 +803,7 @@ class AuthorizationClient {
     return await Ethers.utils.joinSignature(
       this.client.signer.signDigest ?
         await this.client.signer.signDigest(message, usePersonal) :
-        await this.client.signer.signingKey.signDigest(message, usePersonal)
+        await this.client.signer.signingKey.signDigest(message)
     );
   }
 

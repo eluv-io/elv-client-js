@@ -746,6 +746,8 @@ class ElvClient {
     if(addEthereumPrefix) {
       message = `Eluvio Content Fabric Access Token 1.0\n${message}`;
       message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
+    } else {
+      message = Ethers.utils.base64.encode(Buffer.from(message, "utf-8"))
     }
 
     const signature = await Sign(message);
@@ -972,13 +974,13 @@ class ElvClient {
    * @return {Promise<string>} - The signed string
    */
   async Sign(string, usePersonal=false) {
-    let Encode
+    let Encode;
     if(usePersonal) {
-      Encode = function (bytes) { return Ethers.utils.base64.encode(bytes); }
+      Encode = function (bytes) { return Ethers.utils.base64.encode(bytes); };
     } else {
-      Encode = function (bytes) { return Ethers.utils.keccak256(bytes); }
+      Encode = function (bytes) { return Ethers.utils.keccak256(bytes); };
     }
-    const signature = await this.authClient.Sign(Encode(Ethers.utils.toUtf8Bytes(string)));
+    const signature = await this.authClient.Sign(Encode(Ethers.utils.toUtf8Bytes(string)), usePersonal);
     return this.utils.FormatSignature(signature);
   }
 

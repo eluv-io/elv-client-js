@@ -6,7 +6,7 @@ const idToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Inlwd1ZUbXJkWENkYU5
 const Setup = async () => {
 
   client = await ElvClient.FromNetworkName({networkName});
-  client.SetRemoteSigner({idToken: idToken, unsignedPublicAuth: true})
+  await client.SetRemoteSigner({idToken: idToken, unsignedPublicAuth: true})
   client.ToggleLogging(false);
 
   return client;
@@ -26,7 +26,7 @@ const MakeClientSignedTokenPersonal = async ({client}) => {
 
   const token = await client.CreateFabricToken({
     duration: 60 * 60 * 1000, // millisec
-    addEthereumPrefix: false;
+    addEthereumPrefix: false,
   });
 
   console.log("PERSONAL_TOKEN", token);
@@ -39,10 +39,6 @@ const Run = async () => {
 
   const ethToken = await MakeClientSignedToken({client: client});
   const personalToken = await MakeClientSignedTokenPersonal({client: client});
-
-  if(ethToken !== personalToken) {
-    console.Log("Tokens mismatched")
-  }
 }
 
 Run();

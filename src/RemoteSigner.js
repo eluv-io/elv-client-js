@@ -80,7 +80,7 @@ class RemoteSigner extends Ethers.Signer {
 
   /**
    * Sign a hashed piece of data
-   * @param {String} digest - Hex string of hashed data
+   * @param {String} digest - string of hashed data
    * @param {Boolean} usePersonal - use EIP-191 personal_sign
    * @returns - the signed message as a hex string
    */
@@ -88,14 +88,14 @@ class RemoteSigner extends Ethers.Signer {
     if(!this.signatureCache[digest]) {
       this.signatureCache[digest] = new Promise(async (resolve, reject) => {
         try {
-          let path
-          let body
+          let path;
+          let body;
           if(usePersonal) {
-            path = UrlJoin("as", "wlt", "sign", "personal", this.id)
-            body = { message: digest }
+            path = UrlJoin("as", "wlt", "sign", "personal", this.id);
+            body = { message: digest };
           } else {
-            path = UrlJoin("as", "wlt", "sign", "eth", this.id)
-            body = { hash: digest }
+            path = UrlJoin("as", "wlt", "sign", "eth", this.id);
+            body = { hash: digest };
           }
           let signature = await Utils.ResponseToJson(
             this.HttpClient.Request({

@@ -24,7 +24,7 @@ const sampleXcMsg = {
 const Setup = async () => {
 
   client = await ElvClient.FromNetworkName({networkName});
-  client.SetRemoteSigner({idToken: idToken, unsignedPublicAuth: true})
+  await client.SetRemoteSigner({idToken: idToken, unsignedPublicAuth: true})
   client.ToggleLogging(false);
 
   // Overwrite auth service endpoints (until the cross-chain feture is fully deployed)
@@ -90,14 +90,14 @@ const Run = async () => {
 
   client = await Setup();
 
-  console.Log("Start using eth_sign")
+  console.log("Start using eth_sign")
 
   // Call the oracle cross-chain 'view' API 'balanceOf'
   let xcMsg = await XcoMessage({msg: sampleXcMsg});
   console.log("XCO MSG", JSON.stringify(xcMsg));
 
   // Create a client-signed-token including the 'xco-msg' as context
-  const accessToken = await client.CreateFabricToken({
+  let accessToken = await client.CreateFabricToken({
 	  duration: 60 * 60 * 1000, // millisec
     spec: {
       ctx : {
@@ -111,16 +111,16 @@ const Run = async () => {
   let playoutOptions = await Play({token: accessToken});
   console.log("PLAYOUT", JSON.stringify(playoutOptions, null, 2));
 
-  console.Log("Stop using eth_sign")
+  console.log("Stop using eth_sign")
 
-  console.Log("Start using personal_sign")
+  console.log("Start using personal_sign")
 
   // Call the oracle cross-chain 'view' API 'balanceOf'
-  let xcMsg = await XcoMessage({msg: sampleXcMsg, usePersonal: true});
+  xcMsg = await XcoMessage({msg: sampleXcMsg, usePersonal: true});
   console.log("XCO MSG", JSON.stringify(xcMsg));
 
   // Create a client-signed-token including the 'xco-msg' as context
-  const accessToken = await client.CreateFabricToken({
+  accessToken = await client.CreateFabricToken({
     duration: 60 * 60 * 1000, // millisec
     spec: {
       ctx : {
@@ -132,10 +132,10 @@ const Run = async () => {
   console.log("TOKEN", accessToken);
 
   // Play
-  let playoutOptions = await Play({token: accessToken});
+  playoutOptions = await Play({token: accessToken});
   console.log("PLAYOUT", JSON.stringify(playoutOptions, null, 2));
 
-  console.Log("Stop using personal_sign")
+  console.log("Stop using personal_sign")
 }
 
 Run();
