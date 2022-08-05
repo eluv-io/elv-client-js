@@ -35,10 +35,24 @@ const MakeClientSignedTokenPersonal = async ({client}) => {
 
 const Run = async () => {
 
+  // Stub Date.now()
+  const realDateNow = Date.now.bind(global.Date);
+  const dateNowStub = function () { return 1659731714376 };
+  global.Date.now = dateNowStub;
+
   client = await Setup();
 
   const ethToken = await MakeClientSignedToken({client: client});
   const personalToken = await MakeClientSignedTokenPersonal({client: client});
+
+  if(ethToken == personalToken) {
+    console.log("Tokens matched successfully")
+  } else {
+    console.log("Tokens mismatched")
+  }
+
+  // Restore Date.now()
+  global.Date.now = realDateNow;
 }
 
 Run();
