@@ -81,22 +81,30 @@ class RemoteSigner extends Ethers.Signer {
   /**
    * Sign a hashed piece of data
    * @param {String} digest - Hex string of hashed data
+   * @param (Boolean) usePersonal - use EIP-191 personal_sign
    * @returns - the signed message as a hex string
    */
-  async signDigest(digest) {
+  async signDigest(digest, usePersonal=false) {
     if(!this.signatureCache[digest]) {
       this.signatureCache[digest] = new Promise(async (resolve, reject) => {
         try {
+          let path
+          let body
+          if(usePersonal) {
+            path = UrlJoin("as", "wlt", "sign", "personal", this.id)
+            body = { message: digest }
+          } else {
+            path = UrlJoin("as", "wlt", "sign", "eth", this.id)
+            body = { hash: digest }
+          }
           let signature = await Utils.ResponseToJson(
             this.HttpClient.Request({
               method: "POST",
-              path: UrlJoin("as", "wlt", "sign", "eth", this.id),
+              path: path,
               headers: {
                 Authorization: `Bearer ${this.authToken}`
               },
-              body: {
-                hash: digest
-              }
+              body: body,
             })
           );
 
@@ -111,41 +119,6 @@ class RemoteSigner extends Ethers.Signer {
     }
 
     return await this.signatureCache[digest];
-  }
-
-  /**
-   * Sign a message via EIP-191 personal_sign
-   * @param {String} message - base64 message string
-   * @returns - the signed message as a hex string
-   */
-  async personalSignDigest(message) {
-    if(!this.signatureCache[message]) {
-      this.signatureCache[message] = new Promise(async (resolve, reject) => {
-        try {
-          let signature = await Utils.ResponseToJson(
-            this.HttpClient.Request({
-              method: "POST",
-              path: UrlJoin("as", "wlt", "sign", "personal", this.id),
-              headers: {
-                Authorization: `Bearer ${this.authToken}`
-              },
-              body: {
-                message: message
-              }
-            })
-          );
-
-          signature.v = parseInt(signature.v, 16);
-          signature.recoveryParam = signature.v - 27;
-
-          resolve(signature);
-        } catch(error) {
-          reject(error);
-        }
-      });
-    }
-
-    return await this.signatureCache[message];
   }
 
   async signMessage(message) {

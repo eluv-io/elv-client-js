@@ -738,11 +738,7 @@ class ElvClient {
     };
 
     if(!Sign) {
-      if(addEthereumPrefix) {
-        Sign = async message => this.authClient.Sign(message);
-      } else {
-        Sign = async message => this.authClient.PersonalSign(message);
-      }
+      Sign = async message => this.authClient.Sign(message, !addEthereumPrefix);
     }
 
     let message = `${JSON.stringify(token)}`;
@@ -972,21 +968,17 @@ class ElvClient {
    * Create a signature for the specified string
    *
    * @param {string} string - The string to sign
+   * @param (boolean) usePersonal - use EIP-191 personal_sign for signing
    * @return {Promise<string>} - The signed string
    */
-  async Sign(string) {
-    const signature = await this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)));
-    return this.utils.FormatSignature(signature);
-  }
-
-  /**
-   * Create a signature for the specified message via EIP-191 personal_sign
-   *
-   * @param {string} message - The message to sign
-   * @return {Promise<string>} - The signed message
-   */
-  async PersonalSign(string) {
-    const signature = await this.authClient.Sign(Ethers.utils.base64.encode(Ethers.utils.toUtf8Bytes(message)));
+  async Sign(string, usePersonal=false) {
+    let Encode
+    if(usePersonal) {
+      Encode = function (bytes) { return Ethers.utils.base64.encode(bytes); }
+    } else {
+      Encode = function (bytes) { return Ethers.utils.keccak256(bytes); }
+    }
+    const signature = await this.authClient.Sign(Encode(Ethers.utils.toUtf8Bytes(string)));
     return this.utils.FormatSignature(signature);
   }
 

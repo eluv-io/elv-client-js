@@ -799,19 +799,11 @@ class AuthorizationClient {
     return Utils.FormatAddress(ownerAddress);
   }
 
-  async Sign(message) {
+  async Sign(message, usePersonal=false) {
     return await Ethers.utils.joinSignature(
       this.client.signer.signDigest ?
-        await this.client.signer.signDigest(message) :
-        await this.client.signer.signingKey.signDigest(message)
-    );
-  }
-
-  async PersonalSign(message) {
-    return await Ethers.utils.joinSignature(
-      this.client.signer.signDigest ?
-        await this.client.signer.personalSignDigest(message) :
-        await this.client.signer.signingKey.personalSignDigest(message)
+        await this.client.signer.signDigest(message, usePersonal) :
+        await this.client.signer.signingKey.signDigest(message, usePersonal)
     );
   }
 
