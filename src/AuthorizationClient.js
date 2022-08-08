@@ -800,11 +800,15 @@ class AuthorizationClient {
   }
 
   async Sign(message, usePersonal=false) {
-    return await Ethers.utils.joinSignature(
-      this.client.signer.signDigest ?
-        await this.client.signer.signDigest(message, usePersonal) :
-        await this.client.signer.signingKey.signDigest(message)
-    );
+    let signature;
+    if(usePersonal) {
+      signature = await this.client.signer.signMessage(message);
+    } else {
+      signature = this.client.signer.signDigest ?
+        await this.client.signer.signDigest(message) :
+        await this.client.signer.signingKey.signDigest(message);
+    }
+    return await Ethers.utils.joinSignature(signature);
   }
 
   async KMSAddress({objectId, versionHash}) {

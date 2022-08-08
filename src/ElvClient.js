@@ -737,17 +737,19 @@ class ElvClient {
       exp: Date.now() + duration,
     };
 
-    if(!Sign) {
-      Sign = async message => this.authClient.Sign(message, !addEthereumPrefix);
-    }
-
     let message = `${JSON.stringify(token)}`;
 
-    if(addEthereumPrefix) {
+    if(Sign || addEthereumPrefix) {
+      // Default Sign() already adds Eluvio prefix when addEthereumPrefix is false
       message = `Eluvio Content Fabric Access Token 1.0\n${message}`;
+    }
+
+    if(addEthereumPrefix) {
       message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
-    } else {
-      message = Ethers.utils.base64.encode(Buffer.from(message, "utf-8"))
+    }
+
+    if(!Sign) {
+      Sign = async message => this.authClient.Sign(message, !addEthereumPrefix);
     }
 
     const signature = await Sign(message);
@@ -970,17 +972,18 @@ class ElvClient {
    * Create a signature for the specified string
    *
    * @param {string} string - The string to sign
-   * @param {boolean} usePersonal - use EIP-191 personal_sign for signing
+   * @param {boolean=} usePersonal=false - use EIP-191 personal_sign for signing
    * @return {Promise<string>} - The signed string
    */
   async Sign(string, usePersonal=false) {
     let Encode;
     if(usePersonal) {
-      Encode = function (bytes) { return Ethers.utils.base64.encode(bytes); };
+      // No need to do anything, just pass on
+      Encode = function (string) { return string; };
     } else {
-      Encode = function (bytes) { return Ethers.utils.keccak256(bytes); };
+      Encode = function (string) { return Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)); };
     }
-    const signature = await this.authClient.Sign(Encode(Ethers.utils.toUtf8Bytes(string)), usePersonal);
+    const signature = await this.authClient.Sign(Encode(string), usePersonal);
     return this.utils.FormatSignature(signature);
   }
 
