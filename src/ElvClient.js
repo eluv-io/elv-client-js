@@ -976,14 +976,10 @@ class ElvClient {
    * @return {Promise<string>} - The signed string
    */
   async Sign(string, usePersonal=false) {
-    let Encode;
-    if(usePersonal) {
-      // No need to do anything, just pass on
-      Encode = function (string) { return string; };
-    } else {
-      Encode = function (string) { return Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)); };
+    if(!usePersonal) {
+      string = Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string));
     }
-    const signature = await this.authClient.Sign(Encode(string), usePersonal);
+    const signature = await this.authClient.Sign(string, usePersonal);
     return this.utils.FormatSignature(signature);
   }
 
