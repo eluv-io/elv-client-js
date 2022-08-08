@@ -737,19 +737,14 @@ class ElvClient {
       exp: Date.now() + duration,
     };
 
-    let message = `${JSON.stringify(token)}`;
-
-    if(Sign || addEthereumPrefix) {
-      // Default Sign() already adds Eluvio prefix when addEthereumPrefix is false
-      message = `Eluvio Content Fabric Access Token 1.0\n${message}`;
+    if(!Sign) {
+      Sign = async message => this.authClient.Sign(message, !addEthereumPrefix);
     }
+
+    let message = `Eluvio Content Fabric Access Token 1.0\n${JSON.stringify(token)}`;
 
     if(addEthereumPrefix) {
       message = Ethers.utils.keccak256(Buffer.from(`\x19Ethereum Signed Message:\n${message.length}${message}`, "utf-8"));
-    }
-
-    if(!Sign) {
-      Sign = async message => this.authClient.Sign(message, !addEthereumPrefix);
     }
 
     const signature = await Sign(message);
