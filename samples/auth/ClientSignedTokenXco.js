@@ -22,14 +22,16 @@ const sampleXcMsg = {
 
 const Setup = async () => {
 
+  const signerURIs = ["https://host-216-66-89-94.contentfabric.io/as"];
+
   client = await ElvClient.FromNetworkName({networkName});
-  await client.SetRemoteSigner({idToken: process.env.PRIVATE_KEY, unsignedPublicAuth: true})
+  await client.SetRemoteSigner({signerURIs, idToken: process.env.PRIVATE_KEY, unsignedPublicAuth: true})
   client.ToggleLogging(false);
 
   // Overwrite auth service endpoints (until the cross-chain feture is fully deployed)
   //client.authServiceURIs = ["http://127.0.0.1:6546"];  // Dev instance
-  client.authServiceURIs = ["https://host-216-66-89-94.contentfabric.io/as"]
-  client.AuthHttpClient.uris = client.authServiceURIs;
+  client.authServiceURIs = signerURIs;
+  client.AuthHttpClient.uris = signerURIs;
 
   return client;
 }
