@@ -183,10 +183,11 @@ exports.UserItemInfo = async function ({userAddress}={}) {
 /**
  * <b><i>Requires login</i></b>
  *
- * Retrieve items owned by the current user matching the specified parameters.
+ * Retrieve items owned by the specified or current user matching the specified parameters.
  *
  * @methodGroup User
  * @namedParams
+ * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {integer=} start=0 - PAGINATION: Index from which the results should start
  * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
  * @param {string=} sortBy="created" - Sort order. Options: `default`, `meta/display_name`
@@ -208,6 +209,7 @@ exports.UserItems = async function() {
  *
  * @methodGroup User
  * @namedParams
+ * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {string=} sortBy="created" - Sort order. Options: `created`, `info/token_id`, `info/ordinal`, `price`, `nft/display_name`
  * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
  * @param {Object=} marketplaceParams - Filter results by marketplace
@@ -216,7 +218,7 @@ exports.UserItems = async function() {
  *
  * @returns {Promise<Array<Object>>} - List of current user's listings
  */
-exports.UserListings = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserListings = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "listings",
@@ -224,7 +226,7 @@ exports.UserListings = async function({sortBy="created", sortDesc=false, contrac
       limit: 10000,
       sortBy,
       sortDesc,
-      sellerAddress: this.UserAddress(),
+      sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
       tokenId
@@ -237,6 +239,7 @@ exports.UserListings = async function({sortBy="created", sortDesc=false, contrac
  *
  * @methodGroup User
  * @namedParams
+ * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
  * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
  * @param {Object=} marketplaceParams - Filter results by marketplace
@@ -246,7 +249,7 @@ exports.UserListings = async function({sortBy="created", sortDesc=false, contrac
  *
  * @returns {Promise<Array<Object>>} - List of current user's sales
  */
-exports.UserSales = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserSales = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "sales",
@@ -254,7 +257,7 @@ exports.UserSales = async function({sortBy="created", sortDesc=false, contractAd
       limit: 10000,
       sortBy,
       sortDesc,
-      sellerAddress: this.UserAddress(),
+      sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
       tokenId
@@ -267,6 +270,7 @@ exports.UserSales = async function({sortBy="created", sortDesc=false, contractAd
  *
  * @methodGroup User
  * @namedParams
+ * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
  * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
  * @param {Object=} marketplaceParams - Filter results by marketplace
@@ -276,7 +280,7 @@ exports.UserSales = async function({sortBy="created", sortDesc=false, contractAd
  *
  * @returns {Promise<Array<Object>>} - List of current user's sales
  */
-exports.UserTransfers = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "transfers",
@@ -284,7 +288,7 @@ exports.UserTransfers = async function({sortBy="created", sortDesc=false, contra
       limit: 10000,
       sortBy,
       sortDesc,
-      sellerAddress: this.UserAddress(),
+      sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
       tokenId
@@ -507,7 +511,7 @@ exports.NFT = async function({tokenId, contractAddress}) {
 
   nft.config = await this.TenantConfiguration({contractAddress});
 
-  return FormatNFTMetadata(nft);
+  return FormatNFTMetadata(this, nft);
 };
 
 /**
@@ -580,6 +584,7 @@ exports.ListingStatus = async function({listingId}) {
  */
 exports.Listing = async function({listingId}) {
   return FormatNFT(
+    this,
     await Utils.ResponseToJson(
       await this.client.authClient.MakeAuthServiceRequest({
         path: UrlJoin("as", "mkt", "l", listingId),
@@ -766,6 +771,11 @@ exports.Transfers = async function() {
 exports.SalesStats = async function() {
   return this.FilteredQuery({mode: "sales-stats", ...(arguments[0] || {})});
 };
+
+exports.Leaderboard = async function() {
+  return this.FilteredQuery({mode: "leaderboard", ...(arguments[0] || {})});
+};
+
 
 
 /**
