@@ -276,24 +276,6 @@ exports.UserItemAttributes = async function({marketplaceParams, displayName, use
     );
 };
 
-exports.UserRank = async function({marketplaceParams, userAddress}) {
-  let params = {
-    addr: Utils.FormatAddress(userAddress)
-  };
-
-  if(marketplaceParams) {
-    params.filters = [`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`];
-  }
-
-  return await Utils.ResponseToJson(
-    await this.client.authClient.MakeAuthServiceRequest({
-      path: UrlJoin("as", "wlt", "rank"),
-      method: "GET",
-      queryParams: params
-    })
-  );
-};
-
 /**
  * <b><i>Requires login</i></b>
  *
@@ -886,7 +868,25 @@ exports.SalesStats = async function() {
   return this.FilteredQuery({mode: "sales-stats", ...(arguments[0] || {})});
 };
 
-exports.Leaderboard = async function() {
+exports.Leaderboard = async function({userAddress, marketplaceParams}) {
+  if(userAddress) {
+    let params = {
+      addr: Utils.FormatAddress(userAddress)
+    };
+
+    if(marketplaceParams) {
+      params.filters = [`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`];
+    }
+
+    return ((await Utils.ResponseToJson(
+      await this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "ranks"),
+        method: "GET",
+        queryParams: params
+      })
+    )) || [])[0];
+  }
+
   return this.FilteredQuery({mode: "leaderboard", ...(arguments[0] || {})});
 };
 
