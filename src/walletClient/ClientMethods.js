@@ -181,6 +181,120 @@ exports.UserItemInfo = async function ({userAddress}={}) {
 
 
 /**
+ * Retrieve all valid names for filtering user items. Full item names are required for filtering results by name.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} userAddress - Address of a user
+ * @param {Object=} marketplaceParams - Parameters of a marketplace to filter results by
+ *
+ * @returns {Promise<Array<String>>} - A list of item names
+ */
+exports.UserItemNames = async function({marketplaceParams, userAddress}={}) {
+  let filters = [];
+  if(marketplaceParams) {
+    filters.push(`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`);
+  }
+
+  if(userAddress) {
+    filters.push(`token_owner:eq:${Utils.FormatAddress(userAddress)}`);
+  }
+
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "names"),
+      method: "GET",
+      queryParams: { filter: filters }
+    })
+  );
+};
+
+/**
+ * Retrieve all valid edition names for filtering the specified item. Full edition names are required for filtering results by edition.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string} displayName - Name of an item
+ *
+ * @returns {Promise<Array<String>>} - A list of item editions
+ */
+exports.UserItemEditionNames = async function({displayName}) {
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "editions"),
+      method: "GET",
+      queryParams: { filter: `meta/display_name:eq:${displayName}` }
+    })
+  );
+};
+
+/**
+ * Retrieve all valid attribute names and values. Full attribute names and values are required for filtering results by attribute.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} userAddress - Address of a user
+ * @param {string=} displayName - Name of an item
+ * @param {Object=} marketplaceParams - Parameters of a marketplace to filter results by
+ *
+ * @returns {Promise<Array<String>>} - A list of item names
+ */
+exports.UserItemAttributes = async function({marketplaceParams, displayName, userAddress}={}) {
+  let filters = [];
+  if(marketplaceParams) {
+    filters.push(`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`);
+  }
+
+  if(userAddress) {
+    filters.push(`token_owner:eq:${Utils.FormatAddress(userAddress)}`);
+  }
+
+  if(displayName) {
+    filters.push(`meta/display_name:eq:${displayName}`);
+  }
+
+  const attributes = await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "attributes"),
+      method: "GET",
+      queryParams: {
+        filter: filters
+      }
+    })
+  );
+
+  return attributes
+    .map(({trait_type, values}) => ({ name: trait_type, values }))
+    .filter(({name}) =>
+      !["Content Fabric Hash", "Total Minted Supply", "Creator"].includes(name)
+    );
+};
+
+exports.UserRank = async function({marketplaceParams, userAddress}) {
+  let params = {
+    addr: Utils.FormatAddress(userAddress)
+  };
+
+  if(marketplaceParams) {
+    params.filters = [`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`];
+  }
+
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "rank"),
+      method: "GET",
+      queryParams: params
+    })
+  );
+};
+
+/**
  * <b><i>Requires login</i></b>
  *
  * Retrieve items owned by the specified or current user matching the specified parameters.
@@ -898,7 +1012,7 @@ exports.ListingEditionNames = async function({displayName}) {
 };
 
 /**
- * Retrieve names of all valid attributes for listed tiems. Full attribute names and values are required for filtering listing results by attributes.
+ * Retrieve names of all valid attributes for listed items. Full attribute names and values are required for filtering listing results by attributes.
  *
  * Specify marketplace information to filter the results to only items offered in that marketplace.
  *

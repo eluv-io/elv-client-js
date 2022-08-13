@@ -766,15 +766,13 @@ class ElvWalletClient {
     collectionIndexes = (collectionIndexes || []).map(i => parseInt(i));
 
     let params = {
-      sort_by: sortBy,
-      sort_descending: sortDesc,
       start,
-      limit
+      limit,
+      sort_descending: sortDesc
     };
 
-    // TODO: Remove
-    if(mode === "owned") {
-      delete params.sort_by;
+    if(mode !== "leaderboard") {
+      params.sort_by = sortBy;
     }
 
     let marketplaceInfo, marketplace;
@@ -837,8 +835,7 @@ class ElvWalletClient {
         if(mode === "listing") {
           filters.push(`nft/display_name:eq:${filter}`);
         } else if(mode === "owned") {
-          filters.push(`meta:@>:{"display_name":"${filter}"}`);
-          params.exact = false;
+          filters.push(`meta/display_name:eq:${filter}`);
         } else {
           filters.push(`name:eq:${filter}`);
         }
