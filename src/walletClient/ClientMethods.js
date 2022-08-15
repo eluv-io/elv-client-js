@@ -199,7 +199,7 @@ exports.UserItemNames = async function({marketplaceParams, userAddress}={}) {
   }
 
   if(userAddress) {
-    filters.push(`token_owner:eq:${Utils.FormatAddress(userAddress)}`);
+    filters.push(`wlt:eq:${Utils.FormatAddress(userAddress)}`);
   }
 
   return await Utils.ResponseToJson(
@@ -252,7 +252,7 @@ exports.UserItemAttributes = async function({marketplaceParams, displayName, use
   }
 
   if(userAddress) {
-    filters.push(`token_owner:eq:${Utils.FormatAddress(userAddress)}`);
+    filters.push(`wlt:eq:${Utils.FormatAddress(userAddress)}`);
   }
 
   if(displayName) {
