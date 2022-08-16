@@ -26,6 +26,8 @@ var _require2 = require("./Utils"),
     FormatNFT = _require2.FormatNFT,
     ActionPopup = _require2.ActionPopup;
 
+var HTTPClient = require("../HttpClient");
+
 var UrlJoin = require("url-join");
 
 var Utils = require("../Utils");
@@ -45,7 +47,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
   "use strict";
 
   function ElvWalletClient(_ref) {
-    var client = _ref.client,
+    var appId = _ref.appId,
+        client = _ref.client,
         network = _ref.network,
         mode = _ref.mode,
         marketplaceInfo = _ref.marketplaceInfo,
@@ -53,6 +56,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
     _classCallCheck(this, ElvWalletClient);
 
+    this.appId = appId;
     this.client = client;
     this.loggedIn = false;
     this.network = network;
@@ -65,7 +69,11 @@ var ElvWalletClient = /*#__PURE__*/function () {
     this.selectedMarketplaceInfo = marketplaceInfo;
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
-    this.marketplaceHashes = {}; // Caches
+    this.marketplaceHashes = {};
+    this.stateStoreUrls = Configuration[network].stateStoreUrls;
+    this.stateStoreClient = new HTTPClient({
+      uris: this.stateStoreUrls
+    }); // Caches
 
     this.cachedMarketplaces = {};
     this.cachedCSS = {};
@@ -96,8 +104,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
      *
      * Specify tenantSlug and marketplaceSlug to automatically associate this tenant with a particular marketplace.
      *
+     *
      * @methodGroup Initialization
      * @namedParams
+     * @param {string} appId - A string identifying your app. This is used for namespacing user profile data.
      * @param {string} network=main - Name of the Fabric network to use (`main`, `demo`)
      * @param {string} mode=production - Environment to use (`production`, `staging`)
      * @param {Object=} marketplaceParams - Marketplace parameters
@@ -310,6 +320,9 @@ var ElvWalletClient = /*#__PURE__*/function () {
     }()
     /**
      * Direct the user to the Eluvio Media Wallet login page.
+     *
+     * For redirect login, the authorization token will be included in the URL parameters of the callbackUrl. Simply re-initialize the wallet client and it will authorize with this token,
+     * or you can retrieve the parameter (`elvToken`) yourself and use it in the <a href="#Authenticate">Authenticate</a> method.
      *
      * <b>NOTE:</b> The domain of the opening window (popup flow) or domain of the `callbackUrl` (redirect flow) MUST be allowed in the metadata of the specified marketplace.
      *
@@ -1266,6 +1279,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "FilteredQuery",
     value: function () {
       var _FilteredQuery = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee16() {
+        var _this6 = this;
+
         var _ref14,
             _ref14$mode,
             mode,
@@ -1285,9 +1300,12 @@ var ElvWalletClient = /*#__PURE__*/function () {
             priceRange,
             tokenIdRange,
             capLimit,
+            userAddress,
             sellerAddress,
             _ref14$lastNDays,
             lastNDays,
+            _ref14$includeCheckou,
+            includeCheckoutLocked,
             _ref14$start,
             start,
             _ref14$limit,
@@ -1306,49 +1324,58 @@ var ElvWalletClient = /*#__PURE__*/function () {
           while (1) {
             switch (_context16.prev = _context16.next) {
               case 0:
-                _ref14 = _args16.length > 0 && _args16[0] !== undefined ? _args16[0] : {}, _ref14$mode = _ref14.mode, mode = _ref14$mode === void 0 ? "listings" : _ref14$mode, _ref14$sortBy = _ref14.sortBy, sortBy = _ref14$sortBy === void 0 ? "created" : _ref14$sortBy, _ref14$sortDesc = _ref14.sortDesc, sortDesc = _ref14$sortDesc === void 0 ? false : _ref14$sortDesc, filter = _ref14.filter, editionFilters = _ref14.editionFilters, attributeFilters = _ref14.attributeFilters, contractAddress = _ref14.contractAddress, tokenId = _ref14.tokenId, currency = _ref14.currency, marketplaceParams = _ref14.marketplaceParams, tenantId = _ref14.tenantId, collectionIndexes = _ref14.collectionIndexes, priceRange = _ref14.priceRange, tokenIdRange = _ref14.tokenIdRange, capLimit = _ref14.capLimit, sellerAddress = _ref14.sellerAddress, _ref14$lastNDays = _ref14.lastNDays, lastNDays = _ref14$lastNDays === void 0 ? -1 : _ref14$lastNDays, _ref14$start = _ref14.start, start = _ref14$start === void 0 ? 0 : _ref14$start, _ref14$limit = _ref14.limit, limit = _ref14$limit === void 0 ? 50 : _ref14$limit;
+                _ref14 = _args16.length > 0 && _args16[0] !== undefined ? _args16[0] : {}, _ref14$mode = _ref14.mode, mode = _ref14$mode === void 0 ? "listings" : _ref14$mode, _ref14$sortBy = _ref14.sortBy, sortBy = _ref14$sortBy === void 0 ? "created" : _ref14$sortBy, _ref14$sortDesc = _ref14.sortDesc, sortDesc = _ref14$sortDesc === void 0 ? false : _ref14$sortDesc, filter = _ref14.filter, editionFilters = _ref14.editionFilters, attributeFilters = _ref14.attributeFilters, contractAddress = _ref14.contractAddress, tokenId = _ref14.tokenId, currency = _ref14.currency, marketplaceParams = _ref14.marketplaceParams, tenantId = _ref14.tenantId, collectionIndexes = _ref14.collectionIndexes, priceRange = _ref14.priceRange, tokenIdRange = _ref14.tokenIdRange, capLimit = _ref14.capLimit, userAddress = _ref14.userAddress, sellerAddress = _ref14.sellerAddress, _ref14$lastNDays = _ref14.lastNDays, lastNDays = _ref14$lastNDays === void 0 ? -1 : _ref14$lastNDays, _ref14$includeCheckou = _ref14.includeCheckoutLocked, includeCheckoutLocked = _ref14$includeCheckou === void 0 ? false : _ref14$includeCheckou, _ref14$start = _ref14.start, start = _ref14$start === void 0 ? 0 : _ref14$start, _ref14$limit = _ref14.limit, limit = _ref14$limit === void 0 ? 50 : _ref14$limit;
                 collectionIndexes = (collectionIndexes || []).map(function (i) {
                   return parseInt(i);
                 });
                 params = {
-                  sort_by: sortBy,
-                  sort_descending: sortDesc,
                   start: start,
-                  limit: limit
+                  limit: limit,
+                  sort_descending: sortDesc
                 };
 
+                if (mode !== "leaderboard") {
+                  params.sort_by = sortBy;
+                }
+
+                if (mode.includes("listings") && includeCheckoutLocked) {
+                  params.checkout = true;
+                }
+
                 if (!marketplaceParams) {
-                  _context16.next = 11;
+                  _context16.next = 13;
                   break;
                 }
 
-                _context16.next = 6;
+                _context16.next = 8;
                 return this.MarketplaceInfo({
                   marketplaceParams: marketplaceParams
                 });
 
-              case 6:
+              case 8:
                 marketplaceInfo = _context16.sent;
 
                 if (!(collectionIndexes.length > 0)) {
-                  _context16.next = 11;
+                  _context16.next = 13;
                   break;
                 }
 
-                _context16.next = 10;
+                _context16.next = 12;
                 return this.Marketplace({
                   marketplaceParams: marketplaceParams
                 });
 
-              case 10:
+              case 12:
                 marketplace = _context16.sent;
 
-              case 11:
-                _context16.prev = 11;
+              case 13:
+                _context16.prev = 13;
                 filters = [];
 
                 if (sellerAddress) {
                   filters.push("seller:eq:".concat(this.client.utils.FormatAddress(sellerAddress)));
+                } else if (userAddress && mode !== "owned") {
+                  filters.push("addr:eq:".concat(this.client.utils.FormatAddress(userAddress)));
                 }
 
                 if (marketplace && collectionIndexes.length >= 0) {
@@ -1374,7 +1401,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                       }
                     });
                   });
-                } else if (mode !== "owned" && marketplaceInfo || tenantId) {
+                } else if (marketplaceInfo || tenantId) {
                   filters.push("tenant:eq:".concat(marketplaceInfo ? marketplaceInfo.tenantId : tenantId));
                 }
 
@@ -1389,11 +1416,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     filters.push("token:eq:".concat(tokenId));
                   }
                 } else if (filter) {
-                  if (mode.includes("listing")) {
+                  if (mode === "listing") {
                     filters.push("nft/display_name:eq:".concat(filter));
                   } else if (mode === "owned") {
-                    filters.push("meta:@>:{\"display_name\":\"".concat(filter, "\"}"));
-                    params.exact = false;
+                    filters.push("meta/display_name:eq:".concat(filter));
                   } else {
                     filters.push("name:eq:".concat(filter));
                   }
@@ -1458,91 +1484,87 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 _context16.t0 = mode;
-                _context16.next = _context16.t0 === "owned" ? 26 : _context16.t0 === "listings" ? 29 : _context16.t0 === "transfers" ? 31 : _context16.t0 === "sales" ? 35 : _context16.t0 === "listing-stats" ? 39 : _context16.t0 === "sales-stats" ? 41 : 44;
+                _context16.next = _context16.t0 === "owned" ? 28 : _context16.t0 === "listings" ? 30 : _context16.t0 === "transfers" ? 32 : _context16.t0 === "sales" ? 36 : _context16.t0 === "listing-stats" ? 40 : _context16.t0 === "sales-stats" ? 42 : _context16.t0 === "leaderboard" ? 45 : 47;
                 break;
 
-              case 26:
-                path = UrlJoin("as", "wlt", "nfts");
+              case 28:
+                path = UrlJoin("as", "wlt", userAddress || this.UserAddress());
+                return _context16.abrupt("break", 47);
 
-                if (marketplaceInfo) {
-                  path = UrlJoin("as", "wlt", "nfts", marketplaceInfo.tenantId);
-                }
-
-                return _context16.abrupt("break", 44);
-
-              case 29:
+              case 30:
                 path = UrlJoin("as", "mkt", "f");
-                return _context16.abrupt("break", 44);
+                return _context16.abrupt("break", 47);
 
-              case 31:
+              case 32:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:TRANSFERRED");
                 filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 44);
+                return _context16.abrupt("break", 47);
 
-              case 35:
+              case 36:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:SOLD");
                 filters.push("seller:co:0x");
-                return _context16.abrupt("break", 44);
+                return _context16.abrupt("break", 47);
 
-              case 39:
+              case 40:
                 path = UrlJoin("as", "mkt", "stats", "listed");
-                return _context16.abrupt("break", 44);
+                return _context16.abrupt("break", 47);
 
-              case 41:
+              case 42:
                 path = UrlJoin("as", "mkt", "stats", "sold");
                 filters.push("seller:co:0x");
-                return _context16.abrupt("break", 44);
+                return _context16.abrupt("break", 47);
 
-              case 44:
+              case 45:
+                path = UrlJoin("as", "wlt", "leaders");
+                return _context16.abrupt("break", 47);
+
+              case 47:
                 if (filters.length > 0) {
                   params.filter = filters;
                 }
 
                 if (!mode.includes("stats")) {
-                  _context16.next = 49;
+                  _context16.next = 52;
                   break;
                 }
 
-                _context16.next = 48;
+                _context16.next = 51;
                 return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
                   queryParams: params
                 }));
 
-              case 48:
+              case 51:
                 return _context16.abrupt("return", _context16.sent);
 
-              case 49:
+              case 52:
                 _context16.t2 = Utils;
-                _context16.next = 52;
+                _context16.next = 55;
                 return this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
-                  queryParams: params,
-                  headers: mode === "owned" ? {
-                    Authorization: "Bearer ".concat(this.AuthToken())
-                  } : {}
+                  queryParams: params
                 });
 
-              case 52:
+              case 55:
                 _context16.t3 = _context16.sent;
-                _context16.next = 55;
+                _context16.next = 58;
                 return _context16.t2.ResponseToJson.call(_context16.t2, _context16.t3);
 
-              case 55:
+              case 58:
                 _context16.t1 = _context16.sent;
 
                 if (_context16.t1) {
-                  _context16.next = 58;
+                  _context16.next = 61;
                   break;
                 }
 
                 _context16.t1 = [];
 
-              case 58:
+              case 61:
                 _ref16 = _context16.t1;
                 contents = _ref16.contents;
                 paging = _ref16.paging;
@@ -1554,16 +1576,16 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     more: paging.total > start + limit
                   },
                   results: (contents || []).map(function (item) {
-                    return ["owned", "listings"].includes(mode) ? FormatNFT(item) : item;
+                    return ["owned", "listings"].includes(mode) ? FormatNFT(_this6, item) : item;
                   })
                 });
 
-              case 64:
-                _context16.prev = 64;
-                _context16.t4 = _context16["catch"](11);
+              case 67:
+                _context16.prev = 67;
+                _context16.t4 = _context16["catch"](13);
 
                 if (!(_context16.t4.status && _context16.t4.status.toString() === "404")) {
-                  _context16.next = 68;
+                  _context16.next = 71;
                   break;
                 }
 
@@ -1577,15 +1599,15 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   results: []
                 });
 
-              case 68:
+              case 71:
                 throw _context16.t4;
 
-              case 69:
+              case 72:
               case "end":
                 return _context16.stop();
             }
           }
-        }, _callee16, this, [[11, 64]]);
+        }, _callee16, this, [[13, 67]]);
       }));
 
       function FilteredQuery() {
@@ -1699,13 +1721,13 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "Initialize",
     value: function () {
       var _Initialize = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref18) {
-        var _ref18$network, network, _ref18$mode, mode, marketplaceParams, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, client, walletClient, url, savedToken;
+        var _ref18$appId, appId, _ref18$network, network, _ref18$mode, mode, marketplaceParams, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, client, walletClient, url, savedToken;
 
         return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
             switch (_context18.prev = _context18.next) {
               case 0:
-                _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
+                _ref18$appId = _ref18.appId, appId = _ref18$appId === void 0 ? "general" : _ref18$appId, _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
                 _ref19 = marketplaceParams || {}, tenantSlug = _ref19.tenantSlug, marketplaceSlug = _ref19.marketplaceSlug, marketplaceId = _ref19.marketplaceId, marketplaceHash = _ref19.marketplaceHash;
 
                 if (Configuration[network]) {
@@ -1733,6 +1755,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
               case 10:
                 client = _context18.sent;
                 walletClient = new ElvWalletClient({
+                  appId: appId,
                   client: client,
                   network: network,
                   mode: mode,
@@ -1823,4 +1846,5 @@ var ElvWalletClient = /*#__PURE__*/function () {
 }();
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
+Object.assign(ElvWalletClient.prototype, require("./Profile"));
 exports.ElvWalletClient = ElvWalletClient;
