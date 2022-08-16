@@ -837,7 +837,7 @@ class ElvWalletClient {
           filters.push(`token:eq:${tokenId}`);
         }
       } else if(filter) {
-        if(mode === "listing") {
+        if(mode.includes("listing")) {
           filters.push(`nft/display_name:eq:${filter}`);
         } else if(mode === "owned") {
           filters.push(`meta/display_name:eq:${filter}`);
