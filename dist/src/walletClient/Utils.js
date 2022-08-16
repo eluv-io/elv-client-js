@@ -37,8 +37,29 @@ var RarityToPercentage = function RarityToPercentage(rarity) {
   }
 
   return percentage;
-}; // Format NFT or listing result into consistent format
+};
 
+var LinkTargetHash = function LinkTargetHash(link) {
+  if (!link) {
+    return;
+  }
+
+  if (link["."] && link["."].source) {
+    return link["."].source;
+  }
+
+  if (link["/"] && link["/"].startsWith("/qfab/")) {
+    return link["/"].split("/").find(function (segment) {
+      return segment.startsWith("hq__");
+    });
+  }
+
+  if (link["."] && link["."].container) {
+    return link["."].container;
+  }
+};
+
+exports.LinkTargetHash = LinkTargetHash; // Format NFT or listing result into consistent format
 
 var FormatNFTDetails = function FormatNFTDetails(entry) {
   var isListing = !!entry.id;
@@ -88,7 +109,7 @@ var FormatNFTDetails = function FormatNFTDetails(entry) {
 
 exports.FormatNFTDetails = FormatNFTDetails;
 
-var FormatNFTMetadata = function FormatNFTMetadata(nft) {
+var FormatNFTMetadata = function FormatNFTMetadata(walletClient, nft) {
   nft.formatted = true; // Surface relevant details to top level
 
   nft.contractAddress = nft.details.ContractAddr;
@@ -125,10 +146,13 @@ var FormatNFTMetadata = function FormatNFTMetadata(nft) {
 
         var embedUrl = new URL("https://embed.v3.contentfabric.io");
         embedUrl.searchParams.set("p", "");
-        embedUrl.searchParams.set("net", rootStore.network === "demo" ? "demo" : "main");
-        embedUrl.searchParams.set("ath", rootStore.authToken);
+        embedUrl.searchParams.set("net", walletClient.network === "demo" ? "demo" : "main");
 
-        if (mediaType === "video") {
+        if (media.requires_permissions) {
+          embedUrl.searchParams.set("ath", walletClient.AuthToken());
+        }
+
+        if (["video", "audio"].includes(mediaType)) {
           embedUrl.searchParams.set("vid", LinkTargetHash(media.media_link));
           embedUrl.searchParams.set("ct", "h");
           embedUrl.searchParams.set("ap", "");
@@ -142,6 +166,7 @@ var FormatNFTMetadata = function FormatNFTMetadata(nft) {
           embed_url: embedUrl.toString()
         });
       } catch (error) {
+        walletClient.Log(error, true);
         return media;
       }
     });
@@ -153,8 +178,7 @@ var FormatNFTMetadata = function FormatNFTMetadata(nft) {
       if (nft.metadata.pack_options && nft.metadata.pack_options[key]) {
         var embedUrl = new URL("https://embed.v3.contentfabric.io");
         embedUrl.searchParams.set("p", "");
-        embedUrl.searchParams.set("net", rootStore.network === "demo" ? "demo" : "main");
-        embedUrl.searchParams.set("ath", rootStore.authToken || rootStore.staticToken);
+        embedUrl.searchParams.set("net", walletClient.network === "demo" ? "demo" : "main");
         embedUrl.searchParams.set("vid", LinkTargetHash(nft.metadata.pack_options[key]));
         embedUrl.searchParams.set("ap", "");
 
@@ -173,28 +197,8 @@ var FormatNFTMetadata = function FormatNFTMetadata(nft) {
 
 exports.FormatNFTMetadata = FormatNFTMetadata;
 
-exports.FormatNFT = function (item) {
-  return FormatNFTMetadata(FormatNFTDetails(item));
-};
-
-exports.LinkTargetHash = function (link) {
-  if (!link) {
-    return;
-  }
-
-  if (link["."] && link["."].source) {
-    return link["."].source;
-  }
-
-  if (link["/"] && link["/"].startsWith("/qfab/")) {
-    return link["/"].split("/").find(function (segment) {
-      return segment.startsWith("hq__");
-    });
-  }
-
-  if (link["."] && link["."].container) {
-    return link["."].container;
-  }
+exports.FormatNFT = function (walletClient, item) {
+  return FormatNFTMetadata(walletClient, FormatNFTDetails(item));
 }; // https://stackoverflow.com/questions/4068373/center-a-popup-window-on-screen
 
 

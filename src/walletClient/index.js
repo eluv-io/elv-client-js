@@ -1,6 +1,7 @@
 const {ElvClient} = require("../ElvClient");
 const Configuration = require("./Configuration");
 const {LinkTargetHash, FormatNFT, ActionPopup} = require("./Utils");
+const HTTPClient = require("../HttpClient");
 const UrlJoin = require("url-join");
 const Utils = require("../Utils");
 const Ethers = require("ethers");
@@ -15,7 +16,9 @@ const embedded = inBrowser && window.top !== window.self;
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
 class ElvWalletClient {
-  constructor({client, network, mode, marketplaceInfo, storeAuthToken}) {
+  constructor({appId, client, network, mode, marketplaceInfo, storeAuthToken}) {
+    this.appId = appId;
+
     this.client = client;
     this.loggedIn = false;
 
@@ -32,6 +35,9 @@ class ElvWalletClient {
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
     this.marketplaceHashes = {};
+
+    this.stateStoreUrls = Configuration[network].stateStoreUrls;
+    this.stateStoreClient = new HTTPClient({uris: this.stateStoreUrls});
 
     // Caches
     this.cachedMarketplaces = {};
@@ -60,8 +66,10 @@ class ElvWalletClient {
    *
    * Specify tenantSlug and marketplaceSlug to automatically associate this tenant with a particular marketplace.
    *
+   *
    * @methodGroup Initialization
    * @namedParams
+   * @param {string} appId - A string identifying your app. This is used for namespacing user profile data.
    * @param {string} network=main - Name of the Fabric network to use (`main`, `demo`)
    * @param {string} mode=production - Environment to use (`production`, `staging`)
    * @param {Object=} marketplaceParams - Marketplace parameters
@@ -70,6 +78,7 @@ class ElvWalletClient {
    * @returns {Promise<ElvWalletClient>}
    */
   static async Initialize({
+    appId="general",
     network="main",
     mode="production",
     marketplaceParams,
@@ -86,6 +95,7 @@ class ElvWalletClient {
     const client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
 
     const walletClient = new ElvWalletClient({
+      appId,
       client,
       network,
       mode,
@@ -216,6 +226,9 @@ class ElvWalletClient {
 
   /**
    * Direct the user to the Eluvio Media Wallet login page.
+   *
+   * For redirect login, the authorization token will be included in the URL parameters of the callbackUrl. Simply re-initialize the wallet client and it will authorize with this token,
+   * or you can retrieve the parameter (`elvToken`) yourself and use it in the <a href="#Authenticate">Authenticate</a> method.
    *
    * <b>NOTE:</b> The domain of the opening window (popup flow) or domain of the `callbackUrl` (redirect flow) MUST be allowed in the metadata of the specified marketplace.
    *
@@ -744,19 +757,28 @@ class ElvWalletClient {
     priceRange,
     tokenIdRange,
     capLimit,
+    userAddress,
     sellerAddress,
     lastNDays=-1,
+    includeCheckoutLocked=false,
     start=0,
     limit=50
   }={}) {
     collectionIndexes = (collectionIndexes || []).map(i => parseInt(i));
 
     let params = {
-      sort_by: sortBy,
-      sort_descending: sortDesc,
       start,
-      limit
+      limit,
+      sort_descending: sortDesc
     };
+
+    if(mode !== "leaderboard") {
+      params.sort_by = sortBy;
+    }
+
+    if(mode.includes("listings") && includeCheckoutLocked) {
+      params.checkout = true;
+    }
 
     let marketplaceInfo, marketplace;
     if(marketplaceParams) {
@@ -772,6 +794,8 @@ class ElvWalletClient {
 
       if(sellerAddress) {
         filters.push(`seller:eq:${this.client.utils.FormatAddress(sellerAddress)}`);
+      } else if(userAddress && mode !== "owned") {
+        filters.push(`addr:eq:${this.client.utils.FormatAddress(userAddress)}`);
       }
 
       if(marketplace && collectionIndexes.length >= 0) {
@@ -798,7 +822,7 @@ class ElvWalletClient {
             }
           });
         });
-      } else if(mode !== "owned" && marketplaceInfo || tenantId) {
+      } else if(marketplaceInfo || tenantId) {
         filters.push(`tenant:eq:${marketplaceInfo ? marketplaceInfo.tenantId : tenantId}`);
       }
 
@@ -813,11 +837,10 @@ class ElvWalletClient {
           filters.push(`token:eq:${tokenId}`);
         }
       } else if(filter) {
-        if(mode.includes("listing")) {
+        if(mode === "listing") {
           filters.push(`nft/display_name:eq:${filter}`);
         } else if(mode === "owned") {
-          filters.push(`meta:@>:{"display_name":"${filter}"}`);
-          params.exact = false;
+          filters.push(`meta/display_name:eq:${filter}`);
         } else {
           filters.push(`name:eq:${filter}`);
         }
@@ -880,12 +903,7 @@ class ElvWalletClient {
       let path;
       switch(mode) {
         case "owned":
-          path = UrlJoin("as", "wlt", "nfts");
-
-          if(marketplaceInfo) {
-            path = UrlJoin("as", "wlt", "nfts", marketplaceInfo.tenantId);
-          }
-
+          path = UrlJoin("as", "wlt", userAddress || this.UserAddress());
           break;
 
         case "listings":
@@ -912,6 +930,10 @@ class ElvWalletClient {
           path = UrlJoin("as", "mkt", "stats", "sold");
           filters.push("seller:co:0x");
           break;
+
+        case "leaderboard":
+          path = UrlJoin("as", "wlt", "leaders");
+          break;
       }
 
       if(filters.length > 0) {
@@ -932,10 +954,7 @@ class ElvWalletClient {
         await this.client.authClient.MakeAuthServiceRequest({
           path,
           method: "GET",
-          queryParams: params,
-          headers: mode === "owned" ?
-            { Authorization: `Bearer ${this.AuthToken()}` } :
-            {}
+          queryParams: params
         })
       ) || [];
 
@@ -946,7 +965,7 @@ class ElvWalletClient {
           total: paging.total,
           more: paging.total > start + limit
         },
-        results: (contents || []).map(item => ["owned", "listings"].includes(mode) ? FormatNFT(item) : item)
+        results: (contents || []).map(item => ["owned", "listings"].includes(mode) ? FormatNFT(this, item) : item)
       };
     } catch(error) {
       if(error.status && error.status.toString() === "404") {
@@ -1029,5 +1048,6 @@ class ElvWalletClient {
 }
 
 Object.assign(ElvWalletClient.prototype, require("./ClientMethods"));
+Object.assign(ElvWalletClient.prototype, require("./Profile"));
 
 exports.ElvWalletClient = ElvWalletClient;
