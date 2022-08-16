@@ -34,7 +34,7 @@ const MakeClientSignedTokenPersonal = async ({client}) => {
 
 const Run = async () => {
 
-  // Stub Date.now()
+  // Stub Date.now() to force ethToken and personalToken to use the same timestamp for comparison
   const dateNow = Date.now()
   const realDateNow = Date.now.bind(global.Date);
   const dateNowStub = function () { return dateNow };
