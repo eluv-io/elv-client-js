@@ -10,6 +10,12 @@ const UserProfilePath = ({network, appId, userAddress, key, type, mode}) => {
 };
 
 /**
+ * Methods related to getting and setting user profile data.
+ *
+ * @module ProfileMethods
+ */
+
+/**
  * Retrieve user profile metadata for the specified user
  *
  * @methodGroup ProfileMetadata
@@ -20,7 +26,7 @@ const UserProfilePath = ({network, appId, userAddress, key, type, mode}) => {
  * @param {string=} userAddress - User to retrieve metadata for. If not specified, will retrieve metadata for the current user
  * @param {string=} key - The metadata key to retrieve
  *
- * @returns {Promise<{Object|String}>} - Returns the specified metadata
+ * @returns {Promise<Object|String>} - Returns the specified metadata
  */
 exports.ProfileMetadata = async function({type="app", mode="public", appId, userAddress, key}) {
   try {
@@ -118,7 +124,7 @@ exports.RemoveProfileMetadata = async function({type="app", mode="public", appId
  * @param {string=} userAddress - Address of the user
  * @param {string=} userName - Username of the user
  *
- * @returns {Promise<{Object}>} - Profile info of the specified user
+ * @returns {Promise<Object>} - Profile info of the specified user
  */
 exports.Profile = async function({userAddress, userName}) {
   if(userName) {

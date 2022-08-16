@@ -53,7 +53,7 @@ exports.UserAddress = function() {
  * Retrieve the fund balances for the current user
  *
  * @methodGroup User
- * @returns {Promise<{Object}>} - Returns balances for the user. All values are in USD.
+ * @returns {Promise<Object>} - Returns balances for the user. All values are in USD.
  *  <ul>
  *  <li>- totalWalletBalance - Total balance of the users sales and wallet balance purchases</li>
  *  <li>- availableWalletBalance - Balance available for purchasing items</li>
@@ -405,7 +405,7 @@ exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=
  * @param {string=} tenantId - The ID of the tenant for which to retrieve configuration
  * @param {string=} contractAddress - The ID of an nft contract for which to retrieve configuration
  *
- * @returns {Promise<{Object}>} - The tenant configuration
+ * @returns {Promise<Object>} - The tenant configuration
  */
 exports.TenantConfiguration = async function({tenantId, contractAddress}) {
   try {
@@ -529,7 +529,7 @@ exports.MarketplaceCSS = async function ({marketplaceParams}) {
  * @param {boolean=} organizeById - By default, the returned marketplace info is organized by tenant and marketplace slug. If this option is enabled, the marketplaces will be organized by marketplace ID instead.
  * @param {boolean=} forceReload=false - If specified, a new request will be made to check the currently available marketplaces instead of returning cached info
  *
- * @returns {Promise<{Object}>} - Info about available marketplaces
+ * @returns {Promise<Object>} - Info about available marketplaces
  */
 exports.AvailableMarketplaces = async function ({organizeById, forceReload=false}={}) {
   if(forceReload) {
@@ -870,6 +870,18 @@ exports.SalesStats = async function() {
   return this.FilteredQuery({mode: "sales-stats", ...(arguments[0] || {})});
 };
 
+/**
+ * Get the leaderboard rankings for the specified marketplace. If user address is specified, will return the ranking for the specified user (if present)
+ *
+ * @methodGroup Leaderboard
+ * @namedParams
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {string=} userAddress - Retrieve the ranking for a specific user
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ *
+ * @returns {Promise<Array|Object>} - Returns a list of leaderboard rankings or, if userAddress is specified, ranking for that user.
+ */
 exports.Leaderboard = async function({userAddress, marketplaceParams}) {
   if(userAddress) {
     let params = {
