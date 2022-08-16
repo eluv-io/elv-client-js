@@ -53,7 +53,7 @@ exports.UserAddress = function() {
  * Retrieve the fund balances for the current user
  *
  * @methodGroup User
- * @returns {Promise<{Object}>} - Returns balances for the user. All values are in USD.
+ * @returns {Promise<Object>} - Returns balances for the user. All values are in USD.
  *  <ul>
  *  <li>- totalWalletBalance - Total balance of the users sales and wallet balance purchases</li>
  *  <li>- availableWalletBalance - Balance available for purchasing items</li>
@@ -181,12 +181,109 @@ exports.UserItemInfo = async function ({userAddress}={}) {
 
 
 /**
- * <b><i>Requires login</i></b>
+ * Retrieve all valid names for filtering user items. Full item names are required for filtering results by name.
  *
- * Retrieve items owned by the current user matching the specified parameters.
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
  *
  * @methodGroup User
  * @namedParams
+ * @param {string=} userAddress - Address of a user
+ * @param {Object=} marketplaceParams - Parameters of a marketplace to filter results by
+ *
+ * @returns {Promise<Array<String>>} - A list of item names
+ */
+exports.UserItemNames = async function({marketplaceParams, userAddress}={}) {
+  let filters = [];
+  if(marketplaceParams) {
+    filters.push(`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`);
+  }
+
+  if(userAddress) {
+    filters.push(`wlt:eq:${Utils.FormatAddress(userAddress)}`);
+  }
+
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "names"),
+      method: "GET",
+      queryParams: { filter: filters }
+    })
+  );
+};
+
+/**
+ * Retrieve all valid edition names for filtering the specified item. Full edition names are required for filtering results by edition.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string} displayName - Name of an item
+ *
+ * @returns {Promise<Array<String>>} - A list of item editions
+ */
+exports.UserItemEditionNames = async function({displayName}) {
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "editions"),
+      method: "GET",
+      queryParams: { filter: `meta/display_name:eq:${displayName}` }
+    })
+  );
+};
+
+/**
+ * Retrieve all valid attribute names and values. Full attribute names and values are required for filtering results by attribute.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} userAddress - Address of a user
+ * @param {string=} displayName - Name of an item
+ * @param {Object=} marketplaceParams - Parameters of a marketplace to filter results by
+ *
+ * @returns {Promise<Array<String>>} - A list of item names
+ */
+exports.UserItemAttributes = async function({marketplaceParams, displayName, userAddress}={}) {
+  let filters = [];
+  if(marketplaceParams) {
+    filters.push(`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`);
+  }
+
+  if(userAddress) {
+    filters.push(`wlt:eq:${Utils.FormatAddress(userAddress)}`);
+  }
+
+  if(displayName) {
+    filters.push(`meta/display_name:eq:${displayName}`);
+  }
+
+  const attributes = await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "wlt", "attributes"),
+      method: "GET",
+      queryParams: {
+        filter: filters
+      }
+    })
+  );
+
+  return attributes
+    .map(({trait_type, values}) => ({ name: trait_type, values }))
+    .filter(({name}) =>
+      !["Content Fabric Hash", "Total Minted Supply", "Creator"].includes(name)
+    );
+};
+
+/**
+ * <b><i>Requires login</i></b>
+ *
+ * Retrieve items owned by the specified or current user matching the specified parameters.
+ *
+ * @methodGroup User
+ * @namedParams
+ * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {integer=} start=0 - PAGINATION: Index from which the results should start
  * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
  * @param {string=} sortBy="created" - Sort order. Options: `default`, `meta/display_name`
@@ -208,6 +305,7 @@ exports.UserItems = async function() {
  *
  * @methodGroup User
  * @namedParams
+ * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {string=} sortBy="created" - Sort order. Options: `created`, `info/token_id`, `info/ordinal`, `price`, `nft/display_name`
  * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
  * @param {Object=} marketplaceParams - Filter results by marketplace
@@ -216,7 +314,7 @@ exports.UserItems = async function() {
  *
  * @returns {Promise<Array<Object>>} - List of current user's listings
  */
-exports.UserListings = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserListings = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "listings",
@@ -224,10 +322,11 @@ exports.UserListings = async function({sortBy="created", sortDesc=false, contrac
       limit: 10000,
       sortBy,
       sortDesc,
-      sellerAddress: this.UserAddress(),
+      sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
-      tokenId
+      tokenId,
+      includeCheckoutLocked: true
     })
   ).results;
 };
@@ -237,6 +336,7 @@ exports.UserListings = async function({sortBy="created", sortDesc=false, contrac
  *
  * @methodGroup User
  * @namedParams
+ * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
  * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
  * @param {Object=} marketplaceParams - Filter results by marketplace
@@ -246,7 +346,7 @@ exports.UserListings = async function({sortBy="created", sortDesc=false, contrac
  *
  * @returns {Promise<Array<Object>>} - List of current user's sales
  */
-exports.UserSales = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserSales = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "sales",
@@ -254,7 +354,7 @@ exports.UserSales = async function({sortBy="created", sortDesc=false, contractAd
       limit: 10000,
       sortBy,
       sortDesc,
-      sellerAddress: this.UserAddress(),
+      sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
       tokenId
@@ -267,6 +367,7 @@ exports.UserSales = async function({sortBy="created", sortDesc=false, contractAd
  *
  * @methodGroup User
  * @namedParams
+ * @param {string=} userAddress - Address of a user. If not specified, will return results for current user
  * @param {string=} sortBy="created" - Sort order. Options: `created`, `price`, `name`
  * @param {boolean=} sortDesc=false - Sort results descending instead of ascending
  * @param {Object=} marketplaceParams - Filter results by marketplace
@@ -276,7 +377,7 @@ exports.UserSales = async function({sortBy="created", sortDesc=false, contractAd
  *
  * @returns {Promise<Array<Object>>} - List of current user's sales
  */
-exports.UserTransfers = async function({sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
+exports.UserTransfers = async function({userAddress, sortBy="created", sortDesc=false, contractAddress, tokenId, marketplaceParams}={}) {
   return (
     await this.FilteredQuery({
       mode: "transfers",
@@ -284,7 +385,7 @@ exports.UserTransfers = async function({sortBy="created", sortDesc=false, contra
       limit: 10000,
       sortBy,
       sortDesc,
-      sellerAddress: this.UserAddress(),
+      sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
       tokenId
@@ -304,7 +405,7 @@ exports.UserTransfers = async function({sortBy="created", sortDesc=false, contra
  * @param {string=} tenantId - The ID of the tenant for which to retrieve configuration
  * @param {string=} contractAddress - The ID of an nft contract for which to retrieve configuration
  *
- * @returns {Promise<{Object}>} - The tenant configuration
+ * @returns {Promise<Object>} - The tenant configuration
  */
 exports.TenantConfiguration = async function({tenantId, contractAddress}) {
   try {
@@ -428,7 +529,7 @@ exports.MarketplaceCSS = async function ({marketplaceParams}) {
  * @param {boolean=} organizeById - By default, the returned marketplace info is organized by tenant and marketplace slug. If this option is enabled, the marketplaces will be organized by marketplace ID instead.
  * @param {boolean=} forceReload=false - If specified, a new request will be made to check the currently available marketplaces instead of returning cached info
  *
- * @returns {Promise<{Object}>} - Info about available marketplaces
+ * @returns {Promise<Object>} - Info about available marketplaces
  */
 exports.AvailableMarketplaces = async function ({organizeById, forceReload=false}={}) {
   if(forceReload) {
@@ -507,7 +608,7 @@ exports.NFT = async function({tokenId, contractAddress}) {
 
   nft.config = await this.TenantConfiguration({contractAddress});
 
-  return FormatNFTMetadata(nft);
+  return FormatNFTMetadata(this, nft);
 };
 
 /**
@@ -580,6 +681,7 @@ exports.ListingStatus = async function({listingId}) {
  */
 exports.Listing = async function({listingId}) {
   return FormatNFT(
+    this,
     await Utils.ResponseToJson(
       await this.client.authClient.MakeAuthServiceRequest({
         path: UrlJoin("as", "mkt", "l", listingId),
@@ -619,6 +721,7 @@ exports.Listing = async function({listingId}) {
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
  * @param {integer=} lastNDays - Filter by results listed in the past N days
+ * @param {boolean=} includeCheckoutLocked - If specified, listings which are currently in the checkout process (and not so currently purchasable) will be included in the results. By default they are excluded.
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
  */
@@ -767,6 +870,41 @@ exports.SalesStats = async function() {
   return this.FilteredQuery({mode: "sales-stats", ...(arguments[0] || {})});
 };
 
+/**
+ * Get the leaderboard rankings for the specified marketplace. If user address is specified, will return the ranking for the specified user (if present)
+ *
+ * @methodGroup Leaderboard
+ * @namedParams
+ * @param {Object=} marketplaceParams - Filter results by marketplace
+ * @param {string=} userAddress - Retrieve the ranking for a specific user
+ * @param {integer=} start=0 - PAGINATION: Index from which the results should start
+ * @param {integer=} limit=50 - PAGINATION: Maximum number of results to return
+ *
+ * @returns {Promise<Array|Object>} - Returns a list of leaderboard rankings or, if userAddress is specified, ranking for that user.
+ */
+exports.Leaderboard = async function({userAddress, marketplaceParams}) {
+  if(userAddress) {
+    let params = {
+      addr: Utils.FormatAddress(userAddress)
+    };
+
+    if(marketplaceParams) {
+      params.filter = [`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`];
+    }
+
+    return ((await Utils.ResponseToJson(
+      await this.client.authClient.MakeAuthServiceRequest({
+        path: UrlJoin("as", "wlt", "ranks"),
+        method: "GET",
+        queryParams: params
+      })
+    )) || [])[0];
+  }
+
+  return this.FilteredQuery({mode: "leaderboard", ...(arguments[0] || {})});
+};
+
+
 
 /**
  * <b><i>Requires login</i></b>
@@ -888,7 +1026,7 @@ exports.ListingEditionNames = async function({displayName}) {
 };
 
 /**
- * Retrieve names of all valid attributes for listed tiems. Full attribute names and values are required for filtering listing results by attributes.
+ * Retrieve names of all valid attributes for listed items. Full attribute names and values are required for filtering listing results by attributes.
  *
  * Specify marketplace information to filter the results to only items offered in that marketplace.
  *

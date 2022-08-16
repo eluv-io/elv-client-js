@@ -1,6 +1,7 @@
 let WalletConfiguration = {
   demo: {
     configUrl: "https://demov3.net955210.contentfabric.io/config",
+    stateStoreUrls: ["https://appsvc.svc.eluv.io/dv3"],
     staging: {
       siteId: "iq__2gkNh8CCZqFFnoRpEUmz7P3PaBQG",
       purchaseMode: "develop",
@@ -9,6 +10,7 @@ let WalletConfiguration = {
   },
   main: {
     configUrl: "https://main.net955305.contentfabric.io/config",
+    stateStoreUrls: ["https://appsvc.svc.eluv.io/main"],
     staging: {
       siteId: "iq__inauxD1KLyKWPHargCWjdCh2ayr",
       purchaseMode: "production",
