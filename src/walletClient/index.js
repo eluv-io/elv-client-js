@@ -760,6 +760,7 @@ class ElvWalletClient {
     userAddress,
     sellerAddress,
     lastNDays=-1,
+    includeCheckoutLocked=false,
     start=0,
     limit=50
   }={}) {
@@ -773,6 +774,10 @@ class ElvWalletClient {
 
     if(mode !== "leaderboard") {
       params.sort_by = sortBy;
+    }
+
+    if(mode.includes("listings") && includeCheckoutLocked) {
+      params.checkout = true;
     }
 
     let marketplaceInfo, marketplace;

@@ -325,7 +325,8 @@ exports.UserListings = async function({userAddress, sortBy="created", sortDesc=f
       sellerAddress: userAddress || this.UserAddress(),
       marketplaceParams,
       contractAddress,
-      tokenId
+      tokenId,
+      includeCheckoutLocked: true
     })
   ).results;
 };
@@ -720,6 +721,7 @@ exports.Listing = async function({listingId}) {
  * @param {Object=} marketplaceParams - Filter results by marketplace
  * @param {Array<integer>=} collectionIndexes - If filtering by marketplace, filter by collection(s). The index refers to the index in the array `marketplace.collections`
  * @param {integer=} lastNDays - Filter by results listed in the past N days
+ * @param {boolean=} includeCheckoutLocked - If specified, listings which are currently in the checkout process (and not so currently purchasable) will be included in the results. By default they are excluded.
  *
  * @returns {Promise<Object>} - Results of the query and pagination info
  */
@@ -875,7 +877,7 @@ exports.Leaderboard = async function({userAddress, marketplaceParams}) {
     };
 
     if(marketplaceParams) {
-      params.filters = [`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`];
+      params.filter = [`tenant:eq:${(await this.MarketplaceInfo({marketplaceParams})).tenantId}`];
     }
 
     return ((await Utils.ResponseToJson(
