@@ -23,6 +23,7 @@ let WalletConfiguration = {
     }
   },
   __MARKETPLACE_ORDER: [
+    "PREVIEW",
     "dolly-marketplace",
     "oc-marketplace",
     "maskverse-marketplace",
