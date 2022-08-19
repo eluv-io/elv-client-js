@@ -16,7 +16,7 @@ const embedded = inBrowser && window.top !== window.self;
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
 class ElvWalletClient {
-  constructor({appId, client, network, mode, marketplaceInfo, storeAuthToken}) {
+  constructor({appId, client, network, mode, marketplaceInfo, previewMarketplaceHash, storeAuthToken}) {
     this.appId = appId;
 
     this.client = client;
@@ -31,6 +31,8 @@ class ElvWalletClient {
     this.storeAuthToken = storeAuthToken;
 
     this.selectedMarketplaceInfo = marketplaceInfo;
+    this.previewMarketplaceId = previewMarketplaceHash ? Utils.DecodeVersionHash(previewMarketplaceHash).objectId : undefined;
+    this.previewMarketplaceHash = previewMarketplaceHash;
 
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
@@ -82,6 +84,7 @@ class ElvWalletClient {
     network="main",
     mode="production",
     marketplaceParams,
+    previewMarketplaceId,
     storeAuthToken=true
   }) {
     let { tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash } = (marketplaceParams || {});
@@ -94,6 +97,11 @@ class ElvWalletClient {
 
     const client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
 
+    let previewMarketplaceHash = previewMarketplaceId;
+    if(previewMarketplaceHash && !previewMarketplaceHash.startsWith("hq__")) {
+      previewMarketplaceHash = await client.LatestVersionHash({objectId: previewMarketplaceId});
+    }
+
     const walletClient = new ElvWalletClient({
       appId,
       client,
@@ -105,6 +113,7 @@ class ElvWalletClient {
         marketplaceId: marketplaceHash ? client.utils.DecodeVersionHash(marketplaceHash).objectId : marketplaceId,
         marketplaceHash
       },
+      previewMarketplaceHash,
       storeAuthToken
     });
 
@@ -565,14 +574,13 @@ class ElvWalletClient {
 
 
 
-  // If marketplace slug is specified, load only that marketplace. Otherwise load all
   async LoadAvailableMarketplaces(forceReload=false) {
     if(!forceReload && Object.keys(this.availableMarketplaces) > 0) {
       return;
     }
 
     const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
-    const metadata = await this.client.ContentObjectMetadata({
+    let metadata = await this.client.ContentObjectMetadata({
       versionHash: mainSiteHash,
       metadataSubtree: "public/asset_metadata/tenants",
       resolveLinks: true,
@@ -594,13 +602,74 @@ class ElvWalletClient {
       ]
     });
 
+    // If preview marketplace is specified, load it appropriately
+    if(this.previewMarketplaceId) {
+      let previewTenantSlug = "PREVIEW";
+      let previewMarketplaceSlug, previewMarketplaceMetadata;
+      Object.keys(metadata || {}).forEach(tenantSlug =>
+        Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(marketplaceSlug => {
+          const versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
+          const objectId = this.utils.DecodeVersionHash(versionHash).objectId;
+
+          if(objectId === this.previewMarketplaceId) {
+            // Marketplace exists in site meta
+            previewTenantSlug = tenantSlug;
+            previewMarketplaceSlug = marketplaceSlug;
+
+            // Deployed marketplace is same as preview marketplace
+            if(versionHash === this.previewMarketplaceHash) {
+              previewMarketplaceMetadata = metadata[tenantSlug].marketplaces[marketplaceSlug];
+            }
+          }
+        })
+      );
+
+      // Marketplace not present in branch, or preview version is different - Load metadata directly
+      if(!previewMarketplaceMetadata) {
+        previewMarketplaceMetadata = await this.client.ContentObjectMetadata({
+          versionHash: this.previewMarketplaceHash,
+          metadataSubtree: "public/asset_metadata",
+          produceLinkUrls: true,
+          authorizationToken: this.publicStaticToken,
+          noAuth: true,
+          select: [
+            "slug",
+            "info/tenant_id",
+            "info/tenant_name",
+            "info/branding",
+          ],
+          remove: [
+            "info/branding/custom_css"
+          ]
+        });
+
+        if(!previewMarketplaceSlug) {
+          previewMarketplaceSlug = previewMarketplaceMetadata.slug;
+        }
+      }
+
+      previewMarketplaceMetadata["."] = {
+        source: this.previewMarketplaceHash
+      };
+
+      previewMarketplaceMetadata.info["."] = {
+        source: this.previewMarketplaceHash
+      };
+
+      previewMarketplaceMetadata.info.branding.preview = true;
+      previewMarketplaceMetadata.info.branding.show = true;
+
+      metadata[previewTenantSlug] = metadata[previewTenantSlug] || {};
+      metadata[previewTenantSlug].marketplaces = metadata[previewTenantSlug].marketplaces || {};
+      metadata[previewTenantSlug].marketplaces[previewMarketplaceSlug] = previewMarketplaceMetadata;
+    }
+
     let availableMarketplaces = { ...(this.availableMarketplaces || {}) };
     let availableMarketplacesById = { ...(this.availableMarketplacesById || {}) };
     Object.keys(metadata || {}).forEach(tenantSlug => {
       try {
-        availableMarketplaces[tenantSlug] = {
-          versionHash: metadata[tenantSlug]["."].source
-        };
+        availableMarketplaces[tenantSlug] = metadata[tenantSlug]["."] ?
+          { versionHash: metadata[tenantSlug]["."].source } : { };
 
         Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(marketplaceSlug => {
           try {
@@ -642,11 +711,17 @@ class ElvWalletClient {
   }
 
   // Get the hash of the currently linked marketplace
-  async LatestMarketplaceHash({tenantSlug, marketplaceSlug}) {
+  async LatestMarketplaceHash({marketplaceParams}) {
+    const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
+
+    if(this.previewMarketplaceId && this.previewMarketplaceId === marketplaceInfo.marketplaceId) {
+      return this.availableMarketplaces[marketplaceInfo.tenantSlug][marketplaceInfo.marketplaceSlug]["."].source;
+    }
+
     const mainSiteHash = await this.client.LatestVersionHash({objectId: this.mainSiteId});
     const marketplaceLink = await this.client.ContentObjectMetadata({
       versionHash: mainSiteHash,
-      metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", tenantSlug, "marketplaces", marketplaceSlug),
+      metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug),
       resolveLinks: false
     });
 
@@ -657,7 +732,7 @@ class ElvWalletClient {
     const marketplaceInfo = this.MarketplaceInfo({marketplaceParams});
 
     const marketplaceId = marketplaceInfo.marketplaceId;
-    const marketplaceHash = await this.LatestMarketplaceHash({tenantSlug: marketplaceInfo.tenantSlug, marketplaceSlug: marketplaceInfo.marketplaceSlug});
+    const marketplaceHash = await this.LatestMarketplaceHash({marketplaceParams});
 
     if(this.cachedMarketplaces[marketplaceId] && this.cachedMarketplaces[marketplaceId].versionHash !== marketplaceHash) {
       delete this.cachedMarketplaces[marketplaceId];
@@ -710,6 +785,10 @@ class ElvWalletClient {
       marketplace.retrievedAt = Date.now();
       marketplace.marketplaceId = marketplaceId;
       marketplace.versionHash = marketplaceHash;
+
+      if(this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
+        marketplace.branding.preview = true;
+      }
 
       // Generate embed URLs for pack opening animations
       ["purchase_animation", "purchase_animation__mobile", "reveal_animation", "reveal_animation_mobile"].forEach(key => {
