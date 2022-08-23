@@ -1380,6 +1380,26 @@ exports.CreateLinks = async function({
   );
 };
 
+
+/**
+ * Add authorization token to an existing link
+ *
+ * Expected format of links:
+ *
+
+ {
+   type: string ("file", "meta" | "metadata", "rep" - default "metadata"),
+   path: string (path to link target),
+   targetHash: string (optional, for cross-object links),
+   target: string (path to use in ctx/elv/lnk)
+ }
+
+ * @methodGroup Links
+ * @namedParams
+ * @param {string} libraryId - ID of the library
+ * @param {string} objectId - ID of the object
+ * @param {Array<Object>} links - Link specifications
+ */
 exports.CreateSignedLink = async function({
   libraryId,
   objectId,
