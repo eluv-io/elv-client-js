@@ -433,8 +433,8 @@ const Utils = {
     return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   },
 
-  B64: str => {
-    return Buffer.from(str, "utf-8").toString("base64");
+  B64: (str, encoding="utf-8") => {
+    return Buffer.from(str, encoding).toString("base64");
   },
 
   FromB64: str => {

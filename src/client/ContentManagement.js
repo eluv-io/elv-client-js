@@ -1380,6 +1380,53 @@ exports.CreateLinks = async function({
   );
 };
 
+exports.CreateSignedLink = async function({
+  libraryId,
+  objectId,
+  link={}
+}) {
+  ValidateParameters({libraryId, objectId});
+
+  const path = link.path.replace(/^(\/|\.)+/, "");
+  let type = (link.type || "file") === "file" ? "files" : link.type;
+  if(type === "metadata") { type = "meta"; }
+
+  const metadata = await this.ContentObjectMetadata({
+    libraryId,
+    objectId,
+    metadataSubtree: path
+  }) || {};
+
+  for(let key of Object.values(metadata)) {
+    const title = Object.keys(key)[0];
+
+    if(key[title]["/"].includes(link.targetHash)) {
+      if(!key[title]["."]) key[title]["."] = {};
+
+      key[title]["."]["authorization"] = await this.authClient.GenerateSignedLinkToken({
+        containerId: objectId,
+        versionHash: link.targetHash,
+        link: `./${type}/${link.target}`
+      });
+    }
+  }
+
+  await this.EditAndFinalizeContentObject({
+    libraryId,
+    objectId,
+    commitMessage: "Create signed link",
+    callback: async ({writeToken}) => {
+      await this.ReplaceMetadata({
+        libraryId,
+        objectId,
+        writeToken,
+        metadataSubtree: path,
+        metadata: metadata
+      });
+    }
+  });
+};
+
 /**
  * Initialize or replace the signed auth policy for the specified object
  *
