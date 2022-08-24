@@ -1325,7 +1325,8 @@ exports.UpdateContentObjectGraph = async function({libraryId, objectId, versionH
       target: string (path to link target),
       type: string ("file", "meta" | "metadata", "rep" - default "metadata")
       targetHash: string (optional, for cross-object links),
-      autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method)
+      autoUpdate: boolean (if specified, link will be automatically updated to latest version by UpdateContentObjectGraph method),
+      container: string (optional, object id of container object if creating a signed link)
     }
  ]
 
@@ -1349,24 +1350,54 @@ exports.CreateLinks = async function({
     10,
     links,
     async info => {
-      const path = info.path.replace(/^(\/|\.)+/, "");
+      let path = info.path.replace(/^(\/|\.)+/, "");
 
+      let link;
       let type = (info.type || "file") === "file" ? "files" : info.type;
       if(type === "metadata") { type = "meta"; }
-
       let target = info.target.replace(/^(\/|\.)+/, "");
-      if(info.targetHash) {
-        target = `/qfab/${info.targetHash}/${type}/${target}`;
-      } else {
-        target = `./${type}/${target}`;
+
+      if(info.container) {
+        const linksMetadata = await this.ContentObjectMetadata({
+          libraryId,
+          objectId,
+          metadataSubtree: path
+        }) || {};
+
+        let index = 0;
+        for(let key of Object.values(linksMetadata)) {
+          const title = Object.keys(key)[0];
+
+          if(key[title]["/"].includes(info.targetHash)) {
+            link = key[title];
+            path = `${path}/${index}/${title}`;
+          }
+          index++;
+        }
+
+        if(!link["."]) link["."] = {};
+
+        link["."]["authorization"] = await this.authClient.GenerateSignedLinkToken({
+          containerId: info.container,
+          versionHash: info.targetHash,
+          link: `./${type}/${target}`
+        });
       }
 
-      let link = {
-        "/": target
-      };
+      if(!link["/"]) {
+        if(info.targetHash) {
+          target = `/qfab/${info.targetHash}/${type}/${target}`;
+        } else {
+          target = `./${type}/${target}`;
+        }
 
-      if(info.autoUpdate) {
-        link["."] = { auto_update: { tag: "latest"} };
+        link = {
+          "/": target
+        };
+
+        if(info.autoUpdate) {
+          link["."] = { auto_update: { tag: "latest"} };
+        }
       }
 
       await this.ReplaceMetadata({
@@ -1378,73 +1409,6 @@ exports.CreateLinks = async function({
       });
     }
   );
-};
-
-
-/**
- * Add authorization token to an existing link
- *
- * Expected format of links:
- *
-
- {
-   type: string ("file", "meta" | "metadata", "rep" - default "metadata"),
-   path: string (path to link target),
-   targetHash: string (optional, for cross-object links),
-   target: string (path to use in ctx/elv/lnk)
- }
-
- * @methodGroup Links
- * @namedParams
- * @param {string} libraryId - ID of the library
- * @param {string} objectId - ID of the object
- * @param {Array<Object>} links - Link specifications
- */
-exports.CreateSignedLink = async function({
-  libraryId,
-  objectId,
-  link={}
-}) {
-  ValidateParameters({libraryId, objectId});
-
-  const path = link.path.replace(/^(\/|\.)+/, "");
-  let type = (link.type || "file") === "file" ? "files" : link.type;
-  if(type === "metadata") { type = "meta"; }
-
-  const metadata = await this.ContentObjectMetadata({
-    libraryId,
-    objectId,
-    metadataSubtree: path
-  }) || {};
-
-  for(let key of Object.values(metadata)) {
-    const title = Object.keys(key)[0];
-
-    if(key[title]["/"].includes(link.targetHash)) {
-      if(!key[title]["."]) key[title]["."] = {};
-
-      key[title]["."]["authorization"] = await this.authClient.GenerateSignedLinkToken({
-        containerId: objectId,
-        versionHash: link.targetHash,
-        link: `./${type}/${link.target}`
-      });
-    }
-  }
-
-  await this.EditAndFinalizeContentObject({
-    libraryId,
-    objectId,
-    commitMessage: "Create signed link",
-    callback: async ({writeToken}) => {
-      await this.ReplaceMetadata({
-        libraryId,
-        objectId,
-        writeToken,
-        metadataSubtree: path,
-        metadata: metadata
-      });
-    }
-  });
 };
 
 /**
