@@ -255,7 +255,7 @@ class AuthorizationClient {
       throw Error(`Current user does not have permission to edit content object ${objectId}`);
     }
 
-    const signerAddress = (this.client.signer && this.client.signer.address) || "";
+    const signerAddress = this.client.CurrentAccountAddress();
 
     let token = {
       adr: Utils.B64(signerAddress.replace("0x", ""), "hex"),
