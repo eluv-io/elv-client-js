@@ -56,6 +56,7 @@ const FormatNFTDetails = function(entry) {
     ContractId: `ictr${Utils.AddressToHash(info.contract_addr)}`,
     ContractName: info.contract_name,
     Cap: info.cap,
+    Offers: info.offers || [],
     TokenIdStr: info.token_id_str,
     TokenUri: info.token_uri,
     TokenOrdinal: info.ordinal,
