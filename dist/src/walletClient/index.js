@@ -1194,10 +1194,11 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
                           case 14:
                             item.nftTemplateMetadata = (item.nft_template || {}).nft || {};
+                            item.nftTemplateHash = ((item.nft_template || {})["."] || {}).source;
                             item.itemIndex = index;
                             return _context14.abrupt("return", item);
 
-                          case 17:
+                          case 18:
                           case "end":
                             return _context14.stop();
                         }
@@ -1457,7 +1458,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 _context16.t0 = mode;
-                _context16.next = _context16.t0 === "owned" ? 26 : _context16.t0 === "listings" ? 29 : _context16.t0 === "transfers" ? 31 : _context16.t0 === "sales" ? 35 : _context16.t0 === "listing-stats" ? 38 : _context16.t0 === "sales-stats" ? 40 : 42;
+                _context16.next = _context16.t0 === "owned" ? 26 : _context16.t0 === "listings" ? 29 : _context16.t0 === "transfers" ? 31 : _context16.t0 === "sales" ? 35 : _context16.t0 === "listing-stats" ? 39 : _context16.t0 === "sales-stats" ? 41 : 44;
                 break;
 
               case 26:
@@ -1467,54 +1468,56 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   path = UrlJoin("as", "wlt", "nfts", marketplaceInfo.tenantId);
                 }
 
-                return _context16.abrupt("break", 42);
+                return _context16.abrupt("break", 44);
 
               case 29:
                 path = UrlJoin("as", "mkt", "f");
-                return _context16.abrupt("break", 42);
+                return _context16.abrupt("break", 44);
 
               case 31:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:TRANSFERRED");
                 filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 42);
+                return _context16.abrupt("break", 44);
 
               case 35:
                 path = UrlJoin("as", "mkt", "hst", "f");
                 filters.push("action:eq:SOLD");
-                return _context16.abrupt("break", 42);
+                filters.push("seller:co:0x");
+                return _context16.abrupt("break", 44);
 
-              case 38:
+              case 39:
                 path = UrlJoin("as", "mkt", "stats", "listed");
-                return _context16.abrupt("break", 42);
+                return _context16.abrupt("break", 44);
 
-              case 40:
+              case 41:
                 path = UrlJoin("as", "mkt", "stats", "sold");
-                return _context16.abrupt("break", 42);
+                filters.push("seller:co:0x");
+                return _context16.abrupt("break", 44);
 
-              case 42:
+              case 44:
                 if (filters.length > 0) {
                   params.filter = filters;
                 }
 
                 if (!mode.includes("stats")) {
-                  _context16.next = 47;
+                  _context16.next = 49;
                   break;
                 }
 
-                _context16.next = 46;
+                _context16.next = 48;
                 return Utils.ResponseToJson(this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
                   queryParams: params
                 }));
 
-              case 46:
+              case 48:
                 return _context16.abrupt("return", _context16.sent);
 
-              case 47:
+              case 49:
                 _context16.t2 = Utils;
-                _context16.next = 50;
+                _context16.next = 52;
                 return this.client.authClient.MakeAuthServiceRequest({
                   path: path,
                   method: "GET",
@@ -1524,22 +1527,22 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   } : {}
                 });
 
-              case 50:
+              case 52:
                 _context16.t3 = _context16.sent;
-                _context16.next = 53;
+                _context16.next = 55;
                 return _context16.t2.ResponseToJson.call(_context16.t2, _context16.t3);
 
-              case 53:
+              case 55:
                 _context16.t1 = _context16.sent;
 
                 if (_context16.t1) {
-                  _context16.next = 56;
+                  _context16.next = 58;
                   break;
                 }
 
                 _context16.t1 = [];
 
-              case 56:
+              case 58:
                 _ref16 = _context16.t1;
                 contents = _ref16.contents;
                 paging = _ref16.paging;
@@ -1555,12 +1558,12 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   })
                 });
 
-              case 62:
-                _context16.prev = 62;
+              case 64:
+                _context16.prev = 64;
                 _context16.t4 = _context16["catch"](11);
 
                 if (!(_context16.t4.status && _context16.t4.status.toString() === "404")) {
-                  _context16.next = 66;
+                  _context16.next = 68;
                   break;
                 }
 
@@ -1574,15 +1577,15 @@ var ElvWalletClient = /*#__PURE__*/function () {
                   results: []
                 });
 
-              case 66:
+              case 68:
                 throw _context16.t4;
 
-              case 67:
+              case 69:
               case "end":
                 return _context16.stop();
             }
           }
-        }, _callee16, this, [[11, 62]]);
+        }, _callee16, this, [[11, 64]]);
       }));
 
       function FilteredQuery() {
