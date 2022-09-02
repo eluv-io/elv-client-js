@@ -83,12 +83,12 @@ const Run = async () => {
 
   const xcoReq = {
     chain_type: 'eip155',
-    chain_id: '955305',
+    chain_id: '955210',
     asset_type: 'erc721',
-    asset_id: '0xd4c8153372b0292b364dac40d0ade37da4c4869a',
+    asset_id: '0xc21ea77699666e2bb6b96dd20157db08f22cb9c3',
     method: 'balance',
     params: {
-      owner: '0xcd8323da264e9c599af47a0d559dcdcb335d44ab'
+      owner: '0x9d4a49b2b6aff4ae42767d95664cbd948d89e0c1'
     }
   };
 
