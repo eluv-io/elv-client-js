@@ -12,16 +12,15 @@ const networkName = "demo"; // "main" or "demo"
 
 const Setup = async () => {
 
-  const signerURIs = ["https://host-216-66-89-94.contentfabric.io/as"];
+  // Overwrite auth service endpoints (until the cross-chain feature is fully deployed)
+  // const signerURIs = ["https://host-216-66-89-94.contentfabric.io/as"];
 
   client = await ElvClient.FromNetworkName({networkName});
-  await client.SetRemoteSigner({signerURIs, idToken: process.env.ID_TOKEN, unsignedPublicAuth: true})
+  await client.SetRemoteSigner({/*signerURIs,*/ idToken: process.env.ID_TOKEN, unsignedPublicAuth: true})
   client.ToggleLogging(false);
 
-  // Overwrite auth service endpoints (until the cross-chain feature is fully deployed)
-  //client.authServiceURIs = ["http://127.0.0.1:6546"];  // Dev instance
-  client.authServiceURIs = signerURIs;
-  client.AuthHttpClient.uris = signerURIs;
+  // client.authServiceURIs = signerURIs;
+  // client.AuthHttpClient.uris = signerURIs;
 
   return client;
 }
