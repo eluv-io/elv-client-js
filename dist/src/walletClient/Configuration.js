@@ -22,7 +22,7 @@ var WalletConfiguration = {
       appUrl: "https://wallet.contentfabric.io"
     }
   },
-  __MARKETPLACE_ORDER: ["dolly-marketplace", "oc-marketplace", "maskverse-marketplace", "emp-marketplace", "microsoft", "indieflix-marketplace", "angels-airwaves-marketplace"]
+  __MARKETPLACE_ORDER: ["PREVIEW", "wwe-marketplace-main", "maskverse-marketplace", "dolly-marketplace", "oc-marketplace", "cirkay-marketplace", "emp-marketplace", "microsoft", "indieflix-marketplace", "angels-airwaves-marketplace"]
 }; // No production environment on demo
 
 WalletConfiguration.demo.production = WalletConfiguration.demo.staging; // Allow demo to be referred to as demov3
