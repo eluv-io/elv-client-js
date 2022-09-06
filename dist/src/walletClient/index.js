@@ -52,6 +52,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
         network = _ref.network,
         mode = _ref.mode,
         marketplaceInfo = _ref.marketplaceInfo,
+        previewMarketplaceHash = _ref.previewMarketplaceHash,
         storeAuthToken = _ref.storeAuthToken;
 
     _classCallCheck(this, ElvWalletClient);
@@ -67,6 +68,8 @@ var ElvWalletClient = /*#__PURE__*/function () {
     this.publicStaticToken = client.staticToken;
     this.storeAuthToken = storeAuthToken;
     this.selectedMarketplaceInfo = marketplaceInfo;
+    this.previewMarketplaceId = previewMarketplaceHash ? Utils.DecodeVersionHash(previewMarketplaceHash).objectId : undefined;
+    this.previewMarketplaceHash = previewMarketplaceHash;
     this.availableMarketplaces = {};
     this.availableMarketplacesById = {};
     this.marketplaceHashes = {};
@@ -967,7 +970,6 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
       return SignMetamask;
     }() // Internal loading methods
-    // If marketplace slug is specified, load only that marketplace. Otherwise load all
 
   }, {
     key: "LoadAvailableMarketplaces",
@@ -978,6 +980,9 @@ var ElvWalletClient = /*#__PURE__*/function () {
         var forceReload,
             mainSiteHash,
             metadata,
+            previewTenantSlug,
+            previewMarketplaceSlug,
+            previewMarketplaceMetadata,
             availableMarketplaces,
             availableMarketplacesById,
             _args12 = arguments;
@@ -1019,13 +1024,75 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
               case 8:
                 metadata = _context12.sent;
+
+                if (!this.previewMarketplaceId) {
+                  _context12.next = 24;
+                  break;
+                }
+
+                previewTenantSlug = "PREVIEW";
+                Object.keys(metadata || {}).forEach(function (tenantSlug) {
+                  return Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(function (marketplaceSlug) {
+                    var versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
+
+                    var objectId = _this4.utils.DecodeVersionHash(versionHash).objectId;
+
+                    if (objectId === _this4.previewMarketplaceId) {
+                      // Marketplace exists in site meta
+                      previewTenantSlug = tenantSlug;
+                      previewMarketplaceSlug = marketplaceSlug; // Deployed marketplace is same as preview marketplace
+
+                      if (versionHash === _this4.previewMarketplaceHash) {
+                        previewMarketplaceMetadata = metadata[tenantSlug].marketplaces[marketplaceSlug];
+                      }
+                    }
+                  });
+                }); // Marketplace not present in branch, or preview version is different - Load metadata directly
+
+                if (previewMarketplaceMetadata) {
+                  _context12.next = 17;
+                  break;
+                }
+
+                _context12.next = 15;
+                return this.client.ContentObjectMetadata({
+                  versionHash: this.previewMarketplaceHash,
+                  metadataSubtree: "public/asset_metadata",
+                  produceLinkUrls: true,
+                  authorizationToken: this.publicStaticToken,
+                  noAuth: true,
+                  select: ["slug", "info/tenant_id", "info/tenant_name", "info/branding"],
+                  remove: ["info/branding/custom_css"]
+                });
+
+              case 15:
+                previewMarketplaceMetadata = _context12.sent;
+
+                if (!previewMarketplaceSlug) {
+                  previewMarketplaceSlug = previewMarketplaceMetadata.slug;
+                }
+
+              case 17:
+                previewMarketplaceMetadata["."] = {
+                  source: this.previewMarketplaceHash
+                };
+                previewMarketplaceMetadata.info["."] = {
+                  source: this.previewMarketplaceHash
+                };
+                previewMarketplaceMetadata.info.branding.preview = true;
+                previewMarketplaceMetadata.info.branding.show = true;
+                metadata[previewTenantSlug] = metadata[previewTenantSlug] || {};
+                metadata[previewTenantSlug].marketplaces = metadata[previewTenantSlug].marketplaces || {};
+                metadata[previewTenantSlug].marketplaces[previewMarketplaceSlug] = previewMarketplaceMetadata;
+
+              case 24:
                 availableMarketplaces = _objectSpread({}, this.availableMarketplaces || {});
                 availableMarketplacesById = _objectSpread({}, this.availableMarketplacesById || {});
                 Object.keys(metadata || {}).forEach(function (tenantSlug) {
                   try {
-                    availableMarketplaces[tenantSlug] = {
+                    availableMarketplaces[tenantSlug] = metadata[tenantSlug]["."] ? {
                       versionHash: metadata[tenantSlug]["."].source
-                    };
+                    } : {};
                     Object.keys(metadata[tenantSlug].marketplaces || {}).forEach(function (marketplaceSlug) {
                       try {
                         var versionHash = metadata[tenantSlug].marketplaces[marketplaceSlug]["."].source;
@@ -1062,7 +1129,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 this.availableMarketplaces = availableMarketplaces;
                 this.availableMarketplacesById = availableMarketplacesById;
 
-              case 14:
+              case 29:
               case "end":
                 return _context12.stop();
             }
@@ -1081,31 +1148,47 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "LatestMarketplaceHash",
     value: function () {
       var _LatestMarketplaceHash = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee13(_ref12) {
-        var tenantSlug, marketplaceSlug, mainSiteHash, marketplaceLink;
+        var marketplaceParams, marketplaceInfo, mainSiteHash, marketplaceLink;
         return _regeneratorRuntime.wrap(function _callee13$(_context13) {
           while (1) {
             switch (_context13.prev = _context13.next) {
               case 0:
-                tenantSlug = _ref12.tenantSlug, marketplaceSlug = _ref12.marketplaceSlug;
+                marketplaceParams = _ref12.marketplaceParams;
                 _context13.next = 3;
+                return this.MarketplaceInfo({
+                  marketplaceParams: marketplaceParams
+                });
+
+              case 3:
+                marketplaceInfo = _context13.sent;
+
+                if (!(this.previewMarketplaceId && this.previewMarketplaceId === marketplaceInfo.marketplaceId)) {
+                  _context13.next = 6;
+                  break;
+                }
+
+                return _context13.abrupt("return", this.availableMarketplaces[marketplaceInfo.tenantSlug][marketplaceInfo.marketplaceSlug]["."].source);
+
+              case 6:
+                _context13.next = 8;
                 return this.client.LatestVersionHash({
                   objectId: this.mainSiteId
                 });
 
-              case 3:
+              case 8:
                 mainSiteHash = _context13.sent;
-                _context13.next = 6;
+                _context13.next = 11;
                 return this.client.ContentObjectMetadata({
                   versionHash: mainSiteHash,
-                  metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", tenantSlug, "marketplaces", marketplaceSlug),
+                  metadataSubtree: UrlJoin("/public", "asset_metadata", "tenants", marketplaceInfo.tenantSlug, "marketplaces", marketplaceInfo.marketplaceSlug),
                   resolveLinks: false
                 });
 
-              case 6:
+              case 11:
                 marketplaceLink = _context13.sent;
                 return _context13.abrupt("return", LinkTargetHash(marketplaceLink));
 
-              case 8:
+              case 13:
               case "end":
                 return _context13.stop();
             }
@@ -1136,8 +1219,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 marketplaceId = marketplaceInfo.marketplaceId;
                 _context15.next = 4;
                 return this.LatestMarketplaceHash({
-                  tenantSlug: marketplaceInfo.tenantSlug,
-                  marketplaceSlug: marketplaceInfo.marketplaceSlug
+                  marketplaceParams: marketplaceParams
                 });
 
               case 4:
@@ -1148,7 +1230,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 if (this.cachedMarketplaces[marketplaceId]) {
-                  _context15.next = 19;
+                  _context15.next = 20;
                   break;
                 }
 
@@ -1233,7 +1315,12 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 });
                 marketplace.retrievedAt = Date.now();
                 marketplace.marketplaceId = marketplaceId;
-                marketplace.versionHash = marketplaceHash; // Generate embed URLs for pack opening animations
+                marketplace.versionHash = marketplaceHash;
+
+                if (this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
+                  marketplace.branding.preview = true;
+                } // Generate embed URLs for pack opening animations
+
 
                 ["purchase_animation", "purchase_animation__mobile", "reveal_animation", "reveal_animation_mobile"].forEach(function (key) {
                   try {
@@ -1258,10 +1345,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 });
                 this.cachedMarketplaces[marketplaceId] = marketplace;
 
-              case 19:
+              case 20:
                 return _context15.abrupt("return", this.cachedMarketplaces[marketplaceId]);
 
-              case 20:
+              case 21:
               case "end":
                 return _context15.stop();
             }
@@ -1416,7 +1503,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     filters.push("token:eq:".concat(tokenId));
                   }
                 } else if (filter) {
-                  if (mode === "listing") {
+                  if (mode.includes("listing")) {
                     filters.push("nft/display_name:eq:".concat(filter));
                   } else if (mode === "owned") {
                     filters.push("meta/display_name:eq:".concat(filter));
@@ -1721,13 +1808,13 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "Initialize",
     value: function () {
       var _Initialize = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref18) {
-        var _ref18$appId, appId, _ref18$network, network, _ref18$mode, mode, marketplaceParams, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, client, walletClient, url, savedToken;
+        var _ref18$appId, appId, _ref18$network, network, _ref18$mode, mode, marketplaceParams, previewMarketplaceId, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, client, previewMarketplaceHash, walletClient, url, savedToken;
 
         return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
             switch (_context18.prev = _context18.next) {
               case 0:
-                _ref18$appId = _ref18.appId, appId = _ref18$appId === void 0 ? "general" : _ref18$appId, _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
+                _ref18$appId = _ref18.appId, appId = _ref18$appId === void 0 ? "general" : _ref18$appId, _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, previewMarketplaceId = _ref18.previewMarketplaceId, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
                 _ref19 = marketplaceParams || {}, tenantSlug = _ref19.tenantSlug, marketplaceSlug = _ref19.marketplaceSlug, marketplaceId = _ref19.marketplaceId, marketplaceHash = _ref19.marketplaceHash;
 
                 if (Configuration[network]) {
@@ -1754,6 +1841,22 @@ var ElvWalletClient = /*#__PURE__*/function () {
 
               case 10:
                 client = _context18.sent;
+                previewMarketplaceHash = previewMarketplaceId;
+
+                if (!(previewMarketplaceHash && !previewMarketplaceHash.startsWith("hq__"))) {
+                  _context18.next = 16;
+                  break;
+                }
+
+                _context18.next = 15;
+                return client.LatestVersionHash({
+                  objectId: previewMarketplaceId
+                });
+
+              case 15:
+                previewMarketplaceHash = _context18.sent;
+
+              case 16:
                 walletClient = new ElvWalletClient({
                   appId: appId,
                   client: client,
@@ -1765,73 +1868,74 @@ var ElvWalletClient = /*#__PURE__*/function () {
                     marketplaceId: marketplaceHash ? client.utils.DecodeVersionHash(marketplaceHash).objectId : marketplaceId,
                     marketplaceHash: marketplaceHash
                   },
+                  previewMarketplaceHash: previewMarketplaceHash,
                   storeAuthToken: storeAuthToken
                 });
 
                 if (!(inBrowser && window.location && window.location.href)) {
-                  _context18.next = 31;
+                  _context18.next = 36;
                   break;
                 }
 
                 url = new URL(window.location.href);
 
                 if (!url.searchParams.get("elvToken")) {
-                  _context18.next = 21;
+                  _context18.next = 26;
                   break;
                 }
 
-                _context18.next = 17;
+                _context18.next = 22;
                 return walletClient.Authenticate({
                   token: url.searchParams.get("elvToken")
                 });
 
-              case 17:
+              case 22:
                 url.searchParams["delete"]("elvToken");
                 window.history.replaceState("", "", url);
-                _context18.next = 31;
+                _context18.next = 36;
                 break;
 
-              case 21:
+              case 26:
                 if (!(storeAuthToken && typeof localStorage !== "undefined")) {
-                  _context18.next = 31;
+                  _context18.next = 36;
                   break;
                 }
 
-                _context18.prev = 22;
+                _context18.prev = 27;
                 // Load saved auth token
                 savedToken = localStorage.getItem("__elv-token-".concat(network));
 
                 if (!savedToken) {
-                  _context18.next = 27;
+                  _context18.next = 32;
                   break;
                 }
 
-                _context18.next = 27;
+                _context18.next = 32;
                 return walletClient.Authenticate({
                   token: savedToken
                 });
 
-              case 27:
-                _context18.next = 31;
+              case 32:
+                _context18.next = 36;
                 break;
 
-              case 29:
-                _context18.prev = 29;
-                _context18.t0 = _context18["catch"](22);
+              case 34:
+                _context18.prev = 34;
+                _context18.t0 = _context18["catch"](27);
 
-              case 31:
-                _context18.next = 33;
+              case 36:
+                _context18.next = 38;
                 return walletClient.LoadAvailableMarketplaces();
 
-              case 33:
+              case 38:
                 return _context18.abrupt("return", walletClient);
 
-              case 34:
+              case 39:
               case "end":
                 return _context18.stop();
             }
           }
-        }, _callee18, null, [[22, 29]]);
+        }, _callee18, null, [[27, 34]]);
       }));
 
       function Initialize(_x21) {
