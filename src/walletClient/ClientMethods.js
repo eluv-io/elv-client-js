@@ -978,6 +978,32 @@ exports.RemoveListing = async function({listingId}) {
 };
 
 /**
+ * Retrieve all valid names for filtering listing sales names. Full item names are required for filtering sales results by name.
+ *
+ * Specify marketplace information to filter the results to only items offered in that marketplace.
+ *
+ * @methodGroup Listings
+ * @namedParams
+ * @param {Object} marketplaceParams - Parameters of a marketplace to filter results by
+ *
+ * @returns {Promise<Array<String>>} - A list of item names
+ */
+exports.SalesNames = async function({marketplaceParams}) {
+  let tenantId;
+  if(marketplaceParams) {
+    tenantId = (await this.MarketplaceInfo({marketplaceParams})).tenantId;
+  }
+
+  return await Utils.ResponseToJson(
+    await this.client.authClient.MakeAuthServiceRequest({
+      path: UrlJoin("as", "mkt", "names", "hst"),
+      method: "GET",
+      queryParams: tenantId ? { filter: `tenant:eq:${tenantId}` } : {}
+    })
+  );
+};
+
+/**
  * Retrieve all valid names for filtering listings. Full item names are required for filtering listing results by name.
  *
  * Specify marketplace information to filter the results to only items offered in that marketplace.
