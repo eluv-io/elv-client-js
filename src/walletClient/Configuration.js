@@ -25,6 +25,7 @@ let WalletConfiguration = {
   __MARKETPLACE_ORDER: [
     "PREVIEW",
     "wwe-marketplace-main",
+    "realcannonballrun-marketplace",
     "maskverse-marketplace",
     "dolly-marketplace",
     "oc-marketplace",
