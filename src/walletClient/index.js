@@ -785,6 +785,7 @@ class ElvWalletClient {
       marketplace.retrievedAt = Date.now();
       marketplace.marketplaceId = marketplaceId;
       marketplace.versionHash = marketplaceHash;
+      marketplace.marketplaceHash = marketplaceHash;
 
       if(this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
         marketplace.branding.preview = true;
