@@ -77,7 +77,6 @@ var FormatNFTDetails = function FormatNFTDetails(entry) {
     ContractId: "ictr".concat(Utils.AddressToHash(info.contract_addr)),
     ContractName: info.contract_name,
     Cap: info.cap,
-    Offers: info.offers || [],
     TokenIdStr: info.token_id_str,
     TokenUri: info.token_uri,
     TokenOrdinal: info.ordinal,
@@ -100,6 +99,8 @@ var FormatNFTDetails = function FormatNFTDetails(entry) {
       Price: entry.price,
       Fee: entry.fee
     });
+  } else {
+    details.Offers = info.offers || [];
   }
 
   return {
