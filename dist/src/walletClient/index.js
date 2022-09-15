@@ -1230,7 +1230,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 }
 
                 if (this.cachedMarketplaces[marketplaceId]) {
-                  _context15.next = 20;
+                  _context15.next = 21;
                   break;
                 }
 
@@ -1316,6 +1316,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 marketplace.retrievedAt = Date.now();
                 marketplace.marketplaceId = marketplaceId;
                 marketplace.versionHash = marketplaceHash;
+                marketplace.marketplaceHash = marketplaceHash;
 
                 if (this.previewMarketplaceId && marketplaceId === this.previewMarketplaceId) {
                   marketplace.branding.preview = true;
@@ -1345,10 +1346,10 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 });
                 this.cachedMarketplaces[marketplaceId] = marketplace;
 
-              case 20:
+              case 21:
                 return _context15.abrupt("return", this.cachedMarketplaces[marketplaceId]);
 
-              case 21:
+              case 22:
               case "end":
                 return _context15.stop();
             }
