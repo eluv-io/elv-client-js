@@ -76,10 +76,12 @@ class ElvWalletClient {
    * @param {string} mode=production - Environment to use (`production`, `staging`)
    * @param {Object=} marketplaceParams - Marketplace parameters
    * @param {boolean=} storeAuthToken=true - If specified, auth tokens will be stored in localstorage (if available)
+   * @param {Object=} client - Existing instance of ElvClient to use instead of initializing a new one
    *
    * @returns {Promise<ElvWalletClient>}
    */
   static async Initialize({
+    client,
     appId="general",
     network="main",
     mode="production",
@@ -95,7 +97,9 @@ class ElvWalletClient {
       throw Error(`ElvWalletClient: Invalid mode ${mode}`);
     }
 
-    const client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
+    if(!client) {
+      client = await ElvClient.FromNetworkName({networkName: network, assumeV3: true});
+    }
 
     let previewMarketplaceHash = previewMarketplaceId;
     if(previewMarketplaceHash && !previewMarketplaceHash.startsWith("hq__")) {
