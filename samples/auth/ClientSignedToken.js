@@ -41,8 +41,7 @@ const SetupWithPrivateKey = async () => {
 }
 
 /**
- * Create a client signed token using the client object's signer
- * This works the same way for all typs of signers.
+ * Create a client signed token using the client object's signer.
 */
 const MakeClientSignedToken = async ({client}) => {
 
@@ -51,37 +50,6 @@ const MakeClientSignedToken = async ({client}) => {
   });
 
   console.log("TOKEN", token);
-  return token;
-}
-
-/**
- * Create a client signed token using the custodial wallet
- * 'eth_sign' method.  This is achieved by adding the EIP191
- * Ethereum prefix on the client side.
- */
-const MakeClientSignedWithCustodialEthSign = async ({client}) => {
-
-  const token = await client.CreateFabricToken({
-    duration: 60 * 60 * 1000, // millisec
-    addEthereumPrefix: true, // Add prefix on the client side
-  });
-
-  console.log("TOKEN_CUSTODIAL_ETH_SIGN", token);
-  return token;
-}
-
-/**
- * Create a client signed token using the custodial wallet
- * 'personal_sign' method.
- */
-const MakeClientSignedTokenWithCustodialEIP191Personal = async ({client}) => {
-
-  const token = await client.CreateFabricToken({
-    duration: 60 * 60 * 1000, // millisec
-    addEthereumPrefix: false, // Don't add prefix on the client side
-  });
-
-  console.log("TOKEN_CUSTODIAL_PERSONAL_SIGN", token);
   return token;
 }
 
@@ -114,44 +82,19 @@ const Run = async () => {
 
   let token;
 
-  switch(signer) {
+  if (process.env.ID_TOKEN) {
 
-    case "custodial_wallet":
+    // Initialize client using custodial wallet id token
+    client = await SetupWithCustodialWallet();
 
-      // Stub Date.now() to force ethToken and personalToken to use the same timestamp for comparison
-      const dateNow = Date.now()
-      const realDateNow = Date.now.bind(global.Date);
-      const dateNowStub = function () { return dateNow };
-      global.Date.now = dateNowStub;
+  } else if (process.env.PRIVATE_KEY) {
 
-      // Initialize client using custodial wallet id token
-      client = await SetupWithCustodialWallet();
+    // Initialize client using custodial wallet id token
+    client = await SetupWithPrivateKey();
 
-      const ethToken = await MakeClientSignedWithCustodialEthSign({client});
-      const personalToken = await MakeClientSignedTokenWithCustodialEIP191Personal({client});
-
-      if(ethToken == personalToken) {
-        console.log("Tokens matched successfully")
-      } else {
-        console.log("Tokens mismatched")
-      }
-
-      // Restore Date.now()
-      global.Date.now = realDateNow;
-
-      token = ethToken;
-
-      break;
-
-    case "private_key":
-
-      // Initialize client using custodial wallet id token
-      client = await SetupWithPrivateKey();
-
-      token = await MakeClientSignedToken({client});
-
-      break;
   }
+
+  token = await MakeClientSignedToken({client});
 
   // Access content and play
   let playoutOptions = await Play({token});
