@@ -80,12 +80,13 @@ class RemoteSigner extends Ethers.Signer {
 
   /**
    * Sign a hashed piece of data
-   * @param {String} digest - Hex string of hashed data
+   * @param {string} digest - hex string of hashed data
    * @returns - the signed message as a hex string
    */
   async signDigest(digest) {
-    if(!this.signatureCache[digest]) {
-      this.signatureCache[digest] = new Promise(async (resolve, reject) => {
+    const cacheKey = `digest ${digest}`;
+    if(!this.signatureCache[cacheKey]) {
+      this.signatureCache[cacheKey] = new Promise(async (resolve, reject) => {
         try {
           let signature = await Utils.ResponseToJson(
             this.HttpClient.Request({
@@ -96,7 +97,7 @@ class RemoteSigner extends Ethers.Signer {
               },
               body: {
                 hash: digest
-              }
+              },
             })
           );
 
@@ -110,11 +111,44 @@ class RemoteSigner extends Ethers.Signer {
       });
     }
 
-    return await this.signatureCache[digest];
+    return await this.signatureCache[cacheKey];
   }
 
+  /**
+   * Sign a message via EIP-191 personal_sign
+   * @param {string} message - message string
+   * @returns - the signed message as a hex string
+   */
   async signMessage(message) {
-    return Promise.resolve(Ethers.utils.joinSignature(`0x${await this.signDigest(Ethers.utils.hashMessage(message))}`));
+    message = Ethers.utils.base64.encode(Ethers.utils.toUtf8Bytes(message));
+    const cacheKey = `message ${message}`;
+    if(!this.signatureCache[cacheKey]) {
+      this.signatureCache[cacheKey] = new Promise(async (resolve, reject) => {
+        try {
+          let signature = await Utils.ResponseToJson(
+            this.HttpClient.Request({
+              method: "POST",
+              path: UrlJoin("as", "wlt", "sign", "personal", this.id),
+              headers: {
+                Authorization: `Bearer ${this.authToken}`
+              },
+              body: {
+                message: message
+              },
+            })
+          );
+
+          signature.v = parseInt(signature.v, 16);
+          signature.recoveryParam = signature.v - 27;
+
+          resolve(signature);
+        } catch(error) {
+          reject(error);
+        }
+      });
+    }
+
+    return await this.signatureCache[cacheKey];
   }
 
   async sign(transaction) {

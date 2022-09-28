@@ -738,7 +738,7 @@ class ElvClient {
     };
 
     if(!Sign) {
-      Sign = async message => this.authClient.Sign(message);
+      Sign = async message => this.authClient.Sign(message, !addEthereumPrefix);
     }
 
     let message = `Eluvio Content Fabric Access Token 1.0\n${JSON.stringify(token)}`;
@@ -967,10 +967,14 @@ class ElvClient {
    * Create a signature for the specified string
    *
    * @param {string} string - The string to sign
+   * @param {boolean=} usePersonal=false - use EIP-191 personal_sign for signing
    * @return {Promise<string>} - The signed string
    */
-  async Sign(string) {
-    const signature = await this.authClient.Sign(Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string)));
+  async Sign(string, usePersonal=false) {
+    if(!usePersonal) {
+      string = Ethers.utils.keccak256(Ethers.utils.toUtf8Bytes(string));
+    }
+    const signature = await this.authClient.Sign(string, usePersonal);
     return this.utils.FormatSignature(signature);
   }
 
