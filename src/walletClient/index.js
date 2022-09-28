@@ -9,6 +9,13 @@ const Ethers = require("ethers");
 const inBrowser = typeof window !== "undefined";
 const embedded = inBrowser && window.top !== window.self;
 
+let localStorageAvailable = false;
+try {
+  typeof localStorage !== "undefined" && localStorage.getItem("test");
+  localStorageAvailable = true;
+// eslint-disable-next-line no-empty
+} catch(error) {}
+
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
  *
@@ -129,7 +136,7 @@ class ElvWalletClient {
         url.searchParams.delete("elvToken");
 
         window.history.replaceState("", "", url);
-      } else if(storeAuthToken && typeof localStorage !== "undefined") {
+      } else if(storeAuthToken && localStorageAvailable) {
         try {
           // Load saved auth token
           let savedToken = localStorage.getItem(`__elv-token-${network}`);
@@ -342,7 +349,7 @@ class ElvWalletClient {
     this.cachedMarketplaces = {};
 
     // Delete saved auth token
-    if(typeof localStorage !== "undefined") {
+    if(localStorageAvailable) {
       try {
         localStorage.removeItem(`__elv-token-${this.network}`);
       // eslint-disable-next-line no-empty
@@ -532,7 +539,7 @@ class ElvWalletClient {
 
     const token = this.ClientAuthToken();
 
-    if(this.storeAuthToken && typeof localStorage !== "undefined") {
+    if(this.storeAuthToken && localStorageAvailable) {
       try {
         localStorage.setItem(`__elv-token-${this.network}`, token);
       // eslint-disable-next-line no-empty
