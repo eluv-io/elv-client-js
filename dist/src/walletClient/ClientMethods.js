@@ -2037,17 +2037,18 @@ exports.ListingAttributes = /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regene
  * @methodGroup Purchase
  * @namedParams
  * @param {Object} marketplaceParams - Parameters of the marketplace
- * @param {string} sku - The SKU of the item to claime
+ * @param {string} sku - The SKU of the item to claim
+ * @param {string=} email - Email address of the user. If specified, this will bind the user to the tenant of the specified marketplace
  */
 
 exports.ClaimItem = /*#__PURE__*/function () {
   var _ref63 = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee32(_ref62) {
-    var marketplaceParams, sku, marketplaceInfo;
+    var marketplaceParams, sku, email, marketplaceInfo;
     return _regeneratorRuntime.wrap(function _callee32$(_context32) {
       while (1) {
         switch (_context32.prev = _context32.next) {
           case 0:
-            marketplaceParams = _ref62.marketplaceParams, sku = _ref62.sku;
+            marketplaceParams = _ref62.marketplaceParams, sku = _ref62.sku, email = _ref62.email;
             _context32.next = 3;
             return this.MarketplaceInfo({
               marketplaceParams: marketplaceParams
@@ -2062,7 +2063,8 @@ exports.ClaimItem = /*#__PURE__*/function () {
               body: {
                 op: "nft-claim",
                 sid: marketplaceInfo.marketplaceId,
-                sku: sku
+                sku: sku,
+                email: email
               },
               headers: {
                 Authorization: "Bearer ".concat(this.AuthToken())
