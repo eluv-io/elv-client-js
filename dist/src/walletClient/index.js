@@ -36,12 +36,19 @@ var Ethers = require("ethers");
 
 var inBrowser = typeof window !== "undefined";
 var embedded = inBrowser && window.top !== window.self;
+var localStorageAvailable = false;
+
+try {
+  typeof localStorage !== "undefined" && localStorage.getItem("test");
+  localStorageAvailable = true; // eslint-disable-next-line no-empty
+} catch (error) {}
 /**
  * Use the <a href="#.Initialize">Initialize</a> method to initialize a new client.
  *
  *
  * See the Modules section on the sidebar for all client methods unrelated to login and authorization
  */
+
 
 var ElvWalletClient = /*#__PURE__*/function () {
   "use strict";
@@ -115,6 +122,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
      * @param {string} mode=production - Environment to use (`production`, `staging`)
      * @param {Object=} marketplaceParams - Marketplace parameters
      * @param {boolean=} storeAuthToken=true - If specified, auth tokens will be stored in localstorage (if available)
+     * @param {Object=} client - Existing instance of ElvClient to use instead of initializing a new one
      *
      * @returns {Promise<ElvWalletClient>}
      */
@@ -532,7 +540,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
       this.loggedIn = false;
       this.cachedMarketplaces = {}; // Delete saved auth token
 
-      if (typeof localStorage !== "undefined") {
+      if (localStorageAvailable) {
         try {
           localStorage.removeItem("__elv-token-".concat(this.network)); // eslint-disable-next-line no-empty
         } catch (error) {}
@@ -891,7 +899,7 @@ var ElvWalletClient = /*#__PURE__*/function () {
       this.cachedMarketplaces = {};
       var token = this.ClientAuthToken();
 
-      if (this.storeAuthToken && typeof localStorage !== "undefined") {
+      if (this.storeAuthToken && localStorageAvailable) {
         try {
           localStorage.setItem("__elv-token-".concat(this.network), token); // eslint-disable-next-line no-empty
         } catch (error) {}
@@ -1809,13 +1817,13 @@ var ElvWalletClient = /*#__PURE__*/function () {
     key: "Initialize",
     value: function () {
       var _Initialize = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime.mark(function _callee18(_ref18) {
-        var _ref18$appId, appId, _ref18$network, network, _ref18$mode, mode, marketplaceParams, previewMarketplaceId, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, client, previewMarketplaceHash, walletClient, url, savedToken;
+        var client, _ref18$appId, appId, _ref18$network, network, _ref18$mode, mode, marketplaceParams, previewMarketplaceId, _ref18$storeAuthToken, storeAuthToken, _ref19, tenantSlug, marketplaceSlug, marketplaceId, marketplaceHash, previewMarketplaceHash, walletClient, url, savedToken;
 
         return _regeneratorRuntime.wrap(function _callee18$(_context18) {
           while (1) {
             switch (_context18.prev = _context18.next) {
               case 0:
-                _ref18$appId = _ref18.appId, appId = _ref18$appId === void 0 ? "general" : _ref18$appId, _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, previewMarketplaceId = _ref18.previewMarketplaceId, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
+                client = _ref18.client, _ref18$appId = _ref18.appId, appId = _ref18$appId === void 0 ? "general" : _ref18$appId, _ref18$network = _ref18.network, network = _ref18$network === void 0 ? "main" : _ref18$network, _ref18$mode = _ref18.mode, mode = _ref18$mode === void 0 ? "production" : _ref18$mode, marketplaceParams = _ref18.marketplaceParams, previewMarketplaceId = _ref18.previewMarketplaceId, _ref18$storeAuthToken = _ref18.storeAuthToken, storeAuthToken = _ref18$storeAuthToken === void 0 ? true : _ref18$storeAuthToken;
                 _ref19 = marketplaceParams || {}, tenantSlug = _ref19.tenantSlug, marketplaceSlug = _ref19.marketplaceSlug, marketplaceId = _ref19.marketplaceId, marketplaceHash = _ref19.marketplaceHash;
 
                 if (Configuration[network]) {
@@ -1834,30 +1842,37 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 throw Error("ElvWalletClient: Invalid mode ".concat(mode));
 
               case 8:
-                _context18.next = 10;
+                if (client) {
+                  _context18.next = 12;
+                  break;
+                }
+
+                _context18.next = 11;
                 return ElvClient.FromNetworkName({
                   networkName: network,
                   assumeV3: true
                 });
 
-              case 10:
+              case 11:
                 client = _context18.sent;
+
+              case 12:
                 previewMarketplaceHash = previewMarketplaceId;
 
                 if (!(previewMarketplaceHash && !previewMarketplaceHash.startsWith("hq__"))) {
-                  _context18.next = 16;
+                  _context18.next = 17;
                   break;
                 }
 
-                _context18.next = 15;
+                _context18.next = 16;
                 return client.LatestVersionHash({
                   objectId: previewMarketplaceId
                 });
 
-              case 15:
+              case 16:
                 previewMarketplaceHash = _context18.sent;
 
-              case 16:
+              case 17:
                 walletClient = new ElvWalletClient({
                   appId: appId,
                   client: client,
@@ -1874,69 +1889,69 @@ var ElvWalletClient = /*#__PURE__*/function () {
                 });
 
                 if (!(inBrowser && window.location && window.location.href)) {
-                  _context18.next = 36;
+                  _context18.next = 37;
                   break;
                 }
 
                 url = new URL(window.location.href);
 
                 if (!url.searchParams.get("elvToken")) {
-                  _context18.next = 26;
+                  _context18.next = 27;
                   break;
                 }
 
-                _context18.next = 22;
+                _context18.next = 23;
                 return walletClient.Authenticate({
                   token: url.searchParams.get("elvToken")
                 });
 
-              case 22:
+              case 23:
                 url.searchParams["delete"]("elvToken");
                 window.history.replaceState("", "", url);
-                _context18.next = 36;
+                _context18.next = 37;
                 break;
 
-              case 26:
-                if (!(storeAuthToken && typeof localStorage !== "undefined")) {
-                  _context18.next = 36;
+              case 27:
+                if (!(storeAuthToken && localStorageAvailable)) {
+                  _context18.next = 37;
                   break;
                 }
 
-                _context18.prev = 27;
+                _context18.prev = 28;
                 // Load saved auth token
                 savedToken = localStorage.getItem("__elv-token-".concat(network));
 
                 if (!savedToken) {
-                  _context18.next = 32;
+                  _context18.next = 33;
                   break;
                 }
 
-                _context18.next = 32;
+                _context18.next = 33;
                 return walletClient.Authenticate({
                   token: savedToken
                 });
 
-              case 32:
-                _context18.next = 36;
+              case 33:
+                _context18.next = 37;
                 break;
 
-              case 34:
-                _context18.prev = 34;
-                _context18.t0 = _context18["catch"](27);
+              case 35:
+                _context18.prev = 35;
+                _context18.t0 = _context18["catch"](28);
 
-              case 36:
-                _context18.next = 38;
+              case 37:
+                _context18.next = 39;
                 return walletClient.LoadAvailableMarketplaces();
 
-              case 38:
+              case 39:
                 return _context18.abrupt("return", walletClient);
 
-              case 39:
+              case 40:
               case "end":
                 return _context18.stop();
             }
           }
-        }, _callee18, null, [[27, 34]]);
+        }, _callee18, null, [[28, 35]]);
       }));
 
       function Initialize(_x21) {
