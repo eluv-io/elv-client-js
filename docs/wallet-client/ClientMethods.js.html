@@ -1154,9 +1154,10 @@ exports.ListingAttributes = async function({marketplaceParams, displayName}={}) 
  * @methodGroup Purchase
  * @namedParams
  * @param {Object} marketplaceParams - Parameters of the marketplace
- * @param {string} sku - The SKU of the item to claime
+ * @param {string} sku - The SKU of the item to claim
+ * @param {string=} email - Email address of the user. If specified, this will bind the user to the tenant of the specified marketplace
  */
-exports.ClaimItem = async function({marketplaceParams, sku}) {
+exports.ClaimItem = async function({marketplaceParams, sku, email}) {
   const marketplaceInfo = await this.MarketplaceInfo({marketplaceParams});
 
   await this.client.authClient.MakeAuthServiceRequest({
@@ -1165,7 +1166,8 @@ exports.ClaimItem = async function({marketplaceParams, sku}) {
     body: {
       op: "nft-claim",
       sid: marketplaceInfo.marketplaceId,
-      sku
+      sku,
+      email
     },
     headers: {
       Authorization: `Bearer ${this.AuthToken()}`
